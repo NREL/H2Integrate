@@ -9,6 +9,7 @@ parts:
   - file: markdown
   - file: notebooks
   - file: markdown-notebooks
+  - file: install
   - file: CONTRIBUTING
 - caption: API Reference
   chapters:
