@@ -74,6 +74,15 @@ pip install greenheart
     conda env create -f environment.yml
     ```
 
+4. Install Cbc.
+   1. If using a Unix machine (not Windows), install a final dependency
+
+        ```bash
+        conda install -y -c conda-forge coin-or-cbc=2.10.8
+        ```
+    
+    2. Windows users will have to manually install Cbc: https://github.com/coin-or/Cbc
+
 An additional step can be added if additional dependencies are required, or you plan to use this
 environment for development work.
 
@@ -114,12 +123,18 @@ pip install -e ".[all]"
 4. Install GreenHEART and its dependencies:
 
     ```bash
-    conda install -y -c conda-forge coin-or-cbc=2.10.8 glpk
+    conda install -y -c conda-forge glpk
     pip install electrolyzer@git+https://github.com/jaredthomas68/electrolyzer.git@smoothing
     pip install ProFAST@git+https://github.com/NREL/ProFAST.git
     ```
 
-    Note if you are on Windows, you will have to manually install Cbc: https://github.com/coin-or/Cbc.
+    Note: Unix users should install Cbc via:
+
+    ```bash
+    conda install -y -c conda-forge coin-or-cbc=2.10.8
+    ```
+
+    Windows users will have to manually install Cbc: https://github.com/coin-or/Cbc.
 
     - If you want to just use GreenHEART:
 
@@ -145,11 +160,11 @@ pip install -e ".[all]"
       pip install -e ".[all]"
       ```
 
-5. The functions which download resource data require an NREL API key. Obtain a key from:
+1. The functions which download resource data require an NREL API key. Obtain a key from:
 
     [https://developer.nrel.gov/signup/](https://developer.nrel.gov/signup/)
 
-6. To set up the `NREL_API_KEY` and `NREL_API_EMAIL` required for resource downloads, you can create
+2. To set up the `NREL_API_KEY` and `NREL_API_EMAIL` required for resource downloads, you can create
    Environment Variables called `NREL_API_KEY` and `NREL_API_EMAIL`. Otherwise, you can keep the key
    in a new file called ".env" in the root directory of this project.
 
@@ -160,7 +175,7 @@ pip install -e ".[all]"
     NREL_API_EMAIL=your.name@email.com
     ```
 
-7. Verify setup by running tests:
+3. Verify setup by running tests:
 
     ```bash
     pytest
