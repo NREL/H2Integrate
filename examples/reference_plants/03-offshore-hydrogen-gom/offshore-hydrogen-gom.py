@@ -2,7 +2,7 @@
 from pathlib import Path
 
 # GreenHEART imports
-from greenheart.simulation.greenheart_simulation import GreenHeartSimulationConfig)
+from greenheart.simulation.greenheart_simulation import GreenHeartSimulationConfig
 from greenheart.tools.optimization.gc_run_greenheart import run_greenheart
 
 # ORBIT imports
