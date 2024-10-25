@@ -4,7 +4,7 @@ channels:
   - defaults
 dependencies:
   - python=3.11
-  - coin-or-cbc=2.10.8
+  - coin-or-cbc=2.10.8 # [not win]
   - glpk
   - pip
   - pip:
