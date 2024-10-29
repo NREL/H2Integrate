@@ -14,8 +14,8 @@ you're facing and the impact on your workflow or results.
 IMPORTANT NOTES
 
 1. Replace all example text (contained in "<>") or anywhere specifically commenting to replace the
-   text, leaving HTML comments in place (formatted like this large block so it won't show up in
-   your Bug Report text.)
+   text, leaving any guiding HTML comments in place (formatted like this large block so it won't
+   show up in your Bug Report text.)
 2. Use GH flavored markdown: https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax,
    especially for code snippets, which should look like the following:
    ```python
@@ -29,7 +29,7 @@ IMPORTANT NOTES
 -->
 
 # Add meaningful title here
-<!--The title should clearly define your contribution succinctly.-->
+<!--The title should clearly define the issue succinctly.-->
 
 <Describe your bug/issue here using as much detail as necessary.>
 
