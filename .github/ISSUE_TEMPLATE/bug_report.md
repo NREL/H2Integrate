@@ -6,77 +6,63 @@ labels: "Type: Bug"
 ---
 
 <!--
-IMPORTANT NOTES
-
 Thank you for taking the time to report a bug. If you aren't certain whether an issue
 is a bug, please first open a Discussion. Before submitting, please reread your
 description to ensure that other readers can reasonably understand the issue
 you're facing and the impact on your workflow or results.
 
-This form is written in GitHub's Markdown format. For a reference on this type
-of syntax, see GitHub's documentation:
-https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax
+IMPORTANT NOTES
 
-This template contains guidance for your submission within the < ! - -, - - > blocks.
-These are comments in HTML syntax and will not appear in the submission.
-Be sure to use the "Preview" feature on GitHub to ensure your submission is formatted as intended.
-
-When including code snippets, please paste the text itself and wrap the code block with
-ticks (see the other character on the tilde ~ key in a US keyboard) to format it as code.
-For example, Python code should be wrapped in ticks like this:
-```python
-def a_func():
-    return 1
-
-a = 1
-b = a_func()
-print(a + b)
-```
-This is preferred over screen shots since it is searchable and others can copy/paste
-the text to run it.
+1. Replace all example text (contained in "<>") or anywhere specifically commenting to replace the
+   text, leaving HTML comments in place (formatted like this large block so it won't show up in
+   your Bug Report text.)
+2. Use GH flavored markdown: https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax,
+   especially for code snippets, which should look like the following:
+   ```python
+   a = 1
+   b = 2
+   print(a + b)
+   ```
+3. Please be as thorough as possible when describing what went wrong, and what was expected from a
+   correct solution. This might look different depending on the nature of the bug, but more
+   information is always best to ensure you receive the help you need.
 -->
 
 # Add meaningful title here
-<!--
-A clear and concise description of the bug including what happened
-and what you expected to happen.
--->
+<!--The title should clearly define your contribution succinctly.-->
+
+<Describe your bug/issue here using as much detail as necessary.>
 
 ## How to reproduce
-<!--
-Describe how another person with no context can recreate this issue.
-It is typically very helpful to reduce the problem as much as possible
-and share a minimum working example. See the note above on including
-code as text rather than screenshots.
--->
+
+<Describe how another person with no context can recreate this issue.>
 
 ## Relevant output
-<!--
-Include any output, plots, or other means of communication here to add context to the problem.
- -->
 
-## GreenHEART version
-<!--
-Share your GreenHEART version and how you installed it. You can print the GreenHEART version from
-a Python REPL or script with these commands:
-```python
-import greenheart
-print(greenheart.__version__)
-```
- -->
+<Include any output, plots, tracebacks, or other means of communication here to add context to the
+problem. All code and tracebacks should be properly markdown formatted.>
 
 ## System Information
 <!-- Add your information here. -->
- - OS: <e.g. Ubuntu 20.04 or macOS 10.12>
- - Python version: <Result of `python --version`>
- - Relevant library versions, from the results of `pip freeze`, for example:
-   - FLORIS
-   - HOPP
-   - matplotlib
-   - NREL-PySAM
-   - numpy
-   - numexpr
-   - orbit-nrel
-   - pandas
-   - scipy
-   - shapely
+- OS: <macOS 12.4>
+  <!-- e.g. Ubuntu 20.04 or macOS 10.12 -->
+- Python version: <3.10.4>
+  <!-- All OS: `python --version`-->
+- GreenHEART version: <0.1.1>
+  <!--
+  Unix: `pip list --format freeze | grep greenheart`
+  Windows: `pip list --format freeze | findstr greenheart`
+  -->
+  - <Installed from source using an editable installation with developer tools: `pip install -e .[develop]`>
+
+### Relevant library versions
+<!--
+Use `pip freeze` to gather the relevant versions, and use the markdwon table formatting as
+demonstrated below to replacing all relavant packages and their versions.
+-->
+  
+  | Package | Version |
+  | ------- | ------- |
+  | hopp | 3.1.1 |
+  | numpy | 1.26.4 |
+  | Pyomo | 6.8.0 |
