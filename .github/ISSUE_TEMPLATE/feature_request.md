@@ -27,7 +27,7 @@ IMPORTANT NOTES
 -->
 
 # Add meaningful title here
-<!--The title should clearly define the feature requrest/enhancement succinctly.-->
+<!--The title should clearly define the feature request/enhancement succinctly.-->
 
 <Describe the desired enhancement.>
 
