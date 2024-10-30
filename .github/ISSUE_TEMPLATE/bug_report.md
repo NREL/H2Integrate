@@ -40,7 +40,7 @@ IMPORTANT NOTES
 ## Relevant output
 
 <Include any output, plots, tracebacks, or other means of communication here to add context to the
-problem. All code and tracebacks should be properly markdown formatted.>
+problem. All code and full tracebacks should be properly markdown formatted.>
 
 ## System Information
 <!-- Add your information here. -->
@@ -54,10 +54,14 @@ problem. All code and tracebacks should be properly markdown formatted.>
   Windows: `pip list --format freeze | findstr greenheart`
   -->
   - <Installed from source using an editable installation with developer tools: `pip install -e .[develop]`>
+  - Commit hash: <commit-hash>
+    <!--
+    Unix: pip freeze | grep greenheart | awk -F"git@" '/git@/{print $2}' | awk -F"#egg" '/#egg/{print $1}'
+    -->
 
 ### Relevant library versions
 <!--
-Use `pip freeze` to gather the relevant versions, and use the markdwon table formatting as
+Use `pip freeze` to gather the relevant versions, and use the markdown table formatting as
 demonstrated below to replacing all relavant packages and their versions.
 -->
   
