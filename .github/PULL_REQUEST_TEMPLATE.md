@@ -44,7 +44,7 @@ Describe your feature here. Please include any code snippets or examples in this
 
 ## Impacted areas of the software
 <!--
-Replace the below example with any added and/or modified files, and briefly describe what has been changed or added, and why.
+Replace the below example with any added or modified files, and briefly describe what has been changed or added, and why.
 -->
 - `path/to/file.extension`
   - `method1`: What and why something was changed in one sentence or less.
