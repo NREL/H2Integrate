@@ -39,7 +39,7 @@ Describe your feature here. Please include any code snippets or examples in this
 - [ ] Tests pass (If not, and this is expected please elaborate in the tests section)
 - [ ] PR description thoroughly describes the new feature, bug fix, etc.
 
-## Related issue
+## Related issues
 <!--If one exists, link to a related GitHub Issue.-->
 
 ## Impacted areas of the software
