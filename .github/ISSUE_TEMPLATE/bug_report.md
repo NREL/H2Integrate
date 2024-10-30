@@ -67,6 +67,8 @@ demonstrated below to replacing all relavant packages and their versions.
   
   | Package | Version |
   | ------- | ------- |
-  | hopp | 3.1.1 |
-  | numpy | 1.26.4 |
-  | Pyomo | 6.8.0 |
+  | hopp | <3.1.1> |
+  | numpy | <1.26.4> |
+  | Pyomo | <6.8.0> |
+  | scipy | <1.14.1> |
+  | <another-package> | <version> |
