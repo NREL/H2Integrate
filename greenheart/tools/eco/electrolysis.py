@@ -31,8 +31,6 @@ from greenheart.simulation.technologies.hydrogen.electrolysis.run_h2_PEM import 
 
 from greenheart.simulation.technologies.hydrogen.electrolysis.PEM_BOP.PEM_BOP import pem_bop
 
-# from electrolyzer import run_electrolyzer
-
 
 def run_electrolyzer_physics(
     hopp_results,
