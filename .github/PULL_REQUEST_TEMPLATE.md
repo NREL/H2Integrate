@@ -31,6 +31,7 @@ Describe your feature here. Please include any code snippets or examples in this
 ## PR Checklist
 <!--Tick these boxes if they are complete.-->
 
+- [ ] `CHANGELOG.md` has been updated to describe the changes made in this PR
 - [ ] Documentation
   - [ ] Docstrings are up-to-date
   - [ ] Related `docs/` files are up-to-date, or added when necessary
