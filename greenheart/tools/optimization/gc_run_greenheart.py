@@ -82,7 +82,7 @@ def run_greenheart(config:GreenHeartSimulationConfig, overridden_values=None, ru
         os.makedirs(folder_output, exist_ok=True)
 
         # create logger
-        logger = logging.getLogger("wisdem/weis")
+        logger = logging.getLogger("greenheart")
         logger.setLevel(logging.INFO)
 
         # create handlers
