@@ -5,6 +5,8 @@
 - Replaces the git ProFAST installation with a PyPI installation.
 - Removed dependence on external electrolyzer repo
 - Updated CI to use conda environments with reproducible environment artifacts
+- Rename logger from "wisdem/weis" to "greenheart"
+- Remove unsupported optimization algorithms
 
 ## v0.1.2 [28 October 2024]
 
