@@ -1447,30 +1447,16 @@ def save_energy_flows(
 
     return output
 
-###NOTE / TODO:
+# LCA TODO:
     # Add all config for LCA to greenheart_config yaml as input
     # update greenheart_simulation.py 
         # call of post_process_simulation() with flags for run_lca()
     # update post_process_simulation() to call run_lca()
-    # update reference_plant input yamls for with lca_config        
-#NOTE: Suedocode:
-    # x 1. define conversions
-    # x 2. pull greet values (start- pull all, optimal- based on hopp/system config)
-    # x 3. define variables to each years LCA calculation data
-    # x 4. logic to convert atb_year to cambium_year (+5 yrs)
-    # x 5. define lists to hold data for all LCA calculations / cambium years
-    # x 6. read in hopp data as df (energy to electrolyzer kwh, energy from grid kwh, energy from renewables kwh, total energy kwh)
-    # x 7. loop through cambium files, read in data, concat with hopp data, perform calculations based on grid case, append data to lists from 5
-    # x 8. after looping through all cambium files, create dataframe with lists from 5/7 (emissions_intensities_df)
-    # x 9. calculate endoflife_year = cambium_year + system_life
-    # x 10. define lists for interpolated data
-    # x 11. loop through each year between cambium_year and endoflife_year
-        #NOTE: pending question on extrapolation vs using minimum cambium_year data when year < min(cambium_year)
-    # x 12. sum interpolated lists * annual h2 prod sum / h2prod_life_sum to calculate each _LCA value
-    # x 13. put all cumulative metrics into dictionary and then dataframe 
-    # 14. save as csv
-        # either return df, then save as csv as part of post_process
-        # OR return dictionary, then load as df and save as csv in post_process
+    # confirm naming convention for saved LCA results csv and any printing of values in post_process_simulation()
+    # update reference_plant input yamls for with lca_config
+    # confirm removal of h2 from average lca value calculations
+    # confirm outstanding variables in lca_dict (first 5 variables)
+    # confirm if additional site / system config needs to be saved in output lca_results.csv
 
 def run_lca(
     hopp_results,
@@ -1640,7 +1626,7 @@ def run_lca(
     #------------------------------------------------------------------------------
     # Water
     #------------------------------------------------------------------------------
-    #TODO: add water supply type to greenheart_config
+    #TODO: add water supply type to greenheart_config yaml
     if greenheart_config['lca_config']['water_type'] == 'desal':
         H2O_supply_EI = greet_data_dict['desal_H2O_supply_EI']                              # GHG Emissions Intensity of reverse osmosis desalination and supply of that water to processes (kg CO2e/gal H2O).
     elif greenheart_config['lca_config']['water_type'] == 'ground':
@@ -1654,7 +1640,7 @@ def run_lca(
     #------------------------------------------------------------------------------
     # Renewable infrastructure embedded emission intensities
     #------------------------------------------------------------------------------
-    #TODO: add electrolyzer type (pem, alkaline, soec) to lca_config yaml
+    #TODO: add electrolyzer type (pem, alkaline, soec) to greenheart_config yaml
     if greenheart_config['lca_config']['electrolyzer_type'] == 'pem':
         ely_stack_capex_EI = greet_data_dict['pem_ely_stack_capex_EI']                      # PEM electrolyzer CAPEX emissions (kg CO2e/kg H2)
         ely_stack_and_BoP_capex_EI = greet_data_dict['pem_ely_stack_and_BoP_capex_EI']      # PEM electrolyzer stack CAPEX + Balance of Plant emissions (kg CO2e/kg H2)
@@ -1744,20 +1730,18 @@ def run_lca(
                                )
 
     # Read in Cambium data and combine with hopp electrolyzer data
-    # NOTE: For the LRMER_X_Y metrics: only lrmer_co2e_c, lrmer_co2e_p, and lrmer_co2e are used in actual LCA analysis
+    # NOTE: Additional LRMER values for CO2, CH4, and NO2 are available through the cambium call, but not used in this analysis
     for resource_file in cambium_data.resource_files:
         cambium_data_df = pd.read_csv(resource_file,
                                       index_col= None,
                                       header = 0, 
-                                      usecols = ['lrmer_co2_c','lrmer_ch4_c','lrmer_n2o_c','lrmer_co2_p','lrmer_ch4_p','lrmer_n2o_p','lrmer_co2e_c','lrmer_co2e_p','lrmer_co2e',\
+                                      usecols = ['lrmer_co2e_c','lrmer_co2e_p','lrmer_co2e',\
                                                  'generation','battery_MWh','biomass_MWh','beccs_MWh','canada_MWh','coal_MWh','coal-ccs_MWh','csp_MWh','distpv_MWh',\
                                                  'gas-cc_MWh','gas-cc-ccs_MWh','gas-ct_MWh','geothermal_MWh','hydro_MWh','nuclear_MWh','o-g-s_MWh','phs_MWh,upv_MWh','wind-ons_MWh','wind-ofs_MWh']
                                     )
         cambium_data_df = cambium_data_df.reset_index().rename(columns = {'index':'Interval',
-                                                                          'lrmer_co2_c':'LRMER CO2 combustion (kg-CO2/MWh)','lrmer_ch4_c':'LRMER CH4 combustion (g-CH4/MWh)',
-                                                                          'lrmer_n2o_c':'LRMER N2O combustion (g-N2O/MWh)','lrmer_co2_p':'LRMER CO2 precombustion (kg-CO2/MWh)',
-                                                                          'lrmer_ch4_p':'LRMER CH4 precombustion (g-CH4/MWh)','lrmer_n2o_p':'LRMER N2O precombustion (g-N2O/MWh)',
-                                                                          'lrmer_co2e_c':'LRMER CO2 equiv. combustion (kg-CO2e/MWh)','lrmer_co2e_p':'LRMER CO2 equiv. precombustion (kg-CO2e/MWh)',
+                                                                          'lrmer_co2e_c':'LRMER CO2 equiv. combustion (kg-CO2e/MWh)',
+                                                                          'lrmer_co2e_p':'LRMER CO2 equiv. precombustion (kg-CO2e/MWh)',
                                                                           'lrmer_co2e':'LRMER CO2 equiv. total (kg-CO2e/MWh)'})
         cambium_data_df['Interval'] = cambium_data_df['Interval']+1
         cambium_data_df = cambium_data_df.set_index('Interval')
@@ -1801,7 +1785,7 @@ def run_lca(
                          + (generation_annual_geothermal_fraction * geothermal_binary_fraction * geothermal_binary_capex_EI) + (generation_annual_geothermal_fraction * geothermal_flash_fraction * geothermal_flash_capex_EI) + (generation_annual_hydro_fraction * hydro_capex_EI) + (generation_annual_wind_fraction * wind_capex_EI) + (generation_annual_solar_fraction * solar_pv_capex_EI)\
                          + (generation_annual_battery_fraction * battery_EI) * g_to_kg # Grid Imbedded Emissions Intensity accounting for grid mix of power sources (kg CO2e/kwh)
 
-        #NOTE: current config assumes NH3 and Steel are always grid powered / grid connected, electricity needed for these processes comes from the grid not renewables
+        #NOTE: current config assumes SMR, ATR, NH3, and Steel processes are always grid powered / grid connected, electricity needed for these processes does not come from renewables
         if 'hybrid-grid' in grid_case:
             # Calculate grid-connected electrolysis emissions (kg CO2e/kg H2), future cases should reflect targeted electrolyzer electricity usage
             electrolysis_Scope3_EI = ely_stack_and_BoP_capex_EI + (ely_H2O_consume * H2O_supply_EI) + ((scope3_grid_emissions_from_ely_electricity_consume_annual_sum + (wind_capex_EI * g_to_kg * wind_annual_energy_kwh) + (solar_pv_capex_EI * g_to_kg * solar_pv_annual_energy_kwh) + (grid_capex_EI * grid_electricity_to_ely_annual_sum_MWh * MWh_to_kWh)) / h2prod_annual_sum)
@@ -2455,9 +2439,11 @@ def run_lca(
                 'Steel ATR with CCS Total GHG Emissions (kg-CO2e/MT steel)': [steel_atr_ccs_total_LCA],                                            
                 }
 
-    emissions_and_h2_df = pd.DataFrame(data=lca_dict)
+    lca_df = pd.DataFrame(data=lca_dict)
 
-    #TODO: pull site related data and concat to dataframe:
+    return lca_df
+
+    #TODO: For Masha - do we need to pull site related data and concat to dataframe?
         # site: = state
             # use lat/long instead?
         # year = cambium_year
@@ -2517,6 +2503,7 @@ def post_process_simulation(
     plant_design_number,
     incentive_option,
     solver_results=[],
+    run_lca=False,
     show_plots=False,
     save_plots=False,
     verbose=False,
@@ -2535,7 +2522,6 @@ def post_process_simulation(
         "#933C06",
         "#D9531E",
     ]
-    # load saved results
 
     # post process results
     if verbose:
@@ -2567,6 +2553,14 @@ def post_process_simulation(
             ),
         )
 
+    # Run LCA analysis if flag = True
+    if run_lca:
+        lca_df = run_lca(hopp_results = hopp_results,
+                         electrolyzer_physics_results = electrolyzer_physics_results,
+                         hopp_config = hopp_config,
+                         greenheart_config =  greenheart_config
+                        )
+
     if show_plots or save_plots:
         visualize_plant(
             hopp_config,
@@ -2589,6 +2583,7 @@ def post_process_simulation(
         output_dir + "data/",
         output_dir + "data/lcoe/",
         output_dir + "data/lcoh/",
+        output_dir + "data/lca/",
     ]
     for sp in savepaths:
         if not os.path.exists(sp):
@@ -2613,6 +2608,13 @@ def post_process_simulation(
         )
     )
 
+    #TODO: clarify file name desired and add additional descriptors to filename based on yamls inputs
+    if run_lca:
+        lca_df.to_csv(
+            savepaths[3]
+            + "LCA_results.csv"
+        )
+        
     # create dataframe for saving all the stuff
     greenheart_config["design_scenario"] = design_scenario
     greenheart_config["plant_design_number"] = plant_design_number
