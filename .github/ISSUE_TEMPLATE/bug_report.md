@@ -28,19 +28,22 @@ IMPORTANT NOTES
    information is always helpful to ensure you receive the help you need.
 -->
 
-# Add meaningful title here
 <!--The title should clearly define the issue succinctly.-->
+# Add meaningful title here
 
-<Describe your bug/issue here using as much detail as necessary.>
+<!-- Describe your bug/issue here using as much detail as necessary. -->
+
 
 ## How to reproduce
 
-<Describe how another person with no context can recreate this issue.>
+<!-- Describe how another person with no context can recreate this issue. -->
+
 
 ## Relevant output
 
-<Include any output, plots, tracebacks, or other means of communication here to add context to the
-problem. All code and full tracebacks should be properly markdown formatted.>
+<!-- Include any output, plots, tracebacks, or other means of communication here to add context to
+the problem. All code and full tracebacks should be properly markdown formatted. -->
+
 
 ## System Information
 <!-- Add your information here. -->
@@ -50,7 +53,7 @@ problem. All code and full tracebacks should be properly markdown formatted.>
   <!-- All OS: `python --version`-->
 - GreenHEART version: <0.1.1>
   <!--
-  Unix: `pip list --format freeze | grep greenheart`
+  Unix: pip freeze | grep greenheart | awk -F"git@" '/git@/{print $2}' | awk -F"#egg" '/#egg/{print $1}'
   Windows: `pip list --format freeze | findstr greenheart`
   -->
   - <Installed from source using an editable installation with developer tools: `pip install -e .[develop]`>
@@ -71,4 +74,4 @@ demonstrated below to replacing all relavant packages and their versions.
   | numpy | <1.26.4> |
   | Pyomo | <6.8.0> |
   | scipy | <1.14.1> |
-  | <another-package> | <version> |
+  | <another-relevant-package> | <version> |
