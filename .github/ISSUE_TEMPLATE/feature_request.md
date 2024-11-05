@@ -12,8 +12,7 @@ understand the motivation and proposed solution.
 
 IMPORTANT NOTES
 
-1. Replace all example text (contained in "<>") or anywhere specifically commenting to replace the
-   text, leaving HTML comments in place (formatted like this large block so it won't show up in
+1. Leave all HTML comments in place (formatted like this large block so it won't show up in
    your Feature Request text.)
 2. Use GH flavored markdown: https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax,
    especially for code snippets, which should look like the following:
@@ -26,19 +25,22 @@ IMPORTANT NOTES
    do, including any finer details to guide implementation.
 -->
 
-# Add meaningful title here
 <!--The title should clearly define the feature request/enhancement succinctly.-->
+# Add meaningful title here
 
-<Describe the desired enhancement.>
+<!-- Describe the desired enhancement. -->
+
 
 ## Proposed solution
 
-<Please include pseudocode (markdown-formatted), images, or any other visual aids to communicate the idea.>
+<!-- Please include pseudocode (markdown-formatted), images, or any other visual aids to communicate the idea. -->
+
 
 ## Alternatives considered
 
-<Describe workarounds or alternatives even if hacky or incomplete. Sometimes these are the best solution!>
+<!-- Describe workarounds or alternatives even if hacky or incomplete. Sometimes these are the best solution! -->
+
 
 ## Additional context
 
-<Provide anything else that helps to communicate the idea here.>
+<!-- Provide anything else that helps to communicate the idea here. -->
