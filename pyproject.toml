@@ -52,7 +52,6 @@ dependencies = [
     "HOPP>=3.0",
     "orbit-nrel>=1.1",
     "openmdao[all]",
-    "ProFAST",
 ]
 keywords = [
     "python3",

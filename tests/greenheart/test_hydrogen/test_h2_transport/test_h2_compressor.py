@@ -43,7 +43,7 @@ class TestH2Compressor():
         comp = Compressor(p_outlet, flow_rate_kg_per_day, p_inlet=p_inlet, n_compressors=n_compressors, sizing_safety_factor=sizing_safety_factor)
         comp.compressor_power()
         _motor_rating, total_system_power = comp.compressor_system_power()
-        assert total_system_power == approx(3627.3907562149357)
+        assert total_system_power == 3627.3907562149357
 
     def test_max_flow_rate_per_compressor(self):
         p_inlet = 20 # bar

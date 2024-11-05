@@ -124,7 +124,7 @@ pip install -e ".[all]"
 
     ```bash
     conda install -y -c conda-forge glpk
-    pip install electrolyzer@git+https://github.com/jaredthomas68/electrolyzer.git@smoothing
+    pip install ProFAST@git+https://github.com/NREL/ProFAST.git
     ```
 
     Note: Unix users should install Cbc via:
