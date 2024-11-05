@@ -24,8 +24,8 @@ IMPORTANT NOTES
    print(a + b)
    ```
 3. Please be as thorough as possible when describing what went wrong, and what was expected from a
-   correct solution. This might look different depending on the nature of the bug, but more
-   information is always best to ensure you receive the help you need.
+   correct solution. The amount of information required to describe the bug may differ, but more
+   information is always helpful to ensure you receive the help you need.
 -->
 
 # Add meaningful title here
