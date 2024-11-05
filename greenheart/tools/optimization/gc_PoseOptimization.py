@@ -26,20 +26,6 @@ class PoseOptimization(object):
 
         self.config = config
 
-        self.nlopt_methods = [
-            "GN_DIRECT",
-            "GN_DIRECT_L",
-            "GN_DIRECT_L_NOSCAL",
-            "GN_ORIG_DIRECT",
-            "GN_ORIG_DIRECT_L",
-            "GN_AGS",
-            "GN_ISRES",
-            "LN_COBYLA",
-            "LD_MMA",
-            "LD_CCSAQ",
-            "LD_SLSQP",
-        ]
-
         self.scipy_methods = [
             "SLSQP",
             "Nelder-Mead",
@@ -264,20 +250,6 @@ class PoseOptimization(object):
                     "run_parallel",
                 ]
                 opt_prob = self._set_optimizer_properties(opt_prob, options_keys)
-
-            elif opt_options["solver"] in self.nlopt_methods:
-                try:
-                    from wisdem.optimization_drivers.nlopt_driver import NLoptDriver
-                except:
-                    raise ImportError(
-                        "You requested an optimization method from NLopt, but need to first install NLopt to use this method."
-                    )
-
-                opt_prob.driver = NLoptDriver()
-                opt_prob.driver.options["optimizer"] = opt_options["solver"]
-                options_keys = ["tol", "xtol", "max_iter", "max_time", "numgen"]
-                mapped_keys = {"max_iter": "maxiter", "max_time": "maxtime"}
-                opt_prob = self._set_optimizer_properties(opt_prob, options_keys, mapped_keys=mapped_keys)
 
             else:
                 raise ValueError(f"The {self.config.greenheart_config['opt_options']['driver']['optimization']['solver']} optimizer is not yet supported!")
