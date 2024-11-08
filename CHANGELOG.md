@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- add `CoolProp` to `project.toml`
+- add `CoolProp` to `pyproject.toml`
 
 ## v0.1.3 [1 November 2024]
 
