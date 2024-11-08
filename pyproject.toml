@@ -53,6 +53,7 @@ dependencies = [
     "orbit-nrel>=1.1",
     "openmdao[all]",
     "ProFAST",
+    "CoolProp",
 ]
 keywords = [
     "python3",

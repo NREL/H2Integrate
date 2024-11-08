@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## Unreleased
+
+- add `CoolProp` to `project.toml`
+
 ## v0.1.3 [1 November 2024]
 
 - Replaces the git ProFAST installation with a PyPI installation.
