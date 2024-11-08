@@ -59,7 +59,8 @@ the problem. All code and full tracebacks should be properly markdown formatted.
   - <Installed from source using an editable installation with developer tools: `pip install -e .[develop]`>
   - Commit hash: <commit-hash>
     <!--
-    Unix: pip freeze | grep greenheart | awk -F"git@" '/git@/{print $2}' | awk -F"#egg" '/#egg/{print $1}'
+    Unix: `pip freeze | grep greenheart | awk -F"git@" '/git@/{print $2}' | awk -F"#egg" '/#egg/{print $1}'`
+    Windows: `pip freeze | findstr greenheart`, then copy the full git hash between "git@" and "#egg"
     -->
 
 ### Relevant library versions
