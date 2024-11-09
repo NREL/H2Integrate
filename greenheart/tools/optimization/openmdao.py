@@ -182,7 +182,7 @@ class HOPPComponent(om.ExplicitComponent):
         self.add_output("hybrid_electrical_generation_capex", units="USD")
         self.add_output("hybrid_electrical_generation_opex", units="USD")
         self.add_output("aep", units="kW*h")
-        self.add_output("lcoe_real", units="USD/(MW*h)")
+        self.add_output("lcoe_real", units="USD/(kW*h)")
         self.add_output("power_signal", units="kW", val=np.zeros(8760))
 
     def compute(self, inputs, outputs):
@@ -216,6 +216,8 @@ class HOPPComponent(om.ExplicitComponent):
                 
         # run simulation
         hi.simulate(25)
+
+        import pdb; pdb.set_trace()
 
         if self.options["verbose"]:
             print(f"obj: {hi.system.annual_energies.hybrid}")
