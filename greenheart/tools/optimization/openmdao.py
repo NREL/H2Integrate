@@ -217,8 +217,6 @@ class HOPPComponent(om.ExplicitComponent):
         # run simulation
         hi.simulate(25)
 
-        import pdb; pdb.set_trace()
-
         if self.options["verbose"]:
             print(f"obj: {hi.system.annual_energies.hybrid}")
 
