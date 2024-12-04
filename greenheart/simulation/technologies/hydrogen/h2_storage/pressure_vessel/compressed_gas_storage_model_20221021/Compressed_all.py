@@ -6,7 +6,7 @@ Created on Mon Oct 17 20:08:09 2022
 Revisions:
 - 20221118:
     Author: Jared J. Thomas
-    Description: 
+    Description:
         - Reformatted to be a class
 """
 
@@ -26,11 +26,11 @@ Returns:(can be from separate functions and/or methods as it makes sense):
 
 # package imports
 import os
+
 import numpy as np
 
-# local imports
-# from Compressed_gas_function import CompressedGasFunction
 from .Compressed_gas_function import CompressedGasFunction
+
 
 class PressureVessel():
     def __init__(self, Wind_avai=80, H2_flow=200, cdratio=1, Energy_cost=0.07, cycle_number=1, parent_path=os.path.abspath(os.path.dirname(__file__)), spread_sheet_name="Tankinator.xlsx", verbose=False):
@@ -46,7 +46,7 @@ class PressureVessel():
 
         self.compressed_gas_function = CompressedGasFunction(path_tankinator=os.path.join(parent_path, spread_sheet_name))
         self.compressed_gas_function.verbose = verbose
-        
+
     def run(self):
         #####Run calculation########
         self.compressed_gas_function.func(Wind_avai=self.Wind_avai, H2_flow=self.H2_flow, cdratio=self.cdratio, Energy_cost=self.Energy_cost, cycle_number=self.cycle_number)
@@ -68,12 +68,12 @@ class PressureVessel():
         self.c_fit_opex = self.compressed_gas_function.c_op_fit
 
     def calculate_from_fit(self, capacity_kg):
-        capex_per_kg = self.compressed_gas_function.exp_log_fit([self.a_fit_capex, self.b_fit_capex, self.c_fit_capex], capacity_kg) 
-        opex_per_kg = self.compressed_gas_function.exp_log_fit([self.a_fit_opex, self.b_fit_opex, self.c_fit_opex], capacity_kg) 
+        capex_per_kg = self.compressed_gas_function.exp_log_fit([self.a_fit_capex, self.b_fit_capex, self.c_fit_capex], capacity_kg)
+        opex_per_kg = self.compressed_gas_function.exp_log_fit([self.a_fit_opex, self.b_fit_opex, self.c_fit_opex], capacity_kg)
         energy_per_kg_h2 = self.compressed_gas_function.energy_function(capacity_kg)/capacity_kg
 
-        # NOTE ON ENERGY: the energy value returned here is the energy used to fill the 
-        # tanks initially for the first fill and so can be used as an approximation for the energy used on a per kg basis. 
+        # NOTE ON ENERGY: the energy value returned here is the energy used to fill the
+        # tanks initially for the first fill and so can be used as an approximation for the energy used on a per kg basis.
         # If cycle_number > 1, the energy model output is incorrect.
 
         capex = capex_per_kg*capacity_kg
@@ -125,7 +125,7 @@ class PressureVessel():
                 tank_footprint= tank_area*packing_ratio
 
         return (tank_footprint, Ntank*tank_footprint)
-    
+
     def get_tank_mass(self, capacity_kg):
         """
         gets the mass required for the H2 tanks
@@ -153,7 +153,7 @@ class PressureVessel():
             - N_sites: number of sites (e.g. turbines) where pressure vessels will be placed
 
         returns:
-            - 
+            -
         """
 
         # assume that the total target capacity is equally distributed across sites
@@ -185,7 +185,7 @@ if __name__ == "__main__":
     print("tank length:", storage.compressed_gas_function.Louter)
     print("tank footprint (upright):", storage.get_tank_footprint(capacity_req, upright= True)[0])
     print("tank footprint (flat):", storage.get_tank_footprint(capacity_req, upright= False)[0])
-    
+
     print("\nnumber of tanks req'd:",
           storage.get_tanks(capacity_req))
     print("total footprint (upright):", storage.get_tank_footprint(capacity_req, upright= True)[1])

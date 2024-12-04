@@ -1,13 +1,12 @@
 import copy
-import numpy as np
-import matplotlib.pyplot as plt
 import os
 
-
-from hopp.simulation.technologies.sites import SiteInfo
-from hopp.simulation.technologies.sites import flatirons_site as sample_site
+import matplotlib.pyplot as plt
+import numpy as np
 from hopp.simulation.hopp_interface import HoppInterface
 from hopp.simulation.technologies.layout.wind_layout_tools import create_grid
+from hopp.simulation.technologies.sites import SiteInfo
+from hopp.simulation.technologies.sites import flatirons_site as sample_site
 
 
 # Function to set up the HOPP model
@@ -23,7 +22,7 @@ def setup_hopp(
     save_plots=False,
     output_dir="./output/",
 ):
-    
+
     if "battery" in hopp_config["technologies"].keys() and \
         ("desired_schedule" not in hopp_config["site"].keys() or hopp_config["site"]["desired_schedule"] == []):
         hopp_config["site"]["desired_schedule"] = [greenheart_config["electrolyzer"]["rating"]]*8760
@@ -46,7 +45,7 @@ def setup_hopp(
         greenheart_config["site"]["mean_windspeed"] = np.average(wind_speed)
 
     ################ set up HOPP technology inputs
-    
+
     if hopp_config["site"]["wind"]:
         if hopp_config["technologies"]["wind"]["model_name"] == "floris":
             if design_scenario["wind_location"] == "offshore":
@@ -141,13 +140,13 @@ def setup_hopp(
 
     if "battery" in hopp_config_internal["technologies"].keys():
         hopp_config_internal["site"].update({"desired_schedule": hopp_site.desired_schedule})
-        
+
     hi = HoppInterface(hopp_config_internal)
     hi.system.site = hopp_site
 
     if "wave" in hi.system.technologies.keys():
         hi.system.wave.create_mhk_cost_calculator(wave_cost_dict)
-        
+
     if show_plots or save_plots:
         # plot wind resource if desired
         print("\nPlotting Wind Resource")

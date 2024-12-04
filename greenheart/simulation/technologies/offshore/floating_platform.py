@@ -1,25 +1,25 @@
 """
 Author:Charles Kiefer
 Date: 4/11/2023
-Institution: National Renewable Energy Lab 
-Description: This file shall handle costing and sizing of offshore floating platforms deicated to hydrogen production.  It uses the 
+Institution: National Renewable Energy Lab
+Description: This file shall handle costing and sizing of offshore floating platforms deicated to hydrogen production.  It uses the
              same foundation as fixed_platform.py.  Both have been modeled off of existing BOS cost/sizing calculations fond in ORBIT.
              It can be run as standalone functions or as appended ORBIT project phases.
 
 
-             
+
 Sources:
     - [1] ORBIT: https://github.com/WISDEM/ORBIT v1.1
 Args:
     - tech_required_area: (float): area needed for combination of all tech (m^2), not including buffer or working space
     - tech_combined_mass: (float): mass of all tech being placed on the platform (kg or tonnes)year
 
-   
+
     - depth: (float): bathometry at the platform location (m) ##Site depths for floating projects need to be at depths 500 m to 1500 m because of Orbit Semitaut limitations (7/31)
     - distance_to_port: (float): distance ships must travel from port to site location (km)
-    
+
     Future arguments: (Not used at this time)
-    - construction year  (int): 
+    - construction year  (int):
     - lifetime (int): lifetime of the plant in years (may not be needed)
 
 Returns:
@@ -29,26 +29,26 @@ Returns:
     - platform_opex (float): the OPEX (annual, fixed) in USD for the platform
 
 """
-''' 
+'''
 Notes:
     Thank you Jake Nunemaker's oswh2 repository and Rebecca Fuchs SemiTaut_mooring repository!!!
     pile_cost=0 $US/tonne for monopile construction. Not a bug, this # is consistent with the rest of ORBIT
 '''
 
-import os
 import math
-# 
+import os
+
+import numpy as np
 from ORBIT import ProjectManager, load_config
 from ORBIT.core import Vessel
 from ORBIT.core.library import initialize_library
-from ORBIT.phases.design import DesignPhase
+from ORBIT.phases.design import DesignPhase, MooringSystemDesign
 from ORBIT.phases.install import InstallPhase
-from ORBIT.phases.design import MooringSystemDesign
-
 from scipy.interpolate import interp1d
-import numpy as np
 
-from greenheart.simulation.technologies.offshore.all_platforms import calc_platform_opex, install_platform
+from greenheart.simulation.technologies.offshore.all_platforms import (
+    calc_platform_opex, install_platform)
+
 
 class FloatingPlatformDesign(DesignPhase):
     '''
@@ -62,10 +62,10 @@ class FloatingPlatformDesign(DesignPhase):
         "site": {
             "distance" : "int | float",
             "depth" : "int | float",
-        }, 
+        },
 
         "equipment": {
-            "tech_required_area" : "float", 
+            "tech_required_area" : "float",
             "tech_combined_mass" : "float",
             "topside_design_cost": "USD (optional, default:4.5e6)",
             "fabrication_cost_rate": "USD/t (optional, default: 14500.)",
@@ -76,17 +76,17 @@ class FloatingPlatformDesign(DesignPhase):
 
     # Takes in arguments and initialize library files
     def __init__(self, config, **kwargs):
-        
+
         self.phase = "H2 Floating Platform Design"
 
         config = self.initialize_library(config, **kwargs)
         self.config = self.validate_config(config)
 
         self._outputs = {}
-            # Runs the design cost models 
+            # Runs the design cost models
 
     def run(self):
-        
+
         #print("Floating Platform Design run() is working!!!")
 
         self.distance = self.config['site']['distance']     # km
@@ -109,13 +109,13 @@ class FloatingPlatformDesign(DesignPhase):
         MooringSystemDesign.MooringSystemDesign.calculate_line_length_mass(self)
         MooringSystemDesign.MooringSystemDesign.calculate_anchor_mass_cost(self)
         MooringSystemDesign.MooringSystemDesign.determine_mooring_line_cost(self)
-        total_cost, total_mass = calc_substructure_mass_and_cost(self.mass, self.area, 
+        total_cost, total_mass = calc_substructure_mass_and_cost(self.mass, self.area,
                         self.depth, fab_cost_rate, design_cost, steel_cost,
                         self.line_cost, self.anchor_cost, self.anchor_mass, self.line_mass, self.num_lines)
 
-        # Create an ouput dict 
+        # Create an ouput dict
         self._outputs['floating_platform'] = {
-            "mass" : total_mass, 
+            "mass" : total_mass,
             "area" : self.area,
             "total_cost" : total_cost
         }
@@ -139,20 +139,20 @@ class FloatingPlatformDesign(DesignPhase):
 
 class FloatingPlatformInstallation(InstallPhase):
     '''
-    This is a modified class based on ORBIT's install phase 
+    This is a modified class based on ORBIT's install phase
     '''
 
     #phase = "H2 Floating Platform Installation"
-    
+
     # Expected inputs from config yaml file
     expected_config = {
         "site": {
             "distance" : "int | float",
             "depth" : "int | float",
-        }, 
+        },
 
         "equipment": {
-            "tech_required_area" : "float", 
+            "tech_required_area" : "float",
             "tech_combined_mass" : "float",
             "install_duration": "days (optional, default: 14)",
         },
@@ -160,9 +160,9 @@ class FloatingPlatformInstallation(InstallPhase):
         "oss_install_vessel" : "str | dict",
     }
 
-    # Need to initialize arguments and weather files 
+    # Need to initialize arguments and weather files
     def __init__(self, config, weather=None, **kwargs):
-        
+
         super().__init__(weather, **kwargs)
 
         config = self.initialize_library(config, **kwargs)
@@ -185,10 +185,10 @@ class FloatingPlatformInstallation(InstallPhase):
         design_cost = _platform.get('topside_design_cost', 4.5e6)   # USD
         fab_cost_rate = _platform.get('fabrication_cost_rate', 14500.)   # USD/t
         steel_cost = _platform.get('substructure_steel_rate', 3000) # USD/t
-        
+
         install_duration = _platform.get("install_duration", 14)    # days
-        
-        # Initialize vessel 
+
+        # Initialize vessel
         vessel_specs = self.config.get("oss_install_vessel", None)
         name = vessel_specs.get("name","Offshore Substation Install Vessel")
 
@@ -197,7 +197,7 @@ class FloatingPlatformInstallation(InstallPhase):
 
         vessel.initialize()
         self.install_vessel = vessel
-        
+
         # Add in the mass of the substructure to total mass (may or may not impact the final install cost)
 
         '''Calls in SemiTaut Costs and Variables'''
@@ -207,8 +207,8 @@ class FloatingPlatformInstallation(InstallPhase):
         MooringSystemDesign.MooringSystemDesign.calculate_line_length_mass(self)
         MooringSystemDesign.MooringSystemDesign.calculate_anchor_mass_cost(self)
         MooringSystemDesign.MooringSystemDesign.determine_mooring_line_cost(self)
-        
-        _, substructure_mass = calc_substructure_mass_and_cost(self.mass, self.area, 
+
+        _, substructure_mass = calc_substructure_mass_and_cost(self.mass, self.area,
                         self.depth, fab_cost_rate, design_cost, steel_cost,
                         self.line_cost, self.anchor_cost, self.anchor_mass, self.line_mass, self.num_lines)
 
@@ -224,9 +224,9 @@ class FloatingPlatformInstallation(InstallPhase):
 
         return {}
 
-    @property 
+    @property
     def installation_capex(self):
-        
+
         return self.install_capex
 
     @property
@@ -251,7 +251,7 @@ def calc_substructure_mass_and_cost(mass, area, depth, fab_cost_rate=14500., des
     default values are specified in ORBIT
     '''
     topside_mass = mass
-    topside_fab_cost_rate   =   fab_cost_rate   
+    topside_fab_cost_rate   =   fab_cost_rate
     topside_design_cost     =   design_cost
 
     '''Topside Cost & Mass
@@ -266,7 +266,7 @@ def calc_substructure_mass_and_cost(mass, area, depth, fab_cost_rate=14500., des
     substructure_cost_rate  =   sub_cost_rate        # USD/t
 
     substructure_mass       =   0.4*topside_mass        # t
-    substructure_cost       =   (substructure_mass*substructure_cost_rate)     # USD  
+    substructure_cost       =   (substructure_mass*substructure_cost_rate)     # USD
     substructure_total_mass =   substructure_mass       # t
 
     '''Total Mooring cost and mass for the substructure
@@ -274,17 +274,17 @@ def calc_substructure_mass_and_cost(mass, area, depth, fab_cost_rate=14500., des
     Mooring_mass is returned in kilograms and will need to '''
     mooring_cost = (line_cost + anchor_cost)*num_lines #USD
     mooring_mass = (line_mass + anchor_mass)*num_lines #kg
-    
+
     '''Total Platform capex = capex Topside + capex substructure'''
     total_capex = 2*(topside_cost + substructure_cost + mooring_cost)
     platform_capex  = total_capex # USD
-    platform_mass   = substructure_total_mass + topside_mass + mooring_mass/1000   # t 
+    platform_mass   = substructure_total_mass + topside_mass + mooring_mass/1000   # t
     #mass of equipment and floating substructure for substation
-    
+
     return platform_capex, platform_mass
 
 
-# Standalone test sections 
+# Standalone test sections
 if __name__ == '__main__':
     print("\n*** New FloatingPlatform Standalone test section ***\n")
 
@@ -295,7 +295,7 @@ if __name__ == '__main__':
     config_path = os.path.abspath(__file__)
     config_fname = load_config(os.path.join(config_path, os.pardir, "example_floating_project.yaml"))
 
-    
+
     #ProjectManager._design_phases.append(FloatingPlatformDesign)
     ProjectManager.register_design_phase(FloatingPlatformDesign)
     #ProjectManager._install_phases.append(FloatingPlatformInstallation)

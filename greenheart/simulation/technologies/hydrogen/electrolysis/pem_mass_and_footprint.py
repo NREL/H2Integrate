@@ -1,6 +1,7 @@
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 from scipy.optimize import curve_fit
+
 
 def _electrolyzer_footprint_data():
     """
@@ -8,7 +9,7 @@ def _electrolyzer_footprint_data():
     [1] Bolhui, 2017 https://www.irena.org/-/media/Files/IRENA/Agency/Publication/2020/Dec/IRENA_Green_hydrogen_cost_2020.pdf
         - appears to include BOS
     [2] Bourne, 2017
-        - 
+        -
     [3] McPHy, 2018 (https://mcphy.com/en/equipment-services/electrolyzers/)
     [4] Air Liquide 2021, Becancour Quebec
     """
@@ -25,9 +26,9 @@ def footprint(rating_mw):
     """
     Estimate the area required for the electrolyzer equipment using a linear scaling
     """
-    
+
     footprint_m2 = rating_mw*48000*(1/1E3) # from Singlitico 2021, Table 1 (ratio is given in m2/GW, so a conversion is used here for MW)
-    
+
     return footprint_m2
 
 def _electrolyzer_mass_data():
@@ -71,7 +72,7 @@ if __name__ == "__main__":
 
     ratings = np.arange(0,1000)
     footprints = footprint(ratings)
-    
+
     ax[0].plot(ratings, footprints, label="Scaling Factor")
     ax[0].set(xlabel="Electrolyzer Rating (MW)", ylabel="Footprint (m$^2$)")
     ax[0].legend(frameon=False)

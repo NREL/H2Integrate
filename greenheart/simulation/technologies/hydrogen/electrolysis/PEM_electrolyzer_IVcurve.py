@@ -19,13 +19,13 @@ Power production from a hydrogen PEM fuel cell from hydrogen (+/-50%
 efficiency):
 Energy: 1 kg H2 --> 16 kWh
 """
-# Updated as of 10/31/2022
 import math
-import numpy as np
 import sys
+
+import numpy as np
 import pandas as pd
-from matplotlib import pyplot as plt
 import scipy
+from matplotlib import pyplot as plt
 from scipy.optimize import fsolve
 
 np.set_printoptions(threshold=sys.maxsize)
@@ -33,7 +33,7 @@ np.set_printoptions(threshold=sys.maxsize)
 def calc_current(P_T,p1,p2,p3,p4,p5,p6): #calculates i-v curve coefficients given the stack power and stack temp
     pwr,tempc=P_T
     i_stack=p1*(pwr**2) + p2*(tempc**2)+ (p3*pwr*tempc) +  (p4*pwr) + (p5*tempc) + (p6)
-    return i_stack 
+    return i_stack
 
 class PEM_electrolyzer_LT:
     """
@@ -90,9 +90,9 @@ class PEM_electrolyzer_LT:
         self.patmo = 101325 #atmospheric pressure [Pa]
         self.mmHg_2_atm = self.mmHg_2_Pa/self.patmo #convert from mmHg to atm
 
-        
+
         self.curve_coeff=self.iv_curve() #this initializes the I-V curve to calculate current
-        self.external_power_supply() 
+        self.external_power_supply()
 
     def external_power_supply(self):
         """
@@ -120,7 +120,7 @@ class PEM_electrolyzer_LT:
                          (self.electrolyzer_system_size_MW * 1000),
                          (self.input_dict['P_input_external_kW'] -
                           (self.electrolyzer_system_size_MW * 1000)), 0)
-            
+
             #Current used to be calculated as Power/Voltage but now it uses the IV curve
             # self.output_dict['current_input_external_Amps'] = \
             #     (self.input_dict['P_input_external_kW'] * 1000 *
@@ -152,20 +152,20 @@ class PEM_electrolyzer_LT:
 
         calls cell_design() which calculates the cell voltage
         """
-        current_range = np.arange(0,self.max_cell_current+10,10) 
+        current_range = np.arange(0,self.max_cell_current+10,10)
         temp_range = np.arange(40,self.T_C+5,5)
         idx = 0
         powers = np.zeros(len(current_range)*len(temp_range))
         currents = np.zeros(len(current_range)*len(temp_range))
         temps_C = np.zeros(len(current_range)*len(temp_range))
         for i in range(len(current_range)):
-            
+
             for t in range(len(temp_range)):
                 powers[idx] = current_range[i]*self.cell_design(temp_range[t],current_range[i])*self.N_cells*(1e-3) #stack power
                 currents[idx] = current_range[i]
                 temps_C[idx] = temp_range[t]
                 idx = idx+1
-                
+
         curve_coeff, curve_cov = scipy.optimize.curve_fit(calc_current, (powers,temps_C), currents, p0=(1.0,1.0,1.0,1.0,1.0,1.0)) #updates IV curve coeff
         return curve_coeff
     def system_design(self):
@@ -214,7 +214,7 @@ class PEM_electrolyzer_LT:
         10/31/2022
         ESG: https://www.sciencedirect.com/science/article/pii/S0360319906000693
         -> calculates cell voltage to make IV curve (called by iv_curve)
-        Another good source for the equations used in this function: 
+        Another good source for the equations used in this function:
         https://www.sciencedirect.com/science/article/pii/S0360319918309017
 
         """
@@ -228,25 +228,25 @@ class PEM_electrolyzer_LT:
         # E_cell == Open Circuit Voltage - used to be a static variable, now calculated
         # NOTE: E_rev is unused right now, E_rev0 is the general nerst equation for operating at 25 deg C at atmospheric pressure
         # (whereas we will be operating at higher temps). From the literature above, it appears that E_rev0 is more correct
-        # https://www.sciencedirect.com/science/article/pii/S0360319911021380 
+        # https://www.sciencedirect.com/science/article/pii/S0360319911021380
         E_rev = 1.5184 - (1.5421 * (10 ** (-3)) * T_K) + \
                  (9.523 * (10 ** (-5)) * T_K * math.log(T_K)) + \
                  (9.84 * (10 ** (-8)) * (T_K ** 2))
-        
-        # Calculate partial pressure of H2 at the cathode: 
+
+        # Calculate partial pressure of H2 at the cathode:
         # Uses Antoine formula (see link below)
         # p_h2o_sat calculation taken from compression efficiency calculation
         # https://www.omnicalculator.com/chemistry/vapour-pressure-of-water#antoine-equation
         A = 8.07131
         B = 1730.63
         C = 233.426
-        
+
         p_h2o_sat_mmHg = 10 ** (A - (B / (C + Stack_T)))  #vapor pressure of water in [mmHg] using Antoine formula
         p_h20_sat_atm=p_h2o_sat_mmHg*self.mmHg_2_atm #convert mmHg to atm
 
-        # could also use Arden-Buck equation (see below). Arden Buck and Antoine equations give barely different pressures 
+        # could also use Arden-Buck equation (see below). Arden Buck and Antoine equations give barely different pressures
         # for the temperatures we're looking, however, the differences between the two become more substantial at higher temps
-    
+
         # p_h20_sat_pa=((0.61121*math.exp((18.678-(Stack_T/234.5))*(Stack_T/(257.14+Stack_T))))*1e+3) #ARDEN BUCK
         # p_h20_sat_atm=p_h20_sat_pa/self.patmo
 
@@ -264,21 +264,21 @@ class PEM_electrolyzer_LT:
         i_o_a = 2 * (10 ** (-7)) #anode exchange current density
         i_o_c = 2 * (10 ** (-3)) #cathode exchange current density
 
-        #below is the activation energy for anode and cathode - see  https://www.sciencedirect.com/science/article/pii/S0360319911021380 
+        #below is the activation energy for anode and cathode - see  https://www.sciencedirect.com/science/article/pii/S0360319911021380
         V_act = (((self.R * T_K) / (a_a * self.F)) * np.arcsinh(i / (2 * i_o_a))) + (
                 ((self.R * T_K) / (a_c * self.F)) * np.arcsinh(i / (2 * i_o_c)))
-        
-        # equation 13 and 12 for lambda_water_content and sigma: from https://www.sciencedirect.com/science/article/pii/S0360319917309278?via%3Dihub         
+
+        # equation 13 and 12 for lambda_water_content and sigma: from https://www.sciencedirect.com/science/article/pii/S0360319917309278?via%3Dihub
         lambda_water_content = ((-2.89556 + (0.016 * T_K)) + 1.625) / 0.1875
-        delta = 0.018 # [cm] reasonable membrane thickness of 180-µm NOTE: this will likely decrease in the future 
+        delta = 0.018 # [cm] reasonable membrane thickness of 180-µm NOTE: this will likely decrease in the future
         sigma = ((0.005139 * lambda_water_content) - 0.00326) * math.exp(
             1268 * ((1 / 303) - (1 / T_K)))   # membrane proton conductivity [S/cm]
-        
+
         R_cell = (delta / sigma) #ionic resistance [ohms]
         R_elec=3.5*(10 ** (-5)) # [ohms] from Table 1 in  https://journals.utm.my/jurnalteknologi/article/view/5213/3557
         V_cell = E_cell + V_act + (i *( R_cell + R_elec)) #cell voltage [V]
         # NOTE: R_elec is to account for the electronic resistance measured between stack terminals in open-circuit conditions
-        # Supposedly, removing it shouldn't lead to large errors 
+        # Supposedly, removing it shouldn't lead to large errors
         # calculation for it: http://www.electrochemsci.org/papers/vol7/7043314.pdf
 
         #V_stack = self.N_cells * V_cell  # Stack operational voltage -> this is combined in iv_calc for power rather than here
@@ -416,7 +416,7 @@ class PEM_electrolyzer_LT:
         p_h2o_sat = 10 ** (A - (B / (C + self.T_C)))  # [mmHg]
         p_cat = 101325  # Cathode pressure (Pa)
         #Fixed unit bug between mmHg and Pa
-        
+
         p_h2_cat = p_cat - (p_h2o_sat*self.mmHg_2_Pa) #convert mmHg to Pa
         p_s_h2_Pa = self.p_s_h2_bar * 1e5
 
@@ -486,7 +486,7 @@ class PEM_electrolyzer_LT:
         # h2_produced_kg_hr_system = h2_produced_kg_hr
         self.output_dict['h2_produced_kg_hr_system'] = h2_produced_kg_hr_system
 
-        return h2_produced_kg_hr_system, h2_production_rate_g_s 
+        return h2_produced_kg_hr_system, h2_production_rate_g_s
 
     def degradation(self):
         """
@@ -501,14 +501,14 @@ class PEM_electrolyzer_LT:
         Calculate water supply rate based system efficiency and H2 production
         rate
         TODO: Add this capability to the model
-        
+
         The 10x multiple is likely too low. See Lampert, David J., Cai, Hao, Wang, Zhichao, Keisman, Jennifer, Wu, May, Han, Jeongwoo, Dunn, Jennifer, Sullivan, John L., Elgowainy, Amgad, Wang, Michael, & Keisman, Jennifer. Development of a Life Cycle Inventory of Water Consumption Associated with the Production of Transportation Fuels. United States. https://doi.org/10.2172/1224980
         """
         # ratio of water_used:h2_kg_produced depends on power source
         # h20_kg:h2_kg with PV 22-126:1 or 18-25:1 without PV but considering water deminersalisation
         # stoichometrically its just 9:1 but ... theres inefficiencies in the water purification process
         max_water_feed_mass_flow_rate_kg_hr = 411  # kg per hour
-        h2_produced_kg_hr_system, h2_production_rate_g_s = self.h2_production_rate() 
+        h2_produced_kg_hr_system, h2_production_rate_g_s = self.h2_production_rate()
         water_used_kg_hr_system = h2_produced_kg_hr_system * 10
         self.output_dict['water_used_kg_hr'] = water_used_kg_hr_system
         self.output_dict['water_used_kg_annual'] = np.sum(water_used_kg_hr_system)

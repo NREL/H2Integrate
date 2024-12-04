@@ -1,5 +1,7 @@
-from greenheart.simulation.technologies.hydrogen.h2_transport.h2_export_pipe import run_pipe_analysis
-from numpy import isnan, flip, nansum
+from numpy import flip, isnan, nansum
+
+from greenheart.simulation.technologies.hydrogen.h2_transport.h2_export_pipe import \
+    run_pipe_analysis
 
 """
 Args:
@@ -13,13 +15,13 @@ Returns:
     opex (float): annual operating costs (USD)
 """
 def run_pipe_array(sections_distance, depth, p_inlet, p_outlet, mass_flow_rate):
-    
+
     capex = 0
     opex = 0
 
     # loop over each string
     for i, pipe_string in enumerate(sections_distance):
-        
+
         # initialize values for each string
         m_dot = 0
         p_drop = (p_inlet - p_outlet)/len(pipe_string)
@@ -42,7 +44,7 @@ def run_pipe_array(sections_distance, depth, p_inlet, p_outlet, mass_flow_rate):
                 risers = 2
             else:
                 risers = 1
-                
+
             # get specs and costs for each section
             section_outputs = run_pipe_analysis(section_length, m_dot, p_inlet, p_outlet_section, depth, risers=risers)
 
@@ -53,13 +55,13 @@ def run_pipe_array(sections_distance, depth, p_inlet, p_outlet, mass_flow_rate):
 
 #   Assuming one pipe diameter for the pipeline
 def run_pipe_array_const_diam(sections_distance, depth, p_inlet, p_outlet, mass_flow_rate):
-    
+
     capex = 0
     opex = 0
 
     # loop over each string
     for i, pipe_string in enumerate(sections_distance):
-        
+
         # Calculate maximum flow rate per pipe segment (pipe is sized to largest segment)
         m_dot = max(mass_flow_rate[i])
 

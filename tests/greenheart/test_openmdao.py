@@ -1,19 +1,21 @@
-from pytest import approx
-from pathlib import Path
-import numpy as np
 import copy
 import os
+import unittest
+from pathlib import Path
 
+import numpy as np
 import openmdao.api as om
-
 from hopp.simulation import HoppInterface
 from hopp.utilities import load_yaml
+from pytest import approx
 
-from greenheart.tools.optimization.openmdao import GreenHeartComponent, HOPPComponent, TurbineDistanceComponent, BoundaryDistanceComponent
+from greenheart.simulation.greenheart_simulation import \
+    GreenHeartSimulationConfig
 from greenheart.tools.optimization.gc_run_greenheart import run_greenheart
-from greenheart.simulation.greenheart_simulation import GreenHeartSimulationConfig
-
-import unittest
+from greenheart.tools.optimization.openmdao import (BoundaryDistanceComponent,
+                                                    GreenHeartComponent,
+                                                    HOPPComponent,
+                                                    TurbineDistanceComponent)
 
 ROOT_DIR = Path(__file__).parents[2]
 
@@ -112,16 +114,16 @@ def setup_greenheart():
     plant_design_scenario=9,
     output_level=7,
     )
-    
+
     # based on 2023 ATB moderate case for onshore wind
-    config.hopp_config["config"]["cost_info"]["wind_installed_cost_mw"] = 1434000.0 
+    config.hopp_config["config"]["cost_info"]["wind_installed_cost_mw"] = 1434000.0
     # based on 2023 ATB moderate case for onshore wind
     config.hopp_config["config"]["cost_info"]["wind_om_per_kw"] = 29.567
     config.hopp_config["technologies"]["wind"]["fin_model"]["system_costs"]["om_fixed"][0] = config.hopp_config["config"]["cost_info"]["wind_om_per_kw"]
     # set skip_financial to false for onshore wind
     config.hopp_config["config"]["simulation_options"]["wind"]["skip_financial"] = False
 
-    
+
     config.greenheart_config["opt_options"] = {
             "opt_flag": True,
             "general": {
@@ -188,7 +190,7 @@ def setup_greenheart():
                     "lower": 0.0,
                 },
             "pv_to_platform_area_ratio": {
-                "flag": False, 
+                "flag": False,
                 "upper": 1.0, # relative size of solar pv area to platform area
                 },
             "user": {}
@@ -226,7 +228,7 @@ def setup_greenheart():
                     "debug_print": False
                 },
                 "step_size_study": {
-                    "flag": False  
+                    "flag": False
                 },
             },
             "recorder": {
@@ -237,12 +239,12 @@ def setup_greenheart():
         }
 
     return config
-    
+
 
 def test_boundary_distance_component(subtests):
     turbine_x = np.array([2.0, 4.0, 6.0, 2.0, 4.0, 6.0])*100.0
     turbine_y = np.array([2.0, 2.0, 2.0, 4.0, 4.0, 4.0])*100.0
-    
+
     config_dict = load_yaml(hopp_config_filename)
     config_dict["site"]["wind_resource_file"] = wind_resource_file
     config_dict["technologies"]["wind"]["floris_config"] = floris_input_file
@@ -256,16 +258,16 @@ def test_boundary_distance_component(subtests):
     prob.setup()
 
     prob.run_model()
-    
+
     with subtests.test("test distance inside"):
         assert prob["boundary_distance_vec"][0] == 200.0
-    
+
     with subtests.test("test_distance_outside"):
 
         prob.set_val('boundary_constraint.turbine_x', np.array([-2.0, 4.0, 6.0, 2.0, 4.0, 6.0])*100.0)
         prob.set_val('boundary_constraint.turbine_y', np.array([2.0, 2.0, 2.0, 4.0, 4.0, 4.0])*100.0)
         prob.run_model()
-        
+
         assert prob["boundary_distance_vec"][0] == -200.0
 
     # TODO add analytic derivatives and test
@@ -283,16 +285,16 @@ def test_turbine_distance_component(subtests):
     prob.setup()
 
     prob.run_model()
-    
+
     expected_distances = np.array([200.0, np.sqrt(400**2 + 200**2), np.sqrt(2*200**2)])
     for i in range(len(turbine_x)):
         with subtests.test(f"for element {i}"):
             assert prob["spacing_vec"][i] == expected_distances[i]
 
 def test_hopp_component(subtests):
-    
+
     prob, turbine_x, hybrid_config_dict = setup_hopp()
-    
+
     with subtests.test("inputs_turbine_x"):
         assert prob.get_val('turbine_x')[0] == approx(turbine_x[0])
 
@@ -322,7 +324,7 @@ def test_hopp_component(subtests):
 
     with subtests.test("costs_total_capex_equals_sum"):
         assert prob.get_val('hybrid_electrical_generation_capex')[0] == approx(14400000.0 + 43620000.0 + 163100.0)
-        
+
     # with subtests.test("costs_hybrid_electrical_generation_opex"):
     #     assert prob.get_val('hybrid_electrical_generation_opex')[0] == approx(0.0)
 
@@ -339,7 +341,7 @@ def test_hopp_component(subtests):
 
 
 def test_greenheart_component(subtests):
-    
+
     config = setup_greenheart()
 
     model = om.Group()
@@ -371,7 +373,7 @@ def test_greenheart_component(subtests):
 def test_run_greenheart_run_only(subtests):
     config = setup_greenheart()
     prob, config = run_greenheart(config, run_only=True)
-    
+
     # TODO base this test value on something
     with subtests.test("lcoh"):
         assert prob["lcoh"][0] == approx(3.1691092704830357, rel=rtol)
@@ -391,7 +393,7 @@ def test_run_greenheart_run_only(subtests):
         assert prob["lcoa"]  == approx(lcoa_expected, rel=rtol)
 
 def test_run_greenheart_optimize(subtests):
-    
+
     config = setup_greenheart()
 
     prob, config = run_greenheart(config, run_only=False)
@@ -405,11 +407,6 @@ def test_run_greenheart_optimize(subtests):
     # get final LCOH
     case = cr.get_case(-1)
     lcoh_final = case.get_val("lcoh", units='USD/kg')[0]
-    
+
     with subtests.test("lcoh"):
         assert lcoh_final < lcoh_init
-
-
-
-
-

@@ -1,8 +1,11 @@
 import os
+
 import numpy as np
 import pandas as pd
 import scipy.optimize
-from greenheart.simulation.technologies.hydrogen.electrolysis.PEM_tools import get_electrolyzer_BOL_efficiency
+
+from greenheart.simulation.technologies.hydrogen.electrolysis.PEM_tools import \
+    get_electrolyzer_BOL_efficiency
 
 file_path = os.path.dirname(os.path.abspath(__file__))
 
@@ -13,8 +16,8 @@ def calc_efficiency_curve(operating_ratio, a, b, c, d):
     Efficiency curve and general equation structure from Wang et. al (2023). See README.md
     in PEM_BOP directory for more details.
 
-    Wang, X.; Star, A.G.; Ahluwalia, R.K. Performance of Polymer Electrolyte Membrane Water Electrolysis Systems: 
-    Configuration, Stack Materials, Turndown and Efficiency. Energies 2023, 16, 4964. 
+    Wang, X.; Star, A.G.; Ahluwalia, R.K. Performance of Polymer Electrolyte Membrane Water Electrolysis Systems:
+    Configuration, Stack Materials, Turndown and Efficiency. Energies 2023, 16, 4964.
     https://doi.org/10.3390/en16134964
 
     Args:

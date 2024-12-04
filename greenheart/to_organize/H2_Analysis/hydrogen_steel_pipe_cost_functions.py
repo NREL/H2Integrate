@@ -1,7 +1,8 @@
 
-from scipy.optimize import fsolve
 import numpy as np
 import pandas as pd
+from scipy.optimize import fsolve
+
 
 def get_diameter_of_pipe(L:float,m_dot:float,p_inlet:float,p_outlet:float):
     '''
@@ -60,13 +61,13 @@ def momentum_bal(x,*params):
     --------
         residual : list[float] - Residual values of momentum equation
     '''
-    
+
     #   Useful conversions
-    bar2Pa = 100000     #   Convert bar to Pa 
+    bar2Pa = 100000     #   Convert bar to Pa
     km2m = 1000         #   Convert km to m
 
     # Unload params into local varibles
-    m_dot,p_inlet,p_outlet,L,ZRT,f,nodes = params 
+    m_dot,p_inlet,p_outlet,L,ZRT,f,nodes = params
 
     #   Extract guess values
     D = x[0]                                                    #   Diameter of pipe [m]
@@ -90,7 +91,7 @@ def momentum_bal(x,*params):
     pududz = rho_avg*v_avg * (v[1:]-v[0:-1])/dz                 #   Velocity change effect [Pa/m]
 
     #   Momentum balance
-    residual = -dpdz - tau/D - pududz 
+    residual = -dpdz - tau/D - pududz
 
     return residual
 
@@ -115,31 +116,31 @@ def get_dn_schedule_of_pipe(pipe_info_dir,grade,design_option,location_class,joi
 
     # Design pressure array for ASME B31.12 Table for material performance factor
     dp_array = np.array([6.8948,13.7895,15.685,16.5474,17.9264,19.3053,20.6843])
-    
+
     # Read in possible pipe schedules for different nominal diameters in metric units
     pipe_schedules = pd.read_csv(pipe_info_dir+'pipe_dimensions_metric.csv',index_col = None,header = 0)
-    
+
     # Isolate the nominal diameter options
     dn_options = pipe_schedules['DN'].to_list()
-    
+
     for dn in dn_options:
-    
+
         #dn = dn_options[9]
-            
+
         # Clean up table leaving what is actually needed
         pipe_schedules_DN = pipe_schedules.loc[(pipe_schedules['DN'] == dn)].drop(labels = ['DN','Outer diameter [mm]'], axis = 1).transpose().reset_index()
         pipe_schedules_DN = pipe_schedules_DN.rename(columns = {pipe_schedules_DN.columns[0]:'Schedule',pipe_schedules_DN.columns[1]:'Wall thickness [mm]'}).dropna()
         pipe_schedules_DN = pipe_schedules_DN.reset_index().drop(labels = ['index'],axis=1)
-        
+
         pipe_outer_diameter = pipe_schedules.loc[(pipe_schedules['DN']==dn),'Outer diameter [mm]'].values[0]
-        
+
         if pipe_outer_diameter <= pipe_inner_diameter:
             continue
         else:
-        
+
             if design_option == 'b' or design_option == 'B':
                 mat_perf_factor = 1
-            else: 
+            else:
                 if yield_strength <= 358.528:
                     h_f_array = np.array([1,1,0.954,0.91,0.88,0.84,0.78])
                 elif yield_strength > 358.528 and yield_strength <=413.686:
@@ -147,7 +148,7 @@ def get_dn_schedule_of_pipe(pipe_info_dir,grade,design_option,location_class,joi
                 elif yield_strength > 413.686 and yield_strength <= 482.633:
                     h_f_array = np.array([0.776,0.776,0.742,0.706,0.684,0.652,0.606])
                 elif yield_strength > 482.633 and yield_strength<= 551.581:
-                    h_f_array = np.array([0.694,0.694,0.662,0.632,0.61,0.584,0.542]) 
+                    h_f_array = np.array([0.694,0.694,0.662,0.632,0.61,0.584,0.542])
                 mat_perf_factor = np.interp(design_pressure_asme,dp_array,h_f_array)
             #thickness.append(design_pressure_asme*diam_outer[0]/(2*yield_strengths.loc[k,'SMYS [Mpa]']*design_factor*joint_factor*mat_perf_factor))
             thickness = design_pressure_asme*pipe_outer_diameter/(2*yield_strength*design_factor*joint_factor*mat_perf_factor)
@@ -156,14 +157,14 @@ def get_dn_schedule_of_pipe(pipe_info_dir,grade,design_option,location_class,joi
                 thickness_of_schedule = pipe_schedules_DN.loc[pipe_schedules_DN['Schedule']==schedule_minviable,'Wall thickness [mm]'].to_list()[0]
             else:
                 continue
-                
+
             inner_diameter_min_viable_schedule = pipe_outer_diameter-2*thickness_of_schedule
-            
+
             if inner_diameter_min_viable_schedule > pipe_inner_diameter:
                 break
-    
-    
-            
+
+
+
     return(dn,pipe_outer_diameter,schedule_minviable,thickness_of_schedule)
 
 

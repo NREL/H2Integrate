@@ -1,17 +1,13 @@
 import os.path
+from typing import Dict, Optional, Union
 
 import numpy as np
 import numpy_financial as npf
-
-import ProFAST  # system financial model
-from ORBIT import ProjectManager
 import pandas as pd
-
-from typing import Dict, Union, Optional
-
-from attrs import define, Factory, field
-
+import ProFAST  # system financial model
+from attrs import Factory, define, field
 from hopp.simulation import HoppInterface
+from ORBIT import ProjectManager
 
 
 @define

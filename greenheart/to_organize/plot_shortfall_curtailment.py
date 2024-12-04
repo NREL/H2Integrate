@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 
+
 def plot_shortfall_curtailment(titletext, df_mean, df_ci, y, ylim, colors, xticks_major, xticks_minor,
                        xlabels_major, xlabels_minor,  save_location):
 

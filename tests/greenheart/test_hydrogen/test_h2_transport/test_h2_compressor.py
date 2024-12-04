@@ -1,5 +1,8 @@
-from greenheart.simulation.technologies.hydrogen.h2_transport.h2_compression import Compressor
 from pytest import approx, raises
+
+from greenheart.simulation.technologies.hydrogen.h2_transport.h2_compression import \
+    Compressor
+
 
 # test that we get the results we got when the code was received
 class TestH2Compressor():
@@ -7,7 +10,7 @@ class TestH2Compressor():
     p_outlet = 68 # bar
     flow_rate_kg_d = 9311
     n_compressors = 2
-    
+
     def test_capex(self):
         comp = Compressor(self.p_outlet, self.flow_rate_kg_d, p_inlet=self.p_inlet, n_compressors=self.n_compressors)
         comp.compressor_power()
@@ -52,4 +55,3 @@ class TestH2Compressor():
         n_compressors = 2
         with raises(ValueError, match=r".* 5\.4 .*"):
             comp = Compressor(p_outlet,flow_rate_kg_d, p_inlet=p_inlet, n_compressors=n_compressors)
-    

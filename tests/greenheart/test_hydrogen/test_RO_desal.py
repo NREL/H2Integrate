@@ -1,6 +1,7 @@
 from pytest import approx
 
-from greenheart.simulation.technologies.hydrogen.desal.desal_model_eco import RO_desal_eco
+from greenheart.simulation.technologies.hydrogen.desal.desal_model_eco import \
+    RO_desal_eco
 
 # Test values are based on hand calculations
 
@@ -27,7 +28,7 @@ class TestRO_desal():
     def test_capex(self):
         assert self.saltwater[3] == approx(91372, rel=1E-2)
         assert self.brackish[3] == approx(91372, rel=1E-2)
-    
+
     def test_opex(self):
         assert self.saltwater[4] == approx(13447, rel=1E-2)
         assert self.brackish[4] == approx(13447, rel=1E-2)
@@ -52,7 +53,7 @@ class TestRO_desal():
         for t, s in zip(total_outputs, per_system_outputs):
             assert t == approx(s*n_systems)
 
-    
+
     def test_RO_Desal_Brackish(self):
         '''Test Brackish Model'''
         outputs=RO_desal_eco(freshwater_kg_per_hr=997,salinity='Brackish')
@@ -60,6 +61,6 @@ class TestRO_desal():
         RO_desal_footprint = outputs[6]
         assert approx(RO_desal_mass) == 346.7
         assert approx(RO_desal_footprint) == .467
-        
+
 if __name__ == "__main__":
     test_set = TestRO_desal()

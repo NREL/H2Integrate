@@ -1,16 +1,14 @@
 import os
-from pytest import approx, fixture
+
 import numpy as np
-
-from greenheart.simulation.technologies.hydrogen.electrolysis.PEM_BOP.PEM_BOP import (
-    pem_bop,
-)
-from greenheart.simulation.greenheart_simulation import (
-    run_simulation,
-    GreenHeartSimulationConfig,
-)
-
 from ORBIT.core.library import initialize_library
+from pytest import approx, fixture
+
+from greenheart.simulation.greenheart_simulation import (
+    GreenHeartSimulationConfig, run_simulation)
+from greenheart.simulation.technologies.hydrogen.electrolysis.PEM_BOP.PEM_BOP import \
+    pem_bop
+
 
 @fixture
 def bop_energy():

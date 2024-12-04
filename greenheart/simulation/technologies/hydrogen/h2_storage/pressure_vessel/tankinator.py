@@ -7,15 +7,17 @@ Sources:
     - Tankinator.xlsx
 """
 
+import json
+import os
+from enum import Enum
+from typing import Union
+
 import numpy as np
 import scipy.optimize as opt
 
-from typing import Union
-from enum import Enum
-import json
-import os
+from greenheart.simulation.technologies.hydrogen.h2_storage.pressure_vessel import \
+    von_mises
 
-from greenheart.simulation.technologies.hydrogen.h2_storage.pressure_vessel import von_mises
 
 class MetalMaterial(object):
     """
@@ -36,7 +38,7 @@ class MetalMaterial(object):
         if approx_method not in ["nearest", "lookup", "interp"]:
             raise NotImplementedError("the requested approximation method " \
                                       + "(%s) is not implemented." % approx_method)
-        
+
         with open(os.path.join(os.path.split(__file__)[0],
                   "material_properties.json"), "r") as mmprop_file:
             mmprop= json.load(mmprop_file)
@@ -54,7 +56,7 @@ class MetalMaterial(object):
         self.density= self.mmprop['density_kgccm'] # kg/ccm
         self.cost_rate= self.mmprop['costrate_$kg'] # cost per kg
 
-    # nicely package an approximator function        
+    # nicely package an approximator function
     def _get_approx_fun(approx_method):
         interp_fun= None
         if approx_method == "nearest":
@@ -93,7 +95,7 @@ class Tank(object):
 
     :param tank_type: type of tank to be used, which can take values I, III, IV
             referring to all-metal, aluminum-lined carbon fiber, and HDPE-lined
-            carbon fiber, respectively, as 
+            carbon fiber, respectively, as
     :type tank_type: int, must be 1, 3, or 4
     :param material: material that the pressure vessel is made of
     :type material: str, must be in valid types
@@ -192,7 +194,7 @@ class TypeITank(Tank):
     """
     a class I tank: metal shell tank
     """
-   
+
     def __init__(self,
                  material : str,
                  yield_factor : float= 3./2.,
@@ -200,7 +202,7 @@ class TypeITank(Tank):
                  shear_approx = "interp"):
 
         super().__init__(1, yield_factor, ultimate_factor)
-        
+
         self.material= MetalMaterial(material, approx_method= shear_approx)
 
         # initial geometry values undefined
@@ -209,7 +211,7 @@ class TypeITank(Tank):
     # return functions for symmetry
     def get_thickness(self):
         return self.thickness
-    
+
     # get the outer dimensions
     def get_length_outer(self):
         """ returns the outer length of the pressure vessel in cm """
@@ -250,7 +252,7 @@ class TypeITank(Tank):
         mass_metal= self.get_mass_metal()
         if mass_metal is None: return None
         return self.material.cost_rate*mass_metal
-    
+
     def get_gravimetric_tank_efficiency(self):
         """
         returns the gravimetric tank efficiency:
@@ -334,7 +336,7 @@ class TypeITank(Tank):
         thickness_ultimate= pressure*self.radius_inner/Su*self.ultimate_factor
 
         return thickness_ultimate
-    
+
     def get_thickness_thinwall(self,
                                pressure : float = None,
                                temperature : float = None):
@@ -457,7 +459,7 @@ class TypeITank(Tank):
                                                      max_cycle_iter, adj_fac_tol)
         self.thickness= thickness
 
-    
+
 
 class LinedTank(Tank):
     """
@@ -493,7 +495,7 @@ class LinedTank(Tank):
             self.density_liner= mmprop["HDPE"]["density_kgccm"]
             self.costrate_liner= mmprop["HDPE"]["costrate_$kg"]
         self.thickness_liner_min= liner_thickness_min
-        
+
         # jacket characteristics
         self.shear_ultimate_jacket= mmprop["carbon_fiber"]["shear_ultimate_bar"]
         self.density_jacket= mmprop["carbon_fiber"]["density_kgccm"]
@@ -565,7 +567,7 @@ class LinedTank(Tank):
         if None in [self.thickness_jacket, self.thickness_ideal_jacket]: return None
 
         sf_real= self.ultimate_factor*self.thickness_jacket/self.thickness_jacket_ideal
-        
+
         return sf_real
 
     # get the liner dimensions
@@ -653,7 +655,7 @@ class LinedTank(Tank):
         mass_jacket= self.get_mass_jacket()
         if mass_jacket is None: return None
         return self.costrate_jacket*mass_jacket
-    
+
     def get_mass_tank(self):
         """
         returns the mass of the empty tank in kg
@@ -699,4 +701,3 @@ class TypeIVTank(LinedTank):
                  ultimate_factor: float = 2.25):
         super().__init__(4, False, liner_design_load_factor,
                          liner_thickness, yield_factor, ultimate_factor)
-

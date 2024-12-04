@@ -1,29 +1,28 @@
 # extra function in the osw_h2 file
-from math import floor
-import numpy as np
-import pandas as pd
 import copy
+import inspect
 import os
-import matplotlib.pyplot as plt
-import yaml
 import re
+from datetime import datetime
+from math import floor
 from pathlib import Path
 
-# HOPP functionss
+import hopp.simulation.technologies.hydrogen.electrolysis.run_h2_PEM as run_h2_PEM
+import matplotlib.pyplot as plt
+import numpy as np
+import numpy_financial as npf
+import pandas as pd
+import yaml
+from grid_price_profiles import grid_price_interpolation
 from hopp.utilities import load_yaml
+from lcoe.lcoe import lcoe as lcoe_calc
+
+from greenheart.simulation.technologies.hydrogen.desal.desal_model import \
+    RO_desal
+from greenheart.to_organize.H2_Analysis import LCA_single_scenario
+from greenheart.to_organize.H2_Analysis.compressor import Compressor
 from greenheart.to_organize.H2_Analysis.hopp_for_h2 import hopp_for_h2
 from greenheart.to_organize.H2_Analysis.simple_dispatch import SimpleDispatch
-from greenheart.to_organize.H2_Analysis.compressor import Compressor
-from greenheart.simulation.technologies.hydrogen.desal.desal_model import RO_desal
-import hopp.simulation.technologies.hydrogen.electrolysis.run_h2_PEM as run_h2_PEM
-from lcoe.lcoe import lcoe as lcoe_calc
-import numpy_financial as npf
-import inspect
-from datetime import datetime
-from grid_price_profiles import grid_price_interpolation
-
-from greenheart.to_organize.H2_Analysis import LCA_single_scenario
-
 
 
 def todict(obj, classkey=None):
@@ -723,7 +722,8 @@ def run_HOPP(
         #                         'floris_config': floris_config # if not specified, use default SAM models
         #                     }}
 
-        from greenheart.to_organize.H2_Analysis.hopp_for_h2_floris import hopp_for_h2_floris
+        from greenheart.to_organize.H2_Analysis.hopp_for_h2_floris import \
+            hopp_for_h2_floris
         custom_powercurve=False
         hybrid_plant, combined_hybrid_power_production_hopp, combined_hybrid_curtailment_hopp,\
                 energy_shortfall_hopp, annual_energies, wind_plus_solar_npv, npvs, lcoe, lcoe_nom =  \
@@ -835,7 +835,8 @@ def compressor_model(hopp_dict):
 def pressure_vessel(hopp_dict):
 
     #Pressure Vessel Model Example
-    from greenheart.simulation.technologies.hydrogen.h2_storage.pipe_storage.underground_pipe_storage import Underground_Pipe_Storage
+    from greenheart.simulation.technologies.hydrogen.h2_storage.pipe_storage.underground_pipe_storage import \
+        Underground_Pipe_Storage
     storage_input = dict()
     storage_input['h2_storage_kg'] = 18750
     # storage_input['storage_duration_hrs'] = 4
@@ -1230,14 +1231,16 @@ def calculate_financials(
         hopp_dict.add('Models', {'calculate_financials': {'input_dict': input_dict}})
 
     turbine_rating_mw = scenario['Turbine Rating']
-    from greenheart.to_organize.H2_Analysis.simple_cash_annuals import simple_cash_annuals
+    from greenheart.to_organize.H2_Analysis.simple_cash_annuals import \
+        simple_cash_annuals
 
     #Electrolyzer financial model
     if h2_model == 'H2A':
         #cf_h2_annuals = H2A_Results['expenses_annual_cashflow'] # This is unreliable.
         pass
     elif h2_model == 'Simple':
-        from greenheart.simulation.technologies.hydrogen.electrolysis.H2_cost_model import basic_H2_cost_model
+        from greenheart.simulation.technologies.hydrogen.electrolysis.H2_cost_model import \
+            basic_H2_cost_model
 
         cf_h2_annuals, electrolyzer_total_capital_cost, electrolyzer_OM_cost, electrolyzer_capex_kw, time_between_replacement, h2_tax_credit, h2_itc = \
             basic_H2_cost_model(
@@ -1478,7 +1481,8 @@ def write_outputs_RODeO(electrical_generation_timeseries,
                         ammonia_price_breakdown):
 
     turbine_rating_mw = scenario['Turbine Rating']
-    from greenheart.to_organize.H2_Analysis.simple_cash_annuals import simple_cash_annuals
+    from greenheart.to_organize.H2_Analysis.simple_cash_annuals import \
+        simple_cash_annuals
 
     total_elec_production = np.sum(electrical_generation_timeseries)
     total_hopp_installed_cost = hybrid_plant.grid._financial_model.SystemCosts.total_installed_cost
@@ -1645,7 +1649,8 @@ def write_outputs_ProFAST(electrical_generation_timeseries,
                          hopp_dict):
 
     turbine_rating_mw = scenario['Turbine Rating']
-    from greenheart.to_organize.H2_Analysis.simple_cash_annuals import simple_cash_annuals
+    from greenheart.to_organize.H2_Analysis.simple_cash_annuals import \
+        simple_cash_annuals
 
     total_elec_production = np.sum(electrical_generation_timeseries)
 
@@ -1902,7 +1907,7 @@ def write_outputs_ProFAST_SMR(fin_sum_dir,
                                             CO2_TnS_unit_cost,
                                             price_breakdown_SMR_FOM,
                                             price_breakdown_SMR_VOM,
-                                            price_breakdown_SMR_NG, 
+                                            price_breakdown_SMR_NG,
                                             price_breakdown_SMR_E,
                                             price_breakdown_taxes,
                                             price_breakdown_water_charges,
@@ -1972,19 +1977,15 @@ def steel_LCOS(
         hopp_dict.add('Models', {'steel_LCOS': {'input_dict': input_dict}})
 
     #from greenheart.to_organize.run_profast_for_steel import run_profast_for_steel
-    from run_profast_for_steel import run_profast_for_steel
     import ProFAST
+    from run_profast_for_steel import run_profast_for_steel
 
     # Specify file path to PyFAST
     # import sys
     # #sys.path.insert(1,'../PyFAST/')
-
     # sys.path.append('../PyFAST/')
-
     # import src.PyFAST as PyFAST
-
     # Steel production break-even price analysis
-
     # Could connect these to other things in the model
     steel_capacity_factor = 0.9
     steel_plant_life = 30
@@ -2067,19 +2068,17 @@ def steel_LCOS_SMR(
 
     #     hopp_dict.add('Models', {'steel_LCOS': {'input_dict': input_dict}})
 
-   # from greenheart.to_organize.run_profast_for_steel import run_profast_for_steel
-    from run_profast_for_steel import run_profast_for_steel
+   import ProFAST
+   from run_profast_for_steel import run_profast_for_steel
 
-    import ProFAST
+   from greenheart.to_organize.run_profast_for_steel import \
+       run_profast_for_steel
 
     # # Specify file path to PyFAST
     # import sys
     # #sys.path.insert(1,'../PyFAST/')
-
     # sys.path.append('../PyFAST/')
-
     # import src.PyFAST as PyFAST
-
     # Steel production break-even price analysis
 
     hydrogen_consumption_for_steel = 0.06596              # metric tonnes of hydrogen/metric tonne of steel productio
@@ -2157,17 +2156,13 @@ def levelized_cost_of_ammonia(
         hopp_dict.add('Models', {'levelized_cost_of_ammonia': {'input_dict': input_dict}})
 
     #from greenheart.to_organize.run_profast_for_ammonia import run_profast_for_ammonia
-    from run_profast_for_ammonia import run_profast_for_ammonia
-
     # Specify file path to PyFAST
     # import sys
     # #sys.path.insert(1,'../PyFAST/')
-
     # sys.path.append('../PyFAST/')
-
     # import src.PyFAST as PyFAST
-
     import ProFAST
+    from run_profast_for_ammonia import run_profast_for_ammonia
 
     # Ammonia production break-even price analysis
 
@@ -2246,18 +2241,14 @@ def levelized_cost_of_ammonia_SMR(
     #     hopp_dict.add('Models', {'levelized_cost_of_ammonia': {'input_dict': input_dict}})
 
     #from greenheart.to_organize.run_profast_for_ammonia import run_profast_for_ammonia
-    from run_profast_for_ammonia import run_profast_for_ammonia
-
     import ProFAST
+    from run_profast_for_ammonia import run_profast_for_ammonia
 
     # Specify file path to PyFAST
     # import sys
     # #sys.path.insert(1,'../PyFAST/')
-
     # sys.path.append('../PyFAST/')
-
     # import src.PyFAST as PyFAST
-
     # Ammonia production break-even price analysis
 
     hydrogen_consumption_for_ammonia = 0.197284403              # kg of hydrogen/kg of ammonia production
@@ -2330,16 +2321,16 @@ def levelized_cost_of_h2_transmission(
         }
 
         hopp_dict.add('Models', {'levelized_cost_of_h2_transmission': {'input_dict': input_dict}})
-    from greenheart.to_organize.run_profast_for_h2_transmission import run_profast_for_h2_transmission
+    import ProFAST
     from run_profast_for_h2_transmission import run_profast_for_h2_transmission
 
-    import ProFAST
+    from greenheart.to_organize.run_profast_for_h2_transmission import \
+        run_profast_for_h2_transmission
+
     # Specify file path to PyFAST
     # import sys
     # #sys.path.insert(1,'../PyFAST/')
-
     # sys.path.append('../PyFAST/')
-
     # import src.PyFAST as PyFAST
 
     pipeline_length_km = 50
@@ -2605,5 +2596,3 @@ def hydrogen_storage_capacity_cost_calcs(H2_Results,electrolyzer_size_mw,storage
     if hydrogen_storage_capacity_MWh_HHV==0:
         storage_cost_USDprkg=0
     return(hydrogen_average_output_kgprhr,hydrogen_storage_capacity_kg,hydrogen_storage_capacity_MWh_HHV,hydrogen_storage_duration_hr,storage_cost_USDprkg,status_message)
-
-

@@ -10,6 +10,7 @@ Sources:
 
 import numpy as np
 
+
 def S1(p, Re, R0): # von Mises hoop stress
     return p*(Re**2 + R0**2)/(Re**2 - R0**2)
 def S2(p, Re, R0): # von Mises axial stress
@@ -55,7 +56,7 @@ def iterate_thickness(p, R0, thickness_in,
     WTAF= wallThicknessAdjustmentFactor(p, Router, R0,
                                         Syield, Sultimate,
                                         proof_factor, burst_factor)
-    
+
     return max(1.0, WTAF), max(1.0, WTAF)*thickness_in
 
 def cycle(p, R0, thickness_init,
@@ -84,7 +85,5 @@ def cycle(p, R0, thickness_init,
         WTAF, thickness= iterate_thickness(p, R0, thickness,
                                            Syield, Sultimate,
                                            proof_factor, burst_factor)
-    
+
     return (thickness, WTAF, n_iter)
-
-

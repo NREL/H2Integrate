@@ -14,7 +14,10 @@ Sources:
 """
 
 import numpy as np
-from greenheart.simulation.technologies.hydrogen.h2_transport.h2_compression import Compressor
+
+from greenheart.simulation.technologies.hydrogen.h2_transport.h2_compression import \
+    Compressor
+
 
 class UndergroundPipeStorage():
     """
@@ -47,7 +50,7 @@ class UndergroundPipeStorage():
             - output_dict (dict):
                 - pipe_storage_capex (float): installed capital cost in 2018 [USD]
                 - pipe_storage_opex (float): OPEX (annual, fixed) in 2018  [USD/yr]
-        """           
+        """
         self.input_dict = input_dict
         self.output_dict = {}
         """"""
@@ -59,7 +62,7 @@ class UndergroundPipeStorage():
         if 'h2_storage_kg' in input_dict:
             self.h2_storage_kg = input_dict['h2_storage_kg']        #[kg]
         elif 'storage_duration_hrs' and 'flow_rate_kg_hr' in input_dict:
-            self.h2_storage_kg = input_dict['storage_duration_hrs'] * input_dict['flow_rate_kg_hr']  
+            self.h2_storage_kg = input_dict['storage_duration_hrs'] * input_dict['flow_rate_kg_hr']
         else:
             raise Exception('input_dict must contain h2_storage_kg or storage_duration_hrs and flow_rate_kg_hr')
 
@@ -79,7 +82,7 @@ class UndergroundPipeStorage():
         self.licensing_permits = input_dict.get('licensing_permits',0.1/100) # % of total capital investment
         self.comp_om = input_dict.get('compressor_om',4/100)    # % of compressor capital investment
         self.facility_om = input_dict.get('facility_om', 1/100) # % of facility capital investment minus compressor capital investment
-    
+
     def pipe_storage_capex(self):
         """
         Calculates the installed capital cost of underground pipe hydrogen storage
@@ -128,19 +131,18 @@ class UndergroundPipeStorage():
                 - pipe_storage_opex (float): OPEX (annual, fixed) in 2018  [USD/yr]
         """
         # Operations and Maintenace costs [3]
-        # Labor 
+        # Labor
         # Base case is 1 operator, 24 hours a day, 7 days a week for a 100,000 kg/day average capacity facility.  Scaling factor of 0.25 is used for other sized facilities
         annual_hours = 8760 * (self.system_flow_rate/100000)**0.25
-        self.overhead = 0.5 
+        self.overhead = 0.5
         labor = (annual_hours*self.labor_rate) * (1+self.overhead) # Burdened labor cost
         insurance = self.insurance * self.installed_capex
         property_taxes = self.property_taxes * self.installed_capex
         licensing_permits = self.licensing_permits * self.installed_capex
-        comp_op_maint = self.comp_om * self.comp_capex 
+        comp_op_maint = self.comp_om * self.comp_capex
         facility_op_maint = self.facility_om * (self.installed_capex - self.comp_capex)
 
         # O&M excludes electricity requirements
         total_om = labor+insurance+licensing_permits+property_taxes+comp_op_maint+facility_op_maint
         self.output_dict['pipe_storage_opex'] = total_om
         return total_om
-

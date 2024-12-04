@@ -3,9 +3,7 @@ import os
 from pytest import approx
 
 from greenheart.simulation.greenheart_simulation import (
-    run_simulation,
-    GreenHeartSimulationConfig,
-)
+    GreenHeartSimulationConfig, run_simulation)
 
 dirname = os.path.dirname(__file__)
 path = os.path.join(dirname, "input/")
@@ -224,7 +222,7 @@ def test_onshore_ammonia_tx_2030_base_policy(subtests):
 
     with subtests.test("aep"):
         assert output.hopp_results["hybrid_plant"].annual_energies["wind"] == approx(
-            3383439.9656016766 * 1e3, 
+            3383439.9656016766 * 1e3,
             rel=0.1
         )
 
@@ -249,7 +247,7 @@ def test_onshore_ammonia_tx_2030_base_policy(subtests):
         ] == approx(60400414.51854633, rel=0.1)
 
     with subtests.test("capex"):
-        assert sum(output.capex_breakdown.values()) == approx(1922324028.6785245, 
+        assert sum(output.capex_breakdown.values()) == approx(1922324028.6785245,
                                                               0.1
                                                               )
 

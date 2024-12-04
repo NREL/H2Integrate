@@ -1,31 +1,25 @@
+import copy
 import os
 import os.path
 from pathlib import Path
-import yaml
-import copy
 
+import matplotlib.patches as patches
+import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 import numpy as np
 import numpy_financial as npf
-import pandas as pd
-
-import matplotlib.pyplot as plt
-import matplotlib.patches as patches
-import matplotlib.ticker as ticker
-
 import ORBIT as orbit
-
-from hopp.simulation.technologies.resource.wind_resource import WindResource
-
+import pandas as pd
+import yaml
 from hopp.simulation import HoppInterface
-
-from hopp.utilities import load_yaml
-
+from hopp.simulation.technologies.resource.wind_resource import WindResource
 from hopp.tools.dispatch import plot_tools
+from hopp.utilities import load_yaml
 
 from .finance import adjust_orbit_costs
 
 """
-This function returns the ceiling of a/b (rounded to the nearest greater integer). 
+This function returns the ceiling of a/b (rounded to the nearest greater integer).
 The function was copied from https://stackoverflow.com/a/17511341/5128616
 """
 def ceildiv(a, b):
@@ -387,7 +381,7 @@ def visualize_plant(
             hopp_config["technologies"]["wind"]["floris_config"]["farm"]["layout_y"]
         )
         cable_array_points = []
-    
+
     # wind farm area
     turbine_length_x = np.max(turbine_x)-np.min(turbine_x)
     turbine_length_y = np.max(turbine_y)-np.min(turbine_y)
@@ -1099,12 +1093,12 @@ def visualize_plant(
                 label="Battery Array",
                 hatch=battery_hatch,
             )
-            ax[ax_index_detail].add_patch(battery_patch)   
+            ax[ax_index_detail].add_patch(battery_patch)
 
     else:
         battery_side_y = 0.0
-        battery_side_x = 0.0   
-    
+        battery_side_x = 0.0
+
     ## add solar
     if hopp_config["site"]["solar"]:
         component_areas['pv_area_m2'] = hopp_results["hybrid_plant"].pv.footprint_area
@@ -1375,7 +1369,7 @@ def visualize_plant(
         plt.savefig(
             savepaths[0] + "plant_layout_%i.png" % (plant_design_number), transparent=True
         )
-        
+
         df = pd.DataFrame([component_areas])
         df.to_csv(savepaths[1] + "component_areas_layout_%i.csv" % (plant_design_number), index=False)
 
@@ -1385,17 +1379,17 @@ def visualize_plant(
 
 
 def save_energy_flows(
-    hybrid_plant: HoppInterface.system, 
-    electrolyzer_physics_results, 
-    solver_results, 
-    hours, 
+    hybrid_plant: HoppInterface.system,
+    electrolyzer_physics_results,
+    solver_results,
+    hours,
     h2_storage_results,
-    ax=None, 
-    simulation_length=8760, 
+    ax=None,
+    simulation_length=8760,
     output_dir="./output/",
 ):
 
-    
+
 
     if ax == None:
         fig, ax = plt.subplots(1)
@@ -1417,7 +1411,7 @@ def save_energy_flows(
         )
         output.update({"wave generation [kW]": wave_plant_power})
     if hybrid_plant.battery:
-        battery_power_out_mw = hybrid_plant.battery.outputs.P 
+        battery_power_out_mw = hybrid_plant.battery.outputs.P
         output.update({"battery discharge [kW]": [(int(p>0))*p*1E3 for p in battery_power_out_mw]}) # convert from MW to kW and extract only discharging
         output.update({"battery charge [kW]": [-(int(p<0))*p*1E3 for p in battery_power_out_mw]}) # convert from MW to kW and extract only charging
         output.update({"battery state of charge [%]": hybrid_plant.battery.outputs.dispatch_SOC})
@@ -1432,7 +1426,7 @@ def save_energy_flows(
     output.update({"h2 production hourly [kg]": electrolyzer_physics_results["H2_Results"]["Hydrogen Hourly Production [kg/hr]"]})
     if "hydrogen_storage_soc" in h2_storage_results:
         output.update({"hydrogen storage SOC [kg]": h2_storage_results["hydrogen_storage_soc"]})
-    
+
     df = pd.DataFrame.from_dict(output)
 
     filepath = os.path.abspath(output_dir + "data/production/")

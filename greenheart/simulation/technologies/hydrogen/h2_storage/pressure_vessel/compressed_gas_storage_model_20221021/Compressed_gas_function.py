@@ -4,13 +4,13 @@ Created on Fri Jan 15 15:06:21 2021
 
 @author: ppeng
 """
-import openpyxl as openpyxl
-import numpy as np
 import math as math
+
 import matplotlib.pyplot as plt
-from scipy.optimize import curve_fit
+import numpy as np
+import openpyxl as openpyxl
 from CoolProp.CoolProp import PropsSI
-from scipy.optimize import leastsq
+from scipy.optimize import curve_fit, leastsq
 
 plt.rcParams.update({'font.size': 13})
 
@@ -19,10 +19,10 @@ class CompressedGasFunction():
     def __init__(self, path_tankinator):
         # path to the excel spreadsheet to store material properties
         self.wb_tankinator = openpyxl.load_workbook(path_tankinator, data_only=True) #Add file name
-        
+
         ################Other key inputs besides the main script##########################
         self.MW_H2=2.02e-03 #molecular weight of H2 in kg/mol
-        
+
         self.Pres=int(350) #Define storage pressure in bar, Important, if you change storage pressure, make sure to change it in the corresponding tab in Tankinator and save again
         self.Temp_c = 293 #Define storage temperature in K
         self.Pin=int(30)  #Deinfe pressure out of electrolyzer in bar
@@ -30,24 +30,24 @@ class CompressedGasFunction():
         self.T_amb=int(295)
         self.Pres3=int(35) #Define outlet pressure in bar
         self.Temp3=int(353) #Define outlet temperature in K
-        
+
         self.start_point = 10   #For setting the smallest capacity for fitting and plotting
 
-        
+
         #################Economic parameters
         self.CEPCI2007 = 525.4
         self.CEPCI2001 = 397
         self.CEPCI2017 = 567.5
-        
-        self.CEPCI_current = 708    ####Change this value for current CEPCI 
-        
+
+        self.CEPCI_current = 708    ####Change this value for current CEPCI
+
         self.wage = 36
         self.maintanance = 0.03
         self.Site_preparation = 100   #Site preparation in $/kg
-        
+
         self.Tank_manufacturing = 1.8 #self.Markup for tank manufacturing
         self.Markup = 1.5   #self.Markup for installation engineering/contingency
-        
+
         #################Other minor input parameters############
         self.R=8.314 # gas onstant m3*Pa/(molK)
         self.Heat_Capacity_Wall = 0.92 ##wall heat capacity at 298 K in kJ/kg*K for carbon fiber composite
@@ -55,7 +55,7 @@ class CompressedGasFunction():
         self.Efficiency_heater = 0.7  #Heat efficiency
 
     def exp_log_fit(self, var_op, capacity_1):
-        
+
         a_op=var_op[0]
         b_op=var_op[1]
         c_op=var_op[2]
@@ -65,28 +65,28 @@ class CompressedGasFunction():
         return fit_op_kg
 
     def residual_op(self, var_op, capacity_1, Op_c_Costs_kg):
-        
+
             fit_op_kg = self.exp_log_fit(var_op, capacity_1)
 
             return (fit_op_kg - Op_c_Costs_kg)
-    
+
     def exp_fit(self, x, a, b):
             return a*x**b
 
     def calculate_max_storage_capacity(self, Wind_avai, H2_flow, Release_efficiency):
-        
+
         H2_flow_ref = 200 #reference flow rate of steel plants in tonne/day, in case in the future it is not 200 tonne/day
-        
+
         capacity_max = (0.8044*Wind_avai**2-57.557*Wind_avai+4483.1)*(H2_flow/H2_flow_ref)/Release_efficiency*1000  ###Total max equivalent storage capacity kg
 
         return capacity_max
 
     def calculate_max_storage_duration(self, Release_efficiency, H2_flow):
 
-        t_discharge_hr_max = self.capacity_max/1000*Release_efficiency/H2_flow  ###This is the theoretical maximum storage duration 
+        t_discharge_hr_max = self.capacity_max/1000*Release_efficiency/H2_flow  ###This is the theoretical maximum storage duration
 
         return t_discharge_hr_max
-    
+
     #TODO keep breaking this up so we can run the model without running the curve fit
     def func(self, Wind_avai, H2_flow, cdratio, Energy_cost, cycle_number, capacity_max_spec=None, t_discharge_hr_max_spec=None):
         """
@@ -102,18 +102,18 @@ class CompressedGasFunction():
 
         cycle number should just be left as 1 (see compressed_all.py)
         """
-        
+
         ##############Calculation of storage capacity from duration#############
         if 1-self.Pres3/self.Pres < 0.9:
-            Release_efficiency = 1-self.Pres3/self.Pres    
+            Release_efficiency = 1-self.Pres3/self.Pres
         else:
             Release_efficiency = 0.9
-        
+
         if capacity_max_spec == None:
             self.capacity_max = self.calculate_max_storage_capacity(Wind_avai, H2_flow, Release_efficiency)
         else:
             self.capacity_max = capacity_max_spec
-        
+
         if t_discharge_hr_max_spec == None:
             self.t_discharge_hr_max = self.calculate_max_storage_duration(Release_efficiency, H2_flow)
         else:
@@ -122,7 +122,7 @@ class CompressedGasFunction():
         if self.verbose:
             print('Maximum capacity is', self.capacity_max, 'kg H2')
             print('Maximum storage duration is', self.t_discharge_hr_max, 'hr')
-        
+
         if self.Pres > 170:
         ####Use this if use type IV tanks
             tank_type= 4
@@ -136,9 +136,9 @@ class CompressedGasFunction():
             length_outer_c=Louter_c_cell.value # outer length of tank
             Router_c_cell=sheet_tankinator.cell(row= 37, column= 3)
             radius_outer_c=Router_c_cell.value # outer radius of tank
-            Cost_c_tank_cell=sheet_tankinator.cell(row=65, column=3) #Cost of one tank 
+            Cost_c_tank_cell=sheet_tankinator.cell(row=65, column=3) #Cost of one tank
             Cost_c_tank = Cost_c_tank_cell.value   ##Cost of the tank in $/tank
-            
+
         if self.Pres <= 170:
         ####Use this if use type I tanks
             tank_type= 1
@@ -152,7 +152,7 @@ class CompressedGasFunction():
             length_outer_c=Louter_c_cell.value
             Router_c_cell=sheet_tankinator.cell(row= 185, column= 3)
             radius_outer_c=Router_c_cell.value
-            Cost_c_tank_cell=sheet_tankinator.cell(row=193, column=3) #Cost of one tank 
+            Cost_c_tank_cell=sheet_tankinator.cell(row=193, column=3) #Cost of one tank
             Cost_c_tank = Cost_c_tank_cell.value   ##Cost of the tank in $/tank
 
         self.tank_type= tank_type
@@ -162,7 +162,7 @@ class CompressedGasFunction():
         self.Router= radius_outer_c
         self.Louter= length_outer_c
 
-        #####Define arrays for plotting and fitting  
+        #####Define arrays for plotting and fitting
 
         self.t_discharge_hr_1 = np.linspace (self.t_discharge_hr_max, self.t_discharge_hr_max/self.start_point, num=15)
         self.cost_kg = np.zeros(len(self.t_discharge_hr_1))
@@ -174,28 +174,28 @@ class CompressedGasFunction():
         self.capacity_1 = np.zeros(len(self.t_discharge_hr_1))
         self.Op_c_Costs_kg = np.zeros(len(self.t_discharge_hr_1))
         self.total_energy_used_kwh = np.zeros(len(self.t_discharge_hr_1))
-        
+
         ###################################################################################################
         ###################################################################################################
         ###################################################################################################
         ###############Starting detailed calculations#################################
         ###############Stage 1 calculations#################################
-        
+
         for i in range (0,len(self.t_discharge_hr_1-1)):
             t_discharge_hr = self.t_discharge_hr_1 [i]
             capacity=H2_flow*t_discharge_hr*1000/Release_efficiency #Maximum capacity in kg H2
-            
+
             self.capacity_1 [i] = capacity
-            
+
             rgas=PropsSI("D", "P", self.Pres*10**5, "T", self.Temp_c, "Hydrogen") #h2 density in kg/m3 under storage conditions
             H2_c_mass_gas_tank = Vtank_c*rgas  #hydrogen mass per tank in kg
             H2_c_mass_tank = H2_c_mass_gas_tank  #Estimation of H2 amount per tank in kg
             self.single_tank_h2_capacity_kg = H2_c_mass_tank
-            
+
             number_c_of_tanks = np.ceil(capacity/H2_c_mass_tank)
             self.number_of_tanks[i]= number_c_of_tanks
             H2_c_Cap_Storage= H2_c_mass_tank*(number_c_of_tanks-1)+capacity%H2_c_mass_tank  ####This will be useful when changing to assume all tanks are full, but will cause the model to not perform well for small scales, where 1 tank makes a large difference
-            
+
             #################Energy balance for adsorption (state 1 to state 2)########
             self.t_charge_hr=t_discharge_hr * (1/cdratio)
             t_precondition_hr=self.t_charge_hr  #correcting first cycle, useful to size based on maximum power and also when calculating the operational cost
@@ -213,7 +213,7 @@ class CompressedGasFunction():
             deltaE_c_Uwall_1_2 = self.Heat_Capacity_Wall*(Temp2-Temp1_solid)*m_c_wall*number_c_of_tanks #Net energy/enthalpy change of adsorbent in kJ
             deltaE_c_net_1_2 = deltaE_c_H2_1_2 + deltaE_c_Uwall_1_2 #Net energy/enthalpy change in kJ
             deltaP_c_net_1_2 = deltaE_c_net_1_2/self.t_charge_hr/3600  #Net power change in kW
-                
+
             #################Energy balance for desorption (state 2 to state 3)########
             Temp3_gas=self.Temp3
             Temp3_solid = Temp2
@@ -226,7 +226,7 @@ class CompressedGasFunction():
             deltaE_c_Uwall_2_3 = self.Heat_Capacity_Wall*(Temp3_solid-Temp2)*m_c_wall*number_c_of_tanks  #kJ
             deltaE_c_net_2_3 = deltaE_c_H2_2_3+deltaE_c_Uwall_2_3 # Net enthalpy change during desorption
             detlaP_c_net_2_3 = deltaE_c_net_2_3/t_discharge_hr/3600
-            
+
             ###############Energy balance for adsorption (state 4 to state 2)##########
             m_c_flow_rate_4_2 = H2_c_Cap_Storage*Release_efficiency/self.t_charge_hr/3600
             Temp4_tank=Temp2
@@ -240,12 +240,12 @@ class CompressedGasFunction():
             deltaE_c_Uwall_4_2 = self.Heat_Capacity_Wall*(Temp2-Temp4_tank)*m_c_wall*number_c_of_tanks  #kJ
             deltaE_c_net_4_2 = deltaE_c_H2_4_2 +deltaE_c_Uwall_4_2 # Net enthalpy change during desorption
             deltaP_c_net_4_2 = deltaE_c_net_4_2/self.t_charge_hr/3600
-            
-            
+
+
             ########################################Costs for cycle 1 adsorption##################################
-            
+
             ########################################CAPITAL COSTS (sized based on cycle 1 requirements)###########################################
-            
+
             ###############################Compressor costs ### axial/centrifugal
             if self.Pres>=self.Pin:
                 K=PropsSI("ISENTROPIC_EXPANSION_COEFFICIENT", "P", self.Pin*10**5, "T", self.Tin, "Hydrogen")
@@ -264,7 +264,7 @@ class CompressedGasFunction():
                     A_c_comp=A_c_comp_1_2
                 else:
                     A_c_comp=A_c_comp_4_2
-                    
+
                 # print ('work of compressor is', Work_c_comp,'J/kg')
                 # print ('Adjusted storage capacity is', H2_c_Cap_Storage, 'kg')
                 # print ('flow rate is', m_c_flow_rate_1_2, 'and', m_c_flow_rate_4_2, 'kg/s')
@@ -282,8 +282,8 @@ class CompressedGasFunction():
                 compressor_energy_used_2 = Work_c_comp*H2_c_Cap_Storage*Release_efficiency*2.8e-7
 
                 Compr_c_Energy_Costs_1 = compressor_energy_used_1*Energy_cost  #compressor electricity cost in cycle 1
-                Compr_c_Energy_Costs_2 = compressor_energy_used_2*Energy_cost #compressor electricity cost assuming in regular charging cycle 
-                
+                Compr_c_Energy_Costs_2 = compressor_energy_used_2*Energy_cost #compressor electricity cost assuming in regular charging cycle
+
                 Total_c_Compr_Cap_Cost = Compr_c_Cap_Cost + Compr_c_Cap_Cost_1
                 Total_c_Compr_Cap_Cost = Total_c_Compr_Cap_Cost*(self.CEPCI_current/self.CEPCI2001)  ##Inflation
             else:
@@ -305,26 +305,26 @@ class CompressedGasFunction():
             # print ('refrigeration capcost for compressor is $')
             # print('compressor capcost is $', Total_c_Compr_Cap_Cost)
             # print("----------")
-            
+
             ########################################Costs associated with storage tanks
-            
+
             # print("Number of tanks is: ", number_c_of_tanks)
             Storage_c_Tank_Cap_Costs=Cost_c_tank*number_c_of_tanks*self.Tank_manufacturing
             Storage_c_Tank_Cap_Costs = Storage_c_Tank_Cap_Costs*(self.CEPCI_current/self.CEPCI2007)  ##Inflation
             # print('Capcost for storage tank is', Storage_c_Tank_Cap_Costs)
             # print("----------")
-            
-            ###############################Refrigeration costs estimation adsorption process     
+
+            ###############################Refrigeration costs estimation adsorption process
             # print ('pre-conditioning time is', round (t_precondition_hr), 'hr')
-            H2_Cap=(capacity)    
+            H2_Cap=(capacity)
             Ref_c_P_net_1_2=-(deltaP_c_net_1_2-Power_c_comp_1_2)  #Refrigeration power in kW from state 1 to state 2 (precondition)
             Ref_c_P_net_4_2=-(deltaP_c_net_4_2-Power_c_comp_4_2)  #Refrigeration power in kW from state 1 to state 2 (normal charging)
-            if Ref_c_P_net_1_2 >= Ref_c_P_net_4_2:    
+            if Ref_c_P_net_1_2 >= Ref_c_P_net_4_2:
                 Net_c_Cooling_Power_Adsorption=Ref_c_P_net_1_2 #Net refrigeration power in kW
             else:
                 Net_c_Cooling_Power_Adsorption=Ref_c_P_net_4_2
             # print ('Net Cooling power for refrigeration sizing is',Net_c_Cooling_Power_Adsorption,'kW') #Cooling power in kW
-            
+
             if Net_c_Cooling_Power_Adsorption < 1000:
                 A1=-3.53E-09
                 A2=-9.94E-06
@@ -334,33 +334,33 @@ class CompressedGasFunction():
                 B1=24000
                 B2=3500
                 B3=0.9
-                Total_c_Refrig_Cap_Costs_adsorption=(B1+(B2*(Net_c_Cooling_Power_Adsorption/COP)**B3))*(self.CEPCI_current/550.8)   
+                Total_c_Refrig_Cap_Costs_adsorption=(B1+(B2*(Net_c_Cooling_Power_Adsorption/COP)**B3))*(self.CEPCI_current/550.8)
             else:
                 Total_c_Refrig_Cap_Costs_adsorption=2*10**11*self.Temp_c**-2.077*(Net_c_Cooling_Power_Adsorption/1000)**0.6
-                Total_c_Refrig_Cap_Costs_adsorption = Total_c_Refrig_Cap_Costs_adsorption*(self.CEPCI_current/self.CEPCI2017) 
-            
+                Total_c_Refrig_Cap_Costs_adsorption = Total_c_Refrig_Cap_Costs_adsorption*(self.CEPCI_current/self.CEPCI2017)
+
             ####Utility for refrigeration
             Utility_c_ref = 4.07*10**7*self.Temp_c**(-2.669) #Utility in $/GJ, here, the utility is mostly for energy assumes 16.8 $/GJ (57 $/MWh)
-            # Utility_c_refrigeration_1 = (self.CEPCI_current/self.CEPCI2017)*Utility_c_ref*-(deltaE_c_net_1_2-Work_c_comp*H2_c_Cap_Storage/1000)/1e6  
+            # Utility_c_refrigeration_1 = (self.CEPCI_current/self.CEPCI2017)*Utility_c_ref*-(deltaE_c_net_1_2-Work_c_comp*H2_c_Cap_Storage/1000)/1e6
             energy_consumption_refrigeration_1_kj = -(deltaE_c_net_1_2-Work_c_comp*H2_c_Cap_Storage/1000) # in kJ
-            
+
             Utility_c_refrigeration_1 = (Energy_cost/0.057)*Utility_c_ref*energy_consumption_refrigeration_1_kj/1e6  # changed based on discussion with original author 20221216, energy separated out 20230317
-            # print ('refrigerator capital cost for adsorption is $', Total_c_Refrig_Cap_Costs_adsorption)    
+            # print ('refrigerator capital cost for adsorption is $', Total_c_Refrig_Cap_Costs_adsorption)
             # print("------------")
-            
-            # Utility_c_refrigeration_2 = (self.CEPCI_current/self.CEPCI2017)*Utility_c_ref*-(deltaE_c_net_4_2-Work_c_comp*H2_c_Cap_Storage*Release_efficiency/1000)/1e6 
+
+            # Utility_c_refrigeration_2 = (self.CEPCI_current/self.CEPCI2017)*Utility_c_ref*-(deltaE_c_net_4_2-Work_c_comp*H2_c_Cap_Storage*Release_efficiency/1000)/1e6
             energy_consumption_refrigeration_2_kj = -(deltaE_c_net_4_2-Work_c_comp*H2_c_Cap_Storage*Release_efficiency/1000) # in kJ
             Utility_c_refrigeration_2 = (Energy_cost/0.057)*Utility_c_ref*energy_consumption_refrigeration_2_kj/1e6  # changed based on discussion with original author 20221216, energy separated out 20230317
-            
+
             # specify energy usage separately so energy usage can be used externally if desired
             joule2watthour = 1.0/3600.0 # 3600 joules in a watt hour (as also 3600 kJ in a kWh)
             energy_consumption_refrigeration_1_kwh = energy_consumption_refrigeration_1_kj*joule2watthour
             energy_consumption_refrigeration_2_kwh = energy_consumption_refrigeration_2_kj*joule2watthour
             self.total_refrigeration_energy_used_kwh = energy_consumption_refrigeration_1_kwh #+ energy_consumption_refrigeration_2_kwh
-            
+
             if self.total_refrigeration_energy_used_kwh < 0:
                 raise(ValueError("energy usage must be greater than 0"))
-            ###############################Heating costs desorption process   
+            ###############################Heating costs desorption process
             k1=6.9617
             k2=-1.48
             k3=0.3161
@@ -375,27 +375,27 @@ class CompressedGasFunction():
                 Heater_c_Cap_Cost_1=(10**(k1+k2*np.log10(Heater_c_Power_1)+k3*(np.log10(Heater_c_Power_1))**2))
             Total_c_Heater_Cap_Cost = Heater_c_Cap_Cost + Heater_c_Cap_Cost_1
             Total_c_Heater_Cap_Cost = Total_c_Heater_Cap_Cost *(self.CEPCI_current/self.CEPCI2001)  ##Inflation #TODO make inflation optional per user input
-            
+
             Utility_c_Heater = 0 # Jared Thomas set to zero as per discussion with Peng Peng through Abhineet Gupta 20221215 was 13.28*deltaE_c_net_2_3/1e6 #$13.28/GJ for low pressure steam
             self.total_heating_energy_used_kwh = Net_c_Heating_Power_Desorption*t_discharge_hr
             Total_c_Heating_Energy_Costs = self.total_heating_energy_used_kwh*Energy_cost
-            
+
             # print('heater capcost is $', Total_c_Heater_Cap_Cost)
-            
+
             ########################################Operational costs (sized based on cycle 1 requirements)###########################################
             Op_c_Costs_1 = Compr_c_Energy_Costs_1 + Utility_c_refrigeration_1 + Utility_c_Heater + Total_c_Heating_Energy_Costs
             Op_c_Costs_2 = Compr_c_Energy_Costs_2 + Utility_c_refrigeration_2 + Utility_c_Heater + Total_c_Heating_Energy_Costs
             Total_c_Cap_Costs = Storage_c_Tank_Cap_Costs + Total_c_Refrig_Cap_Costs_adsorption + Total_c_Compr_Cap_Cost + Total_c_Heater_Cap_Cost
-            
+
             # Op_c_Costs = (Op_c_Costs_1 + Op_c_Costs_2 * (cycle_number-1)+self.maintanance*Total_c_Cap_Costs+self.wage*360*2)/cycle_number/capacity
             #TODO check this. I changed the 2 to a 24 because it looks like it should be working hours in a year.
             Op_c_Costs = ((Op_c_Costs_1 + Op_c_Costs_2*(cycle_number-1) + self.maintanance*Total_c_Cap_Costs + self.wage*360*2)/cycle_number) # checked, this was divided by capacity, but Peng Peng confirmed it was duplicating the following divisions by capacity
-            
+
             ######################writing costs#####################################################
             self.cost_kg[i] = (Total_c_Cap_Costs/capacity + self.Site_preparation)*self.Markup
             cost_kg_tank[i] = Storage_c_Tank_Cap_Costs/capacity
             cost_kg_comp[i] = Total_c_Compr_Cap_Cost/capacity
-            cost_kg_ref[i] = Total_c_Refrig_Cap_Costs_adsorption/capacity    
+            cost_kg_ref[i] = Total_c_Refrig_Cap_Costs_adsorption/capacity
             cost_kg_heat[i] = Total_c_Heater_Cap_Cost/capacity
             self.Op_c_Costs_kg[i] = Op_c_Costs/capacity
             # print("\n Pressure Vessel Costs: ")
@@ -406,7 +406,7 @@ class CompressedGasFunction():
             # print("cost_kg_heat ")
             ######################################## Total Energy Use (kWh) ######################
             self.total_energy_used_kwh[i] = self.total_compressor_energy_used_kwh + self.total_heating_energy_used_kwh + self.total_refrigeration_energy_used_kwh
-        
+
         self.curve_fit()
 
     def curve_fit(self):
@@ -414,15 +414,15 @@ class CompressedGasFunction():
         ################### plot prep ###########
         self.plot_range = range(int(np.min(self.capacity_1)), int(np.max(self.capacity_1)), 100)
 
-        ###################Fitting capital####################################################  
+        ###################Fitting capital####################################################
 
         var_cap = [0.01 ,0.5, 5]   #Initial guesses for the parameters, can be flexible
-        
+
         varfinal_cap_fitted, success = leastsq(self.residual_op, var_cap, args=(self.capacity_1, self.cost_kg), maxfev=100000)
-        
+
         self.a_cap_fit=varfinal_cap_fitted[0]
         self.b_cap_fit=varfinal_cap_fitted[1]
-        self.c_cap_fit=varfinal_cap_fitted[2] 
+        self.c_cap_fit=varfinal_cap_fitted[2]
 
         if self.verbose:
             print ('a_cap is', self.a_cap_fit)
@@ -430,27 +430,27 @@ class CompressedGasFunction():
             print ('c_cap is', self.c_cap_fit)
             print ('***********')
 
-        self.fitted_capex = self.exp_log_fit(varfinal_cap_fitted, self.plot_range)      
-        
+        self.fitted_capex = self.exp_log_fit(varfinal_cap_fitted, self.plot_range)
+
         # popt, pcov = curve_fit(self.exp_fit, self.capacity_1, self.cost_kg, maxfev=100000)
-        
+
         # self.a_cap_fit=popt[0]
         # self.b_cap_fit=popt[1]
-        
+
         # print ('a is', self.a_cap_fit)
         # print ('b is', self.b_cap_fit)
         # print ('***********')
-        
+
         # self.fitted_kg = self.exp_fit(self.plot_range,self.a_cap_fit,self.b_cap_fit)
-        
+
         ####################### fitting OpEx #################################
         var_op= [0.01 ,0.5, 5]   #Initial guesses for the parameters, can be flexible
-        
+
         varfinal_op_fitted,success = leastsq(self.residual_op, var_op, args=(self.capacity_1, self.Op_c_Costs_kg), maxfev=100000)
-        
+
         self.a_op_fit=varfinal_op_fitted[0]
         self.b_op_fit=varfinal_op_fitted[1]
-        self.c_op_fit=varfinal_op_fitted[2] 
+        self.c_op_fit=varfinal_op_fitted[2]
 
         if self.verbose:
             print ('a_op is', self.a_op_fit)
@@ -459,35 +459,35 @@ class CompressedGasFunction():
             print ('***********')
 
         self.fitted_op_kg = self.exp_log_fit(varfinal_op_fitted, self.plot_range)
-  
+
         ##################### Fit energy usage ################################
         self.energy_coefficients = np.polyfit(self.capacity_1, self.total_energy_used_kwh, 1)
         self.energy_function = np.poly1d(self.energy_coefficients) # kWh
         self.fit_energy_wrt_capacity_kwh = self.energy_function(self.plot_range)
-    
+
     def plot(self):
 
         fig, ax = plt.subplots(2,2, sharex=True, figsize=(10,6))
-        
+
         ##################### CAPEX #######################
         ax[0,0].scatter(self.capacity_1*1E-3, self.cost_kg, color='r', label = 'Calc')
         ax[0,0].plot(np.asarray(self.plot_range)*1E-3, self.fitted_capex, label = 'Fit')
         # ax[0,0].plot(self.capacity_1,cost_kg_tank, color='b', label = 'tank')
         # ax[0,0].plot(self.capacity_1,cost_kg_comp, color='c', label = 'compressor')
         # ax[0,0].plot(self.capacity_1,cost_kg_ref, color='m', label = 'refrigeration')
-        # ax[0,0].plot(self.capacity_1,cost_kg_heat, color='y', label = 'heater')   
-        
+        # ax[0,0].plot(self.capacity_1,cost_kg_heat, color='y', label = 'heater')
+
         a_disp=np.round(self.a_cap_fit, 2)
         b_disp=np.round(self.b_cap_fit, 2)
         # plt.ylim(0,np.amax(self.cost_kg)*2)
         # equation_cap = 'y='+str(a_disp)+'x'+'^'+str(b_disp)
         a_cap_fit_disp=np.round(self.a_cap_fit, 2)
         b_cap_fit_disp=np.round(self.b_cap_fit, 2)
-        c_cap_fit_disp=np.round(self.c_cap_fit, 2) 
+        c_cap_fit_disp=np.round(self.c_cap_fit, 2)
         equation_cap = 'y='+'exp('+str(a_cap_fit_disp)+'(ln(x))^2\n-'+str(b_cap_fit_disp)+'ln(x)+' + str(c_cap_fit_disp) +')'
 
-        ax[0,0].annotate(equation_cap, xy=(np.amax(self.capacity_1)*1E-3*0.4 , np.amax(self.cost_kg)*0.8)) 
-        
+        ax[0,0].annotate(equation_cap, xy=(np.amax(self.capacity_1)*1E-3*0.4 , np.amax(self.cost_kg)*0.8))
+
         ax[0,0].set_ylabel("CAPEX ($/kg)")
         ax[0,0].legend(loc='best', frameon=False)
         # plt.legend(loc='best')
@@ -496,33 +496,33 @@ class CompressedGasFunction():
         ##################### OPEX ############################
         a_op_fit_disp=np.round(self.a_op_fit, 2)
         b_op_fit_disp=np.round(self.b_op_fit, 2)
-        c_op_fit_disp=np.round(self.c_op_fit, 2) 
-        
+        c_op_fit_disp=np.round(self.c_op_fit, 2)
+
         equation_op = 'y='+'exp('+str(a_op_fit_disp)+'(ln(x))^2\n-'+str(b_op_fit_disp)+'ln(x)+' + str(c_op_fit_disp) +')'
-        
+
         ax[0,1].plot(np.asarray(self.plot_range)*1E-3, self.fitted_op_kg, label = 'Fit')
-        ax[0,1].scatter(self.capacity_1*1E-3, self.Op_c_Costs_kg, color='r', label = 'Calc')     
+        ax[0,1].scatter(self.capacity_1*1E-3, self.Op_c_Costs_kg, color='r', label = 'Calc')
         ax[0,1].set_ylabel("OPEX ($/kg)")
-        ax[0,1].annotate(equation_op, xy=(np.amax(self.capacity_1)*1E-3*0.2 , np.amax(self.Op_c_Costs_kg)*0.4))     
+        ax[0,1].annotate(equation_op, xy=(np.amax(self.capacity_1)*1E-3*0.2 , np.amax(self.Op_c_Costs_kg)*0.4))
         ax[0,1].legend(loc='best', frameon=False)
         # plt.legend(loc='best')
         # ax[0,1].title('Annual operational')
 
-        ################## Energy ######################  
+        ################## Energy ######################
         ax[1,1].plot(np.asarray(self.plot_range)*1E-3, self.fit_energy_wrt_capacity_kwh*1E-6, label = 'Fit')
-        ax[1,1].scatter(self.capacity_1*1E-3, self.total_energy_used_kwh*1E-6, color='r', label = 'Calc')    
-        ax[1,1].set_xlabel("Capacity (Tonnes H2)")    
+        ax[1,1].scatter(self.capacity_1*1E-3, self.total_energy_used_kwh*1E-6, color='r', label = 'Calc')
+        ax[1,1].set_xlabel("Capacity (Tonnes H2)")
         ax[1,1].set_ylabel("Energy Use (GWh)")
-        
-        equation_energy = 'y='+str(round(self.energy_coefficients[0],2)) +'x+'+str(round(self.energy_coefficients[1],2)) 
-        ax[1,1].annotate(equation_energy, xy=(3000, 5))     
+
+        equation_energy = 'y='+str(round(self.energy_coefficients[0],2)) +'x+'+str(round(self.energy_coefficients[1],2))
+        ax[1,1].annotate(equation_energy, xy=(3000, 5))
         ax[1,1].legend(loc='best', frameon=False)
         ax[1,1].legend(loc='best', frameon=False)
         # ax[1,1].title('Annual operational')
 
         ################ Wrap Up ######################
-        
-        ax[1,0].set_xlabel("Capacity (Tonnes H2)")    
+
+        ax[1,0].set_xlabel("Capacity (Tonnes H2)")
 
         plt.tight_layout()
         plt.show()

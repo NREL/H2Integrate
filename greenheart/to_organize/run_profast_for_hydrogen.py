@@ -4,17 +4,11 @@ Created on Tue Oct 25 12:31:28 2022
 
 @author: ereznic2
 """
-# Specify file path to PyFAST
-import sys
-#sys.path.insert(1,'../PyFAST/')
 import numpy as np
 import pandas as pd
-# sys.path.insert(1,sys.path[0] + '/ProFAST-main/') #ESG
 import ProFAST
 
 from greenheart.to_organize.H2_Analysis import LCA_single_scenario_ProFAST
-
-# sys.path.append('../ProFAST/')
 
 pf = ProFAST.ProFAST()
 
@@ -23,7 +17,7 @@ def run_profast_for_hydrogen(hopp_dict,electrolyzer_size_mw,H2_Results,\
                             electrolyzer_system_capex_kw,user_defined_time_between_replacement,electrolyzer_energy_kWh_per_kg,hydrogen_storage_capacity_kg,hydrogen_storage_cost_USDprkg,\
                             capex_desal,opex_desal,plant_life,water_cost,wind_size_mw,solar_size_mw,storage_size_mw,renewable_plant_cost_info,wind_om_cost_kw,hybrid_plant,\
                             grid_connection_scenario, atb_year, site_name, policy_option, policy, energy_to_electrolyzer, combined_hybrid_power_production_hopp,combined_hybrid_curtailment_hopp,\
-                            energy_shortfall_hopp, elec_price,grid_prices_interpolated_USDperkwh, grid_price_scenario,user_defined_stack_replacement_time,use_optimistic_pem_efficiency,wind_annual_energy_MWh,solar_annual_energy_MWh,solar_ITC): 
+                            energy_shortfall_hopp, elec_price,grid_prices_interpolated_USDperkwh, grid_price_scenario,user_defined_stack_replacement_time,use_optimistic_pem_efficiency,wind_annual_energy_MWh,solar_annual_energy_MWh,solar_ITC):
     # mwh_to_kwh = 0.001
     # plant_life=useful_life
     # electrolyzer_system_capex_kw = electrolyzer_capex_kw
@@ -99,9 +93,9 @@ def run_profast_for_hydrogen(hopp_dict,electrolyzer_size_mw,H2_Results,\
 
         grid_cost_pr_yr_USDprkg = grid_price_per_yr*energy_used_per_year_kWhpryr/h2prod_per_year_kgpryr
         grid_prices_interpolated_USDperkg = dict(zip(grid_cost_keys,grid_cost_pr_yr_USDprkg))
-        
+
     elif grid_connection_scenario == 'hybrid-grid':
-        
+
         energy_from_grid_pr_yr = energy_used_per_year_kWhpryr - AEP_renewables
         # grid_electricity_useage_kWhpkg=np.mean(energy_from_grid_pr_yr/h2prod_per_year_kgpryr)
         ren_electricity_useage_kWhpkg = AEP_renewables/h2prod_per_year_kgpryr
@@ -177,7 +171,7 @@ def run_profast_for_hydrogen(hopp_dict,electrolyzer_size_mw,H2_Results,\
             electrolyzer_refurbishment_schedule = percent_of_capacity_replaced*stack_replacement_cost
         else:
             electrolyzer_refurbishment_schedule[refturb_period:plant_life:refturb_period]=stack_replacement_cost
-    
+
     # electrolyzer_refurbishment_schedule[refturb_period:plant_life:refturb_period]=stack_replacement_cost
 
     # total_variable_OM_perkg = variable_OM*elec_avg_consumption_kWhprkg/1000 #09/05
@@ -216,9 +210,9 @@ def run_profast_for_hydrogen(hopp_dict,electrolyzer_size_mw,H2_Results,\
     H2_PTC = {}
     y_idx = 0
     for year in range(cambium_year,endofincentives_year):
-        
+
         if atb_year < 2035:
-        
+
             if grid_connection_scenario == 'grid-only' or grid_connection_scenario == 'off-grid':
 
                 if policy_option == 'no-policy':
@@ -314,7 +308,7 @@ def run_profast_for_hydrogen(hopp_dict,electrolyzer_size_mw,H2_Results,\
                         H2_PTC_offgrid = 0.12 # $/kg H2
                     elif electrolysis_total_EI_policy_offgrid[year] > 4:
                         H2_PTC_offgrid = 0
-                    
+
                     ITC = 0.06
 
                 #H2_PTC =  ren_frac * H2_PTC_offgrid + (elec_cf - ren_frac) * H2_PTC_grid
@@ -363,12 +357,12 @@ def run_profast_for_hydrogen(hopp_dict,electrolyzer_size_mw,H2_Results,\
 
     nominal_roe_combined = (real_roe_combined+1)*(1+gen_inflation)-1
     nominal_interest_combined = (real_interest_combined+1)*(1+gen_inflation)-1
-   # total_income_tax_rate = 
+   # total_income_tax_rate =
 
     pf = ProFAST.ProFAST()
 
     # Fill these in - can have most of them as 0 also
-    
+
     install_years = 3
     analysis_start = atb_year + 5 - install_years
     #09/05 (5 lines below)
@@ -463,7 +457,7 @@ def run_profast_for_hydrogen(hopp_dict,electrolyzer_size_mw,H2_Results,\
         pf.add_fixed_cost(name="Solar Plant Fixed O&M Cost",usage=1.0,unit='$/year',cost=fixed_cost_solar,escalation=gen_inflation)
         pf.add_fixed_cost(name="Battery Storage Fixed O&M Cost",usage=1.0,unit='$/year',cost=fixed_cost_battery,escalation=gen_inflation)
 
-    
+
     #---------------------- Add feedstocks, note the various cost options-------------------
     #pf.add_feedstock(name='Electricity',usage=elec_avg_consumption_kWhprkg,unit='kWh',cost=lcoe/100,escalation=gen_inflation)
     pf.add_feedstock(name='Water',usage=water_consumption_avg_galH2O_prkgH2,unit='gallon-water',cost=water_cost,escalation=gen_inflation)
@@ -472,7 +466,7 @@ def run_profast_for_hydrogen(hopp_dict,electrolyzer_size_mw,H2_Results,\
     #TODO: include changes in energy required/year for grid usage
     # pf.add_feedstock(name='Grid Electricity Cost',usage=grid_electricity_useage_kWhpkg,unit='$/kWh',cost=grid_prices_interpolated_USDperkwh,escalation=gen_inflation)
     pf.add_feedstock(name='Grid Electricity Cost',usage=1.0,unit='$/kg',cost=grid_prices_interpolated_USDperkg,escalation=gen_inflation)
-    
+
     # pf.add_feedstock(name='Grid Electricity Cost',usage=min_grid_usage,unit='$/kWh',cost=grid_prices_interpolated_USDperkwh,escalation=gen_inflation)
     #---------------------- Add various tax credit incentives -------------------
     pf.add_incentive(name ='Renewable PTC credit', value=Ren_PTC, decay = 0, sunset_years = Ren_PTC_duration, tax_credit = True)
@@ -573,6 +567,6 @@ def run_profast_for_hydrogen(hopp_dict,electrolyzer_size_mw,H2_Results,\
                       'LCOH: Finances ($/kg)':remaining_financial,'LCOH: total ($/kg)':lcoh_check,'LCOH Profast:':sol['price']}
     print('{} {} {} has LCOH = ${} /kg'.format(site_name,policy_option,grid_connection_scenario,sol['price']))
     price_breakdown = price_breakdown.drop(columns=['index','Amount'])
-   
+
     # return(sol,summary,price_breakdown,lcoh_breakdown,capex_electrolyzer_overnight/electrolyzer_size_mw/1000,elec_cf,ren_frac,electrolysis_total_EI_policy_grid,electrolysis_total_EI_policy_offgrid,H2_PTC,Ren_PTC,total_capex)
     return(sol,summary,price_breakdown,lcoh_breakdown,capex_electrolyzer_overnight/electrolyzer_size_mw/1000,life_average_cf,ren_frac,electrolysis_total_EI_policy_grid,electrolysis_total_EI_policy_offgrid,H2_PTC,Ren_PTC,total_capex)

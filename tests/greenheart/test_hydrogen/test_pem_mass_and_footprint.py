@@ -1,7 +1,9 @@
-import pytest
 import os
 
-from greenheart.simulation.technologies.hydrogen.electrolysis.pem_mass_and_footprint import mass, footprint
+import pytest
+
+from greenheart.simulation.technologies.hydrogen.electrolysis.pem_mass_and_footprint import (
+    footprint, mass)
 
 
 def test_footprint_0mw():

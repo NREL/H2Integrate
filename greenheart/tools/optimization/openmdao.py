@@ -1,9 +1,11 @@
 import numpy as np
 import openmdao.api as om
-
-from shapely.geometry import Polygon, Point
 from hopp.simulation import HoppInterface
-from greenheart.simulation.greenheart_simulation import GreenHeartSimulationConfig, run_simulation
+from shapely.geometry import Point, Polygon
+
+from greenheart.simulation.greenheart_simulation import (
+    GreenHeartSimulationConfig, run_simulation)
+
 
 class GreenHeartComponent(om.ExplicitComponent):
     """This class is an OpenMDAO wrapper for running a greenheart simulation
@@ -14,9 +16,9 @@ class GreenHeartComponent(om.ExplicitComponent):
         self.options.declare("turbine_x_init", types=(list, type(np.array(0))), desc="Initial turbine easting locations in m")
         self.options.declare("turbine_y_init", types=(list, type(np.array(0))), desc="Initial turbine northing locations in m")
         self.options.declare("verbose", default=False, types=bool, desc="Whether or not to print a bunch of stuff")
-        self.options.declare("design_variables", 
-                            #  values=["turbine_x", "turbine_y", "pv_capacity_kw", "wind_rating_kw", "electrolyzer_rating_kw", "battery_capacity_kw", "battery_capacity_kwh"], 
-                             types=list, 
+        self.options.declare("design_variables",
+                            #  values=["turbine_x", "turbine_y", "pv_capacity_kw", "wind_rating_kw", "electrolyzer_rating_kw", "battery_capacity_kw", "battery_capacity_kwh"],
+                             types=list,
                              desc="List of design variables that should be included",
                              default=["pv_capacity_kw", "electrolyzer_rating_kw", "battery_capacity_kw", "battery_capacity_kwh"],
                              recordable=False)
@@ -114,7 +116,7 @@ class GreenHeartComponent(om.ExplicitComponent):
 
         outputs["lcoe"] = lcoe
         outputs["lcoh"] = lcoh
-        
+
         if "steel" in self.options["config"].greenheart_config.keys():
             outputs["lcos"] = steel_finance.sol.get("price")
         if "ammonia" in self.options["config"].greenheart_config.keys():
@@ -126,7 +128,7 @@ class GreenHeartComponent(om.ExplicitComponent):
 
     def setup_partials(self):
         self.declare_partials(self.options["outputs_for_finite_difference"], '*', method='fd', form="forward")
-        
+
 class HOPPComponent(om.ExplicitComponent):
     """This class is an OpenMDAO wrapper for running a HOPP simulation
     """
@@ -136,9 +138,9 @@ class HOPPComponent(om.ExplicitComponent):
         self.options.declare("turbine_x_init", types=(list, type(np.array(0))), desc="Initial turbine easting locations in m")
         self.options.declare("turbine_y_init", types=(list, type(np.array(0))), desc="Initial turbine northing locations in m")
         self.options.declare("verbose", default=False, types=bool, desc="Whether or not to print a bunch of stuff")
-        self.options.declare("design_variables", 
-                            #  values=["turbine_x", "turbine_y", "pv_capacity_kw", "wind_rating_kw", "electrolyzer_rating_kw", "battery_capacity_kw", "battery_capacity_kwh"], 
-                             types=list, 
+        self.options.declare("design_variables",
+                            #  values=["turbine_x", "turbine_y", "pv_capacity_kw", "wind_rating_kw", "electrolyzer_rating_kw", "battery_capacity_kw", "battery_capacity_kwh"],
+                             types=list,
                              desc="List of design variables that should be included",
                              default=["turbine_x", "turbine_y"],
                              recordable=False)
@@ -166,7 +168,7 @@ class HOPPComponent(om.ExplicitComponent):
             ninputs += 1
         if ninputs == 0:
             self.add_input("turbine_x", val=self.options["turbine_x_init"], units="m")
-            
+
         technologies = self.options["hi"].configuration["technologies"]
 
         if "pv" in technologies.keys():
@@ -189,7 +191,7 @@ class HOPPComponent(om.ExplicitComponent):
 
         hi = self.options["hi"]
         technologies = hi.configuration["technologies"]
-        
+
         if any(x in ["wind_rating_kw", "pv_capacity_kw", "battery_capacity_kw", "battery_capacity_kwh"] for x in inputs):
             if "wind_rating_kw" in inputs:
                 raise(NotImplementedError("wind_rating_kw has not be fully implemented as a design variable"))
@@ -203,7 +205,7 @@ class HOPPComponent(om.ExplicitComponent):
             configuration = hi.configuration
             configuration["technologies"] = technologies
             hi.reinitialize(configuration)
-        
+
         if ("turbine_x" in inputs) or ("turbine_y" in inputs):
             if "turbine_x" not in inputs:
                 hi.system.wind._system_model.fi.set(layout_y=inputs["turbine_y"])
@@ -213,7 +215,7 @@ class HOPPComponent(om.ExplicitComponent):
                 hi.system.wind._system_model.fi.set(
                     layout_x=inputs["turbine_x"], layout_y=inputs["turbine_y"]
                 )
-                
+
         # run simulation
         hi.simulate(25)
 
@@ -266,7 +268,7 @@ class TurbineDistanceComponent(om.ExplicitComponent):
                 spacing_vec[k] = np.linalg.norm([(inputs["turbine_x"][i]-inputs["turbine_x"][j]), (inputs["turbine_y"][i]-inputs["turbine_y"][j])])
                 k += 1
         outputs["spacing_vec"] = spacing_vec
-        
+
     def setup_partials(self):
         self.declare_partials('*', '*', method='fd', form='forward')
 
@@ -291,8 +293,8 @@ class BoundaryDistanceComponent(om.ExplicitComponent):
         hi = self.options["hopp_interface"]
 
         # get polygon for boundary
-        boundary_polygon = Polygon(hi.system.site.vertices) 
-        
+        boundary_polygon = Polygon(hi.system.site.vertices)
+
         # check if turbines are inside polygon and get distance
         for i in range(0, self.n_distances):
             point = Point(inputs["turbine_x"][i], inputs["turbine_y"][i])

@@ -1,9 +1,11 @@
-import pytest
 import os
 from pathlib import Path
 
 import ORBIT as orbit
-from greenheart.simulation.technologies.offshore.fixed_platform import install_platform, calc_platform_opex, calc_substructure_mass_and_cost
+import pytest
+
+from greenheart.simulation.technologies.offshore.fixed_platform import (
+    calc_platform_opex, calc_substructure_mass_and_cost, install_platform)
 
 '''Sources:
     - [1]  M. Maness, B. Maples and A. Smith, "NREL Offshore Balance-of-System Model," National Renewable Energy Laboratory, 2017. https://www.nrel.gov/docs/fy17osti/66874.pdf
@@ -23,7 +25,7 @@ def test_install_platform(config):
     distance = 24
     mass = 2100
     area = 500
-    
+
     cost = install_platform(mass, area, distance, install_duration=14)
 
     assert pytest.approx(cost) == 7200014
@@ -36,7 +38,7 @@ def test_calc_substructure_cost(config):
     topmass = 200
     toparea = 1000
     depth = 45
-    
+
     cost, _ = calc_substructure_mass_and_cost(topmass, toparea, depth)
 
     assert pytest.approx(cost) == 7640000
@@ -49,7 +51,7 @@ def test_calc_substructure_mass(config):
     topmass = 200
     toparea = 1000
     depth = 45
-    
+
     _,mass = calc_substructure_mass_and_cost(topmass, toparea, depth)
 
     assert pytest.approx(mass,.1) == 372.02
@@ -61,5 +63,5 @@ def test_calc_platform_opex():
     capex = 28e6
     opex_rate = 0.01
     cost = calc_platform_opex(capex, opex_rate)
-    
+
     assert pytest.approx(cost) == 28e4

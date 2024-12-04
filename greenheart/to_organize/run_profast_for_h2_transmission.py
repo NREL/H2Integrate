@@ -5,18 +5,12 @@ Created on Sat Dec  3 10:02:07 2022
 @author: ereznic2
 """
 
-# import sys
+import os.path
+
 import numpy as np
 import pandas as pd
-
-# # Specify file path to PyFAST
-# sys.path.append('../PyFAST/')
-
-# import src.PyFAST as PyFAST
-
 import ProFAST
 
-import os.path
 
 def run_profast_for_h2_transmission(project_dir, max_hydrogen_production_rate_kg_hr,max_hydrogen_delivery_rate_kg_hr,pipeline_length_km,electrolyzer_capacity_factor,enduse_capacity_factor,before_after_storage,plant_life,elec_price,grid_prices_interpolated_USDperkWh,site_name,atb_year):
 

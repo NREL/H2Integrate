@@ -1,7 +1,9 @@
+import os
+
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt 
-import os
+
 
 def plot_wind_results(wind_data, site_name, latlon, results_dir, plot_wind):
 
@@ -41,13 +43,13 @@ def plot_pie(site_df, site_name, turbine_name, results_dir):
     # First Ring (Inside)
     fig, ax = plt.subplots(figsize=(12,12))
     ax.axis('equal')
-    mypie, _ = ax.pie(group_size, radius=1, labels=group_names, labeldistance=.6, colors= 
+    mypie, _ = ax.pie(group_size, radius=1, labels=group_names, labeldistance=.6, colors=
     [a(0.6), b(0.6), c(0.6)] )
     plt.setp( mypie, width=0.3, edgecolor='white')
 
     # Second Ring (Outside)
-    mypie2, _ = ax.pie(subgroup_size, radius=1.0+0.4, 
-    labels=subgroup_names, labeldistance=1, rotatelabels=True, colors=[a(0.1), a(0.2), 
+    mypie2, _ = ax.pie(subgroup_size, radius=1.0+0.4,
+    labels=subgroup_names, labeldistance=1, rotatelabels=True, colors=[a(0.1), a(0.2),
     a(0.3), a(0.4), a(0.5), a(0.6), a(0.7), a(0.8), a(0.9), a(1), a(1.1), a(1.2),
                                                     a(1.3),b(.16),b(.32),b(.48),b(.64),b(.8),b(.9),c(.4)])
     plt.setp( mypie2, width=0.4, edgecolor='white')
@@ -95,7 +97,7 @@ def plot_HOPP(combined_hybrid_power_production_hopp,
     print('LCOE: ', hybrid_plant.lcoe_real.hybrid)
     # print("LCOE: {}"].format(hybrid_plant.lcoe_real.hybrid))
 
-def plot_battery_results(combined_hybrid_curtailment_hopp, 
+def plot_battery_results(combined_hybrid_curtailment_hopp,
                          energy_shortfall_hopp,
                          combined_pv_wind_storage_power_production_hopp,
                          combined_hybrid_power_production_hopp,
@@ -113,7 +115,7 @@ def plot_battery_results(combined_hybrid_curtailment_hopp,
         plt.plot(energy_shortfall_hopp[200:300],label="shortfall")
         plt.title('Energy Curtailment and Shortfall')
         plt.legend()
-        
+
 
         plt.subplot(312)
         plt.plot(combined_pv_wind_storage_power_production_hopp[200:300],label="wind+pv+storage")
@@ -122,7 +124,7 @@ def plot_battery_results(combined_hybrid_curtailment_hopp,
         plt.legend()
         plt.title("Hybrid Plant Power Flows with and without storage")
         plt.tight_layout()
-        
+
         plt.subplot(313)
         plt.plot(battery_SOC[200:300],label="state of charge")
         plt.plot(battery_used[200:300],"--",label="battery used")
@@ -131,7 +133,7 @@ def plot_battery_results(combined_hybrid_curtailment_hopp,
         plt.savefig(os.path.join(results_dir,'HOPP Full Power Flows_{}_{}_{}'.format(site_name,atb_year,turbine_model)),bbox_inches='tight')
         # plt.show()
 
-def plot_h2_results(H2_Results, 
+def plot_h2_results(H2_Results,
                     electrical_generation_timeseries,
                     results_dir,
                     site_name,atb_year,turbine_model,
@@ -153,13 +155,13 @@ def plot_h2_results(H2_Results,
         plt.ylim(0,max(hydrogen_hourly_production[200:300])*1.2)
         plt.title("Hydrogen production rate (kg/hr)")
 
-        
+
         plt.subplot(413)
         plt.plot(H2_Results['electrolyzer_total_efficiency'][200:300])
         plt.ylim(0,1)
         plt.title("Electrolyzer Total Efficiency (%)")
-        
-        
+
+
         plt.subplot(414)
         plt.plot(H2_Results['water_hourly_usage'][200:300],"--",label="Hourly Water Usage")
         plt.legend()

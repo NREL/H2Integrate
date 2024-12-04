@@ -2,26 +2,27 @@
 
 import numpy as np
 
+
 class SimpleDispatch():
 
     def __init__(self):
 
         # length of simulation
         self.Nt = 1
-        
+
         # amount of curtailment experienced by plant
         self.curtailment = np.zeros(self.Nt)
 
         # amount of energy needed from the battery
         self.shortfall = np.zeros(self.Nt)
-        
+
         # size of battery (MWh)
         self.battery_storage = 0
 
         # Charge rate of the battery (MW)
         self.charge_rate = 0
         self.discharge_rate = 0
-        
+
 
     def run(self):
 
@@ -33,7 +34,7 @@ class SimpleDispatch():
         battery_SOC = np.zeros(self.Nt)
         battery_used = np.zeros(self.Nt)
         excess_energy = np.zeros(self.Nt)
-        
+
         for i in range(self.Nt):
             # should you charge
             if self.curtailment[i] > 0:
@@ -55,7 +56,7 @@ class SimpleDispatch():
             else:
                 if i > 0:
                     if battery_SOC[i-1] > 0:
-                        
+
                         battery_used[i] = np.min([self.shortfall[i], battery_SOC[i-1],discharge_rate])
                         battery_SOC[i] = battery_SOC[i-1] - battery_used[i]
 
@@ -64,6 +65,3 @@ class SimpleDispatch():
         # print('Amount of energy going to the grid: ', np.sum(excess_energy))
         # print('==============================================')
         return battery_used, excess_energy, battery_SOC
-
-
-

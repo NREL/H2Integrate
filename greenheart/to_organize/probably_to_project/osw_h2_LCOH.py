@@ -1,35 +1,36 @@
+import copy
+import json
 import os
 import sys
-sys.path.append('')
-from dotenv import load_dotenv
-import pandas as pd
-import json
-from hopp.simulation.technologies.sites import SiteInfo
-from hopp.simulation.technologies.sites import flatirons_site as sample_site
-from hopp.utilities.keys import set_developer_nrel_gov_key
-# from plot_reopt_results import plot_reopt_results
-# from run_reopt import run_reopt
-from greenheart.to_organize.H2_Analysis.hopp_for_h2 import hopp_for_h2
-from greenheart.to_organize.H2_Analysis.hopp_for_h2 import run_h2a as run_h2a #no h2a function
-from greenheart.to_organize.H2_Analysis.simple_dispatch import SimpleDispatch
-from greenheart.to_organize.H2_Analysis.simple_cash_annuals import simple_cash_annuals
-import hopp.simulation.technologies.hydrogen.electrolysis.run_h2_PEM as run_h2_PEM
-import numpy as np
-import numpy_financial as npf
-from lcoe.lcoe import lcoe as lcoe_calc
-import matplotlib.pyplot as plt
 import warnings
 from pathlib import Path
-warnings.filterwarnings("ignore")
+
+import hopp.simulation.technologies.hydrogen.electrolysis.run_h2_PEM as run_h2_PEM
+import matplotlib.pyplot as plt
+import numpy as np
+import numpy_financial as npf
+import pandas as pd
+import yaml
+from dotenv import load_dotenv
+from hopp.simulation.technologies.sites import SiteInfo
+from hopp.simulation.technologies.sites import flatirons_site as sample_site
 from hopp.tools.resource import *
 from hopp.tools.resource.resource_loader import site_details_creator
+from hopp.utilities.keys import set_developer_nrel_gov_key
+from lcoe.lcoe import lcoe as lcoe_calc
 
-from greenheart.to_organize import hopp_tools_steel
-import copy
-from greenheart.to_organize import plot_results
-from greenheart.to_organize import run_profast_for_hydrogen
+from greenheart.to_organize import (hopp_tools_steel, plot_results,
+                                    run_profast_for_hydrogen)
+from greenheart.to_organize.H2_Analysis.hopp_for_h2 import hopp_for_h2
+from greenheart.to_organize.H2_Analysis.hopp_for_h2 import \
+    run_h2a as run_h2a  # no h2a function
+from greenheart.to_organize.H2_Analysis.simple_cash_annuals import \
+    simple_cash_annuals
+from greenheart.to_organize.H2_Analysis.simple_dispatch import SimpleDispatch
 from greenheart.to_organize.hopp_tools_steel import hoppDict
-import yaml
+
+sys.path.append('')
+warnings.filterwarnings("ignore")
 
 """
 OSW-H2 LCOH analysis

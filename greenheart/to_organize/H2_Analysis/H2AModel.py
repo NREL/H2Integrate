@@ -1,6 +1,7 @@
 import math
-import pandas as pd
+
 import numpy as np
+import pandas as pd
 
 
 def H2AModel(cap_factor, avg_daily_H2_production, hydrogen_annual_output, h2a_for_hopp=True, force_system_size=True,
@@ -106,7 +107,7 @@ def H2AModel(cap_factor, avg_daily_H2_production, hydrogen_annual_output, h2a_fo
 
     scaled_uninstalled_electrical_BoP_cost = baseline_uninstalled_electrical_BoP_cost ** default_scaling_factor_exponent
     scaled_installed_electrical_BoP_cost = scaled_uninstalled_electrical_BoP_cost * electrical_BoP_installation_factor
-    
+
     #TODO: Rectify this calculation. This is a shortcut that is pretty SUS.
     scaled_total_installed_cost = forced_electrolyzer_cost_kw * stack_input_power * 1000 #scaled_installed_stack_capital_cost + scaled_installed_mechanical_BoP_cost + scaled_installed_electrical_BoP_cost
 

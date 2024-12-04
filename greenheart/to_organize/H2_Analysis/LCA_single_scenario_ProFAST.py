@@ -4,9 +4,10 @@ Created on Fri Dec  2 12:09:20 2022
 
 @author: ereznic2
 """
-import pandas as pd
-import numpy as np
 import os.path
+
+import numpy as np
+import pandas as pd
 
 # grid_connection_scenario = 'hybrid-grid'
 # atb_year = 2020
@@ -124,5 +125,3 @@ def hydrogen_LCA_singlescenario_ProFAST(grid_connection_scenario,atb_year,site_n
         electrolysis_total_EI_policy_grid = 0
 
     return(electrolysis_total_EI_policy_grid,electrolysis_total_EI_policy_offgrid)
-
-

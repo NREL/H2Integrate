@@ -1,17 +1,20 @@
-import pytest
-from pathlib import Path
-import numpy as np
 import copy
+from pathlib import Path
 
+import numpy as np
 import openmdao.api as om
-
+import pytest
 from hopp.simulation import HoppInterface
 from hopp.utilities import load_yaml
 
-from greenheart.tools.optimization.openmdao import GreenHeartComponent, HOPPComponent, TurbineDistanceComponent, BoundaryDistanceComponent
+from greenheart.simulation.greenheart_simulation import \
+    GreenHeartSimulationConfig
 from greenheart.tools.optimization.gc_PoseOptimization import PoseOptimization
 from greenheart.tools.optimization.gc_run_greenheart import run_greenheart
-from greenheart.simulation.greenheart_simulation import GreenHeartSimulationConfig
+from greenheart.tools.optimization.openmdao import (BoundaryDistanceComponent,
+                                                    GreenHeartComponent,
+                                                    HOPPComponent,
+                                                    TurbineDistanceComponent)
 
 ROOT_DIR = Path(__file__).parents[2]
 
@@ -39,9 +42,9 @@ def setup_greenheart():
     plant_design_scenario=9,
     output_level=7,
     )
-    
+
     # based on 2023 ATB moderate case for onshore wind
-    config.hopp_config["config"]["cost_info"]["wind_installed_cost_mw"] = 1434000.0 
+    config.hopp_config["config"]["cost_info"]["wind_installed_cost_mw"] = 1434000.0
     # based on 2023 ATB moderate case for onshore wind
     config.hopp_config["config"]["cost_info"]["wind_om_per_kw"] = 29.567
     config.hopp_config["technologies"]["wind"]["fin_model"]["system_costs"]["om_fixed"][0] = config.hopp_config["config"]["cost_info"]["wind_om_per_kw"]
@@ -114,7 +117,7 @@ def setup_greenheart():
                     "lower": 0.0,
                 },
             "pv_to_platform_area_ratio": {
-                "flag": False, 
+                "flag": False,
                 "upper": 1.0, # relative size of solar pv area to platform area
                 },
             "user": {}
@@ -152,7 +155,7 @@ def setup_greenheart():
                     "debug_print": False
                 },
                 "step_size_study": {
-                    "flag": False  
+                    "flag": False
                 },
             },
             "recorder": {
@@ -166,7 +169,7 @@ def setup_greenheart():
 
 # @pytest.mark.mpi
 def test_run_greenheart_optimize_mpi(subtests):
-        
+
     try:
         from mpi4py import MPI
     except:
@@ -192,6 +195,6 @@ def test_run_greenheart_optimize_mpi(subtests):
         # get final LCOH
         case = cr.get_case(-1)
         lcoh_final = case.get_val("lcoh", units='USD/kg')[0]
-        
+
         with subtests.test("lcoh"):
             assert lcoh_final < lcoh_init

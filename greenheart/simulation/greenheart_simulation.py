@@ -1,39 +1,30 @@
 # general imports
+import copy
 import os
-from typing import Optional, Union
 import warnings
+from typing import Optional, Union
+
 import numpy as np
 import pandas as pd
 from attrs import define, field
-import copy
 
 pd.options.mode.chained_assignment = None  # default='warn'
 
+import matplotlib.pyplot as plt
 from hopp.simulation import HoppInterface
 from ProFAST import ProFAST
 
-from greenheart.simulation.technologies.ammonia.ammonia import (
-    run_ammonia_full_model,
-    AmmoniaCostModelOutputs,
-    AmmoniaFinanceModelOutputs,
-    AmmoniaCapacityModelOutputs,
-)
-from greenheart.simulation.technologies.steel.steel import (
-    run_steel_full_model,
-    SteelCostModelOutputs,
-    SteelFinanceModelOutputs,
-    SteelCapacityModelOutputs,
-)
-
-# visualization imports
-import matplotlib.pyplot as plt
-
-# HOPP imports
 import greenheart.tools.eco.electrolysis as he_elec
 import greenheart.tools.eco.finance as he_fin
 import greenheart.tools.eco.hopp_mgmt as he_hopp
-import greenheart.tools.eco.utilities as he_util
 import greenheart.tools.eco.hydrogen_mgmt as he_h2
+import greenheart.tools.eco.utilities as he_util
+from greenheart.simulation.technologies.ammonia.ammonia import (
+    AmmoniaCapacityModelOutputs, AmmoniaCostModelOutputs,
+    AmmoniaFinanceModelOutputs, run_ammonia_full_model)
+from greenheart.simulation.technologies.steel.steel import (
+    SteelCapacityModelOutputs, SteelCostModelOutputs, SteelFinanceModelOutputs,
+    run_steel_full_model)
 
 
 @define

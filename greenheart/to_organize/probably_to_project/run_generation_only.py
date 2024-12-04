@@ -1,29 +1,31 @@
+import copy
+import json
 import os
 import sys
-sys.path.append('')
-from dotenv import load_dotenv
+import warnings
+from pathlib import Path
+
+import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
-import json
+from dotenv import load_dotenv
 from hopp.simulation.technologies.sites import SiteInfo
 from hopp.simulation.technologies.sites import flatirons_site as sample_site
 from hopp.utilities.keys import set_developer_nrel_gov_key
+
+from greenheart.to_organize import hopp_tools, inputs_py, plot_results
 from greenheart.to_organize.H2_Analysis import simple_dispatch
-from greenheart.to_organize.H2_Analysis.simple_cash_annuals import simple_cash_annuals
-import numpy as np
-import matplotlib.pyplot as plt
-import warnings
-from pathlib import Path
+from greenheart.to_organize.H2_Analysis.simple_cash_annuals import \
+    simple_cash_annuals
+
+sys.path.append('')
 warnings.filterwarnings("ignore")
 
-from greenheart.to_organize import hopp_tools
-from greenheart.to_organize import inputs_py
-import copy 
-from greenheart.to_organize import plot_results
 
 """
 Perform a LCOE analysis for a few locations across the U.S. to demonstrate analysis across locations  using HOPP
 A few notes:
-# 1. physical interaction effects ignored currently 
+# 1. physical interaction effects ignored currently
 # 2. shared BOS to be re-implemented
 """
 
@@ -129,7 +131,7 @@ for i in policy:
         for site_location in site_selection:
             scenario_df = xl.parse()
             scenario_df.set_index(["Parameter"], inplace = True)
-            
+
             site_df = scenario_df[site_location]
 
             turbine_model = str(site_df['Turbine Rating'])+'MW'
@@ -166,7 +168,7 @@ for i in policy:
             wind_speed = [W[2] for W in wind_data]
             plot_results.plot_wind_results(wind_data, site_name, site_df['Representative coordinates'], results_dir, plot_wind)
 
-            
+
             # Run HOPP
             combined_hybrid_power_production_hopp, energy_shortfall_hopp, combined_hybrid_curtailment_hopp, hybrid_plant, wind_size_mw, solar_size_mw, lcoe = \
                 hopp_tools.run_HOPP(scenario,
@@ -177,11 +179,11 @@ for i in policy:
                                     wind_size_mw,
                                     storage_size_mw,
                                     storage_size_mwh,
-                                    wind_cost_kw, 
-                                    solar_cost_kw, 
-                                    storage_cost_kw, 
+                                    wind_cost_kw,
+                                    solar_cost_kw,
+                                    storage_cost_kw,
                                     storage_cost_kwh,
-                                    kw_continuous, 
+                                    kw_continuous,
                                     load,
                                     interconnection_size_mw,
                                     wind_om_cost_kw,
@@ -207,8 +209,8 @@ for i in policy:
             #Step 5: Run Simple Dispatch Model
             combined_pv_wind_storage_power_production_hopp, battery_SOC, battery_used, excess_energy = \
                 hopp_tools.run_battery(energy_shortfall_hopp, combined_hybrid_curtailment_hopp, combined_hybrid_power_production_hopp)
-            
-            plot_results.plot_battery_results(combined_hybrid_curtailment_hopp, 
+
+            plot_results.plot_battery_results(combined_hybrid_curtailment_hopp,
                         energy_shortfall_hopp,
                         combined_pv_wind_storage_power_production_hopp,
                         combined_hybrid_power_production_hopp,
@@ -219,7 +221,7 @@ for i in policy:
                         load,
                         plot_battery)
 
-            
+
 
             # grid information (on and off-grid systems)
             cost_to_buy_from_grid, profit_from_selling_to_grid, energy_to_electrolyzer = hopp_tools.grid(combined_pv_wind_storage_power_production_hopp,
@@ -230,7 +232,7 @@ for i in policy:
                                                                                     plot_grid)
 
             # calculate financials simple (no H2)
-            total_elec_production = np.sum(combined_pv_wind_storage_power_production_hopp) 
+            total_elec_production = np.sum(combined_pv_wind_storage_power_production_hopp)
             cf = total_elec_production / (interconnection_size_mw * 1000 * 8760)
             # plt.plot(energy_to_electrolyzer)
             # plt.show()

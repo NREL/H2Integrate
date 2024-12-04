@@ -1,14 +1,14 @@
-import numpy as np
+import json
 import os
+import pickle
+
+import numpy as np
+import pandas as pd
+import PySAM.Singleowner as so
+from dotenv import load_dotenv
 from hopp.simulation.technologies import REopt
 from hopp.simulation.technologies.pv_source import PVPlant
 from hopp.simulation.technologies.wind_source import WindPlant
-import PySAM.Singleowner as so
-import pandas as pd
-import pickle
-# import post_and_poll
-from dotenv import load_dotenv
-import json
 
 #TODO:
 # - Change to developer API.

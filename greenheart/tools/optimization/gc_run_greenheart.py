@@ -2,20 +2,21 @@
 This file is based on the WISDEM file 'runWISDEM.py`: https://github.com/WISDEM/WISDEM
 """
 
+import logging
 import os
 import sys
-import logging
 import warnings
 
 import numpy as np
 import openmdao.api as om
 
-
-from greenheart.simulation.greenheart_simulation import GreenHeartSimulationConfig, setup_greenheart_simulation
-from greenheart.tools.optimization.gc_PoseOptimization import PoseOptimization
-from greenheart.tools.optimization.openmdao import GreenHeartComponent
-from greenheart.tools.optimization.mpi_tools import MPI, map_comm_heirarchical
+from greenheart.simulation.greenheart_simulation import (
+    GreenHeartSimulationConfig, setup_greenheart_simulation)
 from greenheart.tools.optimization import fileIO
+from greenheart.tools.optimization.gc_PoseOptimization import PoseOptimization
+from greenheart.tools.optimization.mpi_tools import MPI, map_comm_heirarchical
+from greenheart.tools.optimization.openmdao import GreenHeartComponent
+
 
 def run_greenheart(config:GreenHeartSimulationConfig, overridden_values=None, run_only=False):
     """This functions sets up and runs greenheart. It can be used for analysis runs, optimizations, design of experiments, or step size studies
@@ -49,10 +50,10 @@ def run_greenheart(config:GreenHeartSimulationConfig, overridden_values=None, ru
                 + " and DV times 2 for central differencing,"
                 + " or the parallelization logic will not work"
             )
-        
+
         if config.greenheart_config["opt_options"]["driver"]["design_of_experiments"]["flag"]:
             n_FD = max_cores
-            
+
         else:
             # Define the color map for the parallelization, determining the maximum number of parallel finite difference (FD) evaluations based on the number of design variables (DV).
             n_FD = min([max_cores, n_DV])
@@ -112,15 +113,15 @@ def run_greenheart(config:GreenHeartSimulationConfig, overridden_values=None, ru
         if MPI:
             # Parallel settings for OpenMDAO
             prob = om.Problem(model=om.Group(num_par_fd=n_FD), comm=comm_i, reports=False)
-            
+
         else:
             # Sequential finite differencing
             prob = om.Problem(model=om.Group(), reports=False)
 
         prob.model.add_subsystem(
-                'greenheart', GreenHeartComponent(config=config, design_variables=design_variables),  
+                'greenheart', GreenHeartComponent(config=config, design_variables=design_variables),
                 promotes=["*"])
-        
+
         # If at least one of the design variables is active, setup an optimization
         if not run_only and config.greenheart_config["opt_options"]["opt_flag"]:
             config, hi, _ = setup_greenheart_simulation(config)
@@ -161,7 +162,7 @@ def run_greenheart(config:GreenHeartSimulationConfig, overridden_values=None, ru
                     checks = prob.check_partials(compact_print=True)
 
             sys.stdout.flush()
-            
+
             if config.greenheart_config["opt_options"]["driver"]["step_size_study"]["flag"]:
                 prob.run_model()
                 study_options = config.greenheart_config["opt_options"]["driver"]["step_size_study"]
@@ -204,4 +205,3 @@ def run_greenheart(config:GreenHeartSimulationConfig, overridden_values=None, ru
         return prob, config
     else:
         return [], []
-

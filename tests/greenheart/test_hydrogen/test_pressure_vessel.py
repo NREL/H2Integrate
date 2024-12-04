@@ -1,8 +1,10 @@
-from greenheart.simulation.technologies.hydrogen.h2_storage.pressure_vessel.compressed_gas_storage_model_20221021.Compressed_all import PressureVessel
-from pytest import approx
-import numpy as np
-
 import matplotlib.pyplot as plt
+import numpy as np
+from pytest import approx
+
+from greenheart.simulation.technologies.hydrogen.h2_storage.pressure_vessel.compressed_gas_storage_model_20221021.Compressed_all import \
+    PressureVessel
+
 
 # test that we the results we got when the code was recieved
 class TestPressureVessel():
@@ -15,21 +17,21 @@ class TestPressureVessel():
 
     pressure_vessel_instance_no_cost = PressureVessel(Energy_cost=0.0)
     pressure_vessel_instance_no_cost.run()
-        
+
     def test_capacity_max(self):
         assert self.pressure_vessel_instance.capacity_max == 5585222.222222222
-    
+
     def test_t_discharge_hr_max(self):
         assert self.pressure_vessel_instance.t_discharge_hr_max == 25.133499999999998
 
     def test_a_fit_capex(self):
         # assert self.pressure_vessel_instance.a_fit_capex == 9084.035219940572
         assert self.pressure_vessel_instance.a_fit_capex == approx(0.053925726563169414)
-    
+
     def test_b_fit_capex(self):
         # assert self.pressure_vessel_instance.b_fit_capex == -0.127478041731842
         assert self.pressure_vessel_instance.b_fit_capex == approx(1.6826965840450498)
-    
+
     def test_c_fit_capex(self):
         assert self.pressure_vessel_instance.c_fit_capex == approx(20.297862568544417)
 
@@ -100,7 +102,7 @@ class TestPressureVessel():
         print(capex)
         mass_tank_empty = self.pressure_vessel_instance.get_tank_mass(capacity)
         area_footprint = self.pressure_vessel_instance.get_tank_footprint(capacity)
-        
+
         capex_dist_05, opex_dist_05, energy_kg_dist_05, area_footprint_site_05, mass_tank_empty_site_05, capacity_site_05= \
                 self.pressure_vessel_instance.distributed_storage_vessels(capacity, 5)
         assert capex_dist_05 == approx(6205232868.4722595)
@@ -139,7 +141,7 @@ class TestPressureVessel():
 
 class PlotTestPressureVessel():
     def __init__(self) -> None:
-        
+
         self.pressure_vessel_instance = PressureVessel(Energy_cost=0.07)
         self.pressure_vessel_instance.run()
 
@@ -170,7 +172,7 @@ class PlotTestPressureVessel():
         for j in np.arange(0, len(divisions)):
             ax[0, 0].plot(capacity_range/1E3, capex_results[j]/capacity_range, label="%i Divisions" %(divisions[j]))
             ax[0, 1].plot(capacity_range/1E3, opex_results[j]/capacity_range, label="%i Divisions" %(divisions[j]))
-    
+
         # ax[0,0].set(ylabel="CAPEX (USD/kg)", ylim=[0, 5000], yticks=[0,1000,2000,3000,4000,5000])
         ax[0,1].set(ylabel="OPEX (USD/kg)", ylim=[0, 100])
 
@@ -193,7 +195,7 @@ if __name__ == "__main__":
     # test_set = TestPressureVessel()
     plot_tests = PlotTestPressureVessel()
     plot_tests.plot_size_and_divisions()
-    
+
 # 0.0
 # 6322420.744236805
 # 1331189.5844818645
@@ -221,15 +223,15 @@ if __name__ == "__main__":
 
 # op c costs
 # op_c_costs 0.07
-# 880996.6646887433 
-#  799322.4503233839 
-#  0.03 
-#  4262490675.039804 
+# 880996.6646887433
+#  799322.4503233839
+#  0.03
+#  4262490675.039804
 #  25920
 
 # op_c_costs 0.00
-# 0.0 
-#  0.0 
-#  0.03 
-#  4262490675.039804 
+# 0.0
+#  0.0
+#  0.03
+#  4262490675.039804
 #  25920

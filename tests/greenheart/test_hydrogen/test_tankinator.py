@@ -1,8 +1,12 @@
 
-from greenheart.simulation.technologies.hydrogen.h2_storage.pressure_vessel.tankinator import Tank, TypeITank, TypeIIITank, TypeIVTank
-from greenheart.simulation.technologies.hydrogen.h2_storage.pressure_vessel import von_mises
-import pytest
 import numpy as np
+import pytest
+
+from greenheart.simulation.technologies.hydrogen.h2_storage.pressure_vessel import \
+    von_mises
+from greenheart.simulation.technologies.hydrogen.h2_storage.pressure_vessel.tankinator import (
+    Tank, TypeIIITank, TypeITank, TypeIVTank)
+
 
 # test that we the results we got when the code was recieved
 class TestTankinator():
@@ -76,7 +80,7 @@ class TestTankinator():
         assert tank.get_cost_metal() == pytest.approx(cost_exact)
 
         assert tank.get_gravimetric_tank_efficiency() == pytest.approx((volume_exact/1e3)/mass_exact)
-    
+
     def test_tankI_set_functions(self):
         """ make sure that the inverse geometry spec works """
 
@@ -87,7 +91,7 @@ class TestTankinator():
         tank= Tank(1, "316SS")
         tank.set_length_radius(length, radius)
         assert tank.get_volume_inner() == pytest.approx(volume_exact)
-        
+
         tank.length_inner= tank.radius_inner= None # reset
         tank.set_length_volume(length, volume_exact)
         assert tank.get_radius_inner() == pytest.approx(radius)
@@ -175,23 +179,23 @@ class TestTankinator():
         assert not Tank.check_thinwall(R_ref, ultimate_thickness_ref)
         assert von_mises.wallThicknessAdjustmentFactor(p_op, R_ref + ultimate_thickness_ref, R_ref,
                                                        Sy_ref, Su_ref) == pytest.approx(WTAF_0_ref)
-        
+
         # check cycle iterations, through two
         WTAF_0, thickness_1= von_mises.iterate_thickness(p_op, R_ref, ultimate_thickness_ref,
                                                          Sy_ref, Su_ref)
         assert WTAF_0 == pytest.approx(WTAF_0_ref)
         assert thickness_1 == pytest.approx(thickness_1_ref)
-        
+
         WTAF_1, thickness_2= von_mises.iterate_thickness(p_op, R_ref, thickness_1,
                                                          Sy_ref, Su_ref)
         assert WTAF_1 == pytest.approx(WTAF_1_ref)
         assert thickness_2 == pytest.approx(thickness_2_ref)
-        
+
         # check final value: cycle three times (no tol) to match tankinator
         (thickness_cycle, WTAF_cycle, n_iter)= von_mises.cycle(p_op, R_ref, ultimate_thickness_ref,
                                                                Sy_ref, Su_ref,
                                                                max_iter= 3, WTAF_tol= 0)
-        
+
         print(thickness_cycle, WTAF_cycle, n_iter) # DEBUG
         assert thickness_cycle == pytest.approx(thickness_f_ref)
 
@@ -199,7 +203,7 @@ class TestTankinator():
         tank.set_thickness_vonmises(p_op, T_op, max_cycle_iter= 3, adj_fac_tol= 0.0)
         assert tank.get_thickness() == pytest.approx(thickness_f_ref)
         assert tank.get_mass_metal() == pytest.approx(mass_f_ref, abs= 0.1)
-        assert tank.get_cost_metal() == pytest.approx(cost_f_ref, abs= 0.01)    
+        assert tank.get_cost_metal() == pytest.approx(cost_f_ref, abs= 0.01)
 
     def test_tankinator_typeIII_comp(self):
         """ compare to the tankinator case """

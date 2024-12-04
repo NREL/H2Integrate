@@ -1,19 +1,15 @@
 import os
-
-from pytest import approx, warns, raises
-import yaml
-import warnings
 import pathlib
+import warnings
+
+import yaml
+from hopp.utilities.keys import set_nrel_key_dot_env
+from pytest import approx, raises, warns
 
 from greenheart.simulation.greenheart_simulation import (
-    run_simulation,
-    GreenHeartSimulationConfig,
-)
-
+    GreenHeartSimulationConfig, run_simulation)
+from greenheart.tools.eco.utilities import ceildiv, visualize_plant
 from greenheart.tools.optimization.gc_run_greenheart import run_greenheart
-
-from hopp.utilities.keys import set_nrel_key_dot_env
-from greenheart.tools.eco.utilities import visualize_plant, ceildiv
 
 set_nrel_key_dot_env()
 
@@ -91,7 +87,7 @@ def test_simulation_wind(subtests):
         config.orbit_config["plant"]["num_turbines"] = 400
         with warns(UserWarning, match=f"The 'num_turbines' value"):
             lcoe, lcoh, _, hi = run_simulation(config)
-            
+
     with subtests.test("depth conflict raise warning"):
         config.orbit_config["site"]["depth"] = 4000
         with warns(UserWarning, match=f"The site depth value"):
@@ -194,7 +190,7 @@ def test_simulation_wind_wave_solar_battery(subtests):
     # TODO base this test value on something. Currently just based on output at writing.
     with subtests.test("lcoe"):
         # TODO base this test value on something. Currently just based on output at writing.
-        assert results.lcoe == approx(0.13275466291379373, rel=rtol)  
+        assert results.lcoe == approx(0.13275466291379373, rel=rtol)
 
     with subtests.test("no conflict in om cost does not raise warning"):
         with warnings.catch_warnings():
@@ -204,7 +200,7 @@ def test_simulation_wind_wave_solar_battery(subtests):
         config.hopp_config["technologies"]["wind"]["fin_model"]["system_costs"]["om_capacity"][0] = 1.0
         with warns(UserWarning, match=f"The 'om_capacity' value in the wind 'fin_model'"):
             _ = run_simulation(config)
-    
+
     with subtests.test("pv_om_per_kw conflict raise warning"):
         config.hopp_config["technologies"]["pv"]["fin_model"]["system_costs"]["om_capacity"][0] = 1.0
         with warns(UserWarning, match=f"The 'om_capacity' value in the pv 'fin_model'"):
@@ -232,7 +228,7 @@ def test_simulation_wind_onshore(subtests):
         output_level=5,
     )
     # based on 2023 ATB moderate case for onshore wind
-    config.hopp_config["config"]["cost_info"]["wind_installed_cost_mw"] = 1434000.0 
+    config.hopp_config["config"]["cost_info"]["wind_installed_cost_mw"] = 1434000.0
     # based on 2023 ATB moderate case for onshore wind
     config.hopp_config["config"]["cost_info"]["wind_om_per_kw"] = 29.567
     # set skip_financial to false for onshore wind
@@ -242,7 +238,7 @@ def test_simulation_wind_onshore(subtests):
 
     # TODO base this test value on something
     with subtests.test("lcoh"):
-        assert lcoh == approx(3.1691092704830357, rel=rtol)  
+        assert lcoh == approx(3.1691092704830357, rel=rtol)
 
     # TODO base this test value on something
     with subtests.test("lcoe"):
@@ -266,9 +262,9 @@ def test_simulation_wind_onshore_steel_ammonia(subtests):
         plant_design_scenario=9,
         output_level=7,
     )
-    
+
     # based on 2023 ATB moderate case for onshore wind
-    config.hopp_config["config"]["cost_info"]["wind_installed_cost_mw"] = 1434000.0 
+    config.hopp_config["config"]["cost_info"]["wind_installed_cost_mw"] = 1434000.0
     # based on 2023 ATB moderate case for onshore wind
     config.hopp_config["config"]["cost_info"]["wind_om_per_kw"] = 29.567
     config.hopp_config["technologies"]["wind"]["fin_model"]["system_costs"]["om_fixed"][0] = config.hopp_config["config"]["cost_info"]["wind_om_per_kw"]
@@ -316,9 +312,9 @@ def test_simulation_wind_battery_pv_onshore_steel_ammonia(subtests):
         plant_design_scenario=plant_design_scenario,
         output_level=8,
     )
-    
+
     # based on 2023 ATB moderate case for onshore wind
-    config.hopp_config["config"]["cost_info"]["wind_installed_cost_mw"] = 1434000.0 
+    config.hopp_config["config"]["cost_info"]["wind_installed_cost_mw"] = 1434000.0
     # based on 2023 ATB moderate case for onshore wind
     config.hopp_config["config"]["cost_info"]["wind_om_per_kw"] = 29.567
     config.hopp_config["technologies"]["wind"]["fin_model"]["system_costs"]["om_fixed"][0] = config.hopp_config["config"]["cost_info"]["wind_om_per_kw"]
@@ -328,7 +324,7 @@ def test_simulation_wind_battery_pv_onshore_steel_ammonia(subtests):
     config.hopp_config["technologies"].pop("wave")
     config.hopp_config["site"]["wave"] = False
     # colocated end-use
-    config.greenheart_config["plant_design"][f"scenario{plant_design_scenario}"]["transportation"] = "colocated" 
+    config.greenheart_config["plant_design"][f"scenario{plant_design_scenario}"]["transportation"] = "colocated"
 
     # run the simulation
     greenheart_output = run_simulation(config)
@@ -355,7 +351,7 @@ def test_simulation_wind_battery_pv_onshore_steel_ammonia(subtests):
 
     with subtests.test("check time series lengths"):
         expected_length = 8760
-        
+
         for key in greenheart_output.hourly_energy_breakdown.keys():
             assert len(greenheart_output.hourly_energy_breakdown[key]) == expected_length
 
@@ -379,9 +375,9 @@ def test_simulation_wind_onshore_steel_ammonia_ss_h2storage(subtests):
 
     config.greenheart_config['h2_storage']['size_capacity_from_demand']['flag'] = True
     config.greenheart_config['h2_storage']['type'] = 'pipe'
-    
+
     # based on 2023 ATB moderate case for onshore wind
-    config.hopp_config["config"]["cost_info"]["wind_installed_cost_mw"] = 1434000.0 
+    config.hopp_config["config"]["cost_info"]["wind_installed_cost_mw"] = 1434000.0
     # based on 2023 ATB moderate case for onshore wind
     config.hopp_config["config"]["cost_info"]["wind_om_per_kw"] = 29.567
     config.hopp_config["technologies"]["wind"]["fin_model"]["system_costs"]["om_fixed"][0] = config.hopp_config["config"]["cost_info"]["wind_om_per_kw"]
@@ -399,7 +395,7 @@ def test_simulation_wind_onshore_steel_ammonia_ss_h2storage(subtests):
 
     # TODO base this test value on something
     with subtests.test("steel_finance"):
-        lcos_expected = 1812.985744428756 
+        lcos_expected = 1812.985744428756
 
         assert steel_finance.sol.get("price") == approx(lcos_expected, rel=rtol)
 

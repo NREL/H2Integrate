@@ -1,7 +1,8 @@
-from greenheart.simulation.technologies.hydrogen.electrolysis.PEM_costs_Singlitico_model import PEMCostsSingliticoModel
-from pytest import approx
 import numpy as np
+from pytest import approx
 
+from greenheart.simulation.technologies.hydrogen.electrolysis.PEM_costs_Singlitico_model import \
+    PEMCostsSingliticoModel
 
 TOL = 1e-3
 

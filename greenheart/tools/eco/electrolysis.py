@@ -1,35 +1,26 @@
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-from matplotlib import ticker
 import os
 import warnings
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+from matplotlib import ticker
+
+from greenheart.simulation.technologies.hydrogen.desal.desal_model_eco import \
+    RO_desal_eco as RO_desal
+from greenheart.simulation.technologies.hydrogen.electrolysis.H2_cost_model import \
+    basic_H2_cost_model
+from greenheart.simulation.technologies.hydrogen.electrolysis.PEM_BOP.PEM_BOP import \
+    pem_bop
+from greenheart.simulation.technologies.hydrogen.electrolysis.PEM_costs_Singlitico_model import \
+    PEMCostsSingliticoModel
+from greenheart.simulation.technologies.hydrogen.electrolysis.pem_mass_and_footprint import \
+    footprint as run_electrolyzer_footprint
+from greenheart.simulation.technologies.hydrogen.electrolysis.pem_mass_and_footprint import \
+    mass as run_electrolyzer_mass
+from greenheart.simulation.technologies.hydrogen.electrolysis.run_h2_PEM import \
+    run_h2_PEM
 from greenheart.tools.eco.utilities import ceildiv
-
-# import hopp.tools.hopp_tools as hopp_tools
-
-from greenheart.simulation.technologies.hydrogen.desal.desal_model_eco import (
-    RO_desal_eco as RO_desal,
-)
-from greenheart.simulation.technologies.hydrogen.electrolysis.pem_mass_and_footprint import (
-    mass as run_electrolyzer_mass,
-)
-from greenheart.simulation.technologies.hydrogen.electrolysis.pem_mass_and_footprint import (
-    footprint as run_electrolyzer_footprint,
-)
-from greenheart.simulation.technologies.hydrogen.electrolysis.H2_cost_model import (
-    basic_H2_cost_model,
-)
-from greenheart.simulation.technologies.hydrogen.electrolysis.PEM_costs_Singlitico_model import (
-    PEMCostsSingliticoModel,
-)
-
-# from hopp.simulation.technologies.hydrogen.electrolysis.run_h2_PEM_eco import run_h2_PEM
-from greenheart.simulation.technologies.hydrogen.electrolysis.run_h2_PEM import (
-    run_h2_PEM,
-)
-
-from greenheart.simulation.technologies.hydrogen.electrolysis.PEM_BOP.PEM_BOP import pem_bop
 
 
 def run_electrolyzer_physics(
@@ -68,7 +59,7 @@ def run_electrolyzer_physics(
         energy_to_electrolyzer_kw = np.asarray(
             hopp_results["combined_hybrid_power_production_hopp"]
         )
-        
+
     n_pem_clusters = int(ceildiv(electrolyzer_size_mw, greenheart_config["electrolyzer"]["cluster_rating_MW"]))
 
     ## run using greensteel model
@@ -191,7 +182,7 @@ def run_electrolyzer_physics(
         ax[0, 0].plot(wind_speed)
         convolved_wind_speed = np.convolve(wind_speed, np.ones(N) / (N), mode="valid")
         ave_x = range(N, len(convolved_wind_speed) + N)
-        
+
         ax[0, 1].plot(ave_x, convolved_wind_speed)
         ax[0, 0].set(ylabel="Wind\n(m/s)", ylim=[0, 30], xlim=[0, len(wind_speed)])
         tick_spacing = 10
@@ -200,11 +191,11 @@ def run_electrolyzer_physics(
         y = greenheart_config["electrolyzer"]["rating"]
         ax[1, 0].plot(energy_to_electrolyzer_kw * 1e-3)
         ax[1, 0].axhline(y=y, color="r", linestyle="--", label="Nameplate Capacity")
-        
+
         convolved_energy_to_electrolyzer = np.convolve(
                 energy_to_electrolyzer_kw * 1e-3, np.ones(N) / (N), mode="valid"
             )
-        
+
         ax[1, 1].plot(
             ave_x,
             convolved_energy_to_electrolyzer,

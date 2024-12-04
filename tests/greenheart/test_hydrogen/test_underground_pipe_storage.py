@@ -1,7 +1,8 @@
 import pytest
 from pytest import fixture
 
-from greenheart.simulation.technologies.hydrogen.h2_storage.pipe_storage.underground_pipe_storage import UndergroundPipeStorage
+from greenheart.simulation.technologies.hydrogen.h2_storage.pipe_storage.underground_pipe_storage import \
+    UndergroundPipeStorage
 
 # Test values are based on conclusions of Papadias 2021 and are in 2019 USD
 
@@ -45,4 +46,3 @@ def test_opex(pipe_storage):
     _pipe_storage_capex_per_kg, _installed_capex, _compressor_capex = pipe_storage.pipe_storage_capex()
     pipe_storage.pipe_storage_opex()
     assert pipe_storage.output_dict["pipe_storage_opex"] == pytest.approx(16439748)
-

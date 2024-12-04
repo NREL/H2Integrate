@@ -1,10 +1,13 @@
+import json
 import os
 import pathlib
-from hopp.simulation.hybrid_simulation import HybridSimulation, TechnologiesConfig
-import json
-from hopp.tools.analysis import create_cost_calculator
-from hopp.simulation.hopp_interface import HoppInterface
+
 import pandas as pd
+from hopp.simulation.hopp_interface import HoppInterface
+from hopp.simulation.hybrid_simulation import (HybridSimulation,
+                                               TechnologiesConfig)
+from hopp.tools.analysis import create_cost_calculator
+
 
 def hopp_for_h2_floris(site, scenario, technologies, wind_size_mw, solar_size_mw, storage_size_mw, storage_size_mwh, storage_hours,
                 wind_cost_kw, solar_cost_kw, storage_cost_kw, storage_cost_kwh,
@@ -82,7 +85,7 @@ def hopp_for_h2_floris(site, scenario, technologies, wind_size_mw, solar_size_mw
     dispatch_options = {'battery_dispatch': 'heuristic'}
     if 'grid' not in technologies.keys():
         technologies['grid'] = {'interconnect_kw': interconnection_size_mw * 1e3}
-    
+
     data = {"technologies": technologies,
             "site": site}
     # print(data)
@@ -96,7 +99,7 @@ def hopp_for_h2_floris(site, scenario, technologies, wind_size_mw, solar_size_mw
                                                               storage_installed_cost_mw=storage_cost_kw * 1000,
                                                               storage_installed_cost_mwh=storage_cost_kwh * 1000
                                                               ))
-    
+
     if 'wave' in technologies.keys():
         hi.system.wave.create_mhk_cost_calculator(wave_cost_dict)
 

@@ -1,16 +1,17 @@
-# from greenheart.hydrogen.electrolysis.PEM_H2_LT_electrolyzer import PEM_electrolyzer_LT
-from greenheart.hydrogen.electrolysis.PEM_electrolyzer_IVcurve import PEM_electrolyzer_LT
-from numpy.lib.function_base import average
-import examples.H2_Analysis.H2AModel as H2AModel
 import numpy as np
 import pandas as pd
+from numpy.lib.function_base import average
+
+import examples.H2_Analysis.H2AModel as H2AModel
+from greenheart.hydrogen.electrolysis.PEM_electrolyzer_IVcurve import \
+    PEM_electrolyzer_LT
 
 
 def run_h2_PEM(electrical_generation_timeseries, electrolyzer_size,
                 kw_continuous,forced_electrolyzer_cost_kw,lcoe,
                 adjusted_installed_cost,useful_life,net_capital_costs,
                 voltage_type="constant", stack_input_voltage_DC=250, min_V_cell=1.62,
-                p_s_h2_bar=31, stack_input_current_lower_bound=500, cell_active_area=1250, 
+                p_s_h2_bar=31, stack_input_current_lower_bound=500, cell_active_area=1250,
                 N_cells=130, total_system_electrical_usage=55.5):
 
     in_dict = dict()
@@ -25,7 +26,7 @@ def run_h2_PEM(electrical_generation_timeseries, electrolyzer_size,
    #  el.electrolyzer_system_size_MW = electrolyzer_size
    #  el.input_dict['voltage_type'] = voltage_type
    #  el.stack_input_voltage_DC = stack_input_voltage_DC
-   # el.stack_input_voltage_DC = 
+   # el.stack_input_voltage_DC =
     # Assumptions:
    #  el.min_V_cell = min_V_cell  # Only used in variable voltage scenario
    #  el.p_s_h2_bar = p_s_h2_bar   # H2 outlet pressure
@@ -100,8 +101,3 @@ def run_h2_PEM(electrical_generation_timeseries, electrolyzer_size,
                    }
 
     return H2_Results, H2A_Results
-
-
-
-
-

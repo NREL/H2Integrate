@@ -1,7 +1,8 @@
 import pytest
 from pytest import fixture
 
-from greenheart.simulation.technologies.hydrogen.h2_storage.lined_rock_cavern.lined_rock_cavern import LinedRockCavernStorage
+from greenheart.simulation.technologies.hydrogen.h2_storage.lined_rock_cavern.lined_rock_cavern import \
+    LinedRockCavernStorage
 
 # Test values are based on conclusions of Papadias 2021 and are in 2019 USD
 in_dict = {

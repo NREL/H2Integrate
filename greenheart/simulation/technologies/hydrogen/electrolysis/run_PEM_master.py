@@ -1,33 +1,23 @@
-import os
-import sys
-
-sys.path.append("")
-# from dotenv import load_dotenv
-import pandas as pd
-
-from greenheart.simulation.technologies.hydrogen.electrolysis.PEM_H2_LT_electrolyzer_Clusters import PEM_H2_Clusters as PEMClusters
-# from PEM_H2_LT_electrolyzer_Clusters import (
-#     PEM_H2_Clusters as PEMClusters,
-# )
-
-import numpy as np
-from numpy import savetxt  # ESG
-import matplotlib.pyplot as plt
-from mpl_toolkits import mplot3d
-import warnings
 import math
-import scipy
-import time
-from scipy import interpolate
-from pyomo.environ import *
+import os
 import random
-import numpy as np
-import matplotlib.pyplot as plt
-import pandas as pd
-
-
-from greenheart.simulation.technologies.hydrogen.electrolysis.optimization_utils_linear import optimize
+import sys
 import time
+import warnings
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import scipy
+from mpl_toolkits import mplot3d
+from numpy import savetxt  # ESG
+from pyomo.environ import *
+from scipy import interpolate
+
+from greenheart.simulation.technologies.hydrogen.electrolysis.optimization_utils_linear import \
+    optimize
+from greenheart.simulation.technologies.hydrogen.electrolysis.PEM_H2_LT_electrolyzer_Clusters import \
+    PEM_H2_Clusters as PEMClusters
 
 # from PyOMO import ipOpt !! FOR SANJANA!!
 warnings.filterwarnings("ignore")
@@ -68,7 +58,7 @@ class run_PEM_clusters:
         # nomen
         self.cluster_cap_mw = np.round(system_size_mw / num_clusters)
         # capacity of each cluster, must be a multiple of 1 MW
-        
+
         self.num_clusters = num_clusters
         self.user_params = user_defined_electrolyzer_params
         self.plant_life_yrs = useful_life
@@ -248,7 +238,7 @@ class run_PEM_clusters:
 
         # power_to_clusters = np.repeat([power_per_cluster],self.num_clusters,axis=0)
         end = time.perf_counter()
-        
+
         if self.verbose:
             print(
                 "Took {} sec to run even_split_power function".format(

@@ -1,9 +1,13 @@
-from greenheart.to_organize.H2_Analysis.h2_setup_optimize import calculate_h_lcoe
-from greenheart.to_organize.H2_Analysis.simple_dispatch import SimpleDispatch
-from greenheart.to_organize.gradient_free import GeneticAlgorithm
-import pandas as pd
-import numpy as np
 import warnings
+
+import numpy as np
+import pandas as pd
+
+from greenheart.to_organize.gradient_free import GeneticAlgorithm
+from greenheart.to_organize.H2_Analysis.h2_setup_optimize import \
+    calculate_h_lcoe
+from greenheart.to_organize.H2_Analysis.simple_dispatch import SimpleDispatch
+
 warnings.filterwarnings("ignore")
 
 # h_lcoe, np.sum(combined_hybrid_power_production_hopp), H2_Results['hydrogen_annual_output'], total_system_installed_cost, total_annual_operating_costs
@@ -43,7 +47,7 @@ def optimize_gf():
     global best_solution
 
     bat_model = SimpleDispatch()
-    scenario = pd.read_csv('single_scenario.csv') 
+    scenario = pd.read_csv('single_scenario.csv')
     buy_from_grid = False
     sell_to_grid = False
     best_solution = 1E16
@@ -53,7 +57,7 @@ def optimize_gf():
     ga.bits = np.array([8,8,8,8])
     ga.bounds = np.array([(1E-6,200),(0,200),(0,200),(0,100)])
     ga.variable_type = np.array(["float","float","float","int"])
-    
+
     ga.max_generation = 30
     ga.population_size = 15
     ga.convergence_iters = 10

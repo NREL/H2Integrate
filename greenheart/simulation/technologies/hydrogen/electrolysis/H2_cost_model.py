@@ -1,12 +1,15 @@
+import warnings
+
 import numpy as np
 import numpy_financial as npf
-from greenheart.to_organize.H2_Analysis.simple_cash_annuals import simple_cash_annuals
-import warnings
 from pytest import approx
+
+from greenheart.to_organize.H2_Analysis.simple_cash_annuals import \
+    simple_cash_annuals
 
 
 def basic_H2_cost_model(electrolyzer_capex_kw, time_between_replacement,\
-    electrolyzer_size_mw, useful_life, atb_year, 
+    electrolyzer_size_mw, useful_life, atb_year,
     electrical_generation_timeseries_kw, hydrogen_annual_output, PTC_USD_kg, ITC_perc, include_refurb_in_opex=False, offshore=0):
     """
     Basic cost modeling for a PEM electrolyzer.
@@ -33,7 +36,7 @@ def basic_H2_cost_model(electrolyzer_capex_kw, time_between_replacement,\
     if cap_factor > 1.0:
         cap_factor = 1.0
         warnings.warn("Electrolyzer capacity factor would be greater than 1 with provided energy profile. Capacity factor has been reduced to 1 for electrolyzer cost estimate purposes.")
-        
+
     # print(cap_factor)
     # if cap_factor != approx(1.0):
     #     raise(ValueError("Capacity factor must equal 1"))
@@ -42,7 +45,7 @@ def basic_H2_cost_model(electrolyzer_capex_kw, time_between_replacement,\
     # #Apply PEM Cost Estimates based on year based on GPRA pathway (H2New)
     # if atb_year == 2022:
     #     electrolyzer_capex_kw = 1100     #[$/kW capacity] stack capital cost
-    #     time_between_replacement = 40000    #[hrs] 
+    #     time_between_replacement = 40000    #[hrs]
     # elif atb_year == 2025:
     #     electrolyzer_capex_kw = 300
     #     time_between_replacement = 80000    #[hrs]
@@ -62,7 +65,7 @@ def basic_H2_cost_model(electrolyzer_capex_kw, time_between_replacement,\
     electrical_bop_cost = 82  #[$/kW] for a rectifier
 
     # Installed capital cost
-    stack_installation_factor = 12/100  #[%] for stack cost 
+    stack_installation_factor = 12/100  #[%] for stack cost
     elec_installation_factor = 12/100   #[%] and electrical BOP
 
     # scale installation fraction if offshore (see Singlitico 2021 https://doi.org/10.1016/j.rset.2021.100005)
@@ -102,9 +105,9 @@ def basic_H2_cost_model(electrolyzer_capex_kw, time_between_replacement,\
     # O&M costs
     # https://www.sciencedirect.com/science/article/pii/S2542435121003068
     h2_FOM_kg = 0.24 #[$/kg] for 700 MW electrolyzer (https://www.hydrogen.energy.gov/pdfs/19009_h2_production_cost_pem_electrolysis_2019.pdf)
-    scaled_h2_FOM_kg = h2_FOM_kg * electrolyzer_size_mw/700    # linearly scaled current central fixed O&M for a 700MW electrolyzer up to a 1000MW electrolyzer 
+    scaled_h2_FOM_kg = h2_FOM_kg * electrolyzer_size_mw/700    # linearly scaled current central fixed O&M for a 700MW electrolyzer up to a 1000MW electrolyzer
     h2_FOM_kWh = scaled_h2_FOM_kg / 55.5    #[$/kWh] used 55.5 kWh/kg for efficiency
-    fixed_OM = h2_FOM_kWh * 8760 #[$/kW-y] 
+    fixed_OM = h2_FOM_kWh * 8760 #[$/kW-y]
     property_tax_insurance = 1.5/100    #[% of Cap/y]
     variable_OM = 1.30  #[$/MWh]
 
@@ -122,11 +125,11 @@ def basic_H2_cost_model(electrolyzer_capex_kw, time_between_replacement,\
     capacity_based_OM = True
     if capacity_based_OM:
         electrolyzer_OM_cost = electrolyzer_total_installed_capex * total_OM_costs     #Capacity based
-    else:   
+    else:
         electrolyzer_OM_cost = fixed_OM  * hydrogen_annual_output #Production based - likely not very accurate
 
     # Add in electrolyzer repair schedule (every 7 years)
-    # Use if not using time between replacement given in hours 
+    # Use if not using time between replacement given in hours
     # Currently not added into further calculations
     electrolyzer_repair_schedule = []
     counter = 1
@@ -175,6 +178,7 @@ def basic_H2_cost_model(electrolyzer_capex_kw, time_between_replacement,\
 if __name__ == "__main__":
 
     import matplotlib.pyplot as plt
+
     # plot a sweep of sizes for OPEX and CAPEX
 
     electrolyzer_capex_kw = 1300 # $/kW
@@ -199,9 +203,9 @@ if __name__ == "__main__":
 
         # centralized
         _, electrolyzer_total_capital_cost, electrolyzer_OM_cost, _, _, _, _ = basic_H2_cost_model(electrolyzer_capex_kw, time_between_replacement,\
-            electrolyzer_size_mw, useful_life, atb_year, 
+            electrolyzer_size_mw, useful_life, atb_year,
             electrical_generation_timeseries_kw, hydrogen_annual_output, 0, 0, include_refurb_in_opex=False, offshore=0)
-        
+
         opex.append(electrolyzer_OM_cost)
         capex.append(electrolyzer_total_capital_cost)
 
@@ -212,12 +216,12 @@ if __name__ == "__main__":
             electrical_generation_timeseries_kw_distibuted = electrical_generation_timeseries_kw/div
 
             _, electrolyzer_capital_cost_distributed, electrolyzer_OM_cost_distributed, electrolyzer_capex_kw_distributed, time_between_replacement, h2_tax_credit, h2_itc = basic_H2_cost_model(electrolyzer_capex_kw, time_between_replacement,\
-                electrolyzer_size_mw_distributed, useful_life, atb_year, 
+                electrolyzer_size_mw_distributed, useful_life, atb_year,
                 electrical_generation_timeseries_kw_distibuted, hydrogen_annual_output, 0, 0, include_refurb_in_opex=False, offshore=0)
             # print(opex_distributed)
             opex_distributed[j, i] = electrolyzer_OM_cost_distributed*div
             capex_distributed[j, i] = electrolyzer_capital_cost_distributed*div
-        
+
     fig, ax = plt.subplots(1,2, figsize=(6,3))
     ax[0].plot(electrolyzer_sizes_mw, np.asarray(capex)*1E-6, label="Centralized")
     ax[1].plot(electrolyzer_sizes_mw, np.asarray(opex)*1E-6, label="Centralized")
@@ -242,4 +246,3 @@ if __name__ == "__main__":
     ax.set(xlabel="Hour", ylabel="Power (MW)")
     plt.tight_layout()
     plt.show()
-

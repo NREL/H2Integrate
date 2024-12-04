@@ -1,7 +1,8 @@
 import pytest
 from pytest import fixture
 
-from greenheart.simulation.technologies.hydrogen.h2_storage.salt_cavern.salt_cavern import SaltCavernStorage
+from greenheart.simulation.technologies.hydrogen.h2_storage.salt_cavern.salt_cavern import \
+    SaltCavernStorage
 
 # Test values are based on conclusions of Papadias 2021 and are in 2019 USD
 in_dict = {

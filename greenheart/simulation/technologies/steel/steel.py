@@ -1,11 +1,11 @@
 import copy
-from typing import Dict, Union, Optional, Tuple
-
-import ProFAST
-import pandas as pd
-from attrs import define, Factory, field
-
 import os
+from typing import Dict, Optional, Tuple, Union
+
+import pandas as pd
+import ProFAST
+from attrs import Factory, define, field
+
 
 @define
 class Feedstocks:
@@ -200,7 +200,7 @@ class SteelCapacityModelConfig:
     feedstock details.
 
     Attributes:
-        hydrogen_amount_kgpy Optional (float): The amount of hydrogen available in kilograms 
+        hydrogen_amount_kgpy Optional (float): The amount of hydrogen available in kilograms
             per year to make steel.
         desired_steel_mtpy Optional (float): The amount of desired steel production in
             metric tonnes per year.
@@ -227,9 +227,9 @@ class SteelCapacityModelOutputs:
     Outputs from the steel size model.
 
     Attributes:
-        steel_plant_size_mtpy (float): If amount of hydrogen in kilograms per year is input, 
+        steel_plant_size_mtpy (float): If amount of hydrogen in kilograms per year is input,
             the size of the steel plant in metric tonnes per year is output.
-        hydrogen_amount_kgpy (float): If amount of steel production in metric tonnes per year is input, 
+        hydrogen_amount_kgpy (float): If amount of steel production in metric tonnes per year is input,
             the amount of necessary hydrogen feedstock in kilograms per year is output.
     """
     steel_plant_capacity_mtpy: float
@@ -253,20 +253,20 @@ def run_size_steel_plant_capacity(config: SteelCapacityModelConfig) -> SteelCapa
     """
 
     if config.hydrogen_amount_kgpy:
-        steel_plant_capacity_mtpy = (config.hydrogen_amount_kgpy 
+        steel_plant_capacity_mtpy = (config.hydrogen_amount_kgpy
             / 1000
-            / config.feedstocks.hydrogen_consumption 
+            / config.feedstocks.hydrogen_consumption
             * config.input_capacity_factor_estimate
         )
         hydrogen_amount_kgpy = config.hydrogen_amount_kgpy
 
     if config.desired_steel_mtpy:
-        hydrogen_amount_kgpy = (config.desired_steel_mtpy 
+        hydrogen_amount_kgpy = (config.desired_steel_mtpy
             * 1000
             * config.feedstocks.hydrogen_consumption
             / config.input_capacity_factor_estimate
         )
-        steel_plant_capacity_mtpy = (config.desired_steel_mtpy 
+        steel_plant_capacity_mtpy = (config.desired_steel_mtpy
             / config.input_capacity_factor_estimate
         )
 
@@ -941,7 +941,7 @@ def run_steel_full_model(greenheart_config: dict, save_plots=False, show_plots=F
             capacity_config.input_capacity_factor_estimate,
         ),
         costs=steel_costs,
-        show_plots=show_plots, 
+        show_plots=show_plots,
         save_plots=save_plots,
         output_dir=output_dir,
         design_scenario_id=design_scenario_id,

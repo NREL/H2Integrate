@@ -1,8 +1,9 @@
 # inputs file
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt 
+
 
 def set_inputs():
 
@@ -101,7 +102,7 @@ def establish_save_output_dict():
     save_outputs_dict['LCOH H2 contribution ($/kg)'] = list()
     save_outputs_dict['LCOH Desal contribution ($/kg)'] = list()
     save_outputs_dict['LCOH HVDC contribution ($/kg)'] = list()
-    save_outputs_dict['LCOH Pipeline contribution ($/kg)'] = list()    
+    save_outputs_dict['LCOH Pipeline contribution ($/kg)'] = list()
     save_outputs_dict['H_LCOE HVDC scenario no operating costs (uses LCOE calculator) ($/kg)'] = list()
     save_outputs_dict['H_LCOE HVDC scenario w/ operating costs (uses LCOE calculator) ($/kg)'] = list()
     save_outputs_dict['H_LCOE Pipeline scenario no operating costs (uses LCOE calculator) ($/kg)'] = list()
@@ -119,7 +120,7 @@ def establish_save_output_dict():
     save_outputs_dict['HOPP Annual Energy Curtailment (kWh)'] = list()
     save_outputs_dict['Battery Generation (kWh)'] = list()
     save_outputs_dict['Electricity to Grid (kWh)'] = list()
-    
+
     return save_outputs_dict
 
 def save_the_things():
@@ -184,7 +185,7 @@ def save_the_things():
     save_outputs_dict['LCOH H2 contribution ($/kg)'] = (LCOH_cf_method_h2_costs)
     save_outputs_dict['LCOH Desal contribution ($/kg)'] = (LCOH_cf_method_desal_costs)
     save_outputs_dict['LCOH HVDC contribution ($/kg)'] = (LCOH_cf_method_pipeline)
-    save_outputs_dict['LCOH Pipeline contribution ($/kg)'] =  (LCOH_cf_method_hvdc) 
+    save_outputs_dict['LCOH Pipeline contribution ($/kg)'] =  (LCOH_cf_method_hvdc)
     save_outputs_dict['H_LCOE HVDC scenario no operating costs (uses LCOE calculator) ($/kg)'] = (h_lcoe_no_op_cost_hvdc)
     save_outputs_dict['H_LCOE HVDC scenario w/ operating costs (uses LCOE calculator) ($/kg)'] = (h_lcoe_hvdc)
     save_outputs_dict['H_LCOE Pipeline scenario no operating costs (uses LCOE calculator) ($/kg)'] = (h_lcoe_no_op_cost_pipeline)

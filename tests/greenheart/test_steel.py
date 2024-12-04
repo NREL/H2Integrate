@@ -1,5 +1,7 @@
-from pytest import approx, fixture, raises
 import copy
+
+from pytest import approx, fixture, raises
+
 from greenheart.simulation.technologies.steel import steel
 
 ng_prices_dict = {
@@ -205,10 +207,10 @@ def test_run_steel_full_model(subtests):
 
     with subtests.test("h2 mass per year"):
         assert res[0].hydrogen_amount_kgpy == approx(73288888.8888889)
-    
+
     with subtests.test("plant cost"):
         assert res[1].total_plant_cost == approx(458597254.6437372)
-    
+
     with subtests.test("steel price"):
         assert res[2].sol.get("price") == approx(958.0597659101862)
 

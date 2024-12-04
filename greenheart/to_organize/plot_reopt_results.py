@@ -1,8 +1,11 @@
-from greenheart.to_organize.plot_power_to_load import plot_power_to_load
-from greenheart.to_organize.plot_shortfall_curtailment import plot_shortfall_curtailment
-from greenheart.to_organize.plot_battery import plot_battery
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
+
+from greenheart.to_organize.plot_battery import plot_battery
+from greenheart.to_organize.plot_power_to_load import plot_power_to_load
+from greenheart.to_organize.plot_shortfall_curtailment import \
+    plot_shortfall_curtailment
+
 
 def plot_reopt_results(REoptResultsDF, site_name, atb_year, critical_load_factor,
                                useful_life, tower_height,

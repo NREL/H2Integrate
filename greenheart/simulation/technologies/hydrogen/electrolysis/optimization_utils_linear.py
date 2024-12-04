@@ -1,9 +1,10 @@
-from pyomo.environ import *
-import random
-import numpy as np
-import matplotlib.pyplot as plt
-import time
 import os
+import random
+import time
+
+import matplotlib.pyplot as plt
+import numpy as np
+from pyomo.environ import *
 
 
 def optimize(

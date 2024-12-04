@@ -5,8 +5,10 @@
     Output is in 2016 USD
 '''
 
-from numpy import interp, mean, dot
-from math import log10, ceil, log
+from math import ceil, log, log10
+
+from numpy import dot, interp, mean
+
 
 class Compressor:
     def __init__(self, p_outlet, flow_rate_kg_d, p_inlet=20, n_compressors=2, sizing_safety_factor=1.1):
@@ -34,19 +36,19 @@ class Compressor:
             May 2008
             """
             raise ValueError("Invalid compressor design. Flow rate must be less than 5.4 kg/s per compressor")
-            
+
 
     def compressor_power(self):
         R = 8.314 #J/mol-K
         T = 25+273.15 #K
-        
+
         cpcv =  1.41 #H2 Cp/Cv ratio
         sizing = self.sizing_safety_factor # 110% based on typical industrial practices
         isentropic_efficiency = 0.88 # 0.88 based on engineering estimation for a reciprocating compressor
 
         # https://h2tools.org/hyarc/hydrogen-data/hydrogen-compressibility-different-temperatures-and-pressures
         Z_pressures = [1,10,50,100,300,500,1000] # Pressure for z correlation in bar
-        Z_z = [1.0006,1.0059,1.0297,1.0601,1.1879,1.3197,1.6454] # H2 Compressibility aty 25C 
+        Z_z = [1.0006,1.0059,1.0297,1.0601,1.1879,1.3197,1.6454] # H2 Compressibility aty 25C
         Z = mean(interp([self.p_inlet,self.p_outlet],Z_pressures,Z_z))
 
         c_ratio_per_stage = 2.1 #based on engineering estimation for a reciprocating compressor operating on hydrogen
@@ -58,7 +60,7 @@ class Compressor:
         actual_power = theorhetical_power/isentropic_efficiency #kW per compressor
         motor_efficiency = dot([0.00008,-0.0015,0.0061,0.0311,0.7617],[log(actual_power)**x for x in [4,3,2,1,0]])
         self.motor_rating = sizing*actual_power/motor_efficiency #kW per unit
-    
+
     def compressor_system_power(self):
         return self.motor_rating, self.motor_rating*self.n_compressors # [kW] total system power
 
@@ -81,7 +83,7 @@ class Compressor:
 
         other_capital_pct = [0.05,0.1,0.1,0,0.03,0.12] # These are all percentages of direct capex (site,E&D,contingency,licensing,permitting,owners cost)
         other_capital = dot(other_capital_pct,[direct_capex]*len(other_capital_pct)) + land
-        
+
         total_capex = direct_capex + other_capital
 
         ##
@@ -103,7 +105,7 @@ class Compressor:
         total_OM = labor+electricity+other_fixed
 
         return total_capex, total_OM
-        
+
 if __name__ == "__main__":
     p_inlet = 20 # bar
     p_outlet = 68 # bar

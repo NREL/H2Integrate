@@ -4,7 +4,7 @@ Date: 23 Jan 2023
 Institution: National Renewable Energy Lab
 Description: This file handles the cost, sizing, and pressure of on-turbine H2 storage
 
-To use this class, specify a turbine 
+To use this class, specify a turbine
 
 Costs are assumed to be in 2003 dollars [1]
 
@@ -23,15 +23,16 @@ API member functions:
 
 import numpy as np
 
+
 class PressurizedTower():
     def __init__(self,
                  year: int,
                  turbine: dict):
-        
+
         # key inputs
         self.year= year
         self.turbine= turbine
-        
+
         self.tower_length= turbine['tower_length'] # m
         self.section_diameters= turbine['section_diameters'] # m
         self.section_heights= turbine['section_heights'] # m
@@ -110,7 +111,7 @@ class PressurizedTower():
                 self.cap_material_cost_trad)
             print("tower total material cost (non-pressurized):",
                 self.wall_material_cost_trad + self.cap_material_cost_trad)
-            
+
             # print the changes to the structure
             print()
             print("tower wall material volume (pressurized):", self.wall_material_volume)
@@ -162,7 +163,7 @@ class PressurizedTower():
 
         # total volume: sum of sections
         return np.sum(vol_section) # m^3
-    
+
     def get_volume_tower_material(self,
                                   pressure : float = None):
         """
@@ -184,7 +185,7 @@ class PressurizedTower():
         if pressure is None: pressure= self.operating_pressure
 
         # this is the linear constant s.t. delta t ~ alpha * d
-        alpha_dtp= PressurizedTower.get_thickness_increment_const(pressure, self.ultimate_tensile_strength) # 
+        alpha_dtp= PressurizedTower.get_thickness_increment_const(pressure, self.ultimate_tensile_strength) #
 
         # loop over the sections of the tower
         Nsection= len(self.section_diameters) - 1
@@ -194,7 +195,7 @@ class PressurizedTower():
             h1= self.section_heights[i_section]
             d2= self.section_diameters[i_section + 1]
             h2= self.section_heights[i_section + 1]
-            
+
             if self.setting_volume_thickness_calc == 'centered':
                 Vouter= PressurizedTower.compute_frustum_volume(h2 - h1,
                                                                 d1*(1 + (1/self.d_t_ratio + alpha_dtp)),
@@ -236,7 +237,7 @@ class PressurizedTower():
 
         # total material volume
         return (Vmat_wall, Vmat_bot, Vmat_top) # m^3
-    
+
     def get_mass_tower_material(self,
                                 pressure : float = None):
         """
@@ -256,7 +257,7 @@ class PressurizedTower():
 
         # pass through to volume calculator, multiplying by steel density
         return [self.density_steel*x for x in self.get_volume_tower_material(pressure)] # kg
-    
+
     def get_cost_tower_material(self,
                                 pressure : float = None):
         """
@@ -284,7 +285,7 @@ class PressurizedTower():
     def get_operational_mass_fraction(self):
         """
         get the fraction of stored hydrogen to tower mass
-        
+
         following Kottenstette
         """
 
@@ -339,8 +340,8 @@ class PressurizedTower():
         against the vessel-specific capital expenditure, plus wages times staff
         hours per year
         """
-        
-        return self.get_capex()*self.maintenance_rate + self.wage*self.staff_hours # 2003 dollars 
+
+        return self.get_capex()*self.maintenance_rate + self.wage*self.staff_hours # 2003 dollars
 
     def get_mass_empty(self):
         """ return the total additional empty mass necessary for H2 production in kg """
@@ -390,7 +391,7 @@ class PressurizedTower():
                     Guide to the ASME Boiler and Pressure Vessel Code_ (2009),
                     fig. 21.3. type of sketch (a) assumed
             - E= 0.80: conservatively butt weld, inspected
-        
+
         using the ASME pressure vessel code definitions, and values given in
         Rao _Companion Guide to the ASME Boiler and Pressure Vessel Code_ (2009)
         """
@@ -410,10 +411,10 @@ class PressurizedTower():
                                d_t_ratio : float):
         """
         get burst/fatigue crossover pressure
-        
+
         following Kottenstette 2003
         """
-    
+
         # convert to nice variables
         E= welded_joint_efficiency # nondim.
         Sut= ultimate_tensile_strength # pressure units

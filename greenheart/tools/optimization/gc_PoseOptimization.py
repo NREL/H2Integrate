@@ -4,15 +4,17 @@ This file is based on the WISDEM file of the same name: https://github.com/WISDE
 
 import os
 import warnings
-
-import numpy as np
 from typing import Optional, Union
 
+import numpy as np
 import openmdao.api as om
-
-from greenheart.simulation.greenheart_simulation import GreenHeartSimulationConfig
-from greenheart.tools.optimization.openmdao import TurbineDistanceComponent, BoundaryDistanceComponent
 from hopp.simulation import HoppInterface
+
+from greenheart.simulation.greenheart_simulation import \
+    GreenHeartSimulationConfig
+from greenheart.tools.optimization.openmdao import (BoundaryDistanceComponent,
+                                                    TurbineDistanceComponent)
+
 
 class PoseOptimization(object):
     """This class contains a collection of methods for setting up an openmdao optimization problem for a greenheart simulation.
@@ -46,7 +48,7 @@ class PoseOptimization(object):
         """
         # Determine the number of design variables
         n_DV = 0
-        
+
         if self.config.greenheart_config["opt_options"]["design_variables"]["electrolyzer_rating_kw"]["flag"]:
             n_DV += 1
         if self.config.greenheart_config["opt_options"]["design_variables"]["pv_capacity_kw"]["flag"]:
@@ -61,7 +63,7 @@ class PoseOptimization(object):
             n_DV += self.config.hopp_config["technologies"]["wind"]["num_turbines"]
         if self.config.greenheart_config["opt_options"]["design_variables"]["turbine_y"]["flag"]:
             n_DV += self.config.hopp_config["technologies"]["wind"]["num_turbines"]
-        
+
         # Wrap-up at end with multiplier for finite differencing
         if "form" in self.config.greenheart_config["opt_options"]["driver"]["optimization"].keys():
             if self.config.greenheart_config["opt_options"]["driver"]["optimization"]["form"] == "central": # TODO this should probably be handled at the MPI point to avoid confusion with n_DV being double what would be expected
@@ -183,7 +185,7 @@ class PoseOptimization(object):
                         f"You requested the optimization solver {opt_options['solver']}, but you have not installed pyOptSparse. Please do so and rerun."
                     )
                 opt_prob.driver = pyOptSparseDriver(gradient_method=opt_options["gradient_method"])
-                
+
                 try:
                     opt_prob.driver.options["optimizer"] = opt_options["solver"]
                 except:
@@ -306,7 +308,7 @@ class PoseOptimization(object):
         Returns:
             opt_prob (openmdao problem instance): openmdao problem instance for current optimization problem with objective set
         """
-        # 
+        #
         if self.config.greenheart_config["opt_options"]["merit_figure_user"]["name"] != "":
             coeff = -1.0 if self.config.greenheart_config["opt_options"]["merit_figure_user"]["max_flag"] else 1.0
             opt_prob.model.add_objective(self.config.greenheart_config["opt_options"]["merit_figure_user"]["name"],
@@ -325,19 +327,19 @@ class PoseOptimization(object):
         Returns:
             opt_prob (openmdao problem instance): openmdao problem instance for current optimization problem with design variables set
         """
-        
+
         design_variables_dict = {}
         for key in self.config.greenheart_config["opt_options"]["design_variables"].keys():
             if self.config.greenheart_config["opt_options"]["design_variables"][key]["flag"]:
                 design_variables_dict[key] = config.greenheart_config["opt_options"]["design_variables"][key]
-            
+
         print("ADDING DESIGN VARIABLES:")
         for dv, d in design_variables_dict.items():
             print(f"   {dv}")
             opt_prob.model.add_design_var(dv, lower=d["lower"], upper=d["upper"], units=d["units"])
 
         return opt_prob
-    
+
     def set_constraints(self, opt_prob, hi: Optional[Union[None, HoppInterface]] = None):
         """sets up optimization constraints for the greenheart optimization problem
 
@@ -363,10 +365,10 @@ class PoseOptimization(object):
         # turbine spacing constraint
         if self.config.greenheart_config["opt_options"]["constraints"]["turbine_spacing"]["flag"]:
             lower = self.config.greenheart_config["opt_options"]["constraints"]["turbine_spacing"]["lower"]
-            
+
             opt_prob.model.add_subsystem("con_spacing", subsys=TurbineDistanceComponent(turbine_x_init=turbine_x_init, turbine_y_init=turbine_y_init), promotes=["*"])
             opt_prob.model.add_constraint("spacing_vec", lower=lower)
-        
+
         # bondary distance constraint
         if self.config.greenheart_config["opt_options"]["constraints"]["boundary_distance"]["flag"]:
             lower = self.config.greenheart_config["opt_options"]["constraints"]["boundary_distance"]["lower"]
@@ -383,21 +385,21 @@ class PoseOptimization(object):
         user_constr = self.config.greenheart_config["opt_options"]["constraints"]["user"]
         for k in range(len(user_constr)):
             var_k = user_constr[k]["name"]
-            
+
             if "lower_bound" in user_constr[k]:
                 lower_k = user_constr[k]["lower_bound"]
             elif "lower" in user_constr[k]:
                 lower_k = user_constr[k]["lower"]
             else:
                 lower_k = None
-                
+
             if "upper_bound" in user_constr[k]:
                 upper_k = user_constr[k]["upper_bound"]
             elif "upper" in user_constr[k]:
                 lower_k = user_constr[k]["upper"]
             else:
                 upper_k = None
-                
+
             if "indices" in user_constr[k]:
                 idx_k = user_constr[k]["indices"]
             else:
@@ -405,9 +407,9 @@ class PoseOptimization(object):
 
             if lower_k is None and upper_k is None:
                 raise Exception(f"Must include a lower_bound and/or an upper bound for {var_k}")
-            
+
             opt_prob.model.add_constraint(var_k, lower=lower_k, upper=upper_k, indices=idx_k)
-        
+
         return opt_prob
 
     def set_recorders(self, opt_prob):
@@ -439,7 +441,7 @@ class PoseOptimization(object):
         return opt_prob
 
     def set_initial(self, opt_prob, config):
-        
+
         return opt_prob
 
     def set_restart(self, opt_prob):

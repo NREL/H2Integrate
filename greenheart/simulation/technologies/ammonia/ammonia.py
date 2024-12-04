@@ -1,11 +1,11 @@
 import copy
-from typing import Dict, Union, Optional, Tuple
-import ProFAST
+import os
+from typing import Dict, Optional, Tuple, Union
 
 import pandas as pd
-from attrs import define, Factory, field
+import ProFAST
+from attrs import Factory, define, field
 
-import os
 
 @define
 class Feedstocks:
@@ -154,7 +154,7 @@ class AmmoniaCapacityModelConfig:
     feedstock details.
 
     Attributes:
-        hydrogen_amount_kgpy Optional (float): The amount of hydrogen available in kilograms 
+        hydrogen_amount_kgpy Optional (float): The amount of hydrogen available in kilograms
             per year to make ammonia.
         desired_ammonia_kgpy Optional (float): The amount of desired ammonia production in
             kilograms per year.
@@ -181,9 +181,9 @@ class AmmoniaCapacityModelOutputs:
     Outputs from the ammonia plant capacity size model.
 
     Attributes:
-        ammonia_plant_capacity_kgpy (float): If amount of hydrogen in kilograms per year is input, 
+        ammonia_plant_capacity_kgpy (float): If amount of hydrogen in kilograms per year is input,
             the size of the ammonia plant in kilograms per year is output.
-        hydrogen_amount_kgpy (float): If amount of ammonia production in kilograms per year is input, 
+        hydrogen_amount_kgpy (float): If amount of ammonia production in kilograms per year is input,
             the amount of necessary hydrogen feedstock in kilograms per year is output.
     """
     ammonia_plant_capacity_kgpy: float
@@ -205,8 +205,8 @@ def run_size_ammonia_plant_capacity(config: AmmoniaCapacityModelConfig) -> Ammon
 
     """
     if config.hydrogen_amount_kgpy:
-        ammonia_plant_capacity_kgpy = (config.hydrogen_amount_kgpy 
-            / config.feedstocks.hydrogen_consumption 
+        ammonia_plant_capacity_kgpy = (config.hydrogen_amount_kgpy
+            / config.feedstocks.hydrogen_consumption
             * config.input_capacity_factor_estimate
         )
         hydrogen_amount_kgpy = config.hydrogen_amount_kgpy
@@ -216,7 +216,7 @@ def run_size_ammonia_plant_capacity(config: AmmoniaCapacityModelConfig) -> Ammon
             * config.feedstocks.hydrogen_consumption
             / config.input_capacity_factor_estimate
         )
-        ammonia_plant_capacity_kgpy = (config.desired_ammonia_kgpy 
+        ammonia_plant_capacity_kgpy = (config.desired_ammonia_kgpy
             / config.input_capacity_factor_estimate
         )
 
@@ -698,7 +698,7 @@ def run_ammonia_full_model(greenheart_config: dict, save_plots=False, show_plots
         plant_capacity_kgpy=ammonia_capacity.ammonia_plant_capacity_kgpy,
         plant_capacity_factor=capacity_config.input_capacity_factor_estimate,
         costs=ammonia_costs,
-        show_plots=show_plots, 
+        show_plots=show_plots,
         save_plots=save_plots,
         output_dir=output_dir,
         design_scenario_id=design_scenario_id,

@@ -20,8 +20,9 @@ efficiency):
 Energy: 1 kg H2 --> 16 kWh
 """
 import math
-import numpy as np
 import sys
+
+import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
 

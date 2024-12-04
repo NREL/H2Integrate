@@ -13,8 +13,12 @@ Post-treatment: Consists of sterilization, stabilization, mineral enrichment and
 Energy recovery system: A system where a portion of the pressure energy of the brine is recovered.
 """
 import sys
+
 import numpy as np
-from greenheart.to_organize.H2_Analysis.simple_cash_annuals import simple_cash_annuals
+
+from greenheart.to_organize.H2_Analysis.simple_cash_annuals import \
+    simple_cash_annuals
+
 
 def RO_desal(net_power_supply_kW, desal_sys_size, useful_life, plant_life, \
     water_recovery_ratio = 0.30, energy_conversion_factor = 4.2, \

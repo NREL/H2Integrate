@@ -1,7 +1,8 @@
 import numpy as np
-from greenheart.simulation.technologies.hydrogen.electrolysis.PEM_H2_LT_electrolyzer_Clusters import (
-    PEM_H2_Clusters as PEMClusters,
-)
+
+from greenheart.simulation.technologies.hydrogen.electrolysis.PEM_H2_LT_electrolyzer_Clusters import \
+    PEM_H2_Clusters as PEMClusters
+
 
 def create_1MW_reference_PEM():
     pem_param_dict = {
