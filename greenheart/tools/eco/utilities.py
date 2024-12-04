@@ -1426,7 +1426,7 @@ def save_energy_flows(
         output.update({"battery state of charge [%]": hybrid_plant.battery.outputs.dispatch_SOC})
 
     output.update({"total accessory power required [kW]": solver_results[0]})
-    output.update({"grid energy usage hourly [kW]": [solver_results[1]]*simulation_length})
+    output.update({"grid energy usage hourly [kW]": solver_results[1]})
     output.update({"desal energy hourly [kW]": [solver_results[2]]*simulation_length})
     output.update({"electrolyzer energy hourly [kW]": electrolyzer_physics_results["power_to_electrolyzer_kw"]})
     output.update({"electrolyzer bop energy hourly [kW]":solver_results[5]})
@@ -1450,32 +1450,44 @@ def save_energy_flows(
 # LCA TODO:
     # Add all config for LCA to greenheart_config yaml as input
     # update greenheart_simulation.py 
-        # call of post_process_simulation() with flags for run_lca()
+        # call of post_process_simulation() with flags for calculate_lca()
     # update post_process_simulation() to call run_lca()
-    # confirm naming convention for saved LCA results csv and any printing of values in post_process_simulation()
     # update reference_plant input yamls for with lca_config
-    # confirm removal of h2 from average lca value calculations
-    # confirm outstanding variables in lca_dict (first 5 variables)
     # confirm if additional site / system config needs to be saved in output lca_results.csv
 
-def run_lca(
+def calculate_lca(
     hopp_results,
     electrolyzer_physics_results,
     hopp_config,
-    greenheart_config
+    greenheart_config,
+    total_accessory_power_renewable_kw,
+    total_accessory_power_grid_kw
     ):
 
     # Load HOPP Data:  
-    project_lifetime = greenheart_config['project_parameters']['project_lifetime']                                  # system lifetime (years)
-    wind_annual_energy_kwh = hopp_results['annual_energies']['wind']                                                # annual energy from wind (kWh)
-    solar_pv_annual_energy_kwh = hopp_results['annual_energies']['pv']                                              # annual energy from solar (kWh)
-    battery_system_capacity_kwh = hopp_results['hybrid_plant'].battery.system_capacity_kwh                          # battery rated capacity (kWh)
-    energy_to_electrolyzer_from_grid = hopp_results['energy_shortfall_hopp']                                        # Total electricity to electrolyzer from grid power (kWh)
-    h2_hourly_prod_kg = np.array(electrolyzer_physics_results['H2_Results']['Hydrogen Hourly Production [kg/hr]'])  # Hourly H2 production (kg/hr * 1hr = kg) len=8760
+    project_lifetime = greenheart_config['project_parameters']['project_lifetime']                                      # system lifetime (years)
+    wind_annual_energy_kwh = hopp_results['annual_energies']['wind']                                                    # annual energy from wind (kWh)
+    solar_pv_annual_energy_kwh = hopp_results['annual_energies']['pv']                                                  # annual energy from solar (kWh)
+    # battery_system_capacity_kwh = hopp_results['hybrid_plant'].battery.system_capacity_kwh                             # battery rated capacity (kWh)
+    
+    # Calculate average annual and lifetime h2 production
+    h2_annual_prod_kg = np.array(electrolyzer_physics_results['H2_Results']['Life: Annual H2 production [kg/year]'])    # Lifetime Average Annual H2 production accounting for electrolyzer degradation (kg H2/year)
+    h2_lifetime_prod_kg = h2_annual_prod_kg * project_lifetime                                                          # Lifetime H2 production accounting for electrolyzer degradation (kg H2)
+
+    # Calculate energy to electrolyzer and peripherals when hybrid-grid case
+    if 'hybrid-grid' in grid_case:
+        energy_shortfall_hopp = hopp_results['energy_shortfall_hopp']                                                   # Total electricity to electrolyzer and peripherals from grid power (kWh) when hybrid-grid, shape = (8760*project_lifetime,)
+        energy_shortfall_hopp.shape = (project_lifetime,8760)                                                           # Reshaped to be annual power (project_lifetime, 8760)
+        annual_energy_to_electrolyzer_from_grid = np.mean(energy_shortfall_hopp, axis=0)                                # Lifetime Average Annual electricity to electrolyzer and peripherals from grid power when hybrid-grid case, shape = (8760,)
+    # Calculate energy to electrolyzer and peripherals when grid-only case
+    if 'grid-only' in grid_case:
+        energy_to_electrolyzer = electrolyzer_physics_results['power_to_electrolyzer_kw']                               # Total electricity to electrolyzer from grid power (kWh) when grid-only case, shape = (8760,)
+        energy_to_peripherals = total_accessory_power_renewable_kw + total_accessory_power_grid_kw                      # Total electricity to peripherals from grid power (kWh) when grid-only case, shape = (8760,)
+        annual_energy_to_electrolyzer_from_grid = energy_to_electrolyzer + energy_to_peripherals                        # Average Annual electricity to electrolyzer and peripherals from grid power when grid-only case, shape = (8760,)
+
 
     # Create dataframe for electrolyzer power profiles
-    electrolyzer_profiles_data_dict = {'Energy to electrolyzer from grid (kWh)': energy_to_electrolyzer_from_grid,
-                                       'Hydrogen Hourly production (kg)': h2_hourly_prod_kg}
+    electrolyzer_profiles_data_dict = {'Energy to electrolyzer from grid (kWh)': annual_energy_to_electrolyzer_from_grid}
     electrolyzer_profiles_df = pd.DataFrame(data=electrolyzer_profiles_data_dict)
     electrolyzer_profiles_df = electrolyzer_profiles_df.reset_index().rename(columns={'index':'Interval'})
     electrolyzer_profiles_df['Interval'] = electrolyzer_profiles_df['Interval']+1
@@ -1748,22 +1760,10 @@ def run_lca(
 
         combined_data_df = pd.concat([electrolyzer_profiles_df, cambium_data_df], axis=1)
 
-        # Calculate hourly grid emissions factors (kg CO2e)
-        combined_data_df['Total grid emissions from electrolysis energy consumption (kg-CO2e)'] = (combined_data_df['Energy to electrolyzer from grid (kWh)'] / 1000) * combined_data_df['LRMER CO2 equiv. total (kg-CO2e/MWh)']
-        combined_data_df['Scope 2 (combustion) grid emissions from electrolysis energy consumption (kg-CO2e)'] = (combined_data_df['Energy to electrolyzer from grid (kWh)'] / 1000) * combined_data_df['LRMER CO2 equiv. combustion (kg-CO2e/MWh)']
-        combined_data_df['Scope 3 (precombustion) grid emissions from electrolysis energy consumption (kg-CO2e)'] = (combined_data_df['Energy to electrolyzer from grid (kWh)'] / 1000) * combined_data_df['LRMER CO2 equiv. precombustion (kg-CO2e/MWh)']
-
-        # Calculate annual and lifetime Hydrogen production (kg H2)
-        h2prod_annual_sum = combined_data['Hydrogen Hourly production (kg)'].sum()
-        h2prod_life_sum = combined_data['Hydrogen Hourly production (kg)'].sum() * project_lifetime
-
-        # Sum total grid emissions
-        # TODO: Masha - why calculate these here instead of in LCA calculations below?
-        total_grid_emissions_from_ely_electricity_consume_annual_sum = combined_data_df['Total grid emissions from electrolysis energy consumption (kg-CO2e)'].sum()                        # Total Grid Emissions from electrolysis electricity consumption (kg CO2e)
-        scope2_grid_emissions_from_ely_electricity_consume_annual_sum = combined_data_df['Scope 2 (combustion) grid emissions from electrolysis energy consumption (kg-CO2e)'].sum()        # Scope 2 Grid Emissions from electrolysis electricity consumption (kg CO2e)
-        scope3_grid_emissions_from_ely_electricity_consume_annual_sum = combined_data_df['Scope 3 (precombustion) grid emissions from electrolysis energy consumption (kg-CO2e)'].sum()     # Scope 3 Grid Emissions from electrolysis electricity consumption (kg CO2e)
-        grid_electricity_to_ely_annual_sum_MWh = combined_data_df['Energy to electrolyzer from grid (kWh)'].sum() / 1000                                                                    # Total energy to the electrolyzer from the grid (MWh)
-        grid_emission_intensity_annual_average = combined_data_df['LRMER CO2 equiv. total (kg-CO2e/MWh)'].mean()                                                                            # Annaul Average Grid Long-Run Marginal Emission Intensity (kg-CO2/MWh)
+        # Calculate consumption and emissions factor for electrolysis
+        electrolysis_grid_electricity_consume = combined_data_df['Energy to electrolyzer from grid (kWh)'].sum()                                                                                # Total energy to the electrolyzer from the grid (kWh)
+        electrolysis_scope3_grid_emissions = ((combined_data_df['Energy to electrolyzer from grid (kWh)'] / 1000) * combined_data_df['LRMER CO2 equiv. precombustion (kg-CO2e/MWh)']).sum()     # Scope 3 Electrolysis Emissions from grid electricity consumption (kg CO2e)
+        electrolysis_scope2_grid_emissions = ((combined_data_df['Energy to electrolyzer from grid (kWh)'] / 1000) * combined_data_df['LRMER CO2 equiv. combustion (kg-CO2e/MWh)']).sum()        # Scope 2 Electrolysis Emissions from grid electricity consumption (kg CO2e)
 
         # Calculate annual percentages of solar, wind and fossil in grid mix (%)
         generation_annual_total_MWh = cambium_data_df['generation'].sum()
@@ -1788,8 +1788,8 @@ def run_lca(
         #NOTE: current config assumes SMR, ATR, NH3, and Steel processes are always grid powered / grid connected, electricity needed for these processes does not come from renewables
         if 'hybrid-grid' in grid_case:
             # Calculate grid-connected electrolysis emissions (kg CO2e/kg H2), future cases should reflect targeted electrolyzer electricity usage
-            electrolysis_Scope3_EI = ely_stack_and_BoP_capex_EI + (ely_H2O_consume * H2O_supply_EI) + ((scope3_grid_emissions_from_ely_electricity_consume_annual_sum + (wind_capex_EI * g_to_kg * wind_annual_energy_kwh) + (solar_pv_capex_EI * g_to_kg * solar_pv_annual_energy_kwh) + (grid_capex_EI * grid_electricity_to_ely_annual_sum_MWh * MWh_to_kWh)) / h2prod_annual_sum)
-            electrolysis_Scope2_EI = scope2_grid_emissions_from_ely_electricity_consume_annual_sum / h2prod_annual_sum 
+            electrolysis_Scope3_EI = ely_stack_and_BoP_capex_EI + (ely_H2O_consume * H2O_supply_EI) + ((electrolysis_scope3_grid_emissions + (wind_capex_EI * g_to_kg * wind_annual_energy_kwh) + (solar_pv_capex_EI * g_to_kg * solar_pv_annual_energy_kwh) + (grid_capex_EI * electrolysis_grid_electricity_consume)) / h2_annual_prod_kg)
+            electrolysis_Scope2_EI = (electrolysis_scope2_grid_emissions / h2_annual_prod_kg) 
             electrolysis_Scope1_EI = 0
             electrolysis_total_EI  = electrolysis_Scope1_EI + electrolysis_Scope2_EI + electrolysis_Scope3_EI
 
@@ -1808,8 +1808,8 @@ def run_lca(
         if 'grid-only' in grid_case:
             ## H2 production via electrolysis
             # Calculate grid-connected electrolysis emissions (kg CO2e/kg H2)
-            electrolysis_Scope3_EI = ely_stack_and_BoP_capex_EI + (ely_H2O_consume * H2O_supply_EI) + ((scope3_grid_emissions_from_ely_electricity_consume_annual_sum + (grid_capex_EI * grid_electricity_to_ely_annual_sum_MWh * MWh_to_kWh))/h2prod_annual_sum)
-            electrolysis_Scope2_EI = scope2_grid_emissions_from_ely_electricity_consume_annual_sum / h2prod_annual_sum 
+            electrolysis_Scope3_EI = ely_stack_and_BoP_capex_EI + (ely_H2O_consume * H2O_supply_EI) + ((electrolysis_scope3_grid_emissions + (grid_capex_EI * electrolysis_grid_electricity_consume))/h2_annual_prod_kg)
+            electrolysis_Scope2_EI = (electrolysis_scope2_grid_emissions / h2_annual_prod_kg) 
             electrolysis_Scope1_EI = 0
             electrolysis_total_EI = electrolysis_Scope1_EI + electrolysis_Scope2_EI + electrolysis_Scope3_EI
 
@@ -1901,7 +1901,7 @@ def run_lca(
 
         if 'off-grid' in grid_case:
             # Calculate renewable only electrolysis emissions (kg CO2e/kg H2)       
-            electrolysis_Scope3_EI = ely_stack_and_BoP_capex_EI + (ely_H2O_consume * H2O_supply_EI) + (((wind_capex_EI * g_to_kg * wind_annual_energy_kwh) + (solar_pv_capex_EI * g_to_kg * solar_pv_annual_energy_kwh)) /h2prod_annual_sum)
+            electrolysis_Scope3_EI = ely_stack_and_BoP_capex_EI + (ely_H2O_consume * H2O_supply_EI) + (((wind_capex_EI * g_to_kg * wind_annual_energy_kwh) + (solar_pv_capex_EI * g_to_kg * solar_pv_annual_energy_kwh)) /h2_annual_prod_kg)
             electrolysis_Scope2_EI = 0
             electrolysis_Scope1_EI = 0
             electrolysis_total_EI = electrolysis_Scope1_EI + electrolysis_Scope2_EI + electrolysis_Scope3_EI
@@ -2370,13 +2370,7 @@ def run_lca(
 
     # Put all cumulative metrics into a dictionary, then dataframe, then save results to csv
     lca_dict = {'Cambium Warning': [cambium_year_warning_message if cambium_warning_flag else "None"],
-                # TODO: h2prod_annual_sum = production for 1 year, if this is lifetime it should be summed for every year (I think this is a set value for each year, so simply multiply by project lifetime?)
-                'Total Life Cycle H2 Production (kg-H2)': [h2prod_annual_sum], 
-                # TODO: following 4 variables are calculated inside cambium loop, thus this value is overriden each loop and really represents grid emissions from electrolysis and average grid EI for 2050 cambium not lifetime                                                                                              
-                'Grid Total Scope 2 (Combustion) GHG Emissions from Electrolysis Power Consumption (kg-CO2e)': [scope2_grid_emissions_from_ely_electricity_consume_annual_sum],       
-                'Grid Total Scope 3 (Production) GHG Emissions from Electrolysis Power Consumption (kg-CO2e)': [scope3_grid_emissions_from_ely_electricity_consume_annual_sum],       
-                'Grid Total Life Cycle Emissions from Electrolysis Power Consumption (kg-CO2e)' : [total_grid_emissions_from_ely_electricity_consume_annual_sum],                     
-                'Annual Average Grid Emission Intensity (kg-CO2/MWh)': [grid_emission_intensity_annual_average],
+                'Total Life Cycle H2 Production (kg-H2)': [h2_lifetime_prod_kg],
                 'Electrolysis Scope 3 GHG Emissions (kg-CO2e/kg-H2)':[electrolysis_Scope3_LCA],
                 'Electrolysis Scope 2 GHG Emissions (kg-CO2e/kg-H2)':[electrolysis_Scope2_LCA],
                 'Electrolysis Scope 1 GHG Emissions (kg-CO2e/kg-H2)':[electrolysis_Scope1_LCA],             
@@ -2494,6 +2488,8 @@ def post_process_simulation(
     orbit_config,
     turbine_config,
     h2_storage_results,
+    total_accessory_power_renewable_kw,
+    total_accessory_power_grid_kw,
     capex_breakdown,
     opex_breakdown,
     wind_cost_results,
@@ -2503,7 +2499,7 @@ def post_process_simulation(
     plant_design_number,
     incentive_option,
     solver_results=[],
-    run_lca=False,
+    # run_lca=False,
     show_plots=False,
     save_plots=False,
     verbose=False,
@@ -2545,7 +2541,7 @@ def post_process_simulation(
             ),
         )
         print(
-            "Electorlyzer CAPEX installed $/kW: ",
+            "Electrolyzer CAPEX installed $/kW: ",
             round(
                 capex_breakdown["electrolyzer"]
                 / (greenheart_config["electrolyzer"]["rating"] * 1e3),
@@ -2554,12 +2550,14 @@ def post_process_simulation(
         )
 
     # Run LCA analysis if flag = True
-    if run_lca:
-        lca_df = run_lca(hopp_results = hopp_results,
-                         electrolyzer_physics_results = electrolyzer_physics_results,
-                         hopp_config = hopp_config,
-                         greenheart_config =  greenheart_config
-                        )
+    # if run_lca:
+    #     lca_df = calculate_lca(hopp_results = hopp_results,
+    #                            electrolyzer_physics_results = electrolyzer_physics_results,
+    #                            hopp_config = hopp_config,
+    #                            greenheart_config =  greenheart_config,
+    #                            total_accessory_power_renewable_kw = total_accessory_power_renewable_kw,
+    #                            total_accessory_power_grid_kw = total_accessory_power_grid_kw
+    #                           )
 
     if show_plots or save_plots:
         visualize_plant(
@@ -2608,12 +2606,19 @@ def post_process_simulation(
         )
     )
 
-    #TODO: clarify file name desired and add additional descriptors to filename based on yamls inputs
-    if run_lca:
-        lca_df.to_csv(
-            savepaths[3]
-            + "LCA_results.csv"
-        )
+    # if run_lca:
+    #     lca_savepath = (
+    #         savepaths[3]
+    #         + "LCA_results_design%i_incentive%i_%sstorage.csv"
+    #         % (
+    #             plant_design_number,
+    #             incentive_option,
+    #             greenheart_config["h2_storage"]["type"],
+    #         )
+    #     )
+    #     lca_df.to_csv(lca_savepath)
+    #     print("LCA Analysis was run as a postprocessing step. Results were saved to:")
+    #     print(lca_savepath)
         
     # create dataframe for saving all the stuff
     greenheart_config["design_scenario"] = design_scenario
@@ -2631,7 +2636,7 @@ def post_process_simulation(
                 electrolyzer_physics_results["power_to_electrolyzer_kw"]
             ),
             "renewable_kwh": sum(solver_results[0]),
-            "grid_power_kwh": solver_results[1] * hours,
+            "grid_power_kwh": sum(solver_results[1]),
             "desal_kwh": solver_results[2] * hours,
             "h2_transport_compressor_power_kwh": solver_results[3] * hours,
             "h2_storage_power_kwh": solver_results[4] * hours,
@@ -2763,5 +2768,71 @@ def post_process_simulation(
         electrolyzer_physics_results["H2_Results"][key],
         header="# " + key
     )
+
+    # h2_annual_prod_kg = np.array(electrolyzer_physics_results['H2_Results']['Life: Annual H2 production [kg/year]'])    # Lifetime Average Annual H2 production accounting for electrolyzer degradation (kg/year)
+    # h2_lifetime_prod_kg = h2_annual_prod_kg * project_lifetime
+
+    # print("#*#*#*#*#*#*#*#*#*#*#")
+    # print("H2_Results -> Life: Annual H2 production [kg/year]")
+    # print(h2_annual_prod_kg)
+    # print(h2_annual_prod_kg * 30)
+
+    # energy_shortfall_hopp = hopp_results['energy_shortfall_hopp']                                                       # Total electricity to electrolyzer from grid power (kWh), shape = (8760*project_lifetime,)
+    # energy_shortfall_hopp.shape = (30,8760)                                                                             # Reshaped to be annual power (project_lifetime, 8760)
+    # annual_energy_to_electrolyzer_from_grid_case_hybrid_grid = np.mean(energy_shortfall_hopp, axis=0)                   # Lifetime Average Annual electricity to electrolyzer from grid power when hybrid-grid, shape = (8760,)
+
+    # print("#*#*#*#*#*#*#*#*#*#*#")
+    # print("energy_shortfall_hopp")
+    # print(len(energy_shortfall_hopp))
+    # print(type(energy_shortfall_hopp))
+    # print(energy_shortfall_hopp.shape)
+
+    # print("#*#*#*#*#*#*#*#*#*#*#")
+    # print("annual_energy_to_electrolyzer_from_grid_case_hybrid_grid")
+    # print(len(annual_energy_to_electrolyzer_from_grid_case_hybrid_grid))
+    # print(type(annual_energy_to_electrolyzer_from_grid_case_hybrid_grid))
+    # print(annual_energy_to_electrolyzer_from_grid_case_hybrid_grid.shape)
+
+    # print("#*#*#*#*#*#*#*#*#*#*#")
+    # print("electrolyzer_physics_results['power_to_electrolyzer_kw']")
+    # print(len(electrolyzer_physics_results['power_to_electrolyzer_kw']))
+    # print(type(electrolyzer_physics_results['power_to_electrolyzer_kw']))
+    # print(electrolyzer_physics_results['power_to_electrolyzer_kw'].shape)
+    # print(electrolyzer_physics_results['power_to_electrolyzer_kw'])
+
+    # print("#*#*#*#*#*#*#*#*#*#*#")
+    # print("total_accessory_power_renewable_kw")
+    # print(len(total_accessory_power_renewable_kw))
+    # print(type(total_accessory_power_renewable_kw))
+    # print(total_accessory_power_renewable_kw.shape)
+    # print(total_accessory_power_renewable_kw)
+
+    # print("#*#*#*#*#*#*#*#*#*#*#")
+    # print("total_accessory_power_grid_kw")
+    # print(len(total_accessory_power_grid_kw))
+    # print(type(total_accessory_power_grid_kw))
+    # print(total_accessory_power_grid_kw.shape)
+    # print(total_accessory_power_grid_kw)
+    #NOTE: current float, need to update to be 8760 in greenheart_simulation.py
+    #NOTE: need to check if update will break he_fin.run_profast_grid_only and he_fin.run_profast_full_plant_model
+
+    # print("#*#*#*#*#*#*#*#*#*#*#")
+    # print("H2_Results")
+    # print(electrolyzer_physics_results['H2_Results'].keys())
+
+    # print("#*#*#*#*#*#*#*#*#*#*#")
+    # print("h2_hourly_prod_kg")
+    # print(len(np.array(electrolyzer_physics_results['H2_Results']['Hydrogen Hourly Production [kg/hr]'])))
+    # print(sum(np.array(electrolyzer_physics_results['H2_Results']['Hydrogen Hourly Production [kg/hr]'])))
+
+    # energy_to_electrolyzer = electrolyzer_physics_results['power_to_electrolyzer_kw']                                   # Total electricity to electrolyzer from grid power (kWh) when grid-only case, shape = (8760,)
+    # energy_to_peripherals = total_accessory_power_renewable_kw + total_accessory_power_grid_kw                          # Total electricity to peripherals from grid power (kWh) when grid-only case, shape = (8760,)
+    # annual_energy_to_electrolyzer_from_grid_case_grid_only = energy_to_electrolyzer + energy_to_peripherals             # Average Annual electricity to electrolyzer and peripherals from grid power when grid-only case, shape = (8760,)
+    # print("#*#*#*#*#*#*#*#*#*#*#")
+    # print("annual_energy_to_electrolyzer_from_grid_case_grid_only")
+    # print(len(annual_energy_to_electrolyzer_from_grid_case_grid_only))
+    # print(type(annual_energy_to_electrolyzer_from_grid_case_grid_only))
+    # print(annual_energy_to_electrolyzer_from_grid_case_grid_only.shape)
+    # print(annual_energy_to_electrolyzer_from_grid_case_grid_only)
 
     return annual_energy_breakdown, hourly_energy_breakdown
