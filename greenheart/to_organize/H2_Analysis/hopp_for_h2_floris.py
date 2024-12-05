@@ -97,7 +97,6 @@ def hopp_for_h2_floris(
     """
 
     # Create model
-    dispatch_options = {"battery_dispatch": "heuristic"}
     if "grid" not in technologies.keys():
         technologies["grid"] = {"interconnect_kw": interconnection_size_mw * 1e3}
 
@@ -178,7 +177,7 @@ def hopp_for_h2_floris(
         ]
         hi.system.wind._financial_model.FinancialParameters.real_discount_rate = 7
     if custom_powercurve:
-        if turbine_parent_path == None:
+        if turbine_parent_path is None:
             turbine_parent_path = Path(__file__).parent
         powercurve_file = turbine_parent_path / scenario["Powercurve File"]
         if powercurve_file.suffix == ".csv":

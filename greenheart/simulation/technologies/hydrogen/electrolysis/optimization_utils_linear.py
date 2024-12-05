@@ -153,7 +153,7 @@ def optimize(
     j = 1
     while eps > 1e-3:
         start = time.process_time()
-        results = solver.solve(model)
+        solver.solve(model)
         print("time to solve", time.process_time() - start)
 
         model.eps = value(model.AC[0] / model.F_tot[0])  # optimal value

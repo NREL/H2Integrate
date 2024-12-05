@@ -1,7 +1,5 @@
-
 import numpy as np
 from matplotlib import pyplot as plt
-
 
 verbose = False
 
@@ -95,7 +93,7 @@ class PipelineASME:
             print("Vol. Flow rate (m**3/sec):", Q)
 
         # Pipe Dimensions
-        L_m = total_length * 1000.0  # km to m
+        total_length * 1000.0  # km to m
         d_m = self.pipe_diam_in * self.in2cm / 100.0  # inch to meters
         A = (np.pi / 4) * d_m**2  # m**2
 

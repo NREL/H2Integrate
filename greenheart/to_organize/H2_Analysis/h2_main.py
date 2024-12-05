@@ -172,10 +172,10 @@ def h2_main():
                     forced_electrolyzer_cost = scenario["Electrolyzer Cost KW"]
 
                 tower_height = scenario["Tower Height"]
-                rotor_diameter = scenario["Rotor Diameter"]
-                turbine_rating = scenario["Turbine Rating"]
+                scenario["Rotor Diameter"]
+                scenario["Turbine Rating"]
                 wind_cost_kw = scenario["Wind Cost KW"]
-                custom_powercurve_path = scenario["Powercurve File"]
+                scenario["Powercurve File"]
                 solar_cost_kw = scenario["Solar Cost KW"]
                 storage_cost_kw = scenario["Storage Cost KW"]
                 storage_cost_kwh = scenario["Storage Cost KWh"]
@@ -269,8 +269,6 @@ def h2_main():
                     grid_connected_hopp=True,
                 )
 
-                wind_installed_cost = hybrid_plant.wind.total_installed_cost
-                solar_installed_cost = hybrid_plant.pv.total_installed_cost
                 hybrid_installed_cost = hybrid_plant.grid.total_installed_cost
 
                 if plot_power_production:
@@ -420,7 +418,7 @@ def h2_main():
                 # hybrid_plant.grid._financial_model.costs
 
                 # system_rating = electrolyzer_size
-                system_rating = wind_size_mw + solar_size_mw
+                wind_size_mw + solar_size_mw
                 H2_Results, H2A_Results = run_h2_PEM.run_h2_PEM(
                     electrical_generation_timeseries,
                     electrolyzer_size,

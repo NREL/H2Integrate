@@ -56,7 +56,6 @@ class MetalMaterial:
 
     # nicely package an approximator function
     def _get_approx_fun(approx_method):
-        interp_fun = None
         if approx_method == "nearest":
 
             def nearest(xq, x, y):
@@ -78,7 +77,7 @@ class MetalMaterial:
         elif approx_method == "interp":
             return lambda xq, x, y: np.interp(xq, x, y)
         else:
-            raise LookupError("approx method (%s) not found." % approx_method)
+            raise LookupError(f"approx method ({approx_method}) not found.")
 
     # stash functions to relate yield and ultimate shear (bar) to temp (degC)
     def yield_shear_fun(self, T):

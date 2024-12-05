@@ -181,13 +181,12 @@ class PEM_electrolyzer_LT:
 
         # Cell level inputs:
         N_cells = 130
-        electrode_surface_area_cm2 = self.cell_active_area / N_cells
-        cell_rating_watts = (self.stack_rating_kW * 1000) / N_cells
+        self.cell_active_area / N_cells
+        (self.stack_rating_kW * 1000) / N_cells
 
         # V_cell_max = 3.0    #Volts
         # V_cell_I_density_max = 2.50     #mA/cm2
         E_rev = 1.23  # (in Volts) Reversible potential at 25degC
-        E_th = 1.48  # (in Volts) Thermoneutral potential at 25degC
         T_C = 80  # Celsius
         T_K = T_C + 273.15  # in Kelvins
         # E_cell == Open Circuit Voltage
@@ -219,7 +218,7 @@ class PEM_electrolyzer_LT:
         R_cell = delta / sigma
         V_cell = E_cell + V_act + (i * R_cell)
         V_cell = np.where(V_cell < E_rev, E_rev, V_cell)
-        V_stack = N_cells * V_cell  # Stack operational voltage
+        N_cells * V_cell  # Stack operational voltage
 
     def dynamic_operation(self):
         """
@@ -229,8 +228,6 @@ class PEM_electrolyzer_LT:
         """
         # When electrolyzer is already at or near its optimal operation
         # temperature (~80degC)
-        warm_startup_time_secs = 30
-        cold_startup_time_secs = 5 * 60  # 5 minutes
 
     def water_electrolysis_efficiency(self):
         """
@@ -448,7 +445,6 @@ class PEM_electrolyzer_LT:
         rate
         TODO: Add this capability to the model
         """
-        max_water_feed_mass_flow_rate_kg_hr = 411  # kg per hour
         water_used_kg_hr_system = self.h2_production_rate() * 10
         self.output_dict["water_used_kg_hr"] = water_used_kg_hr_system
         self.output_dict["water_used_kg_annual"] = np.sum(water_used_kg_hr_system)

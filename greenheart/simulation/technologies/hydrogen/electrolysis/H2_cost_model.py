@@ -32,7 +32,6 @@ def basic_H2_cost_model(
     """
 
     # Basic information in our analysis
-    discount_rate = 0.07
     kw_continuous = electrolyzer_size_mw * 1000
 
     # Capacity factor
@@ -91,7 +90,6 @@ def basic_H2_cost_model(
     land = 250000  # [$]
 
     stack_replacment_cost = 15 / 100  # [% of installed capital cost]
-    plant_lifetime = 40  # [years]
     fixed_OM = 0.24  # [$/kg H2]
 
     program_record = False
@@ -184,7 +182,7 @@ def basic_H2_cost_model(
         else:
             electrolyzer_repair_schedule = np.append(electrolyzer_repair_schedule, [0])
         counter += 1
-    electrolyzer_replacement_costs = electrolyzer_repair_schedule * (
+    electrolyzer_repair_schedule * (
         stack_replacment_cost * electrolyzer_total_installed_capex
     )
     # print("H2 replacement costs: ", electrolyzer_replacement_costs)
@@ -337,9 +335,9 @@ if __name__ == "__main__":
 
     ## plot divided energy signals
     fig, ax = plt.subplots(1)
-    ax.plot(electrical_generation_timeseries_kw, label="%s" % (1))
+    ax.plot(electrical_generation_timeseries_kw, label="1")
     for i, div in enumerate(ndivs):
-        ax.plot(electrical_generation_timeseries_kw / div, label="%s" % (div))
+        ax.plot(electrical_generation_timeseries_kw / div, label=f"{div}")
 
     ax.set(xlabel="Hour", ylabel="Power (MW)")
     plt.tight_layout()

@@ -148,7 +148,7 @@ class PEM_H2_Clusters:
         self.cluster_status = self.system_design(input_power_kw, self.max_stacks)
         # calculate number of on/off cycles
         # no delay at beginning of sim
-        cluster_cycling = [0] + list(np.diff(self.cluster_status))
+        cluster_cycling = [0, *list(np.diff(self.cluster_status))]
         cluster_cycling = np.array(cluster_cycling)
 
         # how much to reduce h2 by based on cycling status
@@ -467,7 +467,7 @@ class PEM_H2_Clusters:
     def calc_onoff_degradation(self):
         change_stack = np.diff(self.cluster_status)
         cycle_cnt = np.where(change_stack < 0, -1 * change_stack, 0)
-        cycle_cnt = np.array([0] + list(cycle_cnt))
+        cycle_cnt = np.array([0, *list(cycle_cnt)])
         self.off_cycle_cnt = cycle_cnt
         stack_off_deg_per_hr = self.onoff_deg_rate * cycle_cnt
         self.output_dict["System Cycle Degradation [V]"] = np.cumsum(
@@ -644,9 +644,6 @@ class PEM_H2_Clusters:
         TODO: extend model to accept variable voltage, current, and power
         This will replicate direct DC-coupled PV system operating at MPP
         """
-        power_converter_efficiency = (
-            1.0  # this used to be 0.95 but feel free to change as you'd like
-        )
         # if self.input_dict['voltage_type'] == 'constant':
         power_curtailed_kw = np.where(
             input_external_power_kw > self.max_stacks * self.stack_rating_kW,
@@ -836,8 +833,6 @@ class PEM_H2_Clusters:
         # When electrolyzer is already at or near its optimal operation
         # temperature (~80degC)
 
-        warm_startup_time_secs = 30
-        cold_startup_time_secs = 5 * 60  # 5 minutes
 
     def faradaic_efficiency(
         self, stack_current

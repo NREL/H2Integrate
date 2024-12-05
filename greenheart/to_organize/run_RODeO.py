@@ -4,7 +4,6 @@ Created on Tue Oct 25 10:50:54 2022
 @author: ereznic2
 """
 
-
 import numpy as np
 import pandas as pd
 
@@ -135,7 +134,6 @@ def run_RODeO(
     permitting = 15 / 100  # [%]
     project_contingency = 15 / 100  # [%]
     # [%]
-    land_cost = 250000  # [$]
     # elif electrolysis_scale == 'Distributed':
     #     electrolyzer_installation_factor = 12/100/capex_ratio_dist  #[%] for stack cost
 
@@ -164,7 +162,6 @@ def run_RODeO(
     # electrolyzer_installation_cost = electrolyzer_system_capex_kw*stack_installation_factor*electrolyzer_size_mw\
     #                               + electrolyzer_indirect_cost
 
-    compressor_capex_USDprkWe_of_electrolysis = 39
 
     # Calculate capital costs
     electrolyzer_total_capital_cost = (
@@ -178,24 +175,20 @@ def run_RODeO(
     # O&M costs
     # https://www.sciencedirect.com/science/article/pii/S2542435121003068
     fixed_OM = 12.8  # [$/kWh-y]
-    property_tax_insurance = 1.5 / 100  # [% of Cap/y]
     variable_OM = 1.30  # [$/MWh]
 
     # Tell RODeO if grid connected or not
     if grid_connection_scenario == "off-grid":
-        grid_connected_rodeo = False
         grid_string = grid_connection_scenario
         grid_imports = 0
         # Electrolyzer CF estimation for ammortized variable O&M cost calculation
         elec_cf = sum(energy_to_electrolyzer) / (electrolyzer_size_mw * 1000 * 8760)
     elif grid_connection_scenario == "grid-only":
-        grid_connected_rodeo = True
         grid_string = grid_connection_scenario + "-" + grid_price_scenario
         grid_imports = 1
         # Electrolyzer CF estimation for ammortized variable O&M cost calculation
         elec_cf = 0.97
     elif grid_connection_scenario == "hybrid-grid":
-        grid_connected_rodeo = True
         grid_string = grid_connection_scenario + "-" + grid_price_scenario
         grid_imports = 1
         # Electrolyzer CF estimation for ammortized variable O&M cost calculation
@@ -287,7 +280,6 @@ def run_RODeO(
     policy_scenario = policy[i]
 
     # Set up batch file
-    dir0 = "..\\RODeO\\"
     dir1 = "examples\\H2_Analysis\\RODeO_files\\Data_files\\TXT_files\\"
     dirout = rodeo_output_dir
 
@@ -406,7 +398,7 @@ def run_RODeO(
         stor_itc = " --itc_stor_inst=0"
 
     # Create batch file
-    batch_string = (
+    (
         txt1
         + scenario_inst
         + demand_prof
@@ -477,10 +469,10 @@ def run_RODeO(
     # Examples for reading out RODeO summary results of interest
     lcoh = RODeO_results_summary_dict["Product NPV cost (US$/kg)"]
     electrolyzer_capacity_factor = RODeO_results_summary_dict["input capacity factor"]
-    electrolyzer_renewable_curtailment_MWh = RODeO_results_summary_dict[
+    RODeO_results_summary_dict[
         "Curtailment (MWh)"
     ]
-    electyrolyzer_renewable_curtailment_percent = (
+    (
         100
         * RODeO_results_summary_dict["Curtailment (MWh)"]
         / (RODeO_results_summary_dict["Renewable Electricity Input (MWh)"] + 0.00000001)
@@ -497,7 +489,7 @@ def run_RODeO(
     )
 
     # Get RODeO operational results (e.g., electrolyzer and storage hourly operation)
-    hydrogen_hourly_inputs_RODeO = pd.read_csv(
+    pd.read_csv(
         dirout + "Storage_dispatch_inputs_" + scenario_name + ".csv",
         index_col=None,
         header=29,

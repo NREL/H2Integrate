@@ -75,8 +75,6 @@ def optimize_gf():
 
     ga.optimize_ga(print_progress=False)
 
-    solution_history = ga.solution_history
-    opt_lcoh = ga.optimized_function_value
     opt_vars = ga.optimized_design_variables
 
     opt_electrolyzer_size_mw = opt_vars[0]

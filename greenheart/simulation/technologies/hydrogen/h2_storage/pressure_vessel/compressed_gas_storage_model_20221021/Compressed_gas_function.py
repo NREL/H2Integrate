@@ -128,14 +128,14 @@ class CompressedGasFunction:
         else:
             Release_efficiency = 0.9
 
-        if capacity_max_spec == None:
+        if capacity_max_spec is None:
             self.capacity_max = self.calculate_max_storage_capacity(
                 Wind_avai, H2_flow, Release_efficiency
             )
         else:
             self.capacity_max = capacity_max_spec
 
-        if t_discharge_hr_max_spec == None:
+        if t_discharge_hr_max_spec is None:
             self.t_discharge_hr_max = self.calculate_max_storage_duration(
                 Release_efficiency, H2_flow
             )
@@ -304,8 +304,6 @@ class CompressedGasFunction:
                 H2_c_Cap_Storage * Release_efficiency / self.t_charge_hr / 3600
             )
             Temp4_tank = Temp2
-            Temp4_gas = self.Tin  # TODO why set but not used?
-            Pres4 = self.Pres3  # TODO why set but not used?
             Pres4_tank = Pres3_tank
             H_c_4_spec_g_electrolyzer = (
                 PropsSI("H", "P", self.Pin, "T", self.Tin, "Hydrogen") / 1000
@@ -461,7 +459,6 @@ class CompressedGasFunction:
 
             ###############################Refrigeration costs estimation adsorption process
             # print ('pre-conditioning time is', round (t_precondition_hr), 'hr')
-            H2_Cap = capacity
             Ref_c_P_net_1_2 = -(
                 deltaP_c_net_1_2 - Power_c_comp_1_2
             )  # Refrigeration power in kW from state 1 to state 2 (precondition)
@@ -541,7 +538,7 @@ class CompressedGasFunction:
             energy_consumption_refrigeration_1_kwh = (
                 energy_consumption_refrigeration_1_kj * joule2watthour
             )
-            energy_consumption_refrigeration_2_kwh = (
+            (
                 energy_consumption_refrigeration_2_kj * joule2watthour
             )
             self.total_refrigeration_energy_used_kwh = energy_consumption_refrigeration_1_kwh  # + energy_consumption_refrigeration_2_kwh
@@ -728,8 +725,8 @@ class CompressedGasFunction:
         # ax[0,0].plot(self.capacity_1,cost_kg_ref, color='m', label = 'refrigeration')
         # ax[0,0].plot(self.capacity_1,cost_kg_heat, color='y', label = 'heater')
 
-        a_disp = np.round(self.a_cap_fit, 2)
-        b_disp = np.round(self.b_cap_fit, 2)
+        np.round(self.a_cap_fit, 2)
+        np.round(self.b_cap_fit, 2)
         # plt.ylim(0,np.amax(self.cost_kg)*2)
         # equation_cap = 'y='+str(a_disp)+'x'+'^'+str(b_disp)
         a_cap_fit_disp = np.round(self.a_cap_fit, 2)

@@ -143,7 +143,7 @@ def run_profast_for_steel(
 
     property_tax_insurance = 0.02 * total_plant_cost
 
-    total_fixed_operating_cost = (
+    (
         labor_cost_annual_operation
         + labor_cost_maintenance
         + labor_cost_admin_support
@@ -179,14 +179,7 @@ def run_profast_for_steel(
     natural_gas_consumption = 0.71657  # GJ-LHV/metric tonne of steel production
     electricity_consumption = 0.5502  # MWh/metric tonne of steel production
 
-    co2_fuel_emissions = (
-        0.03929  # metric tonnes of CO2/metric tonne of steel production
-    )
-    co2_carbon_emissions = (
-        0.17466  # metric tonnes of CO2/metridc tonne of steel production
-    )
     slag_production = 0.17433  # metric tonnes of slag/metric tonne of steel production
-    surface_water_discharge = 0.42113  # metridc tonnes of surface water discharge/metridc tonne of steel production
 
     # ---------------------- Owner's (Installation) Costs --------------------------
     labor_cost_fivemonth = (
@@ -199,10 +192,10 @@ def run_profast_for_steel(
         )
     )
 
-    maintenance_materials_onemonth = (
+    (
         maintenance_materials_unitcost * plant_capacity_mtpy / 12
     )
-    non_fuel_consumables_onemonth = (
+    (
         plant_capacity_mtpy
         * (
             raw_water_consumption * raw_water_unitcost
@@ -213,11 +206,11 @@ def run_profast_for_steel(
         / 12
     )
 
-    waste_disposal_onemonth = (
+    (
         plant_capacity_mtpy * slag_disposal_unitcost * slag_production / 12
     )
 
-    one_month_energy_cost_25percent = (
+    (
         0.25
         * plant_capacity_mtpy
         * (
@@ -266,7 +259,7 @@ def run_profast_for_steel(
     pf = ProFAST.ProFAST()
 
     install_years = 3
-    analysis_start = list(grid_prices_interpolated_USDperMWh.keys())[0] - install_years
+    analysis_start = [*grid_prices_interpolated_USDperMWh][0] - install_years
 
     # Fill these in - can have most of them as 0 also
     gen_inflation = 0.00

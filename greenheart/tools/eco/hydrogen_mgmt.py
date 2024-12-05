@@ -535,9 +535,9 @@ def run_h2_storage(
 
     if verbose:
         print("\nH2 Storage Results:")
-        print("H2 storage capex: ${0:,.0f}".format(h2_storage_results["storage_capex"]))
+        print("H2 storage capex: ${:,.0f}".format(h2_storage_results["storage_capex"]))
         print(
-            "H2 storage annual opex: ${0:,.0f}/yr".format(
+            "H2 storage annual opex: ${:,.0f}/yr".format(
                 h2_storage_results["storage_opex"]
             )
         )
@@ -676,6 +676,6 @@ def run_equipment_platform(
     if verbose:
         print("\nPlatform Results")
         for key in platform_results.keys():
-            print(key, "%.2f" % (platform_results[key]))
+            print(key, f"{platform_results[key]:.2f}")
 
     return platform_results

@@ -138,8 +138,8 @@ class TestPressureVessel:
             capacity
         )
         print(capex)
-        mass_tank_empty = self.pressure_vessel_instance.get_tank_mass(capacity)
-        area_footprint = self.pressure_vessel_instance.get_tank_footprint(capacity)
+        self.pressure_vessel_instance.get_tank_mass(capacity)
+        self.pressure_vessel_instance.get_tank_footprint(capacity)
 
         (
             capex_dist_05,

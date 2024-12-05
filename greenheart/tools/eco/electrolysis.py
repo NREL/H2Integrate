@@ -415,12 +415,11 @@ def run_electrolyzer_cost(
             )  # convert from M USD to USD
 
         else:
-            raise (
-                ValueError(
-                    "Electrolyzer cost model must be one of['basic', 'singlitico2021'] but '%s' was given"
-                    % (electrolyzer_cost_model)
-                )
+            msg = (
+                f"Electrolyzer cost model must be one of['basic', 'singlitico2021'] but "
+                f"'{electrolyzer_cost_model}' was given"
             )
+            raise ValueError(msg)
 
     # package outputs for return
     electrolyzer_cost_results = {

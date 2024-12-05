@@ -465,7 +465,7 @@ def run_ammonia_finance_model(
     for param, val in config.financial_assumptions.items():
         pf.set_params(param, val)
 
-    analysis_start = int(list(config.grid_prices.keys())[0]) - config.install_years
+    analysis_start = int([*config.grid_prices][0]) - config.install_years
 
     # Fill these in - can have most of them as 0 also
     pf.set_params(

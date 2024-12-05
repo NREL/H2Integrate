@@ -149,20 +149,9 @@ class TestTankinator:
         vmSburst_0_ref = 3387.653346
         WTAF_0_ref = 1.018052974
         thickness_1_ref = ultimate_thickness_ref * WTAF_0_ref
-        vmS1_1_ref = 1542.397758
-        vmS2_1_ref = 686.1988791
-        vmS3_1_ref = -170.0
-        vmSproof_1_ref = 2224.46994
-        vmSburst_1_ref = 3336.70491
         WTAF_1_ref = 1.002742019
         thickness_2_ref = thickness_1_ref * WTAF_1_ref
         thickness_f_ref = 3.6626944898294997
-        vmS1_f_ref = 1537.826857
-        vmS2_f_ref = 683.9134286
-        vmS3_f_ref = -170.0
-        vmSproof_f_ref = 2218.532165
-        vmSburst_f_ref = 3327.798248
-        WTAF_f_ref = 1.000065401
         mass_f_ref = 2031.9
         cost_f_ref = 9041.80
 

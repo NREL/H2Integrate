@@ -52,7 +52,7 @@ class TestBasicH2Costs:
         electrolyzer_total_capital_cost = (
             per_turb_electrolyzer_total_capital_cost * self.nturbines
         )
-        electrolyzer_OM_cost = per_turb_electrolyzer_OM_cost * self.nturbines
+        per_turb_electrolyzer_OM_cost * self.nturbines
 
         assert electrolyzer_total_capital_cost == approx(127698560.0)
 
@@ -107,7 +107,7 @@ class TestBasicH2Costs:
         electrolyzer_total_capital_cost = (
             per_turb_electrolyzer_total_capital_cost * self.nturbines
         )
-        electrolyzer_OM_cost = per_turb_electrolyzer_OM_cost * self.nturbines
+        per_turb_electrolyzer_OM_cost * self.nturbines
 
         assert electrolyzer_total_capital_cost == approx(116077280.00000003)
 
@@ -134,7 +134,7 @@ class TestBasicH2Costs:
             offshore=1,
         )
 
-        electrolyzer_total_capital_cost = (
+        (
             per_turb_electrolyzer_total_capital_cost * self.nturbines
         )
         electrolyzer_OM_cost = per_turb_electrolyzer_OM_cost * self.nturbines
@@ -189,7 +189,7 @@ class TestBasicH2Costs:
             offshore=0,
         )
 
-        electrolyzer_total_capital_cost = (
+        (
             per_turb_electrolyzer_total_capital_cost * self.nturbines
         )
         electrolyzer_OM_cost = per_turb_electrolyzer_OM_cost * self.nturbines

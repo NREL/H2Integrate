@@ -34,7 +34,7 @@ def clean_up_final_outputs(h2_tot, h2_ts):
 def combine_cluster_annual_performance_info(h2_tot):
     clusters = h2_tot.loc["Performance By Year"].index.to_list()
     performance_metrics = list(h2_tot.loc["Performance By Year"].iloc[0].keys())
-    vals_to_sum = [k for k in performance_metrics if "/year" in k]
+    [k for k in performance_metrics if "/year" in k]
     n_years = len(
         h2_tot.loc["Performance By Year"].iloc[0][performance_metrics[0]].values()
     )
@@ -101,11 +101,11 @@ def run_h2_PEM(
     hourly_system_electrical_usage = h2_ts.loc["Power Consumed [kWh]"].sum()
     water_hourly_usage = h2_ts.loc["water_hourly_usage_kg"].sum()
     avg_eff_perc = 39.41 * hydrogen_hourly_production / hourly_system_electrical_usage
-    hourly_efficiency = np.nan_to_num(avg_eff_perc)
+    np.nan_to_num(avg_eff_perc)
     # simulation based average performance (unchanged)
-    average_uptime_hr = h2_tot.loc["Total Uptime [sec]"].mean() / 3600
+    h2_tot.loc["Total Uptime [sec]"].mean() / 3600
     water_annual_usage = np.sum(water_hourly_usage)
-    total_system_electrical_usage = np.sum(hourly_system_electrical_usage)
+    np.sum(hourly_system_electrical_usage)
     tot_avg_eff = 39.41 / h2_tot.loc["Total kWh/kg"].mean()
     cap_factor_sim = h2_tot.loc["PEM Capacity Factor (simulation)"].mean()
 

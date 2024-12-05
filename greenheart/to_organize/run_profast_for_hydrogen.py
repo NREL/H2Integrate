@@ -76,9 +76,9 @@ def run_profast_for_hydrogen(
 
     # Design point electricity consumption
     if use_optimistic_pem_efficiency:
-        elec_consumption_kWhprkg_design = electrolyzer_energy_kWh_per_kg
+        pass
     else:
-        elec_consumption_kWhprkg_design = H2_Results["new_H2_Results"][
+        H2_Results["new_H2_Results"][
             "Rated BOL: Efficiency [kWh/kg]"
         ]  # new 09/05
         # elec_consumption_kWhprkg_design=H2_Results['Rated kWh/kg-H2'] #new 09/05
@@ -216,7 +216,7 @@ def run_profast_for_hydrogen(
                 if policy_option == "no-policy":
                     Ren_PTC[year] = 0
                 elif policy_option == "base":
-                    if solar_ITC == True:
+                    if solar_ITC is True:
                         Ren_PTC[year] = (
                             policy["Wind PTC"] * wind_electricity_useage_kWhpkg[y_idx]
                         )
@@ -225,7 +225,7 @@ def run_profast_for_hydrogen(
                             policy["Wind PTC"] * ren_electricity_useage_kWhpkg[y_idx]
                         )  # np.sum(energy_to_electrolyzer)/ (H2_Results['hydrogen_annual_output'])
                 elif policy_option == "max":
-                    if solar_ITC == True:
+                    if solar_ITC is True:
                         Ren_PTC[year] = (
                             policy["Wind PTC"] * wind_electricity_useage_kWhpkg[y_idx]
                         )
@@ -240,7 +240,7 @@ def run_profast_for_hydrogen(
                 if policy_option == "no-policy":
                     Ren_PTC[year] = 0
                 elif policy_option == "base":
-                    if solar_ITC == True:
+                    if solar_ITC is True:
                         Ren_PTC[year] = (
                             policy["Wind PTC"] * wind_electricity_useage_kWhpkg[y_idx]
                         )
@@ -250,7 +250,7 @@ def run_profast_for_hydrogen(
                         )  # energy_from_renewables / (H2_Results['hydrogen_annual_output'])
                     # Ren_PTC = 0.0051  * np.sum(energy_to_electrolyzer)/ (H2_Results['hydrogen_annual_output']) # We will need to fix this by introducing ren_frac multiplier to denominator when HOPP changes to dealing with grid cases are changed
                 elif policy_option == "max":
-                    if solar_ITC == True:
+                    if solar_ITC is True:
                         Ren_PTC[year] = (
                             policy["Wind PTC"] * wind_electricity_useage_kWhpkg[y_idx]
                         )
@@ -333,7 +333,6 @@ def run_profast_for_hydrogen(
     else:
         capex_wind_installed_init = 0
         wind_revised_cost = 0
-        wind_om_cost_kW = 0
         fixed_cost_solar = 0
         capex_solar_installed = 0
         capex_battery_installed = 0
@@ -668,7 +667,7 @@ def run_profast_for_hydrogen(
     pf.set_params("debt type", "Revolving debt")
     pf.set_params("debt interest rate", nominal_interest_combined)
     pf.set_params("cash onhand", 1)
-    if solar_ITC == True:
+    if solar_ITC is True:
         pf.set_params(
             "one time cap inct",
             {

@@ -35,8 +35,6 @@ def hydrogen_LCA_singlescenario(
     # Conversions
     g_to_kg_conv = 0.001  # Conversion from grams to kilograms
     kg_to_MT_conv = 0.001  # Converion from kg to metric tonnes
-    MT_to_kg_conv = 1000  # Conversion from metric tonne to kilogram
-    kWh_to_MWh_conv = 0.001  # Conversion from kWh to MWh
 
     # ------------------------------------------------------------------------------
     # Renewable infrastructure embedded emission intensities
@@ -46,21 +44,11 @@ def hydrogen_LCA_singlescenario(
     wind_capex_EI = (
         10  # Electricity generation from wind, nominal value taken (g CO2e/kWh)
     )
-    solar_pv_capex_EI = (
-        37  # Electricity generation from solar pv, nominal value taken (g CO2e/kWh)
-    )
 
     # ------------------------------------------------------------------------------
     # Hydrogen production via water electrolysis
     # ------------------------------------------------------------------------------
 
-    grid_trans_losses = 0.05  # Grid losses of 5% are assumed (-)
-    fuel_to_grid_curr = (
-        48  # Fuel mix emission intensity for current power grid (g CO2e/kWh)
-    )
-    fuel_to_grid_futu = (
-        14  # Fuel mix emission intensity for future power grid (g CO2e/kWh)
-    )
 
     if atb_year == 2020:
         cambium_year = 2025

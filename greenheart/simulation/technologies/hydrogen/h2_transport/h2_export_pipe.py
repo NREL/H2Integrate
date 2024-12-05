@@ -236,7 +236,7 @@ def checkASMEB318(
     if S_L > S_L_check:
         return False
 
-    S_combined_check = (
+    (
         0.9 * SMYS
     )  # 2020 ASME B31.8 Table A842.2.2-1. Same for riser and pipe
     #   Torsional stress?? Under what applied torque? Not sure what to do for this.

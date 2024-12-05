@@ -295,7 +295,7 @@ class TestPressurizedTower:
             # geometric reference values
             surfacearea_cap_top_ref = np.pi / 4.0 * D_top_ref**2
             surfacearea_cap_bot_ref = np.pi / 4.0 * D_base_ref**2
-            thickness_wall_top_ref = D_top_ref / d_t_ratio_ref
+            D_top_ref / d_t_ratio_ref
             thickness_wall_bot_ref = D_base_ref / d_t_ratio_ref
 
             def cone_volume(h, d):
@@ -489,7 +489,7 @@ class TestPressurizedTower:
             pressurized_tower_instance = PressurizedTower(2004, turbine)
             pressurized_tower_instance.run()
 
-            Vinner_balpark = PressurizedTower.compute_frustum_volume(
+            PressurizedTower.compute_frustum_volume(
                 h_ref, D_bot_ref, D_top_ref
             )
 

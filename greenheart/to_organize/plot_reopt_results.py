@@ -66,7 +66,7 @@ def plot_reopt_results(
             12: "Dec",
         }
 
-        mapped = [f"{month_map[m]}-{h}" for m, h in df_mean.index.values]
+        [f"{month_map[m]}-{h}" for m, h in df_mean.index.values]
         y = range(df_mean.index.values.shape[0])
 
         xticks_major = [x * 24 for x in range(1, 13)]

@@ -34,8 +34,6 @@ Costs are in 2013 dollars
 """
 
 
-
-
 def RO_desal_eco(freshwater_kg_per_hr, salinity):
     """
     param: freshwater_kg_per_hr: Maximum freshwater requirements of system [kg/hr]

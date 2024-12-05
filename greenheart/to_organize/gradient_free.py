@@ -81,7 +81,7 @@ class GeneticAlgorithm:
 
             if self.variable_type[i] == "float":
                 self.design_variables[i] = self.discretized_variables[
-                    "float_var%s" % float_ind
+                    f"float_var{float_ind}"
                 ][binary_value]
                 float_ind += 1
 
@@ -106,7 +106,7 @@ class GeneticAlgorithm:
         for i in range(self.nvars):
             if self.variable_type[i] == "float":
                 ndiscretizations = 2 ** self.bits[i]
-                self.discretized_variables["float_var%s" % float_ind] = np.linspace(
+                self.discretized_variables[f"float_var{float_ind}"] = np.linspace(
                     self.bounds[i][0], self.bounds[i][1], ndiscretizations
                 )
                 float_ind += 1
@@ -150,7 +150,7 @@ class GeneticAlgorithm:
         self.solution_history[0] = np.min(self.parent_fitness)
 
         print("start optimization")
-        while converged == False and ngens < self.max_generation:
+        while converged is False and ngens < self.max_generation:
             # crossover
             if crossover == "random":
                 self.crossover()
@@ -210,7 +210,7 @@ class GeneticAlgorithm:
             shuffle_order = np.append([0], shuffle_order)
             self.parent_population = self.parent_population[shuffle_order]
             self.parent_fitness = self.parent_fitness[shuffle_order]
-            if print_progress == True:
+            if print_progress is True:
                 print(self.parent_fitness[0])
 
             generation += 1
@@ -220,13 +220,11 @@ class GeneticAlgorithm:
             if save_progress:
                 if ngens % save_progress == 0:
                     file = open("progress.txt", "w")
-                    file.write(
-                        "Best solution: %s" % (np.min(self.parent_fitness)) + "\n"
-                    )
+                    file.write(f"Best solution: {np.min(self.parent_fitness)}" + "\n")
                     self.chromosome_2_variables(
                         self.parent_population[np.argmin(self.parent_fitness)]
                     )
-                    file.write("Design Variables: %s" % (self.design_variables) + "\n")
+                    file.write(f"Design Variables: {self.design_variables}" + "\n")
                     file.close()
 
         # Assign final outputs
@@ -362,7 +360,7 @@ class GreedyAlgorithm:
 
             if self.variable_type[i] == "float":
                 self.design_variables[i] = self.discretized_variables[
-                    "float_var%s" % float_ind
+                    f"float_var{float_ind}"
                 ][binary_value]
                 float_ind += 1
 
@@ -381,7 +379,7 @@ class GreedyAlgorithm:
         for i in range(self.nvars):
             if self.variable_type[i] == "float":
                 ndiscretizations = 2 ** self.bits[i]
-                self.discretized_variables["float_var%s" % float_ind] = np.linspace(
+                self.discretized_variables[f"float_var{float_ind}"] = np.linspace(
                     self.bounds[i][0], self.bounds[i][1], ndiscretizations
                 )
                 float_ind += 1
@@ -401,7 +399,7 @@ class GreedyAlgorithm:
         # initialize the population
         if initialize == "ones":
             done = False
-            while done == False:
+            while done is False:
                 self.parent_population = np.zeros(self.nbits, dtype=int)
                 self.parent_population[0] = 1
                 np.random.shuffle(self.parent_population)
@@ -419,7 +417,7 @@ class GreedyAlgorithm:
             # self.parent_population[-1] = 1
         elif initialize == "random":
             done = False
-            while done == False:
+            while done is False:
                 self.parent_population = np.random.randint(0, high=2, size=self.nbits)
                 self.chromosome_2_variables(self.parent_population)
                 self.parent_fitness = self.objective_function(self.design_variables)
@@ -439,7 +437,7 @@ class GreedyAlgorithm:
         converged = False
         best_population = np.zeros(self.nbits)
 
-        while converged == False:
+        while converged is False:
             # loop through every bit
             best_fitness = self.parent_fitness
             best_population[:] = self.parent_population[:]
@@ -480,7 +478,7 @@ class GreedyAlgorithm:
         for i in range(self.nvars):
             if self.variable_type[i] == "float":
                 ndiscretizations = 2 ** self.bits[i]
-                self.discretized_variables["float_var%s" % float_ind] = np.linspace(
+                self.discretized_variables[f"float_var{float_ind}"] = np.linspace(
                     self.bounds[i][0], self.bounds[i][1], ndiscretizations
                 )
                 float_ind += 1
@@ -494,7 +492,7 @@ class GreedyAlgorithm:
             self.nbits += self.bits[i]
 
         init = True
-        while init == True:
+        while init is True:
             # initialize the population
             if initialize == "limit":
                 nones = 1
@@ -527,7 +525,7 @@ class GreedyAlgorithm:
 
         last_solution = self.parent_fitness
 
-        while converged == False:
+        while converged is False:
             # check if we've gone through every bit
             ind = index % self.nbits
             if ind == 0:
@@ -545,7 +543,7 @@ class GreedyAlgorithm:
                 # shuffle the order array and change the phase
                 np.random.shuffle(order)
                 random_method = (random_method + 1) % 3
-                if print_progress == True:
+                if print_progress is True:
                     if random_method == 0:
                         print("explore")
                     if random_method == 1:
@@ -575,7 +573,7 @@ class GreedyAlgorithm:
                     )
                     self.parent_fitness = self.offspring_fitness
                     self.parent_population[:] = self.offspring_population[:]
-                    if print_progress == True:
+                    if print_progress is True:
                         print(self.offspring_fitness)
 
             # this is the first switch phase, switch adjacent bits (only makes sense if they are arranged spatially in a matrix)
@@ -611,7 +609,7 @@ class GreedyAlgorithm:
                         )
                         self.parent_fitness = self.offspring_fitness
                         self.parent_population[:] = self.offspring_population[:]
-                        if print_progress == True:
+                        if print_progress is True:
                             print(self.offspring_fitness)
 
             # this is the second switch phase, switch adjacent bits in the other dimension (only makes sense if they are arranged spatially in a matrix)
@@ -647,7 +645,7 @@ class GreedyAlgorithm:
                         )
                         self.parent_fitness = self.offspring_fitness
                         self.parent_population[:] = self.offspring_population[:]
-                        if print_progress == True:
+                        if print_progress is True:
                             print(self.offspring_fitness)
 
             # increment the counter

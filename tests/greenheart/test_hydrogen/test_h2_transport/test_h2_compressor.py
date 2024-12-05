@@ -78,6 +78,6 @@ class TestH2Compressor:
         flow_rate_kg_d = 2 * 5.41 * 24 * 60**2
         n_compressors = 2
         with raises(ValueError, match=r".* 5\.4 .*"):
-            comp = Compressor(
+            Compressor(
                 p_outlet, flow_rate_kg_d, p_inlet=p_inlet, n_compressors=n_compressors
             )

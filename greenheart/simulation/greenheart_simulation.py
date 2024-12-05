@@ -123,34 +123,34 @@ class GreenHeartSimulationConfig:
         # if design_scenario["h2_storage_location"] == "turbine":
         #     plant_config["h2_storage"]["type"] = "turbine"
 
-        if self.electrolyzer_rating_mw != None:
+        if self.electrolyzer_rating_mw is not None:
             self.greenheart_config["electrolyzer"]["flag"] = True
             self.greenheart_config["electrolyzer"]["rating"] = (
                 self.electrolyzer_rating_mw
             )
 
-        if self.solar_rating != None:
+        if self.solar_rating is not None:
             self.hopp_config["site"]["solar"] = True
             self.hopp_config["technologies"]["pv"]["system_capacity_kw"] = (
                 self.solar_rating
             )
 
-        if self.battery_capacity_kw != None:
+        if self.battery_capacity_kw is not None:
             self.hopp_config["site"]["battery"]["flag"] = True
             self.hopp_config["technologies"]["battery"]["system_capacity_kw"] = (
                 self.battery_capacity_kw
             )
 
-        if self.battery_capacity_kwh != None:
+        if self.battery_capacity_kwh is not None:
             self.hopp_config["site"]["battery"]["flag"] = True
             self.hopp_config["technologies"]["battery"]["system_capacity_kwh"] = (
                 self.battery_capacity_kwh
             )
 
-        if self.storage_type != None:
+        if self.storage_type is not None:
             self.greenheart_config["h2_storage"]["type"] = self.storage_type
 
-        if self.wind_rating != None:
+        if self.wind_rating is not None:
             self.orbit_config["plant"]["capacity"] = int(self.wind_rating * 1e-3)
             self.orbit_config["plant"]["num_turbines"] = int(
                 self.wind_rating * 1e-3 / self.turbine_config["turbine_rating"]
@@ -159,7 +159,7 @@ class GreenHeartSimulationConfig:
                 self.orbit_config["plant"]["num_turbines"]
             )
 
-        if self.grid_connection != None:
+        if self.grid_connection is not None:
             self.greenheart_config["project_parameters"]["grid_connection"] = (
                 self.grid_connection
             )
@@ -705,7 +705,7 @@ def run_simulation(config: GreenHeartSimulationConfig):
         remaining_power_profile = np.zeros_like(
             hopp_results["combined_hybrid_power_production_hopp"]
         )
-        grid_power_profile = np.zeros_like(
+        np.zeros_like(
             hopp_results["combined_hybrid_power_production_hopp"]
         )
         remaining_power_profile = np.where(
@@ -1171,8 +1171,7 @@ def run_sweeps(
                     print(lcoh_array)
                 np.savetxt(
                     output_dir
-                    + "data/lcoh_vs_rating_%s_storage_%sMWwindplant.txt"
-                    % (storage_type, wind_rating),
+                    + f"data/lcoh_vs_rating_{storage_type}_storage_{wind_rating}MWwindplant.txt",
                     np.c_[ratings, lcoh_array],
                 )
 
@@ -1184,18 +1183,16 @@ def run_sweeps(
         for i in np.arange(0, len(wind_ratings)):
             wind_rating = wind_ratings[i]
             data_no_storage = np.loadtxt(
-                "data/lcoh_vs_rating_none_storage_%sMWwindplant.txt" % (wind_rating)
+                f"data/lcoh_vs_rating_none_storage_{wind_rating}MWwindplant.txt"
             )
             data_pressure_vessel = np.loadtxt(
-                "data/lcoh_vs_rating_pressure_vessel_storage_%sMWwindplant.txt"
-                % (wind_rating)
+                f"data/lcoh_vs_rating_pressure_vessel_storage_{wind_rating}MWwindplant.txt"
             )
             data_salt_cavern = np.loadtxt(
-                "data/lcoh_vs_rating_salt_cavern_storage_%sMWwindplant.txt"
-                % (wind_rating)
+                f"data/lcoh_vs_rating_salt_cavern_storage_{wind_rating}MWwindplant.txt"
             )
             data_pipe = np.loadtxt(
-                "data/lcoh_vs_rating_pipe_storage_%sMWwindplant.txt" % (wind_rating)
+                f"data/lcoh_vs_rating_pipe_storage_{wind_rating}MWwindplant.txt"
             )
 
             ax[indexes[i]].plot(
@@ -1246,7 +1243,7 @@ def run_sweeps(
             ax[indexes[i]].set_xlim([0.2, 2.0])
             ax[indexes[i]].set_ylim([0, 25])
 
-            ax[indexes[i]].annotate("%s MW Wind Plant" % (wind_rating), (0.6, 1.0))
+            ax[indexes[i]].annotate(f"{wind_rating} MW Wind Plant", (0.6, 1.0))
 
         ax[1, 0].set_xlabel("Electrolyzer/Wind Plant Rating Ratio")
         ax[1, 1].set_xlabel("Electrolyzer/Wind Plant Rating Ratio")
@@ -1325,7 +1322,7 @@ def run_policy_storage_design_options(
         "h2_storage_power_kwh": [],
     }
 
-    lcoh_array = np.zeros((len(design_scenarios), len(policy_options)))
+    np.zeros((len(design_scenarios), len(policy_options)))
     for i, design in enumerate(design_scenarios):
         for j, policy in enumerate(policy_options):
             for storage in storage_types:

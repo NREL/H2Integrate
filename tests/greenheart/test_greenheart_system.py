@@ -32,9 +32,7 @@ filename_greenheart_config_onshore = (
     orbit_library_path / "plant/greenheart_config_onshore.yaml"
 )
 filename_hopp_config = orbit_library_path / "plant/hopp_config.yaml"
-filename_hopp_config_wind_wave = (
-    orbit_library_path / "plant/hopp_config_wind_wave.yaml"
-)
+filename_hopp_config_wind_wave = orbit_library_path / "plant/hopp_config_wind_wave.yaml"
 filename_hopp_config_wind_wave_solar = (
     orbit_library_path / "plant/hopp_config_wind_wave_solar.yaml"
 )

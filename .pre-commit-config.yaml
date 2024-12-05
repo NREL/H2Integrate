@@ -31,4 +31,4 @@ repos:
       types_or: [ python, pyi, jupyter ]
     - id: ruff
       types_or: [ python, pyi, jupyter ]
-      args: [ --fix ]
+      args: [ --fix, --unsafe-fixes]

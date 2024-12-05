@@ -411,7 +411,7 @@ def setup_cost_calcs(
 
     sample_site["lat"] = scenario["Latitude"]
     sample_site["lon"] = scenario["Longitude"]
-    tower_height = scenario["Tower Height"]
+    scenario["Tower Height"]
     wind_cost_kw = scenario["Wind Cost (kW)"]
     solar_cost_kw = scenario["Solar Cost (kW)"] * solar_cost_multiplier
     storage_cost_kw = scenario["Storage Cost (kW)"]

@@ -63,7 +63,6 @@ def momentum_bal(x, *params):
 
     #   Useful conversions
     bar2Pa = 100000  #   Convert bar to Pa
-    km2m = 1000  #   Convert km to m
 
     # Unload params into local varibles
     m_dot, p_inlet, p_outlet, L, ZRT, f, nodes = params

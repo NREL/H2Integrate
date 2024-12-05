@@ -19,20 +19,16 @@ def H2AModel(
 
     current_density = 2  # A/cm^2
     voltage = 1.9  # V/cell
-    operating_temp = 80  # C
-    H2_outlet_pressure = 450  # psi
-    cell_active_area = 450  # cm^2
-    cellperstack = 150  # cells
     degradation_rate = 1.5  # mV/1000 hrs
     stack_life = 7  # years
     hours_per_stack_life = stack_life * 365 * 24 * cap_factor  # hrs/life
-    degradation_rate_Vperlife = hours_per_stack_life * degradation_rate / 1000  # V/life
+    hours_per_stack_life * degradation_rate / 1000  # V/life
     stack_degradation_oversize = 0.13  # factor
     peak_daily_production_rate = avg_daily_H2_production * (
         1 + stack_degradation_oversize
     )  # kgH2/day
 
-    total_active_area = math.ceil(
+    math.ceil(
         (avg_daily_H2_production / 2.02 * 1000 / 24 / 3600)
         * 2
         * 96485
@@ -48,7 +44,6 @@ def H2AModel(
     )  # m^2
 
     stack_electrical_usage = 50.4  # kWh/kgH2
-    BoP_electrical_usage = 5.1  # kWh/kgH2
     total_system_electrical_usage = 55.5  # kWh/kg H2
 
     if forced_system_size:
@@ -64,7 +59,6 @@ def H2AModel(
             stack_electrical_usage / 24 * peak_daily_production_rate / 1000
         )  # MW
 
-    process_water_flowrate = 3.78
 
     system_unit_cost = forced_electrolyzer_cost_kw  # 1.3 * 300/342 # $/cm^2
     stack_system_cost = system_unit_cost / (current_density * voltage) * 1000  # $/kW
@@ -78,10 +72,10 @@ def H2AModel(
     )  # $/kW
     total_system_cost_perkW = total_system_cost_perkW
     if force_electrolyzer_cost:
-        total_system_cost = forced_electrolyzer_cost_kw * stack_input_power * 1000
+        forced_electrolyzer_cost_kw * stack_input_power * 1000
         # print("Can confirm I did this", total_system_cost)
     else:
-        total_system_cost = total_system_cost_perkW * stack_input_power * 1000  # $
+        total_system_cost_perkW * stack_input_power * 1000  # $
 
     # -------------------------------------------------CAPITAL COST--------------------------------------------------------------#
 
@@ -97,7 +91,6 @@ def H2AModel(
     }  # plant cost index, Chemical Engineering Magazine
     CPI = pd.DataFrame(data=pci)
 
-    baseline_plant_design_capacity = avg_daily_H2_production
     basis_year_for_capital_cost = 2016
     current_year_for_capital_cost = 2016
     CEPCI_inflator = int(
@@ -147,7 +140,7 @@ def H2AModel(
         electrical_BoP_installation_factor * baseline_uninstalled_electrical_BoP_cost
     )
 
-    baseline_total_installed_cost = (
+    (
         baseline_installed_stack_capital_cost
         + baseline_installed_mechanical_BoP_cost
         + baseline_installed_electrical_BoP_cost
@@ -155,32 +148,26 @@ def H2AModel(
 
     # ------------------------------------------------PLANT SCALING-------------------------------------------------------------------#
 
-    scale_ratio = (
-        1  # ratio of new design capacity to baseline design capacity (linear scaling)
-    )
-    scale_factor = 1  # rato of total scaled installed capital cost to total baseline installed capital cost (exponential scaling)
     default_scaling_factor_exponent = 1  # discrepancy
-    lower_limit_for_scaling_capacity = 20000  # kgH2/day
-    upper_limit_for_scaling_capacity = 200000  # kgH2/day
 
     scaled_uninstalled_stack_capital_cost = (
         baseline_uninstalled_stack_capital_cost**default_scaling_factor_exponent
     )
-    scaled_installed_stack_capital_cost = (
+    (
         scaled_uninstalled_stack_capital_cost * stack_installation_factor
     )
 
     scaled_uninstalled_mechanical_BoP_cost = (
         baseline_uninstalled_mechanical_BoP_cost**default_scaling_factor_exponent
     )
-    scaled_installed_mechanical_BoP_cost = (
+    (
         scaled_uninstalled_mechanical_BoP_cost * mechanical_BoP_installation_factor
     )
 
     scaled_uninstalled_electrical_BoP_cost = (
         baseline_uninstalled_electrical_BoP_cost**default_scaling_factor_exponent
     )
-    scaled_installed_electrical_BoP_cost = (
+    (
         scaled_uninstalled_electrical_BoP_cost * electrical_BoP_installation_factor
     )
 
@@ -193,30 +180,20 @@ def H2AModel(
 
     # --------------------------TECHNICAL OPERATING PARAMETERS AND SPECIFICATIONS---------------------------#
 
-    operating_capacity_factor = cap_factor
-    plant_design_capacity = peak_daily_production_rate  # kgH2/day
-    plant_daily_output = plant_design_capacity  # kg/day
     plant_annual_output = hydrogen_annual_output  # kg/year
 
     # -----------------------------------FINANCIAL INPUT VALUES---------------------------------------------#
 
     reference_year = 2016
     assumed_startup_year = 2015
-    basis_year = 2016
     length_of_construction_period = 1  # year
     startup_time = length_of_construction_period
     percent_capital_spent_year_1 = 100 / 100  # percent
-    percent_Capital_Spent_year_2 = 0 / 100  # percent
-    percent_Capital_Spent_year_3 = 0 / 100  # percent
-    percent_Capital_Spent_year_4 = 0 / 100  # percent
     plant_life = useful_life  # years
     analysis_period = useful_life  # years
-    depreciation_schedule_length = 20  # years
-    depreciation_type = "MACRS"
     percent_equity_financing = 40 / 100  # percent
     debt_financing = 60 / 100  # percent
     interest_rate_on_debt = 3.7 / 100  # percent
-    debt_period = "Constant Debt"
     percent_fixed_operating_cost_during_startup = 75 / 100  # percent
     percent_revenue_during_startup = 50 / 100  # percent
     percent_variable_operating_cost_during_startup = 75 / 100  # percent
@@ -235,11 +212,8 @@ def H2AModel(
 
     # ------------------------Energy Feedstock, Ulilities, and Byproducts---------------------------------------#
 
-    price_table_reference = "AEO_2017_Reference_Case"
 
     # Add Feedstock Info
-    feedstock_type = "--------"
-    feedstock_price_conversion_factor = 0  # GJ/kWh
     feedstock_price_in_startup_year = 0  # ($2016)/kWh (LookUp)
     feedstock_usage = 55.5  # kWh/kgH2 (LookUp)
     total_energy_feedstock_unitcost = 0.00
@@ -252,7 +226,6 @@ def H2AModel(
     )
 
     # Add Utilities Info
-    utilities_type = "Industrial Electricity"
     electricity_LHV = 0.0036  # GJ/kWh
     utilities_price_in_startup_year = 0.00  # ($2016)/kWh (LookUp)
     electricity_usage = 55.5  # kWh/kgH2 (LookUp)
@@ -265,8 +238,6 @@ def H2AModel(
     )
 
     # Add ByProducts Info
-    byproduct_type = "--------------"
-    byproduct_price_conversion_factor = 0  # GJ/kWh
     byproduct_price_in_startup_year = 0  # ($2016)/kWh (LookUp)
     byproduct_production = 0  # kWh/kgH2 (LookUp)
     total_byproduct_unitprice = 0
@@ -365,7 +336,6 @@ def H2AModel(
 
     # ------------------Other Material and Byproduct---------------------#
 
-    Material_1 = "Processed Water"  # feed
     processed_water_cost = 0.002375  # ($2016)/gal
     water_usage_per_kgH2 = 3.78  # usageperkgH2
     feedcost_in_startup_year = (
@@ -394,7 +364,7 @@ def H2AModel(
         total_unplanned_replacement_capital_cost_factor / 100
     )  # ($2016)/year
 
-    total_variable_operating_costs = (
+    (
         total_feedstock_cost
         + total_utility_cost
         + total_byproduct_credit
@@ -412,17 +382,16 @@ def H2AModel(
     # --------------------------------------Hydorgen Energy Constants----------------------------------------------#
 
     H2_LHV_MJkg = 120.21  # MJ/kg
-    H2_LHV_Btulb = 51.682  # Btu/lb
     mmBTU_to_GJ = 1.055
 
     # --------------------------------------DCF Calculation Inputs----------------------------------------------#
 
     # PROCESS
     actual_hydrogen_produced = plant_annual_output  # kg/yr
-    actual_hydrogen_energy_produced_Btu = (
+    (
         actual_hydrogen_produced * H2_LHV_MJkg / 1000 / mmBTU_to_GJ
     )  # MMBtu(LHV)/yr
-    actual_hydrogen_energy_produced_MJ = actual_hydrogen_produced * H2_LHV_MJkg
+    actual_hydrogen_produced * H2_LHV_MJkg
 
     # Additional FINANCIALS
 
@@ -1392,7 +1361,7 @@ def H2AModel(
     # Cost_Breakdown.to_csv('Cost_Breakdown.csv')
 
     # print(Cost_Breakdown)
-    feedstock_cost_h2_levelized = Cost_Breakdown.loc[
+    Cost_Breakdown.loc[
         "Other Variable Costs (Utilities)", "$/kg of H2"
     ]
     results = dict()

@@ -43,7 +43,6 @@ def run_reopt(
     filepath = Path(__file__).parent
     fileout = "reopt_result_test_intergration.json"
     # site = SiteInfo(sample_site, hub_height=tower_height)
-    count = 1
     reopt = REopt(
         lat=scenario["Lat"],
         lon=scenario["Long"],
@@ -112,7 +111,7 @@ def run_reopt(
     off_grid = False
     reopt.post["Scenario"]["optimality_tolerance_techs"] = 0.05
 
-    if off_grid == True:
+    if off_grid is True:
         # reopt.post['Scenario']['Site'].pop('Wind')
         # reopt.post['Scenario']['Site']['Wind']['min_kw'] = 10000
         dictforstuff = {"off_grid_flag": True}

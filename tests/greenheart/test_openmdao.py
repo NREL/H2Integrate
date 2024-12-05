@@ -179,12 +179,6 @@ def setup_greenheart():
                 "upper": 1500000.0,
                 "units": "kW*h",
             },
-            "battery_capacity_kwh": {
-                "flag": False,
-                "lower": 1000.0,
-                "upper": 1500000.0,
-                "units": "kW*h",
-            },
             "turbine_x": {
                 "flag": False,
                 "lower": 0.0,

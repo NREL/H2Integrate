@@ -273,7 +273,7 @@ class PEM_electrolyzer_LT:
         # NOTE: E_rev is unused right now, E_rev0 is the general nerst equation for operating at 25 deg C at atmospheric pressure
         # (whereas we will be operating at higher temps). From the literature above, it appears that E_rev0 is more correct
         # https://www.sciencedirect.com/science/article/pii/S0360319911021380
-        E_rev = (
+        (
             1.5184
             - (1.5421 * (10 ** (-3)) * T_K)
             + (9.523 * (10 ** (-5)) * T_K * math.log(T_K))
@@ -348,8 +348,6 @@ class PEM_electrolyzer_LT:
         """
         # When electrolyzer is already at or near its optimal operation
         # temperature (~80degC)
-        warm_startup_time_secs = 30
-        cold_startup_time_secs = 5 * 60  # 5 minutes
 
     def water_electrolysis_efficiency(self):  # UNUSED
         """
@@ -577,7 +575,6 @@ class PEM_electrolyzer_LT:
         # ratio of water_used:h2_kg_produced depends on power source
         # h20_kg:h2_kg with PV 22-126:1 or 18-25:1 without PV but considering water deminersalisation
         # stoichometrically its just 9:1 but ... theres inefficiencies in the water purification process
-        max_water_feed_mass_flow_rate_kg_hr = 411  # kg per hour
         h2_produced_kg_hr_system, h2_production_rate_g_s = self.h2_production_rate()
         water_used_kg_hr_system = h2_produced_kg_hr_system * 10
         self.output_dict["water_used_kg_hr"] = water_used_kg_hr_system

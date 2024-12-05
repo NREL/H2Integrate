@@ -6,31 +6,8 @@ import numpy as np
 def set_inputs():
     # Step 1: User Inputs for scenario
     resource_year = 2013
-    atb_years = [
-        2022,
-        # 2025,
-        # 2030,
-        # 2035
-    ]
-    policy = {
-        "option 1": {"Wind ITC": 0, "Wind PTC": 0, "H2 PTC": 0},
-        # 'option 2': {'Wind ITC': 26, 'Wind PTC': 0, "H2 PTC": 0},
-        # 'option 3': {'Wind ITC': 0, 'Wind PTC': 0.003, "H2 PTC": 0},
-        # 'option 4': {'Wind ITC': 0, 'Wind PTC': 0.026, "H2 PTC": 0},
-        # 'option 5': {'Wind ITC': 0, 'Wind PTC': 0.003, "H2 PTC": 0.6},
-        "option 6": {"Wind ITC": 0, "Wind PTC": 0.026, "H2 PTC": 3},
-    }
 
     sample_site["year"] = resource_year
-    useful_life = 30
-    critical_load_factor = 1
-    run_reopt_flag = False
-    custom_powercurve = True
-    storage_used = True
-    battery_can_grid_charge = True
-    grid_connected_hopp = False
-    interconnection_size_mw = 1000
-    electrolyzer_size = 1000
 
 
 def establish_save_output_dict():

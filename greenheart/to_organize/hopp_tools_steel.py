@@ -509,7 +509,7 @@ def set_turbine_model(
     site_location,
     grid_connection_scenario,
 ):
-    if floris == True:
+    if floris is True:
         # Define Turbine Characteristics based on user selected turbine.
         ########## TEMPERARY ###########
         # site_number = 'base'
@@ -916,7 +916,7 @@ def run_HOPP(
     tower_height = scenario["Tower Height"]
     rotor_diameter = scenario["Rotor Diameter"]
 
-    if floris == False:
+    if floris is False:
         technologies = {}
         if run_wind_plant:
             technologies["wind"] = {
@@ -993,7 +993,7 @@ def run_HOPP(
             wind_om_cost_kw=wind_om_cost_kw,
             solar_om_cost_kw=solar_om_cost_kw,
         )
-    if floris == True:
+    if floris is True:
         technologies = {}
         if run_wind_plant:
             technologies["wind"] = {
@@ -1076,12 +1076,12 @@ def run_HOPP(
         )
 
     if run_wind_plant:
-        wind_installed_cost = copy.deepcopy(hybrid_plant.wind.total_installed_cost)
+        copy.deepcopy(hybrid_plant.wind.total_installed_cost)
     if solar_size_mw > 0:
-        solar_installed_cost = copy.deepcopy(hybrid_plant.pv.total_installed_cost)
+        copy.deepcopy(hybrid_plant.pv.total_installed_cost)
     else:
-        solar_installed_cost = 0
-    hybrid_installed_cost = copy.deepcopy(hybrid_plant.grid.total_installed_cost)
+        pass
+    copy.deepcopy(hybrid_plant.grid.total_installed_cost)
 
     # print("HOPP run complete")
     # print(hybrid_plant.om_capacity_expenses)
@@ -1333,10 +1333,10 @@ def desal_model(
 
         hopp_dict.add("Models", {"desal_model": {"input_dict": input_dict}})
 
-    water_usage_electrolyzer = H2_Results["water_hourly_usage"]
+    H2_Results["water_hourly_usage"]
     m3_water_per_kg_h2 = 0.01
     desal_system_size_m3_hr = electrolyzer_size * (1000 / 55.5) * m3_water_per_kg_h2
-    est_const_desal_power_mw_hr = (
+    (
         desal_system_size_m3_hr * 4.2 / 1000
     )  # 4.2kWh/m^3 desal efficiency estimate
     # Power = [(est_const_desal_power_mw_hr) * 1000 for x in range(0, 8760)]
@@ -1469,7 +1469,7 @@ def run_H2_PEM_sim(
                 0 : len(renewables_energy)
             ] - np.array(renewables_energy)
             power_from_grid_sat = np.where(power_from_grid < 0, 0, power_from_grid)
-            renewables_curtailed = np.where(
+            np.where(
                 power_from_grid < 0, -1 * power_from_grid, 0
             )
             tot_energy = (
@@ -1724,7 +1724,7 @@ def calculate_financials(
         + total_export_system_cost
     )
     annual_operating_cost_wind = np.average(hybrid_plant.wind.om_total_expense)
-    fixed_om_cost_wind = np.average(hybrid_plant.wind.om_fixed_expense)
+    np.average(hybrid_plant.wind.om_fixed_expense)
     annual_operating_cost_h2 = electrolyzer_OM_cost
     annual_operating_cost_desal = desal_opex
     total_annual_operating_costs_pipeline = (
@@ -1744,14 +1744,14 @@ def calculate_financials(
         - profit_from_selling_to_grid
     )
 
-    h_lcoe_no_op_cost_pipeline = lcoe_calc(
+    lcoe_calc(
         (H2_Results["hydrogen_annual_output"]),
         total_system_installed_cost_pipeline,
         0,
         discount_rate,
         useful_life,
     )
-    h_lcoe_no_op_cost_hvdc = lcoe_calc(
+    lcoe_calc(
         (H2_Results["hydrogen_annual_output"]),
         total_system_installed_cost_hvdc,
         0,
@@ -1760,7 +1760,7 @@ def calculate_financials(
     )
 
     annual_energies = copy.deepcopy(hybrid_plant.annual_energies)
-    lcoe_test = lcoe_calc(
+    lcoe_calc(
         (annual_energies.wind / 1000),
         total_hopp_installed_cost,
         annual_operating_cost_wind,
@@ -2095,17 +2095,14 @@ def write_outputs_RODeO(
     ammonia_breakeven_price,
     ammonia_price_breakdown,
 ):
-    turbine_rating_mw = scenario["Turbine Rating"]
+    scenario["Turbine Rating"]
     from greenheart.to_organize.H2_Analysis.simple_cash_annuals import (
         simple_cash_annuals,
     )
 
     total_elec_production = np.sum(electrical_generation_timeseries)
-    total_hopp_installed_cost = (
-        hybrid_plant.grid._financial_model.SystemCosts.total_installed_cost
-    )
-    annual_operating_cost_wind = np.average(hybrid_plant.wind.om_total_expense)
-    fixed_om_cost_wind = np.average(hybrid_plant.wind.om_fixed_expense)
+    np.average(hybrid_plant.wind.om_total_expense)
+    np.average(hybrid_plant.wind.om_fixed_expense)
 
     # Cashflow Financial Calculation
     discount_rate = scenario["Discount Rate"]
@@ -2125,7 +2122,7 @@ def write_outputs_RODeO(
     else:
         cf_solar_annuals = np.zeros(30)
 
-    cf_df = pd.DataFrame([cf_wind_annuals, cf_solar_annuals], ["Wind", "Solar"])
+    pd.DataFrame([cf_wind_annuals, cf_solar_annuals], ["Wind", "Solar"])
 
     # cf_df.to_csv(os.path.join(results_dir, "Annual Cashflows_{}_{}_{}_discount_{}_{}MW.csv".format(site_name, scenario_choice, atb_year, discount_rate,turbine_rating_mw)))
 
@@ -2350,7 +2347,7 @@ def write_outputs_ProFAST(
     profast_ammonia_price_breakdown,
     hopp_dict,
 ):
-    turbine_rating_mw = scenario["Turbine Rating"]
+    scenario["Turbine Rating"]
     from greenheart.to_organize.H2_Analysis.simple_cash_annuals import (
         simple_cash_annuals,
     )
@@ -2386,7 +2383,7 @@ def write_outputs_ProFAST(
     #         #cf_wind_annuals = np.zeros(30)
     #         cf_solar_annuals = np.zeros(30)`
 
-    cf_df = pd.DataFrame([cf_wind_annuals, cf_solar_annuals], ["Wind", "Solar"])
+    pd.DataFrame([cf_wind_annuals, cf_solar_annuals], ["Wind", "Solar"])
 
     # cf_df.to_csv(os.path.join(results_dir, "Annual Cashflows_{}_{}_{}_discount_{}_{}MW.csv".format(site_name, scenario_choice, atb_year, discount_rate,turbine_rating_mw)))
 
@@ -2418,11 +2415,11 @@ def write_outputs_ProFAST(
         grid_price = grid_elec_price
 
     if grid_connection_scenario != "grid-only":
-        if run_pv_battery_sweep == True:
+        if run_pv_battery_sweep is True:
             renbat_string = "Wind+PV+bat"
         else:
             renbat_string = "Wind"
-        if floris == True:
+        if floris is True:
             windmodel_string = "floris"
         else:
             windmodel_string = "pysam"
@@ -2430,15 +2427,15 @@ def write_outputs_ProFAST(
         renbat_string = "No-ren"
         windmodel_string = "no-wind"
 
-    if user_defined_stack_replacement_time == True:
+    if user_defined_stack_replacement_time is True:
         stack_avg_life_hrs = user_defined_time_between_replacement
     else:
         stack_avg_life_hrs = round(H2_Results["avg_time_between_replacement"])
 
-    stack_life_str = str(stack_avg_life_hrs)
+    str(stack_avg_life_hrs)
 
     # Naming for degradation and stack optimization
-    if electrolyzer_degradation_penalty == True:
+    if electrolyzer_degradation_penalty is True:
         deg_string = "deg-pen"
     else:
         deg_string = "no-deg-pen"
@@ -2836,7 +2833,6 @@ def steel_LCOS(
 
         hopp_dict.add("Models", {"steel_LCOS": {"input_dict": input_dict}})
 
-
     from greenheart.to_organize.run_profast_for_steel import run_profast_for_steel
 
     # Specify file path to PyFAST
@@ -2968,7 +2964,6 @@ def steel_LCOS_SMR(
     #     }
 
     #     hopp_dict.add('Models', {'steel_LCOS': {'input_dict': input_dict}})
-
 
     from greenheart.to_organize.run_profast_for_steel import run_profast_for_steel
 
@@ -3197,7 +3192,6 @@ def levelized_cost_of_ammonia_SMR(
 
     #     hopp_dict.add('Models', {'levelized_cost_of_ammonia': {'input_dict': input_dict}})
 
-
     from greenheart.to_organize.run_profast_for_ammonia import run_profast_for_ammonia
 
     # Specify file path to PyFAST
@@ -3409,7 +3403,6 @@ def policy_implementation_for_RODeO(
     Ren_PTC_frac = 0
 
     if policy_option == "no policy":
-        H2_PTC = 0  # $/kg H2
         Ren_PTC = 0  # $/kWh
         Ren_PTC_frac = 0
     elif policy_option == "max":

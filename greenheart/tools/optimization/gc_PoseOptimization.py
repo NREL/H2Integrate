@@ -103,7 +103,10 @@ class PoseOptimization:
         """
 
         if (
-            "step_size" not in self.config.greenheart_config["opt_options"]["driver"]["optimization"]
+            "step_size"
+            not in self.config.greenheart_config["opt_options"]["driver"][
+                "optimization"
+            ]
         ):
             step_size = 1.0e-6
             warnings.warn(
@@ -665,6 +668,6 @@ class PoseOptimization:
                 if adder is None:
                     adder = 0.0
 
-                scaled_dv = desvars[key] / scaler - adder
+                desvars[key] / scaler - adder
 
         return opt_prob

@@ -83,7 +83,7 @@ def run_profast_for_ammonia(
 
     # Feedstock
     H2_consumption = 0.197284403  # kg_H2/ kg_NH3
-    H2_cost_in_startup_year = (
+    (
         levelized_cost_of_hydrogen
         * H2_consumption
         * plant_capacity_kgpy
@@ -109,13 +109,13 @@ def run_profast_for_ammonia(
         * plant_capacity_factor
     )
 
-    variable_cost_in_startup_year = (
+    (
         energy_cost_in_startup_year + non_energy_cost_in_startup_year
     )
 
     # By-product
     oxygen_byproduct = 0.29405077250145  # kg/kg_NH#
-    credits_byproduct = (
+    (
         oxygen_price * oxygen_byproduct * plant_capacity_kgpy * plant_capacity_factor
     )
 
@@ -129,7 +129,7 @@ def run_profast_for_ammonia(
     pf = ProFAST.ProFAST()
 
     install_years = 3
-    analysis_start = list(grid_prices_interpolated_USDperMWh.keys())[0] - install_years
+    analysis_start = [*grid_prices_interpolated_USDperMWh][0] - install_years
 
     # Fill these in - can have most of them as 0 also
     gen_inflation = 0.00
@@ -342,7 +342,7 @@ def run_profast_for_ammonia(
     price_breakdown_administrative_expense = price_breakdown.loc[
         price_breakdown["Name"] == "Administrative Expense", "NPV"
     ].tolist()[0]
-    price_breakdown_property_tax_and_insurance = price_breakdown.loc[
+    price_breakdown.loc[
         price_breakdown["Name"] == "Property tax and insurance", "NPV"
     ].tolist()[0]
     # price_breakdown_land_cost = price_breakdown.loc[price_breakdown['Name']=='Land cost','NPV'].tolist()[0]

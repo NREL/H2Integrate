@@ -174,12 +174,12 @@ def run_greenheart(
             if "check_totals" in config.greenheart_config["opt_options"]["driver"]:
                 if config.greenheart_config["opt_options"]["driver"]["check_totals"]:
                     prob.run_model()
-                    totals = prob.compute_totals()
+                    prob.compute_totals()
 
             if "check_partials" in config.greenheart_config["opt_options"]["driver"]:
                 if config.greenheart_config["opt_options"]["driver"]["check_partials"]:
                     prob.run_model()
-                    checks = prob.check_partials(compact_print=True)
+                    prob.check_partials(compact_print=True)
 
             sys.stdout.flush()
 

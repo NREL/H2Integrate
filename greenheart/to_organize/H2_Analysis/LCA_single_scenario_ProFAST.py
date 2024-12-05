@@ -38,38 +38,26 @@ def hydrogen_LCA_singlescenario_ProFAST(
     # DATA
     # ==============================================================================
     # Conversions
-    g_to_kg_conv = 0.001  # Conversion from grams to kilograms
     kg_to_MT_conv = 0.001  # Converion from kg to metric tonnes
-    MT_to_kg_conv = 1000  # Conversion from metric tonne to kilogram
-    kWh_to_MWh_conv = 0.001  # Conversion from kWh to MWh
 
     # ------------------------------------------------------------------------------
     # Renewable infrastructure embedded emission intensities
     # ------------------------------------------------------------------------------
     system_life = 30
-    ely_stack_capex_EI = 0.019  # PEM electrolyzer CAPEX emissions (kg CO2e/kg H2)
-    wind_capex_EI = 10  # Electricity generation capacity from wind, nominal value taken (g CO2e/kWh)
     if solar_size_mw != 0:
-        solar_pv_capex_EI = 37  # Electricity generation capacity from solar pv, nominal value taken (g CO2e/kWh)
+        pass  # Electricity generation capacity from solar pv, nominal value taken (g CO2e/kWh)
     else:
-        solar_pv_capex_EI = 0  # Electricity generation capacity from solar pv, nominal value taken (g CO2e/kWh)
+        pass  # Electricity generation capacity from solar pv, nominal value taken (g CO2e/kWh)
 
     if storage_size_mw != 0:
-        battery_EI = 20  # Electricity generation capacity from battery (g CO2e/kWh)
+        pass  # Electricity generation capacity from battery (g CO2e/kWh)
     else:
-        battery_EI = 0  # Electricity generation capacity from battery (g CO2e/kWh)
+        pass  # Electricity generation capacity from battery (g CO2e/kWh)
 
     # ------------------------------------------------------------------------------
     # Hydrogen production via water electrolysis
     # ------------------------------------------------------------------------------
 
-    grid_trans_losses = 0.05  # Grid losses of 5% are assumed (-)
-    fuel_to_grid_curr = (
-        48  # Fuel mix emission intensity for current power grid (g CO2e/kWh)
-    )
-    fuel_to_grid_futu = (
-        14  # Fuel mix emission intensity for future power grid (g CO2e/kWh)
-    )
 
     if atb_year == 2020:
         cambium_year = 2025
@@ -162,7 +150,7 @@ def hydrogen_LCA_singlescenario_ProFAST(
         * kg_to_MT_conv
     )
     # scope3_ren_sum            = energy_from_renewables_df['Energy from renewables (kWh)'].sum()/1000 # MWh
-    scope3_ren_sum = (
+    (
         energy_from_renewables_df["Energy from renewables (kWh)"].sum()
         * system_life
         / 1000

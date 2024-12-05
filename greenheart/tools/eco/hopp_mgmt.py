@@ -94,7 +94,7 @@ def setup_hopp(
                     max_sites=hopp_config["technologies"]["wind"]["num_turbines"],
                 )
                 # Extracting xy coordinates
-                xy_coordinates = [(point.x, point.y) for point in grid_position]
+                [(point.x, point.y) for point in grid_position]
                 floris_config["farm"]["layout_x"] = [point.x for point in grid_position]
                 floris_config["farm"]["layout_y"] = [point.y for point in grid_position]
 
@@ -138,12 +138,11 @@ def setup_hopp(
             ]
 
         else:
-            raise (
-                ValueError(
-                    "Wind model '%s' not available. Please choose one of ['floris', 'pysam']"
-                    % (hopp_config["technologies"]["wind"]["model_name"])
-                )
+            msg = (
+                f'Wind model `{hopp_config["technologies"]["wind"]["model_name"]}` not available.'
+                ' Please choose one of ["floris, "pysam]'
             )
+            raise ValueError(msg)
 
     # setup hopp interface
     hopp_config_internal = copy.deepcopy(hopp_config)

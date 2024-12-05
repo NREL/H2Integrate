@@ -42,7 +42,6 @@ def run_h2a(
 
     avg_daily_H2_production = np.mean(daily_H2_production)  # kgH2/day
     hydrogen_annual_output = sum(hydrogen_hourly_production)  # kgH2/year
-    elec_remainder_after_h2 = combined_hybrid_curtailment_hopp
 
     # Run H2A model
     H2A_Results = H2AModel.H2AModel(
@@ -61,10 +60,10 @@ def run_h2a(
         )
     )
     h2a_costs = H2A_Results["Total Hydrogen Cost ($/kgH2)"]
-    determined_electrolyzer_size = H2A_Results["electrolyzer_size"]
-    determined_electrolyzer_plant_total_size = H2A_Results["total_plant_size"]
-    h2_scaled_total_installed_cost = H2A_Results["scaled_total_installed_cost"]
-    h2_scaled_total_installed_cost_kw = H2A_Results["scaled_total_installed_cost_kw"]
+    H2A_Results["electrolyzer_size"]
+    H2A_Results["total_plant_size"]
+    H2A_Results["scaled_total_installed_cost"]
+    H2A_Results["scaled_total_installed_cost_kw"]
 
     feedstock_cost_h2_levelized_hopp = (
         lcoe * total_system_electrical_usage / 100

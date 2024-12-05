@@ -26,7 +26,7 @@ def install_platform(
     """
 
     # If no ORBIT vessel is defined set default values (based on ORBIT's floating_heavy_lift_vessel)
-    if vessel == None:
+    if vessel is None:
         if foundation == "fixed":
             # If no ORBIT vessel is defined set default values (based on ORBIT's example_heavy_lift_vessel)
             # Default values are from [3].

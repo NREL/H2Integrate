@@ -52,7 +52,7 @@ def map_comm_heirarchical(n_DV, n_OF, openmp=False):
     in the color map as 1000000. The ones handling python and the DV are marked as 0, and
     finally the master ones for each openfast run are marked with a 1.
     """
-    if openmp == True:
+    if openmp is True:
         n_procs_per_node = 36  # Number of
         num_procs = MPI.COMM_WORLD.Get_size()
         n_nodes = num_procs / n_procs_per_node
@@ -80,7 +80,7 @@ def map_comm_heirarchical(n_DV, n_OF, openmp=False):
                 for j in comm_map_down[nn * n_procs_per_node + n_dv]:
                     comm_map_up[j] = nn * n_procs_per_node + n_dv
     else:
-        N = n_DV + n_DV * n_OF
+        n_DV + n_DV * n_OF
         comm_map_down = {}
         comm_map_up = {}
         color_map = [0] * n_DV
@@ -115,9 +115,9 @@ def subprocessor_loop(comm_map_up):
     rank_target = comm_map_up[rank]
 
     keep_running = True
-    while keep_running == True:
+    while keep_running is True:
         data = MPI.COMM_WORLD.recv(source=(rank_target), tag=0)
-        if data[0] == False:
+        if data[0] is False:
             break
         else:
             func_execution = data[0]

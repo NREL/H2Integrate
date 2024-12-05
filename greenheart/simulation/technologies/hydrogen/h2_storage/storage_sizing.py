@@ -1,4 +1,3 @@
-
 import numpy as np
 
 
@@ -48,7 +47,7 @@ def hydrogen_storage_capacity(H2_Results, electrolyzer_size_mw, hydrogen_demand_
     h2_LHV = 119.96  # MJ/kg
     h2_HHV = 141.88  # MJ/kg
     hydrogen_storage_capacity_MWh_LHV = hydrogen_storage_capacity_kg * h2_LHV / 3600
-    hydrogen_storage_capacity_MWh_HHV = hydrogen_storage_capacity_kg * h2_HHV / 3600
+    hydrogen_storage_capacity_kg * h2_HHV / 3600
 
     # # Get max injection/withdrawal rate
     # hydrogen_injection_withdrawal_rate = []

@@ -1,4 +1,3 @@
-
 import pytest
 
 from greenheart.simulation.technologies.hydrogen.electrolysis.pem_mass_and_footprint import (

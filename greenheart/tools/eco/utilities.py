@@ -69,7 +69,7 @@ def get_inputs(
     )
 
     ################ load plant inputs from yaml
-    if filename_orbit_config != None:
+    if filename_orbit_config is not None:
         orbit_config = orbit.load_config(filename_orbit_config)
 
         # print plant inputs if desired
@@ -109,7 +109,7 @@ def get_inputs(
             print(key, ": ", turbine_config[key])
 
     ############## provide custom layout for ORBIT and FLORIS if desired
-    if filename_orbit_config != None:
+    if filename_orbit_config is not None:
         if orbit_config["plant"]["layout"] == "custom":
             # generate ORBIT config from floris layout
             for i, x in enumerate(floris_config["farm"]["layout_x"]):
@@ -148,7 +148,7 @@ def get_inputs(
             )
 
     # initialize dict for hybrid plant
-    if filename_orbit_config != None:
+    if filename_orbit_config is not None:
         if total_hybrid_plant_capacity_mw != orbit_config["plant"]["capacity"]:
             orbit_hybrid_electrical_export_config = copy.deepcopy(orbit_config)
             orbit_hybrid_electrical_export_config["plant"]["capacity"] = (
@@ -372,12 +372,10 @@ def visualize_plant(
         desal_equipment_side = np.sqrt(desal_equipment_area)
 
         # get pipe points
-        pipe_x = np.array([substation_x - 1000, substation_x])
-        pipe_y = np.array([substation_y, substation_y])
+        np.array([substation_x - 1000, substation_x])
+        np.array([substation_y, substation_y])
 
         # get cable points
-        cable_x = pipe_x
-        cable_y = pipe_y
 
     else:
         turbine_x = np.array(
@@ -469,11 +467,9 @@ def visualize_plant(
         for x, y in zip(turbine_x, turbine_y):
             if i == 0:
                 rlabel = "Wind Turbine Rotor"
-                tlabel = "Wind Turbine Tower"
                 i += 1
             else:
                 rlabel = None
-                tlabel = None
             turbine_patch = patches.Circle(
                 (x, y),
                 radius=radius,
@@ -1412,7 +1408,7 @@ def save_energy_flows(
 ):
     if isinstance(output_dir, str):
         output_dir = Path(output_dir).resolve()
-    if ax == None:
+    if ax is None:
         fig, ax = plt.subplots(1)
 
     output = {}

@@ -193,9 +193,7 @@ class run_PEM_clusters:
                 AC = np.array(AC)
                 F_tot = np.array(F_tot)
             if start_time == 0:
-                P_tot_opt_full = P_tot_opt
                 P_full = P_
-                P_wind_t_full = P_wind_t
                 H2f_full = H2f
                 I_full = I_
                 Tr_full = np.sum(Tr_, axis=0)

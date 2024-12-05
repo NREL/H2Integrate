@@ -380,7 +380,7 @@ def run_capex(
     # bos_capex = hopp_results["hybrid_plant"].bos.total_installed_cost
 
     ## desal capex
-    if desal_results != None:
+    if desal_results is not None:
         desal_capex = desal_results["desal_capex_usd"]
     else:
         desal_capex = 0.0
@@ -427,10 +427,11 @@ def run_capex(
     ):  # lined rock cavern storage model includes compression
         h2_storage_capex = h2_storage_results["storage_capex"]
     else:
-        raise NotImplementedError(
-            "the storage type you have indicated (%s) has not been implemented."
-            % greenheart_config["h2_storage"]["type"]
+        msg = (
+            f'the storage type you have indicated ({greenheart_config["h2_storage"]["type"]}) '
+            'has not been implemented.'
         )
+        raise NotImplementedError(msg)
 
     # store capex component breakdown
     capex_breakdown = {
@@ -546,7 +547,7 @@ def run_opex(
 
     storage_opex = h2_storage_results["storage_opex"]
     # desal OPEX
-    if desal_results != None:
+    if desal_results is not None:
         desal_opex = desal_results["desal_opex_usd_per_year"]
     else:
         desal_opex = 0.0
@@ -1552,9 +1553,7 @@ def run_profast_full_plant_model(
         Note: full tech-nutral (wind) tax credits are no longer available if constructions starts after Jan. 1 2034 (Jan 1. 2033 for h2 ptc)"""
 
     # catch incentive option and add relevant incentives
-    incentive_dict = greenheart_config["policy_parameters"][
-        "option%s" % (incentive_option)
-    ]
+    incentive_dict = greenheart_config["policy_parameters"][f"option{incentive_option}"]
 
     # add wind_itc (% of wind capex)
     electricity_itc_value_percent_wind_capex = incentive_dict["electricity_itc"]
@@ -1645,12 +1644,12 @@ def run_profast_full_plant_model(
     lcoh = sol["price"]
 
     if verbose:
-        print("\nProFAST LCOH: ", "%.2f" % (lcoh), "$/kg")
-        print("ProFAST NPV: ", "%.2f" % (sol["NPV"]))
-        print("ProFAST IRR: ", "%.5f" % (max(sol["irr"])))
-        print("ProFAST LCO: ", "%.2f" % (sol["lco"]), "$/kg")
-        print("ProFAST Profit Index: ", "%.2f" % (sol["profit index"]))
-        print("ProFAST payback period: ", sol["investor payback period"])
+        print(f"\nProFAST LCOH: {lcoh:.2f} $/kg")
+        print(f'ProFAST NPV: {sol["NPV"]:.2f}')
+        print(f'ProFAST IRR: {max(sol["irr"]):.5f}')
+        print(f'ProFAST LCO: {sol["lco"]:.2f} $/kg')
+        print(f'ProFAST Profit Index: {sol["profit index"]:.2f}')
+        print(f'ProFAST payback period: {sol["investor payback period"]}')
 
         MIRR = npf.mirr(
             df["Investor cash flow"],
