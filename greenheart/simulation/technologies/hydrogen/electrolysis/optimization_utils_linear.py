@@ -1,8 +1,6 @@
-import os
-import random
 import time
+from pathlib import Path
 
-import matplotlib.pyplot as plt
 import numpy as np
 from pyomo.environ import *
 
@@ -147,9 +145,11 @@ def optimize(
     model.physical_constraints.add(physical_constraint_AC(model))
     model.objective = Objective(expr=obj(model), sense=minimize)
     eps = 10
-    cbc_path = os.path.abspath('')+'\\hybrid\\PEM_Model_2Push\\cbc.exe'
-    solver = SolverFactory('cbc', executable=cbc_path) # Use this if you have a Windows machine; also make sure that cbc.exe is in the same folder as this script
-    #solver = SolverFactory("cbc") # Use this if you don't have a windows machine
+    cbc_path = Path(__file__).parent / "hybrid/PEM_Model_2Push/cbc.exe"
+    solver = SolverFactory(
+        "cbc", executable=cbc_path
+    )  # Use this if you have a Windows machine; also make sure that cbc.exe is in the same folder as this script
+    # solver = SolverFactory("cbc") # Use this if you don't have a windows machine
     j = 1
     while eps > 1e-3:
         start = time.process_time()

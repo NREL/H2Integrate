@@ -32,12 +32,8 @@ Energy recovery system: A system where a portion of the pressure energy of the b
 
 Costs are in 2013 dollars
 """
-import sys
 
-import numpy as np
 
-from greenheart.to_organize.H2_Analysis.simple_cash_annuals import \
-    simple_cash_annuals
 
 
 def RO_desal_eco(freshwater_kg_per_hr, salinity):
@@ -59,31 +55,38 @@ def RO_desal_eco(freshwater_kg_per_hr, salinity):
     A desal system capacity is given as desired freshwater flow rate [m^3/hr]
     """
 
-    freshwater_density = 997    #[kg/m^3]
+    freshwater_density = 997  # [kg/m^3]
     freshwater_m3_per_hr = freshwater_kg_per_hr / freshwater_density
     desal_capacity = freshwater_m3_per_hr
 
     if salinity == "Seawater":
         # SWRO: Sea Water Reverse Osmosis, water >18,000 ppm
         # Water recovery
-        recovery_ratio = 0.5    #https://www.usbr.gov/research/dwpr/reportpdfs/report072.pdf
+        recovery_ratio = (
+            0.5  # https://www.usbr.gov/research/dwpr/reportpdfs/report072.pdf
+        )
         feedwater_m3_per_hr = freshwater_m3_per_hr / recovery_ratio
 
         # Power required
-        energy_conversion_factor = 4.0  #[kWh/m^3] SWRO energy_conversion_factor range 2.5 to 4.0 kWh/m^3
-                                        #https://www.sciencedirect.com/science/article/pii/S0011916417321057
+        energy_conversion_factor = (
+            4.0  # [kWh/m^3] SWRO energy_conversion_factor range 2.5 to 4.0 kWh/m^3
+        )
+        # https://www.sciencedirect.com/science/article/pii/S0011916417321057
         desal_power = freshwater_m3_per_hr * energy_conversion_factor
-
 
     elif salinity == "Brackish":
         # BWRO: Brakish water Reverse Osmosis, water < 18,000 ppm
         # Water recovery
-        recovery_ratio = 0.75    #https://www.usbr.gov/research/dwpr/reportpdfs/report072.pdf
+        recovery_ratio = (
+            0.75  # https://www.usbr.gov/research/dwpr/reportpdfs/report072.pdf
+        )
         feedwater_m3_per_hr = freshwater_m3_per_hr / recovery_ratio
 
         # Power required
-        energy_conversion_factor = 1.5  #[kWh/m^3] BWRO energy_conversion_factor range 1.0 to 1.5 kWh/m^3
-                                        #https://www.sciencedirect.com/science/article/pii/S0011916417321057
+        energy_conversion_factor = (
+            1.5  # [kWh/m^3] BWRO energy_conversion_factor range 1.0 to 1.5 kWh/m^3
+        )
+        # https://www.sciencedirect.com/science/article/pii/S0011916417321057
 
         desal_power = freshwater_m3_per_hr * energy_conversion_factor
 
@@ -92,11 +95,11 @@ def RO_desal_eco(freshwater_kg_per_hr, salinity):
 
     # Costing
     # https://www.nrel.gov/docs/fy16osti/66073.pdf
-    desal_capex = 32894 * (freshwater_density * desal_capacity / 3600) # [USD]
+    desal_capex = 32894 * (freshwater_density * desal_capacity / 3600)  # [USD]
 
-    desal_opex = 4841 * (freshwater_density * desal_capacity / 3600) # [USD/yr]
+    desal_opex = 4841 * (freshwater_density * desal_capacity / 3600)  # [USD/yr]
 
-    '''Mass and Footprint
+    """Mass and Footprint
     Based on Commercial Industrial RO Systems
     https://www.appliedmembranes.com/s-series-seawater-reverse-osmosis-systems-2000-to-100000-gpd.html
 
@@ -111,15 +114,23 @@ def RO_desal_eco(freshwater_kg_per_hr, salinity):
 
     Voltage Codes
     460 or 480v/ 3ph/ 60 Hz
-    '''
-    desal_mass_kg = freshwater_m3_per_hr * 346.7    #[kg]
-    desal_size_m2 = freshwater_m3_per_hr * .467     #[m^2]
+    """
+    desal_mass_kg = freshwater_m3_per_hr * 346.7  # [kg]
+    desal_size_m2 = freshwater_m3_per_hr * 0.467  # [m^2]
+
+    return (
+        desal_capacity,
+        feedwater_m3_per_hr,
+        desal_power,
+        desal_capex,
+        desal_opex,
+        desal_mass_kg,
+        desal_size_m2,
+    )
 
 
-    return desal_capacity, feedwater_m3_per_hr, desal_power, desal_capex, desal_opex, desal_mass_kg, desal_size_m2
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     desal_freshwater_kg_hr = 75000
-    salinity = 'Brackish'
-    test = RO_desal_eco(desal_freshwater_kg_hr,salinity)
+    salinity = "Brackish"
+    test = RO_desal_eco(desal_freshwater_kg_hr, salinity)
     print(test)

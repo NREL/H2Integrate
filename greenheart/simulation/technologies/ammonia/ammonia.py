@@ -1,6 +1,5 @@
 import copy
-import os
-from typing import Dict, Optional, Tuple, Union
+from pathlib import Path
 
 import pandas as pd
 import ProFAST
@@ -147,6 +146,7 @@ def run_ammonia_model(
 
     return ammonia_production_kgpy
 
+
 @define
 class AmmoniaCapacityModelConfig:
     """
@@ -162,18 +162,23 @@ class AmmoniaCapacityModelConfig:
         feedstocks (Feedstocks): An instance of the `Feedstocks` class detailing the
             costs and consumption rates of resources used in production.
     """
+
     input_capacity_factor_estimate: float
     feedstocks: Feedstocks
-    hydrogen_amount_kgpy: Optional[float] = field(default=None)
-    desired_ammonia_kgpy: Optional[float] = field(default=None)
-
+    hydrogen_amount_kgpy: float | None = field(default=None)
+    desired_ammonia_kgpy: float | None = field(default=None)
 
     def __attrs_post_init__(self):
         if self.hydrogen_amount_kgpy is None and self.desired_ammonia_kgpy is None:
-            raise ValueError("`hydrogen_amount_kgpy` or `desired_ammonia_kgpy` is a required input.")
+            raise ValueError(
+                "`hydrogen_amount_kgpy` or `desired_ammonia_kgpy` is a required input."
+            )
 
         if self.hydrogen_amount_kgpy and self.desired_ammonia_kgpy:
-            raise ValueError("can only select one input: `hydrogen_amount_kgpy` or `desired_ammonia_kgpy`.")
+            raise ValueError(
+                "can only select one input: `hydrogen_amount_kgpy` or `desired_ammonia_kgpy`."
+            )
+
 
 @define
 class AmmoniaCapacityModelOutputs:
@@ -186,10 +191,14 @@ class AmmoniaCapacityModelOutputs:
         hydrogen_amount_kgpy (float): If amount of ammonia production in kilograms per year is input,
             the amount of necessary hydrogen feedstock in kilograms per year is output.
     """
+
     ammonia_plant_capacity_kgpy: float
     hydrogen_amount_kgpy: float
 
-def run_size_ammonia_plant_capacity(config: AmmoniaCapacityModelConfig) -> AmmoniaCapacityModelOutputs:
+
+def run_size_ammonia_plant_capacity(
+    config: AmmoniaCapacityModelConfig,
+) -> AmmoniaCapacityModelOutputs:
     """
     Calculates either the annual ammonia production in kilograms based on plant capacity and
     available hydrogen or the amount of required hydrogen based on a desired ammonia production.
@@ -205,25 +214,28 @@ def run_size_ammonia_plant_capacity(config: AmmoniaCapacityModelConfig) -> Ammon
 
     """
     if config.hydrogen_amount_kgpy:
-        ammonia_plant_capacity_kgpy = (config.hydrogen_amount_kgpy
+        ammonia_plant_capacity_kgpy = (
+            config.hydrogen_amount_kgpy
             / config.feedstocks.hydrogen_consumption
             * config.input_capacity_factor_estimate
         )
         hydrogen_amount_kgpy = config.hydrogen_amount_kgpy
 
     if config.desired_ammonia_kgpy:
-        hydrogen_amount_kgpy = (config.desired_ammonia_kgpy
+        hydrogen_amount_kgpy = (
+            config.desired_ammonia_kgpy
             * config.feedstocks.hydrogen_consumption
             / config.input_capacity_factor_estimate
         )
-        ammonia_plant_capacity_kgpy = (config.desired_ammonia_kgpy
-            / config.input_capacity_factor_estimate
+        ammonia_plant_capacity_kgpy = (
+            config.desired_ammonia_kgpy / config.input_capacity_factor_estimate
         )
 
     return AmmoniaCapacityModelOutputs(
         ammonia_plant_capacity_kgpy=ammonia_plant_capacity_kgpy,
-        hydrogen_amount_kgpy=hydrogen_amount_kgpy
+        hydrogen_amount_kgpy=hydrogen_amount_kgpy,
     )
+
 
 def run_ammonia_cost_model(config: AmmoniaCostModelConfig) -> AmmoniaCostModelOutputs:
     """
@@ -381,10 +393,10 @@ class AmmoniaFinanceModelConfig:
     plant_life: int
     plant_capacity_kgpy: float
     plant_capacity_factor: float
-    grid_prices: Dict[str, float]
+    grid_prices: dict[str, float]
     feedstocks: Feedstocks
-    costs: Union[AmmoniaCosts, AmmoniaCostModelOutputs]
-    financial_assumptions: Dict[str, float] = Factory(dict)
+    costs: AmmoniaCosts | AmmoniaCostModelOutputs
+    financial_assumptions: dict[str, float] = Factory(dict)
     install_years: int = 3
     gen_inflation: float = 0.0
     save_plots: bool = False
@@ -615,32 +627,33 @@ def run_ammonia_finance_model(
     price_breakdown = pf.get_cost_breakdown()
 
     if config.save_plots or config.show_plots:
+        output_dir = Path(config.output_dir).resolve()
         savepaths = [
-            config.output_dir + "figures/capex/",
-            config.output_dir + "figures/annual_cash_flow/",
-            config.output_dir + "figures/lcoa_breakdown/",
-            config.output_dir + "data/",
+            output_dir / "figures/capex/",
+            output_dir / "figures/annual_cash_flow/",
+            output_dir / "figures/lcoa_breakdown/",
+            output_dir / "data/",
         ]
         for savepath in savepaths:
-            if not os.path.exists(savepath):
-                os.makedirs(savepath)
+            if not savepath.exists():
+                savepath.mkdir(parent=True)
 
         pf.plot_capital_expenses(
-            fileout=savepaths[0] + "ammonia_capital_expense_%i.pdf" % (config.design_scenario_id),
+            fileout=savepaths[0]
+            / f"ammonia_capital_expense_{config.design_scenario_id}.pdf",
             show_plot=config.show_plots,
         )
         pf.plot_cashflow(
-            fileout=savepaths[1] + "ammonia_cash_flow_%i.png"
-            % (config.design_scenario_id),
+            fileout=savepaths[1] / f"ammonia_cash_flow_{config.design_scenario_id}.png",
             show_plot=config.show_plots,
         )
 
         pd.DataFrame.from_dict(data=pf.cash_flow_out).to_csv(
-            savepaths[3] + "ammonia_cash_flow_%i.csv" % (config.design_scenario_id)
+            savepaths[3] / f"ammonia_cash_flow_{config.design_scenario_id}.csv"
         )
 
         pf.plot_costs(
-            savepaths[2] + "lcoa_%i" % (config.design_scenario_id),
+            savepaths[2] / f"lcoa_{config.design_scenario_id}",
             show_plot=config.show_plots,
         )
 
@@ -650,7 +663,16 @@ def run_ammonia_finance_model(
         price_breakdown=price_breakdown,
     )
 
-def run_ammonia_full_model(greenheart_config: dict, save_plots=False, show_plots=False, output_dir="./output/", design_scenario_id=0) -> Tuple[AmmoniaCapacityModelOutputs, AmmoniaCostModelOutputs, AmmoniaFinanceModelOutputs]:
+
+def run_ammonia_full_model(
+    greenheart_config: dict,
+    save_plots=False,
+    show_plots=False,
+    output_dir="./output/",
+    design_scenario_id=0,
+) -> tuple[
+    AmmoniaCapacityModelOutputs, AmmoniaCostModelOutputs, AmmoniaFinanceModelOutputs
+]:
     """
     Runs the full ammonia production model, including capacity sizing, cost calculation,
 
@@ -673,8 +695,7 @@ def run_ammonia_full_model(greenheart_config: dict, save_plots=False, show_plots
 
     # run ammonia capacity model to get ammonia plant size
     capacity_config = AmmoniaCapacityModelConfig(
-        feedstocks=feedstocks,
-        **ammonia_capacity
+        feedstocks=feedstocks, **ammonia_capacity
     )
     ammonia_capacity = run_size_ammonia_plant_capacity(capacity_config)
 
@@ -683,7 +704,7 @@ def run_ammonia_full_model(greenheart_config: dict, save_plots=False, show_plots
     ammonia_cost_config = AmmoniaCostModelConfig(
         plant_capacity_factor=capacity_config.input_capacity_factor_estimate,
         plant_capacity_kgpy=ammonia_capacity.ammonia_plant_capacity_kgpy,
-        **ammonia_costs
+        **ammonia_costs,
     )
     ammonia_cost_config.plant_capacity_kgpy = (
         ammonia_capacity.ammonia_plant_capacity_kgpy
@@ -702,7 +723,7 @@ def run_ammonia_full_model(greenheart_config: dict, save_plots=False, show_plots
         save_plots=save_plots,
         output_dir=output_dir,
         design_scenario_id=design_scenario_id,
-        **ammonia_finance
+        **ammonia_finance,
     )
     ammonia_finance = run_ammonia_finance_model(ammonia_finance_config)
 

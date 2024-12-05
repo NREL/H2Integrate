@@ -102,7 +102,6 @@ def test_run_steel_model():
 
 
 def test_steel_cost_model(subtests, cost_config):
-
     res: steel.SteelCostModelOutputs = steel.run_steel_cost_model(cost_config)
 
     with subtests.test("CapEx"):
@@ -214,6 +213,7 @@ def test_run_steel_full_model(subtests):
     with subtests.test("steel price"):
         assert res[2].sol.get("price") == approx(958.0597659101862)
 
+
 def test_run_steel_full_model_changing_lcoh(subtests):
     config_0 = {
         "steel": {
@@ -257,6 +257,8 @@ def test_run_steel_full_model_changing_lcoh(subtests):
     with subtests.test("res0 price lt res1 price"):
         assert res0[2].sol.get("price") < res1[2].sol.get("price")
     with subtests.test("raise value error when LCOH values do not match"):
-        with raises(ValueError, match="steel cost LCOH and steel finance LCOH are not equal"):
+        with raises(
+            ValueError, match="steel cost LCOH and steel finance LCOH are not equal"
+        ):
             config_1["steel"]["finances"]["lcoh"] = 40.0
             res1 = steel.run_steel_full_model(config_1)

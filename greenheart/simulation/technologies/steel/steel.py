@@ -1,6 +1,5 @@
 import copy
-import os
-from typing import Dict, Optional, Tuple, Union
+from pathlib import Path
 
 import pandas as pd
 import ProFAST
@@ -50,7 +49,7 @@ class Feedstocks:
             factor ($/metric tonne).
     """
 
-    natural_gas_prices: Dict[str, float]
+    natural_gas_prices: dict[str, float]
     excess_oxygen: float = 395
     lime_unitcost: float = 122.1
     carbon_unitcost: float = 236.97
@@ -193,6 +192,7 @@ class SteelCostModelOutputs(SteelCosts):
     spare_parts_cost: float
     misc_owners_costs: float
 
+
 @define
 class SteelCapacityModelConfig:
     """
@@ -208,18 +208,23 @@ class SteelCapacityModelConfig:
         feedstocks (Feedstocks): An instance of the `Feedstocks` class detailing the
             costs and consumption rates of resources used in production.
     """
+
     input_capacity_factor_estimate: float
     feedstocks: Feedstocks
-    hydrogen_amount_kgpy: Optional[float] = field(default=None)
-    desired_steel_mtpy: Optional[float] = field(default=None)
-
+    hydrogen_amount_kgpy: float | None = field(default=None)
+    desired_steel_mtpy: float | None = field(default=None)
 
     def __attrs_post_init__(self):
         if self.hydrogen_amount_kgpy is None and self.desired_steel_mtpy is None:
-            raise ValueError("`hydrogen_amount_kgpy` or `desired_steel_mtpy` is a required input.")
+            raise ValueError(
+                "`hydrogen_amount_kgpy` or `desired_steel_mtpy` is a required input."
+            )
 
         if self.hydrogen_amount_kgpy and self.desired_steel_mtpy:
-            raise ValueError("can only select one input: `hydrogen_amount_kgpy` or `desired_steel_mtpy`.")
+            raise ValueError(
+                "can only select one input: `hydrogen_amount_kgpy` or `desired_steel_mtpy`."
+            )
+
 
 @define
 class SteelCapacityModelOutputs:
@@ -232,11 +237,14 @@ class SteelCapacityModelOutputs:
         hydrogen_amount_kgpy (float): If amount of steel production in metric tonnes per year is input,
             the amount of necessary hydrogen feedstock in kilograms per year is output.
     """
+
     steel_plant_capacity_mtpy: float
     hydrogen_amount_kgpy: float
 
 
-def run_size_steel_plant_capacity(config: SteelCapacityModelConfig) -> SteelCapacityModelOutputs:
+def run_size_steel_plant_capacity(
+    config: SteelCapacityModelConfig,
+) -> SteelCapacityModelOutputs:
     """
     Calculates either the annual steel production in metric tons based on plant capacity and
     available hydrogen or the amount of required hydrogen based on a desired steel production.
@@ -253,7 +261,8 @@ def run_size_steel_plant_capacity(config: SteelCapacityModelConfig) -> SteelCapa
     """
 
     if config.hydrogen_amount_kgpy:
-        steel_plant_capacity_mtpy = (config.hydrogen_amount_kgpy
+        steel_plant_capacity_mtpy = (
+            config.hydrogen_amount_kgpy
             / 1000
             / config.feedstocks.hydrogen_consumption
             * config.input_capacity_factor_estimate
@@ -261,18 +270,19 @@ def run_size_steel_plant_capacity(config: SteelCapacityModelConfig) -> SteelCapa
         hydrogen_amount_kgpy = config.hydrogen_amount_kgpy
 
     if config.desired_steel_mtpy:
-        hydrogen_amount_kgpy = (config.desired_steel_mtpy
+        hydrogen_amount_kgpy = (
+            config.desired_steel_mtpy
             * 1000
             * config.feedstocks.hydrogen_consumption
             / config.input_capacity_factor_estimate
         )
-        steel_plant_capacity_mtpy = (config.desired_steel_mtpy
-            / config.input_capacity_factor_estimate
+        steel_plant_capacity_mtpy = (
+            config.desired_steel_mtpy / config.input_capacity_factor_estimate
         )
 
     return SteelCapacityModelOutputs(
         steel_plant_capacity_mtpy=steel_plant_capacity_mtpy,
-        hydrogen_amount_kgpy=hydrogen_amount_kgpy
+        hydrogen_amount_kgpy=hydrogen_amount_kgpy,
     )
 
 
@@ -554,17 +564,18 @@ class SteelFinanceModelConfig:
     plant_capacity_factor: float
     steel_production_mtpy: float
     lcoh: float
-    grid_prices: Dict[str, float]
+    grid_prices: dict[str, float]
     feedstocks: Feedstocks
-    costs: Union[SteelCosts, SteelCostModelOutputs]
+    costs: SteelCosts | SteelCostModelOutputs
     o2_heat_integration: bool = True
-    financial_assumptions: Dict[str, float] = Factory(dict)
+    financial_assumptions: dict[str, float] = Factory(dict)
     install_years: int = 3
     gen_inflation: float = 0.00
     save_plots: bool = False
     show_plots: bool = False
     output_dir: str = "./output/"
     design_scenario_id: int = 0
+
 
 @define
 class SteelFinanceModelOutputs:
@@ -850,32 +861,33 @@ def run_steel_finance_model(
     price_breakdown = pf.get_cost_breakdown()
 
     if config.save_plots or config.show_plots:
+        output_dir = Path(config.output_dir).resolve()
         savepaths = [
-            config.output_dir + "figures/capex/",
-            config.output_dir + "figures/annual_cash_flow/",
-            config.output_dir + "figures/lcos_breakdown/",
-            config.output_dir + "data/",
+            output_dir / "figures/capex/",
+            output_dir / "figures/annual_cash_flow/",
+            output_dir / "figures/lcos_breakdown/",
+            output_dir / "data/",
         ]
         for savepath in savepaths:
-            if not os.path.exists(savepath):
-                os.makedirs(savepath)
+            if not savepath.exists():
+                savepath.mkdir(parents=True)
 
         pf.plot_capital_expenses(
-            fileout=savepaths[0] + "steel_capital_expense_%i.pdf" % (config.design_scenario_id),
+            fileout=savepaths[0]
+            / f"steel_capital_expense_{config.design_scenario_id}.pdf",
             show_plot=config.show_plots,
         )
         pf.plot_cashflow(
-            fileout=savepaths[1] + "steel_cash_flow_%i.png"
-            % (config.design_scenario_id),
+            fileout=savepaths[1] / f"steel_cash_flow_{config.design_scenario_id}.png",
             show_plot=config.show_plots,
         )
 
         pd.DataFrame.from_dict(data=pf.cash_flow_out).to_csv(
-            savepaths[3] + "steel_cash_flow_%i.csv" % (config.design_scenario_id)
+            savepaths[3] / f"steel_cash_flow_{config.design_scenario_id}.csv"
         )
 
         pf.plot_costs(
-            savepaths[2] + "lcos_%i" % (config.design_scenario_id),
+            savepaths[2] / f"lcos_{config.design_scenario_id}",
             show_plot=config.show_plots,
         )
 
@@ -886,7 +898,13 @@ def run_steel_finance_model(
     )
 
 
-def run_steel_full_model(greenheart_config: dict, save_plots=False, show_plots=False, output_dir="./output/", design_scenario_id=0) -> Tuple[SteelCapacityModelOutputs, SteelCostModelOutputs, SteelFinanceModelOutputs]:
+def run_steel_full_model(
+    greenheart_config: dict,
+    save_plots=False,
+    show_plots=False,
+    output_dir="./output/",
+    design_scenario_id=0,
+) -> tuple[SteelCapacityModelOutputs, SteelCostModelOutputs, SteelFinanceModelOutputs]:
     """
     Runs the full steel model, including capacity, cost, and finance models.
 
@@ -902,8 +920,9 @@ def run_steel_full_model(greenheart_config: dict, save_plots=False, show_plots=F
     config = copy.deepcopy(greenheart_config)
 
     if config["steel"]["costs"]["lcoh"] != config["steel"]["finances"]["lcoh"]:
-        raise(ValueError(
-            "steel cost LCOH and steel finance LCOH are not equal. You must specify both values or neither. \
+        raise (
+            ValueError(
+                "steel cost LCOH and steel finance LCOH are not equal. You must specify both values or neither. \
                 If neither is specified, LCOH will be calculated."
             )
         )
@@ -914,17 +933,13 @@ def run_steel_full_model(greenheart_config: dict, save_plots=False, show_plots=F
 
     # run steel capacity model to get steel plant size
     # uses hydrogen amount from electrolyzer physics model
-    capacity_config = SteelCapacityModelConfig(
-        feedstocks=feedstocks,
-        **steel_capacity
-    )
+    capacity_config = SteelCapacityModelConfig(feedstocks=feedstocks, **steel_capacity)
     steel_capacity = run_size_steel_plant_capacity(capacity_config)
 
     # run steel cost model
     steel_costs["feedstocks"] = feedstocks
     steel_cost_config = SteelCostModelConfig(
-        plant_capacity_mtpy=steel_capacity.steel_plant_capacity_mtpy,
-        **steel_costs
+        plant_capacity_mtpy=steel_capacity.steel_plant_capacity_mtpy, **steel_costs
     )
     steel_cost_config.plant_capacity_mtpy = steel_capacity.steel_plant_capacity_mtpy
     steel_costs = run_steel_cost_model(steel_cost_config)
@@ -945,12 +960,8 @@ def run_steel_full_model(greenheart_config: dict, save_plots=False, show_plots=F
         save_plots=save_plots,
         output_dir=output_dir,
         design_scenario_id=design_scenario_id,
-        **steel_finance
+        **steel_finance,
     )
     steel_finance = run_steel_finance_model(steel_finance_config)
 
-    return (
-        steel_capacity,
-        steel_costs,
-        steel_finance
-    )
+    return (steel_capacity, steel_costs, steel_finance)

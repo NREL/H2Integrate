@@ -1,12 +1,11 @@
 import copy
-import os
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
 from hopp.simulation.hopp_interface import HoppInterface
 from hopp.simulation.technologies.layout.wind_layout_tools import create_grid
 from hopp.simulation.technologies.sites import SiteInfo
-from hopp.simulation.technologies.sites import flatirons_site as sample_site
 
 
 # Function to set up the HOPP model
@@ -22,10 +21,15 @@ def setup_hopp(
     save_plots=False,
     output_dir="./output/",
 ):
-
-    if "battery" in hopp_config["technologies"].keys() and \
-        ("desired_schedule" not in hopp_config["site"].keys() or hopp_config["site"]["desired_schedule"] == []):
-        hopp_config["site"]["desired_schedule"] = [greenheart_config["electrolyzer"]["rating"]]*8760
+    if isinstance(output_dir, str):
+        output_dir = Path(output_dir).resolve()
+    if "battery" in hopp_config["technologies"].keys() and (
+        "desired_schedule" not in hopp_config["site"].keys()
+        or hopp_config["site"]["desired_schedule"] == []
+    ):
+        hopp_config["site"]["desired_schedule"] = [
+            greenheart_config["electrolyzer"]["rating"]
+        ] * 8760
     hopp_site = SiteInfo(**hopp_config["site"])
 
     # adjust mean wind speed if desired
@@ -117,19 +121,28 @@ def setup_hopp(
                 }
             ]
 
-            hopp_config["technologies"]["wind"]["turbine_rating_kw"] = turbine_config["turbine_rating"] * 1000
+            hopp_config["technologies"]["wind"]["turbine_rating_kw"] = (
+                turbine_config["turbine_rating"] * 1000
+            )
             hopp_config["technologies"]["wind"]["floris_config"] = floris_config
 
         elif hopp_config["technologies"]["wind"]["model_name"] == "pysam":
-            hopp_config["technologies"]["wind"]["turbine_rating_kw"] = turbine_config["turbine_rating"] * 1000.  # convert from MW to kW
-            hopp_config["technologies"]["wind"]["hub_height"] = turbine_config["hub_height"]
-            hopp_config["technologies"]["wind"]["rotor_diameter"] = turbine_config["rotor_diameter"]
+            hopp_config["technologies"]["wind"]["turbine_rating_kw"] = (
+                turbine_config["turbine_rating"] * 1000.0
+            )  # convert from MW to kW
+            hopp_config["technologies"]["wind"]["hub_height"] = turbine_config[
+                "hub_height"
+            ]
+            hopp_config["technologies"]["wind"]["rotor_diameter"] = turbine_config[
+                "rotor_diameter"
+            ]
 
         else:
             raise (
                 ValueError(
-                    "Wind model '%s' not available. Please choose one of ['floris', 'pysam']" % \
-                        (hopp_config["technologies"]["wind"]["model_name"]) )
+                    "Wind model '%s' not available. Please choose one of ['floris', 'pysam']"
+                    % (hopp_config["technologies"]["wind"]["model_name"])
+                )
             )
 
     # setup hopp interface
@@ -139,7 +152,9 @@ def setup_hopp(
         wave_cost_dict = hopp_config_internal["technologies"]["wave"].pop("cost_inputs")
 
     if "battery" in hopp_config_internal["technologies"].keys():
-        hopp_config_internal["site"].update({"desired_schedule": hopp_site.desired_schedule})
+        hopp_config_internal["site"].update(
+            {"desired_schedule": hopp_site.desired_schedule}
+        )
 
     hi = HoppInterface(hopp_config_internal)
     hi.system.site = hopp_site
@@ -155,17 +170,19 @@ def setup_hopp(
         plt.plot(wind_speed)
         plt.title(
             "Wind Speed (m/s) for selected location \n Lat:{}, Lon: {} \n Average Wind Speed (m/s) {}".format(
-                hopp_config['site']['data']['lat'], hopp_config['site']['data']['lon'], np.round(np.average(wind_speed), decimals=3)
+                hopp_config["site"]["data"]["lat"],
+                hopp_config["site"]["data"]["lon"],
+                np.round(np.average(wind_speed), decimals=3),
             )
         )
 
         if show_plots:
             plt.show()
         if save_plots:
-            savedir = output_dir + "figures/"
-            if not os.path.exists(savedir):
-                os.makedirs(savedir)
-            plt.savefig(savedir + "average_wind_speed.png", bbox_inches="tight")
+            savedir = output_dir / "figures"
+            if not savedir.exists():
+                savedir.mkdir(parents=True)
+            plt.savefig(savedir / "average_wind_speed.png", bbox_inches="tight")
         print("\n")
 
     ################ return all the inputs for hopp
@@ -174,15 +191,15 @@ def setup_hopp(
 
 # Function to run hopp from provided inputs from setup_hopp()
 def run_hopp(hi, project_lifetime, verbose=False):
-
     hi.simulate(project_life=project_lifetime)
 
     # store results for later use
     hopp_results = {
         "hopp_interface": hi,
         "hybrid_plant": hi.system,
-        "combined_hybrid_power_production_hopp": \
-            hi.system.grid._system_model.Outputs.system_pre_interconnect_kwac[0:8760],
+        "combined_hybrid_power_production_hopp": hi.system.grid._system_model.Outputs.system_pre_interconnect_kwac[
+            0:8760
+        ],
         "combined_hybrid_curtailment_hopp": hi.system.grid.generation_curtailed,
         "energy_shortfall_hopp": hi.system.grid.missed_load,
         "annual_energies": hi.system.annual_energies,
@@ -193,8 +210,8 @@ def run_hopp(hi, project_lifetime, verbose=False):
     }
     if verbose:
         print("\nHOPP Results")
-        print("Hybrid Annual Energy: ", hopp_results["annual_energies"])
-        print("Capacity factors: ", hi.system.capacity_factors)
-        print("Real LCOE from HOPP: ", hi.system.lcoe_real)
+        print(f"Hybrid Annual Energy: {hopp_results['annual_energies']}")
+        print(f"Capacity factors: {hi.system.capacity_factors}")
+        print(f"Real LCOE from HOPP: {hi.system.lcoe_real}")
 
     return hopp_results

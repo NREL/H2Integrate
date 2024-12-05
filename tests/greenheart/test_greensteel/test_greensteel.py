@@ -1,23 +1,22 @@
-import os
+from pathlib import Path
 
 from pytest import approx
 
 from greenheart.simulation.greenheart_simulation import (
-    GreenHeartSimulationConfig, run_simulation)
+    GreenHeartSimulationConfig,
+    run_simulation,
+)
 
-dirname = os.path.dirname(__file__)
-path = os.path.join(dirname, "input/")
+INPUTS = Path(__file__).parent / "input/"
 
 
 def test_onshore_steel_mn_2030_no_policy(subtests):
     # load inputs as needed
     turbine_model = "lbw_6MW"
-    filename_turbine_config = os.path.join(path, f"turbines/{turbine_model}.yaml")
-    filename_floris_config = os.path.join(path, "floris/floris_input_lbw_6MW.yaml")
-    filename_hopp_config = os.path.join(path, "plant/hopp_config_mn_2030.yaml")
-    filename_greenheart_config = os.path.join(
-        path, "plant/greenheart_config_onshore_mn_2030.yaml"
-    )
+    filename_turbine_config = INPUTS / f"turbines/{turbine_model}.yaml"
+    filename_floris_config = INPUTS / "floris/floris_input_lbw_6MW.yaml"
+    filename_hopp_config = INPUTS / "plant/hopp_config_mn_2030.yaml"
+    filename_greenheart_config = INPUTS / "plant/greenheart_config_onshore_mn_2030.yaml"
 
     config = GreenHeartSimulationConfig(
         filename_hopp_config,
@@ -97,12 +96,10 @@ def test_onshore_steel_mn_2030_no_policy(subtests):
 def test_onshore_ammonia_tx_2030_no_policy(subtests):
     # load inputs as needed
     turbine_model = "lbw_6MW"
-    filename_turbine_config = os.path.join(path, f"turbines/{turbine_model}.yaml")
-    filename_floris_config = os.path.join(path, "floris/floris_input_lbw_6MW.yaml")
-    filename_hopp_config = os.path.join(path, "plant/hopp_config_tx_2030.yaml")
-    filename_greenheart_config = os.path.join(
-        path, "plant/greenheart_config_onshore_tx_2030.yaml"
-    )
+    filename_turbine_config = INPUTS / f"turbines/{turbine_model}.yaml"
+    filename_floris_config = INPUTS / "floris/floris_input_lbw_6MW.yaml"
+    filename_hopp_config = INPUTS / "plant/hopp_config_tx_2030.yaml"
+    filename_greenheart_config = INPUTS / "plant/greenheart_config_onshore_tx_2030.yaml"
 
     config = GreenHeartSimulationConfig(
         filename_hopp_config,
@@ -184,12 +181,10 @@ def test_onshore_ammonia_tx_2030_base_policy(subtests):
     # load inputs as needed
     # NOTE: GreenSteel used Wind PTC, H2 PTC and Storage ITC for base policy and incentive_option 2 does not include the Storage ITC
     turbine_model = "lbw_6MW"
-    filename_turbine_config = os.path.join(path, f"turbines/{turbine_model}.yaml")
-    filename_floris_config = os.path.join(path, "floris/floris_input_lbw_6MW.yaml")
-    filename_hopp_config = os.path.join(path, "plant/hopp_config_tx_2030.yaml")
-    filename_greenheart_config = os.path.join(
-        path, "plant/greenheart_config_onshore_tx_2030.yaml"
-    )
+    filename_turbine_config = INPUTS / f"turbines/{turbine_model}.yaml"
+    filename_floris_config = INPUTS / "floris/floris_input_lbw_6MW.yaml"
+    filename_hopp_config = INPUTS / "plant/hopp_config_tx_2030.yaml"
+    filename_greenheart_config = INPUTS / "plant/greenheart_config_onshore_tx_2030.yaml"
 
     config = GreenHeartSimulationConfig(
         filename_hopp_config,
@@ -209,21 +204,16 @@ def test_onshore_ammonia_tx_2030_base_policy(subtests):
     output = run_simulation(config)
 
     with subtests.test("lcoh"):
-        assert output.lcoh == approx(
-            3.2231088737405846,
-            rel=0.11
-        )
+        assert output.lcoh == approx(3.2231088737405846, rel=0.11)
 
     with subtests.test("lcoa"):
         assert output.ammonia_finance.sol.get("price") == approx(
-            0.7242460501735473,
-             rel=0.1
+            0.7242460501735473, rel=0.1
         )
 
     with subtests.test("aep"):
         assert output.hopp_results["hybrid_plant"].annual_energies["wind"] == approx(
-            3383439.9656016766 * 1e3,
-            rel=0.1
+            3383439.9656016766 * 1e3, rel=0.1
         )
 
     with subtests.test("wind cf"):
@@ -247,21 +237,17 @@ def test_onshore_ammonia_tx_2030_base_policy(subtests):
         ] == approx(60400414.51854633, rel=0.1)
 
     with subtests.test("capex"):
-        assert sum(output.capex_breakdown.values()) == approx(1922324028.6785245,
-                                                              0.1
-                                                              )
+        assert sum(output.capex_breakdown.values()) == approx(1922324028.6785245, 0.1)
 
 
 def test_onshore_ammonia_tx_2030_max_policy(subtests):
     # load inputs as needed
     # NOTE: GreenSteel used Wind PTC, H2 PTC and Storage ITC for max policy and incentive_option 3 does not include the Storage ITC
     turbine_model = "lbw_6MW"
-    filename_turbine_config = os.path.join(path, f"turbines/{turbine_model}.yaml")
-    filename_floris_config = os.path.join(path, "floris/floris_input_lbw_6MW.yaml")
-    filename_hopp_config = os.path.join(path, "plant/hopp_config_tx_2030.yaml")
-    filename_greenheart_config = os.path.join(
-        path, "plant/greenheart_config_onshore_tx_2030.yaml"
-    )
+    filename_turbine_config = INPUTS / f"turbines/{turbine_model}.yaml"
+    filename_floris_config = INPUTS / "floris/floris_input_lbw_6MW.yaml"
+    filename_hopp_config = INPUTS / "plant/hopp_config_tx_2030.yaml"
+    filename_greenheart_config = INPUTS / "plant/greenheart_config_onshore_tx_2030.yaml"
 
     config = GreenHeartSimulationConfig(
         filename_hopp_config,
@@ -323,12 +309,10 @@ def test_onshore_ammonia_tx_2030_max_policy(subtests):
 def test_onshore_ammonia_tx_2025_no_policy(subtests):
     # load inputs as needed
     turbine_model = "lbw_6MW"
-    filename_turbine_config = os.path.join(path, f"turbines/{turbine_model}.yaml")
-    filename_floris_config = os.path.join(path, "floris/floris_input_lbw_6MW.yaml")
-    filename_hopp_config = os.path.join(path, "plant/hopp_config_tx_2025.yaml")
-    filename_greenheart_config = os.path.join(
-        path, "plant/greenheart_config_onshore_tx_2025.yaml"
-    )
+    filename_turbine_config = INPUTS / f"turbines/{turbine_model}.yaml"
+    filename_floris_config = INPUTS / "floris/floris_input_lbw_6MW.yaml"
+    filename_hopp_config = INPUTS / "plant/hopp_config_tx_2025.yaml"
+    filename_greenheart_config = INPUTS / "plant/greenheart_config_onshore_tx_2025.yaml"
 
     config = GreenHeartSimulationConfig(
         filename_hopp_config,
@@ -410,15 +394,14 @@ def test_onshore_ammonia_tx_2025_no_policy(subtests):
     # with subtests.test('compressor capex'):
     #     assert output.capex_breakdown['h2_transport_compressor'] == approx(18749265.76357594, rel=0.1)
 
+
 def test_onshore_ammonia_tx_2035_no_policy(subtests):
     # load inputs as needed
     turbine_model = "lbw_6MW"
-    filename_turbine_config = os.path.join(path, f"turbines/{turbine_model}.yaml")
-    filename_floris_config = os.path.join(path, "floris/floris_input_lbw_6MW.yaml")
-    filename_hopp_config = os.path.join(path, "plant/hopp_config_tx_2035.yaml")
-    filename_greenheart_config = os.path.join(
-        path, "plant/greenheart_config_onshore_tx_2035.yaml"
-    )
+    filename_turbine_config = INPUTS / f"turbines/{turbine_model}.yaml"
+    filename_floris_config = INPUTS / "floris/floris_input_lbw_6MW.yaml"
+    filename_hopp_config = INPUTS / "plant/hopp_config_tx_2035.yaml"
+    filename_greenheart_config = INPUTS / "plant/greenheart_config_onshore_tx_2035.yaml"
 
     config = GreenHeartSimulationConfig(
         filename_hopp_config,

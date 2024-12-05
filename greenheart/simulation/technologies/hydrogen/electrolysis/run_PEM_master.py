@@ -1,23 +1,16 @@
-import math
-import os
-import random
-import sys
 import time
 import warnings
 
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import scipy
-from mpl_toolkits import mplot3d
-from numpy import savetxt  # ESG
 from pyomo.environ import *
-from scipy import interpolate
 
-from greenheart.simulation.technologies.hydrogen.electrolysis.optimization_utils_linear import \
-    optimize
-from greenheart.simulation.technologies.hydrogen.electrolysis.PEM_H2_LT_electrolyzer_Clusters import \
-    PEM_H2_Clusters as PEMClusters
+from greenheart.simulation.technologies.hydrogen.electrolysis.optimization_utils_linear import (
+    optimize,
+)
+from greenheart.simulation.technologies.hydrogen.electrolysis.PEM_H2_LT_electrolyzer_Clusters import (
+    PEM_H2_Clusters as PEMClusters,
+)
 
 # from PyOMO import ipOpt !! FOR SANJANA!!
 warnings.filterwarnings("ignore")
@@ -31,6 +24,8 @@ Perform a LCOH analysis for an offshore wind + Hydrogen PEM system
 4. Future Model Development Required:
 - Floating Electrolyzer Platform
 """
+
+
 #
 # ---------------------------
 #
@@ -53,7 +48,7 @@ class run_PEM_clusters:
         electrolyzer_direct_cost_kw,
         useful_life,
         user_defined_electrolyzer_params,
-        verbose=True
+        verbose=True,
     ):
         # nomen
         self.cluster_cap_mw = np.round(system_size_mw / num_clusters)
@@ -65,7 +60,7 @@ class run_PEM_clusters:
         # Do not modify stack_rating_kw or stack_min_power_kw
         # these represent the hard-coded and unmodifiable
         # PEM model basecode
-        turndown_ratio=user_defined_electrolyzer_params['turndown_ratio']
+        turndown_ratio = user_defined_electrolyzer_params["turndown_ratio"]
         self.stack_rating_kw = 1000  # single stack rating - DO NOT CHANGE
         self.stack_min_power_kw = turndown_ratio * self.stack_rating_kw
         # self.stack_min_power_kw = 0.1 * self.stack_rating_kw
@@ -76,27 +71,35 @@ class run_PEM_clusters:
         # For the optimization problem:
         self.T = len(self.input_power_kw)
         self.farm_power = 1e9
-        self.switching_cost = (electrolyzer_direct_cost_kw*0.15*self.cluster_cap_mw * 1000)*(1.48e-4)/(0.26586)
-        self.verbose=verbose
+        self.switching_cost = (
+            (electrolyzer_direct_cost_kw * 0.15 * self.cluster_cap_mw * 1000)
+            * (1.48e-4)
+            / (0.26586)
+        )
+        self.verbose = verbose
 
-    def run_grid_connected_pem(self,system_size_mw,hydrogen_production_capacity_required_kgphr):
-        pem=PEMClusters(
-                    system_size_mw,
-                    self.plant_life_yrs,
-                    **self.user_params,
-                )
+    def run_grid_connected_pem(
+        self, system_size_mw, hydrogen_production_capacity_required_kgphr
+    ):
+        pem = PEMClusters(
+            system_size_mw,
+            self.plant_life_yrs,
+            **self.user_params,
+        )
 
-        power_timeseries,stack_current=pem.grid_connected_func(hydrogen_production_capacity_required_kgphr)
-        h2_ts, h2_tot =pem.run_grid_connected_workaround(power_timeseries,stack_current)
-        #h2_ts, h2_tot = pem.run(power_timeseries)
-        h2_df_ts=pd.Series(h2_ts,name='Cluster #0')
-        h2_df_tot=pd.Series(h2_tot,name='Cluster #0')
+        power_timeseries, stack_current = pem.grid_connected_func(
+            hydrogen_production_capacity_required_kgphr
+        )
+        h2_ts, h2_tot = pem.run_grid_connected_workaround(
+            power_timeseries, stack_current
+        )
+        # h2_ts, h2_tot = pem.run(power_timeseries)
+        h2_df_ts = pd.Series(h2_ts, name="Cluster #0")
+        h2_df_tot = pd.Series(h2_tot, name="Cluster #0")
         # h2_df_ts = pd.DataFrame(h2_ts, index=list(h2_ts.keys()), columns=['Cluster #0'])
         # h2_df_tot = pd.DataFrame(h2_tot, index=list(h2_tot.keys()), columns=['Cluster #0'])
         []
-        return pd.DataFrame(h2_df_ts),pd.DataFrame(h2_df_tot)
-
-
+        return pd.DataFrame(h2_df_ts), pd.DataFrame(h2_df_tot)
 
     def run(self, optimize=False):
         # TODO: add control type as input!
@@ -111,7 +114,7 @@ class run_PEM_clusters:
         col_names = []
         start = time.perf_counter()
         for ci, cluster in enumerate(clusters):
-            cl_name = "Cluster #{}".format(ci)
+            cl_name = f"Cluster #{ci}"
             col_names.append(cl_name)
             h2_ts, h2_tot = clusters[ci].run(power_to_clusters[ci])
             # h2_dict_ts['Cluster #{}'.format(ci)] = h2_ts
@@ -138,7 +141,7 @@ class run_PEM_clusters:
         end = time.perf_counter()
         self.clusters = clusters
         if self.verbose:
-            print("Took {} sec to run the RUN function".format(round(end - start, 3)))
+            print(f"Took {round(end - start, 3)} sec to run the RUN function")
         return h2_df_ts, h2_df_tot
         # return h2_dict_ts, h2_df_tot
 
@@ -160,7 +163,6 @@ class run_PEM_clusters:
                 f"Optimizing {number_of_stacks} stacks tarting {start_time*tf}hr/{self.T}hr"
             )
             if start_time == 0:
-
                 df["Wind + PV Generation"].replace(0, np.NaN, inplace=True)
                 df = df.interpolate()
 
@@ -201,7 +203,6 @@ class run_PEM_clusters:
                 F_tot_full = F_tot
 
             else:
-
                 P_full = np.vstack((P_full, P_))
                 H2f_full = np.vstack((H2f_full, H2f))
                 I_full = np.vstack((I_full, I_))
@@ -240,11 +241,7 @@ class run_PEM_clusters:
         end = time.perf_counter()
 
         if self.verbose:
-            print(
-                "Took {} sec to run even_split_power function".format(
-                    round(end - start, 3)
-                )
-            )
+            print(f"Took {round(end - start, 3)} sec to run even_split_power function")
         # rows are power, columns are stacks [300 x n_stacks]
 
         return np.transpose(power_to_clusters)
@@ -273,12 +270,11 @@ class run_PEM_clusters:
             )
         end = time.perf_counter()
         if self.verbose:
-            print("Took {} sec to run the create clusters".format(round(end - start, 3)))
+            print(f"Took {round(end - start, 3)} sec to run the create clusters")
         return stacks
 
 
 if __name__ == "__main__":
-
     system_size_mw = 1000
     num_clusters = 20
     cluster_cap_mw = system_size_mw / num_clusters
@@ -291,10 +287,10 @@ if __name__ == "__main__":
 
     plant_life = 30
     electrolyzer_model_parameters = {
-        "eol_eff_percent_loss":10,
+        "eol_eff_percent_loss": 10,
         "uptime_hours_until_eol": 77600,
         "include_degradation_penalty": True,
-        "turndown_ratio":0.1,
+        "turndown_ratio": 0.1,
     }
     # power_rampup = np.linspace(cluster_min_power_kw,system_size_mw*1000,num_steps)
     power_rampdown = np.flip(power_rampup)

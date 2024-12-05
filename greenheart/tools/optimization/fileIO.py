@@ -2,8 +2,8 @@
 This file is based on the WISDEM file of the same name: https://github.com/WISDEM/WISDEM
 """
 
-import os
 import pickle
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -12,15 +12,19 @@ import scipy.io as sio
 
 def save_data(fname, prob, npz_file=True, mat_file=True, xls_file=True):
     # Remove file extension
-    froot = os.path.splitext(fname)[0]
+    froot = Path(fname).with_suffix("")
 
     # Get all OpenMDAO inputs and outputs into a dictionary
-    var_dict = prob.model.list_inputs(prom_name=True, units=True, desc=True, out_stream=None)
-    out_dict = prob.model.list_outputs(prom_name=True, units=True, desc=True, out_stream=None)
+    var_dict = prob.model.list_inputs(
+        prom_name=True, units=True, desc=True, out_stream=None
+    )
+    out_dict = prob.model.list_outputs(
+        prom_name=True, units=True, desc=True, out_stream=None
+    )
     var_dict.extend(out_dict)
 
     # Pickle the full archive so that we can load it back in if we need
-    with open(froot + ".pkl", "wb") as f:
+    with froot.with_suffix(".pkl").open("wb") as f:
         pickle.dump(var_dict, f)
 
     # Reduce to variables we can save for matlab or python
@@ -39,11 +43,11 @@ def save_data(fname, prob, npz_file=True, mat_file=True, xls_file=True):
             if iname in array_dict:
                 continue
 
-            if type(value) in [type(np.array([])), type(0.0), type(0), np.float64, np.int64]:
+            if type(value) in [type(np.array([])), float, int, np.float64, np.int64]:
                 array_dict[iname] = value
-            elif type(value) == type(True):
+            elif type(value) == bool:
                 array_dict[iname] = np.bool_(value)
-            elif type(value) == type(""):
+            elif type(value) == str:
                 array_dict[iname] = np.str_(value)
             elif type(value) == type([]):
                 temp_val = np.empty(len(value), dtype=object)
@@ -55,11 +59,11 @@ def save_data(fname, prob, npz_file=True, mat_file=True, xls_file=True):
     # Save to numpy compatible
     if npz_file:
         kwargs = {key: array_dict[key] for key in array_dict.keys()}
-        np.savez_compressed(froot + ".npz", **kwargs)
+        np.savez_compressed(froot.with_suffix(".npz"), **kwargs)
 
     # Save to matlab compatible
     if mat_file:
-        sio.savemat(froot + ".mat", array_dict, long_field_names=True)
+        sio.savemat(froot.with_suffix(".mat"), array_dict, long_field_names=True)
 
     if xls_file:
         data = {}
@@ -81,16 +85,16 @@ def save_data(fname, prob, npz_file=True, mat_file=True, xls_file=True):
             data["values"].append(var_dict[k][1]["val"])
             data["description"].append(var_dict[k][1]["desc"])
         df = pd.DataFrame(data)
-        df.to_excel(froot + ".xlsx", index=False)
-        df.to_csv(froot + ".csv", index=False)
+        df.to_excel(froot.with_suffix(".xlsx"), index=False)
+        df.to_csv(froot.with_suffix(".csv"), index=False)
 
 
 def load_data(fname, prob):
     # Remove file extension
-    froot = os.path.splitext(fname)[0]
+    froot = Path(fname).with_suffix("")
 
     # Load in the pickled data
-    with open(froot + ".pkl", "rb") as f:
+    with froot.with_suffix(".pkl").open("rb") as f:
         var_dict = pickle.load(f)
 
     # Store into Problem object

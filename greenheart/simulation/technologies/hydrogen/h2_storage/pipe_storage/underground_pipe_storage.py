@@ -15,11 +15,12 @@ Sources:
 
 import numpy as np
 
-from greenheart.simulation.technologies.hydrogen.h2_transport.h2_compression import \
-    Compressor
+from greenheart.simulation.technologies.hydrogen.h2_transport.h2_compression import (
+    Compressor,
+)
 
 
-class UndergroundPipeStorage():
+class UndergroundPipeStorage:
     """
     - Oversize pipe: pipe OD = 24'' schedule 60
     - Max pressure: 100 bar
@@ -54,34 +55,56 @@ class UndergroundPipeStorage():
         self.input_dict = input_dict
         self.output_dict = {}
         """"""
-        #inputs
-        if input_dict['compressor_output_pressure'] == 100:
-            self.compressor_output_pressure = input_dict['compressor_output_pressure'] #[bar]
+        # inputs
+        if input_dict["compressor_output_pressure"] == 100:
+            self.compressor_output_pressure = input_dict[
+                "compressor_output_pressure"
+            ]  # [bar]
         else:
-            raise Exception('Error. compressor_output_pressure must = 100bar for pressure vessel storage.')
-        if 'h2_storage_kg' in input_dict:
-            self.h2_storage_kg = input_dict['h2_storage_kg']        #[kg]
-        elif 'storage_duration_hrs' and 'flow_rate_kg_hr' in input_dict:
-            self.h2_storage_kg = input_dict['storage_duration_hrs'] * input_dict['flow_rate_kg_hr']
+            raise Exception(
+                "Error. compressor_output_pressure must = 100bar for pressure vessel storage."
+            )
+        if "h2_storage_kg" in input_dict:
+            self.h2_storage_kg = input_dict["h2_storage_kg"]  # [kg]
+        elif "storage_duration_hrs" and "flow_rate_kg_hr" in input_dict:
+            self.h2_storage_kg = (
+                input_dict["storage_duration_hrs"] * input_dict["flow_rate_kg_hr"]
+            )
         else:
-            raise Exception('input_dict must contain h2_storage_kg or storage_duration_hrs and flow_rate_kg_hr')
+            raise Exception(
+                "input_dict must contain h2_storage_kg or storage_duration_hrs and flow_rate_kg_hr"
+            )
 
-        if 'system_flow_rate' not in input_dict.keys():
-                raise ValueError("system_flow_rate required for underground pipe storage model.")
+        if "system_flow_rate" not in input_dict.keys():
+            raise ValueError(
+                "system_flow_rate required for underground pipe storage model."
+            )
         else:
-            self.system_flow_rate = input_dict['system_flow_rate']
+            self.system_flow_rate = input_dict["system_flow_rate"]
 
-        if 'model' in input_dict:
-            self.model = input_dict['model']    #[papadias, hdsam]
+        if "model" in input_dict:
+            self.model = input_dict["model"]  # [papadias, hdsam]
         else:
-            raise Exception('input_dict must contain model type of either `papadias` or `hdsam`')
+            raise Exception(
+                "input_dict must contain model type of either `papadias` or `hdsam`"
+            )
 
-        self.labor_rate = input_dict.get('labor_rate', 37.39817) # $(2018)/hr
-        self.insurance = input_dict.get('insurance', 1/100) # % of total capital investment
-        self.property_taxes = input_dict.get('property_taxes', 1/100) # % of total capital investment
-        self.licensing_permits = input_dict.get('licensing_permits',0.1/100) # % of total capital investment
-        self.comp_om = input_dict.get('compressor_om',4/100)    # % of compressor capital investment
-        self.facility_om = input_dict.get('facility_om', 1/100) # % of facility capital investment minus compressor capital investment
+        self.labor_rate = input_dict.get("labor_rate", 37.39817)  # $(2018)/hr
+        self.insurance = input_dict.get(
+            "insurance", 1 / 100
+        )  # % of total capital investment
+        self.property_taxes = input_dict.get(
+            "property_taxes", 1 / 100
+        )  # % of total capital investment
+        self.licensing_permits = input_dict.get(
+            "licensing_permits", 0.1 / 100
+        )  # % of total capital investment
+        self.comp_om = input_dict.get(
+            "compressor_om", 4 / 100
+        )  # % of compressor capital investment
+        self.facility_om = input_dict.get(
+            "facility_om", 1 / 100
+        )  # % of facility capital investment minus compressor capital investment
 
     def pipe_storage_capex(self):
         """
@@ -94,31 +117,41 @@ class UndergroundPipeStorage():
                 - pipe_storage_capex (float): installed capital cost in 2018 [USD]
         """
 
-        if self.model == 'papadias':
+        if self.model == "papadias":
             # Installed capital cost
             a = 0.0041617
             b = 0.060369
             c = 6.4581
-            self.pipe_storage_capex_per_kg = np.exp(a*(np.log(self.h2_storage_kg/1000))**2 - b*np.log(self.h2_storage_kg/1000) + c)  # 2019 [USD] from Papadias [2]
+            self.pipe_storage_capex_per_kg = np.exp(
+                a * (np.log(self.h2_storage_kg / 1000)) ** 2
+                - b * np.log(self.h2_storage_kg / 1000)
+                + c
+            )  # 2019 [USD] from Papadias [2]
             self.installed_capex = self.pipe_storage_capex_per_kg * self.h2_storage_kg
-            cepci_overall = 1.29/1.30 # Convert from $2019 to $2018
+            cepci_overall = 1.29 / 1.30  # Convert from $2019 to $2018
             self.installed_capex = cepci_overall * self.installed_capex
-            self.output_dict['pipe_storage_capex'] = self.installed_capex
+            self.output_dict["pipe_storage_capex"] = self.installed_capex
 
-            outlet_pressure = self.compressor_output_pressure # Max outlet pressure of underground pipe storage [1]
+            outlet_pressure = (
+                self.compressor_output_pressure
+            )  # Max outlet pressure of underground pipe storage [1]
             n_compressors = 2
-            storage_compressor = Compressor(outlet_pressure,self.system_flow_rate,n_compressors=n_compressors)
+            storage_compressor = Compressor(
+                outlet_pressure, self.system_flow_rate, n_compressors=n_compressors
+            )
             storage_compressor.compressor_power()
             motor_rating, power = storage_compressor.compressor_system_power()
             if motor_rating > 1600:
                 n_compressors += 1
-                storage_compressor = Compressor(outlet_pressure,self.system_flow_rate,n_compressors=n_compressors)
+                storage_compressor = Compressor(
+                    outlet_pressure, self.system_flow_rate, n_compressors=n_compressors
+                )
                 storage_compressor.compressor_power()
                 motor_rating, power = storage_compressor.compressor_system_power()
-            comp_capex,comp_OM = storage_compressor.compressor_costs()
-            cepci = 1.36/1.29 # convert from $2016 to $2018
-            self.comp_capex = comp_capex*cepci
-        elif self.model == 'hdsam':
+            comp_capex, comp_OM = storage_compressor.compressor_costs()
+            cepci = 1.36 / 1.29  # convert from $2016 to $2018
+            self.comp_capex = comp_capex * cepci
+        elif self.model == "hdsam":
             raise NotImplementedError
         return self.pipe_storage_capex_per_kg, self.installed_capex, self.comp_capex
 
@@ -133,9 +166,11 @@ class UndergroundPipeStorage():
         # Operations and Maintenace costs [3]
         # Labor
         # Base case is 1 operator, 24 hours a day, 7 days a week for a 100,000 kg/day average capacity facility.  Scaling factor of 0.25 is used for other sized facilities
-        annual_hours = 8760 * (self.system_flow_rate/100000)**0.25
+        annual_hours = 8760 * (self.system_flow_rate / 100000) ** 0.25
         self.overhead = 0.5
-        labor = (annual_hours*self.labor_rate) * (1+self.overhead) # Burdened labor cost
+        labor = (annual_hours * self.labor_rate) * (
+            1 + self.overhead
+        )  # Burdened labor cost
         insurance = self.insurance * self.installed_capex
         property_taxes = self.property_taxes * self.installed_capex
         licensing_permits = self.licensing_permits * self.installed_capex
@@ -143,6 +178,13 @@ class UndergroundPipeStorage():
         facility_op_maint = self.facility_om * (self.installed_capex - self.comp_capex)
 
         # O&M excludes electricity requirements
-        total_om = labor+insurance+licensing_permits+property_taxes+comp_op_maint+facility_op_maint
-        self.output_dict['pipe_storage_opex'] = total_om
+        total_om = (
+            labor
+            + insurance
+            + licensing_permits
+            + property_taxes
+            + comp_op_maint
+            + facility_op_maint
+        )
+        self.output_dict["pipe_storage_opex"] = total_om
         return total_om

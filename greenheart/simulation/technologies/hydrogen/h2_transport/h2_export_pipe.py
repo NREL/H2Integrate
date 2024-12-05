@@ -9,7 +9,7 @@ algebraic solver, and reformatted with black.
 08/02/2024: Provide cost overrides
 """
 
-import os
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -29,11 +29,11 @@ def run_pipe_analysis(
     p_outlet: float,
     depth: float,
     risers: int = 1,
-    data_location: str = os.path.abspath(os.path.dirname(__file__) + "/data_tables"),
-    labor_in_mi: float = None,
-    misc_in_mi: float = None,
-    row_in_mi: float = None,
-    mat_in_mi: float = None,
+    data_location: str | Path = Path(__file__).parent / "data_tables",
+    labor_in_mi: float | None = None,
+    misc_in_mi: float | None = None,
+    row_in_mi: float | None = None,
+    mat_in_mi: float | None = None,
     region: str = "SW",
 ):
     """
@@ -42,6 +42,8 @@ def run_pipe_analysis(
     If $/in/mi values are provided in labor_in_mi, misc_in_mi, row_in_mi, mat_in_mi, those values
     will be used in the cost calculations instead of the defaults
     """
+    if isinstance(data_location, str):
+        data_location = Path(data_location).resolve()
     p_inlet_MPa = p_inlet * BAR2MPA
     F = 0.72  # Design option B class 1 - 2011 ASME B31.12 Table  PL-3.7.1.2
     E = 1.0  # Long. Weld Factor: Seamless (Table IX-3B)
@@ -60,7 +62,7 @@ def run_pipe_analysis(
 
     #   Import mechanical props and pipe thicknesses (remove A,B ,and A25 since no costing data)
     yield_strengths = pd.read_csv(
-        os.path.join(data_location, "steel_mechanical_props.csv"),
+        data_location / "steel_mechanical_props.csv",
         index_col=None,
         header=0,
     )
@@ -68,12 +70,12 @@ def run_pipe_analysis(
         ~yield_strengths["Grade"].isin(["A", "B", "A25"])
     ].reset_index()
     schedules_all = pd.read_csv(
-        os.path.join(data_location, "pipe_dimensions_metric.csv"),
+        data_location / "pipe_dimensions_metric.csv",
         index_col=None,
         header=0,
     )
     steel_costs_kg = pd.read_csv(
-        os.path.join(data_location, "steel_costs_per_kg.csv"), index_col=None, header=0
+        data_location / "steel_costs_per_kg.csv", index_col=None, header=0
     )
 
     #   First get the minimum diameter required to achieve the outlet pressure for given length and m_dot

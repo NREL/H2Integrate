@@ -2,15 +2,12 @@
 import copy
 import os
 import warnings
-from typing import Optional, Union
+from pathlib import Path
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from attrs import define, field
-
-pd.options.mode.chained_assignment = None  # default='warn'
-
-import matplotlib.pyplot as plt
 from hopp.simulation import HoppInterface
 from ProFAST import ProFAST
 
@@ -20,11 +17,19 @@ import greenheart.tools.eco.hopp_mgmt as he_hopp
 import greenheart.tools.eco.hydrogen_mgmt as he_h2
 import greenheart.tools.eco.utilities as he_util
 from greenheart.simulation.technologies.ammonia.ammonia import (
-    AmmoniaCapacityModelOutputs, AmmoniaCostModelOutputs,
-    AmmoniaFinanceModelOutputs, run_ammonia_full_model)
+    AmmoniaCapacityModelOutputs,
+    AmmoniaCostModelOutputs,
+    AmmoniaFinanceModelOutputs,
+    run_ammonia_full_model,
+)
 from greenheart.simulation.technologies.steel.steel import (
-    SteelCapacityModelOutputs, SteelCostModelOutputs, SteelFinanceModelOutputs,
-    run_steel_full_model)
+    SteelCapacityModelOutputs,
+    SteelCostModelOutputs,
+    SteelFinanceModelOutputs,
+    run_steel_full_model,
+)
+
+pd.options.mode.chained_assignment = None  # default='warn'
 
 
 @define
@@ -63,30 +68,30 @@ class GreenHeartSimulationConfig:
     filename_greenheart_config: str
     filename_turbine_config: str
     filename_floris_config: str
-    filename_orbit_config: Optional[str] = field(default=None)
-    electrolyzer_rating_mw: Optional[float] = field(default=None)
-    solar_rating: Optional[float] = field(default=None)
-    battery_capacity_kw: Optional[float] = field(default=None)
-    battery_capacity_kwh: Optional[float] = field(default=None)
-    wind_rating: Optional[float] = field(default=None)
+    filename_orbit_config: str | None = field(default=None)
+    electrolyzer_rating_mw: float | None = field(default=None)
+    solar_rating: float | None = field(default=None)
+    battery_capacity_kw: float | None = field(default=None)
+    battery_capacity_kwh: float | None = field(default=None)
+    wind_rating: float | None = field(default=None)
     verbose: bool = field(default=False)
     show_plots: bool = field(default=False)
     save_plots: bool = field(default=False)
-    output_dir: Optional[Union[str, os.PathLike]] = field(default="output/")
+    output_dir: str | os.PathLike | None = field(default="output/")
     use_profast: bool = field(default=True)
     post_processing: bool = field(default=True)
-    storage_type: Optional[str] = field(default=None)
+    storage_type: str | None = field(default=None)
     incentive_option: int = field(default=1)
     plant_design_scenario: int = field(default=1)
     output_level: int = field(default=8)
-    grid_connection: Optional[bool] = field(default=None)
+    grid_connection: bool | None = field(default=None)
 
     # these are set in the __attrs_post_init__ method
     hopp_config: dict = field(init=False)
     greenheart_config: dict = field(init=False)
     orbit_config: dict = field(init=False)
     turbine_config: dict = field(init=False)
-    floris_config: Optional[dict] = field(init=False)
+    floris_config: dict | None = field(init=False)
     orbit_hybrid_electrical_export_config: dict = field(init=False)
     design_scenario: dict = field(init=False)
 
@@ -111,7 +116,7 @@ class GreenHeartSimulationConfig:
 
         # n scenarios, n discrete variables
         self.design_scenario = self.greenheart_config["plant_design"][
-            "scenario%s" % (self.plant_design_scenario)
+            f"scenario{self.plant_design_scenario}"
         ]
         self.design_scenario["id"] = self.plant_design_scenario
 
@@ -120,27 +125,27 @@ class GreenHeartSimulationConfig:
 
         if self.electrolyzer_rating_mw != None:
             self.greenheart_config["electrolyzer"]["flag"] = True
-            self.greenheart_config["electrolyzer"][
-                "rating"
-            ] = self.electrolyzer_rating_mw
+            self.greenheart_config["electrolyzer"]["rating"] = (
+                self.electrolyzer_rating_mw
+            )
 
         if self.solar_rating != None:
             self.hopp_config["site"]["solar"] = True
-            self.hopp_config["technologies"]["pv"][
-                "system_capacity_kw"
-            ] = self.solar_rating
+            self.hopp_config["technologies"]["pv"]["system_capacity_kw"] = (
+                self.solar_rating
+            )
 
         if self.battery_capacity_kw != None:
             self.hopp_config["site"]["battery"]["flag"] = True
-            self.hopp_config["technologies"]["battery"][
-                "system_capacity_kw"
-            ] = self.battery_capacity_kw
+            self.hopp_config["technologies"]["battery"]["system_capacity_kw"] = (
+                self.battery_capacity_kw
+            )
 
         if self.battery_capacity_kwh != None:
             self.hopp_config["site"]["battery"]["flag"] = True
-            self.hopp_config["technologies"]["battery"][
-                "system_capacity_kwh"
-            ] = self.battery_capacity_kwh
+            self.hopp_config["technologies"]["battery"]["system_capacity_kwh"] = (
+                self.battery_capacity_kwh
+            )
 
         if self.storage_type != None:
             self.greenheart_config["h2_storage"]["type"] = self.storage_type
@@ -155,9 +160,9 @@ class GreenHeartSimulationConfig:
             )
 
         if self.grid_connection != None:
-            self.greenheart_config["project_parameters"][
-                "grid_connection"
-            ] = self.grid_connection
+            self.greenheart_config["project_parameters"]["grid_connection"] = (
+                self.grid_connection
+            )
             if self.grid_connection:
                 self.hopp_config["technologies"]["grid"]["interconnect_kw"] = (
                     self.orbit_config["plant"]["capacity"] * 1e6
@@ -217,27 +222,25 @@ class GreenHeartSimulationOutput:
     remaining_power_profile: np.ndarray
 
     # optional outputs
-    h2_storage_max_fill_rate_kg_hr: Optional[dict] = field(default=None)
-    h2_storage_capacity_kg: Optional[dict] = field(default=None)
-    hydrogen_storage_state_of_charge_kg: Optional[dict] = field(default=None)
+    h2_storage_max_fill_rate_kg_hr: dict | None = field(default=None)
+    h2_storage_capacity_kg: dict | None = field(default=None)
+    hydrogen_storage_state_of_charge_kg: dict | None = field(default=None)
 
-    steel_capacity: Optional[SteelCapacityModelOutputs] = field(default=None)
-    steel_costs: Optional[SteelCostModelOutputs] = field(default=None)
-    steel_finance: Optional[SteelFinanceModelOutputs] = field(default=None)
+    steel_capacity: SteelCapacityModelOutputs | None = field(default=None)
+    steel_costs: SteelCostModelOutputs | None = field(default=None)
+    steel_finance: SteelFinanceModelOutputs | None = field(default=None)
 
-    ammonia_capacity: Optional[AmmoniaCapacityModelOutputs] = field(default=None)
-    ammonia_costs: Optional[AmmoniaCostModelOutputs] = field(default=None)
-    ammonia_finance: Optional[AmmoniaFinanceModelOutputs] = field(default=None)
+    ammonia_capacity: AmmoniaCapacityModelOutputs | None = field(default=None)
+    ammonia_costs: AmmoniaCostModelOutputs | None = field(default=None)
+    ammonia_finance: AmmoniaFinanceModelOutputs | None = field(default=None)
 
-    platform_results: Optional[dict] = field(default=None)
+    platform_results: dict | None = field(default=None)
 
 
 def setup_greenheart_simulation(config: GreenHeartSimulationConfig):
-
     # run orbit for wind plant construction and other costs
     ## TODO get correct weather (wind, wave) inputs for ORBIT input (possibly via ERA5)
     if config.design_scenario["wind_location"] == "offshore":
-
         if (
             config.orbit_config["plant"]["num_turbines"]
             != config.hopp_config["technologies"]["wind"]["num_turbines"]
@@ -328,7 +331,6 @@ def setup_greenheart_simulation(config: GreenHeartSimulationConfig):
             ][0]
             != config.hopp_config["config"]["cost_info"]["wind_om_per_kw"]
         ):
-
             for i in range(
                 len(
                     config.hopp_config["technologies"]["wind"]["fin_model"][
@@ -519,7 +521,6 @@ def setup_greenheart_simulation(config: GreenHeartSimulationConfig):
 
 
 def run_simulation(config: GreenHeartSimulationConfig):
-
     config, hi, wind_cost_results = setup_greenheart_simulation(config=config)
 
     # run HOPP model
@@ -563,7 +564,6 @@ def run_simulation(config: GreenHeartSimulationConfig):
         power_for_peripherals_kw_in=0.0,
         breakdown=False,
     ):
-
         hopp_results_internal = dict(hopp_results)
 
         # set energy input profile
@@ -581,10 +581,11 @@ def run_simulation(config: GreenHeartSimulationConfig):
 
         remaining_power_profile_in = np.where(
             hopp_results["combined_hybrid_power_production_hopp"]
-                - distributed_peripheral_power > 0,
+            - distributed_peripheral_power
+            > 0,
             hopp_results["combined_hybrid_power_production_hopp"]
-                - distributed_peripheral_power,
-            0
+            - distributed_peripheral_power,
+            0,
         )
 
         hopp_results_internal["combined_hybrid_power_production_hopp"] = tuple(
@@ -614,8 +615,7 @@ def run_simulation(config: GreenHeartSimulationConfig):
 
         # run electrolyzer bop model
         electrolyzer_energy_consumption_bop_kw = he_elec.run_electrolyzer_bop(
-            greenheart_config,
-            electrolyzer_physics_results
+            greenheart_config, electrolyzer_physics_results
         )
 
         desal_results = he_elec.run_desal(
@@ -683,7 +683,9 @@ def run_simulation(config: GreenHeartSimulationConfig):
         h2_storage_energy_kwh = h2_storage_results["storage_energy"]
         h2_storage_power_kw = h2_storage_energy_kwh * (1.0 / (365 * 24))
 
-        total_accessory_power_renewable_kw = np.zeros(len(electrolyzer_energy_consumption_bop_kw))
+        total_accessory_power_renewable_kw = np.zeros(
+            len(electrolyzer_energy_consumption_bop_kw)
+        )
         total_accessory_power_renewable_kw += electrolyzer_energy_consumption_bop_kw
         # if transport is not HVDC and h2 storage is on shore, then power the storage from the grid
         if (design_scenario["transportation"] == "pipeline") and (
@@ -708,10 +710,11 @@ def run_simulation(config: GreenHeartSimulationConfig):
         )
         remaining_power_profile = np.where(
             hopp_results["combined_hybrid_power_production_hopp"]
-                - total_accessory_power_renewable_kw > 0,
+            - total_accessory_power_renewable_kw
+            > 0,
             hopp_results["combined_hybrid_power_production_hopp"]
-                - total_accessory_power_renewable_kw,
-            0
+            - total_accessory_power_renewable_kw,
+            0,
         )
 
         if verbose and not solver:
@@ -737,12 +740,11 @@ def run_simulation(config: GreenHeartSimulationConfig):
             plt.ylabel("Power (GW)")
             plt.tight_layout()
             if save_plots:
-                savepath = config.output_dir + "figures/power_series/"
-                if not os.path.exists(savepath):
-                    os.makedirs(savepath)
+                savepath = Path(config.output_dir).resolve() / "figures/power_series/"
+                if not savepath.exists():
+                    savepath.mkdir(parents=True)
                 plt.savefig(
-                    savepath + "power_%i.png" % (design_scenario["id"]),
-                    transparent=True,
+                    savepath / f'power_{design_scenario["id"]}.png', transparent=True
                 )
             if show_plots:
                 plt.show()
@@ -777,7 +779,6 @@ def run_simulation(config: GreenHeartSimulationConfig):
 
     # define function to provide to the brent solver
     def energy_residual_function(power_for_peripherals_kw_in):
-
         # get results for current design
         power_for_peripherals_kw_out = energy_internals(
             power_for_peripherals_kw_in=power_for_peripherals_kw_in,
@@ -791,7 +792,6 @@ def run_simulation(config: GreenHeartSimulationConfig):
         return power_residual
 
     def simple_solver(initial_guess=0.0):
-
         # get results for current design
         (
             total_accessory_power_renewable_kw,
@@ -814,7 +814,7 @@ def run_simulation(config: GreenHeartSimulationConfig):
             desal_power_kw,
             h2_transport_compressor_power_kw,
             h2_storage_power_kw,
-            electrolyzer_bop_kw
+            electrolyzer_bop_kw,
         )
 
     #################### solving for energy needed for non-electrolyzer components ####################################
@@ -981,9 +981,9 @@ def run_simulation(config: GreenHeartSimulationConfig):
 
             # use the hydrogen amount from the electrolyzer physics model if it is not already in the config
             if "hydrogen_amount_kgpy" not in steel_config["steel"]["capacity"]:
-                steel_config["steel"]["capacity"][
-                    "hydrogen_amount_kgpy"
-                ] = hydrogen_amount_kgpy
+                steel_config["steel"]["capacity"]["hydrogen_amount_kgpy"] = (
+                    hydrogen_amount_kgpy
+                )
 
             steel_capacity, steel_costs, steel_finance = run_steel_full_model(
                 steel_config,
@@ -1006,9 +1006,9 @@ def run_simulation(config: GreenHeartSimulationConfig):
 
             # use the hydrogen amount from the electrolyzer physics model if it is not already in the config
             if "hydrogen_amount_kgpy" not in ammonia_config["ammonia"]["capacity"]:
-                ammonia_config["ammonia"]["capacity"][
-                    "hydrogen_amount_kgpy"
-                ] = hydrogen_amount_kgpy
+                ammonia_config["ammonia"]["capacity"]["hydrogen_amount_kgpy"] = (
+                    hydrogen_amount_kgpy
+                )
 
             ammonia_capacity, ammonia_costs, ammonia_finance = run_ammonia_full_model(
                 ammonia_config,
@@ -1146,7 +1146,6 @@ def run_sweeps(
     use_profast=True,
     output_dir="output/",
 ):
-
     if simulate:
         verbose = False
         show_plots = False
@@ -1178,7 +1177,6 @@ def run_sweeps(
                 )
 
     if show_plots:
-
         wind_ratings = [400, 800, 1200]  # [200, 400, 600, 800]
         indexes = [(0, 0), (0, 1), (1, 0), (1, 1)]
         fig, ax = plt.subplots(2, 2, sharex=True, sharey=True, figsize=(10, 6))
@@ -1269,7 +1267,6 @@ def run_policy_options_storage_types(
     use_profast=True,
     output_dir="output/",
 ):
-
     storage_types = ["pressure_vessel", "pipe", "salt_cavern", "none"]
     policy_options = [1, 2, 3, 4, 5, 6, 7]
 
@@ -1285,14 +1282,13 @@ def run_policy_options_storage_types(
             )
         print(lcoh_array)
 
-    savepath = output_dir + "results/"
-    if not os.path.exists(savepath):
-        os.makedirs(savepath)
+    savepath = Path(output_dir).resolve() / "results/"
+    if not savepath.exists():
+        savepath.mkdir(parents=True)
     np.savetxt(
         savepath + "lcoh-with-policy.txt",
         np.c_[np.round(lcoh_array, decimals=2)],
-        header="rows: %s, columns: %s"
-        % ("".join(storage_types), "".join(str(p) for p in policy_options)),
+        header=f"rows: {''.join(storage_types)}, columns: {''.join(str(p) for p in policy_options)}",
         fmt="%.2f",
     )
 
@@ -1306,7 +1302,6 @@ def run_policy_storage_design_options(
     use_profast=True,
     output_dir="output/",
 ):
-
     design_scenarios = [1, 2, 3, 4, 5, 6, 7]
     policy_options = [1, 2, 3, 4, 5, 6, 7]
     storage_types = ["pressure_vessel", "pipe", "salt_cavern", "none"]
@@ -1373,9 +1368,9 @@ def run_policy_storage_design_options(
                         annual_energy_breakdown[key]
                     )
 
-    savepath = output_dir + "data/"
-    if not os.path.exists(savepath):
-        os.makedirs(savepath)
+    savepath = Path(output_dir).resolve() / "data/"
+    if not savepath.exists():
+        savepath.mkdir(parents=True)
     df = pd.DataFrame.from_dict(
         {
             "Design": design_series,
@@ -1400,7 +1395,6 @@ def run_design_options(
     incentive_option=1,
     output_dir="output/",
 ):
-
     design_options = range(1, 8)  # 8
     scenario_lcoh = []
     scenario_lcoe = []
@@ -1448,9 +1442,9 @@ def run_design_options(
     df_capex = df_capex.transpose()
     df_opex = df_opex.transpose()
 
-    results_path = output_dir + "/combined_results/"
-    if not os.path.exists(results_path):
-        os.mkdir(results_path)
+    results_path = Path(output_dir).resolve() / "combined_results/"
+    if not results_path.exists():
+        results_path.mkdir(parents=True)
     df_aggregate.to_csv(results_path + "metrics.csv")
     df_capex.to_csv(results_path + "capex.csv")
     df_opex.to_csv(results_path + "opex.csv")
@@ -1504,8 +1498,8 @@ def run_storage_options(output_dir="output/"):
     }
     df = pd.DataFrame.from_dict(data_dict)
 
-    savepath = output_dir + "data/"
-    if not os.path.exists(savepath):
-        os.makedirs(savepath)
+    savepath = Path(output_dir).resolve() / "data/"
+    if not savepath.exists():
+        savepath.mkdir(parents=True)
     df.to_csv(savepath + "storage-types-and-matrics.csv")
     return 0

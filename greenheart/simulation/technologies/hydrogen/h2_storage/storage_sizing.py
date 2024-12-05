@@ -1,4 +1,3 @@
-import math
 
 import numpy as np
 
@@ -39,7 +38,7 @@ def hydrogen_storage_capacity(H2_Results, electrolyzer_size_mw, hydrogen_demand_
 
     minimum_soc = np.min(hydrogen_storage_soc)
 
-    #adjust soc so it's not negative.
+    # adjust soc so it's not negative.
     if minimum_soc < 0:
         hydrogen_storage_soc = [x + np.abs(minimum_soc) for x in hydrogen_storage_soc]
 
@@ -73,7 +72,7 @@ def hydrogen_storage_capacity(H2_Results, electrolyzer_size_mw, hydrogen_demand_
     # )
 
     # Get average electrolyzer efficiency
-    electrolyzer_average_efficiency_HHV = H2_Results['Sim: Average Efficiency [%-HHV]']
+    electrolyzer_average_efficiency_HHV = H2_Results["Sim: Average Efficiency [%-HHV]"]
 
     # Calculate storage durationhyd
     hydrogen_storage_duration_hr = (
@@ -82,4 +81,8 @@ def hydrogen_storage_capacity(H2_Results, electrolyzer_size_mw, hydrogen_demand_
         / electrolyzer_average_efficiency_HHV
     )
 
-    return hydrogen_storage_capacity_kg, hydrogen_storage_duration_hr, hydrogen_storage_soc
+    return (
+        hydrogen_storage_capacity_kg,
+        hydrogen_storage_duration_hr,
+        hydrogen_storage_soc,
+    )

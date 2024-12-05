@@ -31,9 +31,10 @@ if under_mpirun():
     from mpi4py import MPI
 
     def debug(*msg):  # pragma: no cover
-        newmsg = ["%d: " % MPI.COMM_WORLD.rank] + list(msg)
+        newmsg = [f"{MPI.COMM_WORLD.rank}: "]
+        newmsg.extend(list(msg))
         for m in newmsg:
-            sys.stdout.write("%s " % m)
+            sys.stdout.write(f"{m} ")
         sys.stdout.write("\n")
         sys.stdout.flush()
 
@@ -66,14 +67,15 @@ def map_comm_heirarchical(n_DV, n_OF, openmp=False):
         for nn in range(int(n_nodes)):
             for n_dv in range(int(n_DV_per_node)):
                 comm_map_down[nn * n_procs_per_node + n_dv] = [
-                    int(n_DV_per_node) + n_dv * n_OF + nn * (n_procs_per_node) + j for j in range(n_OF)
+                    int(n_DV_per_node) + n_dv * n_OF + nn * (n_procs_per_node) + j
+                    for j in range(n_OF)
                 ]
 
                 # This core handles python, so in the colormap the entry is 0
-                color_map[nn * n_procs_per_node + n_dv] = int(0)
+                color_map[nn * n_procs_per_node + n_dv] = 0
                 # These cores handles openfast, so in the colormap the entry is 1
                 for k in comm_map_down[nn * n_procs_per_node + n_dv]:
-                    color_map[k] = int(1)
+                    color_map[k] = 1
 
                 for j in comm_map_down[nn * n_procs_per_node + n_dv]:
                     comm_map_up[j] = nn * n_procs_per_node + n_dv

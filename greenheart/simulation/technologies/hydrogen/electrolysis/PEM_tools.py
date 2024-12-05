@@ -1,7 +1,8 @@
 import numpy as np
 
-from greenheart.simulation.technologies.hydrogen.electrolysis.PEM_H2_LT_electrolyzer_Clusters import \
-    PEM_H2_Clusters as PEMClusters
+from greenheart.simulation.technologies.hydrogen.electrolysis.PEM_H2_LT_electrolyzer_Clusters import (
+    PEM_H2_Clusters as PEMClusters,
+)
 
 
 def create_1MW_reference_PEM():
@@ -22,6 +23,7 @@ def get_electrolyzer_BOL_efficiency():
     ].values[-1]
 
     return np.round(bol_eff, 2)
+
 
 def size_electrolyzer_for_hydrogen_demand(
     hydrogen_production_capacity_required_kgphr,
@@ -50,7 +52,6 @@ def size_electrolyzer_for_hydrogen_demand(
 
 
 def check_capacity_based_on_clusters(electrolyzer_capacity_BOL_MW, cluster_cap_mw):
-
     if electrolyzer_capacity_BOL_MW % cluster_cap_mw == 0:
         n_pem_clusters_max = electrolyzer_capacity_BOL_MW // cluster_cap_mw
     else:

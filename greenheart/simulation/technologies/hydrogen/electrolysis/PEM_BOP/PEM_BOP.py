@@ -1,13 +1,14 @@
-import os
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
 import scipy.optimize
 
-from greenheart.simulation.technologies.hydrogen.electrolysis.PEM_tools import \
-    get_electrolyzer_BOL_efficiency
+from greenheart.simulation.technologies.hydrogen.electrolysis.PEM_tools import (
+    get_electrolyzer_BOL_efficiency,
+)
 
-file_path = os.path.dirname(os.path.abspath(__file__))
+file_path = Path(__file__).parent
 
 
 def calc_efficiency_curve(operating_ratio, a, b, c, d):
@@ -59,7 +60,7 @@ def calc_efficiency(
 
 def calc_curve_coefficients():
     """Calculates curve coefficients from BOP_efficiency_BOL.csv"""
-    df = pd.read_csv(os.path.join(file_path, "BOP_efficiency_BOL.csv"))
+    df = pd.read_csv(file_path / "BOP_efficiency_BOL.csv")
     operating_ratios = df["operating_ratio"].values
     efficiency = df["efficiency"].values
 

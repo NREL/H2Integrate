@@ -1,6 +1,4 @@
 import copy
-import os
-import os.path
 from pathlib import Path
 
 import matplotlib.patches as patches
@@ -10,9 +8,7 @@ import numpy as np
 import numpy_financial as npf
 import ORBIT as orbit
 import pandas as pd
-import yaml
 from hopp.simulation import HoppInterface
-from hopp.simulation.technologies.resource.wind_resource import WindResource
 from hopp.tools.dispatch import plot_tools
 from hopp.utilities import load_yaml
 
@@ -22,15 +18,19 @@ from .finance import adjust_orbit_costs
 This function returns the ceiling of a/b (rounded to the nearest greater integer).
 The function was copied from https://stackoverflow.com/a/17511341/5128616
 """
+
+
 def ceildiv(a, b):
     return -(a // -b)
+
 
 def convert_relative_to_absolute_path(config_filepath, resource_filepath):
     if resource_filepath == "":
         return ""
     else:
         abs_config_filepath = Path(config_filepath).absolute().parent
-        return os.path.join(abs_config_filepath, resource_filepath)
+        return abs_config_filepath / resource_filepath
+
 
 # Function to load inputs
 def get_inputs(
@@ -43,7 +43,6 @@ def get_inputs(
     show_plots=False,
     save_plots=False,
 ):
-
     ############### load turbine inputs from yaml
 
     # load turbine inputs
@@ -56,10 +55,18 @@ def get_inputs(
     greenheart_config = load_yaml(filename_greenheart_config)
 
     # convert relative filepath to absolute for HOPP ingestion
-    hopp_config['site']['solar_resource_file'] = convert_relative_to_absolute_path(filename_hopp_config, hopp_config['site']['solar_resource_file'])
-    hopp_config['site']['wind_resource_file'] = convert_relative_to_absolute_path(filename_hopp_config, hopp_config['site']['wind_resource_file'])
-    hopp_config['site']['wave_resource_file'] = convert_relative_to_absolute_path(filename_hopp_config, hopp_config['site']['wave_resource_file'])
-    hopp_config['site']['grid_resource_file'] = convert_relative_to_absolute_path(filename_hopp_config, hopp_config['site']['grid_resource_file'])
+    hopp_config["site"]["solar_resource_file"] = convert_relative_to_absolute_path(
+        filename_hopp_config, hopp_config["site"]["solar_resource_file"]
+    )
+    hopp_config["site"]["wind_resource_file"] = convert_relative_to_absolute_path(
+        filename_hopp_config, hopp_config["site"]["wind_resource_file"]
+    )
+    hopp_config["site"]["wave_resource_file"] = convert_relative_to_absolute_path(
+        filename_hopp_config, hopp_config["site"]["wave_resource_file"]
+    )
+    hopp_config["site"]["grid_resource_file"] = convert_relative_to_absolute_path(
+        filename_hopp_config, hopp_config["site"]["grid_resource_file"]
+    )
 
     ################ load plant inputs from yaml
     if filename_orbit_config != None:
@@ -144,9 +151,9 @@ def get_inputs(
     if filename_orbit_config != None:
         if total_hybrid_plant_capacity_mw != orbit_config["plant"]["capacity"]:
             orbit_hybrid_electrical_export_config = copy.deepcopy(orbit_config)
-            orbit_hybrid_electrical_export_config["plant"][
-                "capacity"
-            ] = total_hybrid_plant_capacity_mw
+            orbit_hybrid_electrical_export_config["plant"]["capacity"] = (
+                total_hybrid_plant_capacity_mw
+            )
             orbit_hybrid_electrical_export_config["plant"].pop(
                 "num_turbines"
             )  # allow orbit to set num_turbines later based on the new hybrid capacity and turbine rating
@@ -175,7 +182,6 @@ def get_inputs(
 
 
 def convert_layout_from_floris_for_orbit(turbine_x, turbine_y, save_config=False):
-
     turbine_x_km = (np.array(turbine_x) * 1e-3).tolist()
     turbine_y_km = (np.array(turbine_y) * 1e-3).tolist()
 
@@ -223,11 +229,11 @@ def convert_layout_from_floris_for_orbit(turbine_x, turbine_y, save_config=False
 
     # add location data
     file_name = "osw_cable_layout"
-    save_location = "./input/project/plant/"
+    save_location = Path("./input/project/plant/").resolve()
     # turbine_dict["array_system_design"]["location_data"] = data_location
     if save_config:
-        if not os.path.exists(save_location):
-            os.makedirs(save_location)
+        if not save_location.exists():
+            save_location.mkdir(parents=True)
         # create pandas data frame
         df = pd.DataFrame.from_dict(turbine_dict)
 
@@ -235,7 +241,7 @@ def convert_layout_from_floris_for_orbit(turbine_x, turbine_y, save_config=False
         df.set_index("id")
 
         # save to csv
-        df.to_csv(save_location + file_name + ".csv", index=False)
+        df.to_csv(save_location / f"{file_name}.csv", index=False)
 
     return turbine_dict, file_name
 
@@ -257,6 +263,8 @@ def visualize_plant(
     save_plots=False,
     output_dir="./output/",
 ):
+    if isinstance(output_dir, str):
+        output_dir = Path(output_dir).resolve()
     # save plant sizing to dict
     component_areas = {}
 
@@ -315,9 +323,7 @@ def visualize_plant(
         # get turbine tower base diameter
         tower_base_diameter = wind_cost_outputs.orbit_project.config["turbine"][
             "tower"
-        ]["section_diameters"][
-            0
-        ]  # in m
+        ]["section_diameters"][0]  # in m
         tower_base_radius = tower_base_diameter / 2.0
 
         # get turbine locations
@@ -383,8 +389,8 @@ def visualize_plant(
         cable_array_points = []
 
     # wind farm area
-    turbine_length_x = np.max(turbine_x)-np.min(turbine_x)
-    turbine_length_y = np.max(turbine_y)-np.min(turbine_y)
+    turbine_length_x = np.max(turbine_x) - np.min(turbine_x)
+    turbine_length_y = np.max(turbine_y) - np.min(turbine_y)
     turbine_area = turbine_length_x * turbine_length_y
 
     # compressor side # not sized
@@ -400,7 +406,9 @@ def visualize_plant(
     # set onshore substation dimensions
     onshore_substation_x_side_length = 127.25  # [m] based on 1 acre area https://www.power-technology.com/features/making-space-for-power-how-much-land-must-renewables-use/
     onshore_substation_y_side_length = 31.8  # [m] based on 1 acre area https://www.power-technology.com/features/making-space-for-power-how-much-land-must-renewables-use/
-    onshore_substation_area = onshore_substation_x_side_length * onshore_substation_y_side_length
+    onshore_substation_area = (
+        onshore_substation_x_side_length * onshore_substation_y_side_length
+    )
 
     if greenheart_config["h2_storage"]["type"] == "pressure_vessel":
         h2_storage_area = h2_storage_results["tank_footprint_m2"]
@@ -467,7 +475,12 @@ def visualize_plant(
                 rlabel = None
                 tlabel = None
             turbine_patch = patches.Circle(
-                (x, y), radius=radius, color=color, fill=False, label=rlabel, zorder=10,
+                (x, y),
+                radius=radius,
+                color=color,
+                fill=False,
+                label=rlabel,
+                zorder=10,
             )
             ax.add_patch(turbine_patch)
 
@@ -608,7 +621,7 @@ def visualize_plant(
         ax[0, 1].add_patch(substation_patch01)
         ax[1, 0].add_patch(substation_patch10)
 
-        component_areas['offshore_substation_area_m2'] = substation_side_length ** 2
+        component_areas["offshore_substation_area_m2"] = substation_side_length**2
 
     ## add equipment platform
     if design_scenario["wind_location"] == "offshore" and (
@@ -642,7 +655,7 @@ def visualize_plant(
         ax[0, 1].add_patch(equipment_platform_patch01)
         ax[1, 0].add_patch(equipment_platform_patch10)
 
-        component_areas['equipment_platform_area_m2'] = equipment_platform_area
+        component_areas["equipment_platform_area_m2"] = equipment_platform_area
 
     ## add hvdc cable
     if (
@@ -692,7 +705,7 @@ def visualize_plant(
         )
         ax[0, 0].add_patch(onshore_substation_patch00)
 
-        component_areas['onshore_substation_area_m2'] = onshore_substation_area
+        component_areas["onshore_substation_area_m2"] = onshore_substation_area
 
     ## add transport pipeline
     if design_scenario["transportation"] == "colocated":
@@ -799,7 +812,7 @@ def visualize_plant(
         )
         h2cax.add_patch(compressor_patch10)
 
-        component_areas['compressor_area_m2'] = compressor_area
+        component_areas["compressor_area_m2"] = compressor_area
 
     ## add plant components
     if design_scenario["electrolyzer_location"] == "onshore":
@@ -816,7 +829,7 @@ def visualize_plant(
             hatch=electrolyzer_hatch,
         )
         ax[ax_index_plant].add_patch(electrolyzer_patch)
-        component_areas['electrolyzer_area_m2'] = electrolyzer_area
+        component_areas["electrolyzer_area_m2"] = electrolyzer_area
 
         if design_scenario["wind_location"] == "onshore":
             electrolyzer_patch = patches.Rectangle(
@@ -863,7 +876,7 @@ def visualize_plant(
             hatch=desalinator_hatch,
         )
         ax[ax_index_detail].add_patch(desal_patch)
-        component_areas['desalination_area_m2'] = desal_equipment_area
+        component_areas["desalination_area_m2"] = desal_equipment_area
 
     elif design_scenario["electrolyzer_location"] == "turbine":
         electrolyzer_patch11 = patches.Rectangle(
@@ -888,7 +901,7 @@ def visualize_plant(
             hatch=desalinator_hatch,
         )
         ax[ax_index_turbine_detail].add_patch(desal_patch11)
-        component_areas['desalination_area_m2'] = desal_equipment_area
+        component_areas["desalination_area_m2"] = desal_equipment_area
         i = 0
         for x, y in zip(turbine_x, turbine_y):
             if i == 0:
@@ -972,7 +985,6 @@ def visualize_plant(
         component_areas["h2_storage_area_m2"] = h2_storage_area
 
     elif design_scenario["h2_storage_location"] == "turbine":
-
         if greenheart_config["h2_storage"]["type"] == "turbine":
             h2_storage_patch = patches.Circle(
                 (turbine_x[0], turbine_y[0]),
@@ -1040,7 +1052,9 @@ def visualize_plant(
 
     ## add battery
     if "battery" in hopp_config["technologies"].keys():
-        component_areas['battery_area_m2'] = hopp_results["hybrid_plant"].battery.footprint_area
+        component_areas["battery_area_m2"] = hopp_results[
+            "hybrid_plant"
+        ].battery.footprint_area
         if design_scenario["battery_location"] == "onshore":
             battery_side_y = np.sqrt(
                 hopp_results["hybrid_plant"].battery.footprint_area
@@ -1063,7 +1077,6 @@ def visualize_plant(
             ax[ax_index_plant].add_patch(battery_patch)
 
             if design_scenario["wind_location"] == "onshore":
-
                 battery_patch = patches.Rectangle(
                     (batteryx, batteryy),
                     battery_side_x,
@@ -1101,7 +1114,7 @@ def visualize_plant(
 
     ## add solar
     if hopp_config["site"]["solar"]:
-        component_areas['pv_area_m2'] = hopp_results["hybrid_plant"].pv.footprint_area
+        component_areas["pv_area_m2"] = hopp_results["hybrid_plant"].pv.footprint_area
         if design_scenario["pv_location"] == "offshore":
             solar_side_y = equipment_platform_side_length
             solar_side_x = hopp_results["hybrid_plant"].pv.footprint_area / solar_side_y
@@ -1175,7 +1188,7 @@ def visualize_plant(
         wave_side_y = device_spacing * np.ceil(num_devices / number_rows)
         wave_side_x = row_spacing * (number_rows)
         wave_area = wave_side_x * wave_side_y
-        component_areas['wave_area_m2'] = wave_area
+        component_areas["wave_area_m2"] = wave_area
 
         # generate wave generation patch
         wavex = substation_x - wave_side_x
@@ -1304,8 +1317,14 @@ def visualize_plant(
             xmax = round(np.max([onshorex + 510, 100]), ndigits=roundto)
             ymax = round(100, ndigits=roundto)
         ax[ax_index_detail].set(
-            xlim=[round(onshorex - 10, ndigits=roundto), xmax,],
-            ylim=[round(onshorey - 200, ndigits=roundto), ymax,],
+            xlim=[
+                round(onshorex - 10, ndigits=roundto),
+                xmax,
+            ],
+            ylim=[
+                round(onshorey - 200, ndigits=roundto),
+                ymax,
+            ],
         )
         ax[ax_index_detail].set(aspect="equal")
 
@@ -1359,19 +1378,22 @@ def visualize_plant(
     ## save the plot
     plt.tight_layout()
     savepaths = [
-            output_dir + "figures/layout/",
-            output_dir + "data/",
-        ]
+        output_dir / "figures/layout",
+        output_dir / "data",
+    ]
     if save_plots:
         for savepath in savepaths:
-            if not os.path.exists(savepath):
-                os.makedirs(savepath)
+            if not savepath.exists():
+                savepath.mkdir(parents=True)
         plt.savefig(
-            savepaths[0] + "plant_layout_%i.png" % (plant_design_number), transparent=True
+            savepaths[0] / f"plant_layout_{plant_design_number}.png", transparent=True
         )
 
         df = pd.DataFrame([component_areas])
-        df.to_csv(savepaths[1] + "component_areas_layout_%i.csv" % (plant_design_number), index=False)
+        df.to_csv(
+            savepaths[1] / "fcomponent_areas_layout_{plant_design_number}.csv",
+            index=False,
+        )
 
     if show_plots:
         plt.show()
@@ -1388,9 +1410,8 @@ def save_energy_flows(
     simulation_length=8760,
     output_dir="./output/",
 ):
-
-
-
+    if isinstance(output_dir, str):
+        output_dir = Path(output_dir).resolve()
     if ax == None:
         fig, ax = plt.subplots(1)
 
@@ -1412,29 +1433,66 @@ def save_energy_flows(
         output.update({"wave generation [kW]": wave_plant_power})
     if hybrid_plant.battery:
         battery_power_out_mw = hybrid_plant.battery.outputs.P
-        output.update({"battery discharge [kW]": [(int(p>0))*p*1E3 for p in battery_power_out_mw]}) # convert from MW to kW and extract only discharging
-        output.update({"battery charge [kW]": [-(int(p<0))*p*1E3 for p in battery_power_out_mw]}) # convert from MW to kW and extract only charging
-        output.update({"battery state of charge [%]": hybrid_plant.battery.outputs.dispatch_SOC})
+        output.update(
+            {
+                "battery discharge [kW]": [
+                    (int(p > 0)) * p * 1e3 for p in battery_power_out_mw
+                ]
+            }
+        )  # convert from MW to kW and extract only discharging
+        output.update(
+            {
+                "battery charge [kW]": [
+                    -(int(p < 0)) * p * 1e3 for p in battery_power_out_mw
+                ]
+            }
+        )  # convert from MW to kW and extract only charging
+        output.update(
+            {"battery state of charge [%]": hybrid_plant.battery.outputs.dispatch_SOC}
+        )
 
     output.update({"total accessory power required [kW]": solver_results[0]})
-    output.update({"grid energy usage hourly [kW]": [solver_results[1]]*simulation_length})
-    output.update({"desal energy hourly [kW]": [solver_results[2]]*simulation_length})
-    output.update({"electrolyzer energy hourly [kW]": electrolyzer_physics_results["power_to_electrolyzer_kw"]})
-    output.update({"electrolyzer bop energy hourly [kW]":solver_results[5]})
-    output.update({"transport compressor energy hourly [kW]": [solver_results[3]]*simulation_length})
-    output.update({"storage energy hourly [kW]": [solver_results[4]]*simulation_length})
-    output.update({"h2 production hourly [kg]": electrolyzer_physics_results["H2_Results"]["Hydrogen Hourly Production [kg/hr]"]})
+    output.update(
+        {"grid energy usage hourly [kW]": [solver_results[1]] * simulation_length}
+    )
+    output.update({"desal energy hourly [kW]": [solver_results[2]] * simulation_length})
+    output.update(
+        {
+            "electrolyzer energy hourly [kW]": electrolyzer_physics_results[
+                "power_to_electrolyzer_kw"
+            ]
+        }
+    )
+    output.update({"electrolyzer bop energy hourly [kW]": solver_results[5]})
+    output.update(
+        {
+            "transport compressor energy hourly [kW]": [solver_results[3]]
+            * simulation_length
+        }
+    )
+    output.update(
+        {"storage energy hourly [kW]": [solver_results[4]] * simulation_length}
+    )
+    output.update(
+        {
+            "h2 production hourly [kg]": electrolyzer_physics_results["H2_Results"][
+                "Hydrogen Hourly Production [kg/hr]"
+            ]
+        }
+    )
     if "hydrogen_storage_soc" in h2_storage_results:
-        output.update({"hydrogen storage SOC [kg]": h2_storage_results["hydrogen_storage_soc"]})
+        output.update(
+            {"hydrogen storage SOC [kg]": h2_storage_results["hydrogen_storage_soc"]}
+        )
 
     df = pd.DataFrame.from_dict(output)
 
-    filepath = os.path.abspath(output_dir + "data/production/")
+    filepath = output_dir / "data/production"
 
-    if not os.path.exists(filepath):
-        os.makedirs(filepath)
+    if not filepath.exists():
+        filepath.mkdir(parents=True)
 
-    df.to_csv(os.path.join(filepath, "energy_flows.csv"))
+    df.to_csv(filepath / "energy_flows.csv")
 
     return output
 
@@ -1466,6 +1524,8 @@ def post_process_simulation(
     verbose=False,
     output_dir="./output/",
 ):  # , lcoe, lcoh, lcoh_with_grid, lcoh_grid_only):
+    if isinstance(output_dir, str):
+        output_dir = Path(output_dir).resolve()
     # colors (official NREL color palette https://brand.nrel.gov/content/index/guid/color_palette?parent=61)
     colors = [
         "#0079C2",
@@ -1530,31 +1590,21 @@ def post_process_simulation(
             output_dir=output_dir,
         )
     savepaths = [
-        output_dir + "data/",
-        output_dir + "data/lcoe/",
-        output_dir + "data/lcoh/",
+        output_dir / "data",
+        output_dir / "data/lcoe",
+        output_dir / "data/lcoh",
     ]
     for sp in savepaths:
-        if not os.path.exists(sp):
-            os.makedirs(sp)
+        if not sp.exists():
+            sp.mkdir(parents=True)
 
     pf_lcoh.get_cost_breakdown().to_csv(
         savepaths[2]
-        + "cost_breakdown_lcoh_design%i_incentive%i_%sstorage.csv"
-        % (
-            plant_design_number,
-            incentive_option,
-            greenheart_config["h2_storage"]["type"],
-        )
+        / f'cost_breakdown_lcoh_design{plant_design_number}_incentive{incentive_option}_{greenheart_config["h2_storage"]["type"]}storage.csv'
     )
     pf_lcoe.get_cost_breakdown().to_csv(
         savepaths[1]
-        + "cost_breakdown_lcoe_design%i_incentive%i_%sstorage.csv"
-        % (
-            plant_design_number,
-            incentive_option,
-            greenheart_config["h2_storage"]["type"],
-        )
+        / f'cost_breakdown_lcoe_design{plant_design_number}_incentive{incentive_option}_{greenheart_config["h2_storage"]["type"]}storage.csv'
     )
 
     # create dataframe for saving all the stuff
@@ -1577,9 +1627,8 @@ def post_process_simulation(
             "desal_kwh": solver_results[2] * hours,
             "h2_transport_compressor_power_kwh": solver_results[3] * hours,
             "h2_storage_power_kwh": solver_results[4] * hours,
-            "electrolyzer_bop_energy_kwh": sum(solver_results[5])
+            "electrolyzer_bop_energy_kwh": sum(solver_results[5]),
         }
-
 
     ######################### save detailed ORBIT cost information
     if wind_cost_results.orbit_project:
@@ -1601,17 +1650,12 @@ def post_process_simulation(
 
         # save ORBIT cost information
         ob_df = pd.DataFrame(orbit_capex_breakdown, index=[0]).transpose()
-        savedir = output_dir + "data/orbit_costs/"
-        if not os.path.exists(savedir):
-            os.makedirs(savedir)
+        savedir = output_dir / "data/orbit_costs/"
+        if not savedir.exists():
+            savedir.mkdir(parents=True)
         ob_df.to_csv(
             savedir
-            + "orbit_cost_breakdown_lcoh_design%i_incentive%i_%sstorage.csv"
-            % (
-                plant_design_number,
-                incentive_option,
-                greenheart_config["h2_storage"]["type"],
-            )
+            / f'orbit_cost_breakdown_lcoh_design{plant_design_number}_incentive{incentive_option}_{greenheart_config["h2_storage"]["type"]}storage.csv'
         )
         ###############################
 
@@ -1629,9 +1673,9 @@ def post_process_simulation(
 
         orbit_capex_breakdown["Export System Installation"] -= onshore_substation_costs
 
-        orbit_capex_breakdown[
-            "Onshore Substation and Installation"
-        ] = onshore_substation_costs
+        orbit_capex_breakdown["Onshore Substation and Installation"] = (
+            onshore_substation_costs
+        )
 
         # discount ORBIT cost information
         for key in orbit_capex_breakdown:
@@ -1643,19 +1687,11 @@ def post_process_simulation(
                 orbit_capex_breakdown[key],
             )
 
-        # save ORBIT cost information
+        # save ORBIT cost information using directory defined above
         ob_df = pd.DataFrame(orbit_capex_breakdown, index=[0]).transpose()
-        savedir = output_dir + "data/orbit_costs/"
-        if not os.path.exists(savedir):
-            os.makedirs(savedir)
         ob_df.to_csv(
             savedir
-            + "orbit_cost_breakdown_with_onshore_substation_lcoh_design%i_incentive%i_%sstorage.csv"
-            % (
-                plant_design_number,
-                incentive_option,
-                greenheart_config["h2_storage"]["type"],
-            )
+            / f'orbit_cost_breakdown_with_onshore_substation_lcoh_design{plant_design_number}_incentive{incentive_option}_{greenheart_config["h2_storage"]["type"]}storage.csv'
         )
 
     ##################################################################################
@@ -1663,14 +1699,14 @@ def post_process_simulation(
         hasattr(hopp_results["hybrid_plant"], "dispatch_builder")
         and hopp_results["hybrid_plant"].battery
     ):
-        savedir = output_dir + "figures/production/"
-        if not os.path.exists(savedir):
-            os.makedirs(savedir)
+        savedir = output_dir / "figures/production/"
+        if not savedir.exists():
+            savedir.mkdir(parents=True)
         plot_tools.plot_generation_profile(
             hopp_results["hybrid_plant"],
             start_day=0,
             n_days=10,
-            plot_filename=os.path.abspath(savedir + "generation_profile.pdf"),
+            plot_filename=savedir / "generation_profile.pdf",
             font_size=14,
             power_scale=1 / 1000,
             solar_color="r",
@@ -1695,15 +1731,15 @@ def post_process_simulation(
         solver_results,
         hours,
         h2_storage_results,
-        output_dir=output_dir
+        output_dir=output_dir,
     )
 
     # save hydrogen information
     key = "Hydrogen Hourly Production [kg/hr]"
     np.savetxt(
-        output_dir + "h2_usage",
+        output_dir / "h2_usage",
         electrolyzer_physics_results["H2_Results"][key],
-        header="# " + key
+        header="# " + key,
     )
 
     return annual_energy_breakdown, hourly_energy_breakdown

@@ -3,36 +3,44 @@ import warnings
 
 import numpy as np
 import pandas as pd
-from ORBIT import ProjectManager, load_config
-from ORBIT.core import Vessel
-from ORBIT.core.library import initialize_library
-from ORBIT.phases.design import DesignPhase
-from ORBIT.phases.install import InstallPhase
+from ORBIT import ProjectManager
 
-from greenheart.simulation.technologies.hydrogen.h2_storage.lined_rock_cavern.lined_rock_cavern import \
-    LinedRockCavernStorage
-from greenheart.simulation.technologies.hydrogen.h2_storage.on_turbine.on_turbine_hydrogen_storage import \
-    PressurizedTower
-from greenheart.simulation.technologies.hydrogen.h2_storage.pipe_storage import \
-    UndergroundPipeStorage
-from greenheart.simulation.technologies.hydrogen.h2_storage.pressure_vessel.compressed_gas_storage_model_20221021.Compressed_all import \
-    PressureVessel
-from greenheart.simulation.technologies.hydrogen.h2_storage.salt_cavern.salt_cavern import \
-    SaltCavernStorage
-from greenheart.simulation.technologies.hydrogen.h2_storage.storage_sizing import \
-    hydrogen_storage_capacity
-from greenheart.simulation.technologies.hydrogen.h2_transport.h2_compression import \
-    Compressor
-from greenheart.simulation.technologies.hydrogen.h2_transport.h2_export_pipe import \
-    run_pipe_analysis
-from greenheart.simulation.technologies.hydrogen.h2_transport.h2_pipe_array import \
-    run_pipe_array_const_diam
-from greenheart.simulation.technologies.offshore.all_platforms import \
-    calc_platform_opex
+from greenheart.simulation.technologies.hydrogen.h2_storage.lined_rock_cavern.lined_rock_cavern import (
+    LinedRockCavernStorage,
+)
+from greenheart.simulation.technologies.hydrogen.h2_storage.on_turbine.on_turbine_hydrogen_storage import (
+    PressurizedTower,
+)
+from greenheart.simulation.technologies.hydrogen.h2_storage.pipe_storage import (
+    UndergroundPipeStorage,
+)
+from greenheart.simulation.technologies.hydrogen.h2_storage.pressure_vessel.compressed_gas_storage_model_20221021.Compressed_all import (
+    PressureVessel,
+)
+from greenheart.simulation.technologies.hydrogen.h2_storage.salt_cavern.salt_cavern import (
+    SaltCavernStorage,
+)
+from greenheart.simulation.technologies.hydrogen.h2_storage.storage_sizing import (
+    hydrogen_storage_capacity,
+)
+from greenheart.simulation.technologies.hydrogen.h2_transport.h2_compression import (
+    Compressor,
+)
+from greenheart.simulation.technologies.hydrogen.h2_transport.h2_export_pipe import (
+    run_pipe_analysis,
+)
+from greenheart.simulation.technologies.hydrogen.h2_transport.h2_pipe_array import (
+    run_pipe_array_const_diam,
+)
+from greenheart.simulation.technologies.offshore.all_platforms import calc_platform_opex
 from greenheart.simulation.technologies.offshore.fixed_platform import (
-    FixedPlatformDesign, FixedPlatformInstallation)
+    FixedPlatformDesign,
+    FixedPlatformInstallation,
+)
 from greenheart.simulation.technologies.offshore.floating_platform import (
-    FloatingPlatformDesign, FloatingPlatformInstallation)
+    FloatingPlatformDesign,
+    FloatingPlatformInstallation,
+)
 
 
 def run_h2_pipe_array(
@@ -236,7 +244,6 @@ def run_h2_storage(
     design_scenario,
     verbose=False,
 ):
-
     if design_scenario["h2_storage_location"] == "platform":
         if (
             greenheart_config["h2_storage"]["type"] != "pressure_vessel"
