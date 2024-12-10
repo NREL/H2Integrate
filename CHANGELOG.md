@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## Unreleased
+
+- add `CoolProp` to `pyproject.toml`
+- change units of `lcoe_real` in `HOPPComponent` from "MW*h" to "kW*h"
+
 ## v0.1.3 [1 November 2024]
 
 - Replaces the git ProFAST installation with a PyPI installation.
