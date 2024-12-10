@@ -1382,7 +1382,9 @@ def visualize_plant(
 
     if show_plots:
         plt.show()
-    return 0
+    else:
+        plt.close()
+    # return 0
 
 
 def save_energy_flows(
