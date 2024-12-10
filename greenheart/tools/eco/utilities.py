@@ -399,8 +399,6 @@ def visualize_plant(
     # compressor side # not sized
     compressor_area = 25
     compressor_side = np.sqrt(compressor_area)
-    ## create figure
-    fig, ax = plt.subplots(2, 2, figsize=(10, 6))
 
     # get turbine rotor diameter
     rotor_diameter = turbine_config["rotor_diameter"]  # in m
@@ -1397,11 +1395,6 @@ def save_energy_flows(
     simulation_length=8760, 
     output_dir="./output/",
 ):
-
-    
-
-    if ax == None:
-        fig, ax = plt.subplots(1)
 
     output = {}
     if hybrid_plant.pv:
@@ -2748,34 +2741,35 @@ def post_process_simulation(
         )
 
     ##################################################################################
-    if (
-        hasattr(hopp_results["hybrid_plant"], "dispatch_builder")
-        and hopp_results["hybrid_plant"].battery
-    ):
-        savedir = output_dir + "figures/production/"
-        if not os.path.exists(savedir):
-            os.makedirs(savedir)
-        plot_tools.plot_generation_profile(
-            hopp_results["hybrid_plant"],
-            start_day=0,
-            n_days=10,
-            plot_filename=os.path.abspath(savedir + "generation_profile.pdf"),
-            font_size=14,
-            power_scale=1 / 1000,
-            solar_color="r",
-            wind_color="b",
-            # wave_color="g",
-            discharge_color="b",
-            charge_color="r",
-            gen_color="g",
-            price_color="r",
-            # show_price=False,
-        )
-    else:
-        print(
-            "generation profile not plotted because HoppInterface does not have a "
-            "'dispatch_builder'"
-        )
+    if save_plots:
+        if (
+            hasattr(hopp_results["hybrid_plant"], "dispatch_builder")
+            and hopp_results["hybrid_plant"].battery
+        ):
+            savedir = output_dir + "figures/production/"
+            if not os.path.exists(savedir):
+                os.makedirs(savedir)
+            plot_tools.plot_generation_profile(
+                hopp_results["hybrid_plant"],
+                start_day=0,
+                n_days=10,
+                plot_filename=os.path.abspath(savedir + "generation_profile.pdf"),
+                font_size=14,
+                power_scale=1 / 1000,
+                solar_color="r",
+                wind_color="b",
+                # wave_color="g",
+                discharge_color="b",
+                charge_color="r",
+                gen_color="g",
+                price_color="r",
+                # show_price=False,
+            )
+        else:
+            print(
+                "generation profile not plotted because HoppInterface does not have a "
+                "'dispatch_builder'"
+            )
 
     # save production information
     hourly_energy_breakdown = save_energy_flows(
