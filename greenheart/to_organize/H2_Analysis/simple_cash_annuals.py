@@ -9,24 +9,21 @@ def simple_cash_annuals(
     partial_cycle = plant_useful_life % equipment_useful_life
 
     # Payment period for equipment (assume payment period is life of equipment)
-    a = amortization_interest
-    amortization = []
-
-    for i in range(full_cycle * equipment_useful_life):
-        amortization.append(
-            capex
-            * (
-                (a * (1 + a) ** equipment_useful_life)
-                / (((1 + a) ** equipment_useful_life) - 1)
-            )
-        )
+    N = full_cycle * equipment_useful_life
+    af = capex * (
+        (amortization_interest * (1 + amortization_interest) ** equipment_useful_life)
+        / (((1 + amortization_interest) ** equipment_useful_life) - 1)
+    )
+    amortization = [af] * N
 
     # Payment period if plant's useful life is sorter than equipment
-    for i in range(full_cycle * equipment_useful_life, plant_useful_life):
-        amortization.append(
-            capex
-            * ((a * (1 + a) ** (partial_cycle)) / (((1 + a) ** (partial_cycle)) - 1))
+    N = len(range(full_cycle * equipment_useful_life, plant_useful_life))
+    if N > 0:
+        ap = capex * (
+            (amortization_interest * (1 + amortization_interest) ** partial_cycle)
+            / (((1 + amortization_interest) ** partial_cycle) - 1)
         )
+        amortization += [ap] * N
 
     # Initialize annual cash flow array for useful life of plant
     opex_annuals = [opex] * plant_useful_life

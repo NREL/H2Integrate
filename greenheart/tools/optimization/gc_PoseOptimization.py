@@ -9,22 +9,26 @@ import numpy as np
 import openmdao.api as om
 from hopp.simulation import HoppInterface
 
-from greenheart.simulation.greenheart_simulation import GreenHeartSimulationConfig
 from greenheart.tools.optimization.openmdao import (
-    BoundaryDistanceComponent,
     TurbineDistanceComponent,
+    BoundaryDistanceComponent,
 )
+from greenheart.simulation.greenheart_simulation import GreenHeartSimulationConfig
 
 
 class PoseOptimization:
-    """This class contains a collection of methods for setting up an openmdao optimization problem for a greenheart simulation.
+    """This class contains a collection of methods for setting up an openmdao optimization problem
+    for a greenheart simulation.
 
     Args:
-        config (GreenHeartSimulationConfig): instance of a greenheart config containing all desired simulation set up
+        config (GreenHeartSimulationConfig): instance of a greenheart config containing all desired
+            simulation set up
     """
 
     def __init__(self, config: GreenHeartSimulationConfig):
-        """This method primarily establishes lists of optimization methods available through different optimization drivers"""
+        """This method primarily establishes lists of optimization methods available through
+        different optimization drivers.
+        """
 
         self.config = config
 
@@ -41,7 +45,8 @@ class PoseOptimization:
         ]
 
     def get_number_design_variables(self):
-        """This method counts the number of design variables required given the provided set up and returns the result
+        """This method counts the number of design variables required given the provided set up and
+        returns the result.
 
         Returns:
             int: number of design variables
@@ -53,50 +58,42 @@ class PoseOptimization:
             "electrolyzer_rating_kw"
         ]["flag"]:
             n_DV += 1
-        if self.config.greenheart_config["opt_options"]["design_variables"][
-            "pv_capacity_kw"
-        ]["flag"]:
+        if self.config.greenheart_config["opt_options"]["design_variables"]["pv_capacity_kw"][
+            "flag"
+        ]:
             n_DV += 1
-        if self.config.greenheart_config["opt_options"]["design_variables"][
-            "wave_capacity_kw"
-        ]["flag"]:
+        if self.config.greenheart_config["opt_options"]["design_variables"]["wave_capacity_kw"][
+            "flag"
+        ]:
             n_DV += 1
-        if self.config.greenheart_config["opt_options"]["design_variables"][
-            "battery_capacity_kw"
-        ]["flag"]:
+        if self.config.greenheart_config["opt_options"]["design_variables"]["battery_capacity_kw"][
+            "flag"
+        ]:
             n_DV += 1
-        if self.config.greenheart_config["opt_options"]["design_variables"][
-            "battery_capacity_kwh"
-        ]["flag"]:
+        if self.config.greenheart_config["opt_options"]["design_variables"]["battery_capacity_kwh"][
+            "flag"
+        ]:
             n_DV += 1
-        if self.config.greenheart_config["opt_options"]["design_variables"][
-            "turbine_x"
-        ]["flag"]:
+        if self.config.greenheart_config["opt_options"]["design_variables"]["turbine_x"]["flag"]:
             n_DV += self.config.hopp_config["technologies"]["wind"]["num_turbines"]
-        if self.config.greenheart_config["opt_options"]["design_variables"][
-            "turbine_y"
-        ]["flag"]:
+        if self.config.greenheart_config["opt_options"]["design_variables"]["turbine_y"]["flag"]:
             n_DV += self.config.hopp_config["technologies"]["wind"]["num_turbines"]
 
         # Wrap-up at end with multiplier for finite differencing
-        if (
-            "form"
-            in self.config.greenheart_config["opt_options"]["driver"][
-                "optimization"
-            ].keys()
-        ):
+        if "form" in self.config.greenheart_config["opt_options"]["driver"]["optimization"].keys():
             if (
-                self.config.greenheart_config["opt_options"]["driver"]["optimization"][
-                    "form"
-                ]
+                self.config.greenheart_config["opt_options"]["driver"]["optimization"]["form"]
                 == "central"
-            ):  # TODO this should probably be handled at the MPI point to avoid confusion with n_DV being double what would be expected
+            ):
+                # TODO this should probably be handled at the MPI point to avoid confusion with
+                # n_DV being double what would be expected
                 n_DV *= 2
 
         return n_DV
 
     def _get_step_size(self):
-        """If a step size for the driver-level finite differencing is provided, use that step size. Otherwise use a default value.
+        """If a step size for the driver-level finite differencing is provided, use that step size.
+        Otherwise use a default value.
 
         Returns:
             step size (float): step size for optimization
@@ -104,20 +101,19 @@ class PoseOptimization:
 
         if (
             "step_size"
-            not in self.config.greenheart_config["opt_options"]["driver"][
-                "optimization"
-            ]
+            not in self.config.greenheart_config["opt_options"]["driver"]["optimization"]
         ):
             step_size = 1.0e-6
-            warnings.warn(
-                f"Step size was not specified, setting step size to {step_size}. Step size may be set in the greenheart \
-                          config file under opt_options/driver/optimization/step_size and should be of type float",
-                UserWarning,
+            msg = (
+                f"Step size was not specified, setting step size to {step_size}. Step size may"
+                f" be set in the greenheart config file under"
+                f" 'opt_options/driver/optimization/step_size' and should be of type float"
             )
+            warnings.warn(msg, UserWarning)
         else:
-            step_size = self.config.greenheart_config["opt_options"]["driver"][
-                "optimization"
-            ]["step_size"]
+            step_size = self.config.greenheart_config["opt_options"]["driver"]["optimization"][
+                "step_size"
+            ]
 
         return step_size
 
@@ -131,19 +127,20 @@ class PoseOptimization:
 
         Args:
             opt_prob (OpenMDAO problem object):  The hybrid plant OpenMDAO problem object.
-            options_keys (list, optional): List of keys for driver opt_settings to be set. Defaults to [].
-            opt_settings_keys (list, optional): List of keys for driver options to be set. Defaults to [].
+            options_keys (list, optional): List of keys for driver opt_settings to be set. Defaults
+                to [].
+            opt_settings_keys (list, optional): List of keys for driver options to be set. Defaults
+                to [].
             mapped_keys (dict, optional): Key pairs where the yaml name differs from what's expected
-                                          by the driver. Specifically, the key is what's given in the yaml
-                                          and the value is what's expected by the driver. Defaults to {}.
+                by the driver. Specifically, the key is what's given in the yaml and the value is
+                what's expected by the driver. Defaults to {}.
 
         Returns:
-            opt_prob (OpenMDAO problem object): The updated openmdao problem object with driver settings applied.
+            opt_prob (OpenMDAO problem object): The updated openmdao problem object with driver
+                settings applied.
         """
 
-        opt_options = self.config.greenheart_config["opt_options"]["driver"][
-            "optimization"
-        ]
+        opt_options = self.config.greenheart_config["opt_options"]["driver"]["optimization"]
 
         # Loop through all of the options provided and set them in the OM driver object
         for key in options_keys:
@@ -167,29 +164,31 @@ class PoseOptimization:
         """set which optimization driver to use and set options
 
         Args:
-            opt_prob (openmdao problem instance): openmdao problem class instance for current optimization problem
+            opt_prob (openmdao problem instance): openmdao problem class instance for current
+                optimization problem
 
         Raises:
-            ImportError: An optimization algorithm from pyoptsparse was selected, but pyoptsparse is not installed
-            ImportError: An optimization algorithm from pyoptsparse was selected, but the algorithm code is not currently installed within pyoptsparse
-            ImportError: An optimization algorithm was requested from NLopt, but NLopt is not currently installed.
+            ImportError: An optimization algorithm from pyoptsparse was selected, but pyoptsparse is
+                not installed
+            ImportError: An optimization algorithm from pyoptsparse was selected, but the algorithm
+                code is not currently installed within pyoptsparse
+            ImportError: An optimization algorithm was requested from NLopt, but NLopt is not
+                currently installed.
             ValueError: The selected optimizer is not yet supported.
-            Exception: The specified generator type for the OpenMDAO design of experiments is unsupported.
+            Exception: The specified generator type for the OpenMDAO design of experiments is
+                unsupported.
 
         Returns:
-            opt_prob (openmdao problem instance): openmdao problem class instance, edited from input with desired driver and driver options
+            opt_prob (openmdao problem instance): openmdao problem class instance, edited from input
+                with desired driver and driver options
         """
 
         folder_output = Path(
             self.config.greenheart_config["opt_options"]["general"]["folder_output"]
         ).resolve()
 
-        if self.config.greenheart_config["opt_options"]["driver"]["optimization"][
-            "flag"
-        ]:
-            opt_options = self.config.greenheart_config["opt_options"]["driver"][
-                "optimization"
-            ]
+        if self.config.greenheart_config["opt_options"]["driver"]["optimization"]["flag"]:
+            opt_options = self.config.greenheart_config["opt_options"]["driver"]["optimization"]
             step_size = self._get_step_size()
 
             if "step_calc" in opt_options.keys():
@@ -228,23 +227,26 @@ class PoseOptimization:
             elif opt_options["solver"] in self.pyoptsparse_methods:
                 try:
                     from openmdao.api import pyOptSparseDriver
-                except:
-                    raise ImportError(
-                        f"You requested the optimization solver {opt_options['solver']}, but you have not installed pyOptSparse. Please do so and rerun."
+                except ModuleNotFoundError:
+                    msg = (
+                        f"You requested the optimization solver {opt_options['solver']}, but you"
+                        f" have not installed pyOptSparse. Please do so and rerun."
                     )
-                opt_prob.driver = pyOptSparseDriver(
-                    gradient_method=opt_options["gradient_method"]
-                )
+                    raise ImportError(msg) from None
+                opt_prob.driver = pyOptSparseDriver(gradient_method=opt_options["gradient_method"])
 
                 try:
                     opt_prob.driver.options["optimizer"] = opt_options["solver"]
-                except:
-                    raise ImportError(
-                        f"You requested the optimization solver {opt_options['solver']}, but you have not installed it within pyOptSparse. Please build {opt_options['solver']} and rerun."
+                except ModuleNotFoundError:
+                    msg = (
+                        f"You requested the optimization solver {opt_options['solver']}, but you"
+                        f" have not installed it within pyOptSparse. Please build"
+                        f" {opt_options['solver']} and rerun."
                     )
+                    raise ImportError(msg) from None
 
-                # Most of the pyOptSparse options have special syntax when setting them,
-                # so here we set them by hand instead of using `_set_optimizer_properties` for SNOPT and CONMIN.
+                # Most of the pyOptSparse options have special syntax when setting them, so here we
+                # set them by hand instead of using `_set_optimizer_properties` for SNOPT and CONMIN
                 if opt_options["solver"] == "CONMIN":
                     opt_prob.driver.opt_settings["ITMAX"] = opt_options["max_iter"]
 
@@ -280,9 +282,7 @@ class PoseOptimization:
                         opt_options["tol"]
                     )
                     if "time_limit" in opt_options:
-                        opt_prob.driver.opt_settings["Time limit"] = int(
-                            opt_options["time_limit"]
-                        )
+                        opt_prob.driver.opt_settings["Time limit"] = int(opt_options["time_limit"])
                     opt_prob.driver.opt_settings["Summary file"] = (
                         folder_output / "SNOPT_Summary_file.txt"
                     )
@@ -292,9 +292,7 @@ class PoseOptimization:
                     if "hist_file_name" in opt_options:
                         opt_prob.driver.hist_file = opt_options["hist_file_name"]
                     if "verify_level" in opt_options:
-                        opt_prob.driver.opt_settings["Verify level"] = opt_options[
-                            "verify_level"
-                        ]
+                        opt_prob.driver.opt_settings["Verify level"] = opt_options["verify_level"]
                     else:
                         opt_prob.driver.opt_settings["Verify level"] = -1
                 if "hotstart_file" in opt_options:
@@ -322,9 +320,12 @@ class PoseOptimization:
                 opt_prob = self._set_optimizer_properties(opt_prob, options_keys)
 
             else:
-                raise ValueError(
-                    f"The {self.config.greenheart_config['opt_options']['driver']['optimization']['solver']} optimizer is not yet supported!"
+                msg = (
+                    f"The"
+                    f" {self.config.greenheart_config['opt_options']['driver']['optimization']['solver']}"  # noqa: E501
+                    f" optimizer is not yet supported!"
                 )
+                raise ValueError(msg)
 
             if opt_options["debug_print"]:
                 opt_prob.driver.options["debug_print"] = [
@@ -335,9 +336,9 @@ class PoseOptimization:
                     "totals",
                 ]
 
-        elif self.config.greenheart_config["opt_options"]["driver"][
-            "design_of_experiments"
-        ]["flag"]:
+        elif self.config.greenheart_config["opt_options"]["driver"]["design_of_experiments"][
+            "flag"
+        ]:
             doe_options = self.config.greenheart_config["opt_options"]["driver"][
                 "design_of_experiments"
             ]
@@ -360,9 +361,7 @@ class PoseOptimization:
                 )
             else:
                 raise Exception(
-                    "The generator type {} is unsupported.".format(
-                        doe_options["generator"]
-                    )
+                    "The generator type {} is unsupported.".format(doe_options["generator"])
                 )
 
             # Initialize driver
@@ -379,18 +378,16 @@ class PoseOptimization:
             # options
             opt_prob.driver.options["run_parallel"] = doe_options["run_parallel"]
 
-        elif self.config.greenheart_config["opt_options"]["driver"]["step_size_study"][
-            "flag"
-        ]:
+        elif self.config.greenheart_config["opt_options"]["driver"]["step_size_study"]["flag"]:
             pass
 
         else:
-            print(
-                "WARNING: Design variables are set to be optimized or studied, but no driver is selected."
-            )
-            print(
+            msg = (
+                "WARNING: Design variables are set to be optimized or studied, but no driver is"
+                " selected.\n"
                 "         If you want to run an optimization, please enable a driver."
             )
+            print(msg)
 
         return opt_prob
 
@@ -398,33 +395,24 @@ class PoseOptimization:
         """Set merit figure. Each objective has its own scaling.  Check first for user override
 
         Args:
-            opt_prob (openmdao problem instance): openmdao problem instance for current optimization problem
+            opt_prob (openmdao problem instance): openmdao problem instance for current optimization
+                problem
 
         Returns:
-            opt_prob (openmdao problem instance): openmdao problem instance for current optimization problem with objective set
+            opt_prob (openmdao problem instance): openmdao problem instance for current optimization
+                problem with objective set
         """
         #
-        if (
-            self.config.greenheart_config["opt_options"]["merit_figure_user"]["name"]
-            != ""
-        ):
+        if self.config.greenheart_config["opt_options"]["merit_figure_user"]["name"] != "":
             coeff = (
                 -1.0
-                if self.config.greenheart_config["opt_options"]["merit_figure_user"][
-                    "max_flag"
-                ]
+                if self.config.greenheart_config["opt_options"]["merit_figure_user"]["max_flag"]
                 else 1.0
             )
             opt_prob.model.add_objective(
-                self.config.greenheart_config["opt_options"]["merit_figure_user"][
-                    "name"
-                ],
+                self.config.greenheart_config["opt_options"]["merit_figure_user"]["name"],
                 ref=coeff
-                * np.abs(
-                    self.config.greenheart_config["opt_options"]["merit_figure_user"][
-                        "ref"
-                    ]
-                ),
+                * np.abs(self.config.greenheart_config["opt_options"]["merit_figure_user"]["ref"]),
             )
 
         return opt_prob
@@ -433,21 +421,20 @@ class PoseOptimization:
         """Set optimization design variables.
 
         Args:
-            opt_prob (openmdao problem instance): openmdao problem instance for current optimization problem
-            config (GreenHeartSimulationConfig): data class containing modeling, simulation, and optimization settings
+            opt_prob (openmdao problem instance): openmdao problem instance for current optimization
+                problem
+            config (GreenHeartSimulationConfig): data class containing modeling, simulation, and
+                optimization settings
             hi (HoppInterface): Main HOPP class
 
         Returns:
-            opt_prob (openmdao problem instance): openmdao problem instance for current optimization problem with design variables set
+            opt_prob (openmdao problem instance): openmdao problem instance for current optimization
+                problem with design variables set
         """
 
         design_variables_dict = {}
-        for key in self.config.greenheart_config["opt_options"][
-            "design_variables"
-        ].keys():
-            if self.config.greenheart_config["opt_options"]["design_variables"][key][
-                "flag"
-            ]:
+        for key in self.config.greenheart_config["opt_options"]["design_variables"].keys():
+            if self.config.greenheart_config["opt_options"]["design_variables"][key]["flag"]:
                 design_variables_dict[key] = config.greenheart_config["opt_options"][
                     "design_variables"
                 ][key]
@@ -455,9 +442,7 @@ class PoseOptimization:
         print("ADDING DESIGN VARIABLES:")
         for dv, d in design_variables_dict.items():
             print(f"   {dv}")
-            opt_prob.model.add_design_var(
-                dv, lower=d["lower"], upper=d["upper"], units=d["units"]
-            )
+            opt_prob.model.add_design_var(dv, lower=d["lower"], upper=d["upper"], units=d["units"])
 
         return opt_prob
 
@@ -465,14 +450,18 @@ class PoseOptimization:
         """sets up optimization constraints for the greenheart optimization problem
 
         Args:
-            opt_prob (openmdao problem instance): openmdao problem instance for current optimization problem
-            hi (Optional[Union[None, HoppInterface]], optional): Accepts an instance of the HoppInterface class (required when x and y are design variables). Defaults to None.
+            opt_prob (openmdao problem instance): openmdao problem instance for current optimization
+                problem
+            hi (Optional[Union[None, HoppInterface]], optional): Accepts an instance of the
+                HoppInterface class (required when x and y are design variables). Defaults to None.
 
         Raises:
-            Exception: all design variables must have at least one of an upper and lower bound specified
+            Exception: all design variables must have at least one of an upper and lower bound
+                specified
 
         Returns:
-            opt_prob (openmdao problem instance): openmdao problem instance for current optimization problem edited to include constraint setup
+            opt_prob (openmdao problem instance): openmdao problem instance for current optimization
+                problem edited to include constraint setup
         """
 
         if (hi is not None) and (
@@ -482,20 +471,19 @@ class PoseOptimization:
             turbine_y_init = hi.system.wind.config.floris_config["farm"]["layout_y"]
         else:
             # randomly generate initial turbine locations if not provided
-            turbine_x_init = 1e3 * np.random.rand(
+            rng = np.random.default_rng()
+            turbine_x_init = 1e3 * rng.random(
                 self.config.hopp_config["technologies"]["wind"]["num_turbines"]
             )
-            turbine_y_init = 1e3 * np.random.rand(
+            turbine_y_init = 1e3 * rng.random(
                 self.config.hopp_config["technologies"]["wind"]["num_turbines"]
             )
 
         # turbine spacing constraint
-        if self.config.greenheart_config["opt_options"]["constraints"][
-            "turbine_spacing"
-        ]["flag"]:
-            lower = self.config.greenheart_config["opt_options"]["constraints"][
-                "turbine_spacing"
-            ]["lower"]
+        if self.config.greenheart_config["opt_options"]["constraints"]["turbine_spacing"]["flag"]:
+            lower = self.config.greenheart_config["opt_options"]["constraints"]["turbine_spacing"][
+                "lower"
+            ]
 
             opt_prob.model.add_subsystem(
                 "con_spacing",
@@ -507,9 +495,7 @@ class PoseOptimization:
             opt_prob.model.add_constraint("spacing_vec", lower=lower)
 
         # bondary distance constraint
-        if self.config.greenheart_config["opt_options"]["constraints"][
-            "boundary_distance"
-        ]["flag"]:
+        if self.config.greenheart_config["opt_options"]["constraints"]["boundary_distance"]["flag"]:
             lower = self.config.greenheart_config["opt_options"]["constraints"][
                 "boundary_distance"
             ]["lower"]
@@ -525,9 +511,9 @@ class PoseOptimization:
             opt_prob.model.add_constraint("boundary_distance_vec", lower=lower)
 
         # solar/platform size
-        if self.config.greenheart_config["opt_options"]["constraints"][
-            "pv_to_platform_area_ratio"
-        ]["flag"]:
+        if self.config.greenheart_config["opt_options"]["constraints"]["pv_to_platform_area_ratio"][
+            "flag"
+        ]:
             upper = self.config.greenheart_config["opt_options"]["constraints"][
                 "pv_to_platform_area_ratio"
             ]["upper"]
@@ -539,9 +525,7 @@ class PoseOptimization:
             opt_prob.model.add_constraint("pv_platform_ratio", upper=upper)
 
         # User constraints
-        user_constr = self.config.greenheart_config["opt_options"]["constraints"][
-            "user"
-        ]
+        user_constr = self.config.greenheart_config["opt_options"]["constraints"]["user"]
         for k in range(len(user_constr)):
             var_k = user_constr[k]["name"]
 
@@ -565,13 +549,9 @@ class PoseOptimization:
                 idx_k = None
 
             if lower_k is None and upper_k is None:
-                raise Exception(
-                    f"Must include a lower_bound and/or an upper bound for {var_k}"
-                )
+                raise Exception(f"Must include a lower_bound and/or an upper bound for {var_k}")
 
-            opt_prob.model.add_constraint(
-                var_k, lower=lower_k, upper=upper_k, indices=idx_k
-            )
+            opt_prob.model.add_constraint(var_k, lower=lower_k, upper=upper_k, indices=idx_k)
 
         return opt_prob
 
@@ -579,10 +559,12 @@ class PoseOptimization:
         """sets up a recorder for the openmdao problem as desired in the input yaml
 
         Args:
-            opt_prob (openmdao problem instance): openmdao problem instance for current optimization problem
+            opt_prob (openmdao problem instance): openmdao problem instance for current optimization
+                problem
 
         Returns:
-            opt_prob (openmdao problem instance): openmdao problem instance for current optimization problem edited to include a set up recorder
+            opt_prob (openmdao problem instance): openmdao problem instance for current
+                optimization problem edited to include a set up recorder
         """
         folder_output = Path(
             self.config.greenheart_config["opt_options"]["general"]["folder_output"]
@@ -604,9 +586,9 @@ class PoseOptimization:
             opt_prob.driver.recording_options["record_objectives"] = True
 
             if self.config.greenheart_config["opt_options"]["recorder"]["includes"]:
-                opt_prob.driver.recording_options["includes"] = (
-                    self.config.greenheart_config["opt_options"]["recorder"]["includes"]
-                )
+                opt_prob.driver.recording_options["includes"] = self.config.greenheart_config[
+                    "opt_options"
+                ]["recorder"]["includes"]
 
         return opt_prob
 
@@ -614,13 +596,16 @@ class PoseOptimization:
         return opt_prob
 
     def set_restart(self, opt_prob):
-        """prepares to restart from last recorded iteration if the original problem was set up for warm start
+        """prepares to restart from last recorded iteration if the original problem was set up for
+        warm start
 
         Args:
-            opt_prob (openmdao problem instance): openmdao problem instance for current optimization problem
+            opt_prob (openmdao problem instance): openmdao problem instance for current optimization
+                problem
 
         Returns:
-            opt_prob (openmdao problem instance): openmdao problem instance for current optimization problem set up for warm start
+            opt_prob (openmdao problem instance): openmdao problem instance for current optimization
+                problem set up for warm start
         """
 
         if (

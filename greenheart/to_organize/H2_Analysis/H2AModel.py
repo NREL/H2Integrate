@@ -15,7 +15,7 @@ def H2AModel(
     forced_electrolyzer_cost_kw=200,
     useful_life=30,
 ):
-    # ---------------------------------------------------H2A PROCESS FLOW----------------------------------------------------------#
+    # ---------------------------------------------------H2A PROCESS FLOW--------------------------#
 
     current_density = 2  # A/cm^2
     voltage = 1.9  # V/cell
@@ -29,11 +29,7 @@ def H2AModel(
     )  # kgH2/day
 
     math.ceil(
-        (avg_daily_H2_production / 2.02 * 1000 / 24 / 3600)
-        * 2
-        * 96485
-        / current_density
-        / (100**2)
+        (avg_daily_H2_production / 2.02 * 1000 / 24 / 3600) * 2 * 96485 / current_density / (100**2)
     )  # m^2
     total_active_area_degraded = math.ceil(
         (peak_daily_production_rate / 2.02 * 1000 / 24 / 3600)
@@ -55,21 +51,14 @@ def H2AModel(
         total_system_input = (
             total_system_electrical_usage / 24 * peak_daily_production_rate / 1000
         )  # MW
-        stack_input_power = (
-            stack_electrical_usage / 24 * peak_daily_production_rate / 1000
-        )  # MW
-
+        stack_input_power = stack_electrical_usage / 24 * peak_daily_production_rate / 1000  # MW
 
     system_unit_cost = forced_electrolyzer_cost_kw  # 1.3 * 300/342 # $/cm^2
     stack_system_cost = system_unit_cost / (current_density * voltage) * 1000  # $/kW
     mechanical_BoP_unit_cost = 76  # kWhH2/day
-    mechanical_BoP_cost = (
-        76 * peak_daily_production_rate / stack_input_power / 1000
-    )  # $/kW
+    mechanical_BoP_cost = 76 * peak_daily_production_rate / stack_input_power / 1000  # $/kW
     electrical_BoP_cost = 82  # $/kW
-    total_system_cost_perkW = (
-        stack_system_cost + mechanical_BoP_cost + electrical_BoP_cost
-    )  # $/kW
+    total_system_cost_perkW = stack_system_cost + mechanical_BoP_cost + electrical_BoP_cost  # $/kW
     total_system_cost_perkW = total_system_cost_perkW
     if force_electrolyzer_cost:
         forced_electrolyzer_cost_kw * stack_input_power * 1000
@@ -77,7 +66,7 @@ def H2AModel(
     else:
         total_system_cost_perkW * stack_input_power * 1000  # $
 
-    # -------------------------------------------------CAPITAL COST--------------------------------------------------------------#
+    # -------------------------------------------------CAPITAL COST--------------------------------#
 
     gdpdef = {
         "Year": [2015, 2016, 2017, 2018, 2019, 2020],
@@ -98,9 +87,7 @@ def H2AModel(
     ) / int((CEPCI.loc[CEPCI["Year"] == basis_year_for_capital_cost, "CEPCI"]).iloc[0])
     consumer_price_inflator = int(
         (CPI.loc[CPI["Year"] == current_year_for_capital_cost, "PCI"]).iloc[0]
-    ) / int(
-        (CPI.loc[CPI["Year"] == basis_year_for_capital_cost, "PCI"]).iloc[0]
-    )  # lookup
+    ) / int((CPI.loc[CPI["Year"] == basis_year_for_capital_cost, "PCI"]).iloc[0])  # lookup
 
     # --------------------------CAPITAL INVESTMENT---------------------------------#
     # ----Inputs required in basis year (2016$)----#
@@ -129,11 +116,7 @@ def H2AModel(
     )
 
     baseline_uninstalled_electrical_BoP_cost = (
-        CEPCI_inflator
-        * consumer_price_inflator
-        * electrical_BoP_cost
-        * stack_input_power
-        * 1000
+        CEPCI_inflator * consumer_price_inflator * electrical_BoP_cost * stack_input_power * 1000
     )  # ($2016)
     electrical_BoP_installation_factor = 1.12
     baseline_installed_electrical_BoP_cost = (
@@ -146,43 +129,37 @@ def H2AModel(
         + baseline_installed_electrical_BoP_cost
     )
 
-    # ------------------------------------------------PLANT SCALING-------------------------------------------------------------------#
+    # ------------------------------------------------PLANT SCALING--------------------------------#
 
     default_scaling_factor_exponent = 1  # discrepancy
 
     scaled_uninstalled_stack_capital_cost = (
         baseline_uninstalled_stack_capital_cost**default_scaling_factor_exponent
     )
-    (
-        scaled_uninstalled_stack_capital_cost * stack_installation_factor
-    )
+    (scaled_uninstalled_stack_capital_cost * stack_installation_factor)
 
     scaled_uninstalled_mechanical_BoP_cost = (
         baseline_uninstalled_mechanical_BoP_cost**default_scaling_factor_exponent
     )
-    (
-        scaled_uninstalled_mechanical_BoP_cost * mechanical_BoP_installation_factor
-    )
+    (scaled_uninstalled_mechanical_BoP_cost * mechanical_BoP_installation_factor)
 
     scaled_uninstalled_electrical_BoP_cost = (
         baseline_uninstalled_electrical_BoP_cost**default_scaling_factor_exponent
     )
-    (
-        scaled_uninstalled_electrical_BoP_cost * electrical_BoP_installation_factor
-    )
+    (scaled_uninstalled_electrical_BoP_cost * electrical_BoP_installation_factor)
 
     # TODO: Rectify this calculation. This is a shortcut that is pretty SUS.
     scaled_total_installed_cost = (
         forced_electrolyzer_cost_kw * stack_input_power * 1000
-    )  # scaled_installed_stack_capital_cost + scaled_installed_mechanical_BoP_cost + scaled_installed_electrical_BoP_cost
+    )  # scaled_installed_stack_capital_cost + scaled_installed_mechanical_BoP_cost + scaled_installed_electrical_BoP_cost  # noqa: E501
 
-    # -------------------------------------------------------H2A INPUT-------------------------------------------------------------#
+    # -------------------------------------------------------H2A INPUT-----------------------------#
 
-    # --------------------------TECHNICAL OPERATING PARAMETERS AND SPECIFICATIONS---------------------------#
+    # --------------------------TECHNICAL OPERATING PARAMETERS AND SPECIFICATIONS------------------#
 
     plant_annual_output = hydrogen_annual_output  # kg/year
 
-    # -----------------------------------FINANCIAL INPUT VALUES---------------------------------------------#
+    # -----------------------------------FINANCIAL INPUT VALUES------------------------------------#
 
     reference_year = 2016
     assumed_startup_year = 2015
@@ -210,8 +187,7 @@ def H2AModel(
     unplanned_replacement_cost_factor = 0.005
     tax_credit = 0
 
-    # ------------------------Energy Feedstock, Ulilities, and Byproducts---------------------------------------#
-
+    # ------------------------Energy Feedstock, Ulilities, and Byproducts--------------------------#
 
     # Add Feedstock Info
     feedstock_price_in_startup_year = 0  # ($2016)/kWh (LookUp)
@@ -249,7 +225,7 @@ def H2AModel(
         byproduct_income_in_startup_year  # Add all byproduct credits in startup year
     )
 
-    # --------------------------------------Capital Costs--------------------------------------------------------#
+    # --------------------------------------Capital Costs------------------------------------------#
 
     H2A_total_direct_capital_cost = int(scaled_total_installed_cost)
     cost_scaling_factor = 1  # combined plant scaling and escalation factor
@@ -298,7 +274,7 @@ def H2AModel(
 
     total_capital_costs = total_depreciable_costs + total_nondepreciable_costs
 
-    # --------------------------------------Fixed Operating Costs------------------------------------------------#
+    # --------------------------------------Fixed Operating Costs----------------------------------#
     total_plant_staff = 10  # number of FTEs employed by plant
     burdened_labor_cost = 50  # including overhead ($/man-hr)
     labor_cost = total_plant_staff * burdened_labor_cost * 2080  # ($2016)/year
@@ -307,14 +283,10 @@ def H2AModel(
     GA_cost = labor_cost * (GA_rate / 100)  # $/year
     licensing_permits_fees = 0  # $/year
     propertytax_insurancerate = 2  # percent of total capital investment per year
-    propertytax_insurancecost = total_capital_costs * (
-        propertytax_insurancerate / 100
-    )  # $/year
+    propertytax_insurancecost = total_capital_costs * (propertytax_insurancerate / 100)  # $/year
     rent = 0  # $/year
     material_costs_for_maintenance = (
-        0.03
-        * H2A_total_direct_capital_cost
-        / (CEPCI_inflator * consumer_price_inflator)
+        0.03 * H2A_total_direct_capital_cost / (CEPCI_inflator * consumer_price_inflator)
     )
     production_maintenance_and_repairs = 0  # $/year
     other_fees = 0  # $/year
@@ -332,7 +304,7 @@ def H2AModel(
         + other_fixed_OM_costs
     )
 
-    # --------------------------------------Variable Operating Costs----------------------------------------------#
+    # --------------------------------------Variable Operating Costs-------------------------------#
 
     # ------------------Other Material and Byproduct---------------------#
 
@@ -377,20 +349,18 @@ def H2AModel(
         + total_unplanned_replacement_capital_cost
     )  # ($2016)/year
 
-    # ---------------------------------------------------RESULTS----------------------------------------------------------#
+    # ---------------------------------------------------RESULTS-----------------------------------#
 
-    # --------------------------------------Hydorgen Energy Constants----------------------------------------------#
+    # --------------------------------------Hydorgen Energy Constants------------------------------#
 
     H2_LHV_MJkg = 120.21  # MJ/kg
     mmBTU_to_GJ = 1.055
 
-    # --------------------------------------DCF Calculation Inputs----------------------------------------------#
+    # --------------------------------------DCF Calculation Inputs---------------------------------#
 
     # PROCESS
     actual_hydrogen_produced = plant_annual_output  # kg/yr
-    (
-        actual_hydrogen_produced * H2_LHV_MJkg / 1000 / mmBTU_to_GJ
-    )  # MMBtu(LHV)/yr
+    (actual_hydrogen_produced * H2_LHV_MJkg / 1000 / mmBTU_to_GJ)  # MMBtu(LHV)/yr
     actual_hydrogen_produced * H2_LHV_MJkg
 
     # Additional FINANCIALS
@@ -401,15 +371,13 @@ def H2AModel(
     ) * inflation_factor
     decom = decom_pct * total_depreciable_costs * inflation_factor
     salvage_value = (
-        salvage_pct
-        * inflation_factor
-        * (total_depreciable_costs + total_nondepreciable_costs)
+        salvage_pct * inflation_factor * (total_depreciable_costs + total_nondepreciable_costs)
     )
     inflated_other_rawmaterial = 0
     inflated_othervar = 0
     H2_price_nominal = 4.74027691  # not included
 
-    # --------------------------------------DCF Calculation OUTPUT----------------------------------------------
+    # --------------------------------------DCF Calculation OUTPUT----------------------------------
 
     Initial_Data = {
         "Year": np.arange(
@@ -432,9 +400,7 @@ def H2AModel(
         * plant_annual_output
         * percent_revenue_during_startup
     )
-    df["Revenue from Hydrogen Sales"][
-        (df["Analysis Year"] == 1) & (startup_time < 1)
-    ] = (
+    df["Revenue from Hydrogen Sales"][(df["Analysis Year"] == 1) & (startup_time < 1)] = (
         df["Inflation Price Increase Factor"]
         * H2_price_nominal
         * plant_annual_output
@@ -486,9 +452,7 @@ def H2AModel(
 
     df["Other Non-Depreciable Capital Cost"] = 0
     df["Other Non-Depreciable Capital Cost"][df["Analysis Year"] == 0] = (
-        -total_nondepreciable_costs
-        * df["Inflation Price Increase Factor"]
-        * inflation_factor
+        -total_nondepreciable_costs * df["Inflation Price Increase Factor"] * inflation_factor
     )
 
     df["Salvage Value"] = 0
@@ -545,9 +509,7 @@ def H2AModel(
         * df["Inflation Price Increase Factor"]
         * startup_time
         * percent_variable_operating_cost_during_startup
-        + inflated_other_rawmaterial
-        * df["Inflation Price Increase Factor"]
-        * (1 - startup_time)
+        + inflated_other_rawmaterial * df["Inflation Price Increase Factor"] * (1 - startup_time)
     )
     df["Other Raw Material Cost"][df["Analysis Year"] <= startup_time] = (
         -inflated_other_rawmaterial
@@ -559,9 +521,7 @@ def H2AModel(
     )
 
     df["Revenue from Byproduct Sales"] = 0
-    df["Revenue from Byproduct Sales"][
-        (df["Analysis Year"] == 1) & (startup_time < 1)
-    ] = (
+    df["Revenue from Byproduct Sales"][(df["Analysis Year"] == 1) & (startup_time < 1)] = (
         total_byproduct_unitprice
         * plant_annual_output
         * df["Inflation Price Increase Factor"]
@@ -579,9 +539,7 @@ def H2AModel(
         * percent_variable_operating_cost_during_startup
     )
     df["Revenue from Byproduct Sales"][df["Analysis Year"] >= 1] = (
-        total_byproduct_unitprice
-        * plant_annual_output
-        * df["Inflation Price Increase Factor"]
+        total_byproduct_unitprice * plant_annual_output * df["Inflation Price Increase Factor"]
     )
 
     Process_Water_Data = {
@@ -590,15 +548,13 @@ def H2AModel(
     }
     Process_Water_Price = pd.DataFrame(data=Process_Water_Data)
     Process_Water_Price["Unit Cost"] = (
-        inflation_factor
-        * water_usage_per_kgH2
-        * Process_Water_Price["Price ($(2016)/gal)"]
+        inflation_factor * water_usage_per_kgH2 * Process_Water_Price["Price ($(2016)/gal)"]
     )
     Process_Water_Price = Process_Water_Price[
         (Process_Water_Price.Year >= assumed_startup_year - 1)
         & (Process_Water_Price.Year < assumed_startup_year + analysis_period)
     ]
-    Process_Water_Price.reset_index(drop=True, inplace=True)
+    Process_Water_Price = Process_Water_Price.reset_index(drop=True)
 
     Industrial_Electricity_Data = {
         "Year": np.arange(2014, 2061),
@@ -666,17 +622,12 @@ def H2AModel(
         (Industrial_Electricity_Price.Year >= assumed_startup_year - 1)
         & (Industrial_Electricity_Price.Year < assumed_startup_year + analysis_period)
     ]
-    Industrial_Electricity_Price.reset_index(drop=True, inplace=True)
+    Industrial_Electricity_Price = Industrial_Electricity_Price.reset_index(drop=True)
 
     df["Other Variable Operating Costs"] = 0
-    df["Other Variable Operating Costs"][
-        (df["Analysis Year"] == 1) & (startup_time < 1)
-    ] = -(
+    df["Other Variable Operating Costs"][(df["Analysis Year"] == 1) & (startup_time < 1)] = -(
         (
-            (
-                Industrial_Electricity_Price["Unit Cost"]
-                + Process_Water_Price["Unit Cost"]
-            )
+            (Industrial_Electricity_Price["Unit Cost"] + Process_Water_Price["Unit Cost"])
             * plant_annual_output
             + inflated_othervar
         )
@@ -684,10 +635,7 @@ def H2AModel(
         * startup_time
         * percent_variable_operating_cost_during_startup
         + (
-            (
-                Industrial_Electricity_Price["Unit Cost"]
-                + Process_Water_Price["Unit Cost"]
-            )
+            (Industrial_Electricity_Price["Unit Cost"] + Process_Water_Price["Unit Cost"])
             * plant_annual_output
             + inflated_othervar
         )
@@ -696,10 +644,7 @@ def H2AModel(
     )
     df["Other Variable Operating Costs"][df["Analysis Year"] <= startup_time] = (
         -(
-            (
-                Industrial_Electricity_Price["Unit Cost"]
-                + Process_Water_Price["Unit Cost"]
-            )
+            (Industrial_Electricity_Price["Unit Cost"] + Process_Water_Price["Unit Cost"])
             * plant_annual_output
             + inflated_othervar
         )
@@ -716,8 +661,7 @@ def H2AModel(
     df["Other Variable Operating Costs"][df["Analysis Year"] == 0] = 0
 
     df["Working Capital Reserve"] = 0
-    i = 1
-    for i in range(i, len(df) - 1):
+    for i in range(1, len(df) - 1):
         df.loc[i, "Working Capital Reserve"] = working_capital * (
             (
                 df.loc[i, "Fixed Operating Cost"]
@@ -760,7 +704,24 @@ def H2AModel(
     # FIVE_YEAR = [0.2, 0.32, 0.1920, 0.1152, 0.1152, 0.0576]
     # SEVEN_YEAR = [0.1429,0.2449, 0.1749, 0.1249, 0.0893, 0.0892, 0.0893, 0.0446]
     # TEN_YEAR = [0.1, 0.18, 0.144, 0.1152, 0.0922, 0.0737, 0.0655, 0.0655, 0.0656, 0.0655, 0.0328]
-    # FIFTHEEN_YEAR = [0.05, 0.095, 0.0855, 0.077, 0.0693, 0.0623, 0.059, 0.059, 0.0591, 0.059, 0.0591, 0.059, 0.0591, 0.059, 0.0591, 0.0295]
+    # FIFTHEEN_YEAR = [
+    #     0.05,
+    #     0.095,
+    #     0.0855,
+    #     0.077,
+    #     0.0693,
+    #     0.0623,
+    #     0.059,
+    #     0.059,
+    #     0.0591,
+    #     0.059,
+    #     0.0591,
+    #     0.059,
+    #     0.0591,
+    #     0.059,
+    #     0.0591,
+    #     0.0295,
+    # ]
     TWENTY_YEAR = [
         0.0375,
         0.07219,
@@ -815,9 +776,7 @@ def H2AModel(
         ],
     )
     Depreciation_Table["Annual Depreciable Capital"] = 0
-    Depreciation_Table["Annual Depreciable Capital"][
-        Depreciation_Table["Analysis Year"] == 1
-    ] = (
+    Depreciation_Table["Annual Depreciable Capital"][Depreciation_Table["Analysis Year"] == 1] = (
         -(
             df.loc[0, "Debt Financed Initial Depreciable Capital"]
             + df["Initial Equity Depreciable Capital"].sum()
@@ -922,25 +881,25 @@ def H2AModel(
         Depreciation_Table.loc[i, "Depreciation Charge"] = (
             Depreciation_Table.loc[i, "1"]
             + Depreciation_Table.loc[i - 1, "2"]
-            + Depreciation_Table.loc[(i - 2) if (i - 2) > 0 else 0, "3"]
-            + Depreciation_Table.loc[(i - 3) if (i - 3) > 0 else 0, "4"]
-            + Depreciation_Table.loc[(i - 4) if (i - 4) > 0 else 0, "5"]
-            + Depreciation_Table.loc[(i - 5) if (i - 5) > 0 else 0, "6"]
-            + Depreciation_Table.loc[(i - 6) if (i - 6) > 0 else 0, "7"]
-            + Depreciation_Table.loc[(i - 7) if (i - 7) > 0 else 0, "8"]
-            + Depreciation_Table.loc[(i - 8) if (i - 8) > 0 else 0, "9"]
-            + Depreciation_Table.loc[(i - 9) if (i - 9) > 0 else 0, "10"]
-            + Depreciation_Table.loc[(i - 10) if (i - 10) > 0 else 0, "11"]
-            + Depreciation_Table.loc[(i - 11) if (i - 11) > 0 else 0, "12"]
-            + Depreciation_Table.loc[(i - 12) if (i - 12) > 0 else 0, "13"]
-            + Depreciation_Table.loc[(i - 13) if (i - 13) > 0 else 0, "14"]
-            + Depreciation_Table.loc[(i - 14) if (i - 14) > 0 else 0, "15"]
-            + Depreciation_Table.loc[(i - 15) if (i - 15) > 0 else 0, "16"]
-            + Depreciation_Table.loc[(i - 16) if (i - 16) > 0 else 0, "17"]
-            + Depreciation_Table.loc[(i - 17) if (i - 17) > 0 else 0, "18"]
-            + Depreciation_Table.loc[(i - 18) if (i - 18) > 0 else 0, "19"]
-            + Depreciation_Table.loc[(i - 19) if (i - 19) > 0 else 0, "20"]
-            + Depreciation_Table.loc[(i - 20) if (i - 20) > 0 else 0, "21"]
+            + Depreciation_Table.loc[max(0, i - 2), "3"]
+            + Depreciation_Table.loc[max(0, i - 3), "4"]
+            + Depreciation_Table.loc[max(0, i - 4), "5"]
+            + Depreciation_Table.loc[max(0, i - 5), "6"]
+            + Depreciation_Table.loc[max(0, i - 6), "7"]
+            + Depreciation_Table.loc[max(0, i - 7), "8"]
+            + Depreciation_Table.loc[max(0, i - 8), "9"]
+            + Depreciation_Table.loc[max(0, i - 9), "10"]
+            + Depreciation_Table.loc[max(0, i - 10), "11"]
+            + Depreciation_Table.loc[max(0, i - 11), "12"]
+            + Depreciation_Table.loc[max(0, i - 12), "13"]
+            + Depreciation_Table.loc[max(0, i - 13), "14"]
+            + Depreciation_Table.loc[max(0, i - 14), "15"]
+            + Depreciation_Table.loc[max(0, i - 15), "16"]
+            + Depreciation_Table.loc[max(0, i - 16), "17"]
+            + Depreciation_Table.loc[max(0, i - 17), "18"]
+            + Depreciation_Table.loc[max(0, i - 18), "19"]
+            + Depreciation_Table.loc[max(0, i - 19), "20"]
+            + Depreciation_Table.loc[max(0, i - 20), "21"]
         )
 
     df["Depreciation Charge"] = 0
@@ -949,9 +908,7 @@ def H2AModel(
     ]
     df["Depreciation Charge"][df["Analysis Year"] == plant_life] = (
         -Depreciation_Table.loc[useful_life, "Depreciation Charge"]
-        - Depreciation_Table.loc[
-            useful_life + 1 : useful_life + 21, "Depreciation Charge"
-        ].sum()
+        - Depreciation_Table.loc[useful_life + 1 : useful_life + 21, "Depreciation Charge"].sum()
     )
 
     df["Taxable Income"] = 0
@@ -986,8 +943,7 @@ def H2AModel(
     df["Cumulative Cash Flow"][df["Analysis Year"] == 0] = df.loc[
         0, "After-Tax Post-Depreciation Cash Flow"
     ]
-    i = 1
-    for i in range(i, len(df)):
+    for i in range(1, len(df)):
         df.loc[i, "Cumulative Cash Flow"] = (
             df.loc[i, "After-Tax Post-Depreciation Cash Flow"]
             + df.loc[i - 1, "Cumulative Cash Flow"]
@@ -1024,9 +980,7 @@ def H2AModel(
     )
     df.loc["Discounted Values", "Revenue from Hydrogen Sales"] = (
         df["Revenue from Hydrogen Sales"].tolist()
-    )[0] + npv(
-        nominal_IRR, (df["Revenue from Hydrogen Sales"].tolist())[1 : useful_life + 1]
-    )
+    )[0] + npv(nominal_IRR, (df["Revenue from Hydrogen Sales"].tolist())[1 : useful_life + 1])
 
     df.loc["NPV of Cashflow", "Debt Financed Initial Depreciable Capital"] = npv(
         nominal_IRR,
@@ -1055,18 +1009,14 @@ def H2AModel(
     )
     df.loc["Discounted Values", "Yearly Replacement Cost"] = (
         df["Yearly Replacement Cost"].tolist()
-    )[0] + npv(
-        nominal_IRR, (df["Yearly Replacement Cost"].tolist())[1 : useful_life + 1]
-    )
+    )[0] + npv(nominal_IRR, (df["Yearly Replacement Cost"].tolist())[1 : useful_life + 1])
 
     df.loc["NPV of Cashflow", "Working Capital Reserve"] = npv(
         nominal_IRR, (df["Working Capital Reserve"].tolist())[: useful_life + 1]
     )
     df.loc["Discounted Values", "Working Capital Reserve"] = (
         df["Working Capital Reserve"].tolist()
-    )[0] + npv(
-        nominal_IRR, (df["Working Capital Reserve"].tolist())[1 : useful_life + 1]
-    )
+    )[0] + npv(nominal_IRR, (df["Working Capital Reserve"].tolist())[1 : useful_life + 1])
 
     df.loc["NPV of Cashflow", "Other Non-Depreciable Capital Cost"] = npv(
         nominal_IRR,
@@ -1082,48 +1032,44 @@ def H2AModel(
     df.loc["NPV of Cashflow", "Salvage Value"] = npv(
         nominal_IRR, (df["Salvage Value"].tolist())[: useful_life + 1]
     )
-    df.loc["Discounted Values", "Salvage Value"] = (df["Salvage Value"].tolist())[
-        0
-    ] + npv(nominal_IRR, (df["Salvage Value"].tolist())[1 : useful_life + 1])
+    df.loc["Discounted Values", "Salvage Value"] = (df["Salvage Value"].tolist())[0] + npv(
+        nominal_IRR, (df["Salvage Value"].tolist())[1 : useful_life + 1]
+    )
 
     df.loc["NPV of Cashflow", "Decommissioning Costs"] = npv(
         nominal_IRR, (df["Decommissioning Costs"].tolist())[: useful_life + 1]
     )
-    df.loc["Discounted Values", "Decommissioning Costs"] = (
-        df["Decommissioning Costs"].tolist()
-    )[0] + npv(nominal_IRR, (df["Decommissioning Costs"].tolist())[1 : useful_life + 1])
+    df.loc["Discounted Values", "Decommissioning Costs"] = (df["Decommissioning Costs"].tolist())[
+        0
+    ] + npv(nominal_IRR, (df["Decommissioning Costs"].tolist())[1 : useful_life + 1])
 
     df.loc["NPV of Cashflow", "Fixed Operating Cost"] = npv(
         nominal_IRR, (df["Fixed Operating Cost"].tolist())[: useful_life + 1]
     )
-    df.loc["Discounted Values", "Fixed Operating Cost"] = (
-        df["Fixed Operating Cost"].tolist()
-    )[0] + npv(nominal_IRR, (df["Fixed Operating Cost"].tolist())[1 : useful_life + 1])
+    df.loc["Discounted Values", "Fixed Operating Cost"] = (df["Fixed Operating Cost"].tolist())[
+        0
+    ] + npv(nominal_IRR, (df["Fixed Operating Cost"].tolist())[1 : useful_life + 1])
 
     df.loc["NPV of Cashflow", "Feedstock Cost"] = npv(
         nominal_IRR, (df["Feedstock Cost"].tolist())[: useful_life + 1]
     )
-    df.loc["Discounted Values", "Feedstock Cost"] = (df["Feedstock Cost"].tolist())[
-        0
-    ] + npv(nominal_IRR, (df["Feedstock Cost"].tolist())[1 : useful_life + 1])
+    df.loc["Discounted Values", "Feedstock Cost"] = (df["Feedstock Cost"].tolist())[0] + npv(
+        nominal_IRR, (df["Feedstock Cost"].tolist())[1 : useful_life + 1]
+    )
 
     df.loc["NPV of Cashflow", "Other Raw Material Cost"] = npv(
         nominal_IRR, (df["Other Raw Material Cost"].tolist())[: useful_life + 1]
     )
     df.loc["Discounted Values", "Other Raw Material Cost"] = (
         df["Other Raw Material Cost"].tolist()
-    )[0] + npv(
-        nominal_IRR, (df["Other Raw Material Cost"].tolist())[1 : useful_life + 1]
-    )
+    )[0] + npv(nominal_IRR, (df["Other Raw Material Cost"].tolist())[1 : useful_life + 1])
 
     df.loc["NPV of Cashflow", "Revenue from Byproduct Sales"] = npv(
         nominal_IRR, (df["Revenue from Byproduct Sales"].tolist())[: useful_life + 1]
     )
     df.loc["Discounted Values", "Revenue from Byproduct Sales"] = (
         df["Revenue from Byproduct Sales"].tolist()
-    )[0] + npv(
-        nominal_IRR, (df["Revenue from Byproduct Sales"].tolist())[1 : useful_life + 1]
-    )
+    )[0] + npv(nominal_IRR, (df["Revenue from Byproduct Sales"].tolist())[1 : useful_life + 1])
 
     df.loc["NPV of Cashflow", "Other Variable Operating Costs"] = npv(
         nominal_IRR, (df["Other Variable Operating Costs"].tolist())[: useful_life + 1]
@@ -1138,32 +1084,30 @@ def H2AModel(
     df.loc["NPV of Cashflow", "Debt Interest"] = npv(
         nominal_IRR, (df["Debt Interest"].tolist())[: useful_life + 1]
     )
-    df.loc["Discounted Values", "Debt Interest"] = (df["Debt Interest"].tolist())[
-        0
-    ] + npv(nominal_IRR, (df["Debt Interest"].tolist())[1 : useful_life + 1])
+    df.loc["Discounted Values", "Debt Interest"] = (df["Debt Interest"].tolist())[0] + npv(
+        nominal_IRR, (df["Debt Interest"].tolist())[1 : useful_life + 1]
+    )
 
     df.loc["NPV of Cashflow", "Pre-Depreciation Income"] = npv(
         nominal_IRR, (df["Pre-Depreciation Income"].tolist())[: useful_life + 1]
     )
     df.loc["Discounted Values", "Pre-Depreciation Income"] = (
         df["Pre-Depreciation Income"].tolist()
-    )[0] + npv(
-        nominal_IRR, (df["Pre-Depreciation Income"].tolist())[1 : useful_life + 1]
-    )
+    )[0] + npv(nominal_IRR, (df["Pre-Depreciation Income"].tolist())[1 : useful_life + 1])
 
     df.loc["NPV of Cashflow", "Depreciation Charge"] = npv(
         nominal_IRR, (df["Depreciation Charge"].tolist())[: useful_life + 1]
     )
-    df.loc["Discounted Values", "Depreciation Charge"] = (
-        df["Depreciation Charge"].tolist()
-    )[0] + npv(nominal_IRR, (df["Depreciation Charge"].tolist())[1 : useful_life + 1])
+    df.loc["Discounted Values", "Depreciation Charge"] = (df["Depreciation Charge"].tolist())[
+        0
+    ] + npv(nominal_IRR, (df["Depreciation Charge"].tolist())[1 : useful_life + 1])
 
     df.loc["NPV of Cashflow", "Taxable Income"] = npv(
         nominal_IRR, (df["Taxable Income"].tolist())[: useful_life + 1]
     )
-    df.loc["Discounted Values", "Taxable Income"] = (df["Taxable Income"].tolist())[
-        0
-    ] + npv(nominal_IRR, (df["Taxable Income"].tolist())[1 : useful_life + 1])
+    df.loc["Discounted Values", "Taxable Income"] = (df["Taxable Income"].tolist())[0] + npv(
+        nominal_IRR, (df["Taxable Income"].tolist())[1 : useful_life + 1]
+    )
 
     df.loc["NPV of Cashflow", "Total Taxes"] = npv(
         nominal_IRR, (df["Total Taxes"].tolist())[: useful_life + 1]
@@ -1175,16 +1119,16 @@ def H2AModel(
     df.loc["NPV of Cashflow", "After Income Tax"] = npv(
         nominal_IRR, (df["After Income Tax"].tolist())[: useful_life + 1]
     )
-    df.loc["Discounted Values", "After Income Tax"] = (df["After Income Tax"].tolist())[
-        0
-    ] + npv(nominal_IRR, (df["After Income Tax"].tolist())[1 : useful_life + 1])
+    df.loc["Discounted Values", "After Income Tax"] = (df["After Income Tax"].tolist())[0] + npv(
+        nominal_IRR, (df["After Income Tax"].tolist())[1 : useful_life + 1]
+    )
 
     df.loc["NPV of Cashflow", "Principal Payment"] = npv(
         nominal_IRR, (df["Principal Payment"].tolist())[: useful_life + 1]
     )
-    df.loc["Discounted Values", "Principal Payment"] = (
-        df["Principal Payment"].tolist()
-    )[0] + npv(nominal_IRR, (df["Principal Payment"].tolist())[1 : useful_life + 1])
+    df.loc["Discounted Values", "Principal Payment"] = (df["Principal Payment"].tolist())[0] + npv(
+        nominal_IRR, (df["Principal Payment"].tolist())[1 : useful_life + 1]
+    )
 
     df.loc["NPV of Cashflow", "After-Tax Post-Depreciation Cash Flow"] = npv(
         nominal_IRR,
@@ -1200,25 +1144,23 @@ def H2AModel(
     df.loc["NPV of Cashflow", "Cumulative Cash Flow"] = npv(
         nominal_IRR, (df["Cumulative Cash Flow"].tolist())[: useful_life + 1]
     )
-    df.loc["Discounted Values", "Cumulative Cash Flow"] = (
-        df["Cumulative Cash Flow"].tolist()
-    )[0] + npv(nominal_IRR, (df["Cumulative Cash Flow"].tolist())[1 : useful_life + 1])
+    df.loc["Discounted Values", "Cumulative Cash Flow"] = (df["Cumulative Cash Flow"].tolist())[
+        0
+    ] + npv(nominal_IRR, (df["Cumulative Cash Flow"].tolist())[1 : useful_life + 1])
 
     df.loc["NPV of Cashflow", "Pre-Tax Cash Flow"] = npv(
         nominal_IRR, (df["Pre-Tax Cash Flow"].tolist())[: useful_life + 1]
     )
-    df.loc["Discounted Values", "Pre-Tax Cash Flow"] = (
-        df["Pre-Tax Cash Flow"].tolist()
-    )[0] + npv(nominal_IRR, (df["Pre-Tax Cash Flow"].tolist())[1 : useful_life + 1])
+    df.loc["Discounted Values", "Pre-Tax Cash Flow"] = (df["Pre-Tax Cash Flow"].tolist())[0] + npv(
+        nominal_IRR, (df["Pre-Tax Cash Flow"].tolist())[1 : useful_life + 1]
+    )
 
     df.loc["NPV of Cashflow", "H2 Sales (kg/year)"] = npv(
         nominal_IRR, (df["H2 Sales (kg/year)"].tolist())[: useful_life + 1]
     )
-    df.loc["Discounted Values", "H2 Sales (kg/year)"] = (
-        df["H2 Sales (kg/year)"].tolist()
-    )[0] + npv(
-        after_tax_real_IRR, (df["H2 Sales (kg/year)"].tolist())[1 : useful_life + 1]
-    )
+    df.loc["Discounted Values", "H2 Sales (kg/year)"] = (df["H2 Sales (kg/year)"].tolist())[
+        0
+    ] + npv(after_tax_real_IRR, (df["H2 Sales (kg/year)"].tolist())[1 : useful_life + 1])
 
     final_data = pd.DataFrame(
         columns=[
@@ -1309,9 +1251,7 @@ def H2AModel(
     )
     # print(Final_Hydrogen_Cost_Real)
 
-    Cost_Breakdown = pd.DataFrame(
-        columns=["After Tax Present Value", "% of Total", "$/kg of H2"]
-    )
+    Cost_Breakdown = pd.DataFrame(columns=["After Tax Present Value", "% of Total", "$/kg of H2"])
     Cost_Breakdown.loc["Capital Related Costs", "After Tax Present Value"] = -(
         (
             (
@@ -1342,17 +1282,14 @@ def H2AModel(
     Cost_Breakdown.loc["Byproduct Credits", "After Tax Present Value"] = df.loc[
         "NPV of Cashflow", "Revenue from Byproduct Sales"
     ]
-    Cost_Breakdown.loc[
-        "Other Variable Costs (Utilities)", "After Tax Present Value"
-    ] = -df.loc["NPV of Cashflow", "Other Variable Operating Costs"]
+    Cost_Breakdown.loc["Other Variable Costs (Utilities)", "After Tax Present Value"] = -df.loc[
+        "NPV of Cashflow", "Other Variable Operating Costs"
+    ]
 
     Cost_Breakdown["% of Total"] = (
-        Cost_Breakdown["After Tax Present Value"]
-        / Cost_Breakdown["After Tax Present Value"].sum()
+        Cost_Breakdown["After Tax Present Value"] / Cost_Breakdown["After Tax Present Value"].sum()
     ) * 100
-    Cost_Breakdown["$/kg of H2"] = (
-        Cost_Breakdown["% of Total"] / 100
-    ) * Final_Hydrogen_Cost_Real
+    Cost_Breakdown["$/kg of H2"] = (Cost_Breakdown["% of Total"] / 100) * Final_Hydrogen_Cost_Real
     Cost_Breakdown.loc["TOTAL"] = Cost_Breakdown.sum(axis=0)
 
     # Depreciation_Table.to_csv('Depreciation_Table.csv')
@@ -1361,13 +1298,9 @@ def H2AModel(
     # Cost_Breakdown.to_csv('Cost_Breakdown.csv')
 
     # print(Cost_Breakdown)
-    Cost_Breakdown.loc[
-        "Other Variable Costs (Utilities)", "$/kg of H2"
-    ]
-    results = dict()
-    results["Capital Related Costs"] = Cost_Breakdown.loc[
-        "Capital Related Costs", "$/kg of H2"
-    ]
+    Cost_Breakdown.loc["Other Variable Costs (Utilities)", "$/kg of H2"]
+    results = {}
+    results["Capital Related Costs"] = Cost_Breakdown.loc["Capital Related Costs", "$/kg of H2"]
     results["Fixed O&M"] = Cost_Breakdown.loc["Fixed O&M", "$/kg of H2"]
     results["Variable Costs/Feedstock"] = Cost_Breakdown.loc[
         "Other Variable Costs (Utilities)", "$/kg of H2"

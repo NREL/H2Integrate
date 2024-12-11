@@ -41,9 +41,7 @@ class SimpleDispatch:
                 else:
                     if battery_SOC[i - 1] < battery_storage:
                         add_gen = np.min([self.curtailment[i], charge_rate])
-                        battery_SOC[i] = np.min(
-                            [battery_SOC[i - 1] + add_gen, battery_storage]
-                        )
+                        battery_SOC[i] = np.min([battery_SOC[i - 1] + add_gen, battery_storage])
                         amount_charged = battery_SOC[i] - battery_SOC[i - 1]
                         excess_energy[i] = self.curtailment[i] - amount_charged
                     else:

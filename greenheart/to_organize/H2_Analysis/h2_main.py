@@ -2,22 +2,22 @@ import os
 import warnings
 from pathlib import Path
 
-import hopp.simulation.technologies.hydrogen.electrolysis.run_h2_PEM as run_h2_PEM
-import matplotlib.pyplot as plt
 import numpy as np
-import numpy_financial as npf
 import pandas as pd
+import numpy_financial as npf
+import matplotlib.pyplot as plt
+import hopp.simulation.technologies.hydrogen.electrolysis.run_h2_PEM as run_h2_PEM
 from dotenv import load_dotenv
-from hopp.simulation.technologies.sites import SiteInfo
-from hopp.simulation.technologies.sites import flatirons_site as sample_site
-from hopp.utilities.keys import set_developer_nrel_gov_key
 from lcoe.lcoe import lcoe as lcoe_calc
+from hopp.utilities.keys import set_developer_nrel_gov_key
+from hopp.simulation.technologies.sites import SiteInfo, flatirons_site as sample_site
 
-from greenheart.to_organize.H2_Analysis.hopp_for_h2 import hopp_for_h2
-from greenheart.to_organize.H2_Analysis.run_h2a import run_h2a as run_h2a
-from greenheart.to_organize.H2_Analysis.simple_dispatch import SimpleDispatch
-from greenheart.to_organize.plot_reopt_results import plot_reopt_results
 from greenheart.to_organize.run_reopt import run_reopt
+from greenheart.to_organize.plot_reopt_results import plot_reopt_results
+from greenheart.to_organize.H2_Analysis.run_h2a import run_h2a as run_h2a
+from greenheart.to_organize.H2_Analysis.hopp_for_h2 import hopp_for_h2
+from greenheart.to_organize.H2_Analysis.simple_dispatch import SimpleDispatch
+
 
 warnings.filterwarnings("ignore")
 
@@ -35,73 +35,70 @@ def establish_save_output_dict():
     for saving the relevant analysis variables for each site.
     """
 
-    save_outputs_dict = dict()
-    save_outputs_dict["Site Name"] = list()
-    save_outputs_dict["Scenario Choice"] = list()
-    save_outputs_dict["Site Lat"] = list()
-    save_outputs_dict["Site Lon"] = list()
-    save_outputs_dict["ATB Year"] = list()
-    save_outputs_dict["Resource Year"] = list()
-    save_outputs_dict["Critical Load Factor"] = list()
-    save_outputs_dict["kW continuous load"] = list()
-    save_outputs_dict["Useful Life"] = list()
-    save_outputs_dict["PTC"] = list()
-    save_outputs_dict["ITC"] = list()
-    save_outputs_dict["Discount Rate"] = list()
-    save_outputs_dict["Debt Equity"] = list()
-    save_outputs_dict["Hub Height (m)"] = list()
-    save_outputs_dict["Storage Enabled"] = list()
-    save_outputs_dict["Wind Cost kW"] = list()
-    save_outputs_dict["Solar Cost kW"] = list()
-    save_outputs_dict["Storage Cost kW"] = list()
-    save_outputs_dict["Storage Cost kWh"] = list()
-    save_outputs_dict["Storage Hours"] = list()
-    save_outputs_dict["Wind MW built"] = list()
-    save_outputs_dict["Solar MW built"] = list()
-    save_outputs_dict["Storage MW built"] = list()
-    save_outputs_dict["Storage MWh built"] = list()
-    save_outputs_dict["Electrolyzer Size"] = list()
-    save_outputs_dict["Electrolyzer Total System Size"] = list()
-    save_outputs_dict["Battery Can Grid Charge"] = list()
-    save_outputs_dict["Grid Connected HOPP"] = list()
-    save_outputs_dict["Built Interconnection Size"] = list()
-    save_outputs_dict["REOpt Interconnection Size"] = list()
-    save_outputs_dict["Total Installed Cost $(HOPP)"] = list()
-    save_outputs_dict["Total Yearly Electrical Output"] = list()
-    save_outputs_dict["LCOE"] = list()
-    save_outputs_dict["Total Annual H2 production (kg)"] = list()
-    save_outputs_dict["Gut-Check Cost/kg H2 (non-levelized, includes elec if used)"] = (
-        list()
-    )
-    save_outputs_dict[
-        "Levelized Cost/kg H2 (lcoe using installed and operation costs)"
-    ] = list()
+    save_outputs_dict = {}
+    save_outputs_dict["Site Name"] = []
+    save_outputs_dict["Scenario Choice"] = []
+    save_outputs_dict["Site Lat"] = []
+    save_outputs_dict["Site Lon"] = []
+    save_outputs_dict["ATB Year"] = []
+    save_outputs_dict["Resource Year"] = []
+    save_outputs_dict["Critical Load Factor"] = []
+    save_outputs_dict["kW continuous load"] = []
+    save_outputs_dict["Useful Life"] = []
+    save_outputs_dict["PTC"] = []
+    save_outputs_dict["ITC"] = []
+    save_outputs_dict["Discount Rate"] = []
+    save_outputs_dict["Debt Equity"] = []
+    save_outputs_dict["Hub Height (m)"] = []
+    save_outputs_dict["Storage Enabled"] = []
+    save_outputs_dict["Wind Cost kW"] = []
+    save_outputs_dict["Solar Cost kW"] = []
+    save_outputs_dict["Storage Cost kW"] = []
+    save_outputs_dict["Storage Cost kWh"] = []
+    save_outputs_dict["Storage Hours"] = []
+    save_outputs_dict["Wind MW built"] = []
+    save_outputs_dict["Solar MW built"] = []
+    save_outputs_dict["Storage MW built"] = []
+    save_outputs_dict["Storage MWh built"] = []
+    save_outputs_dict["Electrolyzer Size"] = []
+    save_outputs_dict["Electrolyzer Total System Size"] = []
+    save_outputs_dict["Battery Can Grid Charge"] = []
+    save_outputs_dict["Grid Connected HOPP"] = []
+    save_outputs_dict["Built Interconnection Size"] = []
+    save_outputs_dict["REOpt Interconnection Size"] = []
+    save_outputs_dict["Total Installed Cost $(HOPP)"] = []
+    save_outputs_dict["Total Yearly Electrical Output"] = []
+    save_outputs_dict["LCOE"] = []
+    save_outputs_dict["Total Annual H2 production (kg)"] = []
+    save_outputs_dict["Gut-Check Cost/kg H2 (non-levelized, includes elec if used)"] = []
+    save_outputs_dict["Levelized Cost/kg H2 (lcoe using installed and operation costs)"] = []
     save_outputs_dict[
         "Levelized Cost/kg H2 (CF Method - using annual cashflows per technology)"
-    ] = list()
-    # save_outputs_dict['Levelized Cost H2/kg (new method - with operational costs)'] = list()
-    # save_outputs_dict['Levelized Cost H2/kg (new method - no operational costs)'] = list()
-    # save_outputs_dict['Levelized cost of H2 (excl. electricity) (H2A)'] = list()
-    # save_outputs_dict['Levelized H2 Elec Feedstock Cost/kg (HOPP)'] = list()
-    # save_outputs_dict['Total H2 cost/kg (H2A)'] = list()
-    # save_outputs_dict['H2 Elec Feedstock Cost/kg (HOPP) Net Cap Cost Method'] = list()
-    save_outputs_dict["H2A scaled total install cost"] = list()
-    save_outputs_dict["H2A scaled total install cost per kw"] = list()
-    save_outputs_dict["REOpt Energy Shortfall"] = list()
-    save_outputs_dict["REOpt Curtailment"] = list()
-    save_outputs_dict["HOPP Total Generation"] = list()
-    save_outputs_dict["Wind Capacity Factor"] = list()
-    save_outputs_dict["HOPP Energy Shortfall"] = list()
-    save_outputs_dict["HOPP Curtailment"] = list()
-    save_outputs_dict["Battery Generation"] = list()
-    save_outputs_dict["Electricity to Grid"] = list()
+    ] = []
+    # save_outputs_dict['Levelized Cost H2/kg (new method - with operational costs)'] = []
+    # save_outputs_dict['Levelized Cost H2/kg (new method - no operational costs)'] = []
+    # save_outputs_dict['Levelized cost of H2 (excl. electricity) (H2A)'] = []
+    # save_outputs_dict['Levelized H2 Elec Feedstock Cost/kg (HOPP)'] = []
+    # save_outputs_dict['Total H2 cost/kg (H2A)'] = []
+    # save_outputs_dict['H2 Elec Feedstock Cost/kg (HOPP) Net Cap Cost Method'] = []
+    save_outputs_dict["H2A scaled total install cost"] = []
+    save_outputs_dict["H2A scaled total install cost per kw"] = []
+    save_outputs_dict["REOpt Energy Shortfall"] = []
+    save_outputs_dict["REOpt Curtailment"] = []
+    save_outputs_dict["HOPP Total Generation"] = []
+    save_outputs_dict["Wind Capacity Factor"] = []
+    save_outputs_dict["HOPP Energy Shortfall"] = []
+    save_outputs_dict["HOPP Curtailment"] = []
+    save_outputs_dict["Battery Generation"] = []
+    save_outputs_dict["Electricity to Grid"] = []
 
     return save_outputs_dict
 
 
 def h2_main():
     """
-    Runs a Hydrogen Levelized Cost (HLC/LCOH) analysis for scenarios contained in "default_h2_scenarios.csv"
+    Runs a Hydrogen Levelized Cost (HLC/LCOH) analysis for scenarios contained in
+    "default_h2_scenarios.csv"
     """
 
     # Step 1: Establish output structure and special inputs
@@ -164,7 +161,8 @@ def h2_main():
                     forced_storage_size_mwh = scenario["Storage Size MWh"]
                 else:
                     print(
-                        "Using ReOPT for sizing. REopt will be turned on and may not find a solution"
+                        "Using ReOPT for sizing. REopt will be turned on and may not find"
+                        " a solution"
                     )
                     run_reopt_flag = True
 
@@ -279,9 +277,7 @@ def h2_main():
                         label="wind + pv",
                     )
                     plt.plot(energy_shortfall_hopp[200:300], label="shortfall")
-                    plt.plot(
-                        combined_hybrid_curtailment_hopp[200:300], label="curtailment"
-                    )
+                    plt.plot(combined_hybrid_curtailment_hopp[200:300], label="curtailment")
                     plt.plot(load[200:300], label="electrolyzer rating")
                     plt.xlabel("time (hour)")
                     plt.ylabel("power production")
@@ -310,9 +306,7 @@ def h2_main():
                 if plot_battery:
                     plt.figure(figsize=(7, 4))
                     plt.subplot(121)
-                    plt.plot(
-                        combined_hybrid_curtailment_hopp[200:300], label="curtailment"
-                    )
+                    plt.plot(combined_hybrid_curtailment_hopp[200:300], label="curtailment")
                     plt.plot(energy_shortfall_hopp[200:300], label="shortfall")
                     plt.plot(battery_SOC[200:300], label="state of charge")
                     # plt.ylim(0,350000)
@@ -361,23 +355,16 @@ def h2_main():
                     cost_to_buy_from_grid = 0.0
 
                     for i in range(len(combined_pv_wind_storage_power_production_hopp)):
-                        if (
-                            combined_pv_wind_storage_power_production_hopp[i]
-                            < kw_continuous
-                        ):
+                        if combined_pv_wind_storage_power_production_hopp[i] < kw_continuous:
                             cost_to_buy_from_grid += (
-                                kw_continuous
-                                - combined_pv_wind_storage_power_production_hopp[i]
+                                kw_continuous - combined_pv_wind_storage_power_production_hopp[i]
                             ) * buy_price
-                            combined_pv_wind_storage_power_production_hopp[i] = (
-                                kw_continuous
-                            )
+                            combined_pv_wind_storage_power_production_hopp[i] = kw_continuous
                 else:
                     cost_to_buy_from_grid = 0.0
 
                 energy_to_electrolyzer = [
-                    x if x < kw_continuous else kw_continuous
-                    for x in combined_pv_wind_storage_power_production_hopp
+                    min(kw_continuous, x) for x in combined_pv_wind_storage_power_production_hopp
                 ]
 
                 if plot_grid:
@@ -397,8 +384,10 @@ def h2_main():
                 # Step 6: Run the Python H2A model
                 # ------------------------- #
                 # TODO: Refactor H2A model call
-                # Should take as input (electrolyzer size, cost, electrical timeseries, total system electrical usage (kwh/kg),
-                # Should give as ouptut (h2 costs by net cap cost, levelized, total_unit_cost of hydrogen etc)   )
+                # Should take as input (electrolyzer size, cost, electrical timeseries, total
+                # system electrical usage (kwh/kg),
+                # Should give as ouptut (h2 costs by net cap cost, levelized, total_unit_cost of
+                # hydrogen etc)   )
 
                 # electrical_generation_timeseries = combined_pv_wind_storage_power_production_hopp
                 electrical_generation_timeseries = np.zeros_like(energy_to_electrolyzer)
@@ -410,9 +399,9 @@ def h2_main():
                 )
                 # NB: adjusted_installed_cost does NOT include the electrolyzer cost
                 useful_life = scenario["Useful Life"]
-                net_capital_costs = reopt_results["outputs"]["Scenario"]["Site"][
-                    "Financial"
-                ]["net_capital_costs"]
+                net_capital_costs = reopt_results["outputs"]["Scenario"]["Site"]["Financial"][
+                    "net_capital_costs"
+                ]
 
                 # intalled costs:
                 # hybrid_plant.grid._financial_model.costs
@@ -431,9 +420,7 @@ def h2_main():
                 )
 
                 if plot_h2:
-                    hydrogen_hourly_production = H2_Results[
-                        "hydrogen_hourly_production"
-                    ]
+                    hydrogen_hourly_production = H2_Results["hydrogen_hourly_production"]
                     plt.figure(figsize=(6, 3))
 
                     plt.subplot(121)
@@ -457,16 +444,12 @@ def h2_main():
                 )
 
                 # Step 6.5: Intermediate financial calculation
-                total_elec_production = np.sum(
-                    electrical_generation_timeseries
-                )  # REMOVE
+                total_elec_production = np.sum(electrical_generation_timeseries)  # REMOVE
                 total_hopp_installed_cost = (
                     hybrid_plant.grid._financial_model.SystemCosts.total_installed_cost
                 )
                 total_electrolyzer_cost = H2A_Results["scaled_total_installed_cost"]
-                total_system_installed_cost = (
-                    total_hopp_installed_cost + total_electrolyzer_cost
-                )
+                total_system_installed_cost = total_hopp_installed_cost + total_electrolyzer_cost
                 annual_operating_cost_hopp = (wind_size_mw * 1000 * 42) + (
                     solar_size_mw * 1000 * 13
                 )
@@ -479,8 +462,13 @@ def h2_main():
                     + cost_to_buy_from_grid
                     - profit_from_selling_to_grid
                 )
-                # h_lcoe_no_op_cost = lcoe_calc((H2_Results['hydrogen_annual_output']), total_system_installed_cost,
-                #                    0, 0.07, useful_life)
+                # h_lcoe_no_op_cost = lcoe_calc(
+                #     (H2_Results["hydrogen_annual_output"]),
+                #     total_system_installed_cost,
+                #     0,
+                #     0.07,
+                #     useful_life,
+                # )
 
                 h_lcoe = lcoe_calc(
                     (H2_Results["hydrogen_annual_output"]),
@@ -492,15 +480,9 @@ def h2_main():
 
                 # Cashflow Financial Calculation (Not sure that this includes electrical prices)
                 discount_rate = scenario["Discount Rate"]
-                cf_wind_annuals = (
-                    hybrid_plant.wind._financial_model.Outputs.cf_annual_costs
-                )
-                cf_solar_annuals = (
-                    hybrid_plant.pv._financial_model.Outputs.cf_annual_costs
-                )
-                cf_h2_annuals = H2A_Results[
-                    "expenses_annual_cashflow"
-                ]  # This might be unreliable.
+                cf_wind_annuals = hybrid_plant.wind._financial_model.Outputs.cf_annual_costs
+                cf_solar_annuals = hybrid_plant.pv._financial_model.Outputs.cf_annual_costs
+                cf_h2_annuals = H2A_Results["expenses_annual_cashflow"]  # This might be unreliable.
                 cf_df = pd.DataFrame(
                     [
                         cf_wind_annuals,
@@ -512,7 +494,7 @@ def h2_main():
                 results_dir = Path(__file__).parent / "results/"
                 cf_df.to_csv(
                     results_dir
-                    / f"Annual Cashflows_{site_name}_{scenario_choice}_{atb_year}_discount_{discount_rate}.csv"
+                    / f"Annual Cashflows_{site_name}_{scenario_choice}_{atb_year}_discount_{discount_rate}.csv"  # noqa: E501
                 )
 
                 # NPVs of wind, solar, H2
@@ -559,13 +541,12 @@ def h2_main():
                 financial_summary_df.to_csv(results_dir / "Financial Summary.csv")
 
                 # Gut Check H2 calculation (non-levelized)
-                total_installed_and_operational_lifetime_cost = (
-                    total_system_installed_cost + (30 * total_annual_operating_costs)
+                total_installed_and_operational_lifetime_cost = total_system_installed_cost + (
+                    30 * total_annual_operating_costs
                 )
                 lifetime_h2_production = 30 * H2_Results["hydrogen_annual_output"]
                 gut_check_h2_cost_kg = (
-                    total_installed_and_operational_lifetime_cost
-                    / lifetime_h2_production
+                    total_installed_and_operational_lifetime_cost / lifetime_h2_production
                 )
 
                 # Step 7: Print  results
@@ -580,9 +561,7 @@ def h2_main():
                     print("Wind Cost per KW: {}".format(scenario["Wind Cost KW"]))
                     print("PV Cost per KW: {}".format(scenario["Solar Cost KW"]))
                     print("Storage Cost per KW: {}".format(scenario["Storage Cost kW"]))
-                    print(
-                        "Storage Cost per KWh: {}".format(scenario["Storage Cost kWh"])
-                    )
+                    print("Storage Cost per KWh: {}".format(scenario["Storage Cost kWh"]))
                     print(f"Wind Size built: {wind_size_mw}")
                     print(f"PV Size built: {solar_size_mw}")
                     print(f"Storage Size built: {storage_size_mw}")
@@ -595,11 +574,7 @@ def h2_main():
                         )
                     )
                     print("Levelized Cost H2/kg (new method - no operational costs)")
-                    print(
-                        "Capacity Factor of Electrolyzer: {}".format(
-                            H2_Results["cap_factor"]
-                        )
-                    )
+                    print("Capacity Factor of Electrolyzer: {}".format(H2_Results["cap_factor"]))
 
                 if print_h2_results:
                     print(f"Total Lifetime H2(kg) produced: {lifetime_h2_production}")
@@ -608,8 +583,8 @@ def h2_main():
                     print("LCOH CF Method (doesn't include elec)", LCOH_cf_method)
                     # print("Levelized cost of H2 (electricity feedstock) (HOPP): {}".format(
                     #     H2_Results['feedstock_cost_h2_levelized_hopp']))
-                    # print("Levelized cost of H2 (excl. electricity) (H2A): {}".format(H2A_Results['Total Hydrogen Cost ($/kgH2)']))
-                    # print("Total unit cost of H2 ($/kg) : {}".format(H2_Results['total_unit_cost_of_hydrogen']))
+                    # print("Levelized cost of H2 (excl. electricity) (H2A): {}".format(H2A_Results['Total Hydrogen Cost ($/kgH2)']))  # noqa: E501
+                    # print("Total unit cost of H2 ($/kg) : {}".format(H2_Results['total_unit_cost_of_hydrogen']))  # noqa: E501
                     # print("kg H2 cost from net cap cost/lifetime h2 production (HOPP): {}".format(
                     #     H2_Results['feedstock_cost_h2_via_net_cap_cost_lifetime_h2_hopp']))
 
@@ -628,9 +603,7 @@ def h2_main():
                         storage_size_mw,
                         storage_size_mwh,
                         lcoe,
-                        H2_Results[
-                            "feedstock_cost_h2_via_net_cap_cost_lifetime_h2_hopp"
-                        ],
+                        H2_Results["feedstock_cost_h2_via_net_cap_cost_lifetime_h2_hopp"],
                         H2_Results["feedstock_cost_h2_levelized_hopp"],
                         hybrid_installed_cost,
                         H2A_Results["Total Hydrogen Cost ($/kgH2)"],
@@ -670,21 +643,13 @@ def h2_main():
                 save_outputs_dict["Solar MW built"].append(solar_size_mw)
                 save_outputs_dict["Storage MW built"].append(storage_size_mw)
                 save_outputs_dict["Storage MWh built"].append(storage_size_mwh)
-                save_outputs_dict["Battery Can Grid Charge"].append(
-                    battery_can_grid_charge
-                )
-                save_outputs_dict["Built Interconnection Size"].append(
-                    hybrid_plant.interconnect_kw
-                )
+                save_outputs_dict["Battery Can Grid Charge"].append(battery_can_grid_charge)
+                save_outputs_dict["Built Interconnection Size"].append(hybrid_plant.interconnect_kw)
                 save_outputs_dict["REOpt Interconnection Size"].append(
                     interconnection_size_mw * 1000
                 )
-                save_outputs_dict["Total Installed Cost $(HOPP)"].append(
-                    total_hopp_installed_cost
-                )
-                save_outputs_dict["Total Yearly Electrical Output"].append(
-                    total_elec_production
-                )
+                save_outputs_dict["Total Installed Cost $(HOPP)"].append(total_hopp_installed_cost)
+                save_outputs_dict["Total Yearly Electrical Output"].append(total_elec_production)
                 save_outputs_dict["LCOE"].append(lcoe)
                 save_outputs_dict["Total Annual H2 production (kg)"].append(
                     H2_Results["hydrogen_annual_output"]
@@ -698,11 +663,21 @@ def h2_main():
                 save_outputs_dict[
                     "Levelized Cost/kg H2 (CF Method - using annual cashflows per technology)"
                 ].append(LCOH_cf_method)
-                # save_outputs_dict['Levelized Cost H2/kg (new method - no operational costs)'].append(h_lcoe_no_op_cost)
-                # save_outputs_dict['Levelized H2 Elec Feedstock Cost/kg (HOPP)'].append(H2_Results['feedstock_cost_h2_levelized_hopp'])
-                # save_outputs_dict['Levelized cost of H2 (excl. electricity) (H2A)'].append(H2A_Results['Total Hydrogen Cost ($/kgH2)'])
-                # save_outputs_dict['H2 Elec Feedstock Cost/kg (HOPP) Net Cap Cost Method'].append(H2_Results['feedstock_cost_h2_via_net_cap_cost_lifetime_h2_hopp'])
-                # save_outputs_dict['Total H2 cost/kg (H2A)'].append(H2_Results['total_unit_cost_of_hydrogen'])
+                # save_outputs_dict[
+                #     "Levelized Cost H2/kg (new method - no operational costs)"
+                # ].append(h_lcoe_no_op_cost)
+                # save_outputs_dict["Levelized H2 Elec Feedstock Cost/kg (HOPP)"].append(
+                #     H2_Results["feedstock_cost_h2_levelized_hopp"]
+                # )
+                # save_outputs_dict["Levelized cost of H2 (excl. electricity) (H2A)"].append(
+                #     H2A_Results["Total Hydrogen Cost ($/kgH2)"]
+                # )
+                # save_outputs_dict["H2 Elec Feedstock Cost/kg (HOPP) Net Cap Cost Method"].append(
+                #     H2_Results["feedstock_cost_h2_via_net_cap_cost_lifetime_h2_hopp"]
+                # )
+                # save_outputs_dict["Total H2 cost/kg (H2A)"].append(
+                #     H2_Results["total_unit_cost_of_hydrogen"]
+                # )
                 save_outputs_dict["REOpt Energy Shortfall"].append(
                     np.sum(REoptResultsDF["energy_shortfall"])
                 )
@@ -716,17 +691,13 @@ def h2_main():
                 save_outputs_dict["Wind Capacity Factor"].append(
                     hybrid_plant.wind._system_model.Outputs.capacity_factor
                 )
-                save_outputs_dict["HOPP Energy Shortfall"].append(
-                    np.sum(energy_shortfall_hopp)
-                )
+                save_outputs_dict["HOPP Energy Shortfall"].append(np.sum(energy_shortfall_hopp))
                 save_outputs_dict["HOPP Curtailment"].append(
                     np.sum(combined_hybrid_curtailment_hopp)
                 )
                 save_outputs_dict["Battery Generation"].append(np.sum(battery_used))
                 save_outputs_dict["Electricity to Grid"].append(np.sum(excess_energy))
-                save_outputs_dict["Electrolyzer Size"].append(
-                    H2A_Results["electrolyzer_size"]
-                )
+                save_outputs_dict["Electrolyzer Size"].append(H2A_Results["electrolyzer_size"])
                 save_outputs_dict["Electrolyzer Total System Size"].append(
                     H2A_Results["total_plant_size"]
                 )
@@ -750,7 +721,8 @@ def h2_main():
 if __name__ == "__main__":
     """
     Runs h2_main as a standalone analysis.
-    Performs a Hydrogen Levelized Cost (HLC/LCOH) analysis for scenarios contained in "default_h2_scenarios.csv"
+    Performs a Hydrogen Levelized Cost (HLC/LCOH) analysis for scenarios contained in
+    "default_h2_scenarios.csv"
     Results are saved to ..results/H2_Analysis_Main.csv
     """
     h2_main()

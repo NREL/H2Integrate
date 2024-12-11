@@ -11,15 +11,12 @@ class TestBasicH2Costs:
     h2_annual_output = 500
     nturbines = 10
     electrical_generation_timeseries = (
-        electrolyzer_size_mw * (np.sin(range(0, 500))) * 0.5
-        + electrolyzer_size_mw * 0.5
+        electrolyzer_size_mw * (np.sin(range(0, 500))) * 0.5 + electrolyzer_size_mw * 0.5
     )
 
     per_turb_electrolyzer_size_mw = electrolyzer_size_mw / nturbines
     per_turb_h2_annual_output = h2_annual_output / nturbines
-    per_turb_electrical_generation_timeseries = (
-        electrical_generation_timeseries / nturbines
-    )
+    per_turb_electrical_generation_timeseries = electrical_generation_timeseries / nturbines
 
     elec_capex = 600  # $/kW
     time_between_replacement = 80000  # hours
@@ -49,9 +46,7 @@ class TestBasicH2Costs:
             offshore=1,
         )
 
-        electrolyzer_total_capital_cost = (
-            per_turb_electrolyzer_total_capital_cost * self.nturbines
-        )
+        electrolyzer_total_capital_cost = per_turb_electrolyzer_total_capital_cost * self.nturbines
         per_turb_electrolyzer_OM_cost * self.nturbines
 
         assert electrolyzer_total_capital_cost == approx(127698560.0)
@@ -104,9 +99,7 @@ class TestBasicH2Costs:
             offshore=0,
         )
 
-        electrolyzer_total_capital_cost = (
-            per_turb_electrolyzer_total_capital_cost * self.nturbines
-        )
+        electrolyzer_total_capital_cost = per_turb_electrolyzer_total_capital_cost * self.nturbines
         per_turb_electrolyzer_OM_cost * self.nturbines
 
         assert electrolyzer_total_capital_cost == approx(116077280.00000003)
@@ -134,9 +127,7 @@ class TestBasicH2Costs:
             offshore=1,
         )
 
-        (
-            per_turb_electrolyzer_total_capital_cost * self.nturbines
-        )
+        (per_turb_electrolyzer_total_capital_cost * self.nturbines)
         electrolyzer_OM_cost = per_turb_electrolyzer_OM_cost * self.nturbines
 
         assert electrolyzer_OM_cost == approx(1377207.4599629682)
@@ -189,9 +180,7 @@ class TestBasicH2Costs:
             offshore=0,
         )
 
-        (
-            per_turb_electrolyzer_total_capital_cost * self.nturbines
-        )
+        (per_turb_electrolyzer_total_capital_cost * self.nturbines)
         electrolyzer_OM_cost = per_turb_electrolyzer_OM_cost * self.nturbines
 
         assert electrolyzer_OM_cost == approx(1254447.4599629682)

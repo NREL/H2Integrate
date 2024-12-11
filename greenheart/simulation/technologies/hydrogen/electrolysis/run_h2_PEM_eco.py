@@ -1,9 +1,7 @@
 import numpy as np
-
 import examples.H2_Analysis.H2AModel as H2AModel
-from greenheart.hydrogen.electrolysis.PEM_electrolyzer_IVcurve import (
-    PEM_electrolyzer_LT,
-)
+
+from greenheart.hydrogen.electrolysis.PEM_electrolyzer_IVcurve import PEM_electrolyzer_LT
 
 
 def run_h2_PEM(
@@ -24,8 +22,8 @@ def run_h2_PEM(
     N_cells=130,
     total_system_electrical_usage=55.5,
 ):
-    in_dict = dict()
-    out_dict = dict()
+    in_dict = {}
+    out_dict = {}
     in_dict["P_input_external_kW"] = electrical_generation_timeseries
     in_dict["electrolyzer_system_size_MW"] = electrolyzer_size
     el = PEM_electrolyzer_LT(in_dict, out_dict)
@@ -83,9 +81,7 @@ def run_h2_PEM(
         useful_life=useful_life,
     )
 
-    feedstock_cost_h2_levelized_hopp = (
-        lcoe * total_system_electrical_usage / 100
-    )  # $/kg
+    feedstock_cost_h2_levelized_hopp = lcoe * total_system_electrical_usage / 100  # $/kg
     # Hybrid Plant - levelized H2 Cost - HOPP
     feedstock_cost_h2_via_net_cap_cost_lifetime_h2_hopp = adjusted_installed_cost / (
         hydrogen_annual_output * useful_life
@@ -101,8 +97,8 @@ def run_h2_PEM(
     H2_Results = {
         "hydrogen_annual_output": hydrogen_annual_output,
         "feedstock_cost_h2_levelized_hopp": feedstock_cost_h2_levelized_hopp,
-        "feedstock_cost_h2_via_net_cap_cost_lifetime_h2_hopp": feedstock_cost_h2_via_net_cap_cost_lifetime_h2_hopp,
-        "feedstock_cost_h2_via_net_cap_cost_lifetime_h2_reopt": feedstock_cost_h2_via_net_cap_cost_lifetime_h2_reopt,
+        "feedstock_cost_h2_via_net_cap_cost_lifetime_h2_hopp": feedstock_cost_h2_via_net_cap_cost_lifetime_h2_hopp,  # noqa: E501
+        "feedstock_cost_h2_via_net_cap_cost_lifetime_h2_reopt": feedstock_cost_h2_via_net_cap_cost_lifetime_h2_reopt,  # noqa: E501
         "total_unit_cost_of_hydrogen": total_unit_cost_of_hydrogen,
         "cap_factor": cap_factor,
         "hydrogen_hourly_production": hydrogen_hourly_production,

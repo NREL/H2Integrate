@@ -5,7 +5,9 @@ from pytest import approx, fixture
 import greenheart.tools.eco.electrolysis as he_elec
 import greenheart.tools.plant_sizing_estimation as gh_sizing
 from greenheart.simulation.technologies.hydrogen.electrolysis import PEM_tools
+
 from tests import TEST_ROOT_DIR
+
 
 input_library_path = TEST_ROOT_DIR / "greenheart" / "test_hydrogen" / "input_files"
 project_life_years = 30
@@ -71,9 +73,7 @@ default_config = {
 def offgrid_resize_config():
     offgrid_resize_config = default_config.copy()
     offgrid_resize_config["project_parameters"]["grid_connection"] = False
-    offgrid_resize_config["project_parameters"]["hybrid_electricity_estimated_cf"] = (
-        0.492
-    )
+    offgrid_resize_config["project_parameters"]["hybrid_electricity_estimated_cf"] = 0.492
     offgrid_resize_config["electrolyzer"]["sizing"]["resize_for_enduse"] = True
     return offgrid_resize_config
 
@@ -135,19 +135,13 @@ def test_offgrid_electrolyzer_physics(offgrid_physics, subtests):
         assert H2_Res["Sim: Total Input Power [kWh]"] == approx(3383382801.267635, TOL)
 
     with subtests.test("BOL rated hydrogen production rate"):
-        assert H2_Res["Rated BOL: H2 Production [kg/hr]"] == approx(
-            17579.2991094574, TOL
-        )
+        assert H2_Res["Rated BOL: H2 Production [kg/hr]"] == approx(17579.2991094574, TOL)
 
     with subtests.test("BOL rated power consumption"):
-        assert H2_Res["Rated BOL: Power Consumed [kWh]"] == approx(
-            960018.4015366472, TOL
-        )
+        assert H2_Res["Rated BOL: Power Consumed [kWh]"] == approx(960018.4015366472, TOL)
 
     with subtests.test("BOL rated efficiency"):
-        assert H2_Res["Rated BOL: Efficiency [kWh/kg]"] == approx(
-            54.61073251891887, TOL
-        )
+        assert H2_Res["Rated BOL: Efficiency [kWh/kg]"] == approx(54.61073251891887, TOL)
 
     with subtests.test("simulation capacity factor"):
         assert H2_Res["Sim: Capacity Factor"] == approx(0.4104064586084918, TOL)
@@ -201,9 +195,7 @@ def grid_physics():
 def grid_baseline_power_profile():
     power_profile_filename = "GS_gridonly_power_signal.csv"
     grid_power_profile_filename = input_library_path / power_profile_filename
-    grid_power_profile = pd.read_csv(
-        grid_power_profile_filename, index_col="Unnamed: 0"
-    )
+    grid_power_profile = pd.read_csv(grid_power_profile_filename, index_col="Unnamed: 0")
     return grid_power_profile
 
 
@@ -242,17 +234,13 @@ def test_grid_electrolyzer_physics(grid_physics, grid_baseline_power_profile, su
 
     with subtests.test("grid power profile start"):
         assert power_profile[0] == approx(
-            grid_baseline_power_profile["combined_hybrid_power_production_hopp"].values[
-                0
-            ],
+            grid_baseline_power_profile["combined_hybrid_power_production_hopp"].values[0],
             TOL,
         )
 
     with subtests.test("grid power profile end"):
         assert power_profile[-1] == approx(
-            grid_baseline_power_profile["combined_hybrid_power_production_hopp"].values[
-                -1
-            ],
+            grid_baseline_power_profile["combined_hybrid_power_production_hopp"].values[-1],
             TOL,
         )
 
@@ -261,9 +249,7 @@ def test_electrolyzer_tools(subtests):
     hydrogen_demand = 8366.311517
     cluster_cap_mw = 40
     bol_eff = PEM_tools.get_electrolyzer_BOL_efficiency()
-    electrolyzer_capacity_BOL_MW = PEM_tools.size_electrolyzer_for_hydrogen_demand(
-        hydrogen_demand
-    )
+    electrolyzer_capacity_BOL_MW = PEM_tools.size_electrolyzer_for_hydrogen_demand(hydrogen_demand)
     electrolyzer_size_mw = PEM_tools.check_capacity_based_on_clusters(
         electrolyzer_capacity_BOL_MW, cluster_cap_mw
     )

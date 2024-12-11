@@ -6,10 +6,14 @@ Reverse Osmosis (RO) is a membrane separation process. No heating or phase chang
 The majority of energy required is for pressurizing the feed water.
 
 A typical RO system is made up of the following basic components:
-Pre-treatment: Removes suspended solids and microorganisms through sterilization, fine filtration and adding chemicals to inhibit precipitation.
-High-pressure pump: Supplies the pressure needed to enable the water to pass through the membrane (pressure ranges from 54 to 80 bar for seawater).
-Membrane Modules: Membrane assembly consists of a pressure vessel and the membrane. Either sprial wound membranes or hollow fiber membranes are used.
-Post-treatment: Consists of sterilization, stabilization, mineral enrichment and pH adjustment of product water.
+Pre-treatment: Removes suspended solids and microorganisms through sterilization, fine filtration
+    and adding chemicals to inhibit precipitation.
+High-pressure pump: Supplies the pressure needed to enable the water to pass through the membrane
+    (pressure ranges from 54 to 80 bar for seawater).
+Membrane Modules: Membrane assembly consists of a pressure vessel and the membrane. Either sprial
+    wound membranes or hollow fiber membranes are used.
+Post-treatment: Consists of sterilization, stabilization, mineral enrichment and pH adjustment of
+    product water.
 Energy recovery system: A system where a portion of the pressure energy of the brine is recovered.
 """
 
@@ -49,7 +53,7 @@ def RO_desal(
     water_recovery_ratio = 0.30
     energy_conversion_factor = 4.2
     high_pressure_pump_efficency = 0.70
-    pump_pressure_kPa = 5366    (kept static for simplicity. TODO: Modify pressure through RO process)
+    pump_pressure_kPa = 5366  (kept static for simplicity. TODO: Modify pressure through RO process)
     energy_recovery = 0.40
     Assumed energy savings by energy recovery device to be 40% of total energy
     https://www.sciencedirect.com/science/article/pii/S0360544210005578?casa_token=aEz_d_LiSgYAAAAA:88Xa6uHMTZee-djvJIF9KkhpuZmwZCLPHNiThmcwv9k9RC3H17JuSoRWI-l92rrTl_E3kO4oOA
@@ -69,11 +73,11 @@ def RO_desal(
 
     # Modify power to not exceed system's power maximum (100% rated power capacity) or
     # minimum (approx 50% rated power capacity --> affects filter fouling below this level)
-    net_power_for_desal = list()
-    operational_flags = list()
-    feed_water_flowrate = list()
-    fresh_water_flowrate = list()
-    for i, power_at_time_step in enumerate(net_power_supply_kW):
+    net_power_for_desal = []
+    operational_flags = []
+    feed_water_flowrate = []
+    fresh_water_flowrate = []
+    for power_at_time_step in net_power_supply_kW:
         if power_at_time_step > desal_power_max:
             current_net_power_available = desal_power_max
             operational_flag = 2
@@ -92,10 +96,7 @@ def RO_desal(
         # Create list of feedwater flowrates based on net power available for desal
         # https://www.sciencedirect.com/science/article/abs/pii/S0011916409008443
         instantaneous_feed_water_flowrate = (
-            (
-                (current_net_power_available * (1 + energy_recovery))
-                * high_pressure_pump_efficency
-            )
+            ((current_net_power_available * (1 + energy_recovery)) * high_pressure_pump_efficency)
             / pump_pressure_kPa
             * 3600
         )  # m^3/hr
@@ -129,9 +130,7 @@ def RO_desal(
     Assumed useful life = payment period for capital expenditure.
     compressor amortization interest = 3%
     """
-    desal_annuals = simple_cash_annuals(
-        plant_life, useful_life, desal_capex, desal_opex, 0.03
-    )
+    desal_annuals = simple_cash_annuals(plant_life, useful_life, desal_capex, desal_opex, 0.03)
     # a = 0.03
     # desal_annuals = [0] * useful_life
 

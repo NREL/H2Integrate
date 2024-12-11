@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pandas as pd
 import ProFAST
-from attrs import Factory, define, field
+from attrs import Factory, field, define
 
 
 @define
@@ -216,9 +216,7 @@ class SteelCapacityModelConfig:
 
     def __attrs_post_init__(self):
         if self.hydrogen_amount_kgpy is None and self.desired_steel_mtpy is None:
-            raise ValueError(
-                "`hydrogen_amount_kgpy` or `desired_steel_mtpy` is a required input."
-            )
+            raise ValueError("`hydrogen_amount_kgpy` or `desired_steel_mtpy` is a required input.")
 
         if self.hydrogen_amount_kgpy and self.desired_steel_mtpy:
             raise ValueError(
@@ -234,8 +232,8 @@ class SteelCapacityModelOutputs:
     Attributes:
         steel_plant_size_mtpy (float): If amount of hydrogen in kilograms per year is input,
             the size of the steel plant in metric tonnes per year is output.
-        hydrogen_amount_kgpy (float): If amount of steel production in metric tonnes per year is input,
-            the amount of necessary hydrogen feedstock in kilograms per year is output.
+        hydrogen_amount_kgpy (float): If amount of steel production in metric tonnes per year is
+            input, the amount of necessary hydrogen feedstock in kilograms per year is output.
     """
 
     steel_plant_capacity_mtpy: float
@@ -331,22 +329,13 @@ def run_steel_cost_model(config: SteelCostModelConfig) -> SteelCostModelOutputs:
     equation_year_CEPCI = 708.8
 
     capex_eaf_casting = (
-        model_year_CEPCI
-        / equation_year_CEPCI
-        * 352191.5237
-        * config.plant_capacity_mtpy**0.456
+        model_year_CEPCI / equation_year_CEPCI * 352191.5237 * config.plant_capacity_mtpy**0.456
     )
     capex_shaft_furnace = (
-        model_year_CEPCI
-        / equation_year_CEPCI
-        * 489.68061
-        * config.plant_capacity_mtpy**0.88741
+        model_year_CEPCI / equation_year_CEPCI * 489.68061 * config.plant_capacity_mtpy**0.88741
     )
     capex_oxygen_supply = (
-        model_year_CEPCI
-        / equation_year_CEPCI
-        * 1715.21508
-        * config.plant_capacity_mtpy**0.64574
+        model_year_CEPCI / equation_year_CEPCI * 1715.21508 * config.plant_capacity_mtpy**0.64574
     )
     if config.o2_heat_integration:
         capex_h2_preheating = (
@@ -363,10 +352,7 @@ def run_steel_cost_model(config: SteelCostModelConfig) -> SteelCostModelOutputs:
         )  # Optimistic ballpark estimate of 30% reduction in cooling
     else:
         capex_h2_preheating = (
-            model_year_CEPCI
-            / equation_year_CEPCI
-            * 45.69123
-            * config.plant_capacity_mtpy**0.86564
+            model_year_CEPCI / equation_year_CEPCI * 45.69123 * config.plant_capacity_mtpy**0.86564
         )
         capex_cooling_tower = (
             model_year_CEPCI
@@ -375,28 +361,16 @@ def run_steel_cost_model(config: SteelCostModelConfig) -> SteelCostModelOutputs:
             * config.plant_capacity_mtpy**0.63325
         )
     capex_piping = (
-        model_year_CEPCI
-        / equation_year_CEPCI
-        * 11815.72718
-        * config.plant_capacity_mtpy**0.59983
+        model_year_CEPCI / equation_year_CEPCI * 11815.72718 * config.plant_capacity_mtpy**0.59983
     )
     capex_elec_instr = (
-        model_year_CEPCI
-        / equation_year_CEPCI
-        * 7877.15146
-        * config.plant_capacity_mtpy**0.59983
+        model_year_CEPCI / equation_year_CEPCI * 7877.15146 * config.plant_capacity_mtpy**0.59983
     )
     capex_buildings_storage_water = (
-        model_year_CEPCI
-        / equation_year_CEPCI
-        * 1097.81876
-        * config.plant_capacity_mtpy**0.8
+        model_year_CEPCI / equation_year_CEPCI * 1097.81876 * config.plant_capacity_mtpy**0.8
     )
     capex_misc = (
-        model_year_CEPCI
-        / equation_year_CEPCI
-        * 7877.1546
-        * config.plant_capacity_mtpy**0.59983
+        model_year_CEPCI / equation_year_CEPCI * 7877.1546 * config.plant_capacity_mtpy**0.59983
     )
 
     total_plant_cost = (
@@ -419,9 +393,7 @@ def run_steel_cost_model(config: SteelCostModelConfig) -> SteelCostModelOutputs:
         / ((1162077 / 365 * 1000) ** 0.25242)
     )
     labor_cost_maintenance = 0.00863 * total_plant_cost
-    labor_cost_admin_support = 0.25 * (
-        labor_cost_annual_operation + labor_cost_maintenance
-    )
+    labor_cost_admin_support = 0.25 * (labor_cost_annual_operation + labor_cost_maintenance)
 
     property_tax_insurance = 0.02 * total_plant_cost
 
@@ -434,13 +406,7 @@ def run_steel_cost_model(config: SteelCostModelConfig) -> SteelCostModelOutputs:
 
     # ---------------------- Owner's (Installation) Costs --------------------------
     labor_cost_fivemonth = (
-        5
-        / 12
-        * (
-            labor_cost_annual_operation
-            + labor_cost_maintenance
-            + labor_cost_admin_support
-        )
+        5 / 12 * (labor_cost_annual_operation + labor_cost_maintenance + labor_cost_admin_support)
     )
 
     maintenance_materials_onemonth = (
@@ -534,7 +500,8 @@ def run_steel_cost_model(config: SteelCostModelConfig) -> SteelCostModelOutputs:
 @define
 class SteelFinanceModelConfig:
     """
-    Configuration for the steel finance model, including plant characteristics, financial assumptions, and cost inputs.
+    Configuration for the steel finance model, including plant characteristics, financial
+    assumptions, and cost inputs.
 
     Attributes:
         plant_life (int): The operational lifetime of the plant in years.
@@ -580,7 +547,8 @@ class SteelFinanceModelConfig:
 @define
 class SteelFinanceModelOutputs:
     """
-    Represents the outputs of the steel finance model, encapsulating the results of financial analysis for steel production.
+    Represents the outputs of the steel finance model, encapsulating the results of financial
+    analysis for steel production.
 
     Attributes:
         sol (dict):
@@ -672,9 +640,7 @@ def run_steel_finance_model(
     pf.set_params("long term utilization", config.plant_capacity_factor)
     pf.set_params("credit card fees", 0)
     pf.set_params("sales tax", 0)
-    pf.set_params(
-        "license and permit", {"value": 00, "escalation": config.gen_inflation}
-    )
+    pf.set_params("license and permit", {"value": 00, "escalation": config.gen_inflation})
     pf.set_params("rent", {"value": 0, "escalation": config.gen_inflation})
     pf.set_params("property tax and insurance", 0)
     pf.set_params("admin expense", 0)
@@ -778,8 +744,8 @@ def run_steel_finance_model(
         cost=costs.property_tax_insurance,
         escalation=0.0,
     )
-    # Putting property tax and insurance here to zero out depcreciation/escalation. Could instead put it in set_params if
-    # we think that is more accurate
+    # Putting property tax and insurance here to zero out depcreciation/escalation. Could instead
+    # put it in set_params if we think that is more accurate
 
     # ---------------------- Add feedstocks, note the various cost options-------------------
     pf.add_feedstock(
@@ -873,8 +839,7 @@ def run_steel_finance_model(
                 savepath.mkdir(parents=True)
 
         pf.plot_capital_expenses(
-            fileout=savepaths[0]
-            / f"steel_capital_expense_{config.design_scenario_id}.pdf",
+            fileout=savepaths[0] / f"steel_capital_expense_{config.design_scenario_id}.pdf",
             show_plot=config.show_plots,
         )
         pf.plot_cashflow(
@@ -920,12 +885,11 @@ def run_steel_full_model(
     config = copy.deepcopy(greenheart_config)
 
     if config["steel"]["costs"]["lcoh"] != config["steel"]["finances"]["lcoh"]:
-        raise (
-            ValueError(
-                "steel cost LCOH and steel finance LCOH are not equal. You must specify both values or neither. \
-                If neither is specified, LCOH will be calculated."
-            )
+        msg = (
+            "steel cost LCOH and steel finance LCOH are not equal. You must specify both values"
+            " or neither. If neither is specified, LCOH will be calculated."
         )
+        raise ValueError(msg)
 
     steel_costs = config["steel"]["costs"]
     steel_capacity = config["steel"]["capacity"]

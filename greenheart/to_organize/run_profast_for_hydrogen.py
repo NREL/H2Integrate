@@ -10,6 +10,7 @@ import ProFAST
 
 from greenheart.to_organize.H2_Analysis import LCA_single_scenario_ProFAST
 
+
 pf = ProFAST.ProFAST()
 
 
@@ -68,9 +69,7 @@ def run_profast_for_hydrogen(
         24 * H2_Results["new_H2_Results"]["Rated BOL: H2 Production [kg/hr]"]
     )
     # debt_equity_split = 57.983
-    replace_stacks_individually = (
-        False  # TODO, make input (changes refurbishment period)
-    )
+    replace_stacks_individually = False  # TODO, make input (changes refurbishment period)
 
     water_consumption_avg_galH2O_prkgH2 = water_consumption_avg_kgH2O_prkgH2 / 3.79
 
@@ -78,14 +77,12 @@ def run_profast_for_hydrogen(
     if use_optimistic_pem_efficiency:
         pass
     else:
-        H2_Results["new_H2_Results"][
-            "Rated BOL: Efficiency [kWh/kg]"
-        ]  # new 09/05
+        H2_Results["new_H2_Results"]["Rated BOL: Efficiency [kWh/kg]"]  # new 09/05
         # elec_consumption_kWhprkg_design=H2_Results['Rated kWh/kg-H2'] #new 09/05
 
     # Calculate electrolyzer production capacity
-    # electrolysis_plant_capacity_kgperday=   electrolyzer_size_mw/elec_consumption_kWhprkg_design*1000*24
-    # electrolysis_plant_capacity_kgperday = electrolyzer_size_mw*electrolyzer_design_efficiency_HHV/h2_HHV*3600*24
+    # electrolysis_plant_capacity_kgperday=   electrolyzer_size_mw/elec_consumption_kWhprkg_design*1000*24  # noqa: E501
+    # electrolysis_plant_capacity_kgperday = electrolyzer_size_mw*electrolyzer_design_efficiency_HHV/h2_HHV*3600*24  # noqa: E501
 
     # Installed capital cost
     electrolyzer_installation_factor = 12 / 100  # [%] for stack cost
@@ -114,12 +111,8 @@ def run_profast_for_hydrogen(
     compressor_capex_USDprkWe_of_electrolysis = 39
 
     # Calculate capital costs
-    capex_electrolyzer_overnight = (
-        electrolyzer_total_installed_capex + electrolyzer_indirect_cost
-    )
-    capex_storage_installed = (
-        hydrogen_storage_capacity_kg * hydrogen_storage_cost_USDprkg
-    )
+    capex_electrolyzer_overnight = electrolyzer_total_installed_capex + electrolyzer_indirect_cost
+    capex_storage_installed = hydrogen_storage_capacity_kg * hydrogen_storage_cost_USDprkg
     capex_compressor_installed = (
         compressor_capex_USDprkWe_of_electrolysis * electrolyzer_size_mw * 1000
     )
@@ -157,7 +150,7 @@ def run_profast_for_hydrogen(
     grid_cost_keys = list(grid_prices_interpolated_USDperkwh.keys())
     grid_price_per_yr = np.array(list(grid_prices_interpolated_USDperkwh.values()))
     if grid_connection_scenario == "grid-only":
-        # grid_electricity_useage_kWhpkg=np.mean(H2_Results['Performance Schedules']['Annual Average Efficiency [kWh/kg]'].values) #new 09/05
+        # grid_electricity_useage_kWhpkg=np.mean(H2_Results['Performance Schedules']['Annual Average Efficiency [kWh/kg]'].values) #new 09/05  # noqa: E501
         ren_electricity_useage_kWhpkg = 0
         ren_frac = 0
 
@@ -165,22 +158,20 @@ def run_profast_for_hydrogen(
             grid_price_per_yr * energy_used_per_year_kWhpryr / h2prod_per_year_kgpryr
         )
         grid_prices_interpolated_USDperkg = dict(
-            zip(grid_cost_keys, grid_cost_pr_yr_USDprkg)
+            zip(grid_cost_keys, grid_cost_pr_yr_USDprkg, strict=False)
         )
 
     elif grid_connection_scenario == "hybrid-grid":
         energy_from_grid_pr_yr = energy_used_per_year_kWhpryr - AEP_renewables
         # grid_electricity_useage_kWhpkg=np.mean(energy_from_grid_pr_yr/h2prod_per_year_kgpryr)
         ren_electricity_useage_kWhpkg = AEP_renewables / h2prod_per_year_kgpryr
-        wind_electricity_useage_kWhpkg = (
-            wind_annual_energy_MWh * 1000 / h2prod_per_year_kgpryr
-        )
+        wind_electricity_useage_kWhpkg = wind_annual_energy_MWh * 1000 / h2prod_per_year_kgpryr
         ren_frac = AEP_renewables / energy_used_per_year_kWhpryr
         grid_cost_pr_yr_USDprkg = (
             grid_price_per_yr * energy_from_grid_pr_yr / h2prod_per_year_kgpryr
         )
         grid_prices_interpolated_USDperkg = dict(
-            zip(grid_cost_keys, grid_cost_pr_yr_USDprkg)
+            zip(grid_cost_keys, grid_cost_pr_yr_USDprkg, strict=False)
         )
         # grid_price_per_yr = np.array(list(grid_prices_interpolated_USDperkwh.values()))
         pass
@@ -188,11 +179,9 @@ def run_profast_for_hydrogen(
         # grid_electricity_useage_kWhpkg=0
         ren_frac = 1
         ren_electricity_useage_kWhpkg = AEP_renewables / h2prod_per_year_kgpryr
-        wind_electricity_useage_kWhpkg = (
-            wind_annual_energy_MWh * 1000 / h2prod_per_year_kgpryr
-        )
+        wind_electricity_useage_kWhpkg = wind_annual_energy_MWh * 1000 / h2prod_per_year_kgpryr
         grid_prices_interpolated_USDperkg = dict(
-            zip(grid_cost_keys, np.zeros(len(grid_cost_keys)))
+            zip(grid_cost_keys, np.zeros(len(grid_cost_keys)), strict=False)
         )
     # new changes end here
 
@@ -206,59 +195,49 @@ def run_profast_for_hydrogen(
         if atb_year < 2035:
             if grid_connection_scenario == "grid-only":
                 Ren_PTC[year] = 0
-                electrolysis_total_EI_policy[year] = electrolysis_total_EI_policy_grid[
-                    year
-                ]
+                electrolysis_total_EI_policy[year] = electrolysis_total_EI_policy_grid[year]
             elif grid_connection_scenario == "off-grid":
-                electrolysis_total_EI_policy[year] = (
-                    electrolysis_total_EI_policy_offgrid[year]
-                )
+                electrolysis_total_EI_policy[year] = electrolysis_total_EI_policy_offgrid[year]
                 if policy_option == "no-policy":
                     Ren_PTC[year] = 0
                 elif policy_option == "base":
                     if solar_ITC is True:
-                        Ren_PTC[year] = (
-                            policy["Wind PTC"] * wind_electricity_useage_kWhpkg[y_idx]
-                        )
+                        Ren_PTC[year] = policy["Wind PTC"] * wind_electricity_useage_kWhpkg[y_idx]
                     else:
                         Ren_PTC[year] = (
                             policy["Wind PTC"] * ren_electricity_useage_kWhpkg[y_idx]
                         )  # np.sum(energy_to_electrolyzer)/ (H2_Results['hydrogen_annual_output'])
                 elif policy_option == "max":
                     if solar_ITC is True:
-                        Ren_PTC[year] = (
-                            policy["Wind PTC"] * wind_electricity_useage_kWhpkg[y_idx]
-                        )
+                        Ren_PTC[year] = policy["Wind PTC"] * wind_electricity_useage_kWhpkg[y_idx]
                     else:
                         Ren_PTC[year] = (
                             policy["Wind PTC"] * ren_electricity_useage_kWhpkg[y_idx]
                         )  # np.sum(energy_to_electrolyzer)/ (H2_Results['hydrogen_annual_output'])
             elif grid_connection_scenario == "hybrid-grid":
-                electrolysis_total_EI_policy[year] = (
-                    0  # Basically this is not used for hybrid-grid
-                )
+                electrolysis_total_EI_policy[year] = 0  # Basically this is not used for hybrid-grid
                 if policy_option == "no-policy":
                     Ren_PTC[year] = 0
                 elif policy_option == "base":
                     if solar_ITC is True:
-                        Ren_PTC[year] = (
-                            policy["Wind PTC"] * wind_electricity_useage_kWhpkg[y_idx]
-                        )
+                        Ren_PTC[year] = policy["Wind PTC"] * wind_electricity_useage_kWhpkg[y_idx]
                     else:
                         Ren_PTC[year] = (
                             policy["Wind PTC"] * ren_electricity_useage_kWhpkg[y_idx]
                         )  # energy_from_renewables / (H2_Results['hydrogen_annual_output'])
-                    # Ren_PTC = 0.0051  * np.sum(energy_to_electrolyzer)/ (H2_Results['hydrogen_annual_output']) # We will need to fix this by introducing ren_frac multiplier to denominator when HOPP changes to dealing with grid cases are changed
+                    # We will need to fix this by introducing ren_frac multiplier to denominator
+                    # when HOPP changes to dealing with grid cases are changed
+                    # Ren_PTC = 0.0051  * np.sum(energy_to_electrolyzer)/ (H2_Results['hydrogen_annual_output'])  # noqa: E501
                 elif policy_option == "max":
                     if solar_ITC is True:
-                        Ren_PTC[year] = (
-                            policy["Wind PTC"] * wind_electricity_useage_kWhpkg[y_idx]
-                        )
+                        Ren_PTC[year] = policy["Wind PTC"] * wind_electricity_useage_kWhpkg[y_idx]
                     else:
                         Ren_PTC[year] = (
                             policy["Wind PTC"] * ren_electricity_useage_kWhpkg[y_idx]
                         )  # energy_from_renewables/ (H2_Results['hydrogen_annual_output'])
-                    # Ren_PTC = 0.03072 * np.sum(energy_to_electrolyzer)/ (H2_Results['hydrogen_annual_output']) # We will need to fix this by introducing ren_frac multiplier to denominator when HOPP changes to dealing with grid cases are changed
+                    # We will need to fix this by introducing ren_frac multiplier to denominator
+                    # when HOPP changes to dealing with grid cases are changed
+                    # Ren_PTC = 0.03072 * np.sum(energy_to_electrolyzer)/ (H2_Results['hydrogen_annual_output'])  # noqa: E501
         elif atb_year == 2035:
             Ren_PTC[year] = 0
         y_idx += 1
@@ -266,15 +245,12 @@ def run_profast_for_hydrogen(
     electrolyzer_refurbishment_schedule = np.zeros(plant_life)
     if user_defined_stack_replacement_time:
         refturb_period = round(user_defined_time_between_replacement / (24 * 365))
-        electrolyzer_refurbishment_schedule[
-            refturb_period:plant_life:refturb_period
-        ] = stack_replacement_cost
+        electrolyzer_refurbishment_schedule[refturb_period:plant_life:refturb_period] = (
+            stack_replacement_cost
+        )
     else:
         refturb_period = int(
-            np.floor(
-                H2_Results["new_H2_Results"]["Time Until Replacement [hrs]"]
-                / (24 * 365)
-            )
+            np.floor(H2_Results["new_H2_Results"]["Time Until Replacement [hrs]"] / (24 * 365))
         )
         # int(np.floor(H2_Results['avg_time_between_replacement']/(24*365)))
         if replace_stacks_individually:
@@ -288,16 +264,14 @@ def run_profast_for_hydrogen(
                 percent_of_capacity_replaced * stack_replacement_cost
             )
         else:
-            electrolyzer_refurbishment_schedule[
-                refturb_period:plant_life:refturb_period
-            ] = stack_replacement_cost
+            electrolyzer_refurbishment_schedule[refturb_period:plant_life:refturb_period] = (
+                stack_replacement_cost
+            )
 
-    # electrolyzer_refurbishment_schedule[refturb_period:plant_life:refturb_period]=stack_replacement_cost
+    # electrolyzer_refurbishment_schedule[refturb_period:plant_life:refturb_period]=stack_replacement_cost  # noqa: E501
 
     # total_variable_OM_perkg = variable_OM*elec_avg_consumption_kWhprkg/1000 #09/05
-    annual_variable_OM_perkg = (
-        variable_OM / 1000
-    ) * elec_efficiency_per_yr_kWhprkg  # 09/05
+    annual_variable_OM_perkg = (variable_OM / 1000) * elec_efficiency_per_yr_kWhprkg  # 09/05
 
     if grid_connection_scenario != "grid-only":
         wind_om_cost_kw = renewable_plant_cost_info["wind"]["o&m_per_kw"]
@@ -305,9 +279,7 @@ def run_profast_for_hydrogen(
         capex_wind_installed_init = (
             renewable_plant_cost_info["wind"]["capex_per_kw"] * wind_size_mw * 1000
         )
-        wind_cost_adj = [
-            val for val in renewable_plant_cost_info["wind_savings_dollars"].values()
-        ]
+        wind_cost_adj = list(renewable_plant_cost_info["wind_savings_dollars"].values())
         wind_revised_cost = np.sum(wind_cost_adj)
 
         solar_om_cost_kw = renewable_plant_cost_info["pv"]["o&m_per_kw"]
@@ -321,13 +293,10 @@ def run_profast_for_hydrogen(
             + renewable_plant_cost_info["battery"]["capex_per_kw"]
         )
         capex_battery_installed = (
-            battery_capex_per_kw
-            * renewable_plant_cost_info["battery"]["size_mw"]
-            * 1000
+            battery_capex_per_kw * renewable_plant_cost_info["battery"]["size_mw"] * 1000
         )
         fixed_cost_battery = (
-            renewable_plant_cost_info["battery"]["o&m_percent"]
-            * capex_battery_installed
+            renewable_plant_cost_info["battery"]["o&m_percent"] * capex_battery_installed
         )
 
     else:
@@ -347,10 +316,7 @@ def run_profast_for_hydrogen(
     y_idx = 0
     for year in range(cambium_year, endofincentives_year):
         if atb_year < 2035:
-            if (
-                grid_connection_scenario == "grid-only"
-                or grid_connection_scenario == "off-grid"
-            ):
+            if grid_connection_scenario == "grid-only" or grid_connection_scenario == "off-grid":
                 if policy_option == "no-policy":
                     ITC = 0
                     H2_PTC[year] = 0  # $/kg H2
@@ -429,9 +395,7 @@ def run_profast_for_hydrogen(
                     elif electrolysis_total_EI_policy_grid[year] > 4:
                         H2_PTC_grid = 0
 
-                    if (
-                        electrolysis_total_EI_policy_offgrid[year] <= 0.45
-                    ):  # kg CO2e/kg H2
+                    if electrolysis_total_EI_policy_offgrid[year] <= 0.45:  # kg CO2e/kg H2
                         H2_PTC_offgrid = 3  # $/kg H2
                     elif (
                         electrolysis_total_EI_policy_offgrid[year] > 0.45
@@ -474,9 +438,7 @@ def run_profast_for_hydrogen(
                     elif electrolysis_total_EI_policy_grid[year] > 4:
                         H2_PTC_grid = 0
 
-                    if (
-                        electrolysis_total_EI_policy_offgrid[year] <= 0.45
-                    ):  # kg CO2e/kg H2
+                    if electrolysis_total_EI_policy_offgrid[year] <= 0.45:  # kg CO2e/kg H2
                         H2_PTC_offgrid = 0.6  # $/kg H2
                     elif (
                         electrolysis_total_EI_policy_offgrid[year] > 0.45
@@ -500,8 +462,7 @@ def run_profast_for_hydrogen(
 
                 # H2_PTC =  ren_frac * H2_PTC_offgrid + (elec_cf - ren_frac) * H2_PTC_grid
                 H2_PTC[year] = (
-                    ren_frac[y_idx] * H2_PTC_offgrid
-                    + (1 - ren_frac[y_idx]) * H2_PTC_grid
+                    ren_frac[y_idx] * H2_PTC_offgrid + (1 - ren_frac[y_idx]) * H2_PTC_grid
                 )
             # combined_PTC[year] = H2_PTC[year]+Ren_PTC[year]
         elif atb_year == 2035:
@@ -518,8 +479,7 @@ def run_profast_for_hydrogen(
 
     financial_assumptions = pd.read_csv(
         "H2_Analysis/financial_inputs.csv", index_col=None, header=0
-    )
-    financial_assumptions.set_index(["Parameter"], inplace=True)
+    ).set_index(["Parameter"])
 
     fraction_capex_vre = (
         capex_wind_installed + capex_solar_installed + capex_battery_installed
@@ -535,10 +495,7 @@ def run_profast_for_hydrogen(
 
     fraction_debt_financing_vre = 1 / (
         1
-        + 1
-        / financial_assumptions.loc[
-            "debt equity ratio of initial financing", "Wind/Solar/Bat"
-        ]
+        + 1 / financial_assumptions.loc["debt equity ratio of initial financing", "Wind/Solar/Bat"]
     )
     fraction_debt_financing_h2 = 1 / (
         1
@@ -557,12 +514,8 @@ def run_profast_for_hydrogen(
         "leverage after tax nominal discount rate", "Hydrogen/Steel/Ammonia"
     ]
 
-    real_interest_vre = financial_assumptions.loc[
-        "debt interest rate", "Wind/Solar/Bat"
-    ]
-    real_interest_h2 = financial_assumptions.loc[
-        "debt interest rate", "Hydrogen/Steel/Ammonia"
-    ]
+    real_interest_vre = financial_assumptions.loc["debt interest rate", "Wind/Solar/Bat"]
+    real_interest_h2 = financial_assumptions.loc["debt interest rate", "Hydrogen/Steel/Ammonia"]
 
     real_roe_combined = (
         fraction_equity_financing_vre * fraction_capex_vre * real_roe_vre
@@ -615,9 +568,9 @@ def run_profast_for_hydrogen(
     cf_per_year_vals = H2_Results["Performance Schedules"][
         "Capacity Factor [-]"
     ].values  # new 09/05
-    elec_cf_per_year_PF = dict(zip(year_keys, cf_per_year_vals))
+    elec_cf_per_year_PF = dict(zip(year_keys, cf_per_year_vals, strict=False))
     life_average_cf = H2_Results["Performance Schedules"]["Capacity Factor [-]"].mean()
-    total_variable_OM_perkg = dict(zip(year_keys, annual_variable_OM_perkg))
+    total_variable_OM_perkg = dict(zip(year_keys, annual_variable_OM_perkg, strict=False))
     # elec_cf = np.mean(cf_per_year_vals)
 
     pf.set_params(
@@ -672,11 +625,7 @@ def run_profast_for_hydrogen(
             "one time cap inct",
             {
                 "value": ITC
-                * (
-                    capex_storage_installed
-                    + capex_battery_installed
-                    + capex_solar_installed
-                ),
+                * (capex_storage_installed + capex_battery_installed + capex_solar_installed),
                 "depr type": "MACRS",
                 "depr period": 7,
                 "depreciable": True,
@@ -692,11 +641,11 @@ def run_profast_for_hydrogen(
                 "depreciable": True,
             },
         )
-    # pf.set_params('one time cap inct',{'value':ITC*capex_solar_installed,'depr type':'MACRS','depr period':7,'depreciable':True})
-    # pf.set_params('one time cap inct',{'value':ITC*capex_battery_installed,'depr type':'MACRS','depr period':7,'depreciable':True})
+    # pf.set_params('one time cap inct',{'value':ITC*capex_solar_installed,'depr type':'MACRS','depr period':7,'depreciable':True})  # noqa: E501
+    # pf.set_params('one time cap inct',{'value':ITC*capex_battery_installed,'depr type':'MACRS','depr period':7,'depreciable':True})  # noqa: E501
 
     # ----------------------------------- Add capital items to ProFAST ----------------
-    # pf.add_capital_item(name="Electrolysis system",cost=capex_electrolyzer_overnight,depr_type="MACRS",depr_period=5,refurb=[0])
+    # pf.add_capital_item(name="Electrolysis system",cost=capex_electrolyzer_overnight,depr_type="MACRS",depr_period=5,refurb=[0])  # noqa: E501
     pf.add_capital_item(
         name="Electrolysis system",
         cost=capex_electrolyzer_overnight,
@@ -727,9 +676,7 @@ def run_profast_for_hydrogen(
     )
 
     if grid_connection_scenario == "grid-only":
-        pf.add_capital_item(
-            name="Wind Plant", cost=0, depr_type="MACRS", depr_period=7, refurb=[0]
-        )
+        pf.add_capital_item(name="Wind Plant", cost=0, depr_type="MACRS", depr_period=7, refurb=[0])
         pf.add_capital_item(
             name="Solar Plant", cost=0, depr_type="MACRS", depr_period=7, refurb=[0]
         )
@@ -758,8 +705,8 @@ def run_profast_for_hydrogen(
             depr_period=7,
             refurb=[0],
         )
-        # pf.add_capital_item(name = "Renewable Plant",cost = capex_hybrid_installed,depr_type = "MACRS",depr_period = 5,refurb = [0])
-    # replacement_capex = np.sum(electrolyzer_total_installed_capex*electrolyzer_refurbishment_schedule)
+        # pf.add_capital_item(name = "Renewable Plant",cost = capex_hybrid_installed,depr_type = "MACRS",depr_period = 5,refurb = [0])  # noqa: E501
+    # replacement_capex = np.sum(electrolyzer_total_installed_capex*electrolyzer_refurbishment_schedule)  # noqa: E501
     # NOTE TOTAL CAPEX DOES NOT REFLECT STACK REPLACEMENT COSTS AND HOW THEY CHANGE OVER TIME!
     total_capex = (
         capex_electrolyzer_overnight
@@ -770,7 +717,7 @@ def run_profast_for_hydrogen(
         + capex_solar_installed
         + capex_battery_installed
     )  # + replacement_capex#capex_hybrid_installed
-    # total_capex = capex_electrolyzer_overnight+capex_compressor_installed+capex_storage_installed+capex_desal+ capex_hybrid_installed
+    # total_capex = capex_electrolyzer_overnight+capex_compressor_installed+capex_storage_installed+capex_desal+ capex_hybrid_installed  # noqa: E501
     # capex_fraction = {'Electrolyzer':capex_electrolyzer_overnight/total_capex,
     #                   'Compression':capex_compressor_installed/total_capex,
     #                   'Hydrogen Storage':capex_storage_installed/total_capex,
@@ -797,10 +744,10 @@ def run_profast_for_hydrogen(
         cost=opex_desal,
         escalation=gen_inflation,
     )
-    # pf.add_fixed_cost(name="Renewable Plant Fixed O&M Cost",usage=1.0,unit='$/year',cost=fixed_cost_renewables,escalation=gen_inflation)
+    # pf.add_fixed_cost(name="Renewable Plant Fixed O&M Cost",usage=1.0,unit='$/year',cost=fixed_cost_renewables,escalation=gen_inflation)  # noqa: E501
 
     if grid_connection_scenario == "grid-only":
-        # pf.add_fixed_cost(name="Renewable Plant Fixed O&M Cost",usage=1.0,unit='$/year',cost=0,escalation=gen_inflation)
+        # pf.add_fixed_cost(name="Renewable Plant Fixed O&M Cost",usage=1.0,unit='$/year',cost=0,escalation=gen_inflation)  # noqa: E501
         pf.add_fixed_cost(
             name="Wind Plant Fixed O&M Cost",
             usage=1.0,
@@ -823,7 +770,7 @@ def run_profast_for_hydrogen(
             escalation=gen_inflation,
         )
     else:
-        # pf.add_fixed_cost(name="Renewable Plant Fixed O&M Cost",usage=1.0,unit='$/year',cost=fixed_cost_renewables,escalation=gen_inflation)
+        # pf.add_fixed_cost(name="Renewable Plant Fixed O&M Cost",usage=1.0,unit='$/year',cost=fixed_cost_renewables,escalation=gen_inflation)  # noqa: E501
         pf.add_fixed_cost(
             name="Wind Plant Fixed O&M Cost",
             usage=1.0,
@@ -847,7 +794,7 @@ def run_profast_for_hydrogen(
         )
 
     # ---------------------- Add feedstocks, note the various cost options-------------------
-    # pf.add_feedstock(name='Electricity',usage=elec_avg_consumption_kWhprkg,unit='kWh',cost=lcoe/100,escalation=gen_inflation)
+    # pf.add_feedstock(name='Electricity',usage=elec_avg_consumption_kWhprkg,unit='kWh',cost=lcoe/100,escalation=gen_inflation)  # noqa: E501
     pf.add_feedstock(
         name="Water",
         usage=water_consumption_avg_galH2O_prkgH2,
@@ -864,7 +811,7 @@ def run_profast_for_hydrogen(
     )
 
     # TODO: include changes in energy required/year for grid usage
-    # pf.add_feedstock(name='Grid Electricity Cost',usage=grid_electricity_useage_kWhpkg,unit='$/kWh',cost=grid_prices_interpolated_USDperkwh,escalation=gen_inflation)
+    # pf.add_feedstock(name='Grid Electricity Cost',usage=grid_electricity_useage_kWhpkg,unit='$/kWh',cost=grid_prices_interpolated_USDperkwh,escalation=gen_inflation)  # noqa: E501
     pf.add_feedstock(
         name="Grid Electricity Cost",
         usage=1.0,
@@ -873,7 +820,7 @@ def run_profast_for_hydrogen(
         escalation=gen_inflation,
     )
 
-    # pf.add_feedstock(name='Grid Electricity Cost',usage=min_grid_usage,unit='$/kWh',cost=grid_prices_interpolated_USDperkwh,escalation=gen_inflation)
+    # pf.add_feedstock(name='Grid Electricity Cost',usage=min_grid_usage,unit='$/kWh',cost=grid_prices_interpolated_USDperkwh,escalation=gen_inflation)  # noqa: E501
     # ---------------------- Add various tax credit incentives -------------------
     pf.add_incentive(
         name="Renewable PTC credit",
@@ -898,27 +845,13 @@ def run_profast_for_hydrogen(
 
     # Calculate contribution of equipment to breakeven price
     total_price_capex = (
-        price_breakdown.loc[
-            price_breakdown["Name"] == "Electrolysis system", "NPV"
-        ].tolist()[0]
-        + price_breakdown.loc[price_breakdown["Name"] == "Compression", "NPV"].tolist()[
-            0
-        ]
-        + price_breakdown.loc[
-            price_breakdown["Name"] == "Hydrogen Storage", "NPV"
-        ].tolist()[0]
-        + price_breakdown.loc[
-            price_breakdown["Name"] == "Desalination", "NPV"
-        ].tolist()[0]
-        + price_breakdown.loc[price_breakdown["Name"] == "Wind Plant", "NPV"].tolist()[
-            0
-        ]
-        + price_breakdown.loc[price_breakdown["Name"] == "Solar Plant", "NPV"].tolist()[
-            0
-        ]
-        + price_breakdown.loc[
-            price_breakdown["Name"] == "Battery Storage", "NPV"
-        ].tolist()[0]
+        price_breakdown.loc[price_breakdown["Name"] == "Electrolysis system", "NPV"].tolist()[0]
+        + price_breakdown.loc[price_breakdown["Name"] == "Compression", "NPV"].tolist()[0]
+        + price_breakdown.loc[price_breakdown["Name"] == "Hydrogen Storage", "NPV"].tolist()[0]
+        + price_breakdown.loc[price_breakdown["Name"] == "Desalination", "NPV"].tolist()[0]
+        + price_breakdown.loc[price_breakdown["Name"] == "Wind Plant", "NPV"].tolist()[0]
+        + price_breakdown.loc[price_breakdown["Name"] == "Solar Plant", "NPV"].tolist()[0]
+        + price_breakdown.loc[price_breakdown["Name"] == "Battery Storage", "NPV"].tolist()[0]
     )
     capex_fraction = {
         "Electrolyzer": price_breakdown.loc[
@@ -937,9 +870,9 @@ def run_profast_for_hydrogen(
             price_breakdown["Name"] == "Desalination", "NPV"
         ].tolist()[0]
         / total_price_capex,
-        "Wind Plant": price_breakdown.loc[
-            price_breakdown["Name"] == "Wind Plant", "NPV"
-        ].tolist()[0]
+        "Wind Plant": price_breakdown.loc[price_breakdown["Name"] == "Wind Plant", "NPV"].tolist()[
+            0
+        ]
         / total_price_capex,
         "Solar Plant": price_breakdown.loc[
             price_breakdown["Name"] == "Solar Plant", "NPV"
@@ -953,47 +886,27 @@ def run_profast_for_hydrogen(
 
     # Calculate financial expense associated with equipment
     cap_expense = (
-        price_breakdown.loc[
-            price_breakdown["Name"] == "Repayment of debt", "NPV"
-        ].tolist()[0]
-        + price_breakdown.loc[
-            price_breakdown["Name"] == "Interest expense", "NPV"
-        ].tolist()[0]
-        + price_breakdown.loc[
-            price_breakdown["Name"] == "Dividends paid", "NPV"
-        ].tolist()[0]
-        - price_breakdown.loc[
-            price_breakdown["Name"] == "Inflow of debt", "NPV"
-        ].tolist()[0]
-        - price_breakdown.loc[
-            price_breakdown["Name"] == "Inflow of equity", "NPV"
-        ].tolist()[0]
+        price_breakdown.loc[price_breakdown["Name"] == "Repayment of debt", "NPV"].tolist()[0]
+        + price_breakdown.loc[price_breakdown["Name"] == "Interest expense", "NPV"].tolist()[0]
+        + price_breakdown.loc[price_breakdown["Name"] == "Dividends paid", "NPV"].tolist()[0]
+        - price_breakdown.loc[price_breakdown["Name"] == "Inflow of debt", "NPV"].tolist()[0]
+        - price_breakdown.loc[price_breakdown["Name"] == "Inflow of equity", "NPV"].tolist()[0]
     )
 
     # Calculate remaining financial expenses
     remaining_financial = (
-        price_breakdown.loc[
-            price_breakdown["Name"] == "Non-depreciable assets", "NPV"
-        ].tolist()[0]
-        + price_breakdown.loc[
-            price_breakdown["Name"] == "Cash on hand reserve", "NPV"
-        ].tolist()[0]
-        + price_breakdown.loc[
-            price_breakdown["Name"] == "Property insurance", "NPV"
-        ].tolist()[0]
+        price_breakdown.loc[price_breakdown["Name"] == "Non-depreciable assets", "NPV"].tolist()[0]
+        + price_breakdown.loc[price_breakdown["Name"] == "Cash on hand reserve", "NPV"].tolist()[0]
+        + price_breakdown.loc[price_breakdown["Name"] == "Property insurance", "NPV"].tolist()[0]
         - price_breakdown.loc[
             price_breakdown["Name"] == "Sale of non-depreciable assets", "NPV"
         ].tolist()[0]
-        - price_breakdown.loc[
-            price_breakdown["Name"] == "Cash on hand recovery", "NPV"
-        ].tolist()[0]
+        - price_breakdown.loc[price_breakdown["Name"] == "Cash on hand recovery", "NPV"].tolist()[0]
     )
 
     # Calculate LCOH breakdown and assign capital expense to equipment costs
     price_breakdown_electrolyzer = (
-        price_breakdown.loc[
-            price_breakdown["Name"] == "Electrolysis system", "NPV"
-        ].tolist()[0]
+        price_breakdown.loc[price_breakdown["Name"] == "Electrolysis system", "NPV"].tolist()[0]
         + cap_expense * capex_fraction["Electrolyzer"]
     )
     price_breakdown_compression = (
@@ -1001,18 +914,14 @@ def run_profast_for_hydrogen(
         + cap_expense * capex_fraction["Compression"]
     )
     price_breakdown_storage = (
-        price_breakdown.loc[
-            price_breakdown["Name"] == "Hydrogen Storage", "NPV"
-        ].tolist()[0]
+        price_breakdown.loc[price_breakdown["Name"] == "Hydrogen Storage", "NPV"].tolist()[0]
         + cap_expense * capex_fraction["Hydrogen Storage"]
     )
     price_breakdown_desalination = (
-        price_breakdown.loc[price_breakdown["Name"] == "Desalination", "NPV"].tolist()[
-            0
-        ]
+        price_breakdown.loc[price_breakdown["Name"] == "Desalination", "NPV"].tolist()[0]
         + cap_expense * capex_fraction["Desalination"]
     )
-    # price_breakdown_renewables = price_breakdown.loc[price_breakdown['Name']=='Renewable Plant','NPV'].tolist()[0] + cap_expense*capex_fraction['Renewable Plant']
+    # price_breakdown_renewables = price_breakdown.loc[price_breakdown['Name']=='Renewable Plant','NPV'].tolist()[0] + cap_expense*capex_fraction['Renewable Plant']  # noqa: E501
     price_breakdown_wind = (
         price_breakdown.loc[price_breakdown["Name"] == "Wind Plant", "NPV"].tolist()[0]
         + cap_expense * capex_fraction["Wind Plant"]
@@ -1022,9 +931,7 @@ def run_profast_for_hydrogen(
         + cap_expense * capex_fraction["Solar Plant"]
     )
     price_breakdown_battery = (
-        price_breakdown.loc[
-            price_breakdown["Name"] == "Battery Storage", "NPV"
-        ].tolist()[0]
+        price_breakdown.loc[price_breakdown["Name"] == "Battery Storage", "NPV"].tolist()[0]
         + cap_expense * capex_fraction["Battery Storage"]
     )
 
@@ -1037,7 +944,7 @@ def run_profast_for_hydrogen(
     price_breakdown_desalination_FOM = price_breakdown.loc[
         price_breakdown["Name"] == "Desalination Fixed O&M Cost", "NPV"
     ].tolist()[0]
-    # price_breakdown_renewables_FOM = price_breakdown.loc[price_breakdown['Name']=='Renewable Plant Fixed O&M Cost','NPV'].tolist()[0]
+    # price_breakdown_renewables_FOM = price_breakdown.loc[price_breakdown['Name']=='Renewable Plant Fixed O&M Cost','NPV'].tolist()[0]  # noqa: E501
     price_breakdown_wind_FOM = price_breakdown.loc[
         price_breakdown["Name"] == "Wind Plant Fixed O&M Cost", "NPV"
     ].tolist()[0]
@@ -1048,12 +955,8 @@ def run_profast_for_hydrogen(
         price_breakdown["Name"] == "Battery Storage Fixed O&M Cost", "NPV"
     ].tolist()[0]
     price_breakdown_taxes = (
-        price_breakdown.loc[
-            price_breakdown["Name"] == "Income taxes payable", "NPV"
-        ].tolist()[0]
-        - price_breakdown.loc[
-            price_breakdown["Name"] == "Monetized tax losses", "NPV"
-        ].tolist()[0]
+        price_breakdown.loc[price_breakdown["Name"] == "Income taxes payable", "NPV"].tolist()[0]
+        - price_breakdown.loc[price_breakdown["Name"] == "Monetized tax losses", "NPV"].tolist()[0]
     )
     if gen_inflation > 0:
         price_breakdown_taxes = (
@@ -1063,31 +966,33 @@ def run_profast_for_hydrogen(
             ].tolist()[0]
         )
 
-    price_breakdown_water = price_breakdown.loc[
-        price_breakdown["Name"] == "Water", "NPV"
-    ].tolist()[0]
+    price_breakdown_water = price_breakdown.loc[price_breakdown["Name"] == "Water", "NPV"].tolist()[
+        0
+    ]
 
     price_breakdown_grid_elec_price = price_breakdown.loc[
         price_breakdown["Name"] == "Grid Electricity Cost", "NPV"
     ].tolist()[0]
 
-    # price_breakdown_financial = price_breakdown.loc[price_breakdown['Name']=='Non-depreciable assets','NPV'].tolist()[0]\
-    #     + price_breakdown.loc[price_breakdown['Name']=='Cash on hand reserve','NPV'].tolist()[0]\
-    #     + price_breakdown.loc[price_breakdown['Name']=='Property insurance','NPV'].tolist()[0]\
-    #     + price_breakdown.loc[price_breakdown['Name']=='Repayment of debt','NPV'].tolist()[0]\
-    #     + price_breakdown.loc[price_breakdown['Name']=='Interest expense','NPV'].tolist()[0]\
-    #     + price_breakdown.loc[price_breakdown['Name']=='Dividends paid','NPV'].tolist()[0]\
-    #     - price_breakdown.loc[price_breakdown['Name']=='Sale of non-depreciable assets','NPV'].tolist()[0]\
-    #     - price_breakdown.loc[price_breakdown['Name']=='Cash on hand recovery','NPV'].tolist()[0]\
-    #     - price_breakdown.loc[price_breakdown['Name']=='Inflow of debt','NPV'].tolist()[0]\
-    #     - price_breakdown.loc[price_breakdown['Name']=='Inflow of equity','NPV'].tolist()[0]
+    # price_breakdown_financial = (
+    #     price_breakdown.loc[price_breakdown["Name"] == "Non-depreciable assets", "NPV"].tolist()[0]  # noqa: E501
+    #     + price_breakdown.loc[price_breakdown["Name"] == "Cash on hand reserve", "NPV"].tolist()[0]  # noqa: E501
+    #     + price_breakdown.loc[price_breakdown["Name"] == "Property insurance", "NPV"].tolist()[0]
+    #     + price_breakdown.loc[price_breakdown["Name"] == "Repayment of debt", "NPV"].tolist()[0]
+    #     + price_breakdown.loc[price_breakdown["Name"] == "Interest expense", "NPV"].tolist()[0]
+    #     + price_breakdown.loc[price_breakdown["Name"] == "Dividends paid", "NPV"].tolist()[0]
+    #     - price_breakdown.loc[
+    #         price_breakdown["Name"] == "Sale of non-depreciable assets", "NPV"
+    #     ].tolist()[0]
+    #     - price_breakdown.loc[price_breakdown["Name"] == "Cash on hand recovery", "NPV"].tolist()[0]  # noqa: E501
+    #     - price_breakdown.loc[price_breakdown["Name"] == "Inflow of debt", "NPV"].tolist()[0]
+    #     - price_breakdown.loc[price_breakdown["Name"] == "Inflow of equity", "NPV"].tolist()[0]
+    # )
     price_breakdown_renewables = (
         price_breakdown_wind + price_breakdown_solar + price_breakdown_battery
     )
     price_breakdown_renewables_FOM = (
-        price_breakdown_wind_FOM
-        + price_breakdown_solar_FOM
-        + price_breakdown_battery_FOM
+        price_breakdown_wind_FOM + price_breakdown_solar_FOM + price_breakdown_battery_FOM
     )
     lcoh_check = (
         price_breakdown_electrolyzer
@@ -1107,8 +1012,7 @@ def run_profast_for_hydrogen(
     # + price_breakdown_stack_replacement
 
     lcoh_breakdown = {
-        "LCOH: Compression & storage ($/kg)": price_breakdown_storage
-        + price_breakdown_compression,
+        "LCOH: Compression & storage ($/kg)": price_breakdown_storage + price_breakdown_compression,
         "LCOH: Electrolyzer CAPEX ($/kg)": price_breakdown_electrolyzer,
         "LCOH: Desalination CAPEX ($/kg)": price_breakdown_desalination,
         "LCOH: Electrolyzer FOM ($/kg)": price_breakdown_electrolysis_FOM,
@@ -1120,7 +1024,8 @@ def run_profast_for_hydrogen(
         "LCOH: Solar Plant FOM ($/kg)": price_breakdown_solar_FOM,
         "LCOH: Battery Storage ($/kg)": price_breakdown_battery,
         "LCOH: Battery Storage FOM ($/kg)": price_breakdown_battery_FOM,
-        #'LCOH: Renewable plant ($/kg)':price_breakdown_renewables,'LCOH: Renewable FOM ($/kg)':price_breakdown_renewables_FOM,
+        #  'LCOH: Renewable plant ($/kg)':price_breakdown_renewables,
+        #  'LCOH: Renewable FOM ($/kg)':price_breakdown_renewables_FOM,
         "LCOH: Taxes ($/kg)": price_breakdown_taxes,
         "LCOH: Water consumption ($/kg)": price_breakdown_water,
         "LCOH: Grid electricity ($/kg)": price_breakdown_grid_elec_price,
@@ -1135,7 +1040,20 @@ def run_profast_for_hydrogen(
     )
     price_breakdown = price_breakdown.drop(columns=["index", "Amount"])
 
-    # return(sol,summary,price_breakdown,lcoh_breakdown,capex_electrolyzer_overnight/electrolyzer_size_mw/1000,elec_cf,ren_frac,electrolysis_total_EI_policy_grid,electrolysis_total_EI_policy_offgrid,H2_PTC,Ren_PTC,total_capex)
+    # return (
+    #     sol,
+    #     summary,
+    #     price_breakdown,
+    #     lcoh_breakdown,
+    #     capex_electrolyzer_overnight / electrolyzer_size_mw / 1000,
+    #     elec_cf,
+    #     ren_frac,
+    #     electrolysis_total_EI_policy_grid,
+    #     electrolysis_total_EI_policy_offgrid,
+    #     H2_PTC,
+    #     Ren_PTC,
+    #     total_capex,
+    # )
     return (
         sol,
         summary,

@@ -1,12 +1,12 @@
 from pathlib import Path
 
 import numpy as np
-import numpy_financial as npf
 import pandas as pd
 import ProFAST  # system financial model
-from attrs import define, field
-from hopp.simulation import HoppInterface
+import numpy_financial as npf
+from attrs import field, define
 from ORBIT import ProjectManager
+from hopp.simulation import HoppInterface
 
 
 @define
@@ -26,7 +26,8 @@ class WindCostConfig:
         turbine_config (Dict[str, float], optional):
             Configuration parameters specific to turbine
         orbit_hybrid_electrical_export_config (Dict[str, float], optional):
-            Configuration parameters for hybrid electrical export in ORBIT, required if using a different substation size for the hybrid plant than for the wind plant alone
+            Configuration parameters for hybrid electrical export in ORBIT, required if using a
+            different substation size for the hybrid plant than for the wind plant alone
         weather (Union[list, tuple, numpy.ndarray], optional):
             Array-like of wind speeds for ORBIT to use in determining installation time and costs
     """
@@ -66,9 +67,7 @@ class WindCostOutputs:
     orbit_project: dict | ProjectManager | None = field(default=None)
 
 
-def run_wind_cost_model(
-    wind_cost_inputs: WindCostConfig, verbose=False
-) -> WindCostOutputs:
+def run_wind_cost_model(wind_cost_inputs: WindCostConfig, verbose=False) -> WindCostOutputs:
     if wind_cost_inputs.design_scenario["wind_location"] == "offshore":
         # if per kw
         project, orbit_hybrid_electrical_export_project = run_orbit(
@@ -109,13 +108,10 @@ def run_wind_cost_model(
                 max(orbit_hybrid_electrical_export_project.monthly_opex.values()) * 12
             )
 
-        if (
-            "installation_time"
-            in wind_cost_inputs.greenheart_config["project_parameters"]
-        ):
-            installation_time = wind_cost_inputs.greenheart_config[
-                "project_parameters"
-            ]["installation_time"]
+        if "installation_time" in wind_cost_inputs.greenheart_config["project_parameters"]:
+            installation_time = wind_cost_inputs.greenheart_config["project_parameters"][
+                "installation_time"
+            ]
         else:
             installation_time = (project.installation_time / (365 * 24)) * (12.0 / 1.0)
 
@@ -130,24 +126,17 @@ def run_wind_cost_model(
         )
     elif wind_cost_inputs.design_scenario["wind_location"] == "onshore":
         total_wind_cost_no_export = (
-            wind_cost_inputs.hopp_config["config"]["cost_info"][
-                "wind_installed_cost_mw"
-            ]
+            wind_cost_inputs.hopp_config["config"]["cost_info"]["wind_installed_cost_mw"]
             * wind_cost_inputs.hopp_config["technologies"]["wind"]["num_turbines"]
             * wind_cost_inputs.turbine_config["turbine_rating"]
         )
 
-        annual_operating_cost_wind = (
-            wind_cost_inputs.hopp_interface.system.wind.om_total_expense[0]
-        )
+        annual_operating_cost_wind = wind_cost_inputs.hopp_interface.system.wind.om_total_expense[0]
 
-        if (
-            "installation_time"
-            in wind_cost_inputs.greenheart_config["project_parameters"]
-        ):
-            installation_time = wind_cost_inputs.greenheart_config[
-                "project_parameters"
-            ]["installation_time"]
+        if "installation_time" in wind_cost_inputs.greenheart_config["project_parameters"]:
+            installation_time = wind_cost_inputs.greenheart_config["project_parameters"][
+                "installation_time"
+            ]
         else:
             installation_time = 0
 
@@ -164,9 +153,7 @@ def run_wind_cost_model(
 
 
 # Function to run orbit from provided inputs - this is just for wind costs
-def run_orbit(
-    orbit_config, verbose=False, weather=None, orbit_hybrid_electrical_export_config={}
-):
+def run_orbit(orbit_config, verbose=False, weather=None, orbit_hybrid_electrical_export_config={}):
     # set up ORBIT
     project = ProjectManager(orbit_config, weather=weather)
 
@@ -180,9 +167,7 @@ def run_orbit(
         hybrid_substation_project = ProjectManager(
             orbit_hybrid_electrical_export_config, weather=weather
         )
-        hybrid_substation_project.run(
-            availability=orbit_config["installation_availability"]
-        )
+        hybrid_substation_project.run(availability=orbit_config["installation_availability"])
 
     # print results if desired
     if verbose:
@@ -226,39 +211,29 @@ def adjust_orbit_costs(orbit_project, greenheart_config):
     return wind_total_capex, wind_capex_breakdown, wind_capex_multiplier
 
 
-def breakout_export_costs_from_orbit_results(
-    orbit_project, greenheart_config, design_scenario
-):
+def breakout_export_costs_from_orbit_results(orbit_project, greenheart_config, design_scenario):
     # adjust wind capex to meet expectations
     wind_total_capex, wind_capex_breakdown, wind_capex_multiplier = adjust_orbit_costs(
         orbit_project=orbit_project, greenheart_config=greenheart_config
     )
 
-    # onshore substation cost is not included in ORBIT costs by default, so we have to add it separately
+    # onshore substation cost not included in ORBIT costs by default, so add it separately
     total_wind_installed_costs_with_export = wind_total_capex
 
     # breakout export system costs
     array_cable_equipment_cost = wind_capex_breakdown["Array System"]
     array_cable_installation_cost = wind_capex_breakdown["Array System Installation"]
-    total_array_cable_system_capex = (
-        array_cable_equipment_cost + array_cable_installation_cost
-    )
+    total_array_cable_system_capex = array_cable_equipment_cost + array_cable_installation_cost
 
     export_cable_equipment_cost = wind_capex_breakdown[
         "Export System"
     ]  # this should include the onshore substation
     export_cable_installation_cost = wind_capex_breakdown["Export System Installation"]
     substation_equipment_cost = wind_capex_breakdown["Offshore Substation"]
-    substation_installation_cost = wind_capex_breakdown[
-        "Offshore Substation Installation"
-    ]
-    total_export_cable_system_capex = (
-        export_cable_equipment_cost + export_cable_installation_cost
-    )
+    substation_installation_cost = wind_capex_breakdown["Offshore Substation Installation"]
+    total_export_cable_system_capex = export_cable_equipment_cost + export_cable_installation_cost
 
-    total_offshore_substation_capex = (
-        substation_equipment_cost + substation_installation_cost
-    )
+    total_offshore_substation_capex = substation_equipment_cost + substation_installation_cost
 
     total_electrical_export_system_cost = (
         total_array_cable_system_capex
@@ -282,29 +257,21 @@ def breakout_export_costs_from_orbit_results(
         design_scenario["electrolyzer_location"] == "turbine"
         and design_scenario["h2_storage_location"] == "platform"
     ):
-        unused_export_system_cost = (
-            total_export_cable_system_capex  # TODO check assumptions here
-        )
+        unused_export_system_cost = total_export_cable_system_capex  # TODO check assumptions here
     elif (
         design_scenario["electrolyzer_location"] == "platform"
         and design_scenario["h2_storage_location"] == "platform"
     ):
-        unused_export_system_cost = (
-            total_export_cable_system_capex  # TODO check assumptions here
-        )
+        unused_export_system_cost = total_export_cable_system_capex  # TODO check assumptions here
     elif (
         design_scenario["electrolyzer_location"] == "platform"
         or design_scenario["electrolyzer_location"] == "turbine"
     ) and design_scenario["h2_storage_location"] == "onshore":
-        unused_export_system_cost = (
-            total_export_cable_system_capex  # TODO check assumptions here
-        )
+        unused_export_system_cost = total_export_cable_system_capex  # TODO check assumptions here
     else:
         unused_export_system_cost = 0.0
 
-    total_used_export_system_costs = (
-        total_electrical_export_system_cost - unused_export_system_cost
-    )
+    total_used_export_system_costs = total_electrical_export_system_cost - unused_export_system_cost
 
     total_wind_cost_no_export = (
         total_wind_installed_costs_with_export - total_used_export_system_costs
@@ -328,10 +295,10 @@ def run_capex(
     platform_results,
     verbose=False,
 ):
-    # total_wind_cost_no_export, total_used_export_system_costs = breakout_export_costs_from_orbit_results(orbit_project, greenheart_config, design_scenario)
+    # total_wind_cost_no_export, total_used_export_system_costs = breakout_export_costs_from_orbit_results(orbit_project, greenheart_config, design_scenario)  # noqa: E501
 
     # if orbit_hybrid_electrical_export_project is not None:
-    #     _, total_used_export_system_costs = breakout_export_costs_from_orbit_results(orbit_hybrid_electrical_export_project, greenheart_config, design_scenario)
+    #     _, total_used_export_system_costs = breakout_export_costs_from_orbit_results(orbit_hybrid_electrical_export_project, greenheart_config, design_scenario)  # noqa: E501
 
     # wave capex
     if hopp_config["site"]["wave"]:
@@ -386,9 +353,7 @@ def run_capex(
         desal_capex = 0.0
 
     ## electrolyzer capex
-    electrolyzer_total_capital_cost = electrolyzer_cost_results[
-        "electrolyzer_total_capital_cost"
-    ]
+    electrolyzer_total_capital_cost = electrolyzer_cost_results["electrolyzer_total_capital_cost"]
 
     if (
         design_scenario["electrolyzer_location"] == "platform"
@@ -452,7 +417,7 @@ def run_capex(
     # discount capex to appropriate year for unified costing
     for key in capex_breakdown.keys():
         if key == "h2_storage":
-            # if design_scenario["h2_storage_location"] == "turbine" and greenheart_config["h2_storage"]["type"] == "turbine":
+            # if design_scenario["h2_storage_location"] == "turbine" and greenheart_config["h2_storage"]["type"] == "turbine":  # noqa: E501
             #     cost_year = greenheart_config["finance_parameters"]["discount_years"][key][
             #         design_scenario["h2_storage_location"]
             #     ]
@@ -472,9 +437,7 @@ def run_capex(
             capex_breakdown[key],
         )
 
-    total_system_installed_cost = sum(
-        capex_breakdown[key] for key in capex_breakdown.keys()
-    )
+    total_system_installed_cost = sum(capex_breakdown[key] for key in capex_breakdown.keys())
 
     if verbose:
         print("\nCAPEX Breakdown")
@@ -537,13 +500,9 @@ def run_opex(
 
     annual_operating_cost_h2 = electrolyzer_cost_results["electrolyzer_OM_cost_annual"]
 
-    h2_transport_compressor_opex = h2_transport_compressor_results[
-        "compressor_opex"
-    ]  # annual
+    h2_transport_compressor_opex = h2_transport_compressor_results["compressor_opex"]  # annual
 
-    h2_transport_pipeline_opex = h2_transport_pipe_results["annual operating cost [$]"][
-        0
-    ]  # annual
+    h2_transport_pipeline_opex = h2_transport_pipe_results["annual operating cost [$]"][0]  # annual
 
     storage_opex = h2_storage_results["storage_opex"]
     # desal OPEX
@@ -646,12 +605,8 @@ def run_profast_lcoe(
         np.sum(hopp_results["combined_hybrid_power_production_hopp"]) / 365.0,
     )  # kWh/day
     pf.set_params("maintenance", {"value": 0, "escalation": gen_inflation})
-    pf.set_params(
-        "analysis start year", greenheart_config["project_parameters"]["atb_year"] + 1
-    )
-    pf.set_params(
-        "operating life", greenheart_config["project_parameters"]["project_lifetime"]
-    )
+    pf.set_params("analysis start year", greenheart_config["project_parameters"]["atb_year"] + 1)
+    pf.set_params("operating life", greenheart_config["project_parameters"]["project_lifetime"])
     pf.set_params("installation months", wind_cost_results.installation_time)
     pf.set_params(
         "installation cost",
@@ -667,15 +622,12 @@ def run_profast_lcoe(
         pf.set_params(
             "end of proj sale non depr assets",
             land_cost
-            * (1 + gen_inflation)
-            ** greenheart_config["project_parameters"]["project_lifetime"],
+            * (1 + gen_inflation) ** greenheart_config["project_parameters"]["project_lifetime"],
         )
     pf.set_params("demand rampup", 0)
     pf.set_params("long term utilization", 1)
     pf.set_params("credit card fees", 0)
-    pf.set_params(
-        "sales tax", greenheart_config["finance_parameters"]["sales_tax_rate"]
-    )
+    pf.set_params("sales tax", greenheart_config["finance_parameters"]["sales_tax_rate"])
     pf.set_params("license and permit", {"value": 00, "escalation": gen_inflation})
     pf.set_params("rent", {"value": 0, "escalation": gen_inflation})
     pf.set_params(
@@ -685,9 +637,7 @@ def run_profast_lcoe(
     )
     pf.set_params(
         "admin expense",
-        greenheart_config["finance_parameters"][
-            "administrative_expense_percent_of_sales"
-        ],
+        greenheart_config["finance_parameters"]["administrative_expense_percent_of_sales"],
     )
     pf.set_params(
         "total income tax rate",
@@ -712,16 +662,12 @@ def run_profast_lcoe(
         ),
     )
     pf.set_params("debt type", greenheart_config["finance_parameters"]["debt_type"])
-    pf.set_params(
-        "loan period if used", greenheart_config["finance_parameters"]["loan_period"]
-    )
+    pf.set_params("loan period if used", greenheart_config["finance_parameters"]["loan_period"])
     pf.set_params(
         "debt interest rate",
         greenheart_config["finance_parameters"]["debt_interest_rate"],
     )
-    pf.set_params(
-        "cash onhand", greenheart_config["finance_parameters"]["cash_onhand_months"]
-    )
+    pf.set_params("cash onhand", greenheart_config["finance_parameters"]["cash_onhand_months"])
 
     # ----------------------------------- Add capital items to ProFAST ----------------
     if "wind" in capex_breakdown.keys():
@@ -808,8 +754,13 @@ def run_profast_lcoe(
         )
 
     # ------------------------------------- add incentives -----------------------------------
-    """ Note: ptc units must be given to ProFAST in terms of dollars per unit of the primary commodity being produced
-        Note: full tech-nutral (wind) tax credits are no longer available if constructions starts after Jan. 1 2034 (Jan 1. 2033 for h2 ptc)"""
+    """
+    Note: ptc units must be given to ProFAST in terms of dollars per unit of the primary commodity
+    being produced
+
+    Note: full tech-nutral (wind) tax credits are no longer available if constructions starts after
+    Jan. 1 2034 (Jan 1. 2033 for h2 ptc)
+    """
 
     # catch incentive option and add relevant incentives
     incentive_dict = greenheart_config["policy_parameters"][f"option{incentive_option}"]
@@ -848,8 +799,7 @@ def run_profast_lcoe(
             scale="M",
             remove_zeros=True,
             remove_depreciation=False,
-            fileout=savepath
-            / f'annual_cash_flow_wind_only_{design_scenario["id"]}.png',
+            fileout=savepath / f'annual_cash_flow_wind_only_{design_scenario["id"]}.png',
             show_plot=show_plots,
         )
         pf.plot_costs_yearly2(
@@ -857,8 +807,7 @@ def run_profast_lcoe(
             scale="M",
             remove_zeros=True,
             remove_depreciation=False,
-            fileout=savepath
-            / f'annual_cash_flow_wind_only_{design_scenario["id"]}.html',
+            fileout=savepath / f'annual_cash_flow_wind_only_{design_scenario["id"]}.html',
             show_plot=show_plots,
         )
         pf.plot_capital_expenses(
@@ -919,18 +868,11 @@ def run_profast_grid_only(
     )
     pf.set_params(
         "capacity",
-        electrolyzer_physics_results["H2_Results"][
-            "Life: Annual H2 production [kg/year]"
-        ]
-        / 365.0,
+        electrolyzer_physics_results["H2_Results"]["Life: Annual H2 production [kg/year]"] / 365.0,
     )  # kg/day
     pf.set_params("maintenance", {"value": 0, "escalation": gen_inflation})
-    pf.set_params(
-        "analysis start year", greenheart_config["project_parameters"]["atb_year"] + 1
-    )
-    pf.set_params(
-        "operating life", greenheart_config["project_parameters"]["project_lifetime"]
-    )
+    pf.set_params("analysis start year", greenheart_config["project_parameters"]["atb_year"] + 1)
+    pf.set_params("operating life", greenheart_config["project_parameters"]["project_lifetime"])
     pf.set_params(
         "installation cost",
         {
@@ -945,15 +887,12 @@ def run_profast_grid_only(
         pf.set_params(
             "end of proj sale non depr assets",
             land_cost
-            * (1 + gen_inflation)
-            ** greenheart_config["project_parameters"]["project_lifetime"],
+            * (1 + gen_inflation) ** greenheart_config["project_parameters"]["project_lifetime"],
         )
     pf.set_params("demand rampup", 0)
     pf.set_params("long term utilization", 1)
     pf.set_params("credit card fees", 0)
-    pf.set_params(
-        "sales tax", greenheart_config["finance_parameters"]["sales_tax_rate"]
-    )
+    pf.set_params("sales tax", greenheart_config["finance_parameters"]["sales_tax_rate"])
     pf.set_params("license and permit", {"value": 00, "escalation": gen_inflation})
     pf.set_params("rent", {"value": 0, "escalation": gen_inflation})
     pf.set_params(
@@ -963,9 +902,7 @@ def run_profast_grid_only(
     )
     pf.set_params(
         "admin expense",
-        greenheart_config["finance_parameters"][
-            "administrative_expense_percent_of_sales"
-        ],
+        greenheart_config["finance_parameters"]["administrative_expense_percent_of_sales"],
     )
     pf.set_params(
         "total income tax rate",
@@ -990,19 +927,21 @@ def run_profast_grid_only(
         ),
     )
     pf.set_params("debt type", greenheart_config["finance_parameters"]["debt_type"])
-    pf.set_params(
-        "loan period if used", greenheart_config["finance_parameters"]["loan_period"]
-    )
+    pf.set_params("loan period if used", greenheart_config["finance_parameters"]["loan_period"])
     pf.set_params(
         "debt interest rate",
         greenheart_config["finance_parameters"]["debt_interest_rate"],
     )
-    pf.set_params(
-        "cash onhand", greenheart_config["finance_parameters"]["cash_onhand_months"]
-    )
+    pf.set_params("cash onhand", greenheart_config["finance_parameters"]["cash_onhand_months"])
 
     # ----------------------------------- Add capital items to ProFAST ----------------
-    # pf.add_capital_item(name="Wind System",cost=capex_breakdown["wind"], depr_type=greenheart_config["finance_parameters"]["depreciation_method"], depr_period=greenheart_config["finance_parameters"]["depreciation_period"],refurb=[0])
+    # pf.add_capital_item(
+    #     name="Wind System",
+    #     cost=capex_breakdown["wind"],
+    #     depr_type=greenheart_config["finance_parameters"]["depreciation_method"],
+    #     depr_period=greenheart_config["finance_parameters"]["depreciation_period"],
+    #     refurb=[0],
+    # )
     # pf.add_capital_item(
     #     name="Electrical Export system",
     #     cost=capex_breakdown["electrical_export_system"],
@@ -1018,22 +957,17 @@ def run_profast_grid_only(
     #     greenheart_config["electrolyzer"]["time_between_replacement"] / (24 * 365)
     # )
     refurb_period = round(
-        electrolyzer_physics_results["H2_Results"]["Time Until Replacement [hrs]"]
-        / (24 * 365)
+        electrolyzer_physics_results["H2_Results"]["Time Until Replacement [hrs]"] / (24 * 365)
     )
     electrolyzer_refurbishment_schedule[
-        refurb_period : greenheart_config["project_parameters"][
-            "project_lifetime"
-        ] : refurb_period
+        refurb_period : greenheart_config["project_parameters"]["project_lifetime"] : refurb_period
     ] = greenheart_config["electrolyzer"]["replacement_cost_percent"]
 
     pf.add_capital_item(
         name="Electrolysis System",
         cost=capex_breakdown["electrolyzer"],
         depr_type=greenheart_config["finance_parameters"]["depreciation_method"],
-        depr_period=greenheart_config["finance_parameters"][
-            "depreciation_period_electrolyzer"
-        ],
+        depr_period=greenheart_config["finance_parameters"]["depreciation_period_electrolyzer"],
         refurb=list(electrolyzer_refurbishment_schedule),
     )
 
@@ -1041,17 +975,39 @@ def run_profast_grid_only(
         name="Hydrogen Storage System",
         cost=capex_breakdown["h2_storage"],
         depr_type=greenheart_config["finance_parameters"]["depreciation_method"],
-        depr_period=greenheart_config["finance_parameters"][
-            "depreciation_period_electrolyzer"
-        ],
+        depr_period=greenheart_config["finance_parameters"]["depreciation_period_electrolyzer"],
         refurb=[0],
     )
-    # pf.add_capital_item(name ="Desalination system",cost=capex_breakdown["desal"], depr_type=greenheart_config["finance_parameters"]["depreciation_method"],depr_period=greenheart_config["finance_parameters"]["depreciation_period"],refurb=[0])
+    # pf.add_capital_item(
+    #     name="Desalination system",
+    #     cost=capex_breakdown["desal"],
+    #     depr_type=greenheart_config["finance_parameters"]["depreciation_method"],
+    #     depr_period=greenheart_config["finance_parameters"]["depreciation_period"],
+    #     refurb=[0],
+    # )
 
     # -------------------------------------- Add fixed costs--------------------------------
-    # pf.add_fixed_cost(name="Wind Fixed O&M Cost",usage=1.0, unit='$/year',cost=opex_breakdown["wind"],escalation=gen_inflation)
-    # pf.add_fixed_cost(name="Electrical Export Fixed O&M Cost", usage=1.0,unit='$/year',cost=opex_breakdown["electrical_export_system"],escalation=gen_inflation)
-    # pf.add_fixed_cost(name="Desalination Fixed O&M Cost",usage=1.0, unit='$/year',cost=opex_breakdown["desal"],escalation=gen_inflation)
+    # pf.add_fixed_cost(
+    #     name="Wind Fixed O&M Cost",
+    #     usage=1.0,
+    #     unit="$/year",
+    #     cost=opex_breakdown["wind"],
+    #     escalation=gen_inflation,
+    # )
+    # pf.add_fixed_cost(
+    #     name="Electrical Export Fixed O&M Cost",
+    #     usage=1.0,
+    #     unit="$/year",
+    #     cost=opex_breakdown["electrical_export_system"],
+    #     escalation=gen_inflation,
+    # )
+    # pf.add_fixed_cost(
+    #     name="Desalination Fixed O&M Cost",
+    #     usage=1.0,
+    #     unit="$/year",
+    #     cost=opex_breakdown["desal"],
+    #     escalation=gen_inflation,
+    # )
     pf.add_fixed_cost(
         name="Electrolyzer Fixed O&M Cost",
         usage=1.0,
@@ -1071,15 +1027,9 @@ def run_profast_grid_only(
     galperkg = 3.785411784
     pf.add_feedstock(
         name="Water",
-        usage=sum(
-            electrolyzer_physics_results["H2_Results"][
-                "Water Hourly Consumption [kg/hr]"
-            ]
-        )
+        usage=sum(electrolyzer_physics_results["H2_Results"]["Water Hourly Consumption [kg/hr]"])
         * galperkg
-        / electrolyzer_physics_results["H2_Results"][
-            "Life: Annual H2 production [kg/year]"
-        ],
+        / electrolyzer_physics_results["H2_Results"]["Life: Annual H2 production [kg/year]"],
         unit="gal",
         cost="US Average",
         escalation=gen_inflation,
@@ -1124,8 +1074,7 @@ def run_profast_grid_only(
                 savepath.mkdir(parents=True)
 
         pf.plot_capital_expenses(
-            fileout=savepaths[0]
-            / f"capital_expense_grid_only_{design_scenario['id']}.pdf",
+            fileout=savepaths[0] / f"capital_expense_grid_only_{design_scenario['id']}.pdf",
             show_plot=show_plots,
         )
         pf.plot_cashflow(
@@ -1187,10 +1136,7 @@ def run_profast_full_plant_model(
     )
     pf.set_params(
         "capacity",
-        electrolyzer_physics_results["H2_Results"][
-            "Life: Annual H2 production [kg/year]"
-        ]
-        / 365.0,
+        electrolyzer_physics_results["H2_Results"]["Life: Annual H2 production [kg/year]"] / 365.0,
     )  # kg/day
     pf.set_params("maintenance", {"value": 0, "escalation": gen_inflation})
     pf.set_params(
@@ -1198,9 +1144,7 @@ def run_profast_full_plant_model(
         greenheart_config["project_parameters"]["atb_year"]
         + 2,  # Add financial analysis start year
     )
-    pf.set_params(
-        "operating life", greenheart_config["project_parameters"]["project_lifetime"]
-    )
+    pf.set_params("operating life", greenheart_config["project_parameters"]["project_lifetime"])
     pf.set_params(
         "installation months",
         wind_cost_results.installation_time,  # Add installation time to yaml default=0
@@ -1219,15 +1163,12 @@ def run_profast_full_plant_model(
         pf.set_params(
             "end of proj sale non depr assets",
             land_cost
-            * (1 + gen_inflation)
-            ** greenheart_config["project_parameters"]["project_lifetime"],
+            * (1 + gen_inflation) ** greenheart_config["project_parameters"]["project_lifetime"],
         )
     pf.set_params("demand rampup", 0)
     pf.set_params("long term utilization", 1)  # TODO should use utilization
     pf.set_params("credit card fees", 0)
-    pf.set_params(
-        "sales tax", greenheart_config["finance_parameters"]["sales_tax_rate"]
-    )
+    pf.set_params("sales tax", greenheart_config["finance_parameters"]["sales_tax_rate"])
     pf.set_params("license and permit", {"value": 00, "escalation": gen_inflation})
     pf.set_params("rent", {"value": 0, "escalation": gen_inflation})
     # TODO how to handle property tax and insurance for fully offshore?
@@ -1238,9 +1179,7 @@ def run_profast_full_plant_model(
     )
     pf.set_params(
         "admin expense",
-        greenheart_config["finance_parameters"][
-            "administrative_expense_percent_of_sales"
-        ],
+        greenheart_config["finance_parameters"]["administrative_expense_percent_of_sales"],
     )
     pf.set_params(
         "total income tax rate",
@@ -1271,16 +1210,12 @@ def run_profast_full_plant_model(
             (greenheart_config["finance_parameters"]["debt_equity_ratio"]),
         )  # TODO this may not be put in right
     pf.set_params("debt type", greenheart_config["finance_parameters"]["debt_type"])
-    pf.set_params(
-        "loan period if used", greenheart_config["finance_parameters"]["loan_period"]
-    )
+    pf.set_params("loan period if used", greenheart_config["finance_parameters"]["loan_period"])
     pf.set_params(
         "debt interest rate",
         greenheart_config["finance_parameters"]["debt_interest_rate"],
     )
-    pf.set_params(
-        "cash onhand", greenheart_config["finance_parameters"]["cash_onhand_months"]
-    )
+    pf.set_params("cash onhand", greenheart_config["finance_parameters"]["cash_onhand_months"])
 
     # ----------------------------------- Add capital and fixed items to ProFAST ----------------
     if "wind" in capex_breakdown.keys():
@@ -1387,22 +1322,17 @@ def run_profast_full_plant_model(
     #     greenheart_config["electrolyzer"]["time_between_replacement"] / (24 * 365)
     # )
     refurb_period = round(
-        electrolyzer_physics_results["H2_Results"]["Time Until Replacement [hrs]"]
-        / (24 * 365)
+        electrolyzer_physics_results["H2_Results"]["Time Until Replacement [hrs]"] / (24 * 365)
     )
     electrolyzer_refurbishment_schedule[
-        refurb_period : greenheart_config["project_parameters"][
-            "project_lifetime"
-        ] : refurb_period
+        refurb_period : greenheart_config["project_parameters"]["project_lifetime"] : refurb_period
     ] = greenheart_config["electrolyzer"]["replacement_cost_percent"]
 
     pf.add_capital_item(
         name="Electrolysis System",
         cost=capex_breakdown["electrolyzer"],
         depr_type=greenheart_config["finance_parameters"]["depreciation_method"],
-        depr_period=greenheart_config["finance_parameters"][
-            "depreciation_period_electrolyzer"
-        ],
+        depr_period=greenheart_config["finance_parameters"]["depreciation_period_electrolyzer"],
         refurb=list(electrolyzer_refurbishment_schedule),
     )
     pf.add_fixed_cost(
@@ -1418,9 +1348,7 @@ def run_profast_full_plant_model(
             name="H2 Pipe Array System",
             cost=capex_breakdown["h2_pipe_array"],
             depr_type=greenheart_config["finance_parameters"]["depreciation_method"],
-            depr_period=greenheart_config["finance_parameters"][
-                "depreciation_period_electrolyzer"
-            ],
+            depr_period=greenheart_config["finance_parameters"]["depreciation_period_electrolyzer"],
             refurb=[0],
         )
         pf.add_fixed_cost(
@@ -1446,18 +1374,14 @@ def run_profast_full_plant_model(
             name="H2 Transport Compressor System",
             cost=capex_breakdown["h2_transport_compressor"],
             depr_type=greenheart_config["finance_parameters"]["depreciation_method"],
-            depr_period=greenheart_config["finance_parameters"][
-                "depreciation_period_electrolyzer"
-            ],
+            depr_period=greenheart_config["finance_parameters"]["depreciation_period_electrolyzer"],
             refurb=[0],
         )
         pf.add_capital_item(
             name="H2 Transport Pipeline System",
             cost=capex_breakdown["h2_transport_pipeline"],
             depr_type=greenheart_config["finance_parameters"]["depreciation_method"],
-            depr_period=greenheart_config["finance_parameters"][
-                "depreciation_period_electrolyzer"
-            ],
+            depr_period=greenheart_config["finance_parameters"]["depreciation_period_electrolyzer"],
             refurb=[0],
         )
 
@@ -1481,9 +1405,7 @@ def run_profast_full_plant_model(
             name="Hydrogen Storage System",
             cost=capex_breakdown["h2_storage"],
             depr_type=greenheart_config["finance_parameters"]["depreciation_method"],
-            depr_period=greenheart_config["finance_parameters"][
-                "depreciation_period_electrolyzer"
-            ],
+            depr_period=greenheart_config["finance_parameters"]["depreciation_period_electrolyzer"],
             refurb=[0],
         )
         pf.add_fixed_cost(
@@ -1500,14 +1422,10 @@ def run_profast_full_plant_model(
         pf.add_feedstock(
             name="Water",
             usage=sum(
-                electrolyzer_physics_results["H2_Results"][
-                    "Water Hourly Consumption [kg/hr]"
-                ]
+                electrolyzer_physics_results["H2_Results"]["Water Hourly Consumption [kg/hr]"]
             )
             * galperkg
-            / electrolyzer_physics_results["H2_Results"][
-                "Life: Annual H2 production [kg/year]"
-            ],
+            / electrolyzer_physics_results["H2_Results"]["Life: Annual H2 production [kg/year]"],
             unit="gal",
             cost="US Average",
             escalation=gen_inflation,
@@ -1517,9 +1435,7 @@ def run_profast_full_plant_model(
             name="Desal System",
             cost=capex_breakdown["desal"],
             depr_type=greenheart_config["finance_parameters"]["depreciation_method"],
-            depr_period=greenheart_config["finance_parameters"][
-                "depreciation_period_electrolyzer"
-            ],
+            depr_period=greenheart_config["finance_parameters"]["depreciation_period_electrolyzer"],
             refurb=[0],
         )
         pf.add_fixed_cost(
@@ -1549,8 +1465,13 @@ def run_profast_full_plant_model(
         )
 
     # ------------------------------------- add incentives -----------------------------------
-    """ Note: units must be given to ProFAST in terms of dollars per unit of the primary commodity being produced
-        Note: full tech-nutral (wind) tax credits are no longer available if constructions starts after Jan. 1 2034 (Jan 1. 2033 for h2 ptc)"""
+    """
+    Note: units must be given to ProFAST in terms of dollars per unit of the primary commodity being
+    produced
+
+    Note: full tech-nutral (wind) tax credits are no longer available if constructions starts after
+    Jan. 1 2034 (Jan 1. 2033 for h2 ptc)
+    """
 
     # catch incentive option and add relevant incentives
     incentive_dict = greenheart_config["policy_parameters"][f"option{incentive_option}"]
@@ -1565,9 +1486,7 @@ def run_profast_full_plant_model(
         {
             "value": electricity_itc_value_dollars,
             "depr type": greenheart_config["finance_parameters"]["depreciation_method"],
-            "depr period": greenheart_config["finance_parameters"][
-                "depreciation_period"
-            ],
+            "depr period": greenheart_config["finance_parameters"]["depreciation_period"],
             "depreciable": True,
         },
     )
@@ -1582,9 +1501,7 @@ def run_profast_full_plant_model(
         {
             "value": electricity_itc_value_dollars_h2_store,
             "depr type": greenheart_config["finance_parameters"]["depreciation_method"],
-            "depr period": greenheart_config["finance_parameters"][
-                "depreciation_period"
-            ],
+            "depr period": greenheart_config["finance_parameters"]["depreciation_period"],
             "depreciable": True,
         },
     )
@@ -1601,13 +1518,9 @@ def run_profast_full_plant_model(
     )  # given in 1992 dollars but adjust for inflation
     kw_per_kg_h2 = (
         sum(hopp_results["combined_hybrid_power_production_hopp"])
-        / electrolyzer_physics_results["H2_Results"][
-            "Life: Annual H2 production [kg/year]"
-        ]
+        / electrolyzer_physics_results["H2_Results"]["Life: Annual H2 production [kg/year]"]
     )
-    electricity_ptc_in_dollars_per_kg_h2 = (
-        electricity_ptc_in_dollars_per_kw * kw_per_kg_h2
-    )
+    electricity_ptc_in_dollars_per_kg_h2 = electricity_ptc_in_dollars_per_kw * kw_per_kg_h2
     pf.add_incentive(
         name="Electricity PTC",
         value=electricity_ptc_in_dollars_per_kg_h2,
@@ -1666,8 +1579,12 @@ def run_profast_full_plant_model(
 
         # TODO project level IRR - capex and operating cash flow
 
-        # note: hurdle rate typically 20% IRR before investing in it due to typically optimistic assumptions
-        # note: negative retained earnings (keeping debt, paying down equity) - to get around it, do another line for retained earnings and watch dividends paid by the rpoject (net income/equity should stay positive this way)
+        # note: hurdle rate typically 20% IRR before investing in it due to typically optimistic
+        # assumptions
+
+        # note: negative retained earnings (keeping debt, paying down equity) - to get around it,
+        # do another line for retained earnings and watch dividends paid by the project
+        # (net income/equity should stay positive this way)
 
         print("Investor NPV: ", np.round(NPV * 1e-6, 2), "M USD")
         print("Investor MIRR: ", np.round(MIRR, 5), "")

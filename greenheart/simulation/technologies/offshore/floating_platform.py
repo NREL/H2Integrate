@@ -2,20 +2,23 @@
 Author:Charles Kiefer
 Date: 4/11/2023
 Institution: National Renewable Energy Lab
-Description: This file shall handle costing and sizing of offshore floating platforms deicated to hydrogen production.  It uses the
-             same foundation as fixed_platform.py.  Both have been modeled off of existing BOS cost/sizing calculations fond in ORBIT.
-             It can be run as standalone functions or as appended ORBIT project phases.
+Description: This file shall handle costing and sizing of offshore floating platforms deicated to
+    hydrogen production.  It uses the same foundation as fixed_platform.py.  Both have been modeled
+    off of existing BOS cost/sizing calculations fond in ORBIT. It can be run as standalone
+    functions or as appended ORBIT project phases.
 
 
 
 Sources:
     - [1] ORBIT: https://github.com/WISDEM/ORBIT v1.1
 Args:
-    - tech_required_area: (float): area needed for combination of all tech (m^2), not including buffer or working space
+    - tech_required_area: (float): area needed for combination of all tech (m^2), not including
+      buffer or working space
     - tech_combined_mass: (float): mass of all tech being placed on the platform (kg or tonnes)year
 
 
-    - depth: (float): bathometry at the platform location (m) ##Site depths for floating projects need to be at depths 500 m to 1500 m because of Orbit Semitaut limitations (7/31)
+    - depth: (float): bathometry at the platform location (m) ##Site depths for floating projects
+        need to be at depths 500 m to 1500 m because of Orbit Semitaut limitations (7/31)
     - distance_to_port: (float): distance ships must travel from port to site location (km)
 
     Future arguments: (Not used at this time)
@@ -33,7 +36,8 @@ Returns:
 """
 Notes:
     Thank you Jake Nunemaker's oswh2 repository and Rebecca Fuchs SemiTaut_mooring repository!!!
-    pile_cost=0 $US/tonne for monopile construction. Not a bug, this # is consistent with the rest of ORBIT
+    pile_cost=0 $US/tonne for monopile construction. Not a bug, this # is consistent with the rest
+    of ORBIT
 """
 
 import typing
@@ -46,8 +50,8 @@ from ORBIT.phases.design import DesignPhase, MooringSystemDesign
 from ORBIT.phases.install import InstallPhase
 
 from greenheart.simulation.technologies.offshore.all_platforms import (
-    calc_platform_opex,
     install_platform,
+    calc_platform_opex,
 )
 
 
@@ -200,7 +204,8 @@ class FloatingPlatformInstallation(InstallPhase):
         vessel.initialize()
         self.install_vessel = vessel
 
-        # Add in the mass of the substructure to total mass (may or may not impact the final install cost)
+        # Add in the mass of the substructure to total mass (may or may not impact the final
+        # install cost)
 
         """Calls in SemiTaut Costs and Variables"""
         self.anchor_type = "Drag Embedment"
@@ -236,7 +241,8 @@ class FloatingPlatformInstallation(InstallPhase):
             foundation="floating",
         )
 
-    # An install object needs to have attribute system_capex, installation_capex, and detailed output
+    # An install object needs to have attribute system_capex, installation_capex, and detailed
+    # output
     @property
     def system_capex(self):
         return {}
@@ -265,13 +271,15 @@ def calc_substructure_mass_and_cost(
     num_lines=4,
 ):
     """
-    calc_substructure_mass_and_cost returns the total mass including substructure, topside and equipment.  Also returns the cost of the substructure and topside
+    calc_substructure_mass_and_cost returns the total mass including substructure, topside and
+    equipment.  Also returns the cost of the substructure and topside
     Inputs: mass            | Mass of equipment on platform (tonnes)
             area            | Area needed for equipment (meter^2) (not necessary)
             depth           | Ocean depth at platform location (meters)
             fab_cost_rate   | Cost rate to fabricate topside (USD/tonne)
             design_cost     | Design cost to design structural components (USD) from ORBIT
-            sub_cost_rate   | Steel cost rate (USD/tonne) from ORBIT"""
+            sub_cost_rate   | Steel cost rate (USD/tonne) from ORBIT
+    """
 
     """
     Platform is substructure and topside combined
@@ -340,6 +348,6 @@ if __name__ == "__main__":
     print("ORBIT Phases: ", platform.phases.keys())
     print(f"\tH2 Platform Design Capex:    {design_capex:.0f} USD")
     print(f"\tH2 Platform Install Capex:  {install_capex:.0f} USD")
-    print("")
+    print()
     print(f"\tTotal H2 Platform Capex:   {(design_capex+install_capex)/1e6:.0f} mUSD")
     print(f"\tH2 Platform Opex: {platform_opex:.0f} USD/year")

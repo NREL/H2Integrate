@@ -1,8 +1,10 @@
 ################## needed addition ######################
 """
-Description: This file already contains a desal model, but we need an estimate of the desal unit size, particularly mass and footprint (m^2)
+Description: This file already contains a desal model, but we need an estimate of the desal unit
+    size, particularly mass and footprint (m^2)
 Sources:
-    - [1] Singlitico 2021 (use this as a jumping off point, I think there may be other good sources available)
+    - [1] Singlitico 2021 (use this as a jumping off point, I think there may be other good sources
+          available)
     - [2] See sources in existing model below and the model itself
 Args:
     - electrolyzer_rating (float): electrolyzer rating in MW
@@ -24,10 +26,14 @@ Reverse Osmosis (RO) is a membrane separation process. No heating or phase chang
 The majority of energy required is for pressurizing the feed water.
 
 A typical RO system is made up of the following basic components:
-Pre-treatment: Removes suspended solids and microorganisms through sterilization, fine filtration and adding chemicals to inhibit precipitation.
-High-pressure pump: Supplies the pressure needed to enable the water to pass through the membrane (pressure ranges from 54 to 80 bar for seawater).
-Membrane Modules: Membrane assembly consists of a pressure vessel and the membrane. Either sprial wound membranes or hollow fiber membranes are used.
-Post-treatment: Consists of sterilization, stabilization, mineral enrichment and pH adjustment of product water.
+Pre-treatment: Removes suspended solids and microorganisms through sterilization, fine filtration
+    and adding chemicals to inhibit precipitation.
+High-pressure pump: Supplies the pressure needed to enable the water to pass through the membrane
+    (pressure ranges from 54 to 80 bar for seawater).
+Membrane Modules: Membrane assembly consists of a pressure vessel and the membrane. Either sprial
+    wound membranes or hollow fiber membranes are used.
+Post-treatment: Consists of sterilization, stabilization, mineral enrichment and pH adjustment of
+    product water.
 Energy recovery system: A system where a portion of the pressure energy of the brine is recovered.
 
 Costs are in 2013 dollars
@@ -60,9 +66,7 @@ def RO_desal_eco(freshwater_kg_per_hr, salinity):
     if salinity == "Seawater":
         # SWRO: Sea Water Reverse Osmosis, water >18,000 ppm
         # Water recovery
-        recovery_ratio = (
-            0.5  # https://www.usbr.gov/research/dwpr/reportpdfs/report072.pdf
-        )
+        recovery_ratio = 0.5  # https://www.usbr.gov/research/dwpr/reportpdfs/report072.pdf
         feedwater_m3_per_hr = freshwater_m3_per_hr / recovery_ratio
 
         # Power required
@@ -75,9 +79,7 @@ def RO_desal_eco(freshwater_kg_per_hr, salinity):
     elif salinity == "Brackish":
         # BWRO: Brakish water Reverse Osmosis, water < 18,000 ppm
         # Water recovery
-        recovery_ratio = (
-            0.75  # https://www.usbr.gov/research/dwpr/reportpdfs/report072.pdf
-        )
+        recovery_ratio = 0.75  # https://www.usbr.gov/research/dwpr/reportpdfs/report072.pdf
         feedwater_m3_per_hr = freshwater_m3_per_hr / recovery_ratio
 
         # Power required

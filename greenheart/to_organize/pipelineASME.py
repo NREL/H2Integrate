@@ -1,6 +1,7 @@
 import numpy as np
 from matplotlib import pyplot as plt
 
+
 verbose = False
 
 
@@ -80,9 +81,7 @@ class PipelineASME:
         site_depth_km = self.site_depth_m / 1000.0  # m to km
         percent_added_length = 0.02  # 2%
 
-        total_length = (
-            1 + percent_added_length
-        ) * self.dist_to_h2_load_km + 2 * site_depth_km
+        total_length = (1 + percent_added_length) * self.dist_to_h2_load_km + 2 * site_depth_km
 
         self.output_dict["total_pipeline_length_km"] = total_length
 
@@ -108,7 +107,7 @@ class PipelineASME:
         # if(Re < 4001.0):
         f = 64 / Re  # laminar flow
         # else:
-        #   f = 0.03        # Approx. from Moody Diagram assume Re ~10^4 and relative roughness ~0.002
+        #   f = 0.03  # Approx. from Moody Diagram assume Re ~10^4 and relative roughness ~0.002
         if verbose:
             print("Friction factor:", f)
 
@@ -150,10 +149,7 @@ class PipelineASME:
         # TODO: Come up with a higher fidelity method to find values in a 2D array
         tol = 0.01 * self.output_dict["pres_design_bar"]  # Within a 10% tolerance
         d_Ind, t_Ind = np.where(
-            np.abs(
-                self.output_dict["pres_calc_bar"] - self.output_dict["pres_design_bar"]
-            )
-            < tol
+            np.abs(self.output_dict["pres_calc_bar"] - self.output_dict["pres_design_bar"]) < tol
         )
         # print(d_Ind)
         if verbose:
@@ -205,8 +201,7 @@ class PipelineASME:
         struc_steel_cost = 3000.0  # $USD/ton
         fabrication_rate = 14500  # $USD/ton
         substructure_cost = (
-            total_substructure_mass * struc_steel_cost
-            + substation_mass * fabrication_rate
+            total_substructure_mass * struc_steel_cost + substation_mass * fabrication_rate
         )
         substation_install_days = 14
         subs_vessel_daily_rate = 0.5e6
@@ -214,9 +209,7 @@ class PipelineASME:
 
         # Total CapEx
         capex_pipe = pipe_cost_total + pipe_install_cost
-        capex_substation = (
-            substation_design_cost + substructure_cost + substation_install_cost
-        )
+        capex_substation = substation_design_cost + substructure_cost + substation_install_cost
 
         # Find the cost of construction and loading/unloading
         self.output_dict["pipeline_capex"] = capex_pipe
@@ -232,7 +225,7 @@ class PipelineASME:
 # Test sections
 if __name__ == "__main__":
     print("PipelineASME Testing section")
-    in_dict = dict()
+    in_dict = {}
     in_dict["steel_cost_ton"] = (
         900.0  # $ US/ton searching for seamless FBE X52 carbon steel > $500-$1000 per ton
     )
@@ -245,7 +238,7 @@ if __name__ == "__main__":
     in_dict["flow_rate_kg_hr"] = 125
     in_dict["pressure_bar"] = 100.0
 
-    out_dict = dict()
+    out_dict = {}
 
     pipeline_test = PipelineASME(in_dict, out_dict)
     pipeline_test.pipelineDesign()
@@ -274,9 +267,15 @@ if __name__ == "__main__":
     # fig, ax = plt.subplots()
     fig, axs = plt.subplots(figsize=(6, 4))
     # fig, axs = plt.subplots(1, 2, figsize=(9, 5), sharey=True)
-    # CS1 = axs.contour(in_dict['pipe_diam_in'],in_dict['pipe_thic_in'], \
-    #                  np.transpose(out_dict['pres_calc_bar']), levels = [out_dict['pres_design_bar'] ], \
-    #                   colors=('k',),linestyles=('--',),linewidths=(3,))
+    # CS1 = axs.contour(
+    #     in_dict["pipe_diam_in"],
+    #     in_dict["pipe_thic_in"],
+    #     np.transpose(out_dict["pres_calc_bar"]),
+    #     levels=[out_dict["pres_design_bar"]],
+    #     colors=("k",),
+    #     linestyles=("--",),
+    #     linewidths=(3,),
+    # )
     CS = axs.contour(
         in_dict["pipe_diam_in"],
         in_dict["pipe_thic_in"],
@@ -311,7 +310,5 @@ if __name__ == "__main__":
     )
     plt.xlabel("Pipe Diameter (in)")
     plt.ylabel("Unit Cost ($US/km)")
-    plt.title(
-        "Cost of Pipeline \n Design Pressure:{}bar".format(out_dict["pres_design_bar"])
-    )
+    plt.title("Cost of Pipeline \n Design Pressure:{}bar".format(out_dict["pres_design_bar"]))
     plt.show()

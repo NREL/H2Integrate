@@ -1,22 +1,21 @@
-import json
 import os
+import json
 import warnings
+from pathlib import Path
 
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 from dotenv import load_dotenv
-from hopp.simulation.hybrid_simulation import HybridSimulation
-from hopp.simulation.technologies.sites import SiteInfo
-from hopp.simulation.technologies.sites import flatirons_site as sample_site
+from lcoe.lcoe import lcoe as lcoe_calc
 from hopp.tools.analysis import create_cost_calculator
 from hopp.utilities.keys import set_developer_nrel_gov_key
-from lcoe.lcoe import lcoe as lcoe_calc
+from hopp.simulation.hybrid_simulation import HybridSimulation
+from hopp.simulation.technologies.sites import SiteInfo, flatirons_site as sample_site
 
-from greenheart.simulation.technologies.hydrogen.electrolysis.run_h2_PEM import (
-    run_h2_PEM,
-)
 from greenheart.to_organize.H2_Analysis.simple_dispatch import SimpleDispatch
+from greenheart.simulation.technologies.hydrogen.electrolysis.run_h2_PEM import run_h2_PEM
+
 
 warnings.filterwarnings("ignore")
 
@@ -99,9 +98,9 @@ def setup_optimize(
     )
     hybrid_plant.wind.system_model.Turbine.wind_resource_shear = 0.33
     if solar_size_mw > 0:
-        hybrid_plant.solar.financial_model.FinancialParameters.analysis_period = (
-            scenario["Useful Life"]
-        )
+        hybrid_plant.solar.financial_model.FinancialParameters.analysis_period = scenario[
+            "Useful Life"
+        ]
         hybrid_plant.solar.financial_model.FinancialParameters.debt_percent = scenario[
             "Debt Equity"
         ]
@@ -111,38 +110,29 @@ def setup_optimize(
             hybrid_plant.solar.financial_model.TaxCreditIncentives.itc_fed_percent = 0
 
     if "wind" in technologies:
-        hybrid_plant.wind.financial_model.FinancialParameters.analysis_period = (
-            scenario["Useful Life"]
-        )
-        hybrid_plant.wind.financial_model.FinancialParameters.debt_percent = scenario[
-            "Debt Equity"
+        hybrid_plant.wind.financial_model.FinancialParameters.analysis_period = scenario[
+            "Useful Life"
         ]
+        hybrid_plant.wind.financial_model.FinancialParameters.debt_percent = scenario["Debt Equity"]
         if scenario["PTC Available"]:
             ptc_val = 0.022
         else:
             ptc_val = 0.0
 
-        interim_list = list(
-            hybrid_plant.wind.financial_model.TaxCreditIncentives.ptc_fed_amount
-        )
+        interim_list = list(hybrid_plant.wind.financial_model.TaxCreditIncentives.ptc_fed_amount)
         interim_list[0] = ptc_val
-        hybrid_plant.wind.financial_model.TaxCreditIncentives.ptc_fed_amount = tuple(
-            interim_list
-        )
-        hybrid_plant.wind.system_model.Turbine.wind_turbine_hub_ht = scenario[
-            "Tower Height"
-        ]
+        hybrid_plant.wind.financial_model.TaxCreditIncentives.ptc_fed_amount = tuple(interim_list)
+        hybrid_plant.wind.system_model.Turbine.wind_turbine_hub_ht = scenario["Tower Height"]
 
     if custom_powercurve:
-        powercurve_file = open(scenario["Powercurve File"])
-        powercurve_data = json.load(powercurve_file)
-        powercurve_file.close()
-        hybrid_plant.wind.system_model.Turbine.wind_turbine_powercurve_windspeeds = (
-            powercurve_data["turbine_powercurve_specification"]["wind_speed_ms"]
-        )
-        hybrid_plant.wind.system_model.Turbine.wind_turbine_powercurve_powerout = (
-            powercurve_data["turbine_powercurve_specification"]["turbine_power_output"]
-        )
+        with Path(scenario["Powercurve File"]).open() as powercurve_file:
+            powercurve_data = json.load(powercurve_file)
+        hybrid_plant.wind.system_model.Turbine.wind_turbine_powercurve_windspeeds = powercurve_data[
+            "turbine_powercurve_specification"
+        ]["wind_speed_ms"]
+        hybrid_plant.wind.system_model.Turbine.wind_turbine_powercurve_powerout = powercurve_data[
+            "turbine_powercurve_specification"
+        ]["turbine_power_output"]
 
     hybrid_plant.solar.system_capacity_kw = solar_size_mw * 1000
     N = (
@@ -168,7 +158,7 @@ def calculate_h_lcoe(
     sell_to_grid=False,
     solar_cost_multiplier=1.0,
 ):
-    for i, s in scenarios_df.iterrows():
+    for _, s in scenarios_df.iterrows():
         scenario = s
 
     wind_size_mw = n_turbines * scenario["Turbine Rating"]
@@ -204,17 +194,15 @@ def calculate_h_lcoe(
         hybrid_plant.grid.system_model.Outputs.system_pre_interconnect_kwac[0:8759]
     )
     energy_shortfall_hopp = [
-        x - y for x, y in zip(load, combined_hybrid_power_production_hopp)
+        x - y for x, y in zip(load, combined_hybrid_power_production_hopp, strict=False)
     ]
-    energy_shortfall_hopp = [x if x > 0 else 0 for x in energy_shortfall_hopp]
+    energy_shortfall_hopp = [max(0, x) for x in energy_shortfall_hopp]
     lcoe = hybrid_plant.lcoe_real.hybrid
 
     combined_hybrid_curtailment_hopp = [
-        x - y for x, y in zip(combined_hybrid_power_production_hopp, load)
+        x - y for x, y in zip(combined_hybrid_power_production_hopp, load, strict=False)
     ]
-    combined_hybrid_curtailment_hopp = [
-        x if x > 0 else 0 for x in combined_hybrid_curtailment_hopp
-    ]
+    combined_hybrid_curtailment_hopp = [max(0, x) for x in combined_hybrid_curtailment_hopp]
 
     # plt.plot(combined_hybrid_power_production_hopp[0:200], label="production")
     # plt.plot(energy_shortfall_hopp[0:200], label="shortfall")
@@ -238,8 +226,7 @@ def calculate_h_lcoe(
         combined_hybrid_power_production_hopp + battery_used
     )
     energy_to_electrolyzer = [
-        x if x < kw_continuous else kw_continuous
-        for x in combined_pv_wind_storage_power_production_hopp
+        min(kw_continuous, x) for x in combined_pv_wind_storage_power_production_hopp
     ]
 
     if sell_to_grid:
@@ -264,12 +251,8 @@ def calculate_h_lcoe(
     electrical_generation_timeseries = np.zeros_like(energy_to_electrolyzer)
     electrical_generation_timeseries[:] = energy_to_electrolyzer[:]
 
-    adjusted_installed_cost = (
-        hybrid_plant.grid.financial_model.Outputs.adjusted_installed_cost
-    )
-    net_capital_costs = (
-        hybrid_plant.grid.financial_model.SystemCosts.total_installed_cost
-    )
+    adjusted_installed_cost = hybrid_plant.grid.financial_model.Outputs.adjusted_installed_cost
+    net_capital_costs = hybrid_plant.grid.financial_model.SystemCosts.total_installed_cost
 
     H2_Results, H2A_Results = run_h2_PEM(
         electrical_generation_timeseries,
@@ -283,17 +266,11 @@ def calculate_h_lcoe(
     )
 
     # print(H2_Results['hydrogen_annual_output'])
-    total_hopp_installed_cost = (
-        hybrid_plant.grid.financial_model.SystemCosts.total_installed_cost
-    )
+    total_hopp_installed_cost = hybrid_plant.grid.financial_model.SystemCosts.total_installed_cost
     total_electrolyzer_cost = H2A_Results["scaled_total_installed_cost"]
     total_system_installed_cost = total_hopp_installed_cost + total_electrolyzer_cost
-    annual_operating_cost_hopp = (wind_size_mw * 1000 * 42) + (
-        solar_capacity_mw * 1000 * 13
-    )
-    annual_operating_cost_h2 = (
-        H2A_Results["Fixed O&M"] * H2_Results["hydrogen_annual_output"]
-    )
+    annual_operating_cost_hopp = (wind_size_mw * 1000 * 42) + (solar_capacity_mw * 1000 * 13)
+    annual_operating_cost_h2 = H2A_Results["Fixed O&M"] * H2_Results["hydrogen_annual_output"]
     total_annual_operating_costs = (
         annual_operating_cost_hopp
         + annual_operating_cost_h2
@@ -318,9 +295,7 @@ def calculate_h_lcoe(
     )
 
 
-def setup_power_calcs(
-    scenario, wind_size_mw, solar_size_mw, storage_size_mwh, storage_size_mw
-):
+def setup_power_calcs(scenario, wind_size_mw, solar_size_mw, storage_size_mwh, storage_size_mw):
     # Set API key
     load_dotenv()
     NREL_API_KEY = os.getenv("NREL_API_KEY")
@@ -370,15 +345,14 @@ def setup_power_calcs(
     hybrid_plant.wind.system_model.Turbine.wind_resource_shear = 0.33
 
     if custom_powercurve:
-        powercurve_file = open(scenario["Power Curve File"])
-        powercurve_data = json.load(powercurve_file)
-        powercurve_file.close()
-        hybrid_plant.wind.system_model.Turbine.wind_turbine_powercurve_windspeeds = (
-            powercurve_data["turbine_powercurve_specification"]["wind_speed_ms"]
-        )
-        hybrid_plant.wind.system_model.Turbine.wind_turbine_powercurve_powerout = (
-            powercurve_data["turbine_powercurve_specification"]["turbine_power_output"]
-        )
+        with Path(scenario["Power Curve File"]).open() as powercurve_file:
+            powercurve_data = json.load(powercurve_file)
+        hybrid_plant.wind.system_model.Turbine.wind_turbine_powercurve_windspeeds = powercurve_data[
+            "turbine_powercurve_specification"
+        ]["wind_speed_ms"]
+        hybrid_plant.wind.system_model.Turbine.wind_turbine_powercurve_powerout = powercurve_data[
+            "turbine_powercurve_specification"
+        ]["turbine_power_output"]
 
     hybrid_plant.solar.system_capacity_kw = solar_size_mw * 1000
     N = (
@@ -445,9 +419,9 @@ def setup_cost_calcs(
     )
     hybrid_plant.wind.system_model.Turbine.wind_resource_shear = 0.33
     if solar_size_mw > 0:
-        hybrid_plant.solar.financial_model.FinancialParameters.analysis_period = (
-            scenario["Useful Life"]
-        )
+        hybrid_plant.solar.financial_model.FinancialParameters.analysis_period = scenario[
+            "Useful Life"
+        ]
         hybrid_plant.solar.financial_model.FinancialParameters.debt_percent = scenario[
             "Debt Equity"
         ]
@@ -457,27 +431,19 @@ def setup_cost_calcs(
             hybrid_plant.solar.financial_model.TaxCreditIncentives.itc_fed_percent = 0
 
     if wind_size_mw > 0:
-        hybrid_plant.wind.financial_model.FinancialParameters.analysis_period = (
-            scenario["Useful Life"]
-        )
-        hybrid_plant.wind.financial_model.FinancialParameters.debt_percent = scenario[
-            "Debt Equity"
+        hybrid_plant.wind.financial_model.FinancialParameters.analysis_period = scenario[
+            "Useful Life"
         ]
+        hybrid_plant.wind.financial_model.FinancialParameters.debt_percent = scenario["Debt Equity"]
         if scenario["PTC"]:
             ptc_val = 0.022
         else:
             ptc_val = 0.0
 
-        interim_list = list(
-            hybrid_plant.wind.financial_model.TaxCreditIncentives.ptc_fed_amount
-        )
+        interim_list = list(hybrid_plant.wind.financial_model.TaxCreditIncentives.ptc_fed_amount)
         interim_list[0] = ptc_val
-        hybrid_plant.wind.financial_model.TaxCreditIncentives.ptc_fed_amount = tuple(
-            interim_list
-        )
-        hybrid_plant.wind.system_model.Turbine.wind_turbine_hub_ht = scenario[
-            "Tower Height"
-        ]
+        hybrid_plant.wind.financial_model.TaxCreditIncentives.ptc_fed_amount = tuple(interim_list)
+        hybrid_plant.wind.system_model.Turbine.wind_turbine_hub_ht = scenario["Tower Height"]
 
     hybrid_plant.ppa_price = 0.05
     hybrid_plant.wind.system_capacity_kw = wind_size_mw * 1000
@@ -529,9 +495,7 @@ def calculate_h_lcoe_continuous(
     wind_power_production_1 = hybrid_plant.wind.generation_profile()[0:8760]
     effective_n_turbs = wind_capacity_mw / scenario["Turbine Rating"]
     wind_power_production = (
-        np.array(wind_power_production_1)
-        * effective_n_turbs
-        / hybrid_plant.wind.num_turbines
+        np.array(wind_power_production_1) * effective_n_turbs / hybrid_plant.wind.num_turbines
     )
 
     # plt.plot(pv_power_production)
@@ -540,16 +504,14 @@ def calculate_h_lcoe_continuous(
 
     combined_hybrid_power_production_hopp = pv_power_production + wind_power_production
     energy_shortfall_hopp = [
-        x - y for x, y in zip(load, combined_hybrid_power_production_hopp)
+        x - y for x, y in zip(load, combined_hybrid_power_production_hopp, strict=False)
     ]
-    energy_shortfall_hopp = [x if x > 0 else 0 for x in energy_shortfall_hopp]
+    energy_shortfall_hopp = [max(0, x) for x in energy_shortfall_hopp]
 
     combined_hybrid_curtailment_hopp = [
-        x - y for x, y in zip(combined_hybrid_power_production_hopp, load)
+        x - y for x, y in zip(combined_hybrid_power_production_hopp, load, strict=False)
     ]
-    combined_hybrid_curtailment_hopp = [
-        x if x > 0 else 0 for x in combined_hybrid_curtailment_hopp
-    ]
+    combined_hybrid_curtailment_hopp = [max(0, x) for x in combined_hybrid_curtailment_hopp]
 
     # # plt.plot(combined_hybrid_power_production_hopp[0:200], label="production")
     # # plt.plot(energy_shortfall_hopp[0:200], label="shortfall")
@@ -591,12 +553,9 @@ def calculate_h_lcoe_continuous(
         cost_to_buy_from_grid = 0.0
 
     energy_to_electrolyzer = [
-        x if x < kw_continuous else kw_continuous
-        for x in combined_pv_wind_storage_power_production_hopp
+        min(kw_continuous, x) for x in combined_pv_wind_storage_power_production_hopp
     ]
-    electrolyzer_CF = np.sum(energy_to_electrolyzer) / (
-        kw_continuous * len(energy_to_electrolyzer)
-    )
+    electrolyzer_CF = np.sum(energy_to_electrolyzer) / (kw_continuous * len(energy_to_electrolyzer))
 
     # Step 6: Run the Python H2A model
     # ------------------------- #
@@ -618,12 +577,8 @@ def calculate_h_lcoe_continuous(
     electrical_generation_timeseries = np.zeros_like(energy_to_electrolyzer)
     electrical_generation_timeseries[:] = energy_to_electrolyzer[:]
 
-    adjusted_installed_cost = (
-        hybrid_plant.grid.financial_model.Outputs.adjusted_installed_cost
-    )
-    net_capital_costs = (
-        hybrid_plant.grid.financial_model.SystemCosts.total_installed_cost
-    )
+    adjusted_installed_cost = hybrid_plant.grid.financial_model.Outputs.adjusted_installed_cost
+    net_capital_costs = hybrid_plant.grid.financial_model.SystemCosts.total_installed_cost
 
     H2_Results, H2A_Results = run_h2_PEM(
         electrical_generation_timeseries,
@@ -637,17 +592,11 @@ def calculate_h_lcoe_continuous(
     )
 
     # print(H2_Results['hydrogen_annual_output'])
-    total_hopp_installed_cost = (
-        hybrid_plant.grid.financial_model.SystemCosts.total_installed_cost
-    )
+    total_hopp_installed_cost = hybrid_plant.grid.financial_model.SystemCosts.total_installed_cost
     total_electrolyzer_cost = H2A_Results["scaled_total_installed_cost"]
     total_system_installed_cost = total_hopp_installed_cost + total_electrolyzer_cost
-    annual_operating_cost_hopp = (wind_size_mw * 1000 * 42) + (
-        solar_capacity_mw * 1000 * 13
-    )
-    annual_operating_cost_h2 = (
-        H2A_Results["Fixed O&M"] * H2_Results["hydrogen_annual_output"]
-    )
+    annual_operating_cost_hopp = (wind_size_mw * 1000 * 42) + (solar_capacity_mw * 1000 * 13)
+    annual_operating_cost_h2 = H2A_Results["Fixed O&M"] * H2_Results["hydrogen_annual_output"]
     total_annual_operating_costs = (
         annual_operating_cost_hopp
         + annual_operating_cost_h2
@@ -694,7 +643,7 @@ if __name__ == "__main__":
     battery_storage_mwh = np.linspace(0.0, 1000.0, N)
 
     scenarios_df = pd.read_csv("single_scenario2.csv")
-    for i, s in scenarios_df.iterrows():
+    for _, s in scenarios_df.iterrows():
         scenario = s
 
     buy_from_grid = False

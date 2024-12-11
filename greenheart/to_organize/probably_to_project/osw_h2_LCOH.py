@@ -1,26 +1,20 @@
-import copy
 import os
 import sys
+import copy
 import warnings
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 from dotenv import load_dotenv
-from hopp.simulation.technologies.sites import SiteInfo
-from hopp.simulation.technologies.sites import flatirons_site as sample_site
-from hopp.tools.resource import *
+from hopp.tools.resource import *  # noqa: F403  TODO: explicitly import what's needed
 from hopp.utilities.keys import set_developer_nrel_gov_key
+from hopp.simulation.technologies.sites import SiteInfo, flatirons_site as sample_site
 
-from greenheart.to_organize import (
-    hopp_tools_steel,
-    plot_results,
-    run_profast_for_hydrogen,
-)
-from greenheart.to_organize.H2_Analysis.hopp_for_h2 import (
-    run_h2a as run_h2a,
-)  # no h2a function
+from greenheart.to_organize import plot_results, hopp_tools_steel, run_profast_for_hydrogen
 from greenheart.to_organize.hopp_tools_steel import hoppDict
+from greenheart.to_organize.H2_Analysis.hopp_for_h2 import run_h2a as run_h2a  # no h2a function
+
 
 sys.path.append("")
 warnings.filterwarnings("ignore")
@@ -37,9 +31,7 @@ set_developer_nrel_gov_key(
 )  # Set this key manually here if you are not setting it using the .env
 
 # Step 1: User Inputs for scenario
-save_hybrid_plant_yaml = (
-    True  # hybrid_plant requires special processing of the SAM objects
-)
+save_hybrid_plant_yaml = True  # hybrid_plant requires special processing of the SAM objects
 save_model_input_yaml = True  # saves the inputs for each model/major function
 save_model_output_yaml = True  # saves the outputs for each model/major function
 
@@ -72,9 +64,7 @@ sample_site["year"] = resource_year
 useful_life = 30
 critical_load_factor = 1
 run_reopt_flag = False
-custom_powercurve = (
-    False  # A flag that is applicable when using PySam WindPower (not FLORIS)
-)
+custom_powercurve = False  # A flag that is applicable when using PySam WindPower (not FLORIS)
 storage_used = False
 battery_can_grid_charge = False
 grid_connected_hopp = False
@@ -105,7 +95,7 @@ site_selection = [
     # 'Site 4'
 ]
 
-scenario = dict()
+scenario = {}
 kw_continuous = electrolyzer_size_mw * 1000
 load = [
     kw_continuous for x in range(0, 8760)
@@ -228,8 +218,7 @@ for option in policy:
                 print(scenario["Wind PTC"])
 
                 turbinesheet = turbine_model[-4:]
-                scenario_df = xl.parse(turbinesheet)
-                scenario_df.set_index(["Parameter"], inplace=True)
+                scenario_df = xl.parse(turbinesheet).set_index(["Parameter"])
 
                 site_df = scenario_df[site_location]
 
@@ -238,15 +227,13 @@ for option in policy:
                 turbine_rating = site_df["Turbine rating"]
 
                 # set turbine values
-                hopp_dict, scenario, nTurbs, floris_config = (
-                    hopp_tools_steel.set_turbine_model(
-                        hopp_dict,
-                        turbine_model,
-                        scenario,
-                        parent_path,
-                        floris_dir,
-                        floris,
-                    )
+                hopp_dict, scenario, nTurbs, floris_config = hopp_tools_steel.set_turbine_model(
+                    hopp_dict,
+                    turbine_model,
+                    scenario,
+                    parent_path,
+                    floris_dir,
+                    floris,
                 )
 
                 scenario["Useful Life"] = useful_life
@@ -480,20 +467,18 @@ for option in policy:
                 )
 
                 # compressor model
-                hopp_dict, compressor, compressor_results = (
-                    hopp_tools_steel.compressor_model(hopp_dict)
+                hopp_dict, compressor, compressor_results = hopp_tools_steel.compressor_model(
+                    hopp_dict
                 )
 
                 # Pressure Vessel Model Example
-                hopp_dict, storage_input, storage_output = (
-                    hopp_tools_steel.pressure_vessel(hopp_dict)
+                hopp_dict, storage_input, storage_output = hopp_tools_steel.pressure_vessel(
+                    hopp_dict
                 )
 
                 # pipeline model
                 total_h2export_system_cost, opex_pipeline, dist_to_port_value = (
-                    hopp_tools_steel.pipeline(
-                        site_df, H2_Results, useful_life, storage_input
-                    )
+                    hopp_tools_steel.pipeline(site_df, H2_Results, useful_life, storage_input)
                 )
 
                 # plot HVDC vs pipe
@@ -510,9 +495,7 @@ for option in policy:
                 hydrogen_annual_production = H2_Results["hydrogen_annual_output"]
                 hydrogen_storage_capacity_kg = 0
                 hydrogen_storage_cost_USDprkg = 0
-                water_cost = (
-                    0.006868  # ($/gal) average of green steel sites' water cost
-                )
+                water_cost = 0.006868  # ($/gal) average of green steel sites' water cost
 
                 h2_ptc = scenario["H2 PTC"]
                 wind_ptc = scenario["Wind PTC"]
@@ -559,13 +542,11 @@ for option in policy:
                 max_hydrogen_production_rate_kg_hr = np.max(
                     H2_Results["hydrogen_hourly_production"]
                 )
-                max_hydrogen_delivery_rate_kg_hr = np.mean(
-                    H2_Results["hydrogen_hourly_production"]
-                )
+                max_hydrogen_delivery_rate_kg_hr = np.mean(H2_Results["hydrogen_hourly_production"])
 
                 electrolyzer_capacity_factor = H2_Results["cap_factor"]
 
-                test = dict()
+                test = {}
 
                 test["Site Name"] = site_name
                 test["ATB Year"] = atb_year
@@ -576,9 +557,7 @@ for option in policy:
                 test["LCOH: total ($/kg)"] = lcoh_breakdown["LCOH: total ($/kg)"]
                 test["Turbine size (MW)"] = turbine_rating
                 test["Wind Plant size (MW)"] = wind_size_mw
-                test["Wind Plant Size Adjusted for Turbine Rating(MW)"] = (
-                    wind_plant_size / 1000
-                )
+                test["Wind Plant Size Adjusted for Turbine Rating(MW)"] = wind_plant_size / 1000
                 test["Electrolyzer size (MW)"] = electrolyzer_size_mw
                 test["Load Profile (kW)"] = kw_continuous
                 test["Energy to Electrolyzer (kW)"] = np.sum(energy_to_electrolyzer)
@@ -619,9 +598,7 @@ for option in policy:
                 test["LCOH: Renewable plant ($/kg)"] = lcoh_breakdown[
                     "LCOH: Renewable plant ($/kg)"
                 ]
-                test["LCOH: Renewable FOM ($/kg)"] = lcoh_breakdown[
-                    "LCOH: Renewable FOM ($/kg)"
-                ]
+                test["LCOH: Renewable FOM ($/kg)"] = lcoh_breakdown["LCOH: Renewable FOM ($/kg)"]
                 test["LCOH: Taxes ($/kg)"] = lcoh_breakdown["LCOH: Taxes ($/kg)"]
                 test["LCOH: Water consumption ($/kg)"] = lcoh_breakdown[
                     "LCOH: Water consumption ($/kg)"
@@ -672,13 +649,11 @@ for option in policy:
                 max_hydrogen_production_rate_kg_hr = np.max(
                     H2_Results["hydrogen_hourly_production"]
                 )
-                max_hydrogen_delivery_rate_kg_hr = np.mean(
-                    H2_Results["hydrogen_hourly_production"]
-                )
+                max_hydrogen_delivery_rate_kg_hr = np.mean(H2_Results["hydrogen_hourly_production"])
 
                 electrolyzer_capacity_factor = H2_Results["cap_factor"]
 
-                test = dict()
+                test = {}
 
                 test["Site Name"] = site_name
                 test["ATB Year"] = atb_year
@@ -689,9 +664,7 @@ for option in policy:
                 test["Turbine size (MW)"] = turbine_rating
                 test["LCOH: total ($/kg)"] = lcoh_breakdown["LCOH: total ($/kg)"]
                 test["Wind Plant size (MW)"] = wind_size_mw
-                test["Wind Plant Size Adjusted for Turbine Rating(MW)"] = (
-                    wind_plant_size / 1000
-                )
+                test["Wind Plant Size Adjusted for Turbine Rating(MW)"] = wind_plant_size / 1000
                 test["Electrolyzer size (MW)"] = electrolyzer_size_mw
                 test["Load Profile (kW)"] = kw_continuous
                 test["Energy to Electrolyzer (kW)"] = np.sum(energy_to_electrolyzer)
@@ -732,9 +705,7 @@ for option in policy:
                 test["LCOH: Renewable plant ($/kg)"] = lcoh_breakdown[
                     "LCOH: Renewable plant ($/kg)"
                 ]
-                test["LCOH: Renewable FOM ($/kg)"] = lcoh_breakdown[
-                    "LCOH: Renewable FOM ($/kg)"
-                ]
+                test["LCOH: Renewable FOM ($/kg)"] = lcoh_breakdown["LCOH: Renewable FOM ($/kg)"]
                 test["LCOH: Taxes ($/kg)"] = lcoh_breakdown["LCOH: Taxes ($/kg)"]
                 test["LCOH: Water consumption ($/kg)"] = lcoh_breakdown[
                     "LCOH: Water consumption ($/kg)"

@@ -43,12 +43,8 @@ def plot_battery(
             )
             ax2.fill_between(
                 y[i : i + 24],
-                (df_mean.wind_power_to_battery - df_ci.wind_power_to_battery)[
-                    i : i + 24
-                ],
-                (df_mean.wind_power_to_battery + df_ci.wind_power_to_battery)[
-                    i : i + 24
-                ],
+                (df_mean.wind_power_to_battery - df_ci.wind_power_to_battery)[i : i + 24],
+                (df_mean.wind_power_to_battery + df_ci.wind_power_to_battery)[i : i + 24],
                 alpha=0.3,
                 color=colors[0],
                 label="$Wind to Battery$ 95% CI",
@@ -77,12 +73,8 @@ def plot_battery(
             )
             ax2.fill_between(
                 y[i : i + 24],
-                (df_mean.storage_power_to_load - df_ci.storage_power_to_load)[
-                    i : i + 24
-                ],
-                (df_mean.storage_power_to_load + df_ci.storage_power_to_load)[
-                    i : i + 24
-                ],
+                (df_mean.storage_power_to_load - df_ci.storage_power_to_load)[i : i + 24],
+                (df_mean.storage_power_to_load + df_ci.storage_power_to_load)[i : i + 24],
                 alpha=0.3,
                 color="green",
                 label="$Battery to Load$ 95% CI",
@@ -96,12 +88,8 @@ def plot_battery(
             )
             ax2.fill_between(
                 y[i : i + 24],
-                (df_mean.storage_power_to_load - df_ci.storage_power_to_load)[
-                    i : i + 24
-                ],
-                (df_mean.storage_power_to_load + df_ci.storage_power_to_load)[
-                    i : i + 24
-                ],
+                (df_mean.storage_power_to_load - df_ci.storage_power_to_load)[i : i + 24],
+                (df_mean.storage_power_to_load + df_ci.storage_power_to_load)[i : i + 24],
                 alpha=0.3,
                 color="cyan",
                 label="$Battery to Grid$ 95% CI",

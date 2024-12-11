@@ -8,15 +8,14 @@ Costs are in 2018 USD
 
 Sources:
     - [1] Papadias 2021: https://www.sciencedirect.com/science/article/pii/S0360319921030834?via%3Dihub
-    - [2] Papadias 2021: Bulk Hydrogen as Function of Capacity.docx documentation at hopp/hydrogen/h2_storage
+    - [2] Papadias 2021: Bulk Hydrogen as Function of Capacity.docx documentation at
+          hopp/hydrogen/h2_storage
     - [3] HDSAM V4.0 Gaseous H2 Geologic Storage sheet
 """
 
 import numpy as np
 
-from greenheart.simulation.technologies.hydrogen.h2_transport.h2_compression import (
-    Compressor,
-)
+from greenheart.simulation.technologies.hydrogen.h2_transport.h2_compression import Compressor
 
 
 class SaltCavernStorage:
@@ -40,10 +39,14 @@ class SaltCavernStorage:
                 - property_taxes (float): (optional, default: 1%) [decimal percent]
                 - licensing_permits (float): (optional, default: 0.01%) [decimal percent]
         Returns:
-            - salt_cavern_storage_capex_per_kg (float): the installed capital cost per kg h2 in 2018 [USD/kg]
-            - installed_capex (float): the installed capital cost in 2018 [USD] (including compressor)
-            - storage_compressor_capex (float): the installed capital cost in 2018 for the compressor [USD]
-            - total_opex (float): the OPEX (annual, fixed) in 2018 excluding electricity costs [USD/kg-yr]
+            - salt_cavern_storage_capex_per_kg (float): the installed capital cost per kg h2 in
+                2018 [USD/kg]
+            - installed_capex (float): the installed capital cost in 2018 [USD] (including
+                compressor)
+            - storage_compressor_capex (float): the installed capital cost in 2018 for the
+                compressor [USD]
+            - total_opex (float): the OPEX (annual, fixed) in 2018 excluding electricity costs
+                [USD/kg-yr]
             - output_dict (dict):
                 - salt_cavern_storage_capex (float): installed capital cost in 2018 [USD]
                 - salt_cavern_storage_opex (float): OPEX (annual, fixed) in 2018  [USD/yr]
@@ -55,9 +58,7 @@ class SaltCavernStorage:
         if "h2_storage_kg" in input_dict:
             self.h2_storage_kg = input_dict["h2_storage_kg"]  # [kg]
         elif "storage_duration_hrs" and "flow_rate_kg_hr" in input_dict:
-            self.h2_storage_kg = (
-                input_dict["storage_duration_hrs"] * input_dict["flow_rate_kg_hr"]
-            )
+            self.h2_storage_kg = input_dict["storage_duration_hrs"] * input_dict["flow_rate_kg_hr"]
         else:
             raise Exception(
                 "input_dict must contain h2_storage_kg or storage_duration_hrs and flow_rate_kg_hr"
@@ -71,14 +72,10 @@ class SaltCavernStorage:
         if "model" in input_dict:
             self.model = input_dict["model"]  # [papadias, hdsam]
         else:
-            raise Exception(
-                "input_dict must contain model type of either `papadias` or `hdsam`"
-            )
+            raise Exception("input_dict must contain model type of either `papadias` or `hdsam`")
 
         self.labor_rate = input_dict.get("labor_rate", 37.39817)  # $(2018)/hr
-        self.insurance = input_dict.get(
-            "insurance", 1 / 100
-        )  # % of total capital investment
+        self.insurance = input_dict.get("insurance", 1 / 100)  # % of total capital investment
         self.property_taxes = input_dict.get(
             "property_taxes", 1 / 100
         )  # % of total capital investment
@@ -96,9 +93,12 @@ class SaltCavernStorage:
         """
         Calculates the installed capital cost of salt cavern hydrogen storage
         Returns:
-            - salt_cavern_capex_per_kg (float): the installed capital cost per kg h2 in 2018 [USD/kg]
-            - installed_capex (float): the installed capital cost in 2018 [USD] (including compressor)
-            - storage_compressor_capex (float): the installed capital cost in 2018 for the compressor [USD]
+            - salt_cavern_capex_per_kg (float): the installed capital cost per kg h2 in 2018
+                [USD/kg]
+            - installed_capex (float): the installed capital cost in 2018 [USD] (including
+                compressor)
+            - storage_compressor_capex (float): the installed capital cost in 2018 for the
+                compressor [USD]
             - output_dict (dict):
                 - salt_cavern_capex (float): installed capital cost in 2018 [USD]
         """
@@ -113,9 +113,7 @@ class SaltCavernStorage:
                 - b * np.log(self.h2_storage_kg / 1000)
                 + c
             )  # 2019 [USD] from Papadias [2]
-            self.installed_capex = (
-                self.salt_cavern_storage_capex_per_kg * self.h2_storage_kg
-            )
+            self.installed_capex = self.salt_cavern_storage_capex_per_kg * self.h2_storage_kg
             cepci_overall = 1.29 / 1.30  # Convert from $2019 to $2018
             self.installed_capex = cepci_overall * self.installed_capex
             self.output_dict["salt_cavern_storage_capex"] = self.installed_capex
@@ -147,20 +145,21 @@ class SaltCavernStorage:
 
     def salt_cavern_opex(self):
         """
-        Calculates the operation and maintenance costs excluding electricity costs for the salt cavern hydrogen storage
+        Calculates the operation and maintenance costs excluding electricity costs for the salt
+        cavern hydrogen storage
         - Returns:
-            - total_opex (float): the OPEX (annual, fixed) in 2018 excluding electricity costs [USD/kg-yr]
+            - total_opex (float): the OPEX (annual, fixed) in 2018 excluding electricity costs
+                [USD/kg-yr]
             - output_dict (dict):
                 - salt_cavern_storage_opex (float): OPEX (annual, fixed) in 2018  [USD/yr]
         """
         # Operations and Maintenace costs [3]
         # Labor
-        # Base case is 1 operator, 24 hours a day, 7 days a week for a 100,000 kg/day average capacity facility.  Scaling factor of 0.25 is used for other sized facilities
+        # Base case is 1 operator, 24 hours a day, 7 days a week for a 100,000 kg/day average
+        # capacity facility.  Scaling factor of 0.25 is used for other sized facilities
         annual_hours = 8760 * (self.system_flow_rate / 100000) ** 0.25
         self.overhead = 0.5
-        labor = (annual_hours * self.labor_rate) * (
-            1 + self.overhead
-        )  # Burdened labor cost
+        labor = (annual_hours * self.labor_rate) * (1 + self.overhead)  # Burdened labor cost
         insurance = self.insurance * self.installed_capex
         property_taxes = self.property_taxes * self.installed_capex
         licensing_permits = self.licensing_permits * self.installed_capex

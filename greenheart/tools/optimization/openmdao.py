@@ -3,10 +3,7 @@ import openmdao.api as om
 from hopp.simulation import HoppInterface
 from shapely.geometry import Point, Polygon
 
-from greenheart.simulation.greenheart_simulation import (
-    GreenHeartSimulationConfig,
-    run_simulation,
-)
+from greenheart.simulation.greenheart_simulation import GreenHeartSimulationConfig, run_simulation
 
 
 class GreenHeartComponent(om.ExplicitComponent):
@@ -43,7 +40,15 @@ class GreenHeartComponent(om.ExplicitComponent):
         )
         self.options.declare(
             "design_variables",
-            #  values=["turbine_x", "turbine_y", "pv_capacity_kw", "wind_rating_kw", "electrolyzer_rating_kw", "battery_capacity_kw", "battery_capacity_kwh"],
+            # values=[
+            #     "turbine_x",
+            #     "turbine_y",
+            #     "pv_capacity_kw",
+            #     "wind_rating_kw",
+            #     "electrolyzer_rating_kw",
+            #     "battery_capacity_kw",
+            #     "battery_capacity_kwh",
+            # ],
             types=list,
             desc="List of design variables that should be included",
             default=[
@@ -103,37 +108,24 @@ class GreenHeartComponent(om.ExplicitComponent):
         if ninputs == 0 or "electrolyzer_rating_kw" in self.options["design_variables"]:
             self.add_input(
                 "electrolyzer_rating_kw",
-                val=self.options["config"].greenheart_config["electrolyzer"]["rating"]
-                * 1e3,
+                val=self.options["config"].greenheart_config["electrolyzer"]["rating"] * 1e3,
                 units="kW",
             )
             ninputs += 1
 
         # add outputs
-        self.add_output(
-            "lcoe", units="USD/(kW*h)", val=0.0, desc="levelized cost of energy"
-        )
-        self.add_output(
-            "lcoh", units="USD/kg", val=0.0, desc="levelized cost of hydrogen"
-        )
+        self.add_output("lcoe", units="USD/(kW*h)", val=0.0, desc="levelized cost of energy")
+        self.add_output("lcoh", units="USD/kg", val=0.0, desc="levelized cost of hydrogen")
         if "steel" in self.options["config"].greenheart_config.keys():
-            self.add_output(
-                "lcos", units="USD/t", val=0.0, desc="levelized cost of steel"
-            )
+            self.add_output("lcos", units="USD/t", val=0.0, desc="levelized cost of steel")
         if "ammonia" in self.options["config"].greenheart_config.keys():
-            self.add_output(
-                "lcoa", units="USD/kg", val=0.0, desc="levelized cost of ammonia"
-            )
+            self.add_output("lcoa", units="USD/kg", val=0.0, desc="levelized cost of ammonia")
 
         if self.options["config"].greenheart_config["opt_options"]["constraints"][
             "pv_to_platform_area_ratio"
         ]["flag"]:
-            self.add_output(
-                "pv_area", units="m*m", val=0.0, desc="offshore pv array area"
-            )
-            self.add_output(
-                "platform_area", units="m*m", val=0.0, desc="offshore platform area"
-            )
+            self.add_output("pv_area", units="m*m", val=0.0, desc="offshore pv array area")
+            self.add_output("platform_area", units="m*m", val=0.0, desc="offshore platform area")
 
             self.options["outputs_for_finite_difference"].append("pv_area")
             self.options["outputs_for_finite_difference"].append("platform_area")
@@ -165,12 +157,12 @@ class GreenHeartComponent(om.ExplicitComponent):
                     inputs["pv_capacity_kw"]
                 )
             if "battery_capacity_kw" in inputs:
-                config.hopp_config["technologies"]["battery"]["system_capacity_kw"] = (
-                    float(inputs["battery_capacity_kw"])
+                config.hopp_config["technologies"]["battery"]["system_capacity_kw"] = float(
+                    inputs["battery_capacity_kw"]
                 )
             if "battery_capacity_kwh" in inputs:
-                config.hopp_config["technologies"]["battery"]["system_capacity_kwh"] = (
-                    float(inputs["battery_capacity_kwh"])
+                config.hopp_config["technologies"]["battery"]["system_capacity_kwh"] = float(
+                    inputs["battery_capacity_kwh"]
                 )
         if "electrolyzer_rating_kw" in inputs:
             config.greenheart_config["electrolyzer"]["rating"] = (
@@ -206,8 +198,8 @@ class GreenHeartComponent(om.ExplicitComponent):
         elif config.output_level == 5:
             lcoe, lcoh, lcoh_grid_only, hopp_interface = run_simulation(config)
         elif config.output_level == 6:
-            hopp_results, electrolyzer_physics_results, remaining_power_profile = (
-                run_simulation(config)
+            hopp_results, electrolyzer_physics_results, remaining_power_profile = run_simulation(
+                config
             )
         elif config.output_level == 7:
             lcoe, lcoh, steel_finance, ammonia_finance = run_simulation(config)
@@ -271,7 +263,15 @@ class HOPPComponent(om.ExplicitComponent):
         )
         self.options.declare(
             "design_variables",
-            #  values=["turbine_x", "turbine_y", "pv_capacity_kw", "wind_rating_kw", "electrolyzer_rating_kw", "battery_capacity_kw", "battery_capacity_kwh"],
+            # values=[
+            #     "turbine_x",
+            #     "turbine_y",
+            #     "pv_capacity_kw",
+            #     "wind_rating_kw",
+            #     "electrolyzer_rating_kw",
+            #     "battery_capacity_kw",
+            #     "battery_capacity_kwh",
+            # ],
             types=list,
             desc="List of design variables that should be included",
             default=["turbine_x", "turbine_y"],
@@ -340,13 +340,9 @@ class HOPPComponent(om.ExplicitComponent):
                     )
                 )
             if "pv_capacity_kw" in inputs:
-                technologies["pv"]["system_capacity_kw"] = float(
-                    inputs["pv_capacity_kw"]
-                )
+                technologies["pv"]["system_capacity_kw"] = float(inputs["pv_capacity_kw"])
             if "battery_capacity_kw" in inputs:
-                technologies["battery"]["system_capacity_kw"] = float(
-                    inputs["battery_capacity_kw"]
-                )
+                technologies["battery"]["system_capacity_kw"] = float(inputs["battery_capacity_kw"])
             if "battery_capacity_kwh" in inputs:
                 technologies["battery"]["system_capacity_kwh"] = float(
                     inputs["battery_capacity_kwh"]
@@ -383,9 +379,7 @@ class HOPPComponent(om.ExplicitComponent):
             outputs["battery_capex"] = hi.system.battery.total_installed_cost
             # outputs["battery_opex"] = hi.system.battery.om_total_expense[1]
 
-        outputs["hybrid_electrical_generation_capex"] = hi.system.cost_installed[
-            "hybrid"
-        ]
+        outputs["hybrid_electrical_generation_capex"] = hi.system.cost_installed["hybrid"]
         # outputs["hybrid_electrical_generation_opex"] = hi.system.om_total_expenses[1]
 
         outputs["aep"] = hi.system.annual_energies.hybrid
@@ -395,9 +389,7 @@ class HOPPComponent(om.ExplicitComponent):
         outputs["power_signal"] = hi.system.grid.generation_profile[0:8760]
 
     def setup_partials(self):
-        self.declare_partials(
-            ["lcoe_real", "power_signal"], "*", method="fd", form="forward"
-        )
+        self.declare_partials(["lcoe_real", "power_signal"], "*", method="fd", form="forward")
 
 
 class TurbineDistanceComponent(om.ExplicitComponent):
@@ -434,7 +426,9 @@ class TurbineDistanceComponent(om.ExplicitComponent):
 
 
 class BoundaryDistanceComponent(om.ExplicitComponent):
-    """This class is an OpenMDAO component for placing a boundary constraint on wind turbine locations"""
+    """This class is an OpenMDAO component for placing a boundary constraint on wind turbine
+    locations.
+    """
 
     def initialize(self):
         self.options.declare("hopp_interface", recordable=False)
@@ -446,9 +440,7 @@ class BoundaryDistanceComponent(om.ExplicitComponent):
         self.n_distances = self.n_turbines
         self.add_input("turbine_x", val=self.options["turbine_x_init"], units="m")
         self.add_input("turbine_y", val=self.options["turbine_y_init"], units="m")
-        self.add_output(
-            "boundary_distance_vec", val=np.zeros(self.n_distances), units="m"
-        )
+        self.add_output("boundary_distance_vec", val=np.zeros(self.n_distances), units="m")
 
     def compute(self, inputs, outputs):
         # get hopp interface
@@ -460,9 +452,7 @@ class BoundaryDistanceComponent(om.ExplicitComponent):
         # check if turbines are inside polygon and get distance
         for i in range(0, self.n_distances):
             point = Point(inputs["turbine_x"][i], inputs["turbine_y"][i])
-            outputs["boundary_distance_vec"][i] = boundary_polygon.exterior.distance(
-                point
-            )
+            outputs["boundary_distance_vec"][i] = boundary_polygon.exterior.distance(point)
             if not boundary_polygon.contains(point):
                 outputs["boundary_distance_vec"][i] *= -1
 

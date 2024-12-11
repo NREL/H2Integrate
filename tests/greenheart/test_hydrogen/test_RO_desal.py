@@ -1,13 +1,12 @@
 from pytest import approx
 
-from greenheart.simulation.technologies.hydrogen.desal.desal_model_eco import (
-    RO_desal_eco,
-)
+from greenheart.simulation.technologies.hydrogen.desal.desal_model_eco import RO_desal_eco
+
 
 # Test values are based on hand calculations
 
 
-class TestRO_desal:
+class TestRODesal:
     rel_tol = 1e-2
 
     freshwater_needed = 10000  # [kg/hr]
@@ -47,9 +46,7 @@ class TestRO_desal:
         """Test Seawater RO Model"""
         n_systems = 2
         total_freshwater_kg_per_hr_required = 997
-        per_system_freshwater_kg_per_hr_required = (
-            total_freshwater_kg_per_hr_required / n_systems
-        )
+        per_system_freshwater_kg_per_hr_required = total_freshwater_kg_per_hr_required / n_systems
 
         total_outputs = RO_desal_eco(
             freshwater_kg_per_hr=total_freshwater_kg_per_hr_required,
@@ -59,7 +56,7 @@ class TestRO_desal:
             per_system_freshwater_kg_per_hr_required, salinity="Seawater"
         )
 
-        for t, s in zip(total_outputs, per_system_outputs):
+        for t, s in zip(total_outputs, per_system_outputs, strict=False):
             assert t == approx(s * n_systems)
 
     def test_RO_Desal_Brackish(self):
@@ -72,4 +69,4 @@ class TestRO_desal:
 
 
 if __name__ == "__main__":
-    test_set = TestRO_desal()
+    test_set = TestRODesal()

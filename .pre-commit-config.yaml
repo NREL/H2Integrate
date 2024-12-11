@@ -17,6 +17,7 @@ repos:
   - id: check-json
   - id: check-yaml
     args: [--unsafe]  # allow Python constructors
+    exclude: conda.recipe/meta.yaml  # ignore conda build
   - id: check-merge-conflict
   - id: check-symlinks
   - id: mixed-line-ending

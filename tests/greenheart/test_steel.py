@@ -1,8 +1,9 @@
 import copy
 
-from pytest import approx, fixture, raises
+from pytest import approx, raises, fixture
 
 from greenheart.simulation.technologies.steel import steel
+
 
 ng_prices_dict = {
     "2035": 3.76232,
@@ -84,9 +85,7 @@ def cost_config():
         operational_year=2035,
         plant_capacity_mtpy=1084408.2137715619,
         lcoh=4.2986685034417045,
-        feedstocks=steel.Feedstocks(
-            natural_gas_prices=ng_prices_dict, oxygen_market_price=0
-        ),
+        feedstocks=steel.Feedstocks(natural_gas_prices=ng_prices_dict, oxygen_market_price=0),
         o2_heat_integration=False,
     )
     return config
@@ -144,9 +143,7 @@ def test_steel_size_h2_input(subtests):
     config = steel.SteelCapacityModelConfig(
         hydrogen_amount_kgpy=73288888.8888889,
         input_capacity_factor_estimate=0.9,
-        feedstocks=steel.Feedstocks(
-            natural_gas_prices=ng_prices_dict, oxygen_market_price=0
-        ),
+        feedstocks=steel.Feedstocks(natural_gas_prices=ng_prices_dict, oxygen_market_price=0),
     )
 
     res: steel.SteelCapacityModelOutputs = steel.run_size_steel_plant_capacity(config)
@@ -161,9 +158,7 @@ def test_steel_size_steel_input(subtests):
     config = steel.SteelCapacityModelConfig(
         desired_steel_mtpy=1000000,
         input_capacity_factor_estimate=0.9,
-        feedstocks=steel.Feedstocks(
-            natural_gas_prices=ng_prices_dict, oxygen_market_price=0
-        ),
+        feedstocks=steel.Feedstocks(natural_gas_prices=ng_prices_dict, oxygen_market_price=0),
     )
 
     res: steel.SteelCapacityModelOutputs = steel.run_size_steel_plant_capacity(config)
@@ -257,8 +252,6 @@ def test_run_steel_full_model_changing_lcoh(subtests):
     with subtests.test("res0 price lt res1 price"):
         assert res0[2].sol.get("price") < res1[2].sol.get("price")
     with subtests.test("raise value error when LCOH values do not match"):
-        with raises(
-            ValueError, match="steel cost LCOH and steel finance LCOH are not equal"
-        ):
-            config_1["steel"]["finances"]["lcoh"] = 40.0
+        config_1["steel"]["finances"]["lcoh"] = 40.0
+        with raises(ValueError, match="steel cost LCOH and steel finance LCOH are not equal"):
             res1 = steel.run_steel_full_model(config_1)

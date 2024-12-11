@@ -64,7 +64,7 @@ For most use cases, installing from source will be the preferred installation ro
         ```bash
         conda install -y -c conda-forge coin-or-cbc=2.10.8
         ```
-    
+
     2. Windows users will have to manually install Cbc: https://github.com/coin-or/Cbc
 
 An additional step can be added if additional dependencies are required, or you plan to use this
@@ -123,7 +123,7 @@ pip install -e ".[all]"
     - If you want to just use GreenHEART:
 
        ```bash
-       pip install .  
+       pip install .
        ```
 
     - If you want to work with the examples:
@@ -132,7 +132,7 @@ pip install -e ".[all]"
        pip install ".[examples]"
        ```
 
-    - If you also want development dependencies for running tests and building docs:  
+    - If you also want development dependencies for running tests and building docs:
 
        ```bash
        pip install -e ".[develop]"

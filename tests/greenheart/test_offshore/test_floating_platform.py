@@ -4,24 +4,22 @@ import ORBIT as orbit
 import pytest
 
 from greenheart.simulation.technologies.offshore.floating_platform import (
+    install_platform,
     calc_platform_opex,
     calc_substructure_mass_and_cost,
-    install_platform,
 )
 
+
 """Sources:
-    - [1] M. Maness, B. Maples and A. Smith, "NREL Offshore Balance-of-System Model," National Renewable Energy Laboratory, 2017. https://www.nrel.gov/docs/fy17osti/66874.pdf
+    - [1] M. Maness, B. Maples and A. Smith, "NREL Offshore Balance-of-System Model," National
+    Renewable Energy Laboratory, 2017. https://www.nrel.gov/docs/fy17osti/66874.pdf
 """
 
 
 @pytest.fixture
 def config():
     offshore_path = (
-        Path(__file__).parents[3]
-        / "greenheart"
-        / "simulation"
-        / "technologies"
-        / "offshore"
+        Path(__file__).parents[3] / "greenheart" / "simulation" / "technologies" / "offshore"
     )
 
     return orbit.load_config(offshore_path / "example_floating_project.yaml")
@@ -36,9 +34,7 @@ def test_install_platform(config):
     mass = 2100
     area = 500
 
-    cost = install_platform(
-        mass, area, distance, install_duration=14, foundation="floating"
-    )
+    cost = install_platform(mass, area, distance, install_duration=14, foundation="floating")
 
     assert pytest.approx(cost) == 7142871
 

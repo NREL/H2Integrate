@@ -1,5 +1,5 @@
-import hopp.to_organize.H2_Analysis.H2AModel as H2AModel
 import numpy as np
+import hopp.to_organize.H2_Analysis.H2AModel as H2AModel
 
 
 def run_h2a(
@@ -28,9 +28,9 @@ def run_h2a(
     hydrogen_hourly_production = cap_factor * np.divide(
         electrical_generation_timeseries, total_system_electrical_usage
     )  # hourly hydrogen production (kg)
-    hydrogen_hourly_production[
-        hydrogen_hourly_production > max_hourly_h2_production
-    ] = max_hourly_h2_production
+    hydrogen_hourly_production[hydrogen_hourly_production > max_hourly_h2_production] = (
+        max_hourly_h2_production
+    )
 
     # Get Daily Hydrogen Production - Add Every 24 hours
     i = 0
@@ -65,9 +65,7 @@ def run_h2a(
     H2A_Results["scaled_total_installed_cost"]
     H2A_Results["scaled_total_installed_cost_kw"]
 
-    feedstock_cost_h2_levelized_hopp = (
-        lcoe * total_system_electrical_usage / 100
-    )  # $/kg
+    feedstock_cost_h2_levelized_hopp = lcoe * total_system_electrical_usage / 100  # $/kg
     # Hybrid Plant - levelized H2 Cost - HOPP
     feedstock_cost_h2_via_net_cap_cost_lifetime_h2_hopp = (
         hybrid_plant.grid.financial_model.Outputs.adjusted_installed_cost
@@ -76,19 +74,20 @@ def run_h2a(
     # Total Hydrogen Cost ($/kgH2)
     total_unit_cost_of_hydrogen = h2a_costs + feedstock_cost_h2_levelized_hopp
 
-    # feedstock_cost_h2_via_net_cap_cost_lifetime_h2_hopp = hybrid_plant.grid.financial_model.Outputs.adjusted_installed_cost /\
-    #                                                     ((kw_continuous/55.5)*(8760 * useful_life))
-    feedstock_cost_h2_via_net_cap_cost_lifetime_h2_reopt = reopt_results["outputs"][
-        "Scenario"
-    ]["Site"]["Financial"]["net_capital_costs"] / (
-        (kw_continuous / total_system_electrical_usage)
-        * (8760 * scenario["Useful Life"])
+    # feedstock_cost_h2_via_net_cap_cost_lifetime_h2_hopp = (
+    #     hybrid_plant.grid.financial_model.Outputs.adjusted_installed_cost
+    #     / ((kw_continuous / 55.5) * (8760 * useful_life))
+    # )
+    feedstock_cost_h2_via_net_cap_cost_lifetime_h2_reopt = reopt_results["outputs"]["Scenario"][
+        "Site"
+    ]["Financial"]["net_capital_costs"] / (
+        (kw_continuous / total_system_electrical_usage) * (8760 * scenario["Useful Life"])
     )
     H2_Results = {
         "hydrogen_annual_output": hydrogen_annual_output,
         "feedstock_cost_h2_levelized_hopp": feedstock_cost_h2_levelized_hopp,
-        "feedstock_cost_h2_via_net_cap_cost_lifetime_h2_hopp": feedstock_cost_h2_via_net_cap_cost_lifetime_h2_hopp,
-        "feedstock_cost_h2_via_net_cap_cost_lifetime_h2_reopt": feedstock_cost_h2_via_net_cap_cost_lifetime_h2_reopt,
+        "feedstock_cost_h2_via_net_cap_cost_lifetime_h2_hopp": feedstock_cost_h2_via_net_cap_cost_lifetime_h2_hopp,  # noqa: E501
+        "feedstock_cost_h2_via_net_cap_cost_lifetime_h2_reopt": feedstock_cost_h2_via_net_cap_cost_lifetime_h2_reopt,  # noqa: E501
         "total_unit_cost_of_hydrogen": total_unit_cost_of_hydrogen,
         "cap_factor": cap_factor,
     }

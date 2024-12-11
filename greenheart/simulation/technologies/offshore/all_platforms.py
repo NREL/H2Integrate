@@ -14,9 +14,7 @@ def calc_platform_opex(capex, opex_rate=0.011):
     return opex
 
 
-def install_platform(
-    mass, area, distance, install_duration=14, vessel=None, foundation="fixed"
-):
+def install_platform(mass, area, distance, install_duration=14, vessel=None, foundation="fixed"):
     """
     A simplified platform installation costing model.
     Total Cost = install_cost * duration
@@ -28,14 +26,16 @@ def install_platform(
     # If no ORBIT vessel is defined set default values (based on ORBIT's floating_heavy_lift_vessel)
     if vessel is None:
         if foundation == "fixed":
-            # If no ORBIT vessel is defined set default values (based on ORBIT's example_heavy_lift_vessel)
+            # If no ORBIT vessel is defined set default values (based on ORBIT's
+            # example_heavy_lift_vessel)
             # Default values are from [3].
             vessel_cargo_mass = 7999  # t
             vessel_deck_space = 3999  # m**2
             vessel_day_rate = 500001  # USD/day
             vessel_speed = 5  # km/hr
         elif foundation == "floating":
-            # If no ORBIT vessel is defined set default values (based on ORBIT's floating_heavy_lift_vessel)
+            # If no ORBIT vessel is defined set default values (based on ORBIT's
+            # floating_heavy_lift_vessel)
             vessel_cargo_mass = 7999  # t
             vessel_deck_space = 3999  # m**2
             vessel_day_rate = 500001  # USD/day
@@ -43,7 +43,8 @@ def install_platform(
         else:
             raise (
                 ValueError(
-                    "Invalid offshore platform foundation type. Must be one of ['fixed', 'floating']"
+                    "Invalid offshore platform foundation type. Must be one of"
+                    " ['fixed', 'floating']"
                 )
             )
     else:
@@ -53,14 +54,10 @@ def install_platform(
         vessel_speed = vessel.transit_speed  # km/hr
 
     # Get the # of trips based on ships cargo/space limits
-    num_of_trips = math.ceil(
-        max((mass / vessel_cargo_mass), (area / vessel_deck_space))
-    )
+    num_of_trips = math.ceil(max((mass / vessel_cargo_mass), (area / vessel_deck_space)))
 
     # Total duration = double the trips + install_duration
-    duration = (2 * num_of_trips * distance) / (
-        vessel_speed * 24
-    ) + install_duration  # days\
+    duration = (2 * num_of_trips * distance) / (vessel_speed * 24) + install_duration  # days\
 
     # Final install cost is obtained by using the vessel's daily rate
     install_cost = vessel_day_rate * duration  # USD

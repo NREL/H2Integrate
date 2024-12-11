@@ -5,6 +5,7 @@ import openmdao.api as om
 from greenheart.simulation.greenheart_simulation import GreenHeartSimulationConfig
 from greenheart.tools.optimization.gc_run_greenheart import run_greenheart
 
+
 ROOT_DIR = Path(__file__).parents[2]
 
 solar_resource_file = (
@@ -16,9 +17,7 @@ wind_resource_file = (
     / "wind"
     / "35.2018863_-101.945027_windtoolkit_2012_60min_80m_100m.srw"
 )
-floris_input_filename = (
-    Path(__file__).absolute().parent / "inputs" / "floris_input.yaml"
-)
+floris_input_filename = Path(__file__).absolute().parent / "inputs" / "floris_input.yaml"
 hopp_config_filename = (
     Path(__file__).absolute().parent
     / "input_files"
@@ -26,10 +25,7 @@ hopp_config_filename = (
     / "hopp_config_wind_wave_solar_battery.yaml"
 )
 greenheart_config_filename = (
-    Path(__file__).absolute().parent
-    / "input_files"
-    / "plant"
-    / "greenheart_config.yaml"
+    Path(__file__).absolute().parent / "input_files" / "plant" / "greenheart_config.yaml"
 )
 turbine_config_filename = (
     Path(__file__).absolute().parent / "input_files" / "turbines" / "osw_18MW.yaml"
@@ -58,9 +54,9 @@ def setup_greenheart():
     config.hopp_config["config"]["cost_info"]["wind_installed_cost_mw"] = 1434000.0
     # based on 2023 ATB moderate case for onshore wind
     config.hopp_config["config"]["cost_info"]["wind_om_per_kw"] = 29.567
-    config.hopp_config["technologies"]["wind"]["fin_model"]["system_costs"]["om_fixed"][
-        0
-    ] = config.hopp_config["config"]["cost_info"]["wind_om_per_kw"]
+    config.hopp_config["technologies"]["wind"]["fin_model"]["system_costs"]["om_fixed"][0] = (
+        config.hopp_config["config"]["cost_info"]["wind_om_per_kw"]
+    )
     # set skip_financial to false for onshore wind
     config.hopp_config["config"]["simulation_options"]["wind"]["skip_financial"] = False
 
@@ -147,17 +143,23 @@ def setup_greenheart():
                 # "hist_file_name": "snopt_history.txt", # optional
                 "verify_level": -1,  # optional
                 "step_calc": None,
-                "form": "forward",  # type of finite differences to use, can be one of ["forward", "backward", "central"]
+                # Type of finite differences to use, one of ["forward", "backward", "central"]
+                "form": "forward",
                 "debug_print": False,
             },
             "design_of_experiments": {
                 "flag": False,
                 "run_parallel": False,
-                "generator": "FullFact",  # [Uniform, FullFact, PlackettBurman, BoxBehnken, LatinHypercube]
-                "num_samples": 1,  # Number of samples to evaluate model at (Uniform and LatinHypercube only)
+                # [Uniform, FullFact, PlackettBurman, BoxBehnken, LatinHypercube]
+                "generator": "FullFact",
+                # Number of samples to evaluate model at (Uniform and LatinHypercube only)
+                "num_samples": 1,
                 "seed": 2,
-                "levels": 50,  #  Number of evenly spaced levels between each design variable lower and upper bound (FullFactorial only)
-                "criterion": None,  # [None, center, c, maximin, m, centermaximin, cm, correelation, corr]
+                #  Number of evenly spaced levels between each design variable lower and
+                # upper bound (FullFactorial only)
+                "levels": 50,
+                # [None, center, c, maximin, m, centermaximin, cm, correelation, corr]
+                "criterion": None,
                 "iterations": 1,
                 "debug_print": False,
             },
@@ -165,9 +167,7 @@ def setup_greenheart():
         },
         "recorder": {
             "flag": True,
-            "file_name": str(
-                Path(__file__).absolute().parent / "output" / "recorder.sql"
-            ),
+            "file_name": str(Path(__file__).absolute().parent / "output" / "recorder.sql"),
             "includes": False,
         },
     }
@@ -179,14 +179,16 @@ def setup_greenheart():
 def test_run_greenheart_optimize_mpi(subtests):
     try:
         from mpi4py import MPI
-    except:
-        MPI = False
+
+        is_mpi = True
+    except ModuleNotFoundError:
+        is_mpi = False
 
     config = setup_greenheart()
 
     prob, config = run_greenheart(config, run_only=False)
 
-    if MPI:
+    if is_mpi:
         rank = MPI.COMM_WORLD.Get_rank()
     else:
         rank = 0

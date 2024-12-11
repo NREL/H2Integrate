@@ -21,20 +21,31 @@ For more context about GreenHEART and to see analyses that have been performed u
 PDFs are available in the linked titles.
 
 ### Nationwide techno-economic analysis of clean hydrogen production powered by a hybrid renewable energy plant for over 50,000 locations in the United States.
-The levelized cost of hydrogen is calculated for varying technology costs, and tax credits to explore cost sensitivities independent of plant design, performance, and site selection.
-Our findings suggest that strategies for cost reduction include selecting sites with abundant wind resources, complementary wind and solar resources, and optimizing the sizing of wind and solar assets to maximize the hybrid plant capacity factor.
+The levelized cost of hydrogen is calculated for varying technology costs, and tax credits to
+explore cost sensitivities independent of plant design, performance, and site selection. Our
+findings suggest that strategies for cost reduction include selecting sites with abundant wind
+resources, complementary wind and solar resources, and optimizing the sizing of wind and solar
+assets to maximize the hybrid plant capacity factor.
 
 Grant, E., et al. "[Hybrid power plant design for low-carbon hydrogen in the United States.](https://iopscience.iop.org/article/10.1088/1742-6596/2767/8/082019/pdf)" Journal of Physics: Conference Series. Vol. 2767. No. 8. IOP Publishing, 2024.
 
 
 ### Exploring the role of producing low-carbon hydrogen using water electrolysis powered by offshore wind in facilitating the United States’ transition to a net-zero emissions economy by 2050.
-Conducting a regional techno-economic analysis at four U.S. coastal sites, the study evaluates two energy transmission configurations and examines associated costs for the years 2025, 2030, and 2035.
-The results highlight that locations using fixed-bottom technology may achieve cost-competitive water electrolysis hydrogen production by 2030 through leveraging geologic hydrogen storage and federal policy incentives.
+Conducting a regional techno-economic analysis at four U.S. coastal sites, the study evaluates two
+energy transmission configurations and examines associated costs for the years 2025, 2030, and 2035.
+The results highlight that locations using fixed-bottom technology may achieve cost-competitive
+water electrolysis hydrogen production by 2030 through leveraging geologic hydrogen storage and
+federal policy incentives.
 
 Brunik, K., et al. "[Potential for large-scale deployment of offshore wind-to-hydrogen systems in the United States.](https://iopscience.iop.org/article/10.1088/1742-6596/2767/6/062017/pdf)" Journal of Physics: Conference Series. Vol. 2767. No. 6. IOP Publishing, 2024.
 
 ### Examining how tightly-coupled gigawatt-scale wind- and solar-sourced H2 depends on the ability to store and deliver otherwise-curtailed H2 during times of shortages.
-Modeling results suggest that the levelized cost of storage is highly spatially heterogeneous, with minor impact on the cost of H2 in the Midwest, and potentially significant impact in areas with emerging H2 economies such as Central California and the Southeast. While TOL/MCH may be the cheapest aboveground bulk storage solution evaluated, upfront capital costs, modest energy efficiency, reliance on critical materials, and greenhouse gas emissions from heating remain concerns. 
+Modeling results suggest that the levelized cost of storage is highly spatially heterogeneous, with
+minor impact on the cost of H2 in the Midwest, and potentially significant impact in areas with
+emerging H2 economies such as Central California and the Southeast. While TOL/MCH may be the
+cheapest aboveground bulk storage solution evaluated, upfront capital costs, modest energy
+efficiency, reliance on critical materials, and greenhouse gas emissions from heating remain
+concerns.
 
 Breunig, Hanna, et al. "[Hydrogen Storage Materials Could Meet Requirements for GW-Scale Seasonal Storage and Green Steel.](https://assets-eu.researchsquare.com/files/rs-4326648/v1_covered_338a5071-b74b-4ecd-9d2a-859e8d988b5c.pdf?c=1716199726)" (2024).
 
@@ -80,7 +91,7 @@ pip install greenheart
         ```bash
         conda install -y -c conda-forge coin-or-cbc=2.10.8
         ```
-    
+
     2. Windows users will have to manually install Cbc: https://github.com/coin-or/Cbc
 
 An additional step can be added if additional dependencies are required, or you plan to use this
@@ -137,7 +148,7 @@ pip install -e ".[all]"
     - If you want to just use GreenHEART:
 
        ```bash
-       pip install .  
+       pip install .
        ```
 
     - If you want to work with the examples:
@@ -146,7 +157,7 @@ pip install -e ".[all]"
        pip install ".[examples]"
        ```
 
-    - If you also want development dependencies for running tests and building docs:  
+    - If you also want development dependencies for running tests and building docs:
 
        ```bash
        pip install -e ".[develop]"
@@ -186,8 +197,9 @@ pip install -e ".[all]"
 
 ## Parallel processing for GreenHEART finite differences and design of experiments
 
-GreenHEART is set up to run in parallel using MPI and PETSc for finite differencing and for design of
-experiments runs through OpenMDAO. To use this capability you will need to follow the addtional installation
+GreenHEART is set up to run in parallel using MPI and PETSc for finite differencing and for design
+of experiments runs through OpenMDAO. To use this capability you will need to follow the additional
+installation
 instruction below:
 
 ```bash
@@ -196,7 +208,7 @@ conda install -c conda-forge mpi4py petsc4py
 
 For more details on implementation and installation, reference the documentation for OpenMDAO.
 
-To to check that your installation is working, do the following:
+To check that your installation is working, do the following:
 
 ```bash
 cd tests/greenheart/

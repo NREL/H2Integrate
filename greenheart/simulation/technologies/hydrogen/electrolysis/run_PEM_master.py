@@ -3,14 +3,15 @@ import warnings
 
 import numpy as np
 import pandas as pd
-from pyomo.environ import *
+from pyomo.environ import *  # FIXME: no * imports, delete whole comment when fixed # noqa: F403
 
 from greenheart.simulation.technologies.hydrogen.electrolysis.optimization_utils_linear import (
     optimize,
 )
-from greenheart.simulation.technologies.hydrogen.electrolysis.PEM_H2_LT_electrolyzer_Clusters import (
+from greenheart.simulation.technologies.hydrogen.electrolysis.PEM_H2_LT_electrolyzer_Clusters import (  # noqa: E501
     PEM_H2_Clusters as PEMClusters,
 )
+
 
 # from PyOMO import ipOpt !! FOR SANJANA!!
 warnings.filterwarnings("ignore")
@@ -18,8 +19,10 @@ warnings.filterwarnings("ignore")
 """
 Perform a LCOH analysis for an offshore wind + Hydrogen PEM system
 
-1. Offshore wind site locations and cost details (4 sites, $1300/kw capex + BOS cost which will come from Orbit Runs)~
-2. Cost Scaling Based on Year (Have Weiser et. al report with cost scaling for fixed and floating tech, will implement)
+1. Offshore wind site locations and cost details (4 sites, $1300/kw capex + BOS cost which will come
+   from Orbit Runs)~
+2. Cost Scaling Based on Year (Have Weiser et. al report with cost scaling for fixed and floating
+   tech, will implement)
 3. Cost Scaling Based on Plant Size (Shields et. Al report)
 4. Future Model Development Required:
 - Floating Electrolyzer Platform
@@ -78,9 +81,7 @@ class run_PEM_clusters:
         )
         self.verbose = verbose
 
-    def run_grid_connected_pem(
-        self, system_size_mw, hydrogen_production_capacity_required_kgphr
-    ):
+    def run_grid_connected_pem(self, system_size_mw, hydrogen_production_capacity_required_kgphr):
         pem = PEMClusters(
             system_size_mw,
             self.plant_life_yrs,
@@ -90,15 +91,12 @@ class run_PEM_clusters:
         power_timeseries, stack_current = pem.grid_connected_func(
             hydrogen_production_capacity_required_kgphr
         )
-        h2_ts, h2_tot = pem.run_grid_connected_workaround(
-            power_timeseries, stack_current
-        )
+        h2_ts, h2_tot = pem.run_grid_connected_workaround(power_timeseries, stack_current)
         # h2_ts, h2_tot = pem.run(power_timeseries)
         h2_df_ts = pd.Series(h2_ts, name="Cluster #0")
         h2_df_tot = pd.Series(h2_tot, name="Cluster #0")
         # h2_df_ts = pd.DataFrame(h2_ts, index=list(h2_ts.keys()), columns=['Cluster #0'])
         # h2_df_tot = pd.DataFrame(h2_tot, index=list(h2_tot.keys()), columns=['Cluster #0'])
-        []
         return pd.DataFrame(h2_df_ts), pd.DataFrame(h2_df_tot)
 
     def run(self, optimize=False):
@@ -113,7 +111,7 @@ class run_PEM_clusters:
 
         col_names = []
         start = time.perf_counter()
-        for ci, cluster in enumerate(clusters):
+        for ci in range(len(clusters)):
             cl_name = f"Cluster #{ci}"
             col_names.append(cl_name)
             h2_ts, h2_tot = clusters[ci].run(power_to_clusters[ci])
@@ -123,9 +121,7 @@ class run_PEM_clusters:
             h2_tot_temp = pd.Series(h2_tot, name=cl_name)
             if len(h2_df_tot) == 0:
                 # h2_df_ts=pd.concat([h2_df_ts,h2_ts_temp],axis=0,ignore_index=False)
-                h2_df_tot = pd.concat(
-                    [h2_df_tot, h2_tot_temp], axis=0, ignore_index=False
-                )
+                h2_df_tot = pd.concat([h2_df_tot, h2_tot_temp], axis=0, ignore_index=False)
                 h2_df_tot.columns = col_names
 
                 h2_df_ts = pd.concat([h2_df_ts, h2_ts_temp], axis=0, ignore_index=False)
@@ -159,11 +155,9 @@ class run_PEM_clusters:
         diff = 0
 
         for start_time in range(n_times_to_run):
-            print(
-                f"Optimizing {number_of_stacks} stacks tarting {start_time*tf}hr/{self.T}hr"
-            )
+            print(f"Optimizing {number_of_stacks} stacks tarting {start_time*tf}hr/{self.T}hr")
             if start_time == 0:
-                df["Wind + PV Generation"].replace(0, np.NaN, inplace=True)
+                df["Wind + PV Generation"] = df["Wind + PV Generation"].replace(0, np.nan)
                 df = df.interpolate()
 
             P_wind_t = df["Wind + PV Generation"][
@@ -218,9 +212,7 @@ class run_PEM_clusters:
             num_clusters_on > self.num_clusters, self.num_clusters, num_clusters_on
         )
         power_per_cluster = [
-            self.input_power_kw[ti] / num_clusters_on[ti]
-            if num_clusters_on[ti] > 0
-            else 0
+            self.input_power_kw[ti] / num_clusters_on[ti] if num_clusters_on[ti] > 0 else 0
             for ti, pwr in enumerate(self.input_power_kw)
         ]
 
@@ -246,26 +238,18 @@ class run_PEM_clusters:
 
     def max_h2_cntrl(self):
         # run as many at lower power as possible
-        []
+        ...
 
     def min_deg_cntrl(self):
         # run as few as possible
-        []
+        ...
 
     def create_clusters(self):
         start = time.perf_counter()
-        stacks = []
         # TODO fix the power input - don't make it required!
         # in_dict={'dt':3600}
-        for i in range(self.num_clusters):
-            # stacks.append(PEMClusters(cluster_size_mw = self.cluster_cap_mw))
-            stacks.append(
-                PEMClusters(
-                    self.cluster_cap_mw,
-                    self.plant_life_yrs,
-                    **self.user_params,
-                )
-            )
+        clusters = PEMClusters(self.cluster_cap_mw, self.plant_life_yrs, **self.user_params)
+        stacks = [clusters] * self.num_clusters
         end = time.perf_counter()
         if self.verbose:
             print(f"Took {round(end - start, 3)} sec to run the create clusters")
@@ -303,4 +287,3 @@ if __name__ == "__main__":
 
     h2_ts, h2_tot = pem.run()
     # pem.clusters[0].cell_design(80,1920*2)
-    []

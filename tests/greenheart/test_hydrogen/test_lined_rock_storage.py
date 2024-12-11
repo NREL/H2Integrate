@@ -1,9 +1,10 @@
 import pytest
 from pytest import fixture
 
-from greenheart.simulation.technologies.hydrogen.h2_storage.lined_rock_cavern.lined_rock_cavern import (
+from greenheart.simulation.technologies.hydrogen.h2_storage.lined_rock_cavern.lined_rock_cavern import (  # noqa: E501
     LinedRockCavernStorage,
 )
+
 
 # Test values are based on conclusions of Papadias 2021 and are in 2019 USD
 in_dict = {"h2_storage_kg": 1000000, "system_flow_rate": 100000, "model": "papadias"}
@@ -58,6 +59,6 @@ def test_opex(lined_rock_cavern_storage):
         lined_rock_cavern_storage.lined_rock_cavern_capex()
     )
     lined_rock_cavern_storage.lined_rock_cavern_opex()
-    assert lined_rock_cavern_storage.output_dict[
-        "lined_rock_cavern_storage_opex"
-    ] == pytest.approx(2359700)
+    assert lined_rock_cavern_storage.output_dict["lined_rock_cavern_storage_opex"] == pytest.approx(
+        2359700
+    )

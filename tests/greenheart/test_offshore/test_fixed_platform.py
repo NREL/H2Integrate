@@ -4,13 +4,15 @@ import ORBIT as orbit
 import pytest
 
 from greenheart.simulation.technologies.offshore.fixed_platform import (
+    install_platform,
     calc_platform_opex,
     calc_substructure_mass_and_cost,
-    install_platform,
 )
 
+
 """Sources:
-    - [1]  M. Maness, B. Maples and A. Smith, "NREL Offshore Balance-of-System Model," National Renewable Energy Laboratory, 2017. https://www.nrel.gov/docs/fy17osti/66874.pdf
+    - [1]  M. Maness, B. Maples and A. Smith, "NREL Offshore Balance-of-System Model," National
+    Renewable Energy Laboratory, 2017. https://www.nrel.gov/docs/fy17osti/66874.pdf
 """
 
 
@@ -18,11 +20,7 @@ from greenheart.simulation.technologies.offshore.fixed_platform import (
 @pytest.fixture
 def config():
     offshore_path = (
-        Path(__file__).parents[3]
-        / "greenheart"
-        / "simulation"
-        / "technologies"
-        / "offshore"
+        Path(__file__).parents[3] / "greenheart" / "simulation" / "technologies" / "offshore"
     )
 
     return orbit.load_config(offshore_path / "example_fixed_project.yaml")

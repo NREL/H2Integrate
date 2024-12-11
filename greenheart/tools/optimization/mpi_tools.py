@@ -5,9 +5,10 @@ This file is based on the WISDEM file of the same name: https://github.com/WISDE
 import os
 import sys
 
+
 try:
     from mpi4py import MPI
-except:
+except ModuleNotFoundError:
     MPI = False
 
 
@@ -48,8 +49,8 @@ def map_comm_heirarchical(n_DV, n_OF, openmp=False):
     equal to the number of design variables (x2 if central finite differencing is used), each
     with its associated number of openfast simulations.
     When openmp flag is turned on, the code spreads the openfast simulations across nodes to
-    lavereage the opnemp parallelization of OpenFAST. The cores that will run under openmp, are marked
-    in the color map as 1000000. The ones handling python and the DV are marked as 0, and
+    lavereage the opnemp parallelization of OpenFAST. The cores that will run under openmp, are
+    marked in the color map as 1000000. The ones handling python and the DV are marked as 0, and
     finally the master ones for each openfast run are marked with a 1.
     """
     if openmp is True:

@@ -1,6 +1,6 @@
+from greenheart.simulation.technologies.steel import steel
 from greenheart.simulation.technologies.ammonia import ammonia
 from greenheart.simulation.technologies.hydrogen.electrolysis import PEM_tools
-from greenheart.simulation.technologies.steel import steel
 
 
 def size_electrolyzer_for_end_use(greenheart_config):
@@ -36,9 +36,7 @@ def size_electrolyzer_for_end_use(greenheart_config):
                 "input_capacity_factor_estimate"
             ],
             feedstocks=feedstocks,
-            desired_steel_mtpy=greenheart_config["steel"]["capacity"][
-                "annual_production_target"
-            ],
+            desired_steel_mtpy=greenheart_config["steel"]["capacity"]["annual_production_target"],
         )
         output = steel.run_size_steel_plant_capacity(config)
 
@@ -68,21 +66,16 @@ def size_electrolyzer_for_end_use(greenheart_config):
 
 def run_resizing_estimation(greenheart_config):
     if greenheart_config["project_parameters"]["hybrid_electricity_estimated_cf"] > 1:
-        raise (
-            ValueError(
-                "hybrid plant capacity factor estimate (hybrid_electricity_estimated_cf) cannot exceed 1"
-            )
+        msg = (
+            "hybrid plant capacity factor estimate (hybrid_electricity_estimated_cf) cannot"
+            " exceed 1."
         )
+        raise ValueError(msg)
 
     if greenheart_config["project_parameters"]["grid_connection"]:
-        if (
-            greenheart_config["project_parameters"]["hybrid_electricity_estimated_cf"]
-            < 1
-        ):
+        if greenheart_config["project_parameters"]["hybrid_electricity_estimated_cf"] < 1:
             print("hybrid_electricity_estimated_cf reset to 1 for grid-connected cases")
-            greenheart_config["project_parameters"][
-                "hybrid_electricity_estimated_cf"
-            ] = 1
+            greenheart_config["project_parameters"]["hybrid_electricity_estimated_cf"] = 1
 
     if greenheart_config["electrolyzer"]["sizing"]["resize_for_enduse"]:
         greenheart_config = size_electrolyzer_for_end_use(greenheart_config)

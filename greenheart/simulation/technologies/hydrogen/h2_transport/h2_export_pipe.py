@@ -14,6 +14,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+
 BAR2MPA = 0.1
 BAR2PA = 100_000
 MM2IN = 0.0393701
@@ -52,13 +53,13 @@ def run_pipe_analysis(
     # Cost overrides
     anl_cost_overrides = {"labor": labor_in_mi, "misc": misc_in_mi, "ROW": row_in_mi}
 
-    riser = (
-        risers > 0
-    )  # This is a flag for the ASMEB31.8 stress design, if not including risers, then this can be set to false
+    # This is a flag for the ASMEB31.8 stress design, if not including risers, then this can be set
+    # to false
+    riser = risers > 0
     extra_length = 1 + 0.05  # 5% extra
-    total_L = (
-        L * extra_length + risers * depth * M2KM
-    )  # km #Assuming 5% extra length and 1 riser. Will need two risers for turbine to central platform
+
+    # Assuming 5% extra length and 1 riser. Will need two risers for turbine to central platform
+    total_L = L * extra_length + risers * depth * M2KM  # km
 
     #   Import mechanical props and pipe thicknesses (remove A,B ,and A25 since no costing data)
     yield_strengths = pd.read_csv(
@@ -74,15 +75,12 @@ def run_pipe_analysis(
         index_col=None,
         header=0,
     )
-    steel_costs_kg = pd.read_csv(
-        data_location / "steel_costs_per_kg.csv", index_col=None, header=0
-    )
+    steel_costs_kg = pd.read_csv(data_location / "steel_costs_per_kg.csv", index_col=None, header=0)
 
-    #   First get the minimum diameter required to achieve the outlet pressure for given length and m_dot
-    min_diam_mm = get_min_diameter_of_pipe(
-        L=L, m_dot=m_dot, p_inlet=p_inlet, p_outlet=p_outlet
-    )
-    #   Filter for diameters larger than min diam required
+    # First get the minimum diameter required to achieve the outlet pressure for given length and
+    # m_dot
+    min_diam_mm = get_min_diameter_of_pipe(L=L, m_dot=m_dot, p_inlet=p_inlet, p_outlet=p_outlet)
+    # Filter for diameters larger than min diam required
     schedules_spec = schedules_all.loc[schedules_all["DN"] >= (min_diam_mm)]
 
     #   Gather the grades, diameters, and schedules to loop thru
@@ -96,19 +94,15 @@ def run_pipe_analysis(
     #   Loop thru grades
     for grade in grades:
         #   Get SMYS and SMTS for the specific grade
-        SMYS = yield_strengths.loc[yield_strengths["Grade"] == grade, "SMYS [Mpa]"].iat[
-            0
-        ]
-        SMTS = yield_strengths.loc[yield_strengths["Grade"] == grade, "SMTS [Mpa]"].iat[
-            0
-        ]
+        SMYS = yield_strengths.loc[yield_strengths["Grade"] == grade, "SMYS [Mpa]"].values[0]
+        SMTS = yield_strengths.loc[yield_strengths["Grade"] == grade, "SMTS [Mpa]"].values[0]
         #   Loop thru outer diameters
         for diam in diams:
             diam_row = schedules_spec.loc[schedules_spec["Outer diameter [mm]"] == diam]
-            dn = diam_row["DN"].iat[0]
+            dn = diam_row["DN"].values[0]
             #   Loop thru scheudles (which give the thickness)
             for schd in schds:
-                thickness = diam_row[schd].iat[0]
+                thickness = diam_row[schd].values[0]
 
                 # Check if thickness satisfies ASME B31.12
                 mat_perf_factor = get_mat_factor(
@@ -170,9 +164,7 @@ def run_pipe_analysis(
     )
 
     # Take the option with the lowest total capital cost
-    min_row = (
-        viable_types_df.sort_values(by="total capital cost [$]").iloc[:1].reset_index()
-    )
+    min_row = viable_types_df.sort_values(by="total capital cost [$]").iloc[:1].reset_index()
     return min_row
 
 
@@ -182,9 +174,7 @@ def get_mat_factor(SMYS: float, SMTS: float, design_pressure: float) -> float:
     Dependent on the SMYS and SMTS.
     Defaulted to 1 if not within parameters - This may not be a good assumption
     """
-    dp_array = np.array(
-        [6.8948, 13.7895, 15.685, 16.5474, 17.9264, 19.3053, 20.6843]
-    )  # MPa
+    dp_array = np.array([6.8948, 13.7895, 15.685, 16.5474, 17.9264, 19.3053, 20.6843])  # MPa
     if SMYS <= 358.528 or SMTS <= 455.054:
         h_f_array = np.array([1, 1, 0.954, 0.91, 0.88, 0.84, 0.78])
     elif SMYS <= 413.686 and (SMTS > 455.054 and SMTS <= 517.107):
@@ -224,9 +214,7 @@ def checkASMEB318(
     rho_water = 1_000  # kg/m3
     p_hydrostatic = rho_water * 9.81 * depth / BAR2PA  # bar
     dP = (p_inlet - p_hydrostatic) * BAR2MPA  # MPa
-    S_h = (
-        dP * (diam - (thickness if diam / thickness >= 30 else 0)) / (2_000 * thickness)
-    )
+    S_h = dP * (diam - (thickness if diam / thickness >= 30 else 0)) / (2_000 * thickness)
     if S_h >= S_h_check:
         return False
 
@@ -236,9 +224,7 @@ def checkASMEB318(
     if S_L > S_L_check:
         return False
 
-    (
-        0.9 * SMYS
-    )  # 2020 ASME B31.8 Table A842.2.2-1. Same for riser and pipe
+    (0.9 * SMYS)  # 2020 ASME B31.8 Table A842.2.2-1. Same for riser and pipe
     #   Torsional stress?? Under what applied torque? Not sure what to do for this.
 
     return True
@@ -248,14 +234,16 @@ def get_anl_costs(
     costs: pd.DataFrame, total_L: float, anl_cost_overrides: dict, loc: str = "SW"
 ) -> pd.DataFrame:
     """
-    Calculates the labor, right-of-way (ROW), and miscellaneous costs associated with pipe capital cost
+    Calculates the labor, right-of-way (ROW), and miscellaneous costs associated with pipe capital
+    cost
 
-    Users can specify a region (GP,NE,MA,GL,RM,SE,PN,SW,CA) that corresponds to grouping of states which
-    will apply cost correlations from Brown, D., et al. 2022. “The Development of Natural Gas and Hydrogen Pipeline Capital
-    Cost Estimating Equations.” International Journal of Hydrogen Energy https://doi.org/10.1016/j.ijhydene.2022.07.270.
+    Users can specify a region (GP,NE,MA,GL,RM,SE,PN,SW,CA) that corresponds to grouping of states
+    which will apply cost correlations from Brown, D., et al. 2022. “The Development of Natural Gas
+    and Hydrogen Pipeline Capital Cost Estimating Equations.” International Journal of Hydrogen
+    Energy https://doi.org/10.1016/j.ijhydene.2022.07.270.
 
-    Alternatively, if a value (not None) is provided in anl_cost_overrides, that value be used as the $/in/mi
-    cost correlation for the relevant cost type.
+    Alternatively, if a value (not None) is provided in anl_cost_overrides, that value be used as
+    the $/in/mi cost correlation for the relevant cost type.
     """
 
     ANL_COEFS = {
@@ -329,14 +317,10 @@ def get_anl_costs(
         # If no override specified, use defaults
         if cost_per_in_mi_val is None:
             cost_per_in_mi_val = costs.apply(
-                lambda x: cost_per_in_mi(
-                    ANL_COEFS[loc][cost_type], x[diam_col] * MM2IN, L_mi
-                ),
+                lambda x: cost_per_in_mi(ANL_COEFS[loc][cost_type], x[diam_col] * MM2IN, L_mi),
                 axis=1,
             )
-        costs[f"{cost_type} cost [$]"] = (
-            cost_per_in_mi_val * costs[diam_col] * MM2IN * L_mi
-        )
+        costs[f"{cost_type} cost [$]"] = cost_per_in_mi_val * costs[diam_col] * MM2IN * L_mi
 
     return costs
 
@@ -349,7 +333,9 @@ def get_mat_costs(
 ):
     """
     Calculates the material cost based on $/kg from Savoy for each grade
-    Inc., S. P. Live Stock List & Current Price. https://www.savoypipinginc.com/blog/live-stock-and-current-price.html. Accessed September 22, 2022.
+    Inc., S. P. Live Stock List & Current Price.
+    https://www.savoypipinginc.com/blog/live-stock-and-current-price.html.
+    Accessed September 22, 2022.
 
     Users can alternatively provide a $/in/mi override to calculate material cost
     """
@@ -370,28 +356,23 @@ def get_mat_costs(
 
     # If mat cost override is not specified, use $/kg savoy costing
     if mat_cost_override is not None:
-        schedules_spec["mat cost [$]"] = (
-            mat_cost_override * L_mi * schedules_spec["DN"] * MM2IN
-        )
+        schedules_spec["mat cost [$]"] = mat_cost_override * L_mi * schedules_spec["DN"] * MM2IN
     else:
         schedules_spec["mat cost [$]"] = schedules_spec.apply(
             lambda x: x["weight [kg]"]
-            * steel_costs_kg.loc[
-                steel_costs_kg["Grade"] == x["Grade"], "Price [$/kg]"
-            ].iat[0],
+            * steel_costs_kg.loc[steel_costs_kg["Grade"] == x["Grade"], "Price [$/kg]"].values[0],
             axis=1,
         )
 
     return schedules_spec
 
 
-def get_min_diameter_of_pipe(
-    L: float, m_dot: float, p_inlet: float, p_outlet: float
-) -> float:
+def get_min_diameter_of_pipe(L: float, m_dot: float, p_inlet: float, p_outlet: float) -> float:
     """
     Overview:
     ---------
-        This function returns the diameter of a pipe for a given length,flow rate, and pressure boundaries
+        This function returns the diameter of a pipe for a given length,flow rate, and pressure
+        boundaries
 
     Parameters:
     -----------
@@ -428,14 +409,10 @@ def get_min_diameter_of_pipe(
     err = np.inf
     max_iter = 50
     while err > 0.001:
-        d_m = (
-            m_dot / p_diff * 4 / np.pi * (mw / zrt / f_list[-1] / L_m) ** (-0.5)
-        ) ** (1 / 2.5)
+        d_m = (m_dot / p_diff * 4 / np.pi * (mw / zrt / f_list[-1] / L_m) ** (-0.5)) ** (1 / 2.5)
         d_mm = d_m * M2MM
         Re = 4 * m_dot / (np.pi * d_m * mu)
-        f_list.append(
-            (-2 * np.log10(4.518 / Re * np.log10(Re / 7) + RO / (3.71 * d_mm))) ** (-2)
-        )
+        f_list.append((-2 * np.log10(4.518 / Re * np.log10(Re / 7) + RO / (3.71 * d_mm))) ** (-2))
         err = abs((f_list[-1] - f_list[-2]) / f_list[-2])
 
         # Error out if no solution after max iterations

@@ -28,7 +28,8 @@ def basic_H2_cost_model(
     Verifying numbers are appropriate for simplified cash flows
     Verify how H2 PTC works/factors into cash flows
 
-    If offshore = 1, then additional cost scaling is added to account for added difficulties for offshore installation, offshore=0 means onshore
+    If offshore = 1, then additional cost scaling is added to account for added difficulties for
+    offshore installation, offshore=0 means onshore
     """
 
     # Basic information in our analysis
@@ -42,7 +43,8 @@ def basic_H2_cost_model(
     if cap_factor > 1.0:
         cap_factor = 1.0
         warnings.warn(
-            "Electrolyzer capacity factor would be greater than 1 with provided energy profile. Capacity factor has been reduced to 1 for electrolyzer cost estimate purposes."
+            "Electrolyzer capacity factor would be greater than 1 with provided energy profile."
+            " Capacity factor has been reduced to 1 for electrolyzer cost estimate purposes."
         )
 
     # print(cap_factor)
@@ -67,7 +69,8 @@ def basic_H2_cost_model(
     # Hydrogen Production Cost From PEM Electrolysis - 2019 (HFTO Program Record)
     # https://www.hydrogen.energy.gov/pdfs/19009_h2_production_cost_pem_electrolysis_2019.pdf
 
-    # Capital costs provide by Hydrogen Production Cost From PEM Electrolysis - 2019 (HFTO Program Record)
+    # Capital costs provide by Hydrogen Production Cost From PEM Electrolysis - 2019 (HFTO
+    # Program Record)
     stack_capital_cost = 342  # [$/kW]
     mechanical_bop_cost = 36  # [$/kW] for a compressor
     electrical_bop_cost = 82  # [$/kW] for a rectifier
@@ -125,10 +128,12 @@ def basic_H2_cost_model(
 
     # O&M costs
     # https://www.sciencedirect.com/science/article/pii/S2542435121003068
-    h2_FOM_kg = 0.24  # [$/kg] for 700 MW electrolyzer (https://www.hydrogen.energy.gov/pdfs/19009_h2_production_cost_pem_electrolysis_2019.pdf)
-    scaled_h2_FOM_kg = (
-        h2_FOM_kg * electrolyzer_size_mw / 700
-    )  # linearly scaled current central fixed O&M for a 700MW electrolyzer up to a 1000MW electrolyzer
+    # for 700 MW electrolyzer (https://www.hydrogen.energy.gov/pdfs/19009_h2_production_cost_pem_electrolysis_2019.pdf)
+    h2_FOM_kg = 0.24  # [$/kg]
+
+    # linearly scaled current central fixed O&M for a 700MW electrolyzer up to a 1000MW electrolyzer
+    scaled_h2_FOM_kg = h2_FOM_kg * electrolyzer_size_mw / 700
+
     h2_FOM_kWh = scaled_h2_FOM_kg / 55.5  # [$/kWh] used 55.5 kWh/kg for efficiency
     fixed_OM = h2_FOM_kWh * 8760  # [$/kW-y]
     property_tax_insurance = 1.5 / 100  # [% of Cap/y]
@@ -159,9 +164,7 @@ def basic_H2_cost_model(
 
     capacity_based_OM = True
     if capacity_based_OM:
-        electrolyzer_OM_cost = (
-            electrolyzer_total_installed_capex * total_OM_costs
-        )  # Capacity based
+        electrolyzer_OM_cost = electrolyzer_total_installed_capex * total_OM_costs  # Capacity based
     else:
         electrolyzer_OM_cost = (
             fixed_OM * hydrogen_annual_output
@@ -182,9 +185,7 @@ def basic_H2_cost_model(
         else:
             electrolyzer_repair_schedule = np.append(electrolyzer_repair_schedule, [0])
         counter += 1
-    electrolyzer_repair_schedule * (
-        stack_replacment_cost * electrolyzer_total_installed_capex
-    )
+    electrolyzer_repair_schedule * (stack_replacment_cost * electrolyzer_total_installed_capex)
     # print("H2 replacement costs: ", electrolyzer_replacement_costs)
 
     # Include Hydrogen PTC from the Inflation Reduction Act (range $0.60 - $3/kg-H2)
@@ -193,7 +194,8 @@ def basic_H2_cost_model(
     # print('H2 tax credit',h2_tax_credit)
 
     # Include ITC from IRA (range 0% - 50%)
-    # ITC is expressed as a percentage of the total installed cost which reduces the annual tax liabiity in year one of the project cash flow.
+    # ITC is expressed as a percentage of the total installed cost which reduces the annual tax
+    # liabiity in year one of the project cash flow.
     h2_itc = (ITC_perc / 100) * electrolyzer_total_installed_capex
     cf_h2_itc = [0] * 30
     cf_h2_itc[1] = h2_itc
@@ -252,25 +254,21 @@ if __name__ == "__main__":
     capex_distributed = np.zeros((len(ndivs), len(electrolyzer_sizes_mw)))
 
     for i, electrolyzer_size_mw in enumerate(electrolyzer_sizes_mw):
-        electrical_generation_timeseries_kw = (
-            electrolyzer_size_mw * 1000 * np.ones(365 * 24)
-        )
+        electrical_generation_timeseries_kw = electrolyzer_size_mw * 1000 * np.ones(365 * 24)
 
         # centralized
-        _, electrolyzer_total_capital_cost, electrolyzer_OM_cost, _, _, _, _ = (
-            basic_H2_cost_model(
-                electrolyzer_capex_kw,
-                time_between_replacement,
-                electrolyzer_size_mw,
-                useful_life,
-                atb_year,
-                electrical_generation_timeseries_kw,
-                hydrogen_annual_output,
-                0,
-                0,
-                include_refurb_in_opex=False,
-                offshore=0,
-            )
+        _, electrolyzer_total_capital_cost, electrolyzer_OM_cost, _, _, _, _ = basic_H2_cost_model(
+            electrolyzer_capex_kw,
+            time_between_replacement,
+            electrolyzer_size_mw,
+            useful_life,
+            atb_year,
+            electrical_generation_timeseries_kw,
+            hydrogen_annual_output,
+            0,
+            0,
+            include_refurb_in_opex=False,
+            offshore=0,
         )
 
         opex.append(electrolyzer_OM_cost)
@@ -318,13 +316,13 @@ if __name__ == "__main__":
             electrolyzer_sizes_mw,
             np.asarray(capex_distributed[i]) * 1e-6,
             "--",
-            label="%i Divisions" % (div),
+            label=f"{div} Divisions",
         )
         ax[1].plot(
             electrolyzer_sizes_mw,
             np.asarray(opex_distributed[i]) * 1e-6,
             "--",
-            label="%i Divisions" % (div),
+            label=f"{div} Divisions",
         )
 
     ax[0].set(ylabel="CAPEX (M USD)", xlabel="Electrolyzer Size (MW)")
@@ -336,7 +334,7 @@ if __name__ == "__main__":
     ## plot divided energy signals
     fig, ax = plt.subplots(1)
     ax.plot(electrical_generation_timeseries_kw, label="1")
-    for i, div in enumerate(ndivs):
+    for div in ndivs:
         ax.plot(electrical_generation_timeseries_kw / div, label=f"{div}")
 
     ax.set(xlabel="Hour", ylabel="Power (MW)")

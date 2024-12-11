@@ -1,8 +1,6 @@
 from pytest import approx, raises
 
-from greenheart.simulation.technologies.hydrogen.h2_transport.h2_compression import (
-    Compressor,
-)
+from greenheart.simulation.technologies.hydrogen.h2_transport.h2_compression import Compressor
 
 
 # test that we get the results we got when the code was received
@@ -47,10 +45,13 @@ class TestH2Compressor:
 
     def test_system_power_report(self):
         """
-        H2A Hydrogen Delivery Infrastructure Analysis Models and Conventional Pathway Options Analysis Results
+        H2A Hydrogen Delivery Infrastructure Analysis Models and Conventional Pathway Options
+        Analysis Results
         DE-FG36-05GO15032
         Interim Report
-        Nexant, Inc., Air Liquide, Argonne National Laboratory, Chevron Technology Venture, Gas Technology Institute, National Renewable Energy Laboratory, Pacific Northwest National Laboratory, and TIAX LLC
+        Nexant, Inc., Air Liquide, Argonne National Laboratory, Chevron Technology Venture,
+        Gas Technology Institute, National Renewable Energy Laboratory,
+        Pacific Northwest National Laboratory, and TIAX LLC
         May 2008
         Table 2-21
         """
@@ -58,9 +59,7 @@ class TestH2Compressor:
         flow_rate_kg_per_day = 126593.0  # [kg/day]
         p_outlet = 1227.0 * 0.0689476  # convert from psi to bar
         p_inlet = 265.0 * 0.0689476  # convert from psi to bar
-        sizing_safety_factor = (
-            1.0  # default is 1.1, for a 10% oversizing of the compressor
-        )
+        sizing_safety_factor = 1.0  # default is 1.1, for a 10% oversizing of the compressor
         comp = Compressor(
             p_outlet,
             flow_rate_kg_per_day,
@@ -78,6 +77,4 @@ class TestH2Compressor:
         flow_rate_kg_d = 2 * 5.41 * 24 * 60**2
         n_compressors = 2
         with raises(ValueError, match=r".* 5\.4 .*"):
-            Compressor(
-                p_outlet, flow_rate_kg_d, p_inlet=p_inlet, n_compressors=n_compressors
-            )
+            Compressor(p_outlet, flow_rate_kg_d, p_inlet=p_inlet, n_compressors=n_compressors)

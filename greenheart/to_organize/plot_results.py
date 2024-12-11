@@ -1,7 +1,7 @@
 from pathlib import Path
 
-import matplotlib.pyplot as plt
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 def plot_wind_results(wind_data, site_name, latlon, results_dir, plot_wind):
@@ -9,9 +9,11 @@ def plot_wind_results(wind_data, site_name, latlon, results_dir, plot_wind):
         wind_speed = [W[2] for W in wind_data]
         plt.figure(figsize=(9, 6))
         plt.plot(wind_speed)
-        plt.title(
-            f"Wind Speed (m/s) for selected location \n {site_name} \n lat, lon: {latlon} \n Average Wind Speed (m/s) {np.average(wind_speed)}"
+        title = (
+            f"Wind Speed (m/s) for selected location\n{site_name}\nlat, lon: {latlon}"
+            f"\nAverage Wind Speed (m/s) {np.average(wind_speed)}"
         )
+        plt.title(title)
         plt.savefig(
             Path(results_dir) / f"Average Wind Speed_{site_name}",
             bbox_inches="tight",
@@ -45,13 +47,13 @@ def plot_pie(site_df, site_name, turbine_name, results_dir):
     ]
 
     subgroup_vals = site_df[subgroup_names]
-    subgroup_size = [x for x in subgroup_vals]
+    subgroup_size = subgroup_vals
 
-    bos_names = ["BOS: " + name for name in subgroup_names[:13]]
-    soft_names = ["Soft Cost: " + name for name in subgroup_names[13:-1]]
-    turbine_names = ["Turbine: " + name for name in subgroup_names[19:]]
+    bos_names = [f"BOS: {name}" for name in subgroup_names[:13]]
+    soft_names = [f"Soft Cost: {name}" for name in subgroup_names[13:-1]]
+    turbine_names = [f"Turbine: {name}" for name in subgroup_names[19:]]
     all_names = bos_names + soft_names + turbine_names
-    subgroup_names_legs = [x for x in all_names]
+    subgroup_names_legs = all_names
 
     # Create colors
     a, b, c = [plt.cm.Blues, plt.cm.Reds, plt.cm.Greens]
@@ -141,17 +143,18 @@ def plot_HOPP(
         plt.legend()
         plt.tight_layout()
         plt.savefig(
-            Path(results_dir)
-            / f"HOPP Power Production_{site_name}_{atb_year}_{turbine_model}",
+            Path(results_dir) / f"HOPP Power Production_{site_name}_{atb_year}_{turbine_model}",
             bbox_inches="tight",
         )
         # plt.show()
 
-    print(
-        f"Turbine Power Output (to identify powercurve impact): {hybrid_plant.wind.annual_energy_kw:,.0f} kW"
+    msg = (
+        f"Turbine Power Output (to identify powercurve impact):"
+        " {hybrid_plant.wind.annual_energy_kw:,.0f} kW"
+        f"\nWind Plant CF: {hybrid_plant.wind.capacity_factor}"
+        f"\nLCOE: {hybrid_plant.lcoe_real.hybrid}"
     )
-    print(f"Wind Plant CF: {hybrid_plant.wind.capacity_factor}")
-    print("LCOE: ", hybrid_plant.lcoe_real.hybrid)
+    print(msg)
     # print("LCOE: {}"].format(hybrid_plant.lcoe_real.hybrid))
 
 
@@ -194,8 +197,7 @@ def plot_battery_results(
         plt.title("Battery State")
         plt.legend()
         plt.savefig(
-            Path(results_dir)
-            / f"HOPP Full Power Flows_{site_name}_{atb_year}_{turbine_model}",
+            Path(results_dir) / f"HOPP Full Power Flows_{site_name}_{atb_year}_{turbine_model}",
             bbox_inches="tight",
         )
         # plt.show()
@@ -232,18 +234,17 @@ def plot_h2_results(
         plt.title("Electrolyzer Total Efficiency (%)")
 
         plt.subplot(414)
-        plt.plot(
-            H2_Results["water_hourly_usage"][200:300], "--", label="Hourly Water Usage"
-        )
+        plt.plot(H2_Results["water_hourly_usage"][200:300], "--", label="Hourly Water Usage")
         plt.legend()
-        plt.title(
-            f"Hourly Water Usage (kg/hr)\nTotal Annual Water Usage: {H2_Results["water_annual_usage"]:,.0f} kg"
+        title = (
+            f"Hourly Water Usage (kg/hr)\nTotal Annual Water Usage:"
+            f" {H2_Results["water_annual_usage"]:,.0f} kg"
         )
+        plt.title(title)
         plt.tight_layout()
         plt.xlabel("Time (hours)")
         plt.savefig(
-            Path(results_dir)
-            / f"Electrolyzer Flows_{site_name}_{atb_year}_{turbine_model}",
+            Path(results_dir) / f"Electrolyzer Flows_{site_name}_{atb_year}_{turbine_model}",
             bbox_inches="tight",
         )
         # plt.show()
@@ -262,12 +263,8 @@ def plot_desal_results(
     if plot_desal:
         plt.figure(figsize=(10, 5))
         plt.subplot(1, 2, 1)
-        plt.plot(
-            fresh_water_flowrate[200:300], "--", label="Freshwater flowrate from desal"
-        )
-        plt.plot(
-            feed_water_flowrate[200:300], "--", label="Feedwater flowrate to desal"
-        )
+        plt.plot(fresh_water_flowrate[200:300], "--", label="Freshwater flowrate from desal")
+        plt.plot(feed_water_flowrate[200:300], "--", label="Feedwater flowrate to desal")
         plt.legend()
         plt.title("Freshwater flowrate (m^3/hr) from desal  (Snapshot)")
         # plt.show()
@@ -275,9 +272,13 @@ def plot_desal_results(
         plt.subplot(1, 2, 2)
         plt.plot(operational_flags[200:300], "--", label="Operational Flag")
         plt.legend()
-        plt.title(
-            "Desal Equipment Operational Status (Snapshot) \n 0 = Not enough power to operate \n 1 = Operating at reduced capacity \n 2 = Operating at full capacity"
+        title = (
+            "Desal Equipment Operational Status (Snapshot)"
+            "\n0 = Not enough power to operate"
+            "\n1 = Operating at reduced capacity"
+            "\n2 = Operating at full capacity"
         )
+        plt.title(title)
         plt.savefig(
             Path(results_dir) / f"Desal Flows_{site_name}_{atb_year}_{turbine_model}",
             bbox_inches="tight",
@@ -306,10 +307,9 @@ def plot_hvdcpipe(
 
         plt.ylabel("$USD")
         plt.legend(["Total CAPEX"])
-        # plt.title("H2 Pipeline vs HVDC cost\n {}\n Model:{}".format(site_name,in_dict['pipeline_model']))
+        # plt.title(f"H2 Pipeline vs HVDC cost\n {site_name}\n Model:{in_dict['pipeline_model']}"
         plt.title(f"H2 Pipeline vs HVDC cost\n {site_name}\n Model: ASME Pipeline")
         plt.savefig(
-            Path(results_dir)
-            / f"Pipeline Vs HVDC Cost_{site_name}_{atb_year}_{dist_to_port_value}"
+            Path(results_dir) / f"Pipeline Vs HVDC Cost_{site_name}_{atb_year}_{dist_to_port_value}"
         )
         # plt.show()

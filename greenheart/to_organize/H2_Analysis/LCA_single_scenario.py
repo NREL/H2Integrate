@@ -6,6 +6,7 @@ Created on Fri Dec  2 12:09:20 2022
 
 import pandas as pd
 
+
 dircambium = "examples/H2_Analysis/Cambium_data/StdScen21_MidCase95by2035_hourly_"
 
 # grid_connection_scenario = 'hybrid-grid'
@@ -41,14 +42,11 @@ def hydrogen_LCA_singlescenario(
     # ------------------------------------------------------------------------------
     system_life = 30
     ely_stack_capex_EI = 0.019  # PEM electrolyzer CAPEX emissions (kg CO2e/kg H2)
-    wind_capex_EI = (
-        10  # Electricity generation from wind, nominal value taken (g CO2e/kWh)
-    )
+    wind_capex_EI = 10  # Electricity generation from wind, nominal value taken (g CO2e/kWh)
 
     # ------------------------------------------------------------------------------
     # Hydrogen production via water electrolysis
     # ------------------------------------------------------------------------------
-
 
     if atb_year == 2020:
         cambium_year = 2025
@@ -119,10 +117,10 @@ def hydrogen_LCA_singlescenario(
     # Combine RODeO and Cambium data into one dataframe
     combined_data = rodeo_data.merge(cambium_data, on="Interval", how="outer")
 
-    # Calculate hourly grid emissions factors of interest. If we want to use different GWPs, we can do that here. The Grid Import is an hourly data i.e., in MWh
+    # Calculate hourly grid emissions factors of interest. If we want to use different GWPs, we can
+    # do that here. The Grid Import is an hourly data i.e., in MWh
     combined_data["Total grid emissions (kg-CO2e)"] = (
-        combined_data["Grid Import (MW)"]
-        * combined_data["LRMER CO2 equiv. total (kg-CO2e/MWh)"]
+        combined_data["Grid Import (MW)"] * combined_data["LRMER CO2 equiv. total (kg-CO2e/MWh)"]
     )
     combined_data["Scope 2 (combustion) grid emissions (kg-CO2e)"] = (
         combined_data["Grid Import (MW)"]
@@ -144,24 +142,20 @@ def hydrogen_LCA_singlescenario(
         * system_life
         * kg_to_MT_conv
     )
-    h2prod_sum = (
-        combined_data["Hydrogen production (kg-H2)"].sum() * system_life * kg_to_MT_conv
-    )
+    h2prod_sum = combined_data["Hydrogen production (kg-H2)"].sum() * system_life * kg_to_MT_conv
     h2prod_grid_frac = (
-        combined_data["Grid Import (MW)"].sum()
-        / combined_data["Electrolyzer Power (MW)"].sum()
+        combined_data["Grid Import (MW)"].sum() / combined_data["Electrolyzer Power (MW)"].sum()
     )
 
     if grid_connection_scenario == "hybrid-grid":
-        # Calculate grid-connected electrolysis emissions/ future cases should reflect targeted electrolyzer electricity usage
+        # Calculate grid-connected electrolysis emissions/ future cases should reflect targeted
+        # electrolyzer electricity usage
         electrolysis_Scope3_EI = (
             h2prod_grid_frac * scope3_grid_emissions_sum / h2prod_sum
             + wind_capex_EI * electrolyzer_energy_kWh_per_kg * g_to_kg_conv
             + ely_stack_capex_EI
         )  # kg CO2e/kg H2
-        electrolysis_Scope2_EI = (
-            h2prod_grid_frac * scope2_grid_emissions_sum / h2prod_sum
-        )
+        electrolysis_Scope2_EI = h2prod_grid_frac * scope2_grid_emissions_sum / h2prod_sum
         electrolysis_Scope1_EI = 0
         electrolysis_total_EI = (
             electrolysis_Scope1_EI + electrolysis_Scope2_EI + electrolysis_Scope3_EI
@@ -187,8 +181,7 @@ def hydrogen_LCA_singlescenario(
     elif grid_connection_scenario == "off-grid":
         # Calculate renewable only electrolysis emissions
         electrolysis_Scope3_EI = (
-            wind_capex_EI * electrolyzer_energy_kWh_per_kg * g_to_kg_conv
-            + ely_stack_capex_EI
+            wind_capex_EI * electrolyzer_energy_kWh_per_kg * g_to_kg_conv + ely_stack_capex_EI
         )  # kg CO2e/kg H2
         electrolysis_Scope2_EI = 0
         electrolysis_Scope1_EI = 0

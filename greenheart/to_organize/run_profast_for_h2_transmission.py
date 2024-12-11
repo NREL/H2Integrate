@@ -80,7 +80,7 @@ def run_profast_for_h2_transmission(
             pipeline_compressor_cost_data["Production Volume"] == "Mid"
         ]
 
-    # Interpolate compressor and pipe costs based on capacity. Note that it would be preferable to interpolate the scaling factor and then apply the scaling factor,
+    # Interpolate compressor and pipe costs based on capacity. Note that it would be preferable to interpolate the scaling factor and then apply the scaling factor,  # noqa: E501
     # but this will take more time. Could do it at some point
     pipe_capex_USDperkm = np.interp(
         hydrogen_flow_capacity_kg_yr,
@@ -102,9 +102,7 @@ def run_profast_for_h2_transmission(
     compressor_FOM_frac = np.interp(
         hydrogen_flow_capacity_kg_yr,
         pipeline_compressor_cost_data["Nameplate Capacity [kg/yr]"].to_numpy(),
-        pipeline_compressor_cost_data[
-            "Fixed Operating Cost [fraction of CapCost/y]"
-        ].to_numpy(),
+        pipeline_compressor_cost_data["Fixed Operating Cost [fraction of CapCost/y]"].to_numpy(),
     )
     compressor_FOM_USD_yr = compressor_FOM_frac * compressor_capex
 
@@ -114,15 +112,14 @@ def run_profast_for_h2_transmission(
         pipeline_compressor_cost_data["Electricity Use (kWh/kg)"].to_numpy(),
     )
 
-    # pipeline_capex_perkm = np.interp(hydrogen_flow_capacity_kg_day,pipeline_cost_data['Nameplate kg/d'].to_numpy(),pipeline_cost_data['Capital Cost [$/km]'].to_numpy())
+    # pipeline_capex_perkm = np.interp(hydrogen_flow_capacity_kg_day,pipeline_cost_data['Nameplate kg/d'].to_numpy(),pipeline_cost_data['Capital Cost [$/km]'].to_numpy())  # noqa: E501
     # pipeline_capex = pipeline_capex_perkm*pipeline_length_km
-    # pipeline_FOM_frac = np.interp(hydrogen_flow_capacity_kg_day,pipeline_cost_data['Nameplate kg/d'].to_numpy(),pipeline_cost_data['Fixed Operating Cost [fraction of OvernightCapCost/y]'].to_numpy())
+    # pipeline_FOM_frac = np.interp(hydrogen_flow_capacity_kg_day,pipeline_cost_data['Nameplate kg/d'].to_numpy(),pipeline_cost_data['Fixed Operating Cost [fraction of OvernightCapCost/y]'].to_numpy())  # noqa: E501
     # pipeline_FOM_USD_yr = pipeline_FOM_frac*pipeline_capex
 
     financial_assumptions = pd.read_csv(
         "H2_Analysis/financial_inputs.csv", index_col=None, header=0
-    )
-    financial_assumptions.set_index(["Parameter"], inplace=True)
+    ).set_index(["Parameter"])
     financial_assumptions = financial_assumptions["Hydrogen/Steel/Ammonia"]
 
     # Set up ProFAST
@@ -166,12 +163,8 @@ def run_profast_for_h2_transmission(
     pf.set_params("rent", {"value": 0, "escalation": gen_inflation})
     pf.set_params("property tax and insurance", 0)
     pf.set_params("admin expense", 0)
-    pf.set_params(
-        "total income tax rate", financial_assumptions["total income tax rate"]
-    )
-    pf.set_params(
-        "capital gains tax rate", financial_assumptions["capital gains tax rate"]
-    )
+    pf.set_params("total income tax rate", financial_assumptions["total income tax rate"])
+    pf.set_params("capital gains tax rate", financial_assumptions["capital gains tax rate"])
     pf.set_params("sell undepreciated cap", True)
     pf.set_params("tax losses monetized", True)
     pf.set_params("general inflation rate", gen_inflation)
@@ -253,36 +246,18 @@ def run_profast_for_h2_transmission(
     ].tolist()[0]
 
     price_breakdown_taxes = (
-        price_breakdown.loc[
-            price_breakdown["Name"] == "Income taxes payable", "NPV"
-        ].tolist()[0]
-        - price_breakdown.loc[
-            price_breakdown["Name"] == "Monetized tax losses", "NPV"
-        ].tolist()[0]
+        price_breakdown.loc[price_breakdown["Name"] == "Income taxes payable", "NPV"].tolist()[0]
+        - price_breakdown.loc[price_breakdown["Name"] == "Monetized tax losses", "NPV"].tolist()[0]
     )
 
     price_breakdown_financial = (
-        price_breakdown.loc[
-            price_breakdown["Name"] == "Cash on hand reserve", "NPV"
-        ].tolist()[0]
-        + price_breakdown.loc[
-            price_breakdown["Name"] == "Repayment of debt", "NPV"
-        ].tolist()[0]
-        + price_breakdown.loc[
-            price_breakdown["Name"] == "Interest expense", "NPV"
-        ].tolist()[0]
-        + price_breakdown.loc[
-            price_breakdown["Name"] == "Dividends paid", "NPV"
-        ].tolist()[0]
-        - price_breakdown.loc[
-            price_breakdown["Name"] == "Cash on hand recovery", "NPV"
-        ].tolist()[0]
-        - price_breakdown.loc[
-            price_breakdown["Name"] == "Inflow of debt", "NPV"
-        ].tolist()[0]
-        - price_breakdown.loc[
-            price_breakdown["Name"] == "Inflow of equity", "NPV"
-        ].tolist()[0]
+        price_breakdown.loc[price_breakdown["Name"] == "Cash on hand reserve", "NPV"].tolist()[0]
+        + price_breakdown.loc[price_breakdown["Name"] == "Repayment of debt", "NPV"].tolist()[0]
+        + price_breakdown.loc[price_breakdown["Name"] == "Interest expense", "NPV"].tolist()[0]
+        + price_breakdown.loc[price_breakdown["Name"] == "Dividends paid", "NPV"].tolist()[0]
+        - price_breakdown.loc[price_breakdown["Name"] == "Cash on hand recovery", "NPV"].tolist()[0]
+        - price_breakdown.loc[price_breakdown["Name"] == "Inflow of debt", "NPV"].tolist()[0]
+        - price_breakdown.loc[price_breakdown["Name"] == "Inflow of equity", "NPV"].tolist()[0]
     )
 
     price_check = (

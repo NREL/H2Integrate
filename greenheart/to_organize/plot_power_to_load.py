@@ -43,12 +43,8 @@ def plot_power_to_load(
             )
             ax.fill_between(
                 y[i : i + 24],
-                (df_mean.wind_power_production - df_ci.wind_power_production)[
-                    i : i + 24
-                ],
-                (df_mean.wind_power_production + df_ci.wind_power_production)[
-                    i : i + 24
-                ],
+                (df_mean.wind_power_production - df_ci.wind_power_production)[i : i + 24],
+                (df_mean.wind_power_production + df_ci.wind_power_production)[i : i + 24],
                 alpha=0.3,
                 color=colors[0],
                 label="$Wind Power$ 95% CI",
@@ -106,12 +102,8 @@ def plot_power_to_load(
             )
             ax.fill_between(
                 y[i : i + 24],
-                (df_mean.storage_power_to_load - df_ci.storage_power_to_load)[
-                    i : i + 24
-                ],
-                (df_mean.storage_power_to_load + df_ci.storage_power_to_load)[
-                    i : i + 24
-                ],
+                (df_mean.storage_power_to_load - df_ci.storage_power_to_load)[i : i + 24],
+                (df_mean.storage_power_to_load + df_ci.storage_power_to_load)[i : i + 24],
                 alpha=0.3,
                 color=colors[4],
                 label="$Storage Power$ 95% CI",

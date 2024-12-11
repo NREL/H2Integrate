@@ -13,9 +13,7 @@ from pathlib import Path
 import numpy as np
 import scipy.optimize as opt
 
-from greenheart.simulation.technologies.hydrogen.h2_storage.pressure_vessel import (
-    von_mises,
-)
+from greenheart.simulation.technologies.hydrogen.h2_storage.pressure_vessel import von_mises
 
 
 class MetalMaterial:
@@ -116,9 +114,8 @@ class Tank:
     ):
         # unpack the key variables
         if tank_type not in [1, 3, 4]:
-            raise NotImplementedError(
-                "tank_type %d has not been implemented yet.\n" % tank_type
-            )
+            msg = f"tank_type {tank_type} has not been implemented yet.\n"
+            raise NotImplementedError(msg)
         self.tank_type = tank_type
 
         # if not (tank_type == 1):
@@ -179,8 +176,7 @@ class Tank:
             lambda x: Tank.compute_hemicylinder_volume(x, length_in) - volume_in, Rguess
         )
         assert (
-            np.abs(Tank.compute_hemicylinder_volume(r_opt, length_in) - volume_in)
-            / volume_in
+            np.abs(Tank.compute_hemicylinder_volume(r_opt, length_in) - volume_in) / volume_in
             <= self.check_tol
         )
         self.radius_inner = float(r_opt)
@@ -198,8 +194,7 @@ class Tank:
             lambda x: Tank.compute_hemicylinder_volume(radius_in, x) - volume_in, Lguess
         )
         assert (
-            np.abs(Tank.compute_hemicylinder_volume(radius_in, L_opt) - volume_in)
-            / volume_in
+            np.abs(Tank.compute_hemicylinder_volume(radius_in, L_opt) - volume_in) / volume_in
             <= self.check_tol
         )
         self.length_inner = float(L_opt)
@@ -267,9 +262,7 @@ class TypeITank(Tank):
         """
         if None in [self.length_inner, self.radius_inner, self.thickness]:
             return None
-        return Tank.compute_hemicylinder_volume(
-            self.get_radius_outer(), self.get_length_outer()
-        )
+        return Tank.compute_hemicylinder_volume(self.get_radius_outer(), self.get_length_outer())
 
     def get_volume_metal(self):
         """
@@ -308,9 +301,7 @@ class TypeITank(Tank):
         volume_inner = self.get_volume_inner()
         return (volume_inner / 1e3) / mass_metal
 
-    def get_yield_thickness(
-        self, pressure: float | None = None, temperature: float | None = None
-    ):
+    def get_yield_thickness(self, pressure: float | None = None, temperature: float | None = None):
         """
         gets the yield thickness
 
@@ -510,7 +501,7 @@ class TypeITank(Tank):
                 factor
         """
 
-        thickness, iter = self.get_thickness_vonmises(
+        thickness, _ = self.get_thickness_vonmises(
             pressure, temperature, max_cycle_iter, adj_fac_tol
         )
         self.thickness = thickness
@@ -579,20 +570,14 @@ class LinedTank(Tank):
         # compute the liner thickness
         pressure_burst_target = self.ultimate_factor * pressure
         if self.tank_type != 4:
-            pressure_liner_target = (
-                pressure_burst_target * self.liner_design_load_factor
-            )
-            thickness_burst = (
-                pressure_liner_target * self.radius_inner / self.shear_ultimate_liner
-            )
+            pressure_liner_target = pressure_burst_target * self.liner_design_load_factor
+            thickness_burst = pressure_liner_target * self.radius_inner / self.shear_ultimate_liner
             thickness_liner = max(thickness_burst, self.thickness_liner_min)
         else:
             thickness_liner = self.thickness_liner_min
 
         # compute ideal jacket thickness
-        radius_liner = Tank.compute_hemicylinder_outer_radius(
-            self.radius_inner, thickness_liner
-        )
+        radius_liner = Tank.compute_hemicylinder_outer_radius(self.radius_inner, thickness_liner)
         thickness_jacket_ideal = (
             pressure_burst_target
             * radius_liner
@@ -601,9 +586,7 @@ class LinedTank(Tank):
         )
         if self.load_bearing_liner:
             # subdivide pressure if liner is load-bearing
-            pressure_liner = (
-                thickness_liner * self.shear_ultimate_liner / self.radius_inner
-            )
+            pressure_liner = thickness_liner * self.shear_ultimate_liner / self.radius_inner
             pressure_jacket = pressure_burst_target - pressure_liner
             assert pressure_jacket >= 0
             thickness_jacket_ideal = (
@@ -651,9 +634,7 @@ class LinedTank(Tank):
         if None in [self.thickness_jacket, self.thickness_ideal_jacket]:
             return None
 
-        sf_real = (
-            self.ultimate_factor * self.thickness_jacket / self.thickness_jacket_ideal
-        )
+        sf_real = self.ultimate_factor * self.thickness_jacket / self.thickness_jacket_ideal
 
         return sf_real
 
@@ -662,17 +643,13 @@ class LinedTank(Tank):
         """returns the outer length of the pressure vessel in cm"""
         if None in [self.length_inner, self.thickness_liner]:
             return None
-        return Tank.compute_hemicylinder_outer_length(
-            self.length_inner, self.thickness_liner
-        )
+        return Tank.compute_hemicylinder_outer_length(self.length_inner, self.thickness_liner)
 
     def get_radius_liner(self):
         """returns the outer radius of the pressure vessel in cm"""
         if None in [self.radius_inner, self.thickness_liner]:
             return None
-        return Tank.compute_hemicylinder_outer_radius(
-            self.radius_inner, self.thickness_liner
-        )
+        return Tank.compute_hemicylinder_outer_radius(self.radius_inner, self.thickness_liner)
 
     def get_volume_outer_liner(self):
         """
@@ -680,9 +657,7 @@ class LinedTank(Tank):
         """
         if None in [self.length_inner, self.radius_inner, self.thickness_liner]:
             return None
-        return Tank.compute_hemicylinder_volume(
-            self.get_radius_liner(), self.get_length_liner()
-        )
+        return Tank.compute_hemicylinder_volume(self.get_radius_liner(), self.get_length_liner())
 
     def get_volume_liner(self):
         """
@@ -741,9 +716,7 @@ class LinedTank(Tank):
             self.thickness_jacket,
         ]:
             return None
-        return Tank.compute_hemicylinder_volume(
-            self.get_radius_outer(), self.get_length_outer()
-        )
+        return Tank.compute_hemicylinder_volume(self.get_radius_outer(), self.get_length_outer())
 
     def get_volume_jacket(self):
         """
@@ -814,9 +787,7 @@ class TypeIIITank(LinedTank):
         yield_factor: float = 3 / 2,
         ultimate_factor: float = 2.25,
     ):
-        load_bearing_liner = (
-            not conservative
-        )  # use load bearing liner iff not conservative
+        load_bearing_liner = not conservative  # use load bearing liner iff not conservative
         super().__init__(
             3,
             load_bearing_liner,

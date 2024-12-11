@@ -7,6 +7,7 @@ Created on Wed Oct 19 12:13:58 2022
 import pandas as pd
 import ProFAST
 
+
 # mat_n_heat_integration = 1
 
 
@@ -49,22 +50,13 @@ def run_profast_for_steel(
     # --------------------- Capital costs and Total Plant Cost ---------------------
 
     capex_eaf_casting = (
-        model_year_CEPCI
-        / equation_year_CEPCI
-        * 352191.5237
-        * plant_capacity_mtpy**0.456
+        model_year_CEPCI / equation_year_CEPCI * 352191.5237 * plant_capacity_mtpy**0.456
     )
     capex_shaft_furnace = (
-        model_year_CEPCI
-        / equation_year_CEPCI
-        * 489.68061
-        * plant_capacity_mtpy**0.88741
+        model_year_CEPCI / equation_year_CEPCI * 489.68061 * plant_capacity_mtpy**0.88741
     )
     capex_oxygen_supply = (
-        model_year_CEPCI
-        / equation_year_CEPCI
-        * 1715.21508
-        * plant_capacity_mtpy**0.64574
+        model_year_CEPCI / equation_year_CEPCI * 1715.21508 * plant_capacity_mtpy**0.64574
     )
     if o2_heat_integration == 1:
         capex_h2_preheating = (
@@ -82,40 +74,23 @@ def run_profast_for_steel(
         oxygen_market_price = 0.03  # $/kgO2
     else:
         capex_h2_preheating = (
-            model_year_CEPCI
-            / equation_year_CEPCI
-            * 45.69123
-            * plant_capacity_mtpy**0.86564
+            model_year_CEPCI / equation_year_CEPCI * 45.69123 * plant_capacity_mtpy**0.86564
         )
         capex_cooling_tower = (
-            model_year_CEPCI
-            / equation_year_CEPCI
-            * 2513.08314
-            * plant_capacity_mtpy**0.63325
+            model_year_CEPCI / equation_year_CEPCI * 2513.08314 * plant_capacity_mtpy**0.63325
         )
         oxygen_market_price = 0  # $/kgO2
     excess_oxygen = 395  # excess kg O2/metric tonne of steel
     capex_piping = (
-        model_year_CEPCI
-        / equation_year_CEPCI
-        * 11815.72718
-        * plant_capacity_mtpy**0.59983
+        model_year_CEPCI / equation_year_CEPCI * 11815.72718 * plant_capacity_mtpy**0.59983
     )
     capex_elec_instr = (
-        model_year_CEPCI
-        / equation_year_CEPCI
-        * 7877.15146
-        * plant_capacity_mtpy**0.59983
+        model_year_CEPCI / equation_year_CEPCI * 7877.15146 * plant_capacity_mtpy**0.59983
     )
     capex_buildings_storage_water = (
         model_year_CEPCI / equation_year_CEPCI * 1097.81876 * plant_capacity_mtpy**0.8
     )
-    capex_misc = (
-        model_year_CEPCI
-        / equation_year_CEPCI
-        * 7877.1546
-        * plant_capacity_mtpy**0.59983
-    )
+    capex_misc = model_year_CEPCI / equation_year_CEPCI * 7877.1546 * plant_capacity_mtpy**0.59983
 
     total_plant_cost = (
         capex_eaf_casting
@@ -137,9 +112,7 @@ def run_profast_for_steel(
         / ((1162077 / 365 * 1000) ** 0.25242)
     )
     labor_cost_maintenance = 0.00863 * total_plant_cost
-    labor_cost_admin_support = 0.25 * (
-        labor_cost_annual_operation + labor_cost_maintenance
-    )
+    labor_cost_admin_support = 0.25 * (labor_cost_annual_operation + labor_cost_maintenance)
 
     property_tax_insurance = 0.02 * total_plant_cost
 
@@ -163,19 +136,11 @@ def run_profast_for_steel(
 
     # ---------------Feedstock Consumtion and Waste/Emissions Production-----------
 
-    iron_ore_consumption = (
-        1.62927  # metric tonnes of iron ore/metric tonne of steel production
-    )
-    raw_water_consumption = (
-        0.80367  # metric tonnes of raw water/metric tonne of steel production
-    )
+    iron_ore_consumption = 1.62927  # metric tonnes of iron ore/metric tonne of steel production
+    raw_water_consumption = 0.80367  # metric tonnes of raw water/metric tonne of steel production
     lime_consumption = 0.01812  # metric tonnes of lime/metric tonne of steel production
-    carbon_consumption = (
-        0.0538  # metric tonnes of carbon/metric tonne of steel production
-    )
-    hydrogen_consumption = (
-        0.06596  # metric tonnes of hydrogen/metric tonne of steel production
-    )
+    carbon_consumption = 0.0538  # metric tonnes of carbon/metric tonne of steel production
+    hydrogen_consumption = 0.06596  # metric tonnes of hydrogen/metric tonne of steel production
     natural_gas_consumption = 0.71657  # GJ-LHV/metric tonne of steel production
     electricity_consumption = 0.5502  # MWh/metric tonne of steel production
 
@@ -183,18 +148,10 @@ def run_profast_for_steel(
 
     # ---------------------- Owner's (Installation) Costs --------------------------
     labor_cost_fivemonth = (
-        5
-        / 12
-        * (
-            labor_cost_annual_operation
-            + labor_cost_maintenance
-            + labor_cost_admin_support
-        )
+        5 / 12 * (labor_cost_annual_operation + labor_cost_maintenance + labor_cost_admin_support)
     )
 
-    (
-        maintenance_materials_unitcost * plant_capacity_mtpy / 12
-    )
+    (maintenance_materials_unitcost * plant_capacity_mtpy / 12)
     (
         plant_capacity_mtpy
         * (
@@ -206,9 +163,7 @@ def run_profast_for_steel(
         / 12
     )
 
-    (
-        plant_capacity_mtpy * slag_disposal_unitcost * slag_production / 12
-    )
+    (plant_capacity_mtpy * slag_disposal_unitcost * slag_production / 12)
 
     (
         0.25
@@ -251,8 +206,7 @@ def run_profast_for_steel(
 
     financial_assumptions = pd.read_csv(
         "H2_Analysis/financial_inputs.csv", index_col=None, header=0
-    )
-    financial_assumptions.set_index(["Parameter"], inplace=True)
+    ).set_index(["Parameter"])
     financial_assumptions = financial_assumptions["Hydrogen/Steel/Ammonia"]
 
     # Set up ProFAST
@@ -299,12 +253,8 @@ def run_profast_for_steel(
     pf.set_params("rent", {"value": 0, "escalation": gen_inflation})
     pf.set_params("property tax and insurance", 0)
     pf.set_params("admin expense", 0)
-    pf.set_params(
-        "total income tax rate", financial_assumptions["total income tax rate"]
-    )
-    pf.set_params(
-        "capital gains tax rate", financial_assumptions["capital gains tax rate"]
-    )
+    pf.set_params("total income tax rate", financial_assumptions["total income tax rate"])
+    pf.set_params("capital gains tax rate", financial_assumptions["capital gains tax rate"])
     pf.set_params("sell undepreciated cap", True)
     pf.set_params("tax losses monetized", True)
     pf.set_params("general inflation rate", gen_inflation)
@@ -422,8 +372,8 @@ def run_profast_for_steel(
         cost=0.02 * total_plant_cost,
         escalation=0.0,
     )
-    # Putting property tax and insurance here to zero out depcreciation/escalation. Could instead put it in set_params if
-    # we think that is more accurate
+    # Putting property tax and insurance here to zero out depcreciation/escalation. Could instead
+    # put it in set_params if we think that is more accurate
 
     # ---------------------- Add feedstocks, note the various cost options-------------------
     pf.add_feedstock(
@@ -497,9 +447,16 @@ def run_profast_for_steel(
         cost=oxygen_market_price,
         escalation=gen_inflation,
     )
-    # Not sure if ProFAST can work with negative cost i.e., revenues so, will add the reduction at the end
+    # Not sure if ProFAST can work with negative cost i.e., revenues so, will add the reduction at
+    # the end
     # if o2_heat_integration == 1:
-    #     pf.addfeedstock(name='Oxygen Sales',usage=excess_oxygen,unit='kilograms of oxygen per metric tonne of steel',cost=-oxygen_market_price,escalation=gen_inflation)
+    #     pf.addfeedstock(
+    #         name="Oxygen Sales",
+    #         usage=excess_oxygen,
+    #         unit="kilograms of oxygen per metric tonne of steel",
+    #         cost=-oxygen_market_price,
+    #         escalation=gen_inflation,
+    #     )
     # ------------------------------ Sovle for breakeven price ---------------------------
 
     sol = pf.solve_price()
@@ -548,7 +505,9 @@ def run_profast_for_steel(
     price_breakdown_labor_cost_admin_support = price_breakdown.loc[
         price_breakdown["Name"] == "Administrative & Support Labor Cost", "NPV"
     ].tolist()[0]
-    # price_breakdown_proptax_ins = price_breakdown.loc[price_breakdown['Name']=='Property tax and insurance','NPV'].tolist()[0]
+    # price_breakdown_proptax_ins = price_breakdown.loc[
+    #     price_breakdown["Name"] == "Property tax and insurance", "NPV"
+    # ].tolist()[0]
 
     price_breakdown_maintenance_materials = price_breakdown.loc[
         price_breakdown["Name"] == "Maintenance Materials", "NPV"
@@ -556,9 +515,7 @@ def run_profast_for_steel(
     price_breakdown_water_withdrawal = price_breakdown.loc[
         price_breakdown["Name"] == "Raw Water Withdrawal", "NPV"
     ].tolist()[0]
-    price_breakdown_lime = price_breakdown.loc[
-        price_breakdown["Name"] == "Lime", "NPV"
-    ].tolist()[0]
+    price_breakdown_lime = price_breakdown.loc[price_breakdown["Name"] == "Lime", "NPV"].tolist()[0]
     price_breakdown_carbon = price_breakdown.loc[
         price_breakdown["Name"] == "Carbon", "NPV"
     ].tolist()[0]
@@ -567,10 +524,7 @@ def run_profast_for_steel(
     ].tolist()[0]
     if levelized_cost_of_hydrogen < 0:
         price_breakdown_hydrogen = (
-            -1
-            * price_breakdown.loc[
-                price_breakdown["Name"] == "Hydrogen", "NPV"
-            ].tolist()[0]
+            -1 * price_breakdown.loc[price_breakdown["Name"] == "Hydrogen", "NPV"].tolist()[0]
         )
     else:
         price_breakdown_hydrogen = price_breakdown.loc[
@@ -586,12 +540,8 @@ def run_profast_for_steel(
         price_breakdown["Name"] == "Slag Disposal", "NPV"
     ].tolist()[0]
     price_breakdown_taxes = (
-        price_breakdown.loc[
-            price_breakdown["Name"] == "Income taxes payable", "NPV"
-        ].tolist()[0]
-        - price_breakdown.loc[
-            price_breakdown["Name"] == "Monetized tax losses", "NPV"
-        ].tolist()[0]
+        price_breakdown.loc[price_breakdown["Name"] == "Income taxes payable", "NPV"].tolist()[0]
+        - price_breakdown.loc[price_breakdown["Name"] == "Monetized tax losses", "NPV"].tolist()[0]
     )
     if o2_heat_integration == 1:
         price_breakdown_O2sales = price_breakdown.loc[
@@ -608,53 +558,43 @@ def run_profast_for_steel(
             ].tolist()[0]
         )
 
-    # price_breakdown_financial = price_breakdown.loc[price_breakdown['Name']=='Non-depreciable assets','NPV'].tolist()[0]\
-    #     + price_breakdown.loc[price_breakdown['Name']=='Cash on hand reserve','NPV'].tolist()[0]\
-    #     + price_breakdown.loc[price_breakdown['Name']=='Property tax and insurance','NPV'].tolist()[0]\
-    #     + price_breakdown.loc[price_breakdown['Name']=='Repayment of debt','NPV'].tolist()[0]\
-    #     + price_breakdown.loc[price_breakdown['Name']=='Interest expense','NPV'].tolist()[0]\
-    #     + price_breakdown.loc[price_breakdown['Name']=='Dividends paid','NPV'].tolist()[0]\
-    #     - price_breakdown.loc[price_breakdown['Name']=='Sale of non-depreciable assets','NPV'].tolist()[0]\
-    #     - price_breakdown.loc[price_breakdown['Name']=='Cash on hand recovery','NPV'].tolist()[0]\
-    #     - price_breakdown.loc[price_breakdown['Name']=='Inflow of debt','NPV'].tolist()[0]\
-    #     - price_breakdown.loc[price_breakdown['Name']=='Inflow of equity','NPV'].tolist()[0]
+    # price_breakdown_financial = (
+    #     price_breakdown.loc[price_breakdown["Name"] == "Non-depreciable assets", "NPV"].tolist()[0]  # noqa: E501
+    #     + price_breakdown.loc[price_breakdown["Name"] == "Cash on hand reserve", "NPV"].tolist()[0]  # noqa: E501
+    #     + price_breakdown.loc[
+    #         price_breakdown["Name"] == "Property tax and insurance", "NPV"
+    #     ].tolist()[0]
+    #     + price_breakdown.loc[price_breakdown["Name"] == "Repayment of debt", "NPV"].tolist()[0]
+    #     + price_breakdown.loc[price_breakdown["Name"] == "Interest expense", "NPV"].tolist()[0]
+    #     + price_breakdown.loc[price_breakdown["Name"] == "Dividends paid", "NPV"].tolist()[0]
+    #     - price_breakdown.loc[
+    #         price_breakdown["Name"] == "Sale of non-depreciable assets", "NPV"
+    #     ].tolist()[0]
+    #     - price_breakdown.loc[price_breakdown["Name"] == "Cash on hand recovery", "NPV"].tolist()[0]  # noqa: E501
+    #     - price_breakdown.loc[price_breakdown["Name"] == "Inflow of debt", "NPV"].tolist()[0]
+    #     - price_breakdown.loc[price_breakdown["Name"] == "Inflow of equity", "NPV"].tolist()[0]
+    # )
 
     # Calculate financial expense associated with equipment
     price_breakdown_financial_equipment = (
-        price_breakdown.loc[
-            price_breakdown["Name"] == "Repayment of debt", "NPV"
-        ].tolist()[0]
-        + price_breakdown.loc[
-            price_breakdown["Name"] == "Interest expense", "NPV"
-        ].tolist()[0]
-        + price_breakdown.loc[
-            price_breakdown["Name"] == "Dividends paid", "NPV"
-        ].tolist()[0]
-        - price_breakdown.loc[
-            price_breakdown["Name"] == "Inflow of debt", "NPV"
-        ].tolist()[0]
-        - price_breakdown.loc[
-            price_breakdown["Name"] == "Inflow of equity", "NPV"
-        ].tolist()[0]
+        price_breakdown.loc[price_breakdown["Name"] == "Repayment of debt", "NPV"].tolist()[0]
+        + price_breakdown.loc[price_breakdown["Name"] == "Interest expense", "NPV"].tolist()[0]
+        + price_breakdown.loc[price_breakdown["Name"] == "Dividends paid", "NPV"].tolist()[0]
+        - price_breakdown.loc[price_breakdown["Name"] == "Inflow of debt", "NPV"].tolist()[0]
+        - price_breakdown.loc[price_breakdown["Name"] == "Inflow of equity", "NPV"].tolist()[0]
     )
 
     # Calculate remaining financial expenses
     price_breakdown_financial_remaining = (
-        price_breakdown.loc[
-            price_breakdown["Name"] == "Non-depreciable assets", "NPV"
-        ].tolist()[0]
-        + price_breakdown.loc[
-            price_breakdown["Name"] == "Cash on hand reserve", "NPV"
-        ].tolist()[0]
+        price_breakdown.loc[price_breakdown["Name"] == "Non-depreciable assets", "NPV"].tolist()[0]
+        + price_breakdown.loc[price_breakdown["Name"] == "Cash on hand reserve", "NPV"].tolist()[0]
         + price_breakdown.loc[
             price_breakdown["Name"] == "Property tax and insurance", "NPV"
         ].tolist()[0]
         - price_breakdown.loc[
             price_breakdown["Name"] == "Sale of non-depreciable assets", "NPV"
         ].tolist()[0]
-        - price_breakdown.loc[
-            price_breakdown["Name"] == "Cash on hand recovery", "NPV"
-        ].tolist()[0]
+        - price_breakdown.loc[price_breakdown["Name"] == "Cash on hand recovery", "NPV"].tolist()[0]
     )
 
     price_breakdown_check = (
@@ -684,7 +624,9 @@ def run_profast_for_steel(
         + price_breakdown_financial_equipment
         + price_breakdown_financial_remaining
         + price_breakdown_O2sales
-    )  # a neater way to implement is add to price_breakdowns but I am not sure if ProFAST can handle negative costs
+    )
+    # a neater way to implement is add to price_breakdowns but I am not sure if ProFAST can
+    # handle negative costs
 
     bos_savings = (price_breakdown_labor_cost_admin_support) * 0.3
     steel_price_breakdown = {
@@ -695,11 +637,11 @@ def run_profast_for_steel(
         "Steel price: Cooling Tower CAPEX ($/tonne)": price_breakdown_cooling_tower,
         "Steel price: Piping CAPEX ($/tonne)": price_breakdown_piping,
         "Steel price: Electrical & Instrumentation ($/tonne)": price_breakdown_elec_instr,
-        "Steel price: Buildings, Storage, Water Service CAPEX ($/tonne)": price_breakdown_buildings_storage_water,
+        "Steel price: Buildings, Storage, Water Service CAPEX ($/tonne)": price_breakdown_buildings_storage_water,  # noqa: E501
         "Steel price: Miscellaneous CAPEX ($/tonne)": price_breakdown_misc,
         "Steel price: Annual Operating Labor Cost ($/tonne)": price_breakdown_labor_cost_annual,
         "Steel price: Maintenance Labor Cost ($/tonne)": price_breakdown_labor_cost_maintenance,
-        "Steel price: Administrative & Support Labor Cost ($/tonne)": price_breakdown_labor_cost_admin_support,
+        "Steel price: Administrative & Support Labor Cost ($/tonne)": price_breakdown_labor_cost_admin_support,  # noqa: E501
         "Steel price: Installation Cost ($/tonne)": price_breakdown_installation,
         "Steel price: Maintenance Materials ($/tonne)": price_breakdown_maintenance_materials,
         "Steel price: Raw Water Withdrawal ($/tonne)": price_breakdown_water_withdrawal,

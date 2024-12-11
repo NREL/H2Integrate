@@ -2,9 +2,10 @@
 Author: Nick Riccobono and Charles Kiefer
 Date: 1/31/2023
 Institution: National Renewable Energy Lab
-Description: This file should handles the cost and sizing of a centralized offshore platform dedicated to hydrogen production. It
-             has been modeled off of existing BOS cost/sizing calculations found in ORBIT (Thank you Jake Nunemaker).
-             It can be run as standalone functions or as appended ORBIT project phases.
+Description: This file should handles the cost and sizing of a centralized offshore platform
+    dedicated to hydrogen production. It has been modeled off of existing BOS cost/sizing
+    calculations found in ORBIT (Thank you Jake Nunemaker). It can be run as standalone functions
+    or as appended ORBIT project phases.
 
 
 Sources:
@@ -16,7 +17,8 @@ Sources:
           “NREL Offshore Balance-of-System Model,”
           NREL/TP--6A20-66874, 1339522, Jan. 2017. doi: 10.2172/1339522.
 Args:
-    - tech_required_area: (float): area needed for combination of all tech (m^2), not including buffer or working space
+    - tech_required_area: (float): area needed for combination of all tech (m^2), not including
+      buffer or working space
     - tech_combined_mass: (float): mass of all tech being placed on the platform (kg or tonnes)year
 
     - depth: (float): bathometry at the platform location (m)
@@ -48,8 +50,8 @@ from pathlib import Path
 import ORBIT as orbit
 
 from greenheart.simulation.technologies.offshore.all_platforms import (
-    calc_platform_opex,
     install_platform,
+    calc_platform_opex,
 )
 
 
@@ -189,7 +191,8 @@ class FixedPlatformInstallation(orbit.phases.install.InstallPhase):
         vessel.initialize()
         self.install_vessel = vessel
 
-        # Add in the mass of the substructure to total mass (may or may not impact the final install cost)
+        # Add in the mass of the substructure to total mass (may or may not impact the final
+        # install cost)
         _, substructure_mass = calc_substructure_mass_and_cost(
             self.mass, self.area, self.depth, fab_cost, design_cost, steel_cost
         )
@@ -205,7 +208,8 @@ class FixedPlatformInstallation(orbit.phases.install.InstallPhase):
             foundation="fixed",
         )
 
-    # An install object needs to have attribute system_capex, installation_capex, and detailed output
+    # An install object needs to have attribute system_capex, installation_capex, and detailed
+    # output
     @property
     def system_capex(self):
         return {}
@@ -224,7 +228,8 @@ def calc_substructure_mass_and_cost(
     mass, area, depth, fab_cost=14500.0, design_cost=4.5e6, sub_cost=3000, pile_cost=0
 ):
     """
-    calc_substructure_mass_and_cost returns the total mass including substructure, topside and equipment.  Also returns the cost of the substructure and topside
+    calc_substructure_mass_and_cost returns the total mass including substructure, topside and
+    equipment.  Also returns the cost of the substructure and topside
     Inputs: mass            | Mass of equipment on platform (tonnes)
             area            | Area needed for equipment (meter^2) (not necessary)
             depth           | Ocean depth at platform location (meters) (not necessary)
@@ -257,8 +262,7 @@ def calc_substructure_mass_and_cost(
     substructure_mass = 0.4 * topside_mass  # t
     substructure_pile_mass = 8 * substructure_mass**0.5574  # t
     substructure_cost = (
-        substructure_mass * substructure_cost_rate
-        + substructure_pile_mass * pile_cost_rate
+        substructure_mass * substructure_cost_rate + substructure_pile_mass * pile_cost_rate
     )  # USD
 
     substructure_total_mass = substructure_mass + substructure_pile_mass  # t
@@ -298,6 +302,6 @@ if __name__ == "__main__":
     print("ORBIT Phases: ", platform.phases.keys())
     print(f"\tH2 Platform Design Capex:    {design_capex:.0f} USD")
     print(f"\tH2 Platform Install Capex:  {install_capex:.0f} USD")
-    print("")
+    print()
     print(f"\tTotal H2 Platform Capex:   {(design_capex+install_capex)/1e6:.0f} mUSD")
     print(f"\tH2 Platform Opex: {platform_opex:.0f} USD/year")

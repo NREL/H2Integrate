@@ -2,39 +2,42 @@
 This file is based on the WISDEM file 'runWISDEM.py`: https://github.com/WISDEM/WISDEM
 """
 
-import logging
 import sys
+import logging
 from pathlib import Path
 
 import numpy as np
 import openmdao.api as om
 
+from greenheart.tools.optimization import fileIO
+from greenheart.tools.optimization.openmdao import GreenHeartComponent
+from greenheart.tools.optimization.mpi_tools import MPI, map_comm_heirarchical
 from greenheart.simulation.greenheart_simulation import (
     GreenHeartSimulationConfig,
     setup_greenheart_simulation,
 )
-from greenheart.tools.optimization import fileIO
 from greenheart.tools.optimization.gc_PoseOptimization import PoseOptimization
-from greenheart.tools.optimization.mpi_tools import MPI, map_comm_heirarchical
-from greenheart.tools.optimization.openmdao import GreenHeartComponent
 
 
-def run_greenheart(
-    config: GreenHeartSimulationConfig, overridden_values=None, run_only=False
-):
-    """This functions sets up and runs greenheart. It can be used for analysis runs, optimizations, design of experiments, or step size studies
+def run_greenheart(config: GreenHeartSimulationConfig, overridden_values=None, run_only=False):
+    """This functions sets up and runs greenheart. It can be used for analysis runs, optimizations,
+    design of experiments, or step size studies
 
     Args:
         config (GreenHeartSimulationConfig): data structure class containing all simulation options
-        overridden_values (_type_, optional): data values from `config` may be overridden using this input at call time. Defaults to None.
-        run_only (bool, optional): if True, not optimization or design of experiments will be run. Defaults to False.
+        overridden_values (_type_, optional): data values from `config` may be overridden using this
+            input at call time. Defaults to None.
+        run_only (bool, optional): if True, not optimization or design of experiments will be run.
+            Defaults to False.
 
     Returns:
         prob: an openmdao problem instance
         config: see Args
     """
-    # Initialize openmdao problem. If running with multiple processors in MPI, use parallel finite differencing equal to the number of cores used.
-    # Otherwise, initialize the GreenHEART system normally. Get the rank number for parallelization. We only print output files using the root processor.
+    # Initialize openmdao problem. If running with multiple processors in MPI, use parallel finite
+    # differencing equal to the number of cores used.
+    # Otherwise, initialize the GreenHEART system normally. Get the rank number for parallelization.
+    # We only print output files using the root processor.
     myopt = PoseOptimization(config)
 
     if MPI:
@@ -45,9 +48,9 @@ def run_greenheart(
 
         if (
             max_cores > n_DV
-            and not config.greenheart_config["opt_options"]["driver"][
-                "design_of_experiments"
-            ]["flag"]
+            and not config.greenheart_config["opt_options"]["driver"]["design_of_experiments"][
+                "flag"
+            ]
         ):
             raise ValueError(
                 "ERROR: please reduce the number of cores, currently set to "
@@ -59,13 +62,13 @@ def run_greenheart(
                 + " or the parallelization logic will not work"
             )
 
-        if config.greenheart_config["opt_options"]["driver"]["design_of_experiments"][
-            "flag"
-        ]:
+        if config.greenheart_config["opt_options"]["driver"]["design_of_experiments"]["flag"]:
             n_FD = max_cores
 
         else:
-            # Define the color map for the parallelization, determining the maximum number of parallel finite difference (FD) evaluations based on the number of design variables (DV).
+            # Define the color map for the parallelization, determining the maximum number of
+            # parallel finite difference (FD) evaluations based on the number of design variables
+            # (DV).
             n_FD = min([max_cores, n_DV])
 
             # Define the color map for the cores
@@ -128,9 +131,7 @@ def run_greenheart(
     if color_i == 0:  # the top layer of cores enters
         if MPI:
             # Parallel settings for OpenMDAO
-            prob = om.Problem(
-                model=om.Group(num_par_fd=n_FD), comm=comm_i, reports=False
-            )
+            prob = om.Problem(model=om.Group(num_par_fd=n_FD), comm=comm_i, reports=False)
 
         else:
             # Sequential finite differencing
@@ -183,13 +184,9 @@ def run_greenheart(
 
             sys.stdout.flush()
 
-            if config.greenheart_config["opt_options"]["driver"]["step_size_study"][
-                "flag"
-            ]:
+            if config.greenheart_config["opt_options"]["driver"]["step_size_study"]["flag"]:
                 prob.run_model()
-                study_options = config.greenheart_config["opt_options"]["driver"][
-                    "step_size_study"
-                ]
+                study_options = config.greenheart_config["opt_options"]["driver"]["step_size_study"]
                 step_sizes = study_options["step_sizes"]
                 all_derivs = {}
                 for idx, step_size in enumerate(step_sizes):
@@ -225,8 +222,7 @@ def run_greenheart(
         if (not MPI) or (MPI and rank == 0):
             # Save data coming from openmdao to an output yaml file
             froot_out = (
-                folder_output
-                / config.greenheart_config["opt_options"]["general"]["fname_output"]
+                folder_output / config.greenheart_config["opt_options"]["general"]["fname_output"]
             )
 
             # Save data to numpy and matlab arrays

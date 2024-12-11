@@ -1,9 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from greenheart.simulation.technologies.hydrogen.electrolysis.run_PEM_master import (
-    run_PEM_clusters,
-)
+from greenheart.simulation.technologies.hydrogen.electrolysis.run_PEM_master import run_PEM_clusters
 
 
 def clean_up_final_outputs(h2_tot, h2_ts):
@@ -35,12 +33,8 @@ def combine_cluster_annual_performance_info(h2_tot):
     clusters = h2_tot.loc["Performance By Year"].index.to_list()
     performance_metrics = list(h2_tot.loc["Performance By Year"].iloc[0].keys())
     [k for k in performance_metrics if "/year" in k]
-    n_years = len(
-        h2_tot.loc["Performance By Year"].iloc[0][performance_metrics[0]].values()
-    )
-    yr_keys = list(
-        h2_tot.loc["Performance By Year"].iloc[0][performance_metrics[0]].keys()
-    )
+    n_years = len(h2_tot.loc["Performance By Year"].iloc[0][performance_metrics[0]].values())
+    yr_keys = list(h2_tot.loc["Performance By Year"].iloc[0][performance_metrics[0]].keys())
 
     vals_to_average = [k for k in performance_metrics if "/year" not in k]
     new_dict = {}
@@ -53,7 +47,7 @@ def combine_cluster_annual_performance_info(h2_tot):
 
         if k in vals_to_average:
             vals = vals / len(clusters)
-        new_dict[k] = dict(zip(yr_keys, vals))
+        new_dict[k] = dict(zip(yr_keys, vals, strict=False))
     return new_dict
 
 
@@ -113,9 +107,7 @@ def run_h2_PEM(
     max_h2_pr_hr = h2_tot.loc["Cluster Rated H2 Production [kg/hr]"].sum()
     max_pwr_pr_hr = h2_tot.loc["Cluster Rated Power Consumed [kWh]"].sum()
     rated_kWh_pr_kg = h2_tot.loc["Stack Rated Efficiency [kWh/kg]"].mean()
-    elec_rated_h2_capacity_kgpy = h2_tot.loc[
-        "Cluster Rated H2 Production [kg/yr]"
-    ].sum()
+    elec_rated_h2_capacity_kgpy = h2_tot.loc["Cluster Rated H2 Production [kg/yr]"].sum()
     gal_h20_pr_kg_h2 = h2_tot.loc["gal H20 per kg H2"].mean()
 
     atrribute_desc = [
@@ -135,9 +127,7 @@ def run_h2_PEM(
     ]
 
     # Plant Life Average Performance
-    system_avg_life_capfac = pd.Series(
-        annual_avg_performance["Capacity Factor [-]"]
-    ).mean()
+    system_avg_life_capfac = pd.Series(annual_avg_performance["Capacity Factor [-]"]).mean()
     system_total_annual_h2_kg_pr_year = pd.Series(
         annual_avg_performance["Annual H2 Production [kg/year]"]
     ).mean()
@@ -152,9 +142,7 @@ def run_h2_PEM(
     ).mean()
 
     average_stack_life_hrs = np.nanmean(h2_tot.loc["Stack Life [hours]"].values)
-    average_time_until_replacement = np.nanmean(
-        h2_tot.loc["Time until replacement [hours]"].values
-    )
+    average_time_until_replacement = np.nanmean(h2_tot.loc["Time until replacement [hours]"].values)
     life_vals = [
         system_avg_life_capfac,
         system_total_annual_h2_kg_pr_year,
@@ -198,13 +186,11 @@ def run_h2_PEM(
         water_annual_usage,
     ]
 
-    H2_Results = dict(zip(attribute_specs, attributes))
-    H2_Results.update(dict(zip(sim_specs, sim_performance)))
-    H2_Results.update(dict(zip(life_desc, life_vals)))
+    H2_Results = dict(zip(attribute_specs, attributes, strict=False))
+    H2_Results.update(dict(zip(sim_specs, sim_performance, strict=False)))
+    H2_Results.update(dict(zip(life_desc, life_vals, strict=False)))
     H2_Results.update({"Performance Schedules": pd.DataFrame(annual_avg_performance)})
-    H2_Results.update(
-        {"Hydrogen Hourly Production [kg/hr]": hydrogen_hourly_production}
-    )
+    H2_Results.update({"Hydrogen Hourly Production [kg/hr]": hydrogen_hourly_production})
     H2_Results.update({"Water Hourly Consumption [kg/hr]": water_hourly_usage})
 
     if not debug_mode:
@@ -228,26 +214,24 @@ def run_h2_PEM_IVcurve(
     electrical_generation_timeseries[:] = energy_to_electrolyzer[:]
 
     # system_rating = electrolyzer_size
-    H2_Results, H2A_Results = kernel_PEM_IVcurve(
-        electrical_generation_timeseries,
-        electrolyzer_size_mw,
-        useful_life,
-        kw_continuous,
-        electrolyzer_capex_kw,
-        lcoe,
-        adjusted_installed_cost,
-        net_capital_costs,
+    H2_Results, H2A_Results = (
+        kernel_PEM_IVcurve(  # FIXME: undefined, delete whole comment when fixed # noqa: F821
+            electrical_generation_timeseries,
+            electrolyzer_size_mw,
+            useful_life,
+            kw_continuous,
+            electrolyzer_capex_kw,
+            lcoe,
+            adjusted_installed_cost,
+            net_capital_costs,
+        )
     )
 
     H2_Results["hydrogen_annual_output"] = H2_Results["hydrogen_annual_output"]
     H2_Results["cap_factor"] = H2_Results["cap_factor"]
 
-    print(
-        f"Total power input to electrolyzer: {np.sum(electrical_generation_timeseries)}"
-    )
-    print(
-        "Hydrogen Annual Output (kg): {}".format(H2_Results["hydrogen_annual_output"])
-    )
+    print(f"Total power input to electrolyzer: {np.sum(electrical_generation_timeseries)}")
+    print("Hydrogen Annual Output (kg): {}".format(H2_Results["hydrogen_annual_output"]))
     print("Water Consumption (kg) Total: {}".format(H2_Results["water_annual_usage"]))
 
     return H2_Results, H2A_Results  # , electrical_generation_timeseries

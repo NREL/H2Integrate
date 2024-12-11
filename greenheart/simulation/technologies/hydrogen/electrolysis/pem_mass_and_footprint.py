@@ -1,5 +1,5 @@
-import matplotlib.pyplot as plt
 import numpy as np
+import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 
 
@@ -27,9 +27,8 @@ def footprint(rating_mw):
     Estimate the area required for the electrolyzer equipment using a linear scaling
     """
 
-    footprint_m2 = (
-        rating_mw * 48000 * (1 / 1e3)
-    )  # from Singlitico 2021, Table 1 (ratio is given in m2/GW, so a conversion is used here for MW)
+    # from Singlitico 2021, Table 1 (ratio is given in m2/GW, so a conversion is used here forMW)
+    footprint_m2 = rating_mw * 48000 * (1 / 1e3)
 
     return footprint_m2
 
@@ -57,7 +56,8 @@ def mass(rating_mw):
     """
     Estimate the electorlyzer mass given the electrolyzer rating based on data.
 
-    Note: the largest electrolyzer data available was for 1.25 MW. Also, given the current fit, the mass goes negative for very small electrolysis systems
+    Note: the largest electrolyzer data available was for 1.25 MW. Also, given the current fit, the
+    mass goes negative for very small electrolysis systems
     """
 
     rating_mw_fit, mass_kg_fit = _electrolyzer_mass_data()

@@ -1,24 +1,25 @@
-import copy
 import os
 import sys
+import copy
 import warnings
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 from dotenv import load_dotenv
-from hopp.simulation.technologies.sites import SiteInfo
-from hopp.simulation.technologies.sites import flatirons_site as sample_site
 from hopp.utilities.keys import set_developer_nrel_gov_key
+from hopp.simulation.technologies.sites import SiteInfo, flatirons_site as sample_site
 
-from greenheart.to_organize import hopp_tools, inputs_py, plot_results
+from greenheart.to_organize import inputs_py, hopp_tools, plot_results
+
 
 sys.path.append("")
 warnings.filterwarnings("ignore")
 
 
 """
-Perform a LCOE analysis for a few locations across the U.S. to demonstrate analysis across locations  using HOPP
+Perform a LCOE analysis for a few locations across the U.S. to demonstrate analysis across locations
+using HOPP
 A few notes:
 # 1. physical interaction effects ignored currently
 # 2. shared BOS to be re-implemented
@@ -46,9 +47,7 @@ sample_site["year"] = resource_year
 useful_life = 30
 critical_load_factor = 1
 run_reopt_flag = False
-custom_powercurve = (
-    True  # A flag that is applicable when using PySam WindPower (not FLORIS)
-)
+custom_powercurve = True  # A flag that is applicable when using PySam WindPower (not FLORIS)
 storage_used = True
 battery_can_grid_charge = False
 grid_connected_hopp = False
@@ -64,7 +63,7 @@ storage_size_mwh = 400  # 100 MW, 4 hr
 scenario_choice = "Example HOPP buildout"
 
 site_selection = ["Site 1", "Site 2", "Site 3", "Site 4"]
-scenario = dict()
+scenario = {}
 kw_continuous = (wind_size_mw + solar_size_mw) * 1000
 load = [
     kw_continuous for x in range(0, 8760)
@@ -77,7 +76,9 @@ discount_rate = 0.07
 debt_equity_split = 60
 
 # These inputs are not used in this analysis (no solar or storage)
-solar_cost_kw = 640  # TODO: take from input file for different years (fine if just looking at current year)
+solar_cost_kw = (
+    640  # TODO: take from input file for different years (fine if just looking at current year)
+)
 storage_cost_kw = 1500
 storage_cost_kwh = 380
 
@@ -103,7 +104,7 @@ xl = pd.ExcelFile(path)
 
 # outputs
 save_outputs_dict = inputs_py.establish_save_output_dict()
-save_all_runs = list()
+save_all_runs = []
 
 # which plots to show
 plot_power_production = True
@@ -120,8 +121,7 @@ for i in policy:
 
     for atb_year in atb_years:
         for site_location in site_selection:
-            scenario_df = xl.parse()
-            scenario_df.set_index(["Parameter"], inplace=True)
+            scenario_df = xl.parse().set_index(["Parameter"])
 
             site_df = scenario_df[site_location]
 
@@ -135,16 +135,15 @@ for i in policy:
             scenario["Useful Life"] = useful_life
 
             # financials
-            scenario = hopp_tools.set_financial_info(
-                scenario, debt_equity_split, discount_rate
-            )
+            scenario = hopp_tools.set_financial_info(scenario, debt_equity_split, discount_rate)
 
             # site info
             site_df, sample_site = hopp_tools.set_site_info(site_df, sample_site)
             site_name = site_df["State"]
             site = SiteInfo(sample_site, hub_height=scenario["Tower Height"])
 
-            # Assign scenario cost details (TODO: hard-coded from spreadsheet - not a standardized way)
+            # Assign scenario cost details (TODO: hard-coded from spreadsheet - not a
+            # standardized way)
             if atb_year == 2020:
                 total_capex = site_df["2020 CapEx"]
                 wind_om_cost_kw = site_df["2020 OpEx ($/kw-yr)"]
@@ -201,15 +200,11 @@ for i in policy:
             )
 
             generation_summary_df = pd.DataFrame(
-                {
-                    "Generation profile (kW)": hybrid_plant.grid.generation_profile[
-                        0:8760
-                    ]
-                }
+                {"Generation profile (kW)": hybrid_plant.grid.generation_profile[0:8760]}
             )
             generation_summary_df.to_csv(
                 results_dir
-                / f"Generation Summary_{site_name}_{atb_year}_{turbine_model}_{scenario["Powercurve File"]}.csv"
+                / f"Generation Summary_{site_name}_{atb_year}_{turbine_model}_{scenario["Powercurve File"]}.csv"  # noqa: E501
             )
 
             # Step 4: Plot HOPP Results
@@ -268,9 +263,7 @@ for i in policy:
             )
 
             # calculate financials simple (no H2)
-            total_elec_production = np.sum(
-                combined_pv_wind_storage_power_production_hopp
-            )
+            total_elec_production = np.sum(combined_pv_wind_storage_power_production_hopp)
             cf = total_elec_production / (interconnection_size_mw * 1000 * 8760)
             # plt.plot(energy_to_electrolyzer)
             # plt.show()

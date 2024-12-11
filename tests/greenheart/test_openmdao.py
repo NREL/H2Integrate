@@ -3,26 +3,25 @@ from pathlib import Path
 
 import numpy as np
 import openmdao.api as om
-from hopp.simulation import HoppInterface
-from hopp.utilities import load_yaml
-from ORBIT.core.library import initialize_library
 from pytest import approx
+from hopp.utilities import load_yaml
+from hopp.simulation import HoppInterface
+from ORBIT.core.library import initialize_library
 
+from greenheart.tools.optimization.openmdao import (
+    HOPPComponent,
+    GreenHeartComponent,
+    TurbineDistanceComponent,
+    BoundaryDistanceComponent,
+)
 from greenheart.simulation.greenheart_simulation import GreenHeartSimulationConfig
 from greenheart.tools.optimization.gc_run_greenheart import run_greenheart
-from greenheart.tools.optimization.openmdao import (
-    BoundaryDistanceComponent,
-    GreenHeartComponent,
-    HOPPComponent,
-    TurbineDistanceComponent,
-)
+
 
 ROOT = Path(__file__).parent
 RESOURCE_DIR = ROOT.parents[1] / "resource_files"
 
-solar_resource_file = (
-    RESOURCE_DIR / "solar" / "35.2018863_-101.945027_psmv3_60_2012.csv"
-)
+solar_resource_file = RESOURCE_DIR / "solar" / "35.2018863_-101.945027_psmv3_60_2012.csv"
 wind_resource_file = (
     RESOURCE_DIR / "wind" / "35.2018863_-101.945027_windtoolkit_2012_60min_80m_100m.srw"
 )
@@ -33,9 +32,7 @@ greenheart_config_onshore_filename = (
     ROOT / "input_files" / "plant" / "greenheart_config_onshore.yaml"
 )
 turbine_config_filename = ROOT / "input_files" / "turbines" / "osw_18MW.yaml"
-floris_input_filename_steel_ammonia = (
-    ROOT / "input_files" / "floris" / "floris_input_osw_18MW.yaml"
-)
+floris_input_filename_steel_ammonia = ROOT / "input_files" / "floris" / "floris_input_osw_18MW.yaml"
 orbit_library_path = ROOT / "input_files/"
 
 initialize_library(orbit_library_path)
@@ -45,9 +42,7 @@ offshore_hopp_config_wind_wave_solar_battery = (
 offshore_greenheart_config = orbit_library_path / "plant/greenheart_config.yaml"
 offshore_turbine_model = "osw_18MW"
 offshore_turbine_config = orbit_library_path / f"turbines/{offshore_turbine_model}.yaml"
-offshore_floris_config = (
-    orbit_library_path / f"floris/floris_input_{offshore_turbine_model}.yaml"
-)
+offshore_floris_config = orbit_library_path / f"floris/floris_input_{offshore_turbine_model}.yaml"
 offshore_orbit_config = (
     orbit_library_path / f"plant/orbit-config-{offshore_turbine_model}-stripped.yaml"
 )
@@ -87,9 +82,7 @@ def setup_hopp():
     design_variables = ["pv_capacity_kw", "turbine_x"]
 
     technologies = hybrid_config_dict["technologies"]
-    solar_wind_hybrid = {
-        key: technologies[key] for key in ("pv", "wind", "battery", "grid")
-    }
+    solar_wind_hybrid = {key: technologies[key] for key in ("pv", "wind", "battery", "grid")}
     hybrid_config_dict["technologies"] = solar_wind_hybrid
     hi = HoppInterface(hybrid_config_dict)
 
@@ -136,9 +129,9 @@ def setup_greenheart():
     config.hopp_config["config"]["cost_info"]["wind_installed_cost_mw"] = 1434000.0
     # based on 2023 ATB moderate case for onshore wind
     config.hopp_config["config"]["cost_info"]["wind_om_per_kw"] = 29.567
-    config.hopp_config["technologies"]["wind"]["fin_model"]["system_costs"]["om_fixed"][
-        0
-    ] = config.hopp_config["config"]["cost_info"]["wind_om_per_kw"]
+    config.hopp_config["technologies"]["wind"]["fin_model"]["system_costs"]["om_fixed"][0] = (
+        config.hopp_config["config"]["cost_info"]["wind_om_per_kw"]
+    )
     # set skip_financial to false for onshore wind
     config.hopp_config["config"]["simulation_options"]["wind"]["skip_financial"] = False
 
@@ -225,17 +218,23 @@ def setup_greenheart():
                 # "hist_file_name": "snopt_history.txt", # optional
                 "verify_level": -1,  # optional
                 "step_calc": None,
-                "form": "forward",  # type of finite differences to use, can be one of ["forward", "backward", "central"]
+                # Type of finite differences to use, one of ["forward", "backward", "central"]
+                "form": "forward",
                 "debug_print": False,
             },
             "design_of_experiments": {
                 "flag": False,
                 "run_parallel": False,
-                "generator": "FullFact",  # [Uniform, FullFact, PlackettBurman, BoxBehnken, LatinHypercube]
-                "num_samples": 1,  # Number of samples to evaluate model at (Uniform and LatinHypercube only)
+                # [Uniform, FullFact, PlackettBurman, BoxBehnken, LatinHypercube]
+                "generator": "FullFact",
+                # Number of samples to evaluate model at (Uniform and LatinHypercube only)
+                "num_samples": 1,
                 "seed": 2,
-                "levels": 50,  #  Number of evenly spaced levels between each design variable lower and upper bound (FullFactorial only)
-                "criterion": None,  # [None, center, c, maximin, m, centermaximin, cm, correelation, corr]
+                #  Number of evenly spaced levels between each design variable lower and upper
+                # bound (FullFactorial only)
+                "levels": 50,
+                # [None, center, c, maximin, m, centermaximin, cm, correelation, corr]
+                "criterion": None,
                 "iterations": 1,
                 "debug_print": False,
             },
@@ -243,9 +242,7 @@ def setup_greenheart():
         },
         "recorder": {
             "flag": True,
-            "file_name": str(
-                Path(__file__).absolute().parent / "output" / "recorder.sql"
-            ),
+            "file_name": str(Path(__file__).absolute().parent / "output" / "recorder.sql"),
             "includes": False,
         },
     }
@@ -313,9 +310,7 @@ def test_turbine_distance_component(subtests):
 
     prob.run_model()
 
-    expected_distances = np.array(
-        [200.0, np.sqrt(400**2 + 200**2), np.sqrt(2 * 200**2)]
-    )
+    expected_distances = np.array([200.0, np.sqrt(400**2 + 200**2), np.sqrt(2 * 200**2)])
     for i in range(len(turbine_x)):
         with subtests.test(f"for element {i}"):
             assert prob["spacing_vec"][i] == expected_distances[i]
@@ -351,9 +346,7 @@ def test_hopp_component(subtests):
     #     assert prob.get_val('battery_opex')[0] == approx(0.0)
 
     with subtests.test("costs_hybrid_electrical_generation_capex"):
-        assert prob.get_val("hybrid_electrical_generation_capex")[0] == approx(
-            58183100.0
-        )
+        assert prob.get_val("hybrid_electrical_generation_capex")[0] == approx(58183100.0)
 
     with subtests.test("costs_total_capex_equals_sum"):
         assert prob.get_val("hybrid_electrical_generation_capex")[0] == approx(

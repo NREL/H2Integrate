@@ -1,27 +1,21 @@
-import copy
 import os
 import sys
+import copy
 import warnings
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 from dotenv import load_dotenv
-from hopp.simulation.technologies.sites import SiteInfo
-from hopp.simulation.technologies.sites import flatirons_site as sample_site
-from hopp.tools.resource import *
-from hopp.tools.resource.resource_loader import site_details_creator
+from hopp.tools.resource import *  # FIXME: no * imports, delete whole comment when fixed # noqa: F403
 from hopp.utilities.keys import set_developer_nrel_gov_key
+from hopp.simulation.technologies.sites import SiteInfo, flatirons_site as sample_site
+from hopp.tools.resource.resource_loader import site_details_creator
 
-from greenheart.to_organize import (
-    hopp_tools_steel,
-    plot_results,
-    run_profast_for_hydrogen,
-)
-from greenheart.to_organize.H2_Analysis.hopp_for_h2 import (
-    run_h2a as run_h2a,
-)  # no h2a function
+from greenheart.to_organize import plot_results, hopp_tools_steel, run_profast_for_hydrogen
 from greenheart.to_organize.hopp_tools_steel import hoppDict
+from greenheart.to_organize.H2_Analysis.hopp_for_h2 import run_h2a as run_h2a  # no h2a function
+
 
 sys.path.append("")
 
@@ -42,9 +36,7 @@ set_developer_nrel_gov_key(
 )  # Set this key manually here if you are not setting it using the .env
 
 # Step 1: User Inputs for scenario
-save_hybrid_plant_yaml = (
-    True  # hybrid_plant requires special processing of the SAM objects
-)
+save_hybrid_plant_yaml = True  # hybrid_plant requires special processing of the SAM objects
 save_model_input_yaml = True  # saves the inputs for each model/major function
 save_model_output_yaml = True  # saves the outputs for each model/major function
 
@@ -60,9 +52,7 @@ sample_site["year"] = resource_year
 useful_life = 25
 critical_load_factor = 1
 run_reopt_flag = False
-custom_powercurve = (
-    True  # A flag that is applicable when using PySam WindPower (not FLORIS)
-)
+custom_powercurve = True  # A flag that is applicable when using PySam WindPower (not FLORIS)
 storage_used = False
 battery_can_grid_charge = False
 grid_connected_hopp = False
@@ -86,20 +76,25 @@ desired_lats = np.linspace(23.833504, 49.3556, N_lat)
 desired_lons = np.linspace(-129.22923, -65.7146, N_lon)
 load_resource_from_file = False
 resource_dir = ROOT_DIR / "resource_files"
-sitelist_name = (
-    f"filtered_site_details_{N_lat}_lats_{N_lon}_lons_{resource_year}_resourceyear"
-)
+sitelist_name = f"filtered_site_details_{N_lat}_lats_{N_lon}_lons_{resource_year}_resourceyear"
 
 if load_resource_from_file:
-    # Loads resource files in 'resource_files', finds nearest files to 'desired_lats' and 'desired_lons'
-    site_details = resource_loader_file(
-        resource_dir, desired_lats, desired_lons, resource_year
+    # Loads resource files in 'resource_files', finds nearest files to 'desired_lats' and
+    # desired_lons'
+    site_details = (
+        resource_loader_file(  # FIXME: no * imports, delete whole comment when fixed # noqa: F405
+            resource_dir, desired_lats, desired_lons, resource_year
+        )
     )  # Return contains
     site_details.to_csv(resource_dir / "site_details.csv")
-    site_details = filter_sites(site_details, location="usa only")
+    site_details = (
+        filter_sites(  # FIXME: no * imports, delete whole comment when fixed # noqa: F405
+            site_details, location="usa only"
+        )
+    )
 else:
-    # Creates the site_details file containing grid of lats, lons, years, and wind and solar filenames (blank
-    # - to force API resource download)
+    # Creates the site_details file containing grid of lats, lons, years, and wind and solar
+    # filenames (blank - to force API resource download)
     if Path(sitelist_name).exists():
         site_details = pd.read_csv(sitelist_name)
     else:
@@ -107,11 +102,15 @@ else:
             desired_lats, desired_lons, resource_dir
         )
         # Filter to locations in USA
-        site_details = filter_sites(site_details, location="usa only")
+        site_details = (
+            filter_sites(  # FIXME: no * imports, delete whole comment when fixed # noqa: F405
+                site_details, location="usa only"
+            )
+        )
         site_details.to_csv(sitelist_name)
 print("Site Details Created")
 
-scenario = dict()
+scenario = {}
 kw_continuous = electrolyzer_size_mw * 1000
 load = [
     kw_continuous for x in range(0, 8760)
@@ -243,8 +242,7 @@ for option in policy:
             )
             print(scenario["Wind PTC"])
 
-            scenario_df = xl.parse()
-            scenario_df.set_index(["Parameter"], inplace=True)
+            scenario_df = xl.parse().set_index(["Parameter"])
 
             site_df = scenario_df["Site"]
             site_df["Representative coordinates"] = site_name
@@ -254,10 +252,8 @@ for option in policy:
             print(turbine_model, "Turbine model")
 
             # set turbine values
-            hopp_dict, scenario, nTurbs, floris_config = (
-                hopp_tools_steel.set_turbine_model(
-                    hopp_dict, turbine_model, scenario, parent_path, floris_dir, floris
-                )
+            hopp_dict, scenario, nTurbs, floris_config = hopp_tools_steel.set_turbine_model(
+                hopp_dict, turbine_model, scenario, parent_path, floris_dir, floris
             )
 
             scenario["Useful Life"] = useful_life
@@ -453,14 +449,12 @@ for option in policy:
             )
 
             # Step 6b: Run desal model
-            hopp_dict, desal_capex, desal_opex, desal_annuals = (
-                hopp_tools_steel.desal_model(
-                    hopp_dict,
-                    H2_Results,
-                    electrolyzer_size_mw,
-                    electrical_generation_timeseries,
-                    useful_life,
-                )
+            hopp_dict, desal_capex, desal_opex, desal_annuals = hopp_tools_steel.desal_model(
+                hopp_dict,
+                H2_Results,
+                electrolyzer_size_mw,
+                electrical_generation_timeseries,
+                useful_life,
             )
 
             revised_renewable_cost = hybrid_plant.grid.total_installed_cost
@@ -500,18 +494,14 @@ for option in policy:
             lcoh = h2a_solution["price"]
             print("LCOH: ", lcoh)
             # # Max hydrogen production rate [kg/hr]
-            max_hydrogen_production_rate_kg_hr = np.max(
-                H2_Results["hydrogen_hourly_production"]
-            )
-            max_hydrogen_delivery_rate_kg_hr = np.mean(
-                H2_Results["hydrogen_hourly_production"]
-            )
+            max_hydrogen_production_rate_kg_hr = np.max(H2_Results["hydrogen_hourly_production"])
+            max_hydrogen_delivery_rate_kg_hr = np.mean(H2_Results["hydrogen_hourly_production"])
 
             electrolyzer_capacity_factor = H2_Results["cap_factor"]
 
             print_results = False
             print_h2_results = False
-            test = dict()
+            test = {}
 
             test["Site Name"] = site_name
             test["Lat"] = lat
@@ -521,9 +511,7 @@ for option in policy:
             test["Policy"] = option
             test["Turbine size (MW)"] = turbine_rating
             test["Wind Plant size (MW)"] = wind_size_mw
-            test["Wind Plant Size Adjusted for Turbine Rating(MW)"] = (
-                wind_plant_size / 1000
-            )
+            test["Wind Plant Size Adjusted for Turbine Rating(MW)"] = wind_plant_size / 1000
             test["Electrolyzer size (MW)"] = electrolyzer_size_mw
             test["Load Profile (kW)"] = kw_continuous
             test["Energy to Electrolyzer (kW)"] = np.sum(energy_to_electrolyzer)
@@ -539,21 +527,11 @@ for option in policy:
             test["LCOH: Desalination CAPEX ($/kg)"] = lcoh_breakdown[
                 "LCOH: Desalination CAPEX ($/kg)"
             ]
-            test["LCOH: Electrolyzer FOM ($/kg)"] = lcoh_breakdown[
-                "LCOH: Electrolyzer FOM ($/kg)"
-            ]
-            test["LCOH: Electrolyzer VOM ($/kg)"] = lcoh_breakdown[
-                "LCOH: Electrolyzer VOM ($/kg)"
-            ]
-            test["LCOH: Desalination FOM ($/kg)"] = lcoh_breakdown[
-                "LCOH: Desalination FOM ($/kg)"
-            ]
-            test["LCOH: Renewable plant ($/kg)"] = lcoh_breakdown[
-                "LCOH: Renewable plant ($/kg)"
-            ]
-            test["LCOH: Renewable FOM ($/kg)"] = lcoh_breakdown[
-                "LCOH: Renewable FOM ($/kg)"
-            ]
+            test["LCOH: Electrolyzer FOM ($/kg)"] = lcoh_breakdown["LCOH: Electrolyzer FOM ($/kg)"]
+            test["LCOH: Electrolyzer VOM ($/kg)"] = lcoh_breakdown["LCOH: Electrolyzer VOM ($/kg)"]
+            test["LCOH: Desalination FOM ($/kg)"] = lcoh_breakdown["LCOH: Desalination FOM ($/kg)"]
+            test["LCOH: Renewable plant ($/kg)"] = lcoh_breakdown["LCOH: Renewable plant ($/kg)"]
+            test["LCOH: Renewable FOM ($/kg)"] = lcoh_breakdown["LCOH: Renewable FOM ($/kg)"]
             test["LCOH: Taxes ($/kg)"] = lcoh_breakdown["LCOH: Taxes ($/kg)"]
             test["LCOH: Water consumption ($/kg)"] = lcoh_breakdown[
                 "LCOH: Water consumption ($/kg)"

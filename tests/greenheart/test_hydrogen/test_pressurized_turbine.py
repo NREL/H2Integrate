@@ -1,7 +1,7 @@
 import numpy as np
 from pytest import approx
 
-from greenheart.simulation.technologies.hydrogen.h2_storage.on_turbine.on_turbine_hydrogen_storage import (
+from greenheart.simulation.technologies.hydrogen.h2_storage.on_turbine.on_turbine_hydrogen_storage import (  # noqa: E501
     PressurizedTower,
 )
 
@@ -127,10 +127,7 @@ class TestPressurizedTower:
 
         # pressurization info
         p_crossover_ref = (
-            4
-            * Eweld_ref
-            * strength_ultimate_steel_ref
-            / (7 * d_t_ratio_ref * (1 - Eweld_ref / 7))
+            4 * Eweld_ref * strength_ultimate_steel_ref / (7 * d_t_ratio_ref * (1 - Eweld_ref / 7))
         )
         delta_t_ref = p_crossover_ref * (D_ref / 2) / (2 * strength_ultimate_steel_ref)
         thickness_wall_ref = D_ref / d_t_ratio_ref + delta_t_ref
@@ -167,10 +164,7 @@ class TestPressurizedTower:
 
         # capex
         capex_ref = (
-            cost_tower_ref
-            + cost_nontower_ref
-            - cost_tower_trad_ref
-            - cost_nontower_trad_ref
+            cost_tower_ref + cost_nontower_ref - cost_tower_trad_ref - cost_nontower_trad_ref
         )
 
         # opex
@@ -208,9 +202,9 @@ class TestPressurizedTower:
             mass_cap_top_trad_ref
         )
 
-        assert np.sum(
-            pressurized_cylinder.get_cost_tower_material(pressure=0)
-        ) == approx(cost_tower_trad_ref)
+        assert np.sum(pressurized_cylinder.get_cost_tower_material(pressure=0)) == approx(
+            cost_tower_trad_ref
+        )
         assert pressurized_cylinder.get_cost_nontower(traditional=True) == approx(
             cost_nontower_trad_ref
         )
@@ -219,28 +213,14 @@ class TestPressurizedTower:
 
         assert pressurized_cylinder.operating_pressure == p_crossover_ref
 
-        assert pressurized_cylinder.get_volume_tower_material()[0] == approx(
-            volume_wall_ref
-        )
-        assert pressurized_cylinder.get_volume_tower_material()[1] == approx(
-            volume_cap_bot_ref
-        )
-        assert pressurized_cylinder.get_volume_tower_material()[2] == approx(
-            volume_cap_top_ref
-        )
-        assert pressurized_cylinder.get_mass_tower_material()[0] == approx(
-            mass_wall_ref
-        )
-        assert pressurized_cylinder.get_mass_tower_material()[1] == approx(
-            mass_cap_bot_ref
-        )
-        assert pressurized_cylinder.get_mass_tower_material()[2] == approx(
-            mass_cap_top_ref
-        )
+        assert pressurized_cylinder.get_volume_tower_material()[0] == approx(volume_wall_ref)
+        assert pressurized_cylinder.get_volume_tower_material()[1] == approx(volume_cap_bot_ref)
+        assert pressurized_cylinder.get_volume_tower_material()[2] == approx(volume_cap_top_ref)
+        assert pressurized_cylinder.get_mass_tower_material()[0] == approx(mass_wall_ref)
+        assert pressurized_cylinder.get_mass_tower_material()[1] == approx(mass_cap_bot_ref)
+        assert pressurized_cylinder.get_mass_tower_material()[2] == approx(mass_cap_top_ref)
 
-        assert np.sum(pressurized_cylinder.get_cost_tower_material()) == approx(
-            cost_tower_ref
-        )
+        assert np.sum(pressurized_cylinder.get_cost_tower_material()) == approx(cost_tower_ref)
         assert pressurized_cylinder.get_cost_nontower() == approx(cost_nontower_ref)
 
         ## output interface
@@ -326,9 +306,7 @@ class TestPressurizedTower:
                 * strength_ultimate_steel_ref
                 / (7 * d_t_ratio_ref * (1 - Eweld_ref / 7))
             )
-            dt_bot_ref = (
-                p_crossover_ref * (D_base_ref / 2) / (2 * strength_ultimate_steel_ref)
-            )
+            dt_bot_ref = p_crossover_ref * (D_base_ref / 2) / (2 * strength_ultimate_steel_ref)
             thickness_wall_bot_ref = D_base_ref / d_t_ratio_ref + dt_bot_ref
             thickness_cap_top_ref = D_top_ref * np.sqrt(
                 0.10 * p_crossover_ref / (Eweld_ref * strength_yield_steel_ref / 1.5)
@@ -338,9 +316,9 @@ class TestPressurizedTower:
             )
 
             # pressurized geometry values
-            volume_wall_ref = cone_volume(
-                h_ref, D_base_ref + thickness_wall_bot_ref
-            ) - cone_volume(h_ref, D_base_ref - thickness_wall_bot_ref)
+            volume_wall_ref = cone_volume(h_ref, D_base_ref + thickness_wall_bot_ref) - cone_volume(
+                h_ref, D_base_ref - thickness_wall_bot_ref
+            )
             volume_cap_top_ref = surfacearea_cap_top_ref * (thickness_cap_top_ref)
             volume_cap_bot_ref = surfacearea_cap_bot_ref * (thickness_cap_bot_ref)
 
@@ -365,10 +343,7 @@ class TestPressurizedTower:
 
             # capex
             capex_ref = (
-                cost_tower_ref
-                + cost_nontower_ref
-                - cost_tower_trad_ref
-                - cost_nontower_trad_ref
+                cost_tower_ref + cost_nontower_ref - cost_tower_trad_ref - cost_nontower_trad_ref
             )
 
             # opex
@@ -410,9 +385,9 @@ class TestPressurizedTower:
                 mass_cap_top_trad_ref
             )
 
-            assert np.sum(
-                pressurized_cone.get_cost_tower_material(pressure=0)
-            ) == approx(cost_tower_trad_ref)
+            assert np.sum(pressurized_cone.get_cost_tower_material(pressure=0)) == approx(
+                cost_tower_trad_ref
+            )
             assert pressurized_cone.get_cost_nontower(traditional=True) == approx(
                 cost_nontower_trad_ref
             )
@@ -421,28 +396,14 @@ class TestPressurizedTower:
 
             assert pressurized_cone.operating_pressure == p_crossover_ref
 
-            assert pressurized_cone.get_volume_tower_material()[0] == approx(
-                volume_wall_ref
-            )
-            assert pressurized_cone.get_volume_tower_material()[1] == approx(
-                volume_cap_bot_ref
-            )
-            assert pressurized_cone.get_volume_tower_material()[2] == approx(
-                volume_cap_top_ref
-            )
-            assert pressurized_cone.get_mass_tower_material()[0] == approx(
-                mass_wall_ref
-            )
-            assert pressurized_cone.get_mass_tower_material()[1] == approx(
-                mass_cap_bot_ref
-            )
-            assert pressurized_cone.get_mass_tower_material()[2] == approx(
-                mass_cap_top_ref
-            )
+            assert pressurized_cone.get_volume_tower_material()[0] == approx(volume_wall_ref)
+            assert pressurized_cone.get_volume_tower_material()[1] == approx(volume_cap_bot_ref)
+            assert pressurized_cone.get_volume_tower_material()[2] == approx(volume_cap_top_ref)
+            assert pressurized_cone.get_mass_tower_material()[0] == approx(mass_wall_ref)
+            assert pressurized_cone.get_mass_tower_material()[1] == approx(mass_cap_bot_ref)
+            assert pressurized_cone.get_mass_tower_material()[2] == approx(mass_cap_top_ref)
 
-            assert np.sum(pressurized_cone.get_cost_tower_material()) == approx(
-                cost_tower_ref
-            )
+            assert np.sum(pressurized_cone.get_cost_tower_material()) == approx(cost_tower_ref)
             assert pressurized_cone.get_cost_nontower() == approx(cost_nontower_ref)
 
             ## output interface
@@ -489,23 +450,17 @@ class TestPressurizedTower:
             pressurized_tower_instance = PressurizedTower(2004, turbine)
             pressurized_tower_instance.run()
 
-            PressurizedTower.compute_frustum_volume(
-                h_ref, D_bot_ref, D_top_ref
-            )
+            PressurizedTower.compute_frustum_volume(h_ref, D_bot_ref, D_top_ref)
 
             # traditional sizing should get cost within 5%
-            assert pressurized_tower_instance.get_cost_tower_material(pressure=0)[
-                0
-            ] == approx(cost_tower_trad_ref, rel=0.05)
-            assert (
-                pressurized_tower_instance.get_cost_tower_material(pressure=0)[1] == 0.0
+            assert pressurized_tower_instance.get_cost_tower_material(pressure=0)[0] == approx(
+                cost_tower_trad_ref, rel=0.05
             )
-            assert (
-                pressurized_tower_instance.get_cost_tower_material(pressure=0)[2] == 0.0
+            assert pressurized_tower_instance.get_cost_tower_material(pressure=0)[1] == 0.0
+            assert pressurized_tower_instance.get_cost_tower_material(pressure=0)[2] == 0.0
+            assert pressurized_tower_instance.get_cost_nontower(traditional=True) == approx(
+                cost_nontower_trad_ref, rel=0.05
             )
-            assert pressurized_tower_instance.get_cost_nontower(
-                traditional=True
-            ) == approx(cost_nontower_trad_ref, rel=0.05)
 
             # pressurized sizing should get wall cost within 10%
             assert pressurized_tower_instance.get_cost_tower_material()[0] == approx(
@@ -520,17 +475,11 @@ class TestPressurizedTower:
                 cost_cap_top_ref, rel=1.0
             )
 
-            # non-tower pressurized sizing evidently has some weird assumptions but should get within 10%
+            # non-tower pressurized sizing evidently has some weird assumptions but should
+            # get within 10%
             assert pressurized_tower_instance.get_cost_nontower() == approx(
                 cost_nontower_ref, rel=0.1
             )
 
             # capacity within 10%
-            assert pressurized_tower_instance.get_capacity_H2() == approx(
-                m_H2_stored_ref, rel=0.1
-            )
-
-
-if __name__ == "__main__":
-    test_set = test_pressurized_tower()
-    # test_set= TestPressurizedTower()
+            assert pressurized_tower_instance.get_capacity_H2() == approx(m_H2_stored_ref, rel=0.1)

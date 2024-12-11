@@ -11,14 +11,16 @@ Revisions:
 
 """
 Model Revision Needed: storage space and mass
-Description: This file should handle physical size (footprint and mass) needed for pressure vessel storage
+Description: This file should handle physical size (footprint and mass) needed for pressure vessel
+    storage
 Sources:
     - [1] ./README.md and other elements in this directory
 Args:
     - same as for the physics and cost model contained herein
     - others may be added as needed
 Returns:(can be from separate functions and/or methods as it makes sense):
-    - mass_empty (float): mass (approximate) for pressure vessel storage components ignoring stored H2
+    - mass_empty (float): mass (approximate) for pressure vessel storage components ignoring stored
+        H2
     - footprint (float): area required for pressure vessel storage
     - others may be added as needed
 """
@@ -45,11 +47,16 @@ class PressureVessel:
         ########Key inputs##########
         self.Wind_avai = Wind_avai  # Wind availability in %
         self.H2_flow = H2_flow  # Flow rate of steel plants in tonne/day
-        self.cdratio = cdratio  # Charge/discharge ratio, for example 2 means the charging is 2x faster than discharge
+
+        # NOTE: Charge/discharge ratio, i.e. 2 means the charging is 2x faster than discharge
+        self.cdratio = cdratio
         self.Energy_cost = Energy_cost  # Renewable energy cost in $/kWh
 
         #######Other inputs########
-        self.cycle_number = cycle_number  # Equivalent cycle number for a year, only affects operation (the higher the number is the less effect there will be), set as now as I am not sure how the maximum sotrage capacity is determined and how the storage will be cycled
+        # NOTE: Equivalent cycle number for a year, only affects operation (the higher the number
+        # is the less effect there will be), set as now as I am not sure how the maximum storage
+        # capacity is determined and how the storage will be cycled
+        self.cycle_number = cycle_number
 
         _fn = parent_path / spread_sheet_name
         self.compressed_gas_function = CompressedGasFunction(path_tankinator=_fn)
@@ -92,12 +99,11 @@ class PressureVessel:
         opex_per_kg = self.compressed_gas_function.exp_log_fit(
             [self.a_fit_opex, self.b_fit_opex, self.c_fit_opex], capacity_kg
         )
-        energy_per_kg_h2 = (
-            self.compressed_gas_function.energy_function(capacity_kg) / capacity_kg
-        )
+        energy_per_kg_h2 = self.compressed_gas_function.energy_function(capacity_kg) / capacity_kg
 
         # NOTE ON ENERGY: the energy value returned here is the energy used to fill the
-        # tanks initially for the first fill and so can be used as an approximation for the energy used on a per kg basis.
+        # tanks initially for the first fill and so can be used as an approximation for the energy
+        # used on a per kg basis.
         # If cycle_number > 1, the energy model output is incorrect.
 
         capex = capex_per_kg * capacity_kg
@@ -140,24 +146,18 @@ class PressureVessel:
             tank_footprint = 4 * tank_radius**2
         else:
             tank_area = (
-                np.pi
-                * tank_radius**2
-                * ((tank_length - 2 * tank_radius) * (2 * tank_radius))
+                np.pi * tank_radius**2 * ((tank_length - 2 * tank_radius) * (2 * tank_radius))
             )
             tank_footprint = tank_radius * tank_length
 
         if custom_packing:
             if upright:
                 if packing_ratio is None:
-                    packing_ratio = (
-                        np.pi * np.sqrt(3.0) / 6.0
-                    )  # default to tight packing
+                    packing_ratio = np.pi * np.sqrt(3.0) / 6.0  # default to tight packing
                 tank_footprint = tank_area * packing_ratio
             else:
                 if packing_ratio is None:
-                    raise NotImplementedError(
-                        "tight packing ratio for cylinders isn't derived yet"
-                    )
+                    raise NotImplementedError("tight packing ratio for cylinders isn't derived yet")
                 tank_footprint = tank_area * packing_ratio
 
         return (tank_footprint, Ntank * tank_footprint)
@@ -195,10 +195,8 @@ class PressureVessel:
         # assume that the total target capacity is equally distributed across sites
         capacity_site_tgt = capacity_total_tgt / N_sites
 
-        # capex_centralized_total, opex_centralized_total, energy_kg_centralized_total= self.calculate_from_fit(capacity_total_tgt)
-        capex_site, opex_site, energy_kg_site = self.calculate_from_fit(
-            capacity_site_tgt
-        )
+        # capex_centralized_total, opex_centralized_total, energy_kg_centralized_total= self.calculate_from_fit(capacity_total_tgt)  # noqa: E501
+        capex_site, opex_site, energy_kg_site = self.calculate_from_fit(capacity_site_tgt)
 
         # get the resulting capex & opex costs, incl. equivalent
         capex_distributed_total = (

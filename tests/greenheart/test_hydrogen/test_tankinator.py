@@ -1,14 +1,12 @@
 import numpy as np
 import pytest
 
-from greenheart.simulation.technologies.hydrogen.h2_storage.pressure_vessel import (
-    von_mises,
-)
+from greenheart.simulation.technologies.hydrogen.h2_storage.pressure_vessel import von_mises
 from greenheart.simulation.technologies.hydrogen.h2_storage.pressure_vessel.tankinator import (
     Tank,
-    TypeIIITank,
     TypeITank,
     TypeIVTank,
+    TypeIIITank,
 )
 
 
@@ -36,33 +34,27 @@ class TestTankinator:
         thickness = 0.19
         volume_exact = 4.0 / 3.0 * np.pi * radius**3
 
-        assert Tank.compute_hemicylinder_outer_length(
-            length, thickness
-        ) == pytest.approx(length + 2.0 * thickness)
-        assert Tank.compute_hemicylinder_outer_radius(
-            radius, thickness
-        ) == pytest.approx(radius + thickness)
-        assert Tank.compute_hemicylinder_volume(radius, length) == pytest.approx(
-            volume_exact
+        assert Tank.compute_hemicylinder_outer_length(length, thickness) == pytest.approx(
+            length + 2.0 * thickness
         )
+        assert Tank.compute_hemicylinder_outer_radius(radius, thickness) == pytest.approx(
+            radius + thickness
+        )
+        assert Tank.compute_hemicylinder_volume(radius, length) == pytest.approx(volume_exact)
 
         # a lil bit between sphere halves
         radius = 2.1
         length = 6.4
         thickness = 0.02
-        volume_exact = 4.0 / 3.0 * np.pi * radius**3 + (length - 2 * radius) * (
-            np.pi * radius**2
-        )
+        volume_exact = 4.0 / 3.0 * np.pi * radius**3 + (length - 2 * radius) * (np.pi * radius**2)
 
-        assert Tank.compute_hemicylinder_outer_length(
-            length, thickness
-        ) == pytest.approx(length + 2.0 * thickness)
-        assert Tank.compute_hemicylinder_outer_radius(
-            radius, thickness
-        ) == pytest.approx(radius + thickness)
-        assert Tank.compute_hemicylinder_volume(radius, length) == pytest.approx(
-            volume_exact
+        assert Tank.compute_hemicylinder_outer_length(length, thickness) == pytest.approx(
+            length + 2.0 * thickness
         )
+        assert Tank.compute_hemicylinder_outer_radius(radius, thickness) == pytest.approx(
+            radius + thickness
+        )
+        assert Tank.compute_hemicylinder_volume(radius, length) == pytest.approx(volume_exact)
 
     def test_tankI_geometric(self):
         """make sure geometric calls work correctly"""
@@ -106,9 +98,7 @@ class TestTankinator:
 
         radius = 4.3
         length = 14.9
-        volume_exact = 4.0 / 3.0 * np.pi * radius**3 + (length - 2 * radius) * (
-            np.pi * radius**2
-        )
+        volume_exact = 4.0 / 3.0 * np.pi * radius**3 + (length - 2 * radius) * (np.pi * radius**2)
 
         tank = Tank(1, "316SS")
         tank.set_length_radius(length, radius)
@@ -169,38 +159,28 @@ class TestTankinator:
         assert tank.material.cost_rate == pytest.approx(costrate_ref)
 
         # check the thinwall calculations
-        assert tank.get_yield_thickness() == pytest.approx(
-            yield_thickness_ref, abs=0.01
-        )
-        assert tank.get_ultimate_thickness() == pytest.approx(
-            ultimate_thickness_ref, abs=0.001
-        )
-        assert tank.get_thickness_thinwall() == pytest.approx(
-            ultimate_thickness_ref, abs=0.001
-        )
+        assert tank.get_yield_thickness() == pytest.approx(yield_thickness_ref, abs=0.01)
+        assert tank.get_ultimate_thickness() == pytest.approx(ultimate_thickness_ref, abs=0.001)
+        assert tank.get_thickness_thinwall() == pytest.approx(ultimate_thickness_ref, abs=0.001)
 
         # check the implied geometry if we set the thickness to the thinwall
         tank.set_thickness_thinwall()
         assert tank.get_volume_metal() == pytest.approx(disp_vol_tw_ref, rel=0.001)
         assert tank.get_mass_metal() == pytest.approx(mass_tw_ref, rel=0.001)
         assert tank.get_cost_metal() == pytest.approx(cost_tw_ref)
-        assert tank.get_gravimetric_tank_efficiency() == pytest.approx(
-            grav_eff_tw_ref, abs=0.01
-        )
+        assert tank.get_gravimetric_tank_efficiency() == pytest.approx(grav_eff_tw_ref, abs=0.01)
 
         # check von Mises analysis variables
-        assert von_mises.S1(
-            p_op, R_ref + ultimate_thickness_ref, R_ref
-        ) == pytest.approx(vmS1_0_ref)
-        assert von_mises.S2(
-            p_op, R_ref + ultimate_thickness_ref, R_ref
-        ) == pytest.approx(vmS2_0_ref)
-        assert von_mises.S3(
-            p_op, R_ref + ultimate_thickness_ref, R_ref
-        ) == pytest.approx(vmS3_0_ref)
-        vmSproof, vmSburst = von_mises.getPeakStresses(
-            p_op, R_ref + ultimate_thickness_ref, R_ref
+        assert von_mises.S1(p_op, R_ref + ultimate_thickness_ref, R_ref) == pytest.approx(
+            vmS1_0_ref
         )
+        assert von_mises.S2(p_op, R_ref + ultimate_thickness_ref, R_ref) == pytest.approx(
+            vmS2_0_ref
+        )
+        assert von_mises.S3(p_op, R_ref + ultimate_thickness_ref, R_ref) == pytest.approx(
+            vmS3_0_ref
+        )
+        vmSproof, vmSburst = von_mises.getPeakStresses(p_op, R_ref + ultimate_thickness_ref, R_ref)
         assert vmSproof == pytest.approx(vmSproof_0_ref)
         assert vmSburst == pytest.approx(vmSburst_0_ref)
         assert not Tank.check_thinwall(R_ref, ultimate_thickness_ref)
@@ -215,9 +195,7 @@ class TestTankinator:
         assert WTAF_0 == pytest.approx(WTAF_0_ref)
         assert thickness_1 == pytest.approx(thickness_1_ref)
 
-        WTAF_1, thickness_2 = von_mises.iterate_thickness(
-            p_op, R_ref, thickness_1, Sy_ref, Su_ref
-        )
+        WTAF_1, thickness_2 = von_mises.iterate_thickness(p_op, R_ref, thickness_1, Sy_ref, Su_ref)
         assert WTAF_1 == pytest.approx(WTAF_1_ref)
         assert thickness_2 == pytest.approx(thickness_2_ref)
 
@@ -365,9 +343,6 @@ class TestTankinator:
         # assert tank.get_cost_jacket() == pytest.approx(cost_jacket_ref, abs= 0.01)
         # assert tank.get_mass_tank() == pytest.approx(m_tank_ref, abs= 0.01)
         # assert tank.get_cost_tank() == pytest.approx(cost_tank_ref, abs= 0.01)
-        # assert tank.get_gravimetric_tank_efficiency() == pytest.approx(gravimetric_tank_efficiency_ref, abs= 0.01)
-
-
-if __name__ == "__main__":
-    test_set = test_tankinator()
-    # test_set = TestTankinator()
+        # assert tank.get_gravimetric_tank_efficiency() == pytest.approx(
+        #     gravimetric_tank_efficiency_ref, abs= 0.01
+        # )

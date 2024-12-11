@@ -4,9 +4,10 @@ Created on Fri Nov 18 09:06:19 2022
 @author: ereznic2
 """
 
-import hopp.to_organize.hydrogen_steel_pipe_cost_functions as hydrogen_steel_pipe_cost_functions
 import numpy as np
 import pandas as pd
+import hopp.to_organize.hydrogen_steel_pipe_cost_functions as hydrogen_steel_pipe_cost_functions
+
 
 # parent_path = Path(__file__).parent
 
@@ -19,9 +20,7 @@ def hydrogen_steel_pipeline_cost_analysis(
     pipeline_info = pd.read_csv(pipe_info_dir + "/Pipeline_info.csv", header=0, sep=",")
 
     pipeline_info = (
-        pipeline_info.loc[pipeline_info["Site"] == site_name]
-        .reset_index()
-        .drop(["index"], axis=1)
+        pipeline_info.loc[pipeline_info["Site"] == site_name].reset_index().drop(["index"], axis=1)
     )
 
     total_plant_hydrogen_production_kgpsec = hydrogen_max_hourly_production_kg / 3600
@@ -34,8 +33,7 @@ def hydrogen_steel_pipeline_cost_analysis(
             / pipeline_info.loc[j, "Total number of turbines"]
         )
         pipe_mass_flow_kgpsec = (
-            flowrate_per_turbine
-            * pipeline_info.loc[j, "Number of turbines in each pipe"]
+            flowrate_per_turbine * pipeline_info.loc[j, "Number of turbines in each pipe"]
         )
         # Decide pipe inlet pressure based on where the pipe starts
         if pipeline_info.loc[j, "Pipe start point"] == "Turbine":
@@ -115,7 +113,7 @@ def hydrogen_steel_pipeline_cost_analysis(
     pipe_row_cost_USD = []
     pipe_total_cost_USD = []
 
-    #   ANL costing coefficients for all regions. Material cost is ignored as internal methods are used
+    # ANL costing coefficients for all regions. Material cost ignored as internal methods are used
     anl_coefs_regional = {
         "GP": {
             "labor": [10406, 0.20953, -0.08419],
@@ -175,7 +173,10 @@ def hydrogen_steel_pipeline_cost_analysis(
 
     region = {"IN": "GL", "TX": "SW", "IA": "GP", "MS": "SE", "MN": "GP", "WY": "RM"}
     anl_coefs = anl_coefs_regional[region[site_name]]
-    small_positive = 1e-7  # This allows solution and file output writing when length of a given DN is set to zero, but usually this is a sign of an issue somewhere
+
+    # This allows solution and file output writing when length of a given DN is set to zero, but
+    # usually this is a sign of an issue somewhere
+    small_positive = 1e-7
     for j in range(len(pipe_min_DN)):
         # j = 0
 
@@ -183,17 +184,12 @@ def hydrogen_steel_pipeline_cost_analysis(
         pipe_volume = (
             np.pi
             / 4
-            * (
-                (0.001 * pipe_outer_diameter[j]) ** 2
-                - (0.001 * pipe_inner_diameter[j]) ** 2
-            )
+            * ((0.001 * pipe_outer_diameter[j]) ** 2 - (0.001 * pipe_inner_diameter[j]) ** 2)
             * pipeline_info.loc[j, "Length of Pipe in Arm (m)"]
         )
         pipe_mass_kg = density_steel * pipe_volume
         pipe_material_cost_bymass_USD.append(
-            steel_cost_per_kg
-            * pipe_mass_kg
-            * pipeline_info.loc[j, "Number of such pipes needed"]
+            steel_cost_per_kg * pipe_mass_kg * pipeline_info.loc[j, "Number of such pipes needed"]
         )
 
         # Calculate costs using Parker 2004 data adjusted to 2019 (two methods)
@@ -248,12 +244,8 @@ def hydrogen_steel_pipeline_cost_analysis(
     pipe_material_cost_USD = pd.DataFrame(
         pipe_material_cost_USD, columns=["Total material cost ($)"]
     )
-    pipe_misc_cost_USD = pd.DataFrame(
-        pipe_misc_cost_USD, columns=["Total misc cost ($)"]
-    )
-    pipe_labor_cost_USD = pd.DataFrame(
-        pipe_labor_cost_USD, columns=["Total labor cost ($)"]
-    )
+    pipe_misc_cost_USD = pd.DataFrame(pipe_misc_cost_USD, columns=["Total misc cost ($)"])
+    pipe_labor_cost_USD = pd.DataFrame(pipe_labor_cost_USD, columns=["Total labor cost ($)"])
     pipe_row_cost_USD = pd.DataFrame(pipe_row_cost_USD, columns=["Total ROW cost ($)"])
 
     pipe_material_cost_bymass_USD = pd.DataFrame(

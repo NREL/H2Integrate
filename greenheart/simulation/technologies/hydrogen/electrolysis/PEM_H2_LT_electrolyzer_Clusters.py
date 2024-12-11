@@ -23,16 +23,18 @@ Energy: 1 kg H2 --> 16 kWh
 import sys
 
 import numpy as np
+import scipy
 import pandas as pd
 import rainflow
-import scipy
-from matplotlib import pyplot as plt
 from scipy import interpolate
+from matplotlib import pyplot as plt
+
 
 np.set_printoptions(threshold=sys.maxsize)
 
 
-# def calc_current(P_T,p1,p2,p3,p4,p5,p6): #calculates i-v curve coefficients given the stack power and stack temp
+# def calc_current(P_T,p1,p2,p3,p4,p5,p6):
+#     # calculates i-v curve coefficients given the stack power and stack temp
 #     pwr,tempc=P_T
 #     i_stack=p1*(pwr**2) + p2*(tempc**2)+ (p3*pwr*tempc) +  (p4*pwr) + (p5*tempc) + (p6)
 #     return i_stack
@@ -93,15 +95,19 @@ class PEM_H2_Clusters:
         self.dt = dt
         self.max_stacks = cluster_size_mw
 
-        # self.stack_input_current_lower_bound = 400 #[A] any current below this amount (10% rated) will saturate the H2 production to zero, used to be 500 (12.5% of rated)
+        # any current below this amount (10% rated) will saturate the H2 production to zero, used
+        # to be 500 (12.5% of rated)
+        # self.stack_input_current_lower_bound = 400  # [A]
         self.stack_rating_kW = 1000  # 1 MW
+
         self.cell_active_area = 1920  # 1250 #[cm^2]
         self.N_cells = 130
         self.membrane_thickness = 0.018  # cm
         self.cell_max_current_density = 2  # [A/cm^2]
-        self.max_cell_current = (
-            self.cell_max_current_density * self.cell_active_area
-        )  # PEM electrolyzers have a max current density of approx 2 A/cm^2 so max current is 2*cell_area
+
+        # PEM electrolyzers have a max current density of approx 2 A/cm^2 so max current is
+        # 2*cell_area
+        self.max_cell_current = self.cell_max_current_density * self.cell_active_area
         # self.stack_input_current_lower_bound = 0.1*self.max_cell_current
         self.stack_input_current_lower_bound = turndown_ratio * self.max_cell_current
 
@@ -125,18 +131,14 @@ class PEM_H2_Clusters:
         self.onoff_deg_rate = 1.47821515e-04  # [V/off-cycle]
         self.rate_fatigue = 3.33330244e-07  # multiply by rf_track
 
-        self.curve_coeff = (
-            self.iv_curve()
-        )  # this initializes the I-V curve to calculate current
+        self.curve_coeff = self.iv_curve()  # this initializes the I-V curve to calculate current
 
         self.make_BOL_efficiency_curve()
         # if user_defined_EOL_percent_eff_loss:
         self.eol_eff_drop = eol_eff_percent_loss / 100
         self.d_eol = self.find_eol_voltage_val(eol_eff_percent_loss)
         self.find_eol_voltage_curve(eol_eff_percent_loss)
-        self.steady_deg_rate = self.reset_uptime_degradation_rate(
-            uptime_hours_until_eol
-        )
+        self.steady_deg_rate = self.reset_uptime_degradation_rate(uptime_hours_until_eol)
 
     def run(self, input_external_power_kw):
         startup_time = 600  # [sec]
@@ -158,9 +160,7 @@ class PEM_H2_Clusters:
         # n_stacks_op is now either number of pem per cluster or 0 if cluster is off!
 
         # split power evenly amongst all stacks
-        power_per_stack = np.where(
-            self.n_stacks_op > 0, input_power_kw / self.n_stacks_op, 0
-        )
+        power_per_stack = np.where(self.n_stacks_op > 0, input_power_kw / self.n_stacks_op, 0)
         # calculate current from power
         stack_current = calc_current((power_per_stack, self.T_C), *self.curve_coeff)
 
@@ -171,25 +171,26 @@ class PEM_H2_Clusters:
             stack_current = self.find_equivalent_input_power_4_deg(
                 power_per_stack, V_init, deg_signal
             )  # fixed
-            V_cell_equiv = self.cell_design(
-                self.T_C, stack_current
-            )  # mabye this isn't necessary
+            V_cell_equiv = self.cell_design(self.T_C, stack_current)  # mabye this isn't necessary
             V_cell = V_cell_equiv + deg_signal
         else:
             V_init = self.cell_design(self.T_C, stack_current)
             _, deg_signal = self.full_degradation(V_init)
-            # lifetime_performance_df =self.make_lifetime_performance_df_all_opt(deg_signal,V_init,power_per_stack)
-            V_cell = self.cell_design(
-                self.T_C, stack_current
-            )  # +self.total_Vdeg_per_hr_sys
+            # lifetime_performance_df = self.make_lifetime_performance_df_all_opt(
+            #     deg_signal, V_init, power_per_stack
+            # )
+            V_cell = self.cell_design(self.T_C, stack_current)  # +self.total_Vdeg_per_hr_sys
 
-        time_until_replacement, stack_life = self.calc_stack_replacement_info(
-            deg_signal
-        )
+        time_until_replacement, stack_life = self.calc_stack_replacement_info(deg_signal)
         annual_performance = self.make_yearly_performance_dict(
             power_per_stack, deg_signal, V_init, I_op=[], grid_connected=False
         )
-        # self.make_yearly_performance_dict(power_per_stack,lifetime_performance_df['Time until replacement [hours]'],deg_signal,V_init) #TESTING
+        # self.make_yearly_performance_dict(
+        #     power_per_stack,
+        #     lifetime_performance_df["Time until replacement [hours]"],
+        #     deg_signal,
+        #     V_init,
+        # )  # TESTING
         stack_power_consumed = (stack_current * V_cell * self.N_cells) / 1000
         system_power_consumed = self.n_stacks_op * stack_power_consumed
 
@@ -201,12 +202,8 @@ class PEM_H2_Clusters:
 
         h20_gal_used_system = self.water_supply(h2_kg_hr_system)
 
-        pem_cf = np.sum(h2_kg_hr_system) / (
-            rated_h2_hr * len(input_power_kw) * self.max_stacks
-        )
-        efficiency = self.system_efficiency(
-            input_power_kw, stack_current
-        )  # Efficiency as %-HHV
+        pem_cf = np.sum(h2_kg_hr_system) / (rated_h2_hr * len(input_power_kw) * self.max_stacks)
+        efficiency = self.system_efficiency(input_power_kw, stack_current)  # Efficiency as %-HHV
 
         h2_results = {}
         h2_results_aggregates = {}
@@ -228,50 +225,35 @@ class PEM_H2_Clusters:
         h2_results_aggregates["Cluster Rated Power Consumed [kWh]"] = (
             p_consumed_max * self.max_stacks
         )
-        h2_results_aggregates["Cluster Rated H2 Production [kg/hr]"] = (
-            rated_h2_hr * self.max_stacks
+        h2_results_aggregates["Cluster Rated H2 Production [kg/hr]"] = rated_h2_hr * self.max_stacks
+        h2_results_aggregates["gal H20 per kg H2"] = np.sum(h20_gal_used_system) / np.sum(
+            h2_kg_hr_system
         )
-        h2_results_aggregates["gal H20 per kg H2"] = np.sum(
-            h20_gal_used_system
-        ) / np.sum(h2_kg_hr_system)
-        h2_results_aggregates["Stack Rated Efficiency [kWh/kg]"] = (
-            p_consumed_max / rated_h2_hr
-        )
+        h2_results_aggregates["Stack Rated Efficiency [kWh/kg]"] = p_consumed_max / rated_h2_hr
         h2_results_aggregates["Cluster Rated H2 Production [kg/yr]"] = (
             rated_h2_hr * len(input_power_kw) * self.max_stacks
         )
         h2_results_aggregates["Operational Time / Simulation Time (ratio)"] = (
             self.percent_of_sim_operating
         )  # added
-        h2_results_aggregates["Fraction of Life used during sim"] = (
-            self.frac_of_life_used
-        )  # added
+        h2_results_aggregates["Fraction of Life used during sim"] = self.frac_of_life_used  # added
         # TODO: add results for stack replacement stuff based on RATED voltage, not distribution
 
         # h2_results_aggregates['Number of Lifetime Cluster Replacements'] = nsr_life
         h2_results_aggregates["PEM Capacity Factor (simulation)"] = pem_cf
 
         h2_results_aggregates["Total H2 Production [kg]"] = np.sum(h2_kg_hr_system)
-        h2_results_aggregates["Total Input Power [kWh]"] = np.sum(
-            input_external_power_kw
+        h2_results_aggregates["Total Input Power [kWh]"] = np.sum(input_external_power_kw)
+        h2_results_aggregates["Total kWh/kg"] = np.sum(input_external_power_kw) / np.sum(
+            h2_kg_hr_system
         )
-        h2_results_aggregates["Total kWh/kg"] = np.sum(
-            input_external_power_kw
-        ) / np.sum(h2_kg_hr_system)
-        h2_results_aggregates["Total Uptime [sec]"] = np.sum(
-            self.cluster_status * self.dt
-        )
+        h2_results_aggregates["Total Uptime [sec]"] = np.sum(self.cluster_status * self.dt)
         h2_results_aggregates["Total Off-Cycles"] = np.sum(self.off_cycle_cnt)
-        h2_results_aggregates["Final Degradation [V]"] = (
-            self.cumulative_Vdeg_per_hr_sys[-1]
-        )
+        h2_results_aggregates["Final Degradation [V]"] = self.cumulative_Vdeg_per_hr_sys[-1]
         # h2_results_aggregates['IV curve coeff'] = self.curve_coeff
         # h2_results_aggregates.update(lifetime_performance_df.to_dict())
-        h2_results_aggregates["Performance By Year"] = (
-            annual_performance  # double check if errors
-        )
+        h2_results_aggregates["Performance By Year"] = annual_performance  # double check if errors
 
-        []
         return h2_results, h2_results_aggregates
         # return h2_results_aggregates
 
@@ -286,9 +268,7 @@ class PEM_H2_Clusters:
             1 * self.N_cells * self.dt
         )
         n_f = self.faradaic_efficiency(i_eol_no_faradaic_loss)
-        i_eol = (h2_eol * 1000 * 2 * self.F * self.moles_per_g_h2) / (
-            n_f * self.N_cells * self.dt
-        )
+        i_eol = (h2_eol * 1000 * 2 * self.F * self.moles_per_g_h2) / (n_f * self.N_cells * self.dt)
         self.d_eol_curve = ((i_bol * V_bol) / i_eol) - V_bol  # simple method
 
     def find_equivalent_input_power_4_deg(self, power_in_kW, V_init, V_deg):
@@ -353,9 +333,7 @@ class PEM_H2_Clusters:
 
         return t_eod_existance_based, t_eod_operation_based
 
-    def make_yearly_performance_dict(
-        self, power_in_kW, V_deg, V_cell, I_op, grid_connected
-    ):
+    def make_yearly_performance_dict(self, power_in_kW, V_deg, V_cell, I_op, grid_connected):
         # NOTE: this is not the most accurate for cases where simulation length is not close to 8760
         # I_op only needed if grid connected, should be singular value
         refturb_schedule = np.zeros(self.plant_life_years)
@@ -366,9 +344,7 @@ class PEM_H2_Clusters:
 
         death_threshold = self.d_eol_curve[-1]
 
-        cluster_cycling = [0] + list(
-            np.diff(self.cluster_status)
-        )  # no delay at beginning of sim
+        cluster_cycling = [0, *list(np.diff(self.cluster_status))]  # no delay at beginning of sim
         cluster_cycling = np.array(cluster_cycling)
         startup_ratio = 1 - (600 / 3600)  # TODO: don't have this hard-coded
         h2_multiplier = np.where(cluster_cycling > 0, startup_ratio, 1)
@@ -399,20 +375,14 @@ class PEM_H2_Clusters:
                 stack_current = self.find_equivalent_input_power_4_deg(
                     power_in_kW, V_cell, V_deg_pr_sim
                 )
-                h2_kg_hr_system_init = self.h2_production_rate(
-                    stack_current, self.n_stacks_op
-                )
+                h2_kg_hr_system_init = self.h2_production_rate(stack_current, self.n_stacks_op)
                 # total_sim_input_power = self.max_stacks*np.sum(power_in_kW)
                 power_pr_yr_kWh[i] = self.max_stacks * np.sum(power_in_kW)
             else:
                 h2_kg_hr_system_init = self.h2_production_rate(I_op, self.n_stacks_op)
                 h2_kg_hr_system_init = h2_kg_hr_system_init * np.ones(len(power_in_kW))
                 annual_power_consumed_kWh = (
-                    self.max_stacks
-                    * I_op
-                    * (V_cell + V_deg_pr_sim)
-                    * self.N_cells
-                    / 1000
+                    self.max_stacks * I_op * (V_cell + V_deg_pr_sim) * self.N_cells / 1000
                 )
                 # total_sim_input_power = np.sum(annual_power_consumed_kWh)
                 power_pr_yr_kWh[i] = np.sum(annual_power_consumed_kWh)
@@ -425,21 +395,21 @@ class PEM_H2_Clusters:
         performance_by_year = {}
         year = np.arange(0, int(self.plant_life_years), 1)
 
-        performance_by_year["Capacity Factor [-]"] = dict(zip(year, capfac_per_sim))
+        performance_by_year["Capacity Factor [-]"] = dict(zip(year, capfac_per_sim, strict=False))
         performance_by_year["Refurbishment Schedule [MW replaced/year]"] = dict(
-            zip(year, refturb_schedule)
+            zip(year, refturb_schedule, strict=False)
         )
         performance_by_year["Annual H2 Production [kg/year]"] = dict(
-            zip(year, kg_h2_pr_sim)
+            zip(year, kg_h2_pr_sim, strict=False)
         )
         performance_by_year["Annual Average Efficiency [kWh/kg]"] = dict(
-            zip(year, power_pr_yr_kWh / kg_h2_pr_sim)
+            zip(year, power_pr_yr_kWh / kg_h2_pr_sim, strict=False)
         )
         performance_by_year["Annual Average Efficiency [%-HHV]"] = dict(
-            zip(year, self.eta_h2_hhv / (power_pr_yr_kWh / kg_h2_pr_sim))
+            zip(year, self.eta_h2_hhv / (power_pr_yr_kWh / kg_h2_pr_sim), strict=False)
         )
         performance_by_year["Annual Energy Used [kWh/year]"] = dict(
-            zip(year, power_pr_yr_kWh)
+            zip(year, power_pr_yr_kWh, strict=False)
         )
 
         return performance_by_year
@@ -455,9 +425,7 @@ class PEM_H2_Clusters:
 
     def calc_uptime_degradation(self, voltage_signal):
         # steady_deg_rate = 1.12775521e-09
-        steady_deg_per_hr = (
-            self.dt * self.steady_deg_rate * voltage_signal * self.cluster_status
-        )
+        steady_deg_per_hr = self.dt * self.steady_deg_rate * voltage_signal * self.cluster_status
         cumulative_Vdeg = np.cumsum(steady_deg_per_hr)
         self.output_dict["Total Uptime [sec]"] = np.sum(self.cluster_status * self.dt)
         self.output_dict["Total Uptime Degradation [V]"] = cumulative_Vdeg[-1]
@@ -470,9 +438,7 @@ class PEM_H2_Clusters:
         cycle_cnt = np.array([0, *list(cycle_cnt)])
         self.off_cycle_cnt = cycle_cnt
         stack_off_deg_per_hr = self.onoff_deg_rate * cycle_cnt
-        self.output_dict["System Cycle Degradation [V]"] = np.cumsum(
-            stack_off_deg_per_hr
-        )[-1]
+        self.output_dict["System Cycle Degradation [V]"] = np.cumsum(stack_off_deg_per_hr)[-1]
         self.output_dict["Off-Cycles"] = cycle_cnt
         return stack_off_deg_per_hr
 
@@ -480,9 +446,7 @@ class PEM_H2_Clusters:
         # should not use voltage values when voltage_signal = 0
         # aka - should only be counted when electrolyzer is on
 
-        t_calc = np.arange(
-            0, len(voltage_signal) + dt_fatigue_calc_hrs, dt_fatigue_calc_hrs
-        )
+        t_calc = np.arange(0, len(voltage_signal) + dt_fatigue_calc_hrs, dt_fatigue_calc_hrs)
         v_max = np.max(voltage_signal)
         v_min = np.min(voltage_signal)
         if v_max == v_min:
@@ -494,9 +458,7 @@ class PEM_H2_Clusters:
             rf_cycles = rainflow.count_cycles(voltage_signal, nbins=10)
             rf_sum = np.sum([pair[0] * pair[1] for pair in rf_cycles])
             lifetime_fatigue_deg = rf_sum * self.rate_fatigue
-            self.output_dict["Approx Total Fatigue Degradation [V]"] = (
-                lifetime_fatigue_deg
-            )
+            self.output_dict["Approx Total Fatigue Degradation [V]"] = lifetime_fatigue_deg
             rf_track = 0
             V_fatigue_ts = np.zeros(len(voltage_signal))
             for i in range(len(t_calc) - 1):
@@ -513,7 +475,9 @@ class PEM_H2_Clusters:
                         rf_sum = 0
                     else:
                         rf_cycles = rainflow.count_cycles(voltage_signal_temp, nbins=10)
-                        # rf_cycles=rainflow.count_cycles(voltage_signal[t_calc[i]:t_calc[i+1]], nbins=10)
+                        # rf_cycles = rainflow.count_cycles(
+                        #     voltage_signal[t_calc[i] : t_calc[i + 1]], nbins=10
+                        # )
                         rf_sum = np.sum([pair[0] * pair[1] for pair in rf_cycles])
                 rf_track += rf_sum
                 V_fatigue_ts[t_calc[i] : t_calc[i + 1]] = rf_track * self.rate_fatigue
@@ -529,7 +493,9 @@ class PEM_H2_Clusters:
         """
         Calculate power and current required to meet a constant hydrogen demand
         """
-        # df=self.output_dict['BOL Efficiency Curve Info'][['H2 Produced','Current','Power Sent [kWh]','Power Consumed [kWh]']]
+        # df = self.output_dict["BOL Efficiency Curve Info"][
+        #     ["H2 Produced", "Current", "Power Sent [kWh]", "Power Consumed [kWh]"]
+        # ]
 
         max_h2kg_single_stack = self.h2_production_rate(self.max_cell_current, 1)
         # EOL_max_h2_stack=self.h2_production_rate(self.max_cell_current,1)
@@ -538,9 +504,9 @@ class PEM_H2_Clusters:
             print("ISSUE")
         h2_per_stack_min = h2_kg_hr_system_required / self.max_stacks  # change var name
 
-        I_reqd_BOL_noFaradaicLoss = (
-            h2_per_stack_min * 1000 * 2 * self.F * self.moles_per_g_h2
-        ) / (1 * self.N_cells * self.dt)
+        I_reqd_BOL_noFaradaicLoss = (h2_per_stack_min * 1000 * 2 * self.F * self.moles_per_g_h2) / (
+            1 * self.N_cells * self.dt
+        )
         n_f = self.faradaic_efficiency(I_reqd_BOL_noFaradaicLoss)
         I_reqd = (h2_per_stack_min * 1000 * 2 * self.F * self.moles_per_g_h2) / (
             n_f * self.N_cells * self.dt
@@ -549,9 +515,7 @@ class PEM_H2_Clusters:
         # TODO: only include deg if user-requested
         V_deg_per_hr = self.steady_deg_rate * V_reqd * self.dt
         V_steady_deg = np.arange(0, self.d_eol + V_deg_per_hr, V_deg_per_hr)
-        P_reqd_per_hr_stack = (
-            I_reqd * (V_reqd + V_steady_deg) * self.N_cells / 1000
-        )  # kW
+        P_reqd_per_hr_stack = I_reqd * (V_reqd + V_steady_deg) * self.N_cells / 1000  # kW
         P_required_per_hr_system = self.max_stacks * P_reqd_per_hr_stack  # kW
 
         output_system_power = P_required_per_hr_system[0:8760]
@@ -568,9 +532,7 @@ class PEM_H2_Clusters:
             ]
             .to_list()[0]
         )
-        rated_eff_df = self.output_dict["BOL Efficiency Curve Info"].iloc[
-            rated_power_idx
-        ]
+        rated_eff_df = self.output_dict["BOL Efficiency Curve Info"].iloc[rated_power_idx]
         i_rated = rated_eff_df["Current"]
         h2_rated_kg = rated_eff_df["H2 Produced"]
         vcell_rated = rated_eff_df["Cell Voltage"]
@@ -581,7 +543,7 @@ class PEM_H2_Clusters:
         d_eol = v_tot_eol - vcell_rated
         return d_eol
 
-    def system_efficiency(self, P_sys, I):
+    def system_efficiency(self, P_sys, I):  # noqa: E741
         #
         system_h2_prod_rate = self.h2_production_rate(I, self.n_stacks_op)
         eff_kWh_pr_kg = P_sys / system_h2_prod_rate  # kWh/kg
@@ -593,9 +555,7 @@ class PEM_H2_Clusters:
         # TODO: remove all other function calls to self.output_dict['BOL Efficiency Curve Info']
         # this should be done differntly
         # power_in_signal=np.arange(0.1,1.1,0.1)*self.stack_rating_kW
-        power_in_signal = (
-            np.arange(self.turndown_ratio, 1.1, 0.1) * self.stack_rating_kW
-        )
+        power_in_signal = np.arange(self.turndown_ratio, 1.1, 0.1) * self.stack_rating_kW
         stack_I = calc_current((power_in_signal, self.T_C), *self.curve_coeff)
         stack_V = self.cell_design(self.T_C, stack_I)
         power_used_signal = (stack_I * stack_V * self.N_cells) / 1000
@@ -623,9 +583,7 @@ class PEM_H2_Clusters:
             self.output_dict["BOL Efficiency Curve Info"]["Power Sent [kWh]"]
             == self.stack_rating_kW
         ]
-        I_max = (
-            self.output_dict["BOL Efficiency Curve Info"]["Current"].iloc[i].values[0]
-        )
+        I_max = self.output_dict["BOL Efficiency Curve Info"]["Current"].iloc[i].values[0]
         # I_max = calc_current((self.stack_rating_kW,self.T_C),*self.curve_coeff)
         V_max = self.cell_design(self.T_C, I_max)
         P_consumed_stack_kw = I_max * V_max * self.N_cells / 1000
@@ -670,7 +628,8 @@ class PEM_H2_Clusters:
 
         current range is 0: max_cell_current+10 -> PEM have current density approx = 2 A/cm^2
 
-        temperature range is 40 degC : rated_temp+5 -> temperatures for PEM are usually within 60-80degC
+        temperature range is 40 degC : rated_temp+5 -> temperatures for PEM are usually
+            within 60-80degC
 
         calls cell_design() which calculates the cell voltage
         """
@@ -694,11 +653,11 @@ class PEM_H2_Clusters:
                 currents[idx] = current_range[i]
                 temps_C[idx] = temp_range[t]
                 idx = idx + 1
-        df = pd.DataFrame(
-            {"Power": powers, "Current": currents, "Temp": temps_C}
-        )  # added
+        df = pd.DataFrame({"Power": powers, "Current": currents, "Temp": temps_C})  # added
         temp_oi_idx = df.index[df["Temp"] == self.T_C]  # added
-        # curve_coeff, curve_cov = scipy.optimize.curve_fit(calc_current, (powers,temps_C), currents, p0=(1.0,1.0,1.0,1.0,1.0,1.0)) #updates IV curve coeff
+        # curve_coeff, curve_cov = scipy.optimize.curve_fit(
+        #     calc_current, (powers, temps_C), currents, p0=(1.0, 1.0, 1.0, 1.0, 1.0, 1.0)
+        # )  # updates IV curve coeff
         curve_coeff, curve_cov = scipy.optimize.curve_fit(
             calc_current,
             (df["Power"][temp_oi_idx].values, df["Temp"][temp_oi_idx].values),
@@ -763,7 +722,9 @@ class PEM_H2_Clusters:
         p_h20_sat_atm = p_h2o_sat_mmHg * self.mmHg_2_atm
         # p_H2 = p_cat - p_h2O
         # p_O2 = p_an - p_h2O
-        # p_h2O_sat_Pa = (0.61121* np.exp((18.678 - (Stack_T / 234.5)) * (Stack_T / (257.14 + Stack_T)))) * 1e3  # (Pa) #ARDEN-BUCK
+        # p_h2O_sat_Pa = (
+        #     0.61121 * np.exp((18.678 - (Stack_T / 234.5)) * (Stack_T / (257.14 + Stack_T)))
+        # ) * 1e3  # (Pa) #ARDEN-BUCK
         # p_h20_sat_atm=p_h2O_sat_Pa/self.patmo
         # Cell reversible voltage kind of explain in Equations (12)-(15) of below source
         # https://www.sciencedirect.com/science/article/pii/S0360319906000693
@@ -833,22 +794,19 @@ class PEM_H2_Clusters:
         # When electrolyzer is already at or near its optimal operation
         # temperature (~80degC)
 
-
-    def faradaic_efficiency(
-        self, stack_current
-    ):  # ONLY EFFICIENCY CONSIDERED RIGHT NOW
+    def faradaic_efficiency(self, stack_current):  # ONLY EFFICIENCY CONSIDERED RIGHT NOW
         """`
         Text background from:
         [https://www.researchgate.net/publication/344260178_Faraday%27s_
         Efficiency_Modeling_of_a_Proton_Exchange_Membrane_Electrolyzer_
         Based_on_Experimental_Data]
 
-        In electrolyzers, Faraday’s efficiency is a relevant parameter to
+        In electrolyzers, Faraday's efficiency is a relevant parameter to
         assess the amount of hydrogen generated according to the input
-        energy and energy efficiency. Faraday’s efficiency expresses the
+        energy and energy efficiency. Faraday's efficiency expresses the
         faradaic losses due to the gas crossover current. The thickness
         of the membrane and operating conditions (i.e., temperature, gas
-        pressure) may affect the Faraday’s efficiency.
+        pressure) may affect the Faraday's efficiency.
 
         Equation for n_F obtained from:
         https://www.sciencedirect.com/science/article/pii/S0360319917347237#bib27
@@ -904,9 +862,7 @@ class PEM_H2_Clusters:
         """
         # Single stack calculations:
         n_Tot = self.faradaic_efficiency(stack_current)
-        h2_production_rate = n_Tot * (
-            (self.N_cells * stack_current) / (2 * self.F)
-        )  # mol/s
+        h2_production_rate = n_Tot * ((self.N_cells * stack_current) / (2 * self.F))  # mol/s
         h2_production_rate_g_s = h2_production_rate / self.moles_per_g_h2
         h2_produced_kg_hr = h2_production_rate_g_s * (
             self.dt / 1000
@@ -928,8 +884,9 @@ class PEM_H2_Clusters:
         TODO: Add water-to-hydrogen ratio as input, currently hard-coded to 10
         """
         # ratio of water_used:h2_kg_produced depends on power source
-        # h20_kg:h2_kg with PV 22-126:1 or 18-25:1 without PV but considering water deminersalisation
-        # stoichometrically its just 9:1 but ... theres inefficiencies in the water purification process
+        # h20_kg:h2_kg with PV 22-126:1 or 18-25:1 without PV but considering water
+        # deminersalisation stoichometrically its just 9:1 but ... theres inefficiencies in the
+        # water purification process
 
         water_used_kg_hr_system = h2_kg_hr * 10
         self.output_dict["water_used_kg_hr"] = water_used_kg_hr_system
@@ -944,13 +901,9 @@ class PEM_H2_Clusters:
         startup_ratio = 1 - (startup_time / self.dt)
         self.cluster_status = self.system_design(power_input_signal, self.max_stacks)
         self.n_stacks_op = self.max_stacks * self.cluster_status
-        cluster_cycling = [0] + list(
-            np.diff(self.cluster_status)
-        )  # no delay at beginning of sim
+        cluster_cycling = [0, *list(np.diff(self.cluster_status))]  # no delay at beginning of sim
         cluster_cycling = np.array(cluster_cycling)
-        power_per_stack = np.where(
-            self.n_stacks_op > 0, power_input_signal / self.n_stacks_op, 0
-        )
+        power_per_stack = np.where(self.n_stacks_op > 0, power_input_signal / self.n_stacks_op, 0)
 
         h2_multiplier = np.where(cluster_cycling > 0, startup_ratio, 1)
         self.n_stacks_op = self.max_stacks * self.cluster_status
@@ -958,9 +911,7 @@ class PEM_H2_Clusters:
         V_init = self.cell_design(self.T_C, current_signal)
         V_cell_deg, deg_signal = self.full_degradation(V_init)
 
-        time_until_replacement, stack_life = self.calc_stack_replacement_info(
-            deg_signal
-        )
+        time_until_replacement, stack_life = self.calc_stack_replacement_info(deg_signal)
         annual_performance = self.make_yearly_performance_dict(
             power_per_stack, deg_signal, V_init, current_signal[0], grid_connected=True
         )  # TESTING
@@ -970,15 +921,11 @@ class PEM_H2_Clusters:
 
         h2_kg_hr_system_init = self.h2_production_rate(current_signal, self.n_stacks_op)
         p_consumed_max, rated_h2_hr = self.rated_h2_prod()
-        h2_kg_hr_system = (
-            h2_kg_hr_system_init * h2_multiplier
-        )  # scales h2 production to account
+        h2_kg_hr_system = h2_kg_hr_system_init * h2_multiplier  # scales h2 production to account
         # for start-up time if going from off->on
         h20_gal_used_system = self.water_supply(h2_kg_hr_system)
 
-        pem_cf = np.sum(h2_kg_hr_system) / (
-            rated_h2_hr * len(power_input_signal) * self.max_stacks
-        )
+        pem_cf = np.sum(h2_kg_hr_system) / (rated_h2_hr * len(power_input_signal) * self.max_stacks)
         efficiency = self.system_efficiency(power_input_signal, current_signal)
 
         h2_results = {}
@@ -1000,49 +947,34 @@ class PEM_H2_Clusters:
         h2_results_aggregates["Cluster Rated Power Consumed [kWh]"] = (
             p_consumed_max * self.max_stacks
         )
-        h2_results_aggregates["Cluster Rated H2 Production [kg/hr]"] = (
-            rated_h2_hr * self.max_stacks
-        )
-        h2_results_aggregates["Stack Rated Efficiency [kWh/kg]"] = (
-            p_consumed_max / rated_h2_hr
-        )
+        h2_results_aggregates["Cluster Rated H2 Production [kg/hr]"] = rated_h2_hr * self.max_stacks
+        h2_results_aggregates["Stack Rated Efficiency [kWh/kg]"] = p_consumed_max / rated_h2_hr
         h2_results_aggregates["Cluster Rated H2 Production [kg/yr]"] = (
             rated_h2_hr * len(power_input_signal) * self.max_stacks
         )
-        h2_results_aggregates["gal H20 per kg H2"] = np.sum(
-            h20_gal_used_system
-        ) / np.sum(h2_kg_hr_system)
+        h2_results_aggregates["gal H20 per kg H2"] = np.sum(h20_gal_used_system) / np.sum(
+            h2_kg_hr_system
+        )
         h2_results_aggregates["PEM Capacity Factor (simulation)"] = pem_cf
 
         h2_results_aggregates["Operational Time / Simulation Time (ratio)"] = (
             self.percent_of_sim_operating
         )  # added
-        h2_results_aggregates["Fraction of Life used during sim"] = (
-            self.frac_of_life_used
-        )  # added
+        h2_results_aggregates["Fraction of Life used during sim"] = self.frac_of_life_used  # added
 
         h2_results_aggregates["Total H2 Production [kg]"] = np.sum(h2_kg_hr_system)
         h2_results_aggregates["Total Input Power [kWh]"] = np.sum(power_input_signal)
-        h2_results_aggregates["Total kWh/kg"] = np.sum(power_input_signal) / np.sum(
-            h2_kg_hr_system
-        )
-        h2_results_aggregates["Total Uptime [sec]"] = np.sum(
-            self.cluster_status * self.dt
-        )
+        h2_results_aggregates["Total kWh/kg"] = np.sum(power_input_signal) / np.sum(h2_kg_hr_system)
+        h2_results_aggregates["Total Uptime [sec]"] = np.sum(self.cluster_status * self.dt)
         h2_results_aggregates["Total Off-Cycles"] = np.sum(self.off_cycle_cnt)
-        h2_results_aggregates["Final Degradation [V]"] = (
-            self.cumulative_Vdeg_per_hr_sys[-1]
-        )
+        h2_results_aggregates["Final Degradation [V]"] = self.cumulative_Vdeg_per_hr_sys[-1]
 
-        h2_results_aggregates["Performance By Year"] = (
-            annual_performance  # double check if errors
-        )
+        h2_results_aggregates["Performance By Year"] = annual_performance  # double check if errors
         # h2_results_aggregates['Stack Life Summary'] = self.stack_life_opt
 
         h2_results_aggregates["Stack Life [hours]"] = stack_life
         h2_results_aggregates["Time until replacement [hours]"] = time_until_replacement
 
-        []
         return h2_results, h2_results_aggregates
 
 
@@ -1073,9 +1005,7 @@ if __name__ == "__main__":
     # ----- Run grid-connected case -----
     h2_kg_hr_system_required = 12  # kg-H2/hr
     target_h2_per_year = h2_kg_hr_system_required * hours_in_year
-    power_required_kW, stack_current_signal = pem.grid_connected_func(
-        h2_kg_hr_system_required
-    )
+    power_required_kW, stack_current_signal = pem.grid_connected_func(h2_kg_hr_system_required)
     h2_results_grid, h2_results_aggregates_grid = pem.run_grid_connected_workaround(
         power_required_kW, stack_current_signal
     )
@@ -1125,12 +1055,8 @@ if __name__ == "__main__":
         / 1000
     )
 
-    ax[0].plot(
-        year_of_operation, offgrid_AH2, color="b", ls="-", lw=2, label="off-grid"
-    )
-    ax[0].plot(
-        year_of_operation, grid_AH2, color="r", ls="--", lw=2, label="grid-connected"
-    )
+    ax[0].plot(year_of_operation, offgrid_AH2, color="b", ls="-", lw=2, label="off-grid")
+    ax[0].plot(year_of_operation, grid_AH2, color="r", ls="--", lw=2, label="grid-connected")
     ax[0].vlines(
         offgrid_YOR,
         np.zeros(len(offgrid_YOR)),
@@ -1149,9 +1075,7 @@ if __name__ == "__main__":
     )
     ax[0].set_ylabel("Annual Hydrogen Produced\n[metric tons/year]")
     ax[0].legend(loc="upper right")
-    ax[0].set_ylim(
-        (0.8 * np.min([offgrid_AH2, grid_AH2]), 1.2 * np.max([offgrid_AH2, grid_AH2]))
-    )
+    ax[0].set_ylim((0.8 * np.min([offgrid_AH2, grid_AH2]), 1.2 * np.max([offgrid_AH2, grid_AH2])))
 
     # Annual Energy Used (AEU) [MWh/year]
     offgrid_AEU = (
@@ -1174,12 +1098,8 @@ if __name__ == "__main__":
         )
         / 1000
     )
-    ax[1].plot(
-        year_of_operation, offgrid_AEU, color="b", ls="-", lw=2, label="_off-grid"
-    )
-    ax[1].plot(
-        year_of_operation, grid_AEU, color="r", ls="--", lw=2, label="_grid-connected"
-    )
+    ax[1].plot(year_of_operation, offgrid_AEU, color="b", ls="-", lw=2, label="_off-grid")
+    ax[1].plot(year_of_operation, grid_AEU, color="r", ls="--", lw=2, label="_grid-connected")
     ax[1].vlines(
         offgrid_YOR,
         np.zeros(len(offgrid_YOR)),
@@ -1200,9 +1120,7 @@ if __name__ == "__main__":
     )
     ax[1].set_ylabel("Annual Energy Used\n[MWh/year]")
     ax[1].legend(loc="upper right")
-    ax[1].set_ylim(
-        (0.8 * np.min([offgrid_AEU, grid_AEU]), 1.2 * np.max([offgrid_AEU, grid_AEU]))
-    )
+    ax[1].set_ylim((0.8 * np.min([offgrid_AEU, grid_AEU]), 1.2 * np.max([offgrid_AEU, grid_AEU])))
 
     # Annual Average Conversion Efficiency (AACE) [kWh/kg]
     offgrid_AACE = np.array(
@@ -1219,12 +1137,8 @@ if __name__ == "__main__":
             ].values()
         )
     )
-    ax[2].plot(
-        year_of_operation, offgrid_AACE, color="b", ls="-", lw=2, label="_off-grid"
-    )
-    ax[2].plot(
-        year_of_operation, grid_AACE, color="r", ls="--", lw=2, label="_grid-connected"
-    )
+    ax[2].plot(year_of_operation, offgrid_AACE, color="b", ls="-", lw=2, label="_off-grid")
+    ax[2].plot(year_of_operation, grid_AACE, color="r", ls="--", lw=2, label="_grid-connected")
     ax[2].vlines(
         offgrid_YOR,
         np.zeros(len(offgrid_YOR)),
@@ -1253,4 +1167,3 @@ if __name__ == "__main__":
         )
     )
     fig.tight_layout()
-    []

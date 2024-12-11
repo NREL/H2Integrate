@@ -2,6 +2,8 @@
 This file is based on the WISDEM file of the same name: https://github.com/WISDEM/WISDEM
 """
 
+from __future__ import annotations
+
 import pickle
 from pathlib import Path
 
@@ -15,12 +17,8 @@ def save_data(fname, prob, npz_file=True, mat_file=True, xls_file=True):
     froot = Path(fname).with_suffix("")
 
     # Get all OpenMDAO inputs and outputs into a dictionary
-    var_dict = prob.model.list_inputs(
-        prom_name=True, units=True, desc=True, out_stream=None
-    )
-    out_dict = prob.model.list_outputs(
-        prom_name=True, units=True, desc=True, out_stream=None
-    )
+    var_dict = prob.model.list_inputs(prom_name=True, units=True, desc=True, out_stream=None)
+    out_dict = prob.model.list_outputs(prom_name=True, units=True, desc=True, out_stream=None)
     var_dict.extend(out_dict)
 
     # Pickle the full archive so that we can load it back in if we need
@@ -43,13 +41,13 @@ def save_data(fname, prob, npz_file=True, mat_file=True, xls_file=True):
             if iname in array_dict:
                 continue
 
-            if type(value) in [type(np.array([])), float, int, np.float64, np.int64]:
+            if isinstance(value, np.ndarray | float | int | np.float64 | np.int64):
                 array_dict[iname] = value
-            elif type(value) == bool:
+            elif isinstance(value, bool):
                 array_dict[iname] = np.bool_(value)
-            elif type(value) == str:
+            elif isinstance(value, str):
                 array_dict[iname] = np.str_(value)
-            elif type(value) == type([]):
+            elif isinstance(value, list):
                 temp_val = np.empty(len(value), dtype=object)
                 temp_val[:] = value[:]
                 array_dict[iname] = temp_val
@@ -104,11 +102,11 @@ def load_data(fname, prob):
         value = var_dict[k][1]["val"]
         try:
             prob.set_val(iname, value)
-        except:
+        except:  # FIXME: What is this catching? Delete comment when resolved  # noqa: E722
             pass
         try:
             prob.set_val(iname2, value)
-        except:
+        except:  # FIXME: What is this catching? Delete comment when resolved  # noqa: E722
             pass
 
     return prob

@@ -8,6 +8,7 @@ from greenheart.simulation.technologies.hydrogen.electrolysis.PEM_tools import (
     get_electrolyzer_BOL_efficiency,
 )
 
+
 file_path = Path(__file__).parent
 
 
@@ -17,9 +18,9 @@ def calc_efficiency_curve(operating_ratio, a, b, c, d):
     Efficiency curve and general equation structure from Wang et. al (2023). See README.md
     in PEM_BOP directory for more details.
 
-    Wang, X.; Star, A.G.; Ahluwalia, R.K. Performance of Polymer Electrolyte Membrane Water Electrolysis Systems:
-    Configuration, Stack Materials, Turndown and Efficiency. Energies 2023, 16, 4964.
-    https://doi.org/10.3390/en16134964
+    Wang, X.; Star, A.G.; Ahluwalia, R.K. Performance of Polymer Electrolyte Membrane Water
+    Electrolysis Systems: Configuration, Stack Materials, Turndown and Efficiency. Energies 2023,
+    16, 4964. https://doi.org/10.3390/en16134964
 
     Args:
         operating_ratio (list or np.array): Operation ratios.
@@ -39,7 +40,8 @@ def calc_efficiency_curve(operating_ratio, a, b, c, d):
 def calc_efficiency(
     operating_ratio, efficiency, min_ratio, max_ratio, min_efficiency, max_efficiency
 ):
-    """Adjust efficiency list to not go above minimum or maximum operating ratios in BOP_efficiency_BOL.csv
+    """Adjust efficiency list to not go above minimum or maximum operating ratios in
+    BOP_efficiency_BOL.csv
 
     Args:
         operating_ratio (list or np.array): Operation ratios.
@@ -50,7 +52,8 @@ def calc_efficiency(
         max_efficiency (float): Efficiency at the maximum operating ratio.
 
     Returns:
-        efficiency (list or np.array): Efficiencies limited with minimum and maximum values in kWh/kg.
+        efficiency (list or np.array): Efficiencies limited with minimum and maximum values
+            in kWh/kg.
     """
     efficiency = np.where(operating_ratio <= min_ratio, min_efficiency, efficiency)
 
@@ -92,7 +95,7 @@ def pem_bop(
     based on power provided to the electrolyzer.
 
     Args:
-        power_profile_to_electrolyzer_kw (list or np.array): Power profile to the electrolyzer in kW.
+        power_profile_to_electrolyzer_kw (list or np.array): Power profile to electrolyzer in kW.
         electrolyzer_rated_mw (float): The rating of the PEM electrolyzer in MW.
         electrolyzer_turn_down_ratio (float): The electrolyzer turndown ratio.
 
@@ -101,9 +104,7 @@ def pem_bop(
     """
     operating_ratios = power_profile_to_electrolyzer_kw / (electrolyzer_rated_mw * 1e3)
 
-    curve_coeff, min_ratio, max_ratio, min_efficiency, max_efficiency = (
-        calc_curve_coefficients()
-    )
+    curve_coeff, min_ratio, max_ratio, min_efficiency, max_efficiency = calc_curve_coefficients()
 
     efficiencies = calc_efficiency_curve(
         operating_ratios,

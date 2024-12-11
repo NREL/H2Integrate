@@ -1,11 +1,11 @@
 import copy
 from pathlib import Path
 
-import matplotlib.pyplot as plt
 import numpy as np
+import matplotlib.pyplot as plt
 from hopp.simulation.hopp_interface import HoppInterface
-from hopp.simulation.technologies.layout.wind_layout_tools import create_grid
 from hopp.simulation.technologies.sites import SiteInfo
+from hopp.simulation.technologies.layout.wind_layout_tools import create_grid
 
 
 # Function to set up the HOPP model
@@ -37,14 +37,10 @@ def setup_hopp(
     wind_speed = [W[2] for W in wind_data]
     if greenheart_config["site"]["mean_windspeed"]:
         if np.average(wind_speed) != greenheart_config["site"]["mean_windspeed"]:
-            wind_speed += greenheart_config["site"]["mean_windspeed"] - np.average(
-                wind_speed
-            )
+            wind_speed += greenheart_config["site"]["mean_windspeed"] - np.average(wind_speed)
             for i in np.arange(0, len(wind_speed)):
                 # make sure we don't have negative wind speeds after correction
-                hopp_site.wind_resource._data["data"][i][2] = np.maximum(
-                    wind_speed[i], 0
-                )
+                hopp_site.wind_resource._data["data"][i][2] = np.maximum(wind_speed[i], 0)
     else:
         greenheart_config["site"]["mean_windspeed"] = np.average(wind_speed)
 
@@ -54,9 +50,7 @@ def setup_hopp(
         if hopp_config["technologies"]["wind"]["model_name"] == "floris":
             if design_scenario["wind_location"] == "offshore":
                 floris_config["farm"]["layout_x"] = (
-                    wind_cost_results.orbit_project.phases[
-                        "ArraySystemDesign"
-                    ].turbines_x.flatten()
+                    wind_cost_results.orbit_project.phases["ArraySystemDesign"].turbines_x.flatten()
                     * 1e3
                 )  # ORBIT gives coordinates in km
                 # ORBIT produces nans and must be removed for FLORIS layout
@@ -64,16 +58,15 @@ def setup_hopp(
                     ~np.isnan(floris_config["farm"]["layout_x"])
                 ]
                 floris_config["farm"]["layout_y"] = (
-                    wind_cost_results.orbit_project.phases[
-                        "ArraySystemDesign"
-                    ].turbines_y.flatten()
+                    wind_cost_results.orbit_project.phases["ArraySystemDesign"].turbines_y.flatten()
                     * 1e3
                 )  # ORBIT gives coordinates in km
                 # ORBIT produces nans and must be removed for FLORIS layout
                 floris_config["farm"]["layout_y"] = floris_config["farm"]["layout_y"][
                     ~np.isnan(floris_config["farm"]["layout_y"])
                 ]
-                # remove things from turbine_config file that can't be used in FLORIS and set the turbine info in the floris config file
+                # remove things from turbine_config file that can't be used in FLORIS and set the
+                # turbine info in the floris config file
 
             if design_scenario["wind_location"] == "onshore":
                 grid_position = create_grid(
@@ -88,9 +81,7 @@ def setup_hopp(
                         greenheart_config["site"]["wind_layout"]["turbine_spacing"]
                         * turbine_config["rotor_diameter"]
                     ),
-                    row_phase_offset=greenheart_config["site"]["wind_layout"][
-                        "row_phase_offset"
-                    ],
+                    row_phase_offset=greenheart_config["site"]["wind_layout"]["row_phase_offset"],
                     max_sites=hopp_config["technologies"]["wind"]["num_turbines"],
                 )
                 # Extracting xy coordinates
@@ -102,9 +93,7 @@ def setup_hopp(
                     len(floris_config["farm"]["layout_x"])
                     < hopp_config["technologies"]["wind"]["num_turbines"]
                 ):
-                    raise Exception(
-                        "size of site is too small, not all turbines were placed."
-                    )
+                    raise Exception("size of site is too small, not all turbines were placed.")
 
             floris_config["farm"]["turbine_type"] = [
                 {
@@ -130,12 +119,8 @@ def setup_hopp(
             hopp_config["technologies"]["wind"]["turbine_rating_kw"] = (
                 turbine_config["turbine_rating"] * 1000.0
             )  # convert from MW to kW
-            hopp_config["technologies"]["wind"]["hub_height"] = turbine_config[
-                "hub_height"
-            ]
-            hopp_config["technologies"]["wind"]["rotor_diameter"] = turbine_config[
-                "rotor_diameter"
-            ]
+            hopp_config["technologies"]["wind"]["hub_height"] = turbine_config["hub_height"]
+            hopp_config["technologies"]["wind"]["rotor_diameter"] = turbine_config["rotor_diameter"]
 
         else:
             msg = (
@@ -151,9 +136,7 @@ def setup_hopp(
         wave_cost_dict = hopp_config_internal["technologies"]["wave"].pop("cost_inputs")
 
     if "battery" in hopp_config_internal["technologies"].keys():
-        hopp_config_internal["site"].update(
-            {"desired_schedule": hopp_site.desired_schedule}
-        )
+        hopp_config_internal["site"].update({"desired_schedule": hopp_site.desired_schedule})
 
     hi = HoppInterface(hopp_config_internal)
     hi.system.site = hopp_site
@@ -167,13 +150,12 @@ def setup_hopp(
         wind_speed = [W[2] for W in hopp_site.wind_resource._data["data"]]
         plt.figure(figsize=(9, 6))
         plt.plot(wind_speed)
-        plt.title(
-            "Wind Speed (m/s) for selected location \n Lat:{}, Lon: {} \n Average Wind Speed (m/s) {}".format(
-                hopp_config["site"]["data"]["lat"],
-                hopp_config["site"]["data"]["lon"],
-                np.round(np.average(wind_speed), decimals=3),
-            )
+        title = (
+            f"Wind Speed (m/s) for selected location \n Lat:{hopp_config['site']['data']['lat']},"
+            f" Lon: {hopp_config['site']['data']['lon']} \n Average Wind Speed (m/s)"
+            f" {np.average(wind_speed):.3f}"
         )
+        plt.title(title)
 
         if show_plots:
             plt.show()
@@ -196,7 +178,7 @@ def run_hopp(hi, project_lifetime, verbose=False):
     hopp_results = {
         "hopp_interface": hi,
         "hybrid_plant": hi.system,
-        "combined_hybrid_power_production_hopp": hi.system.grid._system_model.Outputs.system_pre_interconnect_kwac[
+        "combined_hybrid_power_production_hopp": hi.system.grid._system_model.Outputs.system_pre_interconnect_kwac[  # noqa: E501
             0:8760
         ],
         "combined_hybrid_curtailment_hopp": hi.system.grid.generation_curtailed,

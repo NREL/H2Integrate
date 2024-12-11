@@ -7,7 +7,8 @@ def get_diameter_of_pipe(L: float, m_dot: float, p_inlet: float, p_outlet: float
     """
     Overview:
     ---------
-        This function returns the diameter of a pipe for a given length,flow rate, and pressure boundaries
+        This function returns the diameter of a pipe for a given length,flow rate, and pressure
+        boundaries
 
     Parameters:
     -----------
@@ -81,9 +82,7 @@ def momentum_bal(x, *params):
         np.concatenate(([p_inlet], p_bar, [p_outlet])) * bar2Pa
     )  #   Pressure array with boundary conditions [Pa]
     rho = p / ZRT  #   Density of gas [kg/m3]
-    rho_avg = np.mean(
-        [rho[0:-1], rho[1:]], axis=0
-    )  #   Average density in each node [kg/m3]
+    rho_avg = np.mean([rho[0:-1], rho[1:]], axis=0)  #   Average density in each node [kg/m3]
     v = m_dot / rho / A  #   Velocity of gas [m/s]
     v_avg = np.mean([v[0:-1], v[1:]], axis=0)  #   Average density in each node [m/s]
 
@@ -113,9 +112,9 @@ def get_dn_schedule_of_pipe(
     )
 
     # Isolate the yield strength of the grade selecdted
-    yield_strength = yield_strengths.loc[
-        yield_strengths["Grade"] == grade, "SMYS [Mpa]"
-    ].to_list()[0]
+    yield_strength = yield_strengths.loc[yield_strengths["Grade"] == grade, "SMYS [Mpa]"].to_list()[
+        0
+    ]
 
     # Assign design factor based on design option
     if design_option == "a" or design_option == "A":
@@ -125,7 +124,8 @@ def get_dn_schedule_of_pipe(
     else:
         design_factor = [0.5, 0.5, 0.5, 0.4]
         print(
-            "Error. Invalid design option. Option set to a as default. Please enter a, A, b, or B for design option"
+            "Error. Invalid design option. Option set to a as default. Please enter a, A, b, or B"
+            " for design option"
         )
 
     # Determine design factor based on location class
@@ -158,9 +158,7 @@ def get_dn_schedule_of_pipe(
                 pipe_schedules_DN.columns[1]: "Wall thickness [mm]",
             }
         ).dropna()
-        pipe_schedules_DN = pipe_schedules_DN.reset_index().drop(
-            labels=["index"], axis=1
-        )
+        pipe_schedules_DN = pipe_schedules_DN.reset_index().drop(labels=["index"], axis=1)
 
         pipe_outer_diameter = pipe_schedules.loc[
             (pipe_schedules["DN"] == dn), "Outer diameter [mm]"
@@ -175,19 +173,23 @@ def get_dn_schedule_of_pipe(
                 if yield_strength <= 358.528:
                     h_f_array = np.array([1, 1, 0.954, 0.91, 0.88, 0.84, 0.78])
                 elif yield_strength > 358.528 and yield_strength <= 413.686:
-                    h_f_array = np.array(
-                        [0.874, 0.874, 0.834, 0.796, 0.77, 0.734, 0.682]
-                    )
+                    h_f_array = np.array([0.874, 0.874, 0.834, 0.796, 0.77, 0.734, 0.682])
                 elif yield_strength > 413.686 and yield_strength <= 482.633:
-                    h_f_array = np.array(
-                        [0.776, 0.776, 0.742, 0.706, 0.684, 0.652, 0.606]
-                    )
+                    h_f_array = np.array([0.776, 0.776, 0.742, 0.706, 0.684, 0.652, 0.606])
                 elif yield_strength > 482.633 and yield_strength <= 551.581:
-                    h_f_array = np.array(
-                        [0.694, 0.694, 0.662, 0.632, 0.61, 0.584, 0.542]
-                    )
+                    h_f_array = np.array([0.694, 0.694, 0.662, 0.632, 0.61, 0.584, 0.542])
                 mat_perf_factor = np.interp(design_pressure_asme, dp_array, h_f_array)
-            # thickness.append(design_pressure_asme*diam_outer[0]/(2*yield_strengths.loc[k,'SMYS [Mpa]']*design_factor*joint_factor*mat_perf_factor))
+            # thickness.append(
+            #     design_pressure_asme
+            #     * diam_outer[0]
+            #     / (
+            #         2
+            #         * yield_strengths.loc[k, "SMYS [Mpa]"]
+            #         * design_factor
+            #         * joint_factor
+            #         * mat_perf_factor
+            #     )
+            # )
             thickness = (
                 design_pressure_asme
                 * pipe_outer_diameter
@@ -211,9 +213,7 @@ def get_dn_schedule_of_pipe(
             else:
                 continue
 
-            inner_diameter_min_viable_schedule = (
-                pipe_outer_diameter - 2 * thickness_of_schedule
-            )
+            inner_diameter_min_viable_schedule = pipe_outer_diameter - 2 * thickness_of_schedule
 
             if inner_diameter_min_viable_schedule > pipe_inner_diameter:
                 break

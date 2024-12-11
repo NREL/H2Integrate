@@ -1,17 +1,16 @@
 import warnings
 from pathlib import Path
 
+from pytest import warns, approx
 from hopp.utilities.keys import set_nrel_key_dot_env
-from pytest import approx, warns
 
-from greenheart.simulation.greenheart_simulation import (
-    GreenHeartSimulationConfig,
-    run_simulation,
-)
+from greenheart.simulation.greenheart_simulation import GreenHeartSimulationConfig, run_simulation
+
 
 set_nrel_key_dot_env()
 
 from ORBIT.core.library import initialize_library
+
 
 dirname = Path(__file__).parent
 orbit_library_path = dirname / "input_files/"
@@ -21,21 +20,13 @@ initialize_library(orbit_library_path)
 
 turbine_model = "osw_18MW"
 filename_turbine_config = orbit_library_path / f"turbines/{turbine_model}.yaml"
-filename_orbit_config = (
-    orbit_library_path / f"plant/orbit-config-{turbine_model}-stripped.yaml"
-)
-filename_floris_config = (
-    orbit_library_path / f"floris/floris_input_{turbine_model}.yaml"
-)
+filename_orbit_config = orbit_library_path / f"plant/orbit-config-{turbine_model}-stripped.yaml"
+filename_floris_config = orbit_library_path / f"floris/floris_input_{turbine_model}.yaml"
 filename_greenheart_config = orbit_library_path / "plant/greenheart_config.yaml"
-filename_greenheart_config_onshore = (
-    orbit_library_path / "plant/greenheart_config_onshore.yaml"
-)
+filename_greenheart_config_onshore = orbit_library_path / "plant/greenheart_config_onshore.yaml"
 filename_hopp_config = orbit_library_path / "plant/hopp_config.yaml"
 filename_hopp_config_wind_wave = orbit_library_path / "plant/hopp_config_wind_wave.yaml"
-filename_hopp_config_wind_wave_solar = (
-    orbit_library_path / "plant/hopp_config_wind_wave_solar.yaml"
-)
+filename_hopp_config_wind_wave_solar = orbit_library_path / "plant/hopp_config_wind_wave_solar.yaml"
 filename_hopp_config_wind_wave_solar_battery = (
     orbit_library_path / "plant/hopp_config_wind_wave_solar_battery.yaml"
 )
@@ -62,14 +53,10 @@ def test_simulation_wind(subtests):
     lcoe, lcoh, _, hi = run_simulation(config)
 
     with subtests.test("lcoh"):
-        assert lcoh == approx(
-            7.509261597149882
-        )  # TODO base this test value on something
+        assert lcoh == approx(7.509261597149882)  # TODO base this test value on something
 
     with subtests.test("lcoe"):
-        assert lcoe == approx(
-            0.11273307417999466
-        )  # TODO base this test value on something
+        assert lcoe == approx(0.11273307417999466)  # TODO base this test value on something
 
     with subtests.test("energy sources"):
         expected_annual_energy_hybrid = hi.system.annual_energies.wind
@@ -119,7 +106,7 @@ def test_simulation_wind_wave(subtests):
     with subtests.test("lcoh"):
         assert lcoh == approx(8.450558037665157, rel=rtol)
 
-    # prior to 20240207 value was approx(0.11051228251811765) # TODO base this test value on something
+    # prior to 20240207 value was approx(0.11051228251811765) # TODO base value on something
     with subtests.test("lcoe"):
         assert lcoe == approx(0.1327684184657075, rel=rtol)
 
@@ -187,28 +174,24 @@ def test_simulation_wind_wave_solar_battery(subtests):
             warnings.simplefilter("error")
 
     with subtests.test("wind_om_per_kw conflict raise warning"):
-        config.hopp_config["technologies"]["wind"]["fin_model"]["system_costs"][
-            "om_capacity"
-        ][0] = 1.0
-        with warns(
-            UserWarning, match="The 'om_capacity' value in the wind 'fin_model'"
-        ):
+        config.hopp_config["technologies"]["wind"]["fin_model"]["system_costs"]["om_capacity"][
+            0
+        ] = 1.0
+        with warns(UserWarning, match="The 'om_capacity' value in the wind 'fin_model'"):
             _ = run_simulation(config)
 
     with subtests.test("pv_om_per_kw conflict raise warning"):
-        config.hopp_config["technologies"]["pv"]["fin_model"]["system_costs"][
-            "om_capacity"
-        ][0] = 1.0
+        config.hopp_config["technologies"]["pv"]["fin_model"]["system_costs"]["om_capacity"][0] = (
+            1.0
+        )
         with warns(UserWarning, match="The 'om_capacity' value in the pv 'fin_model'"):
             _ = run_simulation(config)
 
     with subtests.test("battery_om_per_kw conflict raise warning"):
-        config.hopp_config["technologies"]["battery"]["fin_model"]["system_costs"][
-            "om_capacity"
-        ][0] = 1.0
-        with warns(
-            UserWarning, match="The 'om_capacity' value in the battery 'fin_model'"
-        ):
+        config.hopp_config["technologies"]["battery"]["fin_model"]["system_costs"]["om_capacity"][
+            0
+        ] = 1.0
+        with warns(UserWarning, match="The 'om_capacity' value in the battery 'fin_model'"):
             _ = run_simulation(config)
 
 
@@ -266,9 +249,9 @@ def test_simulation_wind_onshore_steel_ammonia(subtests):
     config.hopp_config["config"]["cost_info"]["wind_installed_cost_mw"] = 1434000.0
     # based on 2023 ATB moderate case for onshore wind
     config.hopp_config["config"]["cost_info"]["wind_om_per_kw"] = 29.567
-    config.hopp_config["technologies"]["wind"]["fin_model"]["system_costs"]["om_fixed"][
-        0
-    ] = config.hopp_config["config"]["cost_info"]["wind_om_per_kw"]
+    config.hopp_config["technologies"]["wind"]["fin_model"]["system_costs"]["om_fixed"][0] = (
+        config.hopp_config["config"]["cost_info"]["wind_om_per_kw"]
+    )
     # set skip_financial to false for onshore wind
     config.hopp_config["config"]["simulation_options"]["wind"]["skip_financial"] = False
     lcoe, lcoh, steel_finance, ammonia_finance = run_simulation(config)
@@ -318,9 +301,9 @@ def test_simulation_wind_battery_pv_onshore_steel_ammonia(subtests):
     config.hopp_config["config"]["cost_info"]["wind_installed_cost_mw"] = 1434000.0
     # based on 2023 ATB moderate case for onshore wind
     config.hopp_config["config"]["cost_info"]["wind_om_per_kw"] = 29.567
-    config.hopp_config["technologies"]["wind"]["fin_model"]["system_costs"]["om_fixed"][
-        0
-    ] = config.hopp_config["config"]["cost_info"]["wind_om_per_kw"]
+    config.hopp_config["technologies"]["wind"]["fin_model"]["system_costs"]["om_fixed"][0] = (
+        config.hopp_config["config"]["cost_info"]["wind_om_per_kw"]
+    )
     # set skip_financial to false for onshore wind
     config.hopp_config["config"]["simulation_options"]["wind"]["skip_financial"] = False
     # exclude wave
@@ -346,25 +329,19 @@ def test_simulation_wind_battery_pv_onshore_steel_ammonia(subtests):
     with subtests.test("steel_finance"):
         lcos_expected = 1349.3364242679354
 
-        assert greenheart_output.steel_finance.sol.get("price") == approx(
-            lcos_expected, rel=rtol
-        )
+        assert greenheart_output.steel_finance.sol.get("price") == approx(lcos_expected, rel=rtol)
 
     # TODO base this test value on something
     with subtests.test("ammonia_finance"):
         lcoa_expected = 1.0404837286866984
 
-        assert greenheart_output.ammonia_finance.sol.get("price") == approx(
-            lcoa_expected, rel=rtol
-        )
+        assert greenheart_output.ammonia_finance.sol.get("price") == approx(lcoa_expected, rel=rtol)
 
     with subtests.test("check time series lengths"):
         expected_length = 8760
 
         for key in greenheart_output.hourly_energy_breakdown.keys():
-            assert (
-                len(greenheart_output.hourly_energy_breakdown[key]) == expected_length
-            )
+            assert len(greenheart_output.hourly_energy_breakdown[key]) == expected_length
 
 
 def test_simulation_wind_onshore_steel_ammonia_ss_h2storage(subtests):
@@ -391,9 +368,9 @@ def test_simulation_wind_onshore_steel_ammonia_ss_h2storage(subtests):
     config.hopp_config["config"]["cost_info"]["wind_installed_cost_mw"] = 1434000.0
     # based on 2023 ATB moderate case for onshore wind
     config.hopp_config["config"]["cost_info"]["wind_om_per_kw"] = 29.567
-    config.hopp_config["technologies"]["wind"]["fin_model"]["system_costs"]["om_fixed"][
-        0
-    ] = config.hopp_config["config"]["cost_info"]["wind_om_per_kw"]
+    config.hopp_config["technologies"]["wind"]["fin_model"]["system_costs"]["om_fixed"][0] = (
+        config.hopp_config["config"]["cost_info"]["wind_om_per_kw"]
+    )
     # set skip_financial to false for onshore wind
     config.hopp_config["config"]["simulation_options"]["wind"]["skip_financial"] = False
     lcoe, lcoh, steel_finance, ammonia_finance = run_simulation(config)

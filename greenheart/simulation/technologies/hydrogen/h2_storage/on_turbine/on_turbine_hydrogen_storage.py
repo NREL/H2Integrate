@@ -12,12 +12,15 @@ Sources:
     - [1] Kottenstette 2003 (use their chosen favorite design)
 Args:
     - year (int): construction year
-    - turbine (dict): contains various information about the turbine, including tower_length, section_diameters, and section_heights
+    - turbine (dict): contains various information about the turbine, including tower_length,
+        section_diameters, and section_heights
 API member functions:
     - get_capex(): return the total additional capex necessary for H2 production, in 2003 dollars
-    - get_opex(): return the result of a simple model for operational expenditures for pressure vessel, in 2003 dollars
+    - get_opex(): return the result of a simple model for operational expenditures for pressure
+        vessel, in 2003 dollars
     - get_mass_empty(): return the total additional empty mass necessary for H2 production, in kg
-    - get_capacity_H2(): return the capacity mass of hydrogen @ operating pressure, ambient temp., in kg
+    - get_capacity_H2(): return the capacity mass of hydrogen @ operating pressure, ambient temp.,
+        in kg
     - get_pressure_H2() return the operating hydrogen pressure, in Pa
 """
 
@@ -35,9 +38,7 @@ class PressurizedTower:
         self.section_heights = turbine["section_heights"]  # m
 
         # calculation settings
-        self.setting_volume_thickness_calc = (
-            "centered"  # ['centered', 'outer', 'inner']
-        )
+        self.setting_volume_thickness_calc = "centered"  # ['centered', 'outer', 'inner']
 
         # constants/parameters
         self.d_t_ratio = 320.0  # Kottenstette 2003
@@ -78,12 +79,8 @@ class PressurizedTower:
             self.cap_bot_material_volume_trad,
             self.cap_top_material_volume_trad,
         ) = self.get_volume_tower_material(pressure=0.0)
-        self.wall_material_mass_trad = (
-            self.wall_material_volume_trad * self.density_steel
-        )
-        self.wall_material_cost_trad = (
-            self.wall_material_mass_trad * self.costrate_steel
-        )
+        self.wall_material_mass_trad = self.wall_material_volume_trad * self.density_steel
+        self.wall_material_cost_trad = self.wall_material_mass_trad * self.costrate_steel
         self.cap_material_mass_trad = (
             self.cap_top_material_volume_trad + self.cap_bot_material_volume_trad
         ) * self.density_steel
@@ -140,9 +137,7 @@ class PressurizedTower:
 
             # print the changes to the structure
             print()
-            print(
-                "tower wall material volume (pressurized):", self.wall_material_volume
-            )
+            print("tower wall material volume (pressurized):", self.wall_material_volume)
             print("tower wall material mass (pressurized):", self.wall_material_mass)
             print("tower wall material cost (pressurized):", self.wall_material_cost)
             print()
@@ -153,15 +148,11 @@ class PressurizedTower:
             print("tower cap material mass (pressurized):", self.cap_material_mass)
             print(
                 "tower top cap material cost (pressurized):",
-                self.cap_top_material_volume
-                * self.density_steel
-                * self.costrate_endcap,
+                self.cap_top_material_volume * self.density_steel * self.costrate_endcap,
             )
             print(
                 "tower bot cap material cost (pressurized):",
-                self.cap_bot_material_volume
-                * self.density_steel
-                * self.costrate_endcap,
+                self.cap_bot_material_volume * self.density_steel * self.costrate_endcap,
             )
             print("tower cap material cost (pressurized):", self.cap_material_cost)
             print()
@@ -179,7 +170,7 @@ class PressurizedTower:
                 self.wall_material_cost - self.wall_material_cost_trad,
             )
             print("empty mass:", self.get_mass_empty())
-            print("")
+            print()
             print("capex:", self.get_capex())
             print("opex:", self.get_opex())
             print("capacity (H2):", self.get_capacity_H2())
@@ -322,9 +313,7 @@ class PressurizedTower:
         """
 
         # pass through to volume calculator, multiplying by steel density
-        return [
-            self.density_steel * x for x in self.get_volume_tower_material(pressure)
-        ]  # kg
+        return [self.density_steel * x for x in self.get_volume_tower_material(pressure)]  # kg
 
     def get_cost_tower_material(self, pressure: float | None = None):
         """
@@ -344,13 +333,10 @@ class PressurizedTower:
 
         if pressure == 0:
             return [
-                self.costrate_steel * x
-                for x in self.get_mass_tower_material(pressure=pressure)
+                self.costrate_steel * x for x in self.get_mass_tower_material(pressure=pressure)
             ]  # 2003 dollars
         else:
-            Mmat_wall, Mmat_bot, Mmat_top = self.get_mass_tower_material(
-                pressure=pressure
-            )
+            Mmat_wall, Mmat_bot, Mmat_top = self.get_mass_tower_material(pressure=pressure)
             # use adjusted pressure cap cost
             return [
                 self.costrate_steel * Mmat_wall,
@@ -522,9 +508,7 @@ class PressurizedTower:
         return p_crossover  # pressure units
 
     @staticmethod
-    def get_thickness_increment_const(
-        pressure: float, ultimate_tensile_strength: float
-    ):
+    def get_thickness_increment_const(pressure: float, ultimate_tensile_strength: float):
         """
         compute Goodman equation-based thickness increment in m
 

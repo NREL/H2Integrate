@@ -1,4 +1,5 @@
-from math import log
+from math import log2
+from pathlib import Path
 
 import numpy as np
 
@@ -13,7 +14,10 @@ class GeneticAlgorithm:
         self.variable_type = np.array(
             []
         )  # array of strings same length as design_variables ('int' or 'float')
-        self.objective_function = None  # takes design_variables as an input and outputs the objective values (needs to account for any constraints already)
+
+        # takes design_variables as an input and outputs the objective values (needs to account for
+        # any constraints already)
+        self.objective_function = None
         self.max_generation = 100
         self.population_size = 0
         self.crossover_rate = 0.1
@@ -27,19 +31,13 @@ class GeneticAlgorithm:
         )  # the desgin variables as they are passed into self.objective function
         self.nbits = 0  # the total number of bits in each chromosome
         self.nvars = 0  # the total number of design variables
-        self.parent_population = np.array(
-            []
-        )  # 2D array containing all of the parent individuals
+        self.parent_population = np.array([])  # 2D array containing all of the parent individuals
         self.offspring_population = np.array(
             []
         )  # 2D array containing all of the offspring individuals
-        self.parent_fitness = np.array(
-            []
-        )  # array containing all of the parent fitnesses
-        self.offspring_fitness = np.array(
-            []
-        )  # array containing all of the offspring fitnesses
-        self.discretized_variables = {}  # a dict of arrays containing all of the discretized design variable
+        self.parent_fitness = np.array([])  # array containing all of the parent fitnesses
+        self.offspring_fitness = np.array([])  # array containing all of the offspring fitnesses
+        self.discretized_variables = {}  # a dict of arrays containing discretized design variables
 
         # outputs
         self.solution_history = np.array([])
@@ -53,8 +51,9 @@ class GeneticAlgorithm:
         self.offspring_population = np.zeros_like(self.parent_population)
 
     def initialize_limited(self):
-        """initialize the population with only a limited number of ones. Use this if having a full random initialization
-        would violate constraints most of the time"""
+        """initialize the population with only a limited number of ones. Use this if having a full
+        random initialization would violate constraints most of the time
+        """
 
         n_ones = 1
 
@@ -80,9 +79,9 @@ class GeneticAlgorithm:
             first_bit += self.bits[i]
 
             if self.variable_type[i] == "float":
-                self.design_variables[i] = self.discretized_variables[
-                    f"float_var{float_ind}"
-                ][binary_value]
+                self.design_variables[i] = self.discretized_variables[f"float_var{float_ind}"][
+                    binary_value
+                ]
                 float_ind += 1
 
             elif self.variable_type[i] == "int":
@@ -115,7 +114,7 @@ class GeneticAlgorithm:
         for i in range(self.nvars):
             if self.variable_type[i] == "int":
                 int_range = self.bounds[i][1] - self.bounds[i][0]
-                int_bits = int(np.ceil(log(int_range, 2)))
+                int_bits = int(np.ceil(log2(int_range)))
                 self.bits[i] = int_bits
             self.nbits += self.bits[i]
 
@@ -174,20 +173,17 @@ class GeneticAlgorithm:
                 # print ("\033[A                             \033[A")
                 # print(i)
                 self.chromosome_2_variables(self.offspring_population[i])
-                self.offspring_fitness[i] = self.objective_function(
-                    self.design_variables
-                )
+                self.offspring_fitness[i] = self.objective_function(self.design_variables)
 
             # rank the total population from best to worst
             total_fitness = np.append(self.parent_fitness, self.offspring_fitness)
             ranked_fitness = np.argsort(total_fitness)[0 : int(self.population_size)]
 
-            # take the best. Might switch to some sort of tournament, need to read more about what is better
-            # for now I've decided to only keep the best members of the population. I have a large population in
-            # the problems I've run with this so I assume sufficient diversity in the population is maintained from that
-            total_population = np.vstack(
-                [self.parent_population, self.offspring_population]
-            )
+            # take the best. Might switch to some sort of tournament, need to read more about what
+            # is better for now I've decided to only keep the best members of the population. I have
+            # a large population in the problems I've run with this so I assume sufficient diversity
+            # in the population is maintained from that
+            total_population = np.vstack([self.parent_population, self.offspring_population])
             self.parent_population[:, :] = total_population[ranked_fitness, :]
             self.parent_fitness[:] = total_fitness[ranked_fitness]
 
@@ -219,20 +215,17 @@ class GeneticAlgorithm:
             # save the intermediate progress of the optimization
             if save_progress:
                 if ngens % save_progress == 0:
-                    file = open("progress.txt", "w")
-                    file.write(f"Best solution: {np.min(self.parent_fitness)}" + "\n")
-                    self.chromosome_2_variables(
-                        self.parent_population[np.argmin(self.parent_fitness)]
-                    )
-                    file.write(f"Design Variables: {self.design_variables}" + "\n")
-                    file.close()
+                    with Path("progress.txt").open("w") as f:
+                        f.write(f"Best solution: {np.min(self.parent_fitness)}" + "\n")
+                        self.chromosome_2_variables(
+                            self.parent_population[np.argmin(self.parent_fitness)]
+                        )
+                        f.write(f"Design Variables: {self.design_variables}" + "\n")
 
         # Assign final outputs
         self.solution_history = self.solution_history[0:ngens]
         self.optimized_function_value = np.min(self.parent_fitness)
-        self.chromosome_2_variables(
-            self.parent_population[np.argmin(self.parent_fitness)]
-        )
+        self.chromosome_2_variables(self.parent_population[np.argmin(self.parent_fitness)])
         self.optimized_design_variables = self.design_variables
 
     def crossover(self):
@@ -313,9 +306,7 @@ class GeneticAlgorithm:
             mutate_arr = np.random.rand(self.nbits)
             for j in range(self.nbits):
                 if mutate_arr[j] < self.mutation_rate:
-                    self.offspring_population[i][j] = (
-                        self.offspring_population[i][j] + 1
-                    ) % 2
+                    self.offspring_population[i][j] = (self.offspring_population[i][j] + 1) % 2
 
 
 class GreedyAlgorithm:
@@ -329,7 +320,10 @@ class GreedyAlgorithm:
         self.variable_type = np.array(
             []
         )  # array of strings same length as design_variables ('int' or 'float')
-        self.objective_function = None  # takes design_variables as an input and outputs the objective values (needs to account for any constraints already)
+
+        # takes design_variables as an input and outputs the objective values (needs to account for
+        # any constraints already)
+        self.objective_function = None
 
         # internal variables, you could output some of this info if you wanted
         self.design_variables = np.array([])
@@ -359,9 +353,9 @@ class GreedyAlgorithm:
             first_bit += self.bits[i]
 
             if self.variable_type[i] == "float":
-                self.design_variables[i] = self.discretized_variables[
-                    f"float_var{float_ind}"
-                ][binary_value]
+                self.design_variables[i] = self.discretized_variables[f"float_var{float_ind}"][
+                    binary_value
+                ]
                 float_ind += 1
 
             elif self.variable_type[i] == "int":
@@ -388,7 +382,7 @@ class GreedyAlgorithm:
         for i in range(self.nvars):
             if self.variable_type[i] == "int":
                 int_range = self.bounds[i][1] - self.bounds[i][0]
-                int_bits = int(np.ceil(log(int_range, 2) + 1))
+                int_bits = int(np.ceil(log2(int_range) + 1))
                 self.bits[i] = int_bits
             self.nbits += self.bits[i]
 
@@ -487,7 +481,7 @@ class GreedyAlgorithm:
         for i in range(self.nvars):
             if self.variable_type[i] == "int":
                 int_range = self.bounds[i][1] - self.bounds[i][0]
-                int_bits = int(np.ceil(log(int_range, 2) + 1))
+                int_bits = int(np.ceil(log2(int_range) + 1))
                 self.bits[i] = int_bits
             self.nbits += self.bits[i]
 
@@ -558,9 +552,7 @@ class GreedyAlgorithm:
             # this is the explore phase. Switch a bit, evaluate, and see if we should keep it
             if random_method == 0:
                 # switch the value of the appropriate index
-                self.offspring_population[order[ind]] = (
-                    self.parent_population[order[ind]] + 1
-                ) % 2
+                self.offspring_population[order[ind]] = (self.parent_population[order[ind]] + 1) % 2
 
                 # check the fitness
                 self.chromosome_2_variables(self.offspring_population)
@@ -568,15 +560,14 @@ class GreedyAlgorithm:
 
                 # check if we should keep the proposed change
                 if self.offspring_fitness < self.parent_fitness:
-                    self.solution_history = np.append(
-                        self.solution_history, self.offspring_fitness
-                    )
+                    self.solution_history = np.append(self.solution_history, self.offspring_fitness)
                     self.parent_fitness = self.offspring_fitness
                     self.parent_population[:] = self.offspring_population[:]
                     if print_progress is True:
                         print(self.offspring_fitness)
 
-            # this is the first switch phase, switch adjacent bits (only makes sense if they are arranged spatially in a matrix)
+            # this is the first switch phase, switch adjacent bits (only makes sense if they are
+            # arranged spatially in a matrix)
             elif random_method == 1:
                 # organize the matrix
                 N = int(np.sqrt(len(self.parent_population)))
@@ -599,9 +590,7 @@ class GreedyAlgorithm:
                         self.offspring_population[i * N : (i + 1) * N] = M[i][:]
                     # check the fitness
                     self.chromosome_2_variables(self.offspring_population)
-                    self.offspring_fitness = self.objective_function(
-                        self.design_variables
-                    )
+                    self.offspring_fitness = self.objective_function(self.design_variables)
 
                     if self.offspring_fitness < self.parent_fitness:
                         self.solution_history = np.append(
@@ -612,7 +601,8 @@ class GreedyAlgorithm:
                         if print_progress is True:
                             print(self.offspring_fitness)
 
-            # this is the second switch phase, switch adjacent bits in the other dimension (only makes sense if they are arranged spatially in a matrix)
+            # this is the second switch phase, switch adjacent bits in the other dimension (only
+            # makes sense if they are arranged spatially in a matrix)
             elif random_method == 2:
                 # organize the matrix
                 N = int(np.sqrt(len(self.parent_population)))
@@ -635,9 +625,7 @@ class GreedyAlgorithm:
                         self.offspring_population[i * N : (i + 1) * N] = M[i][:]
                     # check the fitness
                     self.chromosome_2_variables(self.offspring_population)
-                    self.offspring_fitness = self.objective_function(
-                        self.design_variables
-                    )
+                    self.offspring_fitness = self.objective_function(self.design_variables)
 
                     if self.offspring_fitness < self.parent_fitness:
                         self.solution_history = np.append(
@@ -667,11 +655,7 @@ if __name__ == "__main__":
 
     def ackley_obj(x):
         p1 = -20.0 * np.exp(-0.2 * np.sqrt(0.5 * (x[0] ** 2 + x[1] ** 2)))
-        p2 = (
-            np.exp(0.5 * (np.cos(2.0 * np.pi * x[0]) + np.cos(2.0 * np.pi * x[1])))
-            + np.e
-            + 20.0
-        )
+        p2 = np.exp(0.5 * (np.cos(2.0 * np.pi * x[0]) + np.cos(2.0 * np.pi * x[1]))) + np.e + 20.0
         return p1 - p2
 
     def rastrigin_obj(x):

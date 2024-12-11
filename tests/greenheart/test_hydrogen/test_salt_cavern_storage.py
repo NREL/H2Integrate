@@ -5,6 +5,7 @@ from greenheart.simulation.technologies.hydrogen.h2_storage.salt_cavern.salt_cav
     SaltCavernStorage,
 )
 
+
 # Test values are based on conclusions of Papadias 2021 and are in 2019 USD
 in_dict = {"h2_storage_kg": 1000000, "system_flow_rate": 100000, "model": "papadias"}
 
@@ -48,9 +49,9 @@ def test_capex_output_dict(salt_cavern_storage):
     _salt_caven_storage_capex_per_kg, _installed_capex, _compressor_capex = (
         salt_cavern_storage.salt_cavern_capex()
     )
-    assert salt_cavern_storage.output_dict[
-        "salt_cavern_storage_capex"
-    ] == pytest.approx(24992482.4198)
+    assert salt_cavern_storage.output_dict["salt_cavern_storage_capex"] == pytest.approx(
+        24992482.4198
+    )
 
 
 def test_opex(salt_cavern_storage):
@@ -58,6 +59,4 @@ def test_opex(salt_cavern_storage):
         salt_cavern_storage.salt_cavern_capex()
     )
     salt_cavern_storage.salt_cavern_opex()
-    assert salt_cavern_storage.output_dict["salt_cavern_storage_opex"] == pytest.approx(
-        1461664
-    )
+    assert salt_cavern_storage.output_dict["salt_cavern_storage_opex"] == pytest.approx(1461664)

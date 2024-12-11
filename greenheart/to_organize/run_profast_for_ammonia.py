@@ -33,9 +33,7 @@ def run_profast_for_ammonia(
     model_year_CEPCI = 596.2
     equation_year_CEPCI = 541.7
 
-    ammonia_production_kgpy = (
-        plant_capacity_kgpy * plant_capacity_factor
-    )  # =  416,090,714
+    ammonia_production_kgpy = plant_capacity_kgpy * plant_capacity_factor  # =  416,090,714
 
     # scale with respect to a baseline plant
     scaling_ratio = plant_capacity_kgpy / (365.0 * 1266638.4)
@@ -46,22 +44,13 @@ def run_profast_for_ammonia(
     capex_air_separation_crygenic = (
         model_year_CEPCI / equation_year_CEPCI * 22506100 * capex_scale_factor
     )
-    capex_haber_bosch = (
-        model_year_CEPCI / equation_year_CEPCI * 18642800 * capex_scale_factor
-    )
+    capex_haber_bosch = model_year_CEPCI / equation_year_CEPCI * 18642800 * capex_scale_factor
     capex_boiler = model_year_CEPCI / equation_year_CEPCI * 7069100 * capex_scale_factor
-    capex_cooling_tower = (
-        model_year_CEPCI / equation_year_CEPCI * 4799200 * capex_scale_factor
-    )
+    capex_cooling_tower = model_year_CEPCI / equation_year_CEPCI * 4799200 * capex_scale_factor
     capex_direct = (
-        capex_air_separation_crygenic
-        + capex_haber_bosch
-        + capex_boiler
-        + capex_cooling_tower
+        capex_air_separation_crygenic + capex_haber_bosch + capex_boiler + capex_cooling_tower
     )
-    capex_depreciable_nonequipment = (
-        capex_direct * 0.42 + 4112701.84103543 * scaling_ratio
-    )
+    capex_depreciable_nonequipment = capex_direct * 0.42 + 4112701.84103543 * scaling_ratio
     capex_total = capex_direct + capex_depreciable_nonequipment
 
     land_cost = capex_depreciable_nonequipment
@@ -83,19 +72,11 @@ def run_profast_for_ammonia(
 
     # Feedstock
     H2_consumption = 0.197284403  # kg_H2/ kg_NH3
-    (
-        levelized_cost_of_hydrogen
-        * H2_consumption
-        * plant_capacity_kgpy
-        * plant_capacity_factor
-    )
+    (levelized_cost_of_hydrogen * H2_consumption * plant_capacity_kgpy * plant_capacity_factor)
 
     electricity_usage = 0.530645243 / 1000  # mWh/kg_NH3
     energy_cost_in_startup_year = (
-        electricity_cost
-        * electricity_usage
-        * plant_capacity_kgpy
-        * plant_capacity_factor
+        electricity_cost * electricity_usage * plant_capacity_kgpy * plant_capacity_factor
     )  #
 
     cooling_water_usage = 0.049236824  # Gal/kg_NH3
@@ -109,20 +90,15 @@ def run_profast_for_ammonia(
         * plant_capacity_factor
     )
 
-    (
-        energy_cost_in_startup_year + non_energy_cost_in_startup_year
-    )
+    (energy_cost_in_startup_year + non_energy_cost_in_startup_year)
 
     # By-product
     oxygen_byproduct = 0.29405077250145  # kg/kg_NH#
-    (
-        oxygen_price * oxygen_byproduct * plant_capacity_kgpy * plant_capacity_factor
-    )
+    (oxygen_price * oxygen_byproduct * plant_capacity_kgpy * plant_capacity_factor)
 
     financial_assumptions = pd.read_csv(
         "H2_Analysis/financial_inputs.csv", index_col=None, header=0
-    )
-    financial_assumptions.set_index(["Parameter"], inplace=True)
+    ).set_index(["Parameter"])
     financial_assumptions = financial_assumptions["Hydrogen/Steel/Ammonia"]
 
     # Set up ProFAST
@@ -169,12 +145,8 @@ def run_profast_for_ammonia(
     pf.set_params("rent", {"value": 0, "escalation": gen_inflation})
     pf.set_params("property tax and insurance", 0)
     pf.set_params("admin expense", 0)
-    pf.set_params(
-        "total income tax rate", financial_assumptions["total income tax rate"]
-    )
-    pf.set_params(
-        "capital gains tax rate", financial_assumptions["capital gains tax rate"]
-    )
+    pf.set_params("total income tax rate", financial_assumptions["total income tax rate"])
+    pf.set_params("capital gains tax rate", financial_assumptions["capital gains tax rate"])
     pf.set_params("sell undepreciated cap", True)
     pf.set_params("tax losses monetized", True)
     pf.set_params("general inflation rate", gen_inflation)
@@ -264,10 +236,10 @@ def run_profast_for_ammonia(
         cost=property_tax_insurance,
         escalation=0.0,
     )
-    # pf.add_fixed_cost(name="Land cost",cost=2500000*capex_scale_factor,depr_type="MACRS",depr_period=20,refurb=[0])
+    # pf.add_fixed_cost(name="Land cost",cost=2500000*capex_scale_factor,depr_type="MACRS",depr_period=20,refurb=[0])  # noqa: E501
 
-    # Putting property tax and insurance here to zero out depcreciation/escalation. Could instead put it in set_params if
-    # we think that is more accurate
+    # Putting property tax and insurance here to zero out depcreciation/escalation. Could instead
+    # put it in set_params if we think that is more accurate
 
     # ---------------------- Add feedstocks, note the various cost options-------------------
     pf.add_feedstock(
@@ -342,17 +314,12 @@ def run_profast_for_ammonia(
     price_breakdown_administrative_expense = price_breakdown.loc[
         price_breakdown["Name"] == "Administrative Expense", "NPV"
     ].tolist()[0]
-    price_breakdown.loc[
-        price_breakdown["Name"] == "Property tax and insurance", "NPV"
-    ].tolist()[0]
-    # price_breakdown_land_cost = price_breakdown.loc[price_breakdown['Name']=='Land cost','NPV'].tolist()[0]
+    price_breakdown.loc[price_breakdown["Name"] == "Property tax and insurance", "NPV"].tolist()[0]
+    # price_breakdown_land_cost = price_breakdown.loc[price_breakdown['Name']=='Land cost','NPV'].tolist()[0]  # noqa: E501
 
     if levelized_cost_of_hydrogen < 0:
         price_breakdown_hydrogen = (
-            -1
-            * price_breakdown.loc[
-                price_breakdown["Name"] == "Hydrogen", "NPV"
-            ].tolist()[0]
+            -1 * price_breakdown.loc[price_breakdown["Name"] == "Hydrogen", "NPV"].tolist()[0]
         )
     else:
         price_breakdown_hydrogen = price_breakdown.loc[
@@ -372,12 +339,8 @@ def run_profast_for_ammonia(
     ].tolist()[0]
 
     price_breakdown_taxes = (
-        price_breakdown.loc[
-            price_breakdown["Name"] == "Income taxes payable", "NPV"
-        ].tolist()[0]
-        - price_breakdown.loc[
-            price_breakdown["Name"] == "Monetized tax losses", "NPV"
-        ].tolist()[0]
+        price_breakdown.loc[price_breakdown["Name"] == "Income taxes payable", "NPV"].tolist()[0]
+        - price_breakdown.loc[price_breakdown["Name"] == "Monetized tax losses", "NPV"].tolist()[0]
     )
     if gen_inflation > 0:
         price_breakdown_taxes = (
@@ -387,53 +350,43 @@ def run_profast_for_ammonia(
             ].tolist()[0]
         )
 
-    # price_breakdown_financial = price_breakdown.loc[price_breakdown['Name']=='Non-depreciable assets','NPV'].tolist()[0]\
-    #     + price_breakdown.loc[price_breakdown['Name']=='Cash on hand reserve','NPV'].tolist()[0]\
-    #     + price_breakdown.loc[price_breakdown['Name']=='Property tax and insurance','NPV'].tolist()[0]\
-    #     + price_breakdown.loc[price_breakdown['Name']=='Repayment of debt','NPV'].tolist()[0]\
-    #     + price_breakdown.loc[price_breakdown['Name']=='Interest expense','NPV'].tolist()[0]\
-    #     + price_breakdown.loc[price_breakdown['Name']=='Dividends paid','NPV'].tolist()[0]\
-    #     - price_breakdown.loc[price_breakdown['Name']=='Sale of non-depreciable assets','NPV'].tolist()[0]\
-    #     - price_breakdown.loc[price_breakdown['Name']=='Cash on hand recovery','NPV'].tolist()[0]\
-    #     - price_breakdown.loc[price_breakdown['Name']=='Inflow of debt','NPV'].tolist()[0]\
-    #     - price_breakdown.loc[price_breakdown['Name']=='Inflow of equity','NPV'].tolist()[0]
+    # price_breakdown_financial = (
+    #     price_breakdown.loc[price_breakdown["Name"] == "Non-depreciable assets", "NPV"].tolist()[0]  # noqa: E501
+    #     + price_breakdown.loc[price_breakdown["Name"] == "Cash on hand reserve", "NPV"].tolist()[0]  # noqa: E501
+    #     + price_breakdown.loc[
+    #         price_breakdown["Name"] == "Property tax and insurance", "NPV"
+    #     ].tolist()[0]
+    #     + price_breakdown.loc[price_breakdown["Name"] == "Repayment of debt", "NPV"].tolist()[0]
+    #     + price_breakdown.loc[price_breakdown["Name"] == "Interest expense", "NPV"].tolist()[0]
+    #     + price_breakdown.loc[price_breakdown["Name"] == "Dividends paid", "NPV"].tolist()[0]
+    #     - price_breakdown.loc[
+    #         price_breakdown["Name"] == "Sale of non-depreciable assets", "NPV"
+    #     ].tolist()[0]
+    #     - price_breakdown.loc[price_breakdown["Name"] == "Cash on hand recovery", "NPV"].tolist()[0]  # noqa: E501
+    #     - price_breakdown.loc[price_breakdown["Name"] == "Inflow of debt", "NPV"].tolist()[0]
+    #     - price_breakdown.loc[price_breakdown["Name"] == "Inflow of equity", "NPV"].tolist()[0]
+    # )
 
     # Calculate financial expense associated with equipment
     price_breakdown_financial_equipment = (
-        price_breakdown.loc[
-            price_breakdown["Name"] == "Repayment of debt", "NPV"
-        ].tolist()[0]
-        + price_breakdown.loc[
-            price_breakdown["Name"] == "Interest expense", "NPV"
-        ].tolist()[0]
-        + price_breakdown.loc[
-            price_breakdown["Name"] == "Dividends paid", "NPV"
-        ].tolist()[0]
-        - price_breakdown.loc[
-            price_breakdown["Name"] == "Inflow of debt", "NPV"
-        ].tolist()[0]
-        - price_breakdown.loc[
-            price_breakdown["Name"] == "Inflow of equity", "NPV"
-        ].tolist()[0]
+        price_breakdown.loc[price_breakdown["Name"] == "Repayment of debt", "NPV"].tolist()[0]
+        + price_breakdown.loc[price_breakdown["Name"] == "Interest expense", "NPV"].tolist()[0]
+        + price_breakdown.loc[price_breakdown["Name"] == "Dividends paid", "NPV"].tolist()[0]
+        - price_breakdown.loc[price_breakdown["Name"] == "Inflow of debt", "NPV"].tolist()[0]
+        - price_breakdown.loc[price_breakdown["Name"] == "Inflow of equity", "NPV"].tolist()[0]
     )
 
     # Calculate remaining financial expenses
     price_breakdown_financial_remaining = (
-        price_breakdown.loc[
-            price_breakdown["Name"] == "Non-depreciable assets", "NPV"
-        ].tolist()[0]
-        + price_breakdown.loc[
-            price_breakdown["Name"] == "Cash on hand reserve", "NPV"
-        ].tolist()[0]
+        price_breakdown.loc[price_breakdown["Name"] == "Non-depreciable assets", "NPV"].tolist()[0]
+        + price_breakdown.loc[price_breakdown["Name"] == "Cash on hand reserve", "NPV"].tolist()[0]
         + price_breakdown.loc[
             price_breakdown["Name"] == "Property tax and insurance", "NPV"
         ].tolist()[0]
         - price_breakdown.loc[
             price_breakdown["Name"] == "Sale of non-depreciable assets", "NPV"
         ].tolist()[0]
-        - price_breakdown.loc[
-            price_breakdown["Name"] == "Cash on hand recovery", "NPV"
-        ].tolist()[0]
+        - price_breakdown.loc[price_breakdown["Name"] == "Cash on hand recovery", "NPV"].tolist()[0]
     )
 
     price_check = (
@@ -457,7 +410,7 @@ def run_profast_for_ammonia(
     )
 
     ammonia_price_breakdown = {
-        "Ammonia price: Air Separation by Cryogenic ($/kg)": price_breakdown_air_separation_by_cryogenic,
+        "Ammonia price: Air Separation by Cryogenic ($/kg)": price_breakdown_air_separation_by_cryogenic,  # noqa: E501
         "Ammonia price: Haber Bosch ($/kg)": price_breakdown_Haber_Bosch,
         "Ammonia price: Boiler and Steam Turbine ($/kg)": price_breakdown_boiler_and_steam_turbine,
         "Ammonia price: Cooling Tower ($/kg)": price_breakdown_cooling_tower,

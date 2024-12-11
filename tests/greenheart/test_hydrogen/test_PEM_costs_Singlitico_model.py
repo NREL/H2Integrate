@@ -5,6 +5,7 @@ from greenheart.simulation.technologies.hydrogen.electrolysis.PEM_costs_Singliti
     PEMCostsSingliticoModel,
 )
 
+
 TOL = 1e-3
 
 BASELINE = np.array(

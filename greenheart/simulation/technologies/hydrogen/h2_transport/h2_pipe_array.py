@@ -4,9 +4,11 @@ from greenheart.simulation.technologies.hydrogen.h2_transport.h2_export_pipe imp
     run_pipe_analysis,
 )
 
+
 """
 Args:
-    sections_distance (array[array]): array of arrays where each element of each sub-array holds the horizontal distance in m of a pipe section
+    sections_distance (array[array]): array of arrays where each element of each sub-array holds the
+        horizontal distance in m of a pipe section
     depth (float): depth of the site in m
     p_inlet (float): pipe inlet pressure in bar
     p_outlet (float): pipe outlet pressure in bar
@@ -58,9 +60,7 @@ def run_pipe_array(sections_distance, depth, p_inlet, p_outlet, mass_flow_rate):
 
 
 #   Assuming one pipe diameter for the pipeline
-def run_pipe_array_const_diam(
-    sections_distance, depth, p_inlet, p_outlet, mass_flow_rate
-):
+def run_pipe_array_const_diam(sections_distance, depth, p_inlet, p_outlet, mass_flow_rate):
     capex = 0
     opex = 0
 
@@ -111,7 +111,9 @@ if __name__ == "__main__":
     p_outlet = 10  # Outlet pressure [bar]
     depth = 80  # depth of pipe [m]
 
-    # capex, opex = run_pipe_array([[L, L], [L, L]], depth, p_inlet, p_outlet, [[m_dot, m_dot], [m_dot, m_dot]])
+    # capex, opex = run_pipe_array(
+    #     [[L, L], [L, L]], depth, p_inlet, p_outlet, [[m_dot, m_dot], [m_dot, m_dot]]
+    # )
 
     # print("CAPEX (USD): ", capex)
     # print("OPEX (USD): ", opex)

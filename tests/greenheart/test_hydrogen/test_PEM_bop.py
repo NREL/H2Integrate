@@ -1,16 +1,12 @@
 from pathlib import Path
 
 import numpy as np
-from ORBIT.core.library import initialize_library
 from pytest import approx, fixture
+from ORBIT.core.library import initialize_library
 
-from greenheart.simulation.greenheart_simulation import (
-    GreenHeartSimulationConfig,
-    run_simulation,
-)
-from greenheart.simulation.technologies.hydrogen.electrolysis.PEM_BOP.PEM_BOP import (
-    pem_bop,
-)
+from greenheart.simulation.greenheart_simulation import GreenHeartSimulationConfig, run_simulation
+from greenheart.simulation.technologies.hydrogen.electrolysis.PEM_BOP.PEM_BOP import pem_bop
+
 
 LIBRARY = Path(__file__).parents[1] / "input_files/"
 

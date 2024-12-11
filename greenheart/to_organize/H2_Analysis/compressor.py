@@ -9,29 +9,23 @@ class Compressor:
         # inputs
         self.flow_rate_kg_hr = input_dict["flow_rate_kg_hr"]  # [kg/hr] # per compressor
         self.P_outlet = input_dict["P_outlet"]  # [bar]
-        self.compressor_rating_kWe = input_dict[
-            "compressor_rating_kWe"
-        ]  # [kWe] # per compressor
-        self.mean_time_between_failure = input_dict[
-            "mean_time_between_failure"
-        ]  # [days]
-        self.total_hydrogen_throughput = input_dict[
-            "total_hydrogen_throughput"
-        ]  # [kg-H2/yr]
+        self.compressor_rating_kWe = input_dict["compressor_rating_kWe"]  # [kWe] # per compressor
+        self.mean_time_between_failure = input_dict["mean_time_between_failure"]  # [days]
+        self.total_hydrogen_throughput = input_dict["total_hydrogen_throughput"]  # [kg-H2/yr]
 
         try:
             number_of_compressors = input_dict["number_of_compressors"]
-        except:
+        except KeyError:
             print("Assuming 3 compressors")
             number_of_compressors = 3
         try:
             plant_life = input_dict["plant_life"]
-        except:
+        except KeyError:
             print("Assuming 30 year plant life")
             plant_life = 30
         try:
             useful_life = input_dict["useful_life"]
-        except:
+        except KeyError:
             print("Assuming 15 year useful life")
             useful_life = 15
 
@@ -77,18 +71,12 @@ class Compressor:
         F_install_250 = 2.0  # installation factor (>250 kg/hr)
         F_indir = 1.27  # direct and indirect capital cost factor
 
-        C_cap = 19207 * self.compressor_rating_kWe ** (
-            0.6089
-        )  # purchased equipment capital cost
+        C_cap = 19207 * self.compressor_rating_kWe ** (0.6089)  # purchased equipment capital cost
 
         if self.flow_rate_kg_hr < 250:
-            compressor_capex = (
-                C_cap * F_install * F_indir * self.num_compressors
-            )  # [USD]
+            compressor_capex = C_cap * F_install * F_indir * self.num_compressors  # [USD]
         else:
-            compressor_capex = (
-                C_cap * F_install_250 * F_indir * self.num_compressors
-            )  # [USD]
+            compressor_capex = C_cap * F_install_250 * F_indir * self.num_compressors  # [USD]
         self.output_dict["compressor_capex"] = compressor_capex
 
         # Compressor opex
@@ -101,28 +89,40 @@ class Compressor:
 
         cost_factors = insurance + property_taxes + license_permits
         compressor_opex = (
-            (cost_factors * C_cap)
-            + (op_and_maint * compressor_capex)
-            + labor
-            + overhead
+            (cost_factors * C_cap) + (op_and_maint * compressor_capex) + labor + overhead
         )
 
         # """"TODO: Add mean_time_between_failure [days]: max 365
         #     total_hydrogen_throughput: annual amount of hydrogen compressed [kg/yr]
-        #     This report gives station costs as a function of MTBF but not broken down to single compressor level
-        #     https://www.nrel.gov/docs/fy14osti/58564.pdf"""
-        # if self.mean_time_between_failure <= 50:       #[days]
-        #     maintenance_cost = 0.71     #[USD/kg H2]
-        #     compressor_opex = self.num_compressors * maintenance_cost * self.total_hydrogen_throughput  #[USD/yr]
+        #     This report gives station costs as a function of MTBF but not broken down to
+        #     single compressor level https://www.nrel.gov/docs/fy14osti/58564.pdf
+        # """
+        # if self.mean_time_between_failure <= 50:  # [days]
+        #     maintenance_cost = 0.71  # [USD/kg H2]
+        #     compressor_opex = (
+        #         self.num_compressors * maintenance_cost * self.total_hydrogen_throughput
+        #     )  # [USD/yr]
         # elif 50 < self.mean_time_between_failure <= 100:
-        #     maintenance_cost = 0.71 + ((self.mean_time_between_failure - 50)*((0.36 - 0.71)/(100-50)))     #[USD/kg H2]
-        #     compressor_opex = self.num_compressors * maintenance_cost * self.total_hydrogen_throughput  #[USD/yr]
+        #     maintenance_cost = 0.71 + (
+        #         (self.mean_time_between_failure - 50) * ((0.36 - 0.71) / (100 - 50))
+        #     )  # [USD/kg H2]
+        #     compressor_opex = (
+        #         self.num_compressors * maintenance_cost * self.total_hydrogen_throughput
+        #     )  # [USD/yr]
         # elif 100 < self.mean_time_between_failure <= 200:
-        #     maintenance_cost = 0.36 + ((self.mean_time_between_failure - 100)*((0.19 - 0.36)/(200-100)))     #[USD/kg H2]
-        #     compressor_opex = self.num_compressors * maintenance_cost * self.total_hydrogen_throughput  #[USD/yr]
+        #     maintenance_cost = 0.36 + (
+        #         (self.mean_time_between_failure - 100) * ((0.19 - 0.36) / (200 - 100))
+        #     )  # [USD/kg H2]
+        #     compressor_opex = (
+        #         self.num_compressors * maintenance_cost * self.total_hydrogen_throughput
+        #     )  # [USD/yr]
         # elif 200 < self.mean_time_between_failure <= 365:
-        #     maintenance_cost = 0.11 + ((self.mean_time_between_failure - 200)*((0.11 - 0.19)/(365-200)))     #[USD/kg H2]
-        #     compressor_opex = self.num_compressors * maintenance_cost * self.total_hydrogen_throughput  #[USD/yr]
+        #     maintenance_cost = 0.11 + (
+        #         (self.mean_time_between_failure - 200) * ((0.11 - 0.19) / (365 - 200))
+        #     )  # [USD/kg H2]
+        #     compressor_opex = (
+        #         self.num_compressors * maintenance_cost * self.total_hydrogen_throughput
+        #     )  # [USD/yr]
         # else:
         #     print("Error. mean_time_between_failure <= 365 days.")
         self.output_dict["compressor_opex"] = compressor_opex
@@ -143,13 +143,13 @@ class Compressor:
 
 
 if __name__ == "__main__":
-    in_dict = dict()
+    in_dict = {}
     in_dict["flow_rate_kg_hr"] = 126
     in_dict["P_outlet"] = 250
     in_dict["compressor_rating_kWe"] = 802
     in_dict["mean_time_between_failure"] = 200
     in_dict["total_hydrogen_throughput"] = 5000000
-    out_dict = dict()
+    out_dict = {}
 
     test = Compressor(in_dict, out_dict)
     test.compressor_power()

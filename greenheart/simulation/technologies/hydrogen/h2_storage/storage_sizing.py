@@ -25,14 +25,10 @@ def hydrogen_storage_capacity(H2_Results, electrolyzer_size_mw, hydrogen_demand_
     hydrogen_storage_soc = []
     for j in range(len(hydrogen_production_kgphr)):
         if j == 0:
-            hydrogen_storage_soc.append(
-                hydrogen_production_kgphr[j] - hydrogen_demand_kgphr
-            )
+            hydrogen_storage_soc.append(hydrogen_production_kgphr[j] - hydrogen_demand_kgphr)
         else:
             hydrogen_storage_soc.append(
-                hydrogen_storage_soc[j - 1]
-                + hydrogen_production_kgphr[j]
-                - hydrogen_demand_kgphr
+                hydrogen_storage_soc[j - 1] + hydrogen_production_kgphr[j] - hydrogen_demand_kgphr
             )
 
     minimum_soc = np.min(hydrogen_storage_soc)
@@ -41,9 +37,7 @@ def hydrogen_storage_capacity(H2_Results, electrolyzer_size_mw, hydrogen_demand_
     if minimum_soc < 0:
         hydrogen_storage_soc = [x + np.abs(minimum_soc) for x in hydrogen_storage_soc]
 
-    hydrogen_storage_capacity_kg = np.max(hydrogen_storage_soc) - np.min(
-        hydrogen_storage_soc
-    )
+    hydrogen_storage_capacity_kg = np.max(hydrogen_storage_soc) - np.min(hydrogen_storage_soc)
     h2_LHV = 119.96  # MJ/kg
     h2_HHV = 141.88  # MJ/kg
     hydrogen_storage_capacity_MWh_LHV = hydrogen_storage_capacity_kg * h2_LHV / 3600
@@ -57,7 +51,8 @@ def hydrogen_storage_capacity(H2_Results, electrolyzer_size_mw, hydrogen_demand_
     #     )
     # max_h2_injection_rate_kgphr = max(hydrogen_injection_withdrawal_rate)
 
-    # # Get storage compressor capacity. TODO: sync compressor calculation here with GreenHEART compressor model
+    # # Get storage compressor capacity. TODO: sync compressor calculation here with GreenHEART
+    # compressor model
     # compressor_total_capacity_kW = (
     #     max_h2_injection_rate_kgphr / 3600 / 2.0158 * 8641.678424
     # )

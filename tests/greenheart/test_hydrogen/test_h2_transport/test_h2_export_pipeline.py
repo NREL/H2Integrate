@@ -18,7 +18,7 @@ class TestExportPipeline:
     def test_od(self):
         assert self.costs["Outer diameter (mm)"][0] == 168.28
 
-    def test_od(self):
+    def test_id(self):
         assert self.costs["Inner diameter (mm)"][0] == 162.74
 
     def test_schedule(self):

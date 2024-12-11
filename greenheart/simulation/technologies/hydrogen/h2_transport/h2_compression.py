@@ -5,9 +5,9 @@ Source for most equations is HDSAM3.1, H2 Compressor sheet
 Output is in 2016 USD
 """
 
-from math import ceil, log, log10
+from math import log, ceil, log10
 
-from numpy import dot, interp, mean
+from numpy import dot, mean, interp
 
 
 class Compressor:
@@ -29,8 +29,12 @@ class Compressor:
         self.p_outlet = p_outlet  # bar
         self.flow_rate_kg_d = flow_rate_kg_d  # kg/day
 
-        self.n_compressors = n_compressors  # At least 2 compressors are recommended for operation at any given time
-        self.n_comp_back_up = 1  # Often times, an extra compressor is purchased and installed so that the system can operate at a higher availability.
+        # At least 2 compressors are recommended for operation at any given time
+        self.n_compressors = n_compressors
+
+        # Often times, an extra compressor is purchased and installed so that the system can operate
+        # at a higher availability.
+        self.n_comp_back_up = 1
         self.sizing_safety_factor = (
             sizing_safety_factor  # typically oversized. Default to oversize by 10%
         )
@@ -38,10 +42,13 @@ class Compressor:
         if flow_rate_kg_d * (1 / 24) * (1 / 60**2) / n_compressors > 5.4:
             # largest compressors can only do up to about 5.4 kg/s
             """
-            H2A Hydrogen Delivery Infrastructure Analysis Models and Conventional Pathway Options Analysis Results
+            H2A Hydrogen Delivery Infrastructure Analysis Models and Conventional Pathway Options
+            Analysis Results
             DE-FG36-05GO15032
             Interim Report
-            Nexant, Inc., Air Liquide, Argonne National Laboratory, Chevron Technology Venture, Gas Technology Institute, National Renewable Energy Laboratory, Pacific Northwest National Laboratory, and TIAX LLC
+            Nexant, Inc., Air Liquide, Argonne National Laboratory, Chevron Technology Venture,
+            Gas Technology Institute, National Renewable Energy Laboratory,
+            Pacific Northwest National Laboratory, and TIAX LLC
             May 2008
             """
             raise ValueError(
@@ -58,7 +65,7 @@ class Compressor:
             0.88  # 0.88 based on engineering estimation for a reciprocating compressor
         )
 
-        # https://h2tools.org/hyarc/hydrogen-data/hydrogen-compressibility-different-temperatures-and-pressures
+        # https://h2tools.org/hyarc/hydrogen-data/hydrogen-compressibility-different-temperatures-and-pressures  # noqa: E501
         Z_pressures = [
             1,
             10,
@@ -79,10 +86,10 @@ class Compressor:
         ]  # H2 Compressibility aty 25C
         Z = mean(interp([self.p_inlet, self.p_outlet], Z_pressures, Z_z))
 
-        c_ratio_per_stage = 2.1  # based on engineering estimation for a reciprocating compressor operating on hydrogen
-        self.stages = ceil(
-            (log10(self.p_outlet) - log10(self.p_inlet)) / log10(c_ratio_per_stage)
-        )
+        # based on engineering estimation for a reciprocating compressor operating on hydrogen
+        c_ratio_per_stage = 2.1
+
+        self.stages = ceil((log10(self.p_outlet) - log10(self.p_inlet)) / log10(c_ratio_per_stage))
         flow_per_compressor = self.flow_rate_kg_d / self.n_compressors  # kg/d
         flow_per_compressor_kg_mols_sec = (
             flow_per_compressor / 24 / 60 / 60 / 2.0158
@@ -117,9 +124,7 @@ class Compressor:
         production_volume_factor = 0.55  # Assume high production volume
         CEPCI = 1.29 / 1.1  # Convert from 2007 to 2016$
 
-        cost_per_unit = (
-            1962.2 * self.motor_rating**0.8225 * production_volume_factor * CEPCI
-        )
+        cost_per_unit = 1962.2 * self.motor_rating**0.8225 * production_volume_factor * CEPCI
         if self.stages > 2:
             cost_per_unit = cost_per_unit * (1 + 0.2 * (self.stages - 2))
 
@@ -131,6 +136,8 @@ class Compressor:
         land_cost = 12.35  # $/m2
         land = land_required * land_cost
 
+        # These are all percentages of direct capex (site,E&D,contingency,licensing,permitting
+        # owners cost)
         other_capital_pct = [
             0.05,
             0.1,
@@ -138,10 +145,8 @@ class Compressor:
             0,
             0.03,
             0.12,
-        ]  # These are all percentages of direct capex (site,E&D,contingency,licensing,permitting,owners cost)
-        other_capital = (
-            dot(other_capital_pct, [direct_capex] * len(other_capital_pct)) + land
-        )
+        ]
+        other_capital = dot(other_capital_pct, [direct_capex] * len(other_capital_pct)) + land
 
         total_capex = direct_capex + other_capital
 
@@ -149,26 +154,30 @@ class Compressor:
         # O&M
         ##
         CEPCI_labor = 1.15460860725178 / 1.08789393425957  # 2013 to 2016
-        labor_cost = (
-            31.6 * CEPCI_labor
-        )  # Bureau of Labor Statistics- NAICS code# 2212 -- 2016$/man-hr
-        labor_required = (
-            288 * (self.flow_rate_kg_d / 100000) ** 0.25
-        )  # hrs/yr #Base case is 3 days per month for a 100,000 MJ/day useable capacity facility. Scaling factor of 0.25 is used for other sized facilities
+
+        # Bureau of Labor Statistics- NAICS code# 2212 -- 2016$/man-hr
+        labor_cost = 31.6 * CEPCI_labor
+
+        # Base case is 3 days per month for a 100,000 MJ/day useable capacity facility. Scaling
+        # factor of 0.25 is used for other sized facilities
+        labor_required = 288 * (self.flow_rate_kg_d / 100000) ** 0.25  # hrs/yr
         labor = labor_required * labor_cost
 
         electricity_consumption = self.motor_rating * 8760 * self.n_compressors
         electricity_price = 0.075  #  Maybe need to edit this?
         electricity = electricity_consumption * electricity_price
 
-        #   All are percents of total capital investments, except for maint and repair is % of direct capex, overhead is % of labor
+        # All are percents of total capital investments, except for maint and repair is % of direct
+        # capex, overhead is % of labor
+        # These are percentages of total capital investment - [insurance,property taxes,lic perm,
+        # maint repairs, overhead]
         other_fixed_pct = [
             0.01,
             0.01,
             0.001,
             0.04,
             0.5,
-        ]  # These are percentages of total capital investment - [insurance,property taxes,lic perm, maint repairs, overhead]
+        ]
         other_fixed = dot(
             other_fixed_pct,
             [total_capex] * (len(other_fixed_pct) - 2) + [direct_capex, labor],
@@ -185,9 +194,7 @@ if __name__ == "__main__":
     flow_rate_kg_d = 9311
     n_compressors = 2
 
-    comp = Compressor(
-        p_outlet, flow_rate_kg_d, p_inlet=p_inlet, n_compressors=n_compressors
-    )
+    comp = Compressor(p_outlet, flow_rate_kg_d, p_inlet=p_inlet, n_compressors=n_compressors)
     comp.compressor_power()
     motor_rating, power = comp.compressor_system_power()
     total_capex, total_OM = comp.compressor_costs()  # 2016$ , 2016$/y

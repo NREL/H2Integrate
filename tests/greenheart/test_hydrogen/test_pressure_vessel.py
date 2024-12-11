@@ -1,8 +1,8 @@
-import matplotlib.pyplot as plt
 import numpy as np
+import matplotlib.pyplot as plt
 from pytest import approx
 
-from greenheart.simulation.technologies.hydrogen.h2_storage.pressure_vessel.compressed_gas_storage_model_20221021.Compressed_all import (
+from greenheart.simulation.technologies.hydrogen.h2_storage.pressure_vessel.compressed_gas_storage_model_20221021.Compressed_all import (  # noqa: E501
     PressureVessel,
 )
 
@@ -45,16 +45,12 @@ class TestPressureVessel:
 
     def test_energy_fit(self):
         capacity = 1e6  # 1000 tonnes h2
-        _, _, energy_per_kg = self.pressure_vessel_instance.calculate_from_fit(
-            capacity_kg=capacity
-        )
+        _, _, energy_per_kg = self.pressure_vessel_instance.calculate_from_fit(capacity_kg=capacity)
         assert energy_per_kg == approx(2.688696, 1e-5)  # kWh/kg
 
     def test_compare_price_change_capex(self):
         capacity = 1e6  # 1000 tonnes h2
-        capex_07, _, _ = self.pressure_vessel_instance.calculate_from_fit(
-            capacity_kg=capacity
-        )
+        capex_07, _, _ = self.pressure_vessel_instance.calculate_from_fit(capacity_kg=capacity)
         capex_00, _, _ = self.pressure_vessel_instance_no_cost.calculate_from_fit(
             capacity_kg=capacity
         )
@@ -63,9 +59,7 @@ class TestPressureVessel:
 
     def test_compare_price_change_opex(self):
         capacity = 1e6  # 1000 tonnes h2
-        _, opex_07, _ = self.pressure_vessel_instance.calculate_from_fit(
-            capacity_kg=capacity
-        )
+        _, opex_07, _ = self.pressure_vessel_instance.calculate_from_fit(capacity_kg=capacity)
         _, opex_00, _ = self.pressure_vessel_instance_no_cost.calculate_from_fit(
             capacity_kg=capacity
         )
@@ -77,10 +71,8 @@ class TestPressureVessel:
         _, _, energy_per_kg_07 = self.pressure_vessel_instance.calculate_from_fit(
             capacity_kg=capacity
         )
-        _, _, energy_per_kg_00 = (
-            self.pressure_vessel_instance_no_cost.calculate_from_fit(
-                capacity_kg=capacity
-            )
+        _, _, energy_per_kg_00 = self.pressure_vessel_instance_no_cost.calculate_from_fit(
+            capacity_kg=capacity
         )
 
         assert energy_per_kg_00 == energy_per_kg_07
@@ -96,15 +88,13 @@ class TestPressureVessel:
         footprint_ref = Ntank_ref * Atank_ref
         mass_ref = 1865.0
 
-        assert self.pressure_vessel_instance.get_tanks(capacity_req) == approx(
-            Ntank_ref
+        assert self.pressure_vessel_instance.get_tanks(capacity_req) == approx(Ntank_ref)
+        assert self.pressure_vessel_instance.get_tank_footprint(capacity_req)[0] == approx(
+            Atank_ref, rel=0.01
         )
-        assert self.pressure_vessel_instance.get_tank_footprint(capacity_req)[
-            0
-        ] == approx(Atank_ref, rel=0.01)
-        assert self.pressure_vessel_instance.get_tank_footprint(capacity_req)[
-            1
-        ] == approx(footprint_ref, rel=0.01)
+        assert self.pressure_vessel_instance.get_tank_footprint(capacity_req)[1] == approx(
+            footprint_ref, rel=0.01
+        )
 
         assert self.pressure_vessel_instance.get_tank_mass(capacity_req)[0] == approx(
             mass_ref, rel=0.01
@@ -120,23 +110,18 @@ class TestPressureVessel:
             tol,
         )
         assert opex == approx(
-            self.pressure_vessel_instance.compressed_gas_function.Op_c_Costs_kg[5]
-            * capacity,
+            self.pressure_vessel_instance.compressed_gas_function.Op_c_Costs_kg[5] * capacity,
             tol,
         )
         assert energy == approx(
-            self.pressure_vessel_instance.compressed_gas_function.total_energy_used_kwh[
-                5
-            ]
+            self.pressure_vessel_instance.compressed_gas_function.total_energy_used_kwh[5]
             * capacity,
             tol,
         )
 
     def test_distributed(self):
         capacity = self.pressure_vessel_instance.compressed_gas_function.capacity_1[5]
-        capex, opex, energy_kg = self.pressure_vessel_instance.calculate_from_fit(
-            capacity
-        )
+        capex, opex, energy_kg = self.pressure_vessel_instance.calculate_from_fit(capacity)
         print(capex)
         self.pressure_vessel_instance.get_tank_mass(capacity)
         self.pressure_vessel_instance.get_tank_footprint(capacity)
@@ -243,9 +228,7 @@ class PlotTestPressureVessel:
                         area_footprint_site_05,
                         mass_tank_empty_site_05,
                         capacity_site_05,
-                    ) = self.pressure_vessel_instance.distributed_storage_vessels(
-                        capacity, div
-                    )
+                    ) = self.pressure_vessel_instance.distributed_storage_vessels(capacity, div)
 
         # plot results
         fig, ax = plt.subplots(2, 2, sharex=True)
