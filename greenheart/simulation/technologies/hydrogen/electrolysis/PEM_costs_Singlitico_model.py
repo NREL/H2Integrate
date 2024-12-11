@@ -16,6 +16,8 @@ Sources:
         https://hsweb.hs.uni-hamburg.de/projects/star-formation/hydrogen/P2H_Full_Study_FCHJU.pdf
 """
 
+from __future__ import annotations
+
 import numpy as np
 import matplotlib.pyplot as plt
 

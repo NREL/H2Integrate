@@ -2,6 +2,8 @@
 This file is based on the WISDEM file of the same name: https://github.com/WISDEM/WISDEM
 """
 
+from __future__ import annotations
+
 import warnings
 from pathlib import Path
 

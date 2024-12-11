@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+
 """
 Author:Charles Kiefer
 Date: 4/11/2023
@@ -39,6 +42,7 @@ Notes:
     pile_cost=0 $US/tonne for monopile construction. Not a bug, this # is consistent with the rest
     of ORBIT
 """
+
 
 import typing
 from pathlib import Path

@@ -9,6 +9,8 @@ algebraic solver, and reformatted with black.
 08/02/2024: Provide cost overrides
 """
 
+from __future__ import annotations
+
 from pathlib import Path
 
 import numpy as np

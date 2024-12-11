@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+
 """
 Created on Mon Oct 17 20:08:09 2022
 @author: ppeng
@@ -24,6 +27,7 @@ Returns:(can be from separate functions and/or methods as it makes sense):
     - footprint (float): area required for pressure vessel storage
     - others may be added as needed
 """
+
 
 from pathlib import Path
 
