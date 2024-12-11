@@ -143,3 +143,24 @@ pip install -e ".[all]"
       ```bash
       pip install -e ".[all]"
       ```
+
+## Developer Notes
+
+Developers should add install using `pip install -e ".[all]"` to ensure documentation testing, and
+linting can be done without any additional installation steps.
+
+Please be sure to also install the pre-commit hooks if contributing code back to the main
+repository via the following. This enables a series of automated formatting and code linting
+(style and correctness checking) to ensure the code is stylistically consistent.
+
+```bash
+pre-commit install
+```
+
+If a check (or multiple) fails (commit is blocked), and reformatting was done, then restage
+(`git add`) your files and commit them again to see if all issues were resolved without user
+intervention. If changes are required follow the suggested fix, or resolve the stated
+issue(s). Restaging and committing may take multiple attempts steps if errors are unaddressed
+or insufficiently addressed. Please see [pre-commit](https://pre-commit.com/),
+[ruff](https://docs.astral.sh/ruff/), or [isort](https://pycqa.github.io/isort/) for more
+information.

@@ -14,7 +14,6 @@ design optimization. GreenHEART currently includes renewable energy, hydrogen, a
 Other elements such as desalination systems, pipelines, compressors, and storage systems can also be
 included as needed.
 
-
 ## Publications where GreenHEART has been used
 
 For more context about GreenHEART and to see analyses that have been performed using the tool, please see some of these publications.
@@ -28,7 +27,6 @@ resources, complementary wind and solar resources, and optimizing the sizing of 
 assets to maximize the hybrid plant capacity factor.
 
 Grant, E., et al. "[Hybrid power plant design for low-carbon hydrogen in the United States.](https://iopscience.iop.org/article/10.1088/1742-6596/2767/8/082019/pdf)" Journal of Physics: Conference Series. Vol. 2767. No. 8. IOP Publishing, 2024.
-
 
 ### Exploring the role of producing low-carbon hydrogen using water electrolysis powered by offshore wind in facilitating the United States’ transition to a net-zero emissions economy by 2050.
 Conducting a regional techno-economic analysis at four U.S. coastal sites, the study evaluates two
@@ -163,17 +161,33 @@ pip install -e ".[all]"
        pip install -e ".[develop]"
        ```
 
+       Please be sure to also install the pre-commit hooks if contributing code back to the main
+       repository via the following. This enables a series of automated formatting and code linting
+       (style and correctness checking) to ensure the code is stylistically consistent.
+
+       ```bash
+       pre-commit install
+       ```
+
+       If a check (or multiple) fails (commit is blocked), and reformatting was done, then restage
+       (`git add`) your files and commit them again to see if all issues were resolved without user
+       intervention. If changes are required follow the suggested fix, or resolve the stated
+       issue(s). Restaging and committing may take multiple attempts steps if errors are unaddressed
+       or insufficiently addressed. Please see [pre-commit](https://pre-commit.com/),
+       [ruff](https://docs.astral.sh/ruff/), or [isort](https://pycqa.github.io/isort/) for more
+       information.
+
     - In one step, all dependencies can be installed as:
 
       ```bash
       pip install -e ".[all]"
       ```
 
-1. The functions which download resource data require an NREL API key. Obtain a key from:
+5. The functions which download resource data require an NREL API key. Obtain a key from:
 
     [https://developer.nrel.gov/signup/](https://developer.nrel.gov/signup/)
 
-2. To set up the `NREL_API_KEY` and `NREL_API_EMAIL` required for resource downloads, you can create
+6. To set up the `NREL_API_KEY` and `NREL_API_EMAIL` required for resource downloads, you can create
    Environment Variables called `NREL_API_KEY` and `NREL_API_EMAIL`. Otherwise, you can keep the key
    in a new file called ".env" in the root directory of this project.
 
@@ -184,7 +198,7 @@ pip install -e ".[all]"
     NREL_API_EMAIL=your.name@email.com
     ```
 
-3. Verify setup by running tests:
+7. Verify setup by running tests:
 
     ```bash
     pytest
