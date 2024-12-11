@@ -395,22 +395,18 @@ class PEM_H2_Clusters:
         performance_by_year = {}
         year = np.arange(0, int(self.plant_life_years), 1)
 
-        performance_by_year["Capacity Factor [-]"] = dict(zip(year, capfac_per_sim, strict=False))
+        performance_by_year["Capacity Factor [-]"] = dict(zip(year, capfac_per_sim))
         performance_by_year["Refurbishment Schedule [MW replaced/year]"] = dict(
-            zip(year, refturb_schedule, strict=False)
+            zip(year, refturb_schedule)
         )
-        performance_by_year["Annual H2 Production [kg/year]"] = dict(
-            zip(year, kg_h2_pr_sim, strict=False)
-        )
+        performance_by_year["Annual H2 Production [kg/year]"] = dict(zip(year, kg_h2_pr_sim))
         performance_by_year["Annual Average Efficiency [kWh/kg]"] = dict(
-            zip(year, power_pr_yr_kWh / kg_h2_pr_sim, strict=False)
+            zip(year, power_pr_yr_kWh / kg_h2_pr_sim)
         )
         performance_by_year["Annual Average Efficiency [%-HHV]"] = dict(
-            zip(year, self.eta_h2_hhv / (power_pr_yr_kWh / kg_h2_pr_sim), strict=False)
+            zip(year, self.eta_h2_hhv / (power_pr_yr_kWh / kg_h2_pr_sim))
         )
-        performance_by_year["Annual Energy Used [kWh/year]"] = dict(
-            zip(year, power_pr_yr_kWh, strict=False)
-        )
+        performance_by_year["Annual Energy Used [kWh/year]"] = dict(zip(year, power_pr_yr_kWh))
 
         return performance_by_year
 

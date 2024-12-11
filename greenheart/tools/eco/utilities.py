@@ -455,7 +455,7 @@ def visualize_plant(
     ## add turbines
     def add_turbines(ax, turbine_x, turbine_y, radius, color):
         i = 0
-        for x, y in zip(turbine_x, turbine_y, strict=False):
+        for x, y in zip(turbine_x, turbine_y):
             if i == 0:
                 rlabel = "Wind Turbine Rotor"
                 i += 1
@@ -886,7 +886,7 @@ def visualize_plant(
         ax[ax_index_turbine_detail].add_patch(desal_patch11)
         component_areas["desalination_area_m2"] = desal_equipment_area
         i = 0
-        for x, y in zip(turbine_x, turbine_y, strict=False):
+        for x, y in zip(turbine_x, turbine_y):
             if i == 0:
                 elable = "Electrolyzer"
                 dlabel = "Desalinator"
@@ -980,7 +980,7 @@ def visualize_plant(
             ax[ax_index_turbine_detail].add_patch(h2_storage_patch)
             component_areas["h2_storage_area_m2"] = h2_storage_area
             i = 0
-            for x, y in zip(turbine_x, turbine_y, strict=False):
+            for x, y in zip(turbine_x, turbine_y):
                 if i == 0:
                     slable = "H$_2$ Storage"
                 else:
@@ -1010,7 +1010,7 @@ def visualize_plant(
             )
             ax[ax_index_turbine_detail].add_patch(h2_storage_patch)
             component_areas["h2_storage_area_m2"] = h2_storage_area
-            for i in range(zip(turbine_x, turbine_y, strict=False)):
+            for i in range(zip(turbine_x, turbine_y)):
                 if i == 0:
                     slable = "H$_2$ Storage"
                 else:
@@ -1326,7 +1326,7 @@ def visualize_plant(
         ]
     else:
         labels = ["(a) Full plant", "(b) Non-wind plant detail"]
-    for axi, label in zip(ax.flatten(), labels, strict=False):
+    for axi, label in zip(ax.flatten(), labels):
         axi.legend(frameon=False, ncol=2)  # , ncol=2, loc="best")
         axi.set(xlabel="Easting (m)", ylabel="Northing (m)")
         axi.set_title(label, loc="left")

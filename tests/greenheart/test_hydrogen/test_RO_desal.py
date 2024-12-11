@@ -56,7 +56,7 @@ class TestRODesal:
             per_system_freshwater_kg_per_hr_required, salinity="Seawater"
         )
 
-        for t, s in zip(total_outputs, per_system_outputs, strict=False):
+        for t, s in zip(total_outputs, per_system_outputs):
             assert t == approx(s * n_systems)
 
     def test_RO_Desal_Brackish(self):

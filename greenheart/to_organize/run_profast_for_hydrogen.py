@@ -157,9 +157,7 @@ def run_profast_for_hydrogen(
         grid_cost_pr_yr_USDprkg = (
             grid_price_per_yr * energy_used_per_year_kWhpryr / h2prod_per_year_kgpryr
         )
-        grid_prices_interpolated_USDperkg = dict(
-            zip(grid_cost_keys, grid_cost_pr_yr_USDprkg, strict=False)
-        )
+        grid_prices_interpolated_USDperkg = dict(zip(grid_cost_keys, grid_cost_pr_yr_USDprkg))
 
     elif grid_connection_scenario == "hybrid-grid":
         energy_from_grid_pr_yr = energy_used_per_year_kWhpryr - AEP_renewables
@@ -170,9 +168,7 @@ def run_profast_for_hydrogen(
         grid_cost_pr_yr_USDprkg = (
             grid_price_per_yr * energy_from_grid_pr_yr / h2prod_per_year_kgpryr
         )
-        grid_prices_interpolated_USDperkg = dict(
-            zip(grid_cost_keys, grid_cost_pr_yr_USDprkg, strict=False)
-        )
+        grid_prices_interpolated_USDperkg = dict(zip(grid_cost_keys, grid_cost_pr_yr_USDprkg))
         # grid_price_per_yr = np.array(list(grid_prices_interpolated_USDperkwh.values()))
         pass
     elif grid_connection_scenario == "off-grid":
@@ -180,9 +176,7 @@ def run_profast_for_hydrogen(
         ren_frac = 1
         ren_electricity_useage_kWhpkg = AEP_renewables / h2prod_per_year_kgpryr
         wind_electricity_useage_kWhpkg = wind_annual_energy_MWh * 1000 / h2prod_per_year_kgpryr
-        grid_prices_interpolated_USDperkg = dict(
-            zip(grid_cost_keys, np.zeros(len(grid_cost_keys)), strict=False)
-        )
+        grid_prices_interpolated_USDperkg = dict(zip(grid_cost_keys, np.zeros(len(grid_cost_keys))))
     # new changes end here
 
     # Establish Ren PTC and assign total emission intensity
@@ -568,9 +562,9 @@ def run_profast_for_hydrogen(
     cf_per_year_vals = H2_Results["Performance Schedules"][
         "Capacity Factor [-]"
     ].values  # new 09/05
-    elec_cf_per_year_PF = dict(zip(year_keys, cf_per_year_vals, strict=False))
+    elec_cf_per_year_PF = dict(zip(year_keys, cf_per_year_vals))
     life_average_cf = H2_Results["Performance Schedules"]["Capacity Factor [-]"].mean()
-    total_variable_OM_perkg = dict(zip(year_keys, annual_variable_OM_perkg, strict=False))
+    total_variable_OM_perkg = dict(zip(year_keys, annual_variable_OM_perkg))
     # elec_cf = np.mean(cf_per_year_vals)
 
     pf.set_params(

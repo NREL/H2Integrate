@@ -214,6 +214,7 @@ ignore = [
   "UP038",  # NOTE: integrate with Python >= 3.10
   "N806",  # NOTE: many variable names use an uppercase for legitimate reasons
   "N802",  # NOTE: many function names use an uppercase for legitimate reasons
+  "B905",
 
   # TODO: People who wrote warnings should decide on the appropriate stacklevel
   "B028",

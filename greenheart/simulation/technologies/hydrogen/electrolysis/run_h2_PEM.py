@@ -47,7 +47,7 @@ def combine_cluster_annual_performance_info(h2_tot):
 
         if k in vals_to_average:
             vals = vals / len(clusters)
-        new_dict[k] = dict(zip(yr_keys, vals, strict=False))
+        new_dict[k] = dict(zip(yr_keys, vals))
     return new_dict
 
 
@@ -186,9 +186,9 @@ def run_h2_PEM(
         water_annual_usage,
     ]
 
-    H2_Results = dict(zip(attribute_specs, attributes, strict=False))
-    H2_Results.update(dict(zip(sim_specs, sim_performance, strict=False)))
-    H2_Results.update(dict(zip(life_desc, life_vals, strict=False)))
+    H2_Results = dict(zip(attribute_specs, attributes))
+    H2_Results.update(dict(zip(sim_specs, sim_performance)))
+    H2_Results.update(dict(zip(life_desc, life_vals)))
     H2_Results.update({"Performance Schedules": pd.DataFrame(annual_avg_performance)})
     H2_Results.update({"Hydrogen Hourly Production [kg/hr]": hydrogen_hourly_production})
     H2_Results.update({"Water Hourly Consumption [kg/hr]": water_hourly_usage})

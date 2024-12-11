@@ -193,14 +193,12 @@ def calculate_h_lcoe(
     combined_hybrid_power_production_hopp = (
         hybrid_plant.grid.system_model.Outputs.system_pre_interconnect_kwac[0:8759]
     )
-    energy_shortfall_hopp = [
-        x - y for x, y in zip(load, combined_hybrid_power_production_hopp, strict=False)
-    ]
+    energy_shortfall_hopp = [x - y for x, y in zip(load, combined_hybrid_power_production_hopp)]
     energy_shortfall_hopp = [max(0, x) for x in energy_shortfall_hopp]
     lcoe = hybrid_plant.lcoe_real.hybrid
 
     combined_hybrid_curtailment_hopp = [
-        x - y for x, y in zip(combined_hybrid_power_production_hopp, load, strict=False)
+        x - y for x, y in zip(combined_hybrid_power_production_hopp, load)
     ]
     combined_hybrid_curtailment_hopp = [max(0, x) for x in combined_hybrid_curtailment_hopp]
 
@@ -503,13 +501,11 @@ def calculate_h_lcoe_continuous(
     # plt.show()
 
     combined_hybrid_power_production_hopp = pv_power_production + wind_power_production
-    energy_shortfall_hopp = [
-        x - y for x, y in zip(load, combined_hybrid_power_production_hopp, strict=False)
-    ]
+    energy_shortfall_hopp = [x - y for x, y in zip(load, combined_hybrid_power_production_hopp)]
     energy_shortfall_hopp = [max(0, x) for x in energy_shortfall_hopp]
 
     combined_hybrid_curtailment_hopp = [
-        x - y for x, y in zip(combined_hybrid_power_production_hopp, load, strict=False)
+        x - y for x, y in zip(combined_hybrid_power_production_hopp, load)
     ]
     combined_hybrid_curtailment_hopp = [max(0, x) for x in combined_hybrid_curtailment_hopp]
 

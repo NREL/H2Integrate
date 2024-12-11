@@ -245,9 +245,7 @@ def run_reopt(
             strict=False,
         )
     ]
-    energy_shortfall = [
-        y - x for x, y in zip(combined_pv_wind_storage_power_production, load, strict=False)
-    ]
+    energy_shortfall = [y - x for x, y in zip(combined_pv_wind_storage_power_production, load)]
     energy_shortfall = [max(0, x) for x in energy_shortfall]
 
     combined_pv_wind_curtailment = [
