@@ -41,7 +41,7 @@ def save_data(fname, prob, npz_file=True, mat_file=True, xls_file=True):
             if iname in array_dict:
                 continue
 
-            if isinstance(value, np.ndarray | float | int | np.float64 | np.int64):
+            if isinstance(value, (np.ndarray, float, int, np.float64, np.int64)):
                 array_dict[iname] = value
             elif isinstance(value, bool):
                 array_dict[iname] = np.bool_(value)
