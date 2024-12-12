@@ -620,7 +620,7 @@ def run_ammonia_finance_model(
         ]
         for savepath in savepaths:
             if not savepath.exists():
-                savepath.mkdir(parent=True)
+                savepath.mkdir(parents=True)
 
         pf.plot_capital_expenses(
             fileout=savepaths[0] / f"ammonia_capital_expense_{config.design_scenario_id}.pdf",
