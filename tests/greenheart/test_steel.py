@@ -256,6 +256,7 @@ def test_run_steel_full_model_changing_lcoh(subtests):
         with raises(ValueError, match="steel cost LCOH and steel finance LCOH are not equal"):
             res1 = steel.run_steel_full_model(config_1)
 
+
 def test_run_steel_full_model_changing_feedstock_transport_costs(subtests):
     config = {
         "steel": {
@@ -288,11 +289,9 @@ def test_run_steel_full_model_changing_feedstock_transport_costs(subtests):
 
     with subtests.test("plant cost"):
         assert res[1].total_plant_cost == approx(458597254.6437372)
-    
+
     with subtests.test("Installation"):
         assert res[1].installation_cost == approx(183549317.12111095)
 
     with subtests.test("steel price"):
         assert res[2].sol.get("price") == approx(963.7071101343928)
-
-
