@@ -17,13 +17,22 @@ class Feedstocks:
     Attributes:
         natural_gas_prices (Dict[str, float]):
             Natural gas costs, indexed by year ($/GJ).
-        excess_oxygen (float): Excess oxygen produced (kgO2), default = 395.
-        lime_unitcost (float): Cost per metric tonne of lime ($/metric tonne).
-        carbon_unitcost (float): Cost per metric tonne of carbon ($/metric tonne).
+        excess_oxygen (float): 
+            Excess oxygen produced (kgO2), default = 395.
+        lime_unitcost (float): 
+            Cost per metric tonne of lime ($/metric tonne).
+        lime_transport_cost (float): 
+            Cost to transport lime per metric tonne of lime ($/metric tonne).
+        carbon_unitcost (float): 
+            Cost per metric tonne of carbon ($/metric tonne).
+        carbon_transport_cost (float): 
+            Cost to transport carbon per metric tonne of carbon ($/metric tonne).
         electricity_cost (float):
             Electricity cost per metric tonne of steel production ($/metric tonne).
         iron_ore_pellet_unitcost (float):
             Cost per metric tonne of iron ore ($/metric tonne).
+        iron_ore_pellet_transport_cost (float):
+            Cost to transport iron ore per metric tonne of iron ore ($/metric tonne).
         oxygen_market_price (float):
             Market price per kg of oxygen ($/kgO2).
         raw_water_unitcost (float):
