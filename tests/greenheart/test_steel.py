@@ -255,3 +255,44 @@ def test_run_steel_full_model_changing_lcoh(subtests):
         config_1["steel"]["finances"]["lcoh"] = 40.0
         with raises(ValueError, match="steel cost LCOH and steel finance LCOH are not equal"):
             res1 = steel.run_steel_full_model(config_1)
+
+def test_run_steel_full_model_changing_feedstock_transport_costs(subtests):
+    config = {
+        "steel": {
+            "capacity": {
+                "input_capacity_factor_estimate": 0.9,
+                "desired_steel_mtpy": 1000000,
+            },
+            "costs": {
+                "operational_year": 2035,
+                "o2_heat_integration": False,
+                "feedstocks": {
+                    "natural_gas_prices": ng_prices_dict,
+                    "oxygen_market_price": 0,
+                    "lime_transport_cost": 47.72,
+                    "carbon_transport_cost": 64.91,
+                    "iron_ore_pellet_transport_cost": 0.63,
+                },
+                "lcoh": 4.2986685034417045,
+            },
+            "finances": {
+                "plant_life": 30,
+                "lcoh": 4.2986685034417045,
+                "grid_prices": grid_prices_dict,
+                "financial_assumptions": financial_assumptions,
+            },
+        }
+    }
+
+    res = steel.run_steel_full_model(config)
+
+    with subtests.test("plant cost"):
+        assert res[1].total_plant_cost == approx(458597254.6437372)
+    
+    with subtests.test("Installation"):
+        assert res[1].installation_cost == approx(183549317.12111095)
+
+    with subtests.test("steel price"):
+        assert res[2].sol.get("price") == approx(963.7071101343928)
+
+
