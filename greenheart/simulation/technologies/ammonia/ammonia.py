@@ -686,8 +686,6 @@ def run_ammonia_full_model(
         **ammonia_costs,
     )
     ammonia_cost_config.plant_capacity_kgpy = ammonia_capacity.ammonia_plant_capacity_kgpy
-
-    ammonia_cost_config.plant_capacity_kgpy = ammonia_capacity.ammonia_plant_capacity_kgpy
     ammonia_costs = run_ammonia_cost_model(ammonia_cost_config)
 
     # run ammonia finance model

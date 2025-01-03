@@ -10,6 +10,7 @@
 - Updates ammonia cost year to 2022
 - Requires HOPP 3.1.1 or higher
 - Updates tests to be compatible with HOPP 3.1.1 with ProFAST integration
+- Removes support for python 3.9
 
 ## v0.1.3 [1 November 2024]
 
