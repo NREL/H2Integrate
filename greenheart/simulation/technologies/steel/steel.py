@@ -339,8 +339,8 @@ def run_steel_cost_model(config: SteelCostModelConfig) -> SteelCostModelOutputs:
     """
     feedstocks = config.feedstocks
 
-    model_year_CEPCI = 596.2
-    equation_year_CEPCI = 708.8
+    model_year_CEPCI = 816.0  # 2022
+    equation_year_CEPCI = 708.8  # 2021
 
     capex_eaf_casting = (
         model_year_CEPCI / equation_year_CEPCI * 352191.5237 * config.plant_capacity_mtpy**0.456
