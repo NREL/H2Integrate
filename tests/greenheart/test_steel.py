@@ -204,6 +204,8 @@ def test_run_steel_full_model(subtests):
 
     with subtests.test("plant cost"):
         assert res[1].total_plant_cost == approx(627667493.7760644)
+    with subtests.test("Installation"):
+        assert res[1].installation_cost == approx(212913296.16069925)
     with subtests.test("steel price"):
         assert res[2].sol.get("price") == approx(1000.0534906485253)
 
@@ -287,10 +289,10 @@ def test_run_steel_full_model_changing_feedstock_transport_costs(subtests):
     res = steel.run_steel_full_model(config)
 
     with subtests.test("plant cost"):
-        assert res[1].total_plant_cost == approx(458597254.6437372)
+        assert res[1].total_plant_cost == approx(627667493.7760644)
 
     with subtests.test("Installation"):
-        assert res[1].installation_cost == approx(183549317.12111095)
+        assert res[1].installation_cost == approx(213896544.47120154)
 
     with subtests.test("steel price"):
-        assert res[2].sol.get("price") == approx(963.7071101343928)
+        assert res[2].sol.get("price") == approx(1005.7008348727317)
