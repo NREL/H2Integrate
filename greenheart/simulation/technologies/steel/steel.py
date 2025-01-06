@@ -63,12 +63,12 @@ class Feedstocks:
     natural_gas_prices: dict[str, float]
     excess_oxygen: float = 395
     lime_unitcost: float = 122.1
-    lime_transport_cost: float = 0.0  # USD/kg lime
+    lime_transport_cost: float = 0.0  # USD/tonne lime
     carbon_unitcost: float = 236.97
-    carbon_transport_cost: float = 0.0  # USD/kg carbon
+    carbon_transport_cost: float = 0.0  # USD/tonne carbon
     electricity_cost: float = 48.92
     iron_ore_pellet_unitcost: float = 207.35
-    iron_ore_pellet_transport_cost: float = 0.0  # USD/kg iron
+    iron_ore_pellet_transport_cost: float = 0.0  # USD/tonne iron
     oxygen_market_price: float = 0.03
     raw_water_unitcost: float = 0.59289
     iron_ore_consumption: float = 1.62927
