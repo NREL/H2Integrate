@@ -564,6 +564,51 @@ def run_opex(
     return total_annual_operating_costs, opex_breakdown_annual
 
 
+def calc_financial_parameter_weighted_average_by_capex(
+    parameter_name: str, greenheart_config: dict, capex_breakdown: dict
+) -> float:
+    """Allows the user to provide individual financial parameters for each technology in the system.
+        The values given will be weighted by their CAPEX values to determine the final
+        weighted-average parameter value to be supplied to the financial model. If only one
+        technology has a unique parameter value, a "general" parameter value in the dictionary and
+        that will be used for all technologies not specified individually.
+
+    Args:
+        parameter_name (str): The name of the parameter to be weighted by capex. The name should
+        correspond to the name in the greenheart config greenheart_config (dict): Dictionary form of
+        the greenheart config capex_breakdown (dict): Output from `run_capex`, a dictionary of all
+        capital items for the financial model
+
+    Returns:
+        parameter_value (float): if the parameter in the greenheart config is given as a dictionary,
+        then the weighted average by capex parameter value is returnd. Otherwise no averaging is
+        done and the value of the parameter in the greenheart_config is returned.
+    """
+
+    if type(greenheart_config["finance_parameters"]["discount_rate"]) is not dict:
+        # if only one value is given for the parameter, use that value
+        parameter_value = greenheart_config["finance_parameters"][parameter_name]
+
+    else:
+        # assign capex amounts as weights
+        weights = np.array(list(capex_breakdown.values()))
+
+        # initialize value array
+        values = np.zeros_like(weights)
+
+        # assign values
+        for i, key in enumerate(capex_breakdown.keys()):
+            if key in greenheart_config["finance_parameters"][parameter_name].keys():
+                values[i] = greenheart_config["finance_parameters"][parameter_name][key]
+            else:
+                values[i] = greenheart_config["finance_parameters"][parameter_name]["general"]
+
+        # calcuated weighted average parameter value
+        parameter_value = np.average(values, weights=weights)
+
+    return parameter_value
+
+
 def run_profast_lcoe(
     greenheart_config,
     wind_cost_results,
