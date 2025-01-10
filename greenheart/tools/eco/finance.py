@@ -697,10 +697,21 @@ def run_profast_lcoe(
     pf.set_params("sell undepreciated cap", True)
     pf.set_params("tax losses monetized", True)
     pf.set_params("general inflation rate", gen_inflation)
+
+    equity_discount_rate = calc_financial_parameter_weighted_average_by_capex(
+        parameter_name="discount_rate",
+        greenheart_config=greenheart_config,
+        capex_breakdown={
+            k: capex_breakdown[k]
+            for k in ("wind", "wave", "solar", "battery", "electrical_export_system")
+        },
+    )
+
     pf.set_params(
         "leverage after tax nominal discount rate",
-        greenheart_config["finance_parameters"]["discount_rate"],
+        equity_discount_rate,
     )
+
     pf.set_params(
         "debt equity ratio of initial financing",
         (
