@@ -710,10 +710,7 @@ def run_profast_lcoe(
     )
     pf.set_params("debt type", greenheart_config["finance_parameters"]["debt_type"])
     pf.set_params("loan period if used", greenheart_config["finance_parameters"]["loan_period"])
-    pf.set_params(
-        "debt interest rate",
-        greenheart_config["finance_parameters"]["debt_interest_rate"],
-    )
+
     pf.set_params("cash onhand", greenheart_config["finance_parameters"]["cash_onhand_months"])
 
     # ----------------------------------- Add capital items to ProFAST ----------------
@@ -843,6 +840,16 @@ def run_profast_lcoe(
     pf.set_params(
         "leverage after tax nominal discount rate",
         equity_discount_rate,
+    )
+
+    debt_interest_rate = calc_financial_parameter_weighted_average_by_capex(
+        parameter_name="debt_interest_rate",
+        greenheart_config=greenheart_config,
+        capex_breakdown=finance_param_weights,
+    )
+    pf.set_params(
+        "debt interest rate",
+        debt_interest_rate,
     )
 
     # ---------------------- Run ProFAST -------------------------------------------
@@ -992,10 +999,7 @@ def run_profast_grid_only(
     )
     pf.set_params("debt type", greenheart_config["finance_parameters"]["debt_type"])
     pf.set_params("loan period if used", greenheart_config["finance_parameters"]["loan_period"])
-    pf.set_params(
-        "debt interest rate",
-        greenheart_config["finance_parameters"]["debt_interest_rate"],
-    )
+
     pf.set_params("cash onhand", greenheart_config["finance_parameters"]["cash_onhand_months"])
 
     # ----------------------------------- Add capital items to ProFAST ----------------
@@ -1129,16 +1133,14 @@ def run_profast_grid_only(
         equity_discount_rate,
     )
 
-    # ----------------------- Add weight-averaged parameters -----------------------
-
-    equity_discount_rate = calc_financial_parameter_weighted_average_by_capex(
-        parameter_name="discount_rate",
+    debt_interest_rate = calc_financial_parameter_weighted_average_by_capex(
+        parameter_name="debt_interest_rate",
         greenheart_config=greenheart_config,
         capex_breakdown=finance_param_weights,
     )
     pf.set_params(
-        "leverage after tax nominal discount rate",
-        equity_discount_rate,
+        "debt interest rate",
+        debt_interest_rate,
     )
 
     # ----------------------- Run ProFAST -----------------------------------------
@@ -1304,10 +1306,6 @@ def run_profast_full_plant_model(
         )  # TODO this may not be put in right
     pf.set_params("debt type", greenheart_config["finance_parameters"]["debt_type"])
     pf.set_params("loan period if used", greenheart_config["finance_parameters"]["loan_period"])
-    pf.set_params(
-        "debt interest rate",
-        greenheart_config["finance_parameters"]["debt_interest_rate"],
-    )
     pf.set_params("cash onhand", greenheart_config["finance_parameters"]["cash_onhand_months"])
 
     # ----------------------------------- Add capital and fixed items to ProFAST ----------------
@@ -1670,6 +1668,16 @@ def run_profast_full_plant_model(
     pf.set_params(
         "leverage after tax nominal discount rate",
         equity_discount_rate,
+    )
+
+    debt_interest_rate = calc_financial_parameter_weighted_average_by_capex(
+        parameter_name="debt_interest_rate",
+        greenheart_config=greenheart_config,
+        capex_breakdown=finance_param_weights,
+    )
+    pf.set_params(
+        "debt interest rate",
+        debt_interest_rate,
     )
 
     # ------------------------------------ solve and post-process -----------------------------
