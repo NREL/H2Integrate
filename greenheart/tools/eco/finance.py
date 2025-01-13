@@ -585,7 +585,7 @@ def calc_financial_parameter_weighted_average_by_capex(
         done and the value of the parameter in the greenheart_config is returned.
     """
 
-    if type(greenheart_config["finance_parameters"]["discount_rate"]) is not dict:
+    if type(greenheart_config["finance_parameters"][parameter_name]) is not dict:
         # if only one value is given for the parameter, use that value
         parameter_value = greenheart_config["finance_parameters"][parameter_name]
 
