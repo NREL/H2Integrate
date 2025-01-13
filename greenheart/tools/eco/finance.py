@@ -701,13 +701,6 @@ def run_profast_lcoe(
     pf.set_params("tax losses monetized", True)
     pf.set_params("general inflation rate", gen_inflation)
 
-    pf.set_params(
-        "debt equity ratio of initial financing",
-        (
-            greenheart_config["finance_parameters"]["debt_equity_split"]
-            / (100 - greenheart_config["finance_parameters"]["debt_equity_split"])
-        ),
-    )
     pf.set_params("debt type", greenheart_config["finance_parameters"]["debt_type"])
     pf.set_params("loan period if used", greenheart_config["finance_parameters"]["loan_period"])
 
@@ -852,6 +845,27 @@ def run_profast_lcoe(
         debt_interest_rate,
     )
 
+    if greenheart_config["finance_parameters"]["debt_equity_split"]:
+        debt_equity_split = calc_financial_parameter_weighted_average_by_capex(
+            parameter_name="debt_equity_split",
+            greenheart_config=greenheart_config,
+            capex_breakdown=finance_param_weights,
+        )
+        pf.set_params(
+            "debt equity ratio of initial financing",
+            (debt_equity_split / (100 - debt_equity_split)),
+        )
+    elif greenheart_config["finance_parameters"]["debt_equity_ratio"]:
+        debt_equity_ratio = calc_financial_parameter_weighted_average_by_capex(
+            parameter_name="debt_equity_ratio",
+            greenheart_config=greenheart_config,
+            capex_breakdown=finance_param_weights,
+        )
+        pf.set_params(
+            "debt equity ratio of initial financing",
+            debt_equity_ratio,
+        )
+
     # ---------------------- Run ProFAST -------------------------------------------
     sol = pf.solve_price()
 
@@ -990,13 +1004,6 @@ def run_profast_grid_only(
     pf.set_params("tax losses monetized", True)
     pf.set_params("general inflation rate", gen_inflation)
 
-    pf.set_params(
-        "debt equity ratio of initial financing",
-        (
-            greenheart_config["finance_parameters"]["debt_equity_split"]
-            / (100 - greenheart_config["finance_parameters"]["debt_equity_split"])
-        ),
-    )
     pf.set_params("debt type", greenheart_config["finance_parameters"]["debt_type"])
     pf.set_params("loan period if used", greenheart_config["finance_parameters"]["loan_period"])
 
@@ -1142,6 +1149,27 @@ def run_profast_grid_only(
         "debt interest rate",
         debt_interest_rate,
     )
+
+    if greenheart_config["finance_parameters"]["debt_equity_split"]:
+        debt_equity_split = calc_financial_parameter_weighted_average_by_capex(
+            parameter_name="debt_equity_split",
+            greenheart_config=greenheart_config,
+            capex_breakdown=finance_param_weights,
+        )
+        pf.set_params(
+            "debt equity ratio of initial financing",
+            (debt_equity_split / (100 - debt_equity_split)),
+        )
+    elif greenheart_config["finance_parameters"]["debt_equity_ratio"]:
+        debt_equity_ratio = calc_financial_parameter_weighted_average_by_capex(
+            parameter_name="debt_equity_ratio",
+            greenheart_config=greenheart_config,
+            capex_breakdown=finance_param_weights,
+        )
+        pf.set_params(
+            "debt equity ratio of initial financing",
+            debt_equity_ratio,
+        )
 
     # ----------------------- Run ProFAST -----------------------------------------
 
@@ -1291,19 +1319,6 @@ def run_profast_full_plant_model(
     pf.set_params("tax losses monetized", True)
     pf.set_params("general inflation rate", gen_inflation)
 
-    if greenheart_config["finance_parameters"]["debt_equity_split"]:
-        pf.set_params(
-            "debt equity ratio of initial financing",
-            (
-                greenheart_config["finance_parameters"]["debt_equity_split"]
-                / (100 - greenheart_config["finance_parameters"]["debt_equity_split"])
-            ),
-        )  # TODO this may not be put in right
-    elif greenheart_config["finance_parameters"]["debt_equity_ratio"]:
-        pf.set_params(
-            "debt equity ratio of initial financing",
-            (greenheart_config["finance_parameters"]["debt_equity_ratio"]),
-        )  # TODO this may not be put in right
     pf.set_params("debt type", greenheart_config["finance_parameters"]["debt_type"])
     pf.set_params("loan period if used", greenheart_config["finance_parameters"]["loan_period"])
     pf.set_params("cash onhand", greenheart_config["finance_parameters"]["cash_onhand_months"])
@@ -1680,6 +1695,29 @@ def run_profast_full_plant_model(
         debt_interest_rate,
     )
 
+    if greenheart_config["finance_parameters"]["debt_equity_split"]:
+        debt_equity_split = calc_financial_parameter_weighted_average_by_capex(
+            parameter_name="debt_equity_split",
+            greenheart_config=greenheart_config,
+            capex_breakdown=finance_param_weights,
+        )
+        pf.set_params(
+            "debt equity ratio of initial financing",
+            (debt_equity_split / (100 - debt_equity_split)),
+        )
+    elif greenheart_config["finance_parameters"]["debt_equity_ratio"]:
+        debt_equity_ratio = calc_financial_parameter_weighted_average_by_capex(
+            parameter_name="debt_equity_ratio",
+            greenheart_config=greenheart_config,
+            capex_breakdown=finance_param_weights,
+        )
+        pf.set_params(
+            "debt equity ratio of initial financing",
+            debt_equity_ratio,
+        )
+    import pdb
+
+    pdb.set_trace()
     # ------------------------------------ solve and post-process -----------------------------
 
     sol = pf.solve_price()

@@ -19,8 +19,11 @@ finance_parameters:
   discount_rate:
     general: 0.10 # nominal return based on 2022 ATB basline workbook
     wind: 0.10
-    solar: 0.10
-  debt_equity_split: 68.5 # 2022 ATB uses 68.5% debt
+    wave: 0.10
+  debt_equity_split:
+    general: 68.5 # 2022 ATB uses 68.5% debt
+    wind: 68.5
+    wave: 68.5
   property_tax: 0.01 # percent of CAPEX # combined with property insurance then between H2A and H2FAST defaults
   property_insurance: 0.005 # percent of CAPEX # combined with property tax then between H2A and H2FAST defaults
   total_income_tax_rate: 0.257 # 0.257 tax rate in 2022 atb baseline workbook # current federal income tax rate, but proposed 2023 rate is 0.28. No state income tax in Texas
@@ -29,7 +32,7 @@ finance_parameters:
   debt_interest_rate:
     general: 0.06
     wind: 0.06
-    solar: 0.06
+    wave: 0.06
   debt_type: "Revolving debt" # can be "Revolving debt" or "One time loan". Revolving debt is H2FAST default and leads to much lower LCOH
   loan_period: 0 # H2FAST default, not used for revolving debt
   cash_onhand_months: 1 # H2FAST default
