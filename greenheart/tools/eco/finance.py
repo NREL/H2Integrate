@@ -1715,9 +1715,7 @@ def run_profast_full_plant_model(
             "debt equity ratio of initial financing",
             debt_equity_ratio,
         )
-    import pdb
 
-    pdb.set_trace()
     # ------------------------------------ solve and post-process -----------------------------
 
     sol = pf.solve_price()
