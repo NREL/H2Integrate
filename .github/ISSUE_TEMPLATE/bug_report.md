@@ -66,9 +66,8 @@ the problem. All code and full tracebacks should be properly markdown formatted.
 ### Relevant library versions
 <!--
 Use `pip freeze` to gather the relevant versions, and use the markdown table formatting as
-demonstrated below to replacing all relavant packages and their versions.
+demonstrated below to replacing all relevant packages and their versions.
 -->
-  
   | Package | Version |
   | ------- | ------- |
   | hopp | <3.1.1> |

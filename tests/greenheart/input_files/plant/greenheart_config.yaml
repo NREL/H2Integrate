@@ -1,5 +1,5 @@
 site:
-  mean_windspeed: False 
+  mean_windspeed: False
   depth: 45 #m
   wind_layout:
     row_spacing: 7  # Also defined in ORBIT config for offshore layout. Greenheart config values override the values in ORBIT.
@@ -16,14 +16,23 @@ project_parameters:
 finance_parameters:
   costing_general_inflation: 0.025 # used to adjust modeled costs to cost_year
   profast_general_inflation: 0.025 # based on 2022 ATB
-  discount_rate: 0.10 # nominal return based on 2022 ATB basline workbook
-  debt_equity_split: 68.5 # 2022 ATB uses 68.5% debt
+  discount_rate:
+    general: 0.10 # nominal return based on 2022 ATB basline workbook
+    wind: 0.10
+    wave: 0.10
+  debt_equity_split:
+    general: 68.5 # 2022 ATB uses 68.5% debt
+    wind: 68.5
+    wave: 68.5
   property_tax: 0.01 # percent of CAPEX # combined with property insurance then between H2A and H2FAST defaults
   property_insurance: 0.005 # percent of CAPEX # combined with property tax then between H2A and H2FAST defaults
   total_income_tax_rate: 0.257 # 0.257 tax rate in 2022 atb baseline workbook # current federal income tax rate, but proposed 2023 rate is 0.28. No state income tax in Texas
   capital_gains_tax_rate: 0.15 # H2FAST default
   sales_tax_rate: 0.0 #Verify that a different rate shouldn't be used # minimum total sales tax rate in Corpus Christi https://www.cctexas.com/detail/corpus-christi-type-fund-purpose - does this apply to H2?
-  debt_interest_rate: 0.06
+  debt_interest_rate:
+    general: 0.06
+    wind: 0.06
+    wave: 0.06
   debt_type: "Revolving debt" # can be "Revolving debt" or "One time loan". Revolving debt is H2FAST default and leads to much lower LCOH
   loan_period: 0 # H2FAST default, not used for revolving debt
   cash_onhand_months: 1 # H2FAST default
@@ -57,7 +66,7 @@ electrolyzer:
   sizing:
     resize_for_enduse: False
     size_for: 'BOL' #'BOL' (generous) or 'EOL' (conservative)
-    hydrogen_dmd: 
+    hydrogen_dmd:
   rating: 180 # MW # 0.9*Plant rating appears near-optimal for 400 MW wind plant with 3 days of underground pipe storage # MW
   cluster_rating_MW: 180
   pem_control_type: 'basic'
@@ -68,7 +77,7 @@ electrolyzer:
   electrolyzer_capex: 700 # $/kW conservative 2025 centralized. high 700, low 300 # based on https://www.irena.org/-/media/Files/IRENA/Agency/Publication/2020/Dec/IRENA_Green_hydrogen_cost_2020.pdf
   replacement_cost_percent: 0.15 # percent of capex - H2A default case
   cost_model: "singlitico2021" # "basic" is a basic cost model based on H2a and HFTO program record for PEM electrolysis. "singlitico2021" uses cost estimates from that paper
-  
+
 h2_transport_compressor:
   outlet_pressure: 68 # bar based on HDSAM
 h2_storage_compressor:
@@ -81,9 +90,9 @@ h2_transport_pipe:
   outlet_pressure: 10 # bar - from example in code from Jamie #TODO check this value
 h2_storage:
   size_capacity_from_demand:
-    flag: False # If True, then storage is sized to provide steady-state storage    
+    flag: False # If True, then storage is sized to provide steady-state storage
   capacity_from_max_on_turbine_storage: False # if True, then days of storage is ignored and storage capacity is based on how much h2 storage fits on the turbines in the plant using Kottenstete 2003.
-  type: "none" # can be one of ["none", "pipe", "turbine", "pressure_vessel", "salt_cavern", "lined_rock_cavern"]  
+  type: "none" # can be one of ["none", "pipe", "turbine", "pressure_vessel", "salt_cavern", "lined_rock_cavern"]
   days: 3 # [days] how many days worth of production we should be able to store (this is ignored if `capacity_from_max_on_turbine_storage` or `size_capacity_from_demand` is set to True)
 
 platform:
@@ -237,10 +246,10 @@ plant_design:
 
 opt_options:
   opt_flag: True
-  general: 
+  general:
     folder_output: "output"
     fname_output: "test_run_greenheart_optimization"
-  design_variables: 
+  design_variables:
     electrolyzer_rating_kw:
       flag: False
       lower: 1000.0
@@ -284,7 +293,7 @@ opt_options:
       flag: False
       lower: 0.0
     pv_to_platform_area_ratio:
-      flag: True 
+      flag: True
       upper: 1.0 # relative size of solar pv area to platform area
     user: {}
   merit_figure: "lcoh"
@@ -306,7 +315,7 @@ opt_options:
       form: "central" # type of finite differences to use, can be one of ["forward", "backward", "central"]
       debug_print: False
       gradient_method: "openmdao"
-    step_size_study: 
+    step_size_study:
       flag: False
     design_of_experiments:
       flag: False
