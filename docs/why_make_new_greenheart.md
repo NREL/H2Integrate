@@ -66,6 +66,7 @@ The current setup of ODIES largely works in the same way.
 
 The end-goal of ODIES is to remove this call to HOPP as a monolith and instead break out the individual technologies so they are all exposed equally to ODIES.
 This would entail reworking the dispatch implementation so it is controlled by ODIES and not by HOPP, which is a non-trivial task.
+HOPP would still exist as a standalone tool, but major framework development would be done in ODIES.
 
 ## Where should code I develop and implement live?
 
