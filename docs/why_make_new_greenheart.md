@@ -33,7 +33,7 @@ Storage components include batteries, hydrogen tanks; anything where you store a
 
 By combining instances of these different generalized components, we can study distinct hybrid systems in ODIES.
 Internally, the ODIES framework just needs to know if a something is a converter, transporter, storage, or some other type of component.
-Additionally, this allows users to develop their own components using the expected interface, and add in custom subsystems to their hybrid plant. 
+Additionally, this allows users to develop their own components using the expected interface, and add in custom subsystems to their hybrid plant.
 
 ## Why use OpenMDAO as the internal framework for ODIES?
 

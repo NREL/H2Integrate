@@ -1,4 +1,4 @@
-from pytest import approx, raises
+from pytest import raises
 
 from greenheart.simulation.technologies.hydrogen.h2_transport.h2_compression import Compressor
 
