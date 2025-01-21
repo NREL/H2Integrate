@@ -707,7 +707,6 @@ def run_simulation(config: GreenHeartSimulationConfig):
             total_accessory_power_renewable_kw += (
                 desal_power_kw + h2_transport_compressor_power_kw + h2_storage_power_kw
             )
-            # total_accessory_power_grid_kw = 0.0
 
         ### subtract peripheral power from supply to get what is left for electrolyzer and also get grid power
         remaining_power_profile = np.zeros_like(
