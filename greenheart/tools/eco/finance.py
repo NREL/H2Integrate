@@ -600,6 +600,8 @@ def calc_financial_parameter_weighted_average_by_capex(
         for i, key in enumerate(capex_breakdown.keys()):
             if key in greenheart_config["finance_parameters"][parameter_name].keys():
                 values[i] = greenheart_config["finance_parameters"][parameter_name][key]
+            elif capex_breakdown[key] == 0.0:
+                values[i] = 0.0
             else:
                 values[i] = greenheart_config["finance_parameters"][parameter_name]["general"]
 
@@ -1734,8 +1736,8 @@ def run_profast_full_plant_model(
 
         MIRR = npf.mirr(
             df["Investor cash flow"],
-            greenheart_config["finance_parameters"]["debt_interest_rate"],
-            greenheart_config["finance_parameters"]["discount_rate"],
+            debt_interest_rate,
+            equity_discount_rate,
         )  # TODO probably ignore MIRR
         NPV = npf.npv(
             greenheart_config["finance_parameters"]["profast_general_inflation"],
