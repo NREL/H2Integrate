@@ -1,6 +1,9 @@
-from pytest import approx, fixture, raises
 import copy
+
+from pytest import approx, raises, fixture
+
 from greenheart.simulation.technologies.steel import steel
+
 
 ng_prices_dict = {
     "2035": 3.76232,
@@ -82,9 +85,7 @@ def cost_config():
         operational_year=2035,
         plant_capacity_mtpy=1084408.2137715619,
         lcoh=4.2986685034417045,
-        feedstocks=steel.Feedstocks(
-            natural_gas_prices=ng_prices_dict, oxygen_market_price=0
-        ),
+        feedstocks=steel.Feedstocks(natural_gas_prices=ng_prices_dict, oxygen_market_price=0),
         o2_heat_integration=False,
     )
     return config
@@ -100,15 +101,14 @@ def test_run_steel_model():
 
 
 def test_steel_cost_model(subtests, cost_config):
-
     res: steel.SteelCostModelOutputs = steel.run_steel_cost_model(cost_config)
 
     with subtests.test("CapEx"):
-        assert res.total_plant_cost == approx(451513562.41513157)
+        assert res.total_plant_cost == approx(617972269.2565368)
     with subtests.test("Fixed OpEx"):
-        assert res.total_fixed_operating_cost == approx(99119892.8431614)
+        assert res.total_fixed_operating_cost == approx(104244740.28004119)
     with subtests.test("Installation"):
-        assert res.installation_cost == approx(179525207.856775)
+        assert res.installation_cost == approx(209403678.7623758)
 
 
 def test_steel_finance_model(cost_config):
@@ -132,7 +132,7 @@ def test_steel_finance_model(cost_config):
         costs=costs,
     )
 
-    lcos_expected = 961.2866791076059
+    lcos_expected = 1003.6498479621724
 
     res: steel.SteelFinanceModelOutputs = steel.run_steel_finance_model(config)
 
@@ -143,9 +143,7 @@ def test_steel_size_h2_input(subtests):
     config = steel.SteelCapacityModelConfig(
         hydrogen_amount_kgpy=73288888.8888889,
         input_capacity_factor_estimate=0.9,
-        feedstocks=steel.Feedstocks(
-            natural_gas_prices=ng_prices_dict, oxygen_market_price=0
-        ),
+        feedstocks=steel.Feedstocks(natural_gas_prices=ng_prices_dict, oxygen_market_price=0),
     )
 
     res: steel.SteelCapacityModelOutputs = steel.run_size_steel_plant_capacity(config)
@@ -160,9 +158,7 @@ def test_steel_size_steel_input(subtests):
     config = steel.SteelCapacityModelConfig(
         desired_steel_mtpy=1000000,
         input_capacity_factor_estimate=0.9,
-        feedstocks=steel.Feedstocks(
-            natural_gas_prices=ng_prices_dict, oxygen_market_price=0
-        ),
+        feedstocks=steel.Feedstocks(natural_gas_prices=ng_prices_dict, oxygen_market_price=0),
     )
 
     res: steel.SteelCapacityModelOutputs = steel.run_size_steel_plant_capacity(config)
@@ -205,12 +201,14 @@ def test_run_steel_full_model(subtests):
 
     with subtests.test("h2 mass per year"):
         assert res[0].hydrogen_amount_kgpy == approx(73288888.8888889)
-    
+
     with subtests.test("plant cost"):
-        assert res[1].total_plant_cost == approx(458597254.6437372)
-    
+        assert res[1].total_plant_cost == approx(627667493.7760644)
+    with subtests.test("Installation"):
+        assert res[1].installation_cost == approx(212913296.16069925)
     with subtests.test("steel price"):
-        assert res[2].sol.get("price") == approx(958.0597659101862)
+        assert res[2].sol.get("price") == approx(1000.0534906485253)
+
 
 def test_run_steel_full_model_changing_lcoh(subtests):
     config_0 = {
@@ -255,6 +253,46 @@ def test_run_steel_full_model_changing_lcoh(subtests):
     with subtests.test("res0 price lt res1 price"):
         assert res0[2].sol.get("price") < res1[2].sol.get("price")
     with subtests.test("raise value error when LCOH values do not match"):
+        config_1["steel"]["finances"]["lcoh"] = 40.0
         with raises(ValueError, match="steel cost LCOH and steel finance LCOH are not equal"):
-            config_1["steel"]["finances"]["lcoh"] = 40.0
             res1 = steel.run_steel_full_model(config_1)
+
+
+def test_run_steel_full_model_changing_feedstock_transport_costs(subtests):
+    config = {
+        "steel": {
+            "capacity": {
+                "input_capacity_factor_estimate": 0.9,
+                "desired_steel_mtpy": 1000000,
+            },
+            "costs": {
+                "operational_year": 2035,
+                "o2_heat_integration": False,
+                "feedstocks": {
+                    "natural_gas_prices": ng_prices_dict,
+                    "oxygen_market_price": 0,
+                    "lime_transport_cost": 47.72,
+                    "carbon_transport_cost": 64.91,
+                    "iron_ore_pellet_transport_cost": 0.63,
+                },
+                "lcoh": 4.2986685034417045,
+            },
+            "finances": {
+                "plant_life": 30,
+                "lcoh": 4.2986685034417045,
+                "grid_prices": grid_prices_dict,
+                "financial_assumptions": financial_assumptions,
+            },
+        }
+    }
+
+    res = steel.run_steel_full_model(config)
+
+    with subtests.test("plant cost"):
+        assert res[1].total_plant_cost == approx(627667493.7760644)
+
+    with subtests.test("Installation"):
+        assert res[1].installation_cost == approx(213896544.47120154)
+
+    with subtests.test("steel price"):
+        assert res[2].sol.get("price") == approx(1005.7008348727317)
