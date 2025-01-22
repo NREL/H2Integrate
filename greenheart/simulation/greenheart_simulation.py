@@ -672,9 +672,7 @@ def run_simulation(config: GreenHeartSimulationConfig):
         if (design_scenario["transportation"] == "pipeline") and (
             design_scenario["h2_storage_location"] == "onshore"
         ):
-            total_accessory_power_renewable_kw += (
-                desal_power_kw + h2_transport_compressor_power_kw
-            )
+            total_accessory_power_renewable_kw += desal_power_kw + h2_transport_compressor_power_kw
             total_accessory_power_grid_kw += h2_storage_power_kw
         else:
             total_accessory_power_renewable_kw += (
@@ -1007,35 +1005,33 @@ def run_simulation(config: GreenHeartSimulationConfig):
 
     ################# end OSW intermediate calculations
     if config.post_processing:
-        annual_energy_breakdown, hourly_energy_breakdown = (
-            he_util.post_process_simulation(
-                lcoe,
-                lcoh,
-                pf_lcoh,
-                pf_lcoe,
-                hopp_results,
-                electrolyzer_physics_results,
-                config.hopp_config,
-                config.greenheart_config,
-                config.orbit_config,
-                config.turbine_config,
-                h2_storage_results,
-                total_accessory_power_renewable_kw,
-                total_accessory_power_grid_kw,
-                capex_breakdown,
-                opex_breakdown_annual,
-                wind_cost_results,
-                platform_results,
-                desal_results,
-                config.design_scenario,
-                config.plant_design_scenario,
-                config.incentive_option,
-                solver_results=solver_results,
-                show_plots=config.show_plots,
-                save_plots=config.save_plots,
-                verbose=config.verbose,
-                output_dir=config.output_dir,
-            )
+        annual_energy_breakdown, hourly_energy_breakdown = he_util.post_process_simulation(
+            lcoe,
+            lcoh,
+            pf_lcoh,
+            pf_lcoe,
+            hopp_results,
+            electrolyzer_physics_results,
+            config.hopp_config,
+            config.greenheart_config,
+            config.orbit_config,
+            config.turbine_config,
+            h2_storage_results,
+            total_accessory_power_renewable_kw,
+            total_accessory_power_grid_kw,
+            capex_breakdown,
+            opex_breakdown_annual,
+            wind_cost_results,
+            platform_results,
+            desal_results,
+            config.design_scenario,
+            config.plant_design_scenario,
+            config.incentive_option,
+            solver_results=solver_results,
+            show_plots=config.show_plots,
+            save_plots=config.save_plots,
+            verbose=config.verbose,
+            output_dir=config.output_dir,
         )  # , lcoe, lcoh, lcoh_with_grid, lcoh_grid_only)
 
     # return
