@@ -607,7 +607,6 @@ def calc_financial_parameter_weighted_average_by_capex(
 
         # calcuated weighted average parameter value
         parameter_value = np.average(values, weights=weights)
-
     return parameter_value
 
 
