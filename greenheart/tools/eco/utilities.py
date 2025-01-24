@@ -2905,7 +2905,7 @@ def post_process_simulation(
     if greenheart_config["lca_config"]["run_lca"]:
         lca_savepath = (
             savepaths[3]
-            / f"LCA_results_design{plant_design_number}_incentive{incentive_option}_{greenheart_config["h2_storage"]["type"]}storage.csv"  # noqa: E501
+            / f'LCA_results_design{plant_design_number}_incentive{incentive_option}_{greenheart_config["h2_storage"]["type"]}storage.csv'  # noqa: E501
         )
         lca_df.to_csv(lca_savepath)
         print("LCA Analysis was run as a postprocessing step. Results were saved to:")
