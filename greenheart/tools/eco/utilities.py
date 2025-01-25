@@ -2883,10 +2883,10 @@ def post_process_simulation(
             output_dir=output_dir,
         )
     savepaths = [
-        output_dir + "data/",
-        output_dir + "data/lcoe/",
-        output_dir + "data/lcoh/",
-        output_dir + "data/lca/",
+        output_dir / "data/",
+        output_dir / "data/lcoe/",
+        output_dir / "data/lcoh/",
+        output_dir / "data/lca/",
     ]
     for sp in savepaths:
         if not sp.exists():
