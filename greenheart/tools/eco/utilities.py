@@ -1390,7 +1390,7 @@ def save_energy_flows(
         output.update({"battery state of charge [%]": hybrid_plant.battery.outputs.dispatch_SOC})
 
     output.update({"total accessory power required [kW]": solver_results[0]})
-    output.update({"grid energy usage hourly [kW]": [solver_results[1]]})
+    output.update({"grid energy usage hourly [kW]": solver_results[1]})
     output.update({"desal energy hourly [kW]": [solver_results[2]] * simulation_length})
     output.update(
         {
