@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## Unreleased (TBD)
+
+- New documentation CI pipeline to publish documentation at nrel.github.io/GreenHEART/ and test
+  that the documentation site will build on each pull request.
+- Placeholder documentation content has been removed from the site build
+
 ## v0.1.3 [1 November 2024]
 
 - Replaces the git ProFAST installation with a PyPI installation.

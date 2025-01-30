@@ -6,11 +6,9 @@ root: intro
 parts:
 - caption: Getting Started
   chapters:
-  - file: markdown
-  - file: notebooks
-  - file: markdown-notebooks
   - file: install
   - file: CONTRIBUTING
 - caption: API Reference
+  maxdepth: 3
   chapters:
   - file: api
