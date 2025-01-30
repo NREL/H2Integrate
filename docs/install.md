@@ -108,7 +108,6 @@ pip install -e ".[all]"
 
     ```bash
     conda install -y -c conda-forge glpk
-    pip install ProFAST@git+https://github.com/NREL/ProFAST.git
     ```
 
     ````{note}
