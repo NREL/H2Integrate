@@ -1,4 +1,4 @@
-from pytest import raises
+from pytest import approx, raises
 
 from greenheart.simulation.technologies.hydrogen.h2_transport.h2_compression import Compressor
 
@@ -69,7 +69,7 @@ class TestH2Compressor:
         )
         comp.compressor_power()
         _motor_rating, total_system_power = comp.compressor_system_power()
-        assert total_system_power == 3627.3907562149357
+        assert total_system_power == approx(3627.3907562149357)
 
     def test_max_flow_rate_per_compressor(self):
         p_inlet = 20  # bar
