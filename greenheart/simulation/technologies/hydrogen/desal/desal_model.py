@@ -36,36 +36,35 @@ def RO_desal(
     """
     Calculates the fresh water flow rate (m^3/hr) as
     a function of supplied power (kW) in RO desal.
-    Calculats CAPEX (USD), OPEX (USD/yr), annual cash flows
+    Calculates CAPEX (USD), OPEX (USD/yr), annual cash flows
     based on system's rated capacity (m^3/hr).
 
-    param: net_power_supply_kW: (list), hourly power input [kW]
-
-    param: desal_sys_size: Given as desired fresh water flow rate [m^3/hr]
-
-    param: useful_life: useful life of desal system [years]
-
-    param: plant_life: years of plant operation [years]
+    Args:
+        net_power_supply_kW (list): Hourly power input [kW].
+        desal_sys_size (float): Desired fresh water flow rate [m^3/hr].
+        useful_life (int): Useful life of desal system [years].
+        plant_life (int): Years of plant operation [years].
 
     Assumed values:
-    Common set points from:
-    https://www.sciencedirect.com/science/article/abs/pii/S0011916409008443
-    water_recovery_ratio = 0.30
-    energy_conversion_factor = 4.2
-    high_pressure_pump_efficency = 0.70
-    pump_pressure_kPa = 5366  (kept static for simplicity. TODO: Modify pressure through RO process)
-    energy_recovery = 0.40
-    Assumed energy savings by energy recovery device to be 40% of total energy
-    https://www.sciencedirect.com/science/article/pii/S0360544210005578?casa_token=aEz_d_LiSgYAAAAA:88Xa6uHMTZee-djvJIF9KkhpuZmwZCLPHNiThmcwv9k9RC3H17JuSoRWI-l92rrTl_E3kO4oOA
+        Common set points from:
+        https://www.sciencedirect.com/science/article/abs/pii/S0011916409008443
+        water_recovery_ratio (float): 0.30
+        energy_conversion_factor (float): 4.2
+        high_pressure_pump_efficency (float): 0.70
+        pump_pressure_kPa (float): 5366  (kept static for simplicity)
+        energy_recovery (float): 0.40
+        Assumed energy savings by energy recovery device to be 40% of total energy
+        https://www.sciencedirect.com/science/article/pii/S0360544210005578?casa_token=aEz_d_LiSgYAAAAA:88Xa6uHMTZee-djvJIF9KkhpuZmwZCLPHNiThmcwv9k9RC3H17JuSoRWI-l92rrTl_E3kO4oOA
 
+    TODO:
+        Modify water recovery to vary based on salinity.
+        SWRO: Sea water Reverse Osmosis, water >18,000 ppm
+        SWRO energy_conversion_factor range 2.5 to 4.2 kWh/m^3
+        Modify pressure through RO process
 
-    TODO: modify water recovery to vary based on salinity
-    SWRO: Sea water Reverse Osmosis, water >18,000 ppm
-    SWRO energy_conversion_factor range 2.5 to 4.2 kWh/m^3
-
-    BWRO: Brakish water Reverse Osmosis, water < 18,000 ppm
-    BWRO energy_conversion_factor range 1.0 to 1.5 kWh/m^3
-    Source: https://www.sciencedirect.com/science/article/pii/S0011916417321057
+        BWRO: Brakish water Reverse Osmosis, water < 18,000 ppm
+        BWRO energy_conversion_factor range 1.0 to 1.5 kWh/m^3
+        Source: https://www.sciencedirect.com/science/article/pii/S0011916417321057
     """
     # net_power_supply_kW = np.array(net_power_supply_kW)
 
