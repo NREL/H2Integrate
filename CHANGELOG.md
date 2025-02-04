@@ -13,7 +13,7 @@
 - Removes support for python 3.9
 - Add steel feedstock transport costs (lime, carbon, and iron ore pellets)
 - Allow individual debt rate, equity rate, and debt/equity ratio/split for each subsystem
-- Add initial docs focused on new GreenHEART (ODIES) development
+- Add initial docs focused on new GreenHEART (GreenHEART) development
 - New documentation CI pipeline to publish documentation at nrel.github.io/GreenHEART/ and test
   that the documentation site will build on each pull request.
 - Placeholder documentation content has been removed from the site build

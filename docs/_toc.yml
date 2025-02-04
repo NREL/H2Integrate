@@ -6,15 +6,32 @@ root: intro
 parts:
 - caption: Getting Started
   chapters:
-  - file: install
-  - file: CONTRIBUTING
-- caption: New GreenHEART
+    - file: getting_started/install
+    - file: getting_started/what_greenheart_does
+    - file: getting_started/expected_user_knowledge
+
+- caption: User Guide
   chapters:
-  - file: why_make_new_greenheart
-  - file: features_not_currently_implemented
-  - file: class_structure
-  - file: describing_whats_in_classes
-  - file: development_guidelines
+  - file: user_guide/user_guide
+
+- caption: Examples
+  chapters:
+  - file: examples/01-green-hydrogen
+
+- caption: Developer Guide
+  chapters:
+  - file: CONTRIBUTING
+  - file: developer_guide/coding_guidelines
+  - file: developer_guide/why_make_new_greenheart
+  - file: developer_guide/features_not_currently_implemented
+  - file: developer_guide/class_structure
+  - file: developer_guide/describing_whats_in_classes
+
+- caption: Miscellaneous Resources
+  chapters:
+    - file: misc_resources/FAQ
+    - file: misc_resources/glossary
+
 - caption: API Reference
   maxdepth: 3
   chapters:
