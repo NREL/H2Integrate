@@ -10,7 +10,7 @@ These docs are a work in progress; please ask questions about any and all parts 
 ## Why make ODIES?
 
 ODIES has already proven itself useful as a tool that can analyze and design complex hybrid systems producing electricity, hydrogen, steel, and more.
-However, these developments came in waves across multiple disparate projects, leading to a sometimes disjoint codebase.
+However, these developments came in waves across multiple disparate projects, leading to a sometimes disjointed codebase.
 In an effort to streamline and modularize ODIES to make it more effective and capable for necessary future studies, we are devoting time to redesigning it from the ground up.
 This page discusses some of the high-level decisions and mindsets that we've used throughout this process.
 
@@ -72,7 +72,7 @@ HOPP would still exist as a standalone tool, but major framework development wou
 
 Historically, ODIES has been a sort of hybrid itself, where it contains both the tool itself as well as project-specific code.
 Additionally, HOPP has been a separate tool that ODIES calls to obtain electricity production data and has been developed alongside ODIES.
-This has led to a somewhat disjoint codebase that is difficult to maintain and understand.
+This has led to a somewhat disjointed codebase that is difficult to maintain and understand.
 
 To address this, here are guidelines for where code you develop should live:
 - If the code is specific to a project, it should live in the project's repository.
