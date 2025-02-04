@@ -14,6 +14,9 @@ from greenheart.simulation.technologies.hydrogen.electrolysis.run_h2_PEM import 
 from greenheart.simulation.technologies.hydrogen.electrolysis.H2_cost_model import (
     basic_H2_cost_model,
 )
+from greenheart.simulation.technologies.hydrogen.electrolysis.pem_cost_tools import (
+    calc_electrolyzer_variable_om,
+)
 from greenheart.simulation.technologies.hydrogen.electrolysis.PEM_BOP.PEM_BOP import pem_bop
 from greenheart.simulation.technologies.hydrogen.electrolysis.PEM_costs_custom import (
     calc_custom_electrolysis_capex_fom,
@@ -108,7 +111,11 @@ def run_electrolyzer_physics(
     footprint_m2 = run_electrolyzer_footprint(electrolyzer_size_mw)
 
     # store results for return
-    H2_Results.update({"system capacity [kW]": electrolyzer_size_mw * 1e3})
+    electrolyzer_real_capacity_kW = (
+        n_pem_clusters * greenheart_config["electrolyzer"]["cluster_rating_MW"] * 1e3
+    )
+
+    H2_Results.update({"system capacity [kW]": electrolyzer_real_capacity_kW})
     electrolyzer_physics_results = {
         "H2_Results": H2_Results,
         "capacity_factor": H2_Results["Life: Capacity Factor"],
@@ -292,9 +299,15 @@ def run_electrolyzer_cost(
                 electrolyzer_physics_results, greenheart_config["electrolyzer"]
             )
         )
+
+        electrolyzer_vom_cost = calc_electrolyzer_variable_om(
+            electrolyzer_physics_results, greenheart_config
+        )
+
         electrolyzer_cost_results = {
             "electrolyzer_total_capital_cost": electrolyzer_total_capital_cost,
             "electrolyzer_OM_cost_annual": electrolyzer_OM_cost,
+            "electrolyzer_variable_OM_annual": electrolyzer_vom_cost,
         }
         return electrolyzer_cost_results
 
@@ -405,10 +418,15 @@ def run_electrolyzer_cost(
             )
             raise ValueError(msg)
 
+    electrolyzer_vom_cost = calc_electrolyzer_variable_om(
+        electrolyzer_physics_results, greenheart_config
+    )
+
     # package outputs for return
     electrolyzer_cost_results = {
         "electrolyzer_total_capital_cost": electrolyzer_total_capital_cost,
         "electrolyzer_OM_cost_annual": electrolyzer_OM_cost,
+        "electrolyzer_variable_OM_annual": electrolyzer_vom_cost,
     }
 
     # print some results if desired

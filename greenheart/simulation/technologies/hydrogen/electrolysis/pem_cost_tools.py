@@ -1,8 +1,118 @@
 import numpy as np
+from attrs import field, define
+
+from greenheart.tools.profast_tools import create_years_of_operation
 
 
-def summarize_electrolysis_cost_and_performance(electrolyzer_physics_results, electrolyzer_config):
-    capacity_kW = electrolyzer_physics_results["H2_Results"]["system capacity [kW]"]
+@define
+class ElectrolyzerLCOHInputConfig:
+    electrolyzer_physics_results: dict
+    electrolyzer_config: dict
+    analysis_start_year: int
+    installation_period_months: int | float | None = field(default=36)
+
+    electrolyzer_capacity_kW: int | float = field(init=False)
+    project_lifetime_years: int = field(init=False)
+    long_term_utilization: dict = field(init=False)
+    rated_capacity_kg_pr_day: float = field(init=False)
+    water_usage_gal_pr_kg: float = field(init=False)
+
+    electrolyzer_annual_energy_usage_kWh: list[float] = field(init=False)
+    electrolyzer_eff_kWh_pr_kg: list[float] = field(init=False)
+    electrolyzer_annual_h2_production_kg: list[float] = field(init=False)
+
+    simple_replacement_schedule: list[float] = field(init=False)
+    complex_replacement_schedule: list[float] = field(init=False)
+
+    simple_refurb_cost_percent: list[float] = field(init=False)
+    complex_refurb_cost_percent: list[float] = field(init=False)
+
+    def __attrs_post_init__(self):
+        annual_performance = self.electrolyzer_physics_results["H2_Results"][
+            "Performance Schedules"
+        ]
+
+        self.electrolyzer_capacity_kW = self.electrolyzer_physics_results["H2_Results"][
+            "system capacity [kW]"
+        ]
+        self.project_lifetime_years = len(annual_performance)
+        self.rated_capacity_kg_pr_day = (
+            self.electrolyzer_physics_results["H2_Results"]["Rated BOL: H2 Production [kg/hr]"] * 24
+        )
+
+        self.water_usage_gal_pr_kg = self.electrolyzer_physics_results["H2_Results"][
+            "Rated BOL: Gal H2O per kg-H2"
+        ]
+        self.electrolyzer_annual_energy_usage_kWh = annual_performance[
+            "Annual Energy Used [kWh/year]"
+        ].to_list()
+        self.electrolyzer_eff_kWh_pr_kg = annual_performance[
+            "Annual Average Efficiency [kWh/kg]"
+        ].to_list()
+        self.electrolyzer_annual_h2_production_kg = annual_performance[
+            "Annual H2 Production [kg/year]"
+        ]
+
+        self.long_term_utilization = self.make_lifetime_utilization()
+
+        self.simple_replacement_schedule = self.calc_simple_refurb_schedule()
+        self.simple_refurb_cost_percent = list(
+            np.array(
+                self.simple_replacement_schedule
+                * self.electrolyzer_config["replacement_cost_percent"]
+            )
+        )
+
+        self.complex_replacement_schedule = self.calc_complex_refurb_schedule()
+        self.complex_refurb_cost_percent = list(
+            np.array(
+                self.complex_replacement_schedule
+                * self.electrolyzer_config["replacement_cost_percent"]
+            )
+        )
+
+    def calc_simple_refurb_schedule(self):
+        annual_performance = self.electrolyzer_physics_results["H2_Results"][
+            "Performance Schedules"
+        ]
+        refurb_simple = np.zeros(len(annual_performance))
+        refurb_period = int(
+            round(
+                self.electrolyzer_physics_results["H2_Results"]["Time Until Replacement [hrs]"]
+                / 8760
+            )
+        )
+        refurb_simple[refurb_period : len(annual_performance) : refurb_period] = 1.0
+
+        return refurb_simple
+
+    def calc_complex_refurb_schedule(self):
+        annual_performance = self.electrolyzer_physics_results["H2_Results"][
+            "Performance Schedules"
+        ]
+        refurb_complex = annual_performance["Refurbishment Schedule [MW replaced/year]"].values / (
+            self.electrolyzer_capacity_kW / 1e3
+        )
+        return refurb_complex
+
+    def make_lifetime_utilization(self):
+        annual_performance = self.electrolyzer_physics_results["H2_Results"][
+            "Performance Schedules"
+        ]
+
+        years_of_operation = create_years_of_operation(
+            self.project_lifetime_years,
+            self.analysis_start_year,
+            self.installation_period_months,
+        )
+
+        cf_per_year = annual_performance["Capacity Factor [-]"].to_list()
+        utilization_dict = dict(zip(years_of_operation, cf_per_year))
+        return utilization_dict
+
+
+def calc_electrolyzer_variable_om(electrolyzer_physics_results, greenheart_config):
+    electrolyzer_config = greenheart_config["electrolyzer"]
     annual_performance = electrolyzer_physics_results["H2_Results"]["Performance Schedules"]
 
     if "var_om" in electrolyzer_config.keys():
@@ -10,43 +120,26 @@ def summarize_electrolysis_cost_and_performance(electrolyzer_physics_results, el
             electrolyzer_config["var_om"]
             * annual_performance["Annual Average Efficiency [kWh/kg]"].values
         )
+
+        if "analysis_start_year" not in greenheart_config["finance_parameters"]:
+            analysis_start_year = greenheart_config["project_parameters"]["atb_year"] + 2
+        else:
+            analysis_start_year = greenheart_config["finance_parameters"]["analysis_start_year"]
+        if "installation_time" not in greenheart_config["project_parameters"]:
+            installation_period_months = 36
+        else:
+            installation_period_months = greenheart_config["project_parameters"][
+                "installation_time"
+            ]
+
+        years_of_operation = create_years_of_operation(
+            greenheart_config["project_parameters"]["project_lifetime"],
+            analysis_start_year,
+            installation_period_months,
+        )
+        # $/kg-year
+        vopex_elec = dict(zip(years_of_operation, electrolyzer_vopex_pr_kg))
+
     else:
-        electrolyzer_vopex_pr_kg = 0.0
-
-    refurb_complex = annual_performance["Refurbishment Schedule [MW replaced/year]"].values / (
-        capacity_kW / 1e3
-    )
-    refurb_simple = np.zeros(len(annual_performance))
-    refurb_period = int(
-        round(electrolyzer_physics_results["H2_Results"]["Time Until Replacement [hrs]"] / 8760)
-    )
-    refurb_simple[refurb_period : len(annual_performance) : refurb_period] = 1.0
-
-    complex_refurb_cost = list(
-        np.array(refurb_complex * electrolyzer_config["replacement_cost_percent"])
-    )
-    simple_refurb_cost = list(
-        np.array(refurb_simple * electrolyzer_config["replacement_cost_percent"])
-    )
-    annual_energy_consumption = annual_performance["Annual Energy Used [kWh/year]"].values
-
-    electrolyzer_cost_res = {
-        "electrolyzer_utilization": annual_performance["Capacity Factor [-]"].to_list(),
-        "electrolyzer_capacity_kg_pr_day": electrolyzer_physics_results["H2_Results"][
-            "Rated BOL: H2 Production [kg/hr]"
-        ]
-        * 24,
-        "electrolyzer_var_om": electrolyzer_vopex_pr_kg,
-        "electrolyzer_water_feedstock": electrolyzer_physics_results["H2_Results"][
-            "Rated BOL: Gal H2O per kg-H2"
-        ],
-        "electrolyzer_energy_feedstock_kW": annual_energy_consumption,
-        "electrolyzer_eff_kWh_pr_kg": annual_performance[
-            "Annual Average Efficiency [kWh/kg]"
-        ].to_list(),
-        "stack_replacement_sched_simple": refurb_simple,
-        "stack_replacement_sched_complex": refurb_complex,
-        "refurb_cost_simple": simple_refurb_cost,
-        "refurb_cost_complex": complex_refurb_cost,
-    }
-    return electrolyzer_cost_res
+        vopex_elec = 0.0
+    return vopex_elec
