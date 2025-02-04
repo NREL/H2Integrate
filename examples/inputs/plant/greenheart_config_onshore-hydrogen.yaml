@@ -16,10 +16,10 @@ project_parameters:
   installation_time: 36 # months
 finance_parameters:
   costing_general_inflation: 0.025 # used to adjust modeled costs to cost_year
-  profast_general_inflation: 0 # based on 2022 ATB
+  profast_general_inflation: 0.025 # based on 2022 ATB
   discount_rate: 0.0948 # nominal return based on 2022 ATB basline workbook
-  debt_equity_split: False # 2022 ATB uses 68.5% debt
-  debt_equity_ratio: 1.72
+  debt_equity_split: 68.5 # 2022 ATB uses 68.5% debt
+  debt_equity_ratio: False
   property_tax: 0.01  # percent of CAPEX # combined with property insurance then between H2A and H2FAST defaults
   property_insurance: 0.005 # percent of CAPEX # combined with property tax then between H2A and H2FAST defaults
   total_income_tax_rate: 0.2574 # 0.257 tax rate in 2022 atb baseline workbook # current federal income tax rate, but proposed 2023 rate is 0.28. No state income tax in Texas
@@ -209,6 +209,16 @@ plant_design:
     h2_storage_location: "onshore" # can be one of ["onshore", "turbine", "platform"]
     pv_location: "platform" # can be one of ["none", "onshore", "platform"]
     battery_location: "platform" # can be one of ["none", "onshore", "platform"]
+
+lca_config:
+  run_lca: False #True
+  electrolyzer_type: pem #alkaline, soec
+  feedstock_water_type: ground #desal, surface
+  cambium: #cambium API argument, see cambium_data.py for additional argument options
+    project_uuid: '0f92fe57-3365-428a-8fe8-0afc326b3b43'
+    scenario: 'Mid-case with 100% decarbonization by 2035'
+    location_type: 'GEA Regions 2023'
+    time_type: 'hourly'
 
 opt_options:
   opt_flag: True

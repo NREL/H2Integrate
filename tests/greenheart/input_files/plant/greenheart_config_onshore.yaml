@@ -88,7 +88,7 @@ h2_storage:
   days: 3 # [days] how many days worth of production we should be able to store (this is ignored if `capacity_from_max_on_turbine_storage` is set to True)
 
 policy_parameters: # these should be adjusted for inflation prior to application - order of operations: rate in 1992 $,
-#then prevailing wage multiplier if applicable, then inflation
+  #then prevailing wage multiplier if applicable, then inflation
   option1: # base # no policy included ---> see files/task1/regulation and policy revue/ page 4 of 13 middle - read this
   # and look at assumptions
     electricity_itc: 0
@@ -356,3 +356,13 @@ ammonia:
       "leverage after tax nominal discount rate": 0.10893
       "debt equity ratio of initial financing": 0.624788
       "debt interest rate": 0.050049
+
+lca_config:
+  run_lca: False #True
+  electrolyzer_type: pem #alkaline, soec
+  feedstock_water_type: ground #desal, surface
+  cambium: #cambium API argument, see cambium_data.py for additional argument options
+    project_uuid: '0f92fe57-3365-428a-8fe8-0afc326b3b43'
+    scenario: 'Mid-case with 100% decarbonization by 2035'
+    location_type: 'GEA Regions 2023'
+    time_type: 'hourly'

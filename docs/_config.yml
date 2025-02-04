@@ -3,7 +3,7 @@
 
 title: GreenHEART
 author: National Renewable Energy Laboratory
-logo: logo.png
+# logo: logo.png
 copyright: "2024"
 only_build_toc_files: false
 # exclude_patterns: [_build, Thumbs.db, .DS_Store, "**.ipynb_checkpoints", .github]
@@ -41,7 +41,7 @@ repository:
 html:
   use_issues_button: true
   use_repository_button: true
-  baseurl: https://nrel.github.io/greenheart/
+  baseurl: https://nrel.github.io/GreenHEART/
 
 sphinx:
   extra_extensions:

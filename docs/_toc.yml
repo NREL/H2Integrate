@@ -6,9 +6,6 @@ root: intro
 parts:
 - caption: Getting Started
   chapters:
-  - file: markdown
-  - file: notebooks
-  - file: markdown-notebooks
   - file: install
   - file: CONTRIBUTING
 - caption: New GreenHEART
@@ -19,5 +16,6 @@ parts:
   - file: describing_whats_in_classes
   - file: development_guidelines
 - caption: API Reference
+  maxdepth: 3
   chapters:
   - file: api
