@@ -13,6 +13,7 @@ greenheart.tools.eco.utilities
 
    .. autosummary::
 
+      calculate_lca
       ceildiv
       convert_layout_from_floris_for_orbit
       convert_relative_to_absolute_path

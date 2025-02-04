@@ -81,7 +81,7 @@ met the following steps should be taken to create a new release
 
     ```bash
     git tag -a v0.1 -m "v0.1 release"
-    git push --orign v0.1
+    git push --origin v0.1
     ```
 
 6. Check that the

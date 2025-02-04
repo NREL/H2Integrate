@@ -4,7 +4,7 @@
 title: GreenHEART
 author: National Renewable Energy Laboratory
 # logo: logo.png
-copyright: "2024"
+copyright: "2025"
 only_build_toc_files: false
 # exclude_patterns: [_build, Thumbs.db, .DS_Store, "**.ipynb_checkpoints", .github]
 
@@ -14,7 +14,7 @@ execute:
   execute:
   execute_notebooks: auto
   timeout: -1  # better for longer running notebooks
-  merge_streams: true  # keeps unsychronized cell outputs in a single output cell
+  merge_streams: true  # keeps unsynchronized cell outputs in a single output cell
   exclude_patterns:
     - _build
     - Thumbs.db
@@ -25,10 +25,6 @@ execute:
 latex:
   latex_documents:
     targetname: book.tex
-
-# Add a bibtex file so that we can create citations
-bibtex_bibfiles:
-  - references.bib
 
 # Information about where the book exists on the web
 repository:
