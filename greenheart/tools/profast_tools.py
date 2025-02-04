@@ -4,6 +4,17 @@ import numpy_financial as npf
 
 
 def adjust_dollar_year(init_cost, init_dollar_year, adj_cost_year, costing_general_inflation):
+    """Adjust cost based on inflation.
+
+    Args:
+        init_cost (dict, float, int, list, np.ndarrray): cost of item ($)
+        init_dollar_year (int): dollar-year of init_cost
+        adj_cost_year (int): dollar-year to adjust cost to
+        costing_general_inflation (float): inflation rate (%)
+
+    Returns:
+        same type as init_cost: cost in dollar-year of adj_cost_year
+    """
     periods = adj_cost_year - init_dollar_year
     if isinstance(init_cost, (float, int)):
         adj_cost = -npf.fv(costing_general_inflation, periods, 0.0, init_cost)
@@ -59,6 +70,14 @@ def update_params_based_on_defaults(pf_config, update_config):
 
 
 def create_and_populate_profast(pf_config):
+    """Create ProFAST object and populate it with inputs.
+
+    Args:
+        pf_config (dict): populated dictionary of ProFAST inputs.
+
+    Returns:
+        ProFAST object: profast object initialized with data from pf_config
+    """
     pf = ProFAST.ProFAST()
     config_keys = list(pf_config.keys())
     if "params" in config_keys:
@@ -125,6 +144,16 @@ def create_and_populate_profast(pf_config):
 
 
 def run_profast(pf):
+    """Simulate financials with ProFAST
+
+    Args:
+        pf (ProFAST object): populated ProFAST object
+
+    Returns:
+        sol (dict): _description_
+        summary:
+        price_breakdown
+    """
     sol = pf.solve_price()
     summary = pf.get_summary_vals()
     price_breakdown = pf.get_cost_breakdown()
@@ -136,7 +165,6 @@ def make_price_breakdown(price_breakdown, pf_config):
     price_breakdown_capex = {}
     price_breakdown_fixed_cost = {}
     full_price_breakdown = {}
-    # TODO: update lco_string
     lco_str = "LCO{}".format(pf_config["params"]["commodity"]["name"][0])
     lco_units = "$/{}".format(pf_config["params"]["commodity"]["unit"])
     config_keys = list(pf_config.keys())
@@ -257,7 +285,6 @@ def make_profast_feedstock_item(
             site_feedstock_region = "US Average"
         vals = [feedstock_usage_pr_kg, feedstock_unit, site_feedstock_region, 0.0]
         res = {f"{feedstock_name}": dict(zip(keys, vals))}
-    # vals = [water_usage_gal_pr_kg,"gal",site_feedstock_region,profast_general_inflation]
     else:
         res = {}
     return res

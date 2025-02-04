@@ -7,11 +7,13 @@ def calc_custom_electrolysis_capex_fom(electrolyzer_capacity_kW, electrolyzer_co
 
     Args:
         electrolyzer_capacity_kW (float or int): electrolyzer capacity in kW
-        electrolyzer_config (dict): greenheart_config["electrolyzer"]
+        electrolyzer_config (dict): ``greenheart_config["electrolyzer"]``
 
     Returns:
-        float: electrolyzer overnight capex in $
-        float: electrolyzer fixed O&M in $/year
+        list(float): ``[capex,fixed_om]``::
+
+            ``capex``: electrolyzer overnight capex in $
+            ``fixed_om``: electrolyzer fixed O&M in $/year
     """
     electrolyzer_capex = electrolyzer_config["electrolyzer_capex"] * electrolyzer_capacity_kW
     if "fixed_om" in electrolyzer_config.keys():

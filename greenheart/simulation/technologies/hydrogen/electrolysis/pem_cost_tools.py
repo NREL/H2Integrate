@@ -6,6 +6,15 @@ from greenheart.tools.profast_tools import create_years_of_operation
 
 @define
 class ElectrolyzerLCOHInputConfig:
+    """C
+
+    Args:
+        electrolyzer_physics_results (dict): results from run_electrolyzer_physics()
+        electrolyzer_config (dict): sub-dictionary of greenheart_config
+        analysis_start_year (int): analysis start year
+        installation_period_months (int|float|None): installation period in months. defaults to 36.
+    """
+
     electrolyzer_physics_results: dict
     electrolyzer_config: dict
     analysis_start_year: int
@@ -32,29 +41,39 @@ class ElectrolyzerLCOHInputConfig:
             "Performance Schedules"
         ]
 
+        #: electrolyzer system capacity in kW
         self.electrolyzer_capacity_kW = self.electrolyzer_physics_results["H2_Results"][
             "system capacity [kW]"
         ]
+
+        #: int: lifetime of project in years
         self.project_lifetime_years = len(annual_performance)
+
+        #: float: electrolyzer beginnning-of-life rated H2 production capacity (kg/day)
         self.rated_capacity_kg_pr_day = (
             self.electrolyzer_physics_results["H2_Results"]["Rated BOL: H2 Production [kg/hr]"] * 24
         )
 
+        #: float: water usage in gallons of water per kg of H2
         self.water_usage_gal_pr_kg = self.electrolyzer_physics_results["H2_Results"][
             "Rated BOL: Gal H2O per kg-H2"
         ]
+        #: list(float): annual energy consumed by electrolyzer for each year of operation (kWh/year)
         self.electrolyzer_annual_energy_usage_kWh = annual_performance[
             "Annual Energy Used [kWh/year]"
         ].to_list()
+        #: list(float): annual avg efficiency of electrolyzer for each year of operation (kWh/kg)
         self.electrolyzer_eff_kWh_pr_kg = annual_performance[
             "Annual Average Efficiency [kWh/kg]"
         ].to_list()
+        #: list(float): annual hydrogen production for each year of operation (kg/year)
         self.electrolyzer_annual_h2_production_kg = annual_performance[
             "Annual H2 Production [kg/year]"
         ]
-
+        #: dict: annual capacity factor of electrolyzer for each year of operation
         self.long_term_utilization = self.make_lifetime_utilization()
 
+        #: list(int): schedule assumes all stacks are replaced in the same year
         self.simple_replacement_schedule = self.calc_simple_refurb_schedule()
         self.simple_refurb_cost_percent = list(
             np.array(
@@ -63,6 +82,7 @@ class ElectrolyzerLCOHInputConfig:
             )
         )
 
+        #: list(float): schedule assumes stacks are replaced in the year they reach EOL
         self.complex_replacement_schedule = self.calc_complex_refurb_schedule()
         self.complex_refurb_cost_percent = list(
             np.array(
