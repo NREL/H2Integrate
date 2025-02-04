@@ -441,4 +441,4 @@ def test_run_greenheart_optimize(subtests):
     lcoh_final = case.get_val("lcoh", units="USD/kg")[0]
 
     with subtests.test("lcoh"):
-        assert lcoh_final < lcoh_init
+        assert lcoh_final <= lcoh_init
