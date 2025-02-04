@@ -5,7 +5,20 @@ import numpy_financial as npf
 
 def adjust_dollar_year(init_cost, init_dollar_year, adj_cost_year, costing_general_inflation):
     periods = adj_cost_year - init_dollar_year
-    adj_cost = -npf.fv(costing_general_inflation, periods, 0.0, init_cost)
+    if isinstance(init_cost, (float, int)):
+        adj_cost = -npf.fv(costing_general_inflation, periods, 0.0, init_cost)
+    elif isinstance(init_cost, dict):
+        adj_cost = {}
+        for key, val in init_cost.items():
+            new_val = -npf.fv(costing_general_inflation, periods, 0.0, val)
+            adj_cost.update({key: new_val})
+    elif isinstance(init_cost, (list, np.ndarray)):
+        adj_cost = np.zeros(len(init_cost))
+        for i in range(len(init_cost)):
+            adj_cost[i] = -npf.fv(costing_general_inflation, periods, 0.0, init_cost[i])
+        if isinstance(init_cost, list):
+            adj_cost = list(adj_cost)
+
     return adj_cost
 
 
