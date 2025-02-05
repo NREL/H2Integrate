@@ -30,11 +30,14 @@ class ElectrolyzerLCOHInputConfig:
     electrolyzer_eff_kWh_pr_kg: list[float] = field(init=False)
     electrolyzer_annual_h2_production_kg: list[float] = field(init=False)
 
-    simple_replacement_schedule: list[float] = field(init=False)
-    complex_replacement_schedule: list[float] = field(init=False)
+    # simple_replacement_schedule: list[float] = field(init=False)
+    # complex_replacement_schedule: list[float] = field(init=False)
 
-    simple_refurb_cost_percent: list[float] = field(init=False)
-    complex_refurb_cost_percent: list[float] = field(init=False)
+    # simple_refurb_cost_percent: list[float] = field(init=False)
+    # complex_refurb_cost_percent: list[float] = field(init=False)
+
+    refurb_cost_percent: list[float] = field(init=False)
+    replacement_schedule: list[float] = field(init=False)
 
     def __attrs_post_init__(self):
         annual_performance = self.electrolyzer_physics_results["H2_Results"][
@@ -73,23 +76,28 @@ class ElectrolyzerLCOHInputConfig:
         #: dict: annual capacity factor of electrolyzer for each year of operation
         self.long_term_utilization = self.make_lifetime_utilization()
 
-        #: list(int): schedule assumes all stacks are replaced in the same year
-        self.simple_replacement_schedule = self.calc_simple_refurb_schedule()
-        self.simple_refurb_cost_percent = list(
-            np.array(
-                self.simple_replacement_schedule
-                * self.electrolyzer_config["replacement_cost_percent"]
-            )
-        )
+        use_complex_refurb = False
+        if "complex_refurb" in self.electrolyzer_config.keys():
+            if self.electrolyzer_config["complex_refurb"]:
+                use_complex_refurb = True
 
-        #: list(float): schedule assumes stacks are replaced in the year they reach EOL
-        self.complex_replacement_schedule = self.calc_complex_refurb_schedule()
-        self.complex_refurb_cost_percent = list(
-            np.array(
-                self.complex_replacement_schedule
-                * self.electrolyzer_config["replacement_cost_percent"]
+        # complex schedule assumes stacks are replaced in the year they reach EOL
+        if use_complex_refurb:
+            self.replacement_schedule = self.calc_complex_refurb_schedule()
+            self.refurb_cost_percent = list(
+                np.array(
+                    self.replacement_schedule * self.electrolyzer_config["replacement_cost_percent"]
+                )
             )
-        )
+
+        # simple schedule assumes all stacks are replaced in the same year
+        else:
+            self.replacement_schedule = self.calc_simple_refurb_schedule()
+            self.refurb_cost_percent = list(
+                np.array(
+                    self.replacement_schedule * self.electrolyzer_config["replacement_cost_percent"]
+                )
+            )
 
     def calc_simple_refurb_schedule(self):
         annual_performance = self.electrolyzer_physics_results["H2_Results"][

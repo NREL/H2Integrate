@@ -682,7 +682,9 @@ def run_profast_lcoe(
     pf.set_params("maintenance", {"value": 0, "escalation": gen_inflation})
     pf.set_params("analysis start year", greenheart_config["project_parameters"]["atb_year"] + 1)
     pf.set_params("operating life", greenheart_config["project_parameters"]["project_lifetime"])
-    pf.set_params("installation months", wind_cost_results.installation_time)
+    pf.set_params(
+        "installation months", greenheart_config["project_parameters"]["installation_time"]
+    )
     pf.set_params(
         "installation cost",
         {
@@ -987,6 +989,7 @@ def run_profast_grid_only(
         electrolyzer_performance_results.rated_capacity_kg_pr_day,
     )  # kg/day
     pf.set_params("maintenance", {"value": 0, "escalation": gen_inflation})
+    # TODO: update analysis start year below (ESG)
     pf.set_params("analysis start year", greenheart_config["project_parameters"]["atb_year"] + 1)
     pf.set_params("operating life", greenheart_config["project_parameters"]["project_lifetime"])
     pf.set_params(
@@ -1038,27 +1041,13 @@ def run_profast_grid_only(
     pf.set_params("cash onhand", greenheart_config["finance_parameters"]["cash_onhand_months"])
 
     # ----------------------------------- Add capital items to ProFAST ----------------
-    # pf.add_capital_item(
-    #     name="Wind System",
-    #     cost=capex_breakdown["wind"],
-    #     depr_type=greenheart_config["finance_parameters"]["depreciation_method"],
-    #     depr_period=greenheart_config["finance_parameters"]["depreciation_period"],
-    #     refurb=[0],
-    # )
-    # pf.add_capital_item(
-    #     name="Electrical Export system",
-    #     cost=capex_breakdown["electrical_export_system"],
-    #     depr_type=greenheart_config["finance_parameters"]["depreciation_method"],
-    #     depr_period=greenheart_config["finance_parameters"]["depreciation_period"],
-    #     refurb=[0],
-    # )
 
     pf.add_capital_item(
         name="Electrolysis System",
         cost=capex_breakdown["electrolyzer"],
         depr_type=greenheart_config["finance_parameters"]["depreciation_method"],
         depr_period=greenheart_config["finance_parameters"]["depreciation_period_electrolyzer"],
-        refurb=electrolyzer_performance_results.simple_refurb_cost_percent,
+        refurb=electrolyzer_performance_results.refurb_cost_percent,
     )
     finance_param_weights["electrolyzer"] = capex_breakdown["electrolyzer"]
     pf.add_capital_item(
@@ -1069,36 +1058,7 @@ def run_profast_grid_only(
         refurb=[0],
     )
     finance_param_weights["h2_storage"] = capex_breakdown["h2_storage"]
-    # pf.add_capital_item(
-    #     name="Desalination system",
-    #     cost=capex_breakdown["desal"],
-    #     depr_type=greenheart_config["finance_parameters"]["depreciation_method"],
-    #     depr_period=greenheart_config["finance_parameters"]["depreciation_period"],
-    #     refurb=[0],
-    # )
-
     # -------------------------------------- Add fixed costs--------------------------------
-    # pf.add_fixed_cost(
-    #     name="Wind Fixed O&M Cost",
-    #     usage=1.0,
-    #     unit="$/year",
-    #     cost=opex_breakdown["wind"],
-    #     escalation=gen_inflation,
-    # )
-    # pf.add_fixed_cost(
-    #     name="Electrical Export Fixed O&M Cost",
-    #     usage=1.0,
-    #     unit="$/year",
-    #     cost=opex_breakdown["electrical_export_system"],
-    #     escalation=gen_inflation,
-    # )
-    # pf.add_fixed_cost(
-    #     name="Desalination Fixed O&M Cost",
-    #     usage=1.0,
-    #     unit="$/year",
-    #     cost=opex_breakdown["desal"],
-    #     escalation=gen_inflation,
-    # )
     pf.add_fixed_cost(
         name="Electrolyzer Fixed O&M Cost",
         usage=1.0,
@@ -1304,7 +1264,7 @@ def run_profast_full_plant_model(
     pf.set_params("operating life", greenheart_config["project_parameters"]["project_lifetime"])
     pf.set_params(
         "installation months",
-        installation_period_months,  # Add installation time to yaml default=0
+        installation_period_months,
     )
     pf.set_params(
         "installation cost",
@@ -1468,7 +1428,7 @@ def run_profast_full_plant_model(
         cost=capex_breakdown["electrolyzer"],
         depr_type=greenheart_config["finance_parameters"]["depreciation_method"],
         depr_period=greenheart_config["finance_parameters"]["depreciation_period_electrolyzer"],
-        refurb=electrolyzer_performance_results.simple_refurb_cost_percent,
+        refurb=electrolyzer_performance_results.refurb_cost_percent,
     )
     finance_param_weights["electrolyzer"] = capex_breakdown["electrolyzer"]
     pf.add_fixed_cost(
