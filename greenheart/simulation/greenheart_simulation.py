@@ -331,6 +331,8 @@ def setup_greenheart_simulation(config: GreenHeartSimulationConfig):
     else:
         wind_cost_results = None
 
+    if "installation_time" not in config.greenheart_config["project_parameters"].keys():
+        config.greenheart_config["project_parameters"].update({"installation_time": 0})
     # override individual fin_model values with cost_info values
     if "wind" in config.hopp_config["technologies"]:
         if ("wind_om_per_kw" in config.hopp_config["config"]["cost_info"]) and (
