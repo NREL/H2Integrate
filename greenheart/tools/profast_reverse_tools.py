@@ -108,7 +108,7 @@ def make_pf_config_from_profast(pf):
         pf (ProFAST object): ProFAST object that has been initialized and populated
 
     Returns:
-        dict: dictionary if ProFAST inputs, can be used to recreate replcia of ProFAST simulation.
+        dict: dictionary of ProFAST inputs, can be used to recreate replcia of ProFAST simulation.
     """
     pf_res = {
         "params": pf.vals,
