@@ -1227,7 +1227,7 @@ def visualize_plant(
                 round(np.min(onshorey - 100), ndigits=roundto),
                 round(
                     np.max(onshorey + battery_side_y + electrolyzer_side + solar_side_y + 100)
-                    * 1.7,
+                    * 1.9,
                     ndigits=roundto,
                 ),
             ],
