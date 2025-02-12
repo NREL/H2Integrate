@@ -1,4 +1,5 @@
 import datetime as dt
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -93,28 +94,35 @@ def plot_hydrogen_flows(
 
 
 def plot_energy_flows(
-    energy_flow_data_path: str,
+    energy_flow_data_path: str = "./output/data/production/energy_flows.csv",
     start_date_time: dt.datetime = dt.datetime(2024, 1, 5, 14),
     end_date_time: dt.datetime = dt.datetime(2024, 1, 10, 14),
-    save_path: str = "./output/figures/production/hydrogen-flow.pdf",
+    save_path: str = "./output/figures/production/energy_flows.pdf",
     show_fig: bool = True,
     save_fig: bool = True,
 ) -> None:
     """Generates a plot of electricity and hydrogen dispatch for the specified period
 
     Args:
-        energy_flow_data_path (str): path to energy flow output file
-        start_date_time (dt.datetime, optional): start time for plot.
+        energy_flow_data_path (str, optional): Path to energy flow output file.
+            Defaults to Path("./output/figures/production/energy_flows.csv").
+        start_date_time (dt.datetime, optional): Start time for plot.
             Defaults to dt.datetime(2024, 1, 5, 14).
-        end_date_time (dt.datetime, optional): end time for plot.
+        end_date_time (dt.datetime, optional): End time for plot.
             Defaults to dt.datetime(2024, 1, 10, 14).
+        save_path (str, optional): Path to save figure to.
+            Defaults to Path("./output/data/production/energy_flows.pdf").
+        show_fig (bool, optional): If True, figures will be displayed.
+            Defaults to True.
+        save_fig (bool, optional): If True, figures will be saved.
+            Defaults to True.
     """
 
     # set start and end dates
     hour_start, hour_end = get_hour_from_datetime(start_date_time, end_date_time)
 
     # load data
-    df_data = pd.read_csv(energy_flow_data_path, index_col=0)
+    df_data = pd.read_csv(Path(energy_flow_data_path), index_col=0)
     df_data = df_data.iloc[hour_start:hour_end]
 
     # set up plots
@@ -122,13 +130,18 @@ def plot_energy_flows(
 
     # plot electricity output
     # df_e_out = df_data[["wind generation [kW]", "pv generation [kW]", "wave generation [kW]"]]
-    df_e_out = df_data[["wind generation [kW]", "pv generation [kW]"]] * 1e-6
-    df_e_out = df_e_out.rename(
-        columns={
-            "wind generation [kW]": "wind generation [GW]",
-            "pv generation [kW]": "pv generation [GW]",
-        }
-    )
+    df_e_out_names = {}
+    for col in df_data.columns.tolist():
+        if "generation" in col:
+            col_new = col.replace("kW", "GW")
+            df_e_out_names[col] = col_new
+
+    df_e_out = df_data[df_e_out_names.keys()] * 1e6
+    df_e_out = df_e_out.rename(columns=df_e_out_names)
+
+    print(df_e_out_names)
+    print(df_e_out.columns.to_list())
+
     df_e_out.plot(
         ax=ax[0, 0],
         logy=False,
@@ -153,11 +166,11 @@ def plot_energy_flows(
             0,
             max(
                 [
-                    max(df_batt_power["battery discharge [GW]"]),
                     max(df_batt_power["battery charge [GW]"]),
+                    max(df_batt_power["battery discharge [GW]"]),
                 ]
             )
-            * 1.5,
+            * 1.8,
         ],
         legend=False,
     )
@@ -170,7 +183,7 @@ def plot_energy_flows(
         ylabel="Battery SOC (%)",
         linestyle=":",
         color="k",
-        ylim=[0, 150],
+        ylim=[0, max(df_batt_soc["battery state of charge [%]"]) * 1.8],
         legend=False,
     )
 
@@ -178,12 +191,6 @@ def plot_energy_flows(
     leg_labels = [leg.get_label() for leg in leg_lines]
     ax[0, 1].legend(leg_lines, leg_labels, frameon=False, loc=0)
 
-    # plot energy usage
-    # df_e_usage = df_data[["desal energy hourly [kW]",
-    #                       "electrolyzer energy hourly [kW]",
-    #                       "transport compressor energy hourly [kW]",
-    #                       "storage energy hourly [kW]"]
-    #                     ]
     df_e_usage = (
         df_data[
             [
@@ -206,14 +213,21 @@ def plot_energy_flows(
     ax[1, 0].legend(frameon=False)
 
     # plot hydrogen production
-    df_h_out = df_data[["h2 production hourly [kg]", "hydrogen storage SOC [kg]"]] * 1e-3
-    ax[1, 1].plot(df_h_out)
-    ax[1, 1].set(ylabel="Hydrogen Produced (t)", xlabel="Hour")
+    df_h_out = df_data[["h2 production hourly [kg]", "hydrogen storage SOC [kg]"]] * 1e-6
+    df_h_out = df_h_out.rename(
+        columns={
+            "h2 production hourly [kg]": "H$_2$ produced hourly [kt]",
+            "hydrogen storage SOC [kg]": "H$_2$ storage SOC [kt]",
+        }
+    )
+    df_h_out.plot(ax=ax[1, 1], ylabel="Hydrogen Produced (kt)", xlabel="Hour")
+    ax[1, 1].legend(frameon=False)
 
-    # fig.add_axes((0, 0, 1, 0.5))
     plt.tight_layout()
 
     if save_fig:
+        save_path = Path(save_path)
+        save_path.parent.mkdir(parents=True, exist_ok=True)
         plt.savefig(save_path, transparent=True)
     if show_fig:
         plt.show()
