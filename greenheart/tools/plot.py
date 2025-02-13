@@ -29,7 +29,7 @@ def get_hour_from_datetime(dt_start: dt.datetime, dt_end: dt.datetime) -> tuple[
 
 
 def plot_hydrogen_flows(
-    energy_flow_data_path: str,
+    energy_flow_data_path: str = "./output/data/production/energy_flows.csv",
     start_date_time: dt.datetime = dt.datetime(2024, 1, 1, 0),
     end_date_time: dt.datetime = dt.datetime(2024, 12, 31, 23),
     save_path: str = "./output/figures/production/hydrogen-flow.pdf",
@@ -60,7 +60,7 @@ def plot_hydrogen_flows(
     df_data = df_data.iloc[hour_start:hour_end]
 
     # set up plots
-    fig, ax = plt.subplots(2, 1, sharex=True, figsize=(6, 3))
+    fig, ax = plt.subplots(2, 1, sharex=True, figsize=(12, 6))
 
     # plot hydrogen production
     df_h_out = df_data[["h2 production hourly [kg]"]] * 1e-3  # convert to t
@@ -68,6 +68,7 @@ def plot_hydrogen_flows(
 
     # plot storage SOC
     df_h_soc = np.array(df_data[["hydrogen storage SOC [kg]"]] * 1e-3)  # convert to t
+
     df_h_soc_change = np.array(
         [(df_h_soc[i] - df_h_soc[i - 1]) for i in np.arange(0, len(df_h_soc))]
     ).flatten()
