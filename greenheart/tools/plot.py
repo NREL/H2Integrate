@@ -137,7 +137,7 @@ def plot_energy_flows(
             col_new = col.replace("kW", "GW")
             df_e_out_names[col] = col_new
 
-    df_e_out = df_data[df_e_out_names.keys()] * 1e6
+    df_e_out = df_data[df_e_out_names.keys()] * 1e-6
     df_e_out = df_e_out.rename(columns=df_e_out_names)
 
     df_e_out.plot(
