@@ -811,7 +811,7 @@ def visualize_plant(
             electrolyzer_side,
             color=electrolyzer_color,
             fill=None,
-            label="Electrolyzer",
+            label="H$_2$ Electrolyzer",
             zorder=20,
             hatch=electrolyzer_hatch,
         )
@@ -825,7 +825,7 @@ def visualize_plant(
                 electrolyzer_side,
                 color=electrolyzer_color,
                 fill=None,
-                label="Electrolyzer",
+                label="H$_2$ Electrolyzer",
                 zorder=20,
                 hatch=electrolyzer_hatch,
             )
@@ -848,7 +848,7 @@ def visualize_plant(
             color=electrolyzer_color,
             fill=None,
             zorder=20,
-            label="Electrolyzer",
+            label="H$_2$ Electrolyzer",
             hatch=electrolyzer_hatch,
         )
         ax[ax_index_detail].add_patch(electrolyzer_patch)
@@ -873,7 +873,7 @@ def visualize_plant(
             color=electrolyzer_color,
             fill=None,
             zorder=20,
-            label="Electrolyzer",
+            label="H$_2$ Electrolyzer",
             hatch=electrolyzer_hatch,
         )
         ax[ax_index_turbine_detail].add_patch(electrolyzer_patch11)
@@ -892,7 +892,7 @@ def visualize_plant(
         i = 0
         for x, y in zip(turbine_x, turbine_y):
             if i == 0:
-                elabel = "Electrolyzer"
+                elabel = "H$_2$ Electrolyzer"
                 dlabel = "Desalinator"
             else:
                 elabel = None
