@@ -5,6 +5,7 @@
 - Allow users to save the GreenHEARTOutput class as a yaml file and read that yaml to an instance of the output class
 - Use sentence capitalization for plot labels and legends
 - Use "metric ton" instead of "tonne" or "metric tonne" in all internal naming and plots
+- Requires pySAM>=6.0.0 following HOPP's update
 
 ## v0.1.4 [4 February 2025]
 
