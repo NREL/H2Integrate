@@ -5,13 +5,13 @@ from greenheart.simulation.technologies.hydrogen.electrolysis.PEM_costs_custom i
 )
 
 
-TOL = 1e-3
+TOL = 1e-6
 
 electrolyzer_size_MW = 1
 electrolyzer_size_kW = electrolyzer_size_MW * 1e3
 fom_usd_pr_kW = 10.0
 capex_usd_pr_kW = 15.0
-elec_config = {"electrolyzer_capex": capex_usd_pr_kW, "fixed_om": fom_usd_pr_kW}
+elec_config = {"electrolyzer_capex": capex_usd_pr_kW, "fixed_om_per_kw": fom_usd_pr_kW}
 
 
 def test_custom_capex():
