@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import copy
 from pathlib import Path
 
 import numpy as np
@@ -11,12 +10,40 @@ from attrs import field, define
 from ORBIT import ProjectManager
 from hopp.simulation import HoppInterface
 
-import greenheart.tools.profast_tools as pf_tools
-
 
 # from greenheart.simulation.technologies.hydrogen.electrolysis.pem_cost_tools import (
 #     summarize_electrolysis_cost_and_performance,
 # )
+
+
+def adjust_dollar_year(init_cost, init_dollar_year, adj_cost_year, costing_general_inflation):
+    """Adjust cost based on inflation.
+
+    Args:
+        init_cost (dict, float, int, list, np.ndarrray): cost of item ($)
+        init_dollar_year (int): dollar-year of init_cost
+        adj_cost_year (int): dollar-year to adjust cost to
+        costing_general_inflation (float): inflation rate (%)
+
+    Returns:
+        same type as init_cost: cost in dollar-year of adj_cost_year
+    """
+    periods = adj_cost_year - init_dollar_year
+    if isinstance(init_cost, (float, int)):
+        adj_cost = -npf.fv(costing_general_inflation, periods, 0.0, init_cost)
+    elif isinstance(init_cost, dict):
+        adj_cost = {}
+        for key, val in init_cost.items():
+            new_val = -npf.fv(costing_general_inflation, periods, 0.0, val)
+            adj_cost.update({key: new_val})
+    elif isinstance(init_cost, (list, np.ndarray)):
+        adj_cost = np.zeros(len(init_cost))
+        for i in range(len(init_cost)):
+            adj_cost[i] = -npf.fv(costing_general_inflation, periods, 0.0, init_cost[i])
+        if isinstance(init_cost, list):
+            adj_cost = list(adj_cost)
+
+    return adj_cost
 
 
 @define
@@ -438,7 +465,7 @@ def run_capex(
         else:
             cost_year = greenheart_config["finance_parameters"]["discount_years"][key]
 
-        capex_breakdown[key] = pf_tools.adjust_dollar_year(
+        capex_breakdown[key] = adjust_dollar_year(
             capex_breakdown[key],
             cost_year,
             greenheart_config["project_parameters"]["cost_year"],
@@ -545,7 +572,7 @@ def run_fixed_opex(
         else:
             cost_year = greenheart_config["finance_parameters"]["discount_years"][key]
 
-        opex_breakdown_annual[key] = pf_tools.adjust_dollar_year(
+        opex_breakdown_annual[key] = adjust_dollar_year(
             opex_breakdown_annual[key],
             cost_year,
             greenheart_config["project_parameters"]["cost_year"],
@@ -573,13 +600,26 @@ def run_variable_opex(
     electrolyzer_cost_results,
     greenheart_config,
 ):
+    """calculate variable O&M in $/kg-H2.
+
+    Args:
+        electrolyzer_cost_results (dict): output of
+            greenheart.tools.eco.electrolysis.run_electrolyzer_cost
+        greenheart_config (:obj:`greenheart_simulation.GreenHeartSimulationConfig`): Greenheart
+            simulation config.
+
+    Returns:
+        dict: dictionary of components and corresponding variable O&M in $/kg-H2 for
+            adjusted for inflation so cost is in dollar-year corresponding to
+            `greenheart_config["project_parameters"]["cost_year"]`
+    """
     electrolyzer_vom = electrolyzer_cost_results["electrolyzer_variable_OM_annual"]
 
     vopex_breakdown_annual = {"electrolyzer": electrolyzer_vom}
 
     for key in vopex_breakdown_annual.keys():
         cost_year = greenheart_config["finance_parameters"]["discount_years"][key]
-        vopex_breakdown_annual[key] = pf_tools.adjust_dollar_year(
+        vopex_breakdown_annual[key] = adjust_dollar_year(
             vopex_breakdown_annual[key],
             cost_year,
             greenheart_config["project_parameters"]["cost_year"],
@@ -892,6 +932,12 @@ def run_profast_lcoe(
             "debt equity ratio of initial financing",
             debt_equity_ratio,
         )
+    else:
+        msg = (
+            "missing value in `finance_parameters`. "
+            "Requires either `debt_equity_ratio` or `debt_equity_split`"
+        )
+        raise ValueError(msg)
 
     # ---------------------- Run ProFAST -------------------------------------------
     sol = pf.solve_price()
@@ -953,8 +999,8 @@ def run_profast_grid_only(
     save_plots=False,
     output_dir="./output/",
 ):
-    vopex_breakdown = copy.deepcopy(opex_breakdown_total["variable_om"])
-    fopex_breakdown = copy.deepcopy(opex_breakdown_total["fixed_om"])
+    vopex_breakdown = opex_breakdown_total["variable_om"]
+    fopex_breakdown = opex_breakdown_total["fixed_om"]
 
     if isinstance(output_dir, str):
         output_dir = Path(output_dir).resolve()
@@ -1149,6 +1195,12 @@ def run_profast_grid_only(
             "debt equity ratio of initial financing",
             debt_equity_ratio,
         )
+    else:
+        msg = (
+            "missing value in `finance_parameters`. "
+            "Requires either `debt_equity_ratio` or `debt_equity_split`"
+        )
+        raise ValueError(msg)
 
     # ----------------------- Run ProFAST -----------------------------------------
 
@@ -1211,8 +1263,8 @@ def run_profast_full_plant_model(
     save_plots=False,
     output_dir="./output/",
 ):
-    vopex_breakdown = copy.deepcopy(opex_breakdown_total["variable_om"])
-    fopex_breakdown = copy.deepcopy(opex_breakdown_total["fixed_om"])
+    vopex_breakdown = opex_breakdown_total["variable_om"]
+    fopex_breakdown = opex_breakdown_total["fixed_om"]
 
     if isinstance(output_dir, str):
         output_dir = Path(output_dir).resolve()
@@ -1695,6 +1747,12 @@ def run_profast_full_plant_model(
             "debt equity ratio of initial financing",
             debt_equity_ratio,
         )
+    else:
+        msg = (
+            "missing value in `finance_parameters`. "
+            "Requires either `debt_equity_ratio` or `debt_equity_split`"
+        )
+        raise ValueError(msg)
 
     # ------------------------------------ solve and post-process -----------------------------
 

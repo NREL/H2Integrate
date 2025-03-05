@@ -72,6 +72,19 @@ def run_electrolyzer_physics(
         ceildiv(electrolyzer_size_mw, greenheart_config["electrolyzer"]["cluster_rating_MW"])
     )
 
+    electrolyzer_real_capacity_kW = (
+        n_pem_clusters * greenheart_config["electrolyzer"]["cluster_rating_MW"] * 1e3
+    )
+
+    if (electrolyzer_real_capacity_kW - electrolyzer_size_mw * 1e3) > 1.0:
+        electrolyzer_real_capacity_mw = electrolyzer_real_capacity_kW / 1e3
+        cluster_cap_mw = greenheart_config["electrolyzer"]["cluster_rating_MW"]
+        msg = (
+            f"setting electrolyzer capacity to {electrolyzer_real_capacity_mw} MW. "
+            f"Input value of {electrolyzer_size_mw:.2f} MW is not a "
+            f"multiple of cluster capacity ({cluster_cap_mw} MW)"
+        )
+        warnings.warn(msg, UserWarning)
     ## run using greensteel model
     pem_param_dict = {
         "eol_eff_percent_loss": greenheart_config["electrolyzer"]["eol_eff_percent_loss"],
@@ -111,10 +124,6 @@ def run_electrolyzer_physics(
     footprint_m2 = run_electrolyzer_footprint(electrolyzer_size_mw)
 
     # store results for return
-    electrolyzer_real_capacity_kW = (
-        n_pem_clusters * greenheart_config["electrolyzer"]["cluster_rating_MW"] * 1e3
-    )
-
     H2_Results.update({"system capacity [kW]": electrolyzer_real_capacity_kW})
     electrolyzer_physics_results = {
         "H2_Results": H2_Results,

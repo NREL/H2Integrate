@@ -6,7 +6,8 @@ from greenheart.tools.profast_tools import create_years_of_operation
 
 @define
 class ElectrolyzerLCOHInputConfig:
-    """C
+    """Calculates inputs for LCOH functions related to electrolyzer
+        performance outside of capex and opex.
 
     Args:
         electrolyzer_physics_results (dict): results from run_electrolyzer_physics()
@@ -29,12 +30,6 @@ class ElectrolyzerLCOHInputConfig:
     electrolyzer_annual_energy_usage_kWh: list[float] = field(init=False)
     electrolyzer_eff_kWh_pr_kg: list[float] = field(init=False)
     electrolyzer_annual_h2_production_kg: list[float] = field(init=False)
-
-    # simple_replacement_schedule: list[float] = field(init=False)
-    # complex_replacement_schedule: list[float] = field(init=False)
-
-    # simple_refurb_cost_percent: list[float] = field(init=False)
-    # complex_refurb_cost_percent: list[float] = field(init=False)
 
     refurb_cost_percent: list[float] = field(init=False)
     replacement_schedule: list[float] = field(init=False)
@@ -100,6 +95,13 @@ class ElectrolyzerLCOHInputConfig:
             )
 
     def calc_simple_refurb_schedule(self):
+        """Calculate electrolyzer refurbishment schedule
+            assuming that all stacks are replaced in the same year.
+
+        Returns:
+            list: list of years when stacks are replaced.
+            a value of 1 means stacks are replaced that year.
+        """
         annual_performance = self.electrolyzer_physics_results["H2_Results"][
             "Performance Schedules"
         ]
@@ -115,6 +117,13 @@ class ElectrolyzerLCOHInputConfig:
         return refurb_simple
 
     def calc_complex_refurb_schedule(self):
+        """Calculate electrolyzer refurbishment schedule
+            stacks are replaced in the year they reach EOL.
+
+        Returns:
+            list: list of years when stacks are replaced. values are are fraction of
+            the total installed capacity.
+        """
         annual_performance = self.electrolyzer_physics_results["H2_Results"][
             "Performance Schedules"
         ]
@@ -124,6 +133,11 @@ class ElectrolyzerLCOHInputConfig:
         return refurb_complex
 
     def make_lifetime_utilization(self):
+        """Make long term utilization dictionary for electrolyzer system.
+
+        Returns:
+            dict: keys are years of operation and values are the capacity factor for that year.
+        """
         annual_performance = self.electrolyzer_physics_results["H2_Results"][
             "Performance Schedules"
         ]
@@ -140,6 +154,16 @@ class ElectrolyzerLCOHInputConfig:
 
 
 def calc_electrolyzer_variable_om(electrolyzer_physics_results, greenheart_config):
+    """Calculate variable O&M of electrolyzer system in $/kg-H2.
+
+    Args:
+        electrolyzer_physics_results (dict): results from run_electrolyzer_physics()
+        greenheart_config (:obj:`greenheart_simulation.GreenHeartSimulationConfig`): greenheart
+            simulation config.
+
+    Returns:
+        dict | float: electrolyzer variable o&m in $/kg-H2.
+    """
     electrolyzer_config = greenheart_config["electrolyzer"]
     annual_performance = electrolyzer_physics_results["H2_Results"]["Performance Schedules"]
 
