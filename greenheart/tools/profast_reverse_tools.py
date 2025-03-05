@@ -1,4 +1,12 @@
 def convert_pf_res_to_pf_config(pf_config):
+    """Convert dictionary of profast objects to dictionary with embedded dictionaries.
+
+    Args:
+        pf_config (dict): values are profast objects.
+
+    Returns:
+        dict: dictionary of ProFAST input file.
+    """
     pf_config_new = {}
     config_keys = list(pf_config.keys())
     pf_config_new.update({"params": {}})
