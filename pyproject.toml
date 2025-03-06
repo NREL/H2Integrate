@@ -37,6 +37,7 @@ dependencies = [
     "python-dotenv",
     "python-rapidjson",
     "pytz",
+    "PyYAML",
     "rainflow",
     "requests",
     "scikit-learn",
