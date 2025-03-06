@@ -23,6 +23,7 @@ parts:
   - file: CONTRIBUTING
   - file: developer_guide/coding_guidelines
   - file: developer_guide/why_make_new_greenheart
+  - file: developer_guide/adding_a_new_technology
   - file: developer_guide/features_not_currently_implemented
   - file: developer_guide/class_structure
   - file: developer_guide/describing_whats_in_classes
