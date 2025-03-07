@@ -264,6 +264,7 @@ def run_h2_storage(
             electrolyzer_physics_results["H2_Results"]["Hydrogen Hourly Production [kg/hr]"]
         )  # TODO: update demand based on end-use needs
         (
+            hydrogen_demand_kgphr,
             hydrogen_storage_capacity_kg,
             hydrogen_storage_duration_hr,
             hydrogen_storage_soc,
@@ -273,6 +274,7 @@ def run_h2_storage(
             hydrogen_storage_demand,
         )
         h2_storage_capacity_kg = hydrogen_storage_capacity_kg
+        h2_storage_results["hydrogen_demand_kgphr"] = hydrogen_demand_kgphr
         h2_storage_results["hydrogen_storage_duration_hr"] = hydrogen_storage_duration_hr
         h2_storage_results["hydrogen_storage_soc"] = hydrogen_storage_soc
 

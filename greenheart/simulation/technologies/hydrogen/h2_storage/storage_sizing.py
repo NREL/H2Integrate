@@ -76,6 +76,7 @@ def hydrogen_storage_capacity(H2_Results, electrolyzer_size_mw, hydrogen_demand_
     )
 
     return (
+        np.ones_like(hydrogen_storage_capacity_kg) * hydrogen_demand_kgphr,
         hydrogen_storage_capacity_kg,
         hydrogen_storage_duration_hr,
         hydrogen_storage_soc,

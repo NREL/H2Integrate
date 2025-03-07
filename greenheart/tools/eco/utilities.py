@@ -1453,6 +1453,8 @@ def save_energy_flows(
     )
     if "hydrogen_storage_soc" in h2_storage_results:
         output.update({"hydrogen storage SOC [kg]": h2_storage_results["hydrogen_storage_soc"]})
+    if "hydrogen_demand_kgphr" in h2_storage_results:
+        output.update({"hydrogen demand [kg/h]": h2_storage_results["hydrogen_demand_kgphr"]})
 
     df = pd.DataFrame.from_dict(output)
 
