@@ -10,6 +10,7 @@ def hydrogen_storage_capacity(H2_Results, electrolyzer_size_mw, hydrogen_demand_
         hydrogen_demand_kgphr (float): Hydrogen demand in kg/hr.
 
     Returns:
+        hydrogen_demand_kgphr (list): Hydrogen hourly demand in kilograms per hour.
         hydrogen_storage_capacity_kg (float): Hydrogen storage capacity in kilograms.
         hydrogen_storage_duration_hr (float): Hydrogen storage duration in hours using HHV/LHV.
         hydrogen_storage_soc (list): Timeseries of the hydrogen storage state of charge.
