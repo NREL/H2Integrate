@@ -1412,10 +1412,10 @@ def save_energy_flows(
     if hybrid_plant.battery:
         battery_power_out_mw = hybrid_plant.battery.outputs.P
         output.update(
-            {"battery discharge [kW]": [(int(p > 0)) * p * 1e3 for p in battery_power_out_mw]}
+            {"battery discharge [kW]": [(int(p > 0)) * p for p in battery_power_out_mw]}
         )  # convert from MW to kW and extract only discharging
         output.update(
-            {"battery charge [kW]": [-(int(p < 0)) * p * 1e3 for p in battery_power_out_mw]}
+            {"battery charge [kW]": [-(int(p < 0)) * p for p in battery_power_out_mw]}
         )  # convert from MW to kW and extract only charging
         output.update({"battery state of charge [%]": hybrid_plant.battery.outputs.dispatch_SOC})
     total_generation_hourly = hybrid_plant.grid._system_model.Outputs.system_pre_interconnect_kwac[

@@ -149,23 +149,34 @@ def plot_energy_flows(
     ax[0, 0].legend(frameon=False)
 
     # plot battery charge/discharge
-    df_batt_power = df_data[["battery charge [kW]", "battery discharge [kW]"]] * 1e-6
+    df_batt_power = df_data[["battery charge [kW]", "battery discharge [kW]"]]
+
+    if (df_batt_power.max().values > 1e6).any():
+        batt_scale = 1e-6
+        batt_units = "GW"
+    elif (df_batt_power.max().values > 1e3).any():
+        batt_scale = 1e-3
+        batt_units = "MW"
+    else:
+        batt_scale = 1e0
+        batt_units = "kW"
+    df_batt_power = df_batt_power * batt_scale
     df_batt_power = df_batt_power.rename(
         columns={
-            "battery charge [kW]": "battery charge [GW]",
-            "battery discharge [kW]": "battery discharge [GW]",
+            "battery charge [kW]": f"battery charge [{batt_units}]",
+            "battery discharge [kW]": f"battery discharge [{batt_units}]",
         }
     )
     leg_info_batt_pow = df_batt_power.plot(
         ax=ax[0, 1],
         logy=False,
-        ylabel="Battery Power (GW)",
+        ylabel=f"Battery Power ({batt_units})",
         ylim=[
             0,
             max(
                 [
-                    max(df_batt_power["battery charge [GW]"]),
-                    max(df_batt_power["battery discharge [GW]"]),
+                    max(df_batt_power[f"battery charge [{batt_units}]"]),
+                    max(df_batt_power[f"battery discharge [{batt_units}]"]),
                 ]
             )
             * 1.8,
