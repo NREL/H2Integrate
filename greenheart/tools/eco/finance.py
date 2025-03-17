@@ -11,11 +11,6 @@ from ORBIT import ProjectManager
 from hopp.simulation import HoppInterface
 
 
-# from greenheart.simulation.technologies.hydrogen.electrolysis.pem_cost_tools import (
-#     summarize_electrolysis_cost_and_performance,
-# )
-
-
 def adjust_dollar_year(init_cost, init_dollar_year, adj_cost_year, costing_general_inflation):
     """Adjust cost based on inflation.
 

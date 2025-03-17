@@ -76,7 +76,7 @@ class ElectrolyzerLCOHInputConfig:
             if self.electrolyzer_config["complex_refurb"]:
                 use_complex_refurb = True
 
-        # complex schedule assumes stacks are replaced in the year they reach EOL
+        # complex schedule assumes stacks are replaced in the year they reach end-of-life
         if use_complex_refurb:
             self.replacement_schedule = self.calc_complex_refurb_schedule()
             self.refurb_cost_percent = list(

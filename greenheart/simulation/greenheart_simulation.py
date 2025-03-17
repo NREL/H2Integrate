@@ -186,6 +186,12 @@ class GreenHeartSimulationConfig:
                 {"analysis_start_year": analysis_start_year}
             )
 
+            msg = (
+                "analysis_start_year not provided in greenheart input file."
+                f"Setting analysis_start_year to {analysis_start_year}."
+            )
+            warnings.warn(msg, UserWarning)
+
         if self.electrolyzer_rating_mw is not None:
             self.greenheart_config["electrolyzer"]["flag"] = True
             self.greenheart_config["electrolyzer"]["rating"] = self.electrolyzer_rating_mw
@@ -455,11 +461,22 @@ def setup_greenheart_simulation(config: GreenHeartSimulationConfig):
             config.greenheart_config["project_parameters"].update(
                 {"installation_time": wind_cost_results.installation_time}
             )
+            msg = (
+                "installation_time not provided in greenheart input file."
+                "Updating installation_time from Orbit results "
+                f"({wind_cost_results.installation_time} months)."
+            )
+            warnings.warn(msg, UserWarning)
     else:
         wind_cost_results = None
 
     if "installation_time" not in config.greenheart_config["project_parameters"].keys():
         config.greenheart_config["project_parameters"].update({"installation_time": 0})
+        msg = (
+            "installation_time not provided in greenheart input file."
+            "Setting installation_time to 0 months."
+        )
+        warnings.warn(msg, UserWarning)
     # override individual fin_model values with cost_info values
     if "wind" in config.hopp_config["technologies"]:
         if ("wind_om_per_kw" in config.hopp_config["config"]["cost_info"]) and (
