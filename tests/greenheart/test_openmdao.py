@@ -209,10 +209,10 @@ def setup_greenheart():
         "driver": {
             "optimization": {
                 "flag": True,
-                "solver": "SLSQP",
+                "solver": "COBYLA",
                 "tol": 1e-6,
-                "max_major_iter": 1,
-                "max_minor_iter": 2,
+                "max_iter": 5,
+                "rhobeg": 20000.0,
                 "gradient_method": "openmdao",
                 # "time_limit": 10, # (sec) optional
                 # "hist_file_name": "snopt_history.txt", # optional
@@ -427,6 +427,8 @@ def test_run_greenheart_run_only(subtests):
 
 def test_run_greenheart_optimize(subtests):
     config = setup_greenheart()
+    config.greenheart_config["electrolyzer"]["cluster_rating_MW"] = 20.0
+    config.greenheart_config["electrolyzer"]["rating"] = 100.0
 
     prob, config = run_greenheart(config, run_only=False)
 
@@ -441,4 +443,4 @@ def test_run_greenheart_optimize(subtests):
     lcoh_final = case.get_val("lcoh", units="USD/kg")[0]
 
     with subtests.test("lcoh"):
-        assert lcoh_final <= lcoh_init
+        assert lcoh_final < lcoh_init

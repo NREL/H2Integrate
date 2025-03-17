@@ -1,10 +1,16 @@
+import inspect
 import warnings
 from pathlib import Path
 
-from pytest import warns, approx
+import pandas as pd
+from pytest import skip, warns, approx
 from hopp.utilities.keys import set_nrel_key_dot_env
 
-from greenheart.simulation.greenheart_simulation import GreenHeartSimulationConfig, run_simulation
+from greenheart.simulation.greenheart_simulation import (
+    GreenHeartSimulationConfig,
+    GreenHeartSimulationOutput,
+    run_simulation,
+)
 
 
 set_nrel_key_dot_env()
@@ -139,6 +145,91 @@ def test_simulation_wind_wave_solar(subtests):
     # TODO base this test value on something. Currently just based on output at writing.
     with subtests.test("lcoe"):
         assert lcoe == approx(0.13255644222185253, rel=rtol)
+
+
+def test_simulation_io(subtests):
+    config = GreenHeartSimulationConfig(
+        filename_hopp_config=filename_hopp_config,
+        filename_greenheart_config=filename_greenheart_config_onshore,
+        filename_turbine_config=filename_turbine_config,
+        filename_floris_config=filename_floris_config,
+        verbose=False,
+        show_plots=False,
+        save_plots=False,
+        output_dir=output_path,
+        use_profast=True,
+        post_processing=True,
+        incentive_option=1,
+        plant_design_scenario=9,
+        output_level=8,
+    )
+
+    temp_file_path = Path("tmp.yaml")
+
+    # based on 2023 ATB moderate case for onshore wind
+    config.hopp_config["config"]["cost_info"]["wind_installed_cost_mw"] = 1434000.0
+    # based on 2023 ATB moderate case for onshore wind
+    config.hopp_config["config"]["cost_info"]["wind_om_per_kw"] = 29.567
+    config.hopp_config["technologies"]["wind"]["fin_model"]["system_costs"]["om_fixed"][0] = (
+        config.hopp_config["config"]["cost_info"]["wind_om_per_kw"]
+    )
+    # set skip_financial to false for onshore wind
+    config.hopp_config["config"]["simulation_options"]["wind"]["skip_financial"] = False
+    output_o = run_simulation(config)
+
+    with subtests.test("save_output"):
+        output_o.save_to_file("tmp.yaml")
+
+    with subtests.test("load_saved_output"):
+        output_i = GreenHeartSimulationOutput.load_from_file(temp_file_path)
+
+    if temp_file_path.exists():
+        temp_file_path.unlink()
+
+    members_o = inspect.getmembers(output_o, lambda a: not (inspect.isroutine(a)))
+    members_i = inspect.getmembers(output_i, lambda a: not (inspect.isroutine(a)))
+
+    ignore = ["ammonia_finance", "steel_finance"]
+
+    for i, obj in enumerate(members_i):
+        with subtests.test(f"io equality {i}/{obj}"):
+            if obj[0] in ignore:
+                skip(
+                    "we do not expect equality for these indexes because of excluded information"
+                    "in the yaml dump and complex data type nesting"
+                )
+            if i > 14:
+                skip(
+                    "we do not expect equality for these indexes because of excluded information"
+                    "in the yaml dump and complex data type nesting"
+                )
+
+            assert isinstance(members_o[i], type(obj))
+
+            if len(obj) > 1:
+                if isinstance(obj, pd.Series):
+                    assert obj.equals(members_i[i])
+                elif isinstance(obj, dict):
+                    for key in obj.keys():
+                        if key.startswith("_"):
+                            skip("don't compare private methods")
+                        if len(obj[key] > 1):
+                            for j, el in enumerate(obj[key]):
+                                assert el == members_i[i][key][j]
+                        else:
+                            assert obj[key] == members_i[i][key]
+                else:
+                    for j, el in enumerate(obj):
+                        if isinstance(el, pd.Series):
+                            assert el.equals(members_i[i][j])
+                        elif el is None:
+                            skip("don't compare None type attributes")
+                        elif type(el) is str and el.startswith("_"):
+                            skip("don't compare private methods")
+                        else:
+                            assert el == members_o[i][j]
+            else:
+                assert obj == members_o[i]
 
 
 def test_simulation_wind_wave_solar_battery(subtests):

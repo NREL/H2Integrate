@@ -776,7 +776,7 @@ def run_profast_lcoe(
     # ----------------------------------- Add capital items to ProFAST ----------------
     if "wind" in capex_breakdown.keys():
         pf.add_capital_item(
-            name="Wind System",
+            name="Wind system",
             cost=capex_breakdown["wind"],
             depr_type=greenheart_config["finance_parameters"]["depreciation_method"],
             depr_period=greenheart_config["finance_parameters"]["depreciation_period"],
@@ -785,7 +785,7 @@ def run_profast_lcoe(
         finance_param_weights["wind"] = capex_breakdown["wind"]
     if "wave" in capex_breakdown.keys():
         pf.add_capital_item(
-            name="Wave System",
+            name="Wave system",
             cost=capex_breakdown["wave"],
             depr_type=greenheart_config["finance_parameters"]["depreciation_method"],
             depr_period=greenheart_config["finance_parameters"]["depreciation_period"],
@@ -794,7 +794,7 @@ def run_profast_lcoe(
         finance_param_weights["wave"] = capex_breakdown["wave"]
     if "solar" in capex_breakdown.keys():
         pf.add_capital_item(
-            name="Solar System",
+            name="Solar PV system",
             cost=capex_breakdown["solar"],
             depr_type=greenheart_config["finance_parameters"]["depreciation_method"],
             depr_period=greenheart_config["finance_parameters"]["depreciation_period"],
@@ -803,7 +803,7 @@ def run_profast_lcoe(
         finance_param_weights["solar"] = capex_breakdown["solar"]
     if "battery" in capex_breakdown.keys():
         pf.add_capital_item(
-            name="Battery System",
+            name="Battery system",
             cost=capex_breakdown["battery"],
             depr_type=greenheart_config["finance_parameters"]["depreciation_method"],
             depr_period=greenheart_config["finance_parameters"]["depreciation_period"],
@@ -815,7 +815,7 @@ def run_profast_lcoe(
         and design_scenario["h2_storage_location"] == "turbine"
     ):
         pf.add_capital_item(
-            name="Electrical Export system",
+            name="Electrical export system",
             cost=capex_breakdown["electrical_export_system"],
             depr_type=greenheart_config["finance_parameters"]["depreciation_method"],
             depr_period=greenheart_config["finance_parameters"]["depreciation_period"],
@@ -826,7 +826,7 @@ def run_profast_lcoe(
         ]
     # -------------------------------------- Add fixed costs--------------------------------
     pf.add_fixed_cost(
-        name="Wind and Electrical Fixed O&M Cost",
+        name="Wind and electrical fixed O&M cost",
         usage=1.0,
         unit="$/year",
         cost=opex_breakdown["wind_and_electrical"],
@@ -835,7 +835,7 @@ def run_profast_lcoe(
 
     if "wave" in opex_breakdown.keys():
         pf.add_fixed_cost(
-            name="Wave O&M Cost",
+            name="Wave O&M cost",
             usage=1.0,
             unit="$/year",
             cost=opex_breakdown["wave"],
@@ -844,7 +844,7 @@ def run_profast_lcoe(
 
     if "solar" in opex_breakdown.keys():
         pf.add_fixed_cost(
-            name="Solar O&M Cost",
+            name="Solar O&M cost",
             usage=1.0,
             unit="$/year",
             cost=opex_breakdown["solar"],
@@ -853,7 +853,7 @@ def run_profast_lcoe(
 
     if "battery" in opex_breakdown.keys():
         pf.add_fixed_cost(
-            name="Battery O&M Cost",
+            name="Battery O&M cost",
             usage=1.0,
             unit="$/year",
             cost=opex_breakdown["battery"],
@@ -1089,7 +1089,7 @@ def run_profast_grid_only(
     # ----------------------------------- Add capital items to ProFAST ----------------
 
     pf.add_capital_item(
-        name="Electrolysis System",
+        name="Electrolysis system",
         cost=capex_breakdown["electrolyzer"],
         depr_type=greenheart_config["finance_parameters"]["depreciation_method"],
         depr_period=greenheart_config["finance_parameters"]["depreciation_period_electrolyzer"],
@@ -1097,7 +1097,7 @@ def run_profast_grid_only(
     )
     finance_param_weights["electrolyzer"] = capex_breakdown["electrolyzer"]
     pf.add_capital_item(
-        name="Hydrogen Storage System",
+        name="Hydrogen storage system",
         cost=capex_breakdown["h2_storage"],
         depr_type=greenheart_config["finance_parameters"]["depreciation_method"],
         depr_period=greenheart_config["finance_parameters"]["depreciation_period_electrolyzer"],
@@ -1106,14 +1106,14 @@ def run_profast_grid_only(
     finance_param_weights["h2_storage"] = capex_breakdown["h2_storage"]
     # -------------------------------------- Add fixed costs--------------------------------
     pf.add_fixed_cost(
-        name="Electrolyzer Fixed O&M Cost",
+        name="Electrolyzer fixed O&M cost",
         usage=1.0,
         unit="$/year",
         cost=fopex_breakdown["electrolyzer"],
         escalation=gen_inflation,
     )
     pf.add_fixed_cost(
-        name="Hydrogen Storage Fixed O&M Cost",
+        name="Hydrogen storage fixed O&M cost",
         usage=1.0,
         unit="$/year",
         cost=fopex_breakdown["h2_storage"],
@@ -1369,7 +1369,7 @@ def run_profast_full_plant_model(
     # ----------------------------------- Add capital and fixed items to ProFAST ----------------
     if "wind" in capex_breakdown.keys():
         pf.add_capital_item(
-            name="Wind System",
+            name="Wind system",
             cost=capex_breakdown["wind"],
             depr_type=greenheart_config["finance_parameters"]["depreciation_method"],
             depr_period=greenheart_config["finance_parameters"]["depreciation_period"],
@@ -1379,7 +1379,7 @@ def run_profast_full_plant_model(
 
     if "wave" in capex_breakdown.keys():
         pf.add_capital_item(
-            name="Wave System",
+            name="Wave system",
             cost=capex_breakdown["wave"],
             depr_type=greenheart_config["finance_parameters"]["depreciation_method"],
             depr_period=greenheart_config["finance_parameters"]["depreciation_period"],
@@ -1389,7 +1389,7 @@ def run_profast_full_plant_model(
 
     if "solar" in capex_breakdown.keys():
         pf.add_capital_item(
-            name="Solar System",
+            name="Solar PV system",
             cost=capex_breakdown["solar"],
             depr_type=greenheart_config["finance_parameters"]["depreciation_method"],
             depr_period=greenheart_config["finance_parameters"]["depreciation_period"],
@@ -1399,7 +1399,7 @@ def run_profast_full_plant_model(
 
     if "battery" in capex_breakdown.keys():
         pf.add_capital_item(
-            name="Battery System",
+            name="Battery system",
             cost=capex_breakdown["battery"],
             depr_type=greenheart_config["finance_parameters"]["depreciation_method"],
             depr_period=greenheart_config["finance_parameters"]["depreciation_period"],
@@ -1409,7 +1409,7 @@ def run_profast_full_plant_model(
 
     if "platform" in capex_breakdown.keys() and capex_breakdown["platform"] > 0:
         pf.add_capital_item(
-            name="Equipment Platform",
+            name="Equipment platform",
             cost=capex_breakdown["platform"],
             depr_type=greenheart_config["finance_parameters"]["depreciation_method"],
             depr_period=greenheart_config["finance_parameters"]["depreciation_period"],
@@ -1418,7 +1418,7 @@ def run_profast_full_plant_model(
         finance_param_weights["platform"] = capex_breakdown["platform"]
 
         pf.add_fixed_cost(
-            name="Equipment Platform O&M Cost",
+            name="Equipment platform O&M cost",
             usage=1.0,
             unit="$/year",
             cost=fopex_breakdown["platform"],
@@ -1426,7 +1426,7 @@ def run_profast_full_plant_model(
         )
 
     pf.add_fixed_cost(
-        name="Wind and Electrical Export Fixed O&M Cost",
+        name="Wind and electrical export fixed O&M cost",
         usage=1.0,
         unit="$/year",
         cost=fopex_breakdown["wind_and_electrical"],
@@ -1434,7 +1434,7 @@ def run_profast_full_plant_model(
     )
     if "wave" in fopex_breakdown.keys():
         pf.add_fixed_cost(
-            name="Wave O&M Cost",
+            name="Wave O&M cost",
             usage=1.0,
             unit="$/year",
             cost=fopex_breakdown["wave"],
@@ -1443,7 +1443,7 @@ def run_profast_full_plant_model(
 
     if "solar" in fopex_breakdown.keys():
         pf.add_fixed_cost(
-            name="Solar O&M Cost",
+            name="Solar O&M cost",
             usage=1.0,
             unit="$/year",
             cost=fopex_breakdown["solar"],
@@ -1452,7 +1452,7 @@ def run_profast_full_plant_model(
 
     if "battery" in fopex_breakdown.keys():
         pf.add_fixed_cost(
-            name="Battery O&M Cost",
+            name="Battery O&M cost",
             usage=1.0,
             unit="$/year",
             cost=fopex_breakdown["battery"],
@@ -1464,7 +1464,7 @@ def run_profast_full_plant_model(
         and design_scenario["h2_storage_location"] == "turbine"
     ):
         pf.add_capital_item(
-            name="Electrical Export system",
+            name="Electrical export system",
             cost=capex_breakdown["electrical_export_system"],
             depr_type=greenheart_config["finance_parameters"]["depreciation_method"],
             depr_period=greenheart_config["finance_parameters"]["depreciation_period"],
@@ -1476,7 +1476,7 @@ def run_profast_full_plant_model(
         # TODO assess if this makes sense (electrical export O&M included in wind O&M)
 
     pf.add_capital_item(
-        name="Electrolysis System",
+        name="Electrolysis system",
         cost=capex_breakdown["electrolyzer"],
         depr_type=greenheart_config["finance_parameters"]["depreciation_method"],
         depr_period=greenheart_config["finance_parameters"]["depreciation_period_electrolyzer"],
@@ -1484,7 +1484,7 @@ def run_profast_full_plant_model(
     )
     finance_param_weights["electrolyzer"] = capex_breakdown["electrolyzer"]
     pf.add_fixed_cost(
-        name="Electrolysis System Fixed O&M Cost",
+        name="Electrolysis system fixed O&M cost",
         usage=1.0,
         unit="$/year",
         cost=fopex_breakdown["electrolyzer"],
@@ -1501,7 +1501,7 @@ def run_profast_full_plant_model(
 
     if design_scenario["electrolyzer_location"] == "turbine":
         pf.add_capital_item(
-            name="H2 Pipe Array System",
+            name="H2 pipe array system",
             cost=capex_breakdown["h2_pipe_array"],
             depr_type=greenheart_config["finance_parameters"]["depreciation_method"],
             depr_period=greenheart_config["finance_parameters"]["depreciation_period_electrolyzer"],
@@ -1509,7 +1509,7 @@ def run_profast_full_plant_model(
         )
         finance_param_weights["h2_pipe_array"] = capex_breakdown["h2_pipe_array"]
         pf.add_fixed_cost(
-            name="H2 Pipe Array Fixed O&M Cost",
+            name="H2 pipe array fixed O&M cost",
             usage=1.0,
             unit="$/year",
             cost=fopex_breakdown["h2_pipe_array"],
@@ -1528,7 +1528,7 @@ def run_profast_full_plant_model(
         or (design_scenario["transportation"] == "hvdc+pipeline")
     ):
         pf.add_capital_item(
-            name="H2 Transport Compressor System",
+            name="H2 transport compressor system",
             cost=capex_breakdown["h2_transport_compressor"],
             depr_type=greenheart_config["finance_parameters"]["depreciation_method"],
             depr_period=greenheart_config["finance_parameters"]["depreciation_period_electrolyzer"],
@@ -1538,7 +1538,7 @@ def run_profast_full_plant_model(
             "h2_transport_compressor"
         ]
         pf.add_capital_item(
-            name="H2 Transport Pipeline System",
+            name="H2 transport pipeline system",
             cost=capex_breakdown["h2_transport_pipeline"],
             depr_type=greenheart_config["finance_parameters"]["depreciation_method"],
             depr_period=greenheart_config["finance_parameters"]["depreciation_period_electrolyzer"],
@@ -1547,14 +1547,14 @@ def run_profast_full_plant_model(
         finance_param_weights["h2_transport_pipeline"] = capex_breakdown["h2_transport_pipeline"]
 
         pf.add_fixed_cost(
-            name="H2 Transport Compression Fixed O&M Cost",
+            name="H2 transport compression fixed O&M cost",
             usage=1.0,
             unit="$/year",
             cost=fopex_breakdown["h2_transport_compressor"],
             escalation=gen_inflation,
         )
         pf.add_fixed_cost(
-            name="H2 Transport Pipeline Fixed O&M Cost",
+            name="H2 transport pipeline fixed O&M cost",
             usage=1.0,
             unit="$/year",
             cost=fopex_breakdown["h2_transport_pipeline"],
@@ -1563,7 +1563,7 @@ def run_profast_full_plant_model(
 
     if greenheart_config["h2_storage"]["type"] != "none":
         pf.add_capital_item(
-            name="Hydrogen Storage System",
+            name="Hydrogen storage system",
             cost=capex_breakdown["h2_storage"],
             depr_type=greenheart_config["finance_parameters"]["depreciation_method"],
             depr_period=greenheart_config["finance_parameters"]["depreciation_period_electrolyzer"],
@@ -1571,7 +1571,7 @@ def run_profast_full_plant_model(
         )
         finance_param_weights["h2_storage"] = capex_breakdown["h2_storage"]
         pf.add_fixed_cost(
-            name="Hydrogen Storage Fixed O&M Cost",
+            name="Hydrogen storage fixed O&M cost",
             usage=1.0,
             unit="$/year",
             cost=fopex_breakdown["h2_storage"],
@@ -1589,7 +1589,7 @@ def run_profast_full_plant_model(
         )
     else:
         pf.add_capital_item(
-            name="Desal System",
+            name="Desal system",
             cost=capex_breakdown["desal"],
             depr_type=greenheart_config["finance_parameters"]["depreciation_method"],
             depr_period=greenheart_config["finance_parameters"]["depreciation_period_electrolyzer"],
@@ -1597,7 +1597,7 @@ def run_profast_full_plant_model(
         )
         finance_param_weights["desal"] = capex_breakdown["desal"]
         pf.add_fixed_cost(
-            name="Desal Fixed O&M Cost",
+            name="Desal fixed O&M cost",
             usage=1.0,
             unit="$/year",
             cost=fopex_breakdown["desal"],

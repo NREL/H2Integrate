@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Allow users to save the GreenHEARTOutput class as a yaml file and read that yaml to an instance of the output class
+- Remove reference_plants from examples. Reference plants can now be found in the [ReferenceHybridSystemDesigns](https://github.com/NREL/ReferenceHybridSystemDesigns) repository.
+- Use sentence capitalization for plot labels and legends
+- Use "metric ton" instead of "tonne" or "metric tonne" in all internal naming and plots
+
+## v0.1.4 [4 February 2025]
+
 - Adds `CoolProp` to `pyproject.toml`
 - Changes units of `lcoe_real` in `HOPPComponent` from "MW*h" to "kW*h"
 - Adds `pre-commit`, `ruff`, and `isort` checks, and CI workflow to ensure these steps aren't
