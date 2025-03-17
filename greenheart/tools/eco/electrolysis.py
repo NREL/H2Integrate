@@ -69,14 +69,16 @@ def run_electrolyzer_physics(
         )
 
     n_pem_clusters = int(
-        ceildiv(electrolyzer_size_mw, greenheart_config["electrolyzer"]["cluster_rating_MW"])
+        ceildiv(
+            round(electrolyzer_size_mw, 1), greenheart_config["electrolyzer"]["cluster_rating_MW"]
+        )
     )
 
     electrolyzer_real_capacity_kW = (
         n_pem_clusters * greenheart_config["electrolyzer"]["cluster_rating_MW"] * 1e3
     )
 
-    if (electrolyzer_real_capacity_kW - electrolyzer_size_mw * 1e3) > 1.0:
+    if np.abs(electrolyzer_real_capacity_kW - (electrolyzer_size_mw * 1e3)) > 1.0:
         electrolyzer_real_capacity_mw = electrolyzer_real_capacity_kW / 1e3
         cluster_cap_mw = greenheart_config["electrolyzer"]["cluster_rating_MW"]
         msg = (
