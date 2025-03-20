@@ -47,7 +47,7 @@ class ElectrolyzerLCOHInputConfig:
         #: int: lifetime of project in years
         self.project_lifetime_years = len(annual_performance)
 
-        #: float: electrolyzer beginnning-of-life rated H2 production capacity (kg/day)
+        #: float: electrolyzer beginnning-of-life rated H2 production capacity in kg/day
         self.rated_capacity_kg_pr_day = (
             self.electrolyzer_physics_results["H2_Results"]["Rated BOL: H2 Production [kg/hr]"] * 24
         )
@@ -56,15 +56,15 @@ class ElectrolyzerLCOHInputConfig:
         self.water_usage_gal_pr_kg = self.electrolyzer_physics_results["H2_Results"][
             "Rated BOL: Gal H2O per kg-H2"
         ]
-        #: list(float): annual energy consumed by electrolyzer for each year of operation (kWh/year)
+        #: list(float): annual energy consumed by electrolyzer per year of operation in kWh/year
         self.electrolyzer_annual_energy_usage_kWh = annual_performance[
             "Annual Energy Used [kWh/year]"
         ].to_list()
-        #: list(float): annual avg efficiency of electrolyzer for each year of operation (kWh/kg)
+        #: list(float): annual avg efficiency of electrolyzer for each year of operation in kWh/kg
         self.electrolyzer_eff_kWh_pr_kg = annual_performance[
             "Annual Average Efficiency [kWh/kg]"
         ].to_list()
-        #: list(float): annual hydrogen production for each year of operation (kg/year)
+        #: list(float): annual hydrogen production for each year of operation in kg/year
         self.electrolyzer_annual_h2_production_kg = annual_performance[
             "Annual H2 Production [kg/year]"
         ]
