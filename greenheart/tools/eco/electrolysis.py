@@ -302,7 +302,7 @@ def run_electrolyzer_cost(
     electrolyzer_cost_model = greenheart_config["electrolyzer"][
         "cost_model"
     ]  # can be "basic" or "singlitico2021" or "custom"
-    # electrolyzer_size_mw = greenheart_config["electrolyzer"]["rating"]
+
     electrolyzer_size_kW = electrolyzer_physics_results["H2_Results"]["system capacity [kW]"]
     electrolyzer_size_mw = electrolyzer_size_kW / 1e3
     if electrolyzer_cost_model == "custom":

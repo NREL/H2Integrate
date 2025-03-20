@@ -1,5 +1,6 @@
 def calc_custom_electrolysis_capex_fom(electrolyzer_capacity_kW, electrolyzer_config):
-    """calculates electrolyzer total installed capex and fixed O&M based on user-input values.
+    """Calculates electrolyzer total installed capex and fixed O&M based on user-input values.
+
     Only used if greenheart_config["electrolyzer"]["cost_model"] is set to "custom"
     Requires additional inputs in greenheart_config["electrolyzer"]:
         - fixed_om_per_kw: electrolyzer fixed o&m in $/kW-year
