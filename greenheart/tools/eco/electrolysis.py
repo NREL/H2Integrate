@@ -301,11 +301,11 @@ def run_electrolyzer_cost(
     # unpack inputs
     electrolyzer_cost_model = greenheart_config["electrolyzer"][
         "cost_model"
-    ]  # can be "basic" or "singlitico2021" or "custom"
+    ]  # can be "basic" or "singlitico2021" or "basic_custom"
 
     electrolyzer_size_kW = electrolyzer_physics_results["H2_Results"]["system capacity [kW]"]
     electrolyzer_size_mw = electrolyzer_size_kW / 1e3
-    if electrolyzer_cost_model == "custom":
+    if electrolyzer_cost_model == "basic_custom":
         (electrolyzer_total_capital_cost, electrolyzer_OM_cost) = (
             calc_custom_electrolysis_capex_fom(
                 electrolyzer_size_kW, greenheart_config["electrolyzer"]
