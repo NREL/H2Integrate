@@ -188,7 +188,6 @@ def grid_physics():
     )
     H2_Res_grid = electrolyzer_physics_results["H2_Results"]
     electrical_gen_ts_grid = electrolyzer_physics_results["power_to_electrolyzer_kw"]
-    pd.Series(electrical_gen_ts_grid).to_csv('test.csv')
     return [H2_Res_grid, electrical_gen_ts_grid]
 
 
