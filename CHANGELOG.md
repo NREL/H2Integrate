@@ -8,6 +8,7 @@
 - Use sentence capitalization for plot labels and legends
 - Use "metric ton" instead of "tonne" or "metric tonne" in all internal naming and plots
 - Fix bug in hydrogen dispatch plotting by storing time series of hydrogen demand by hour
+- Update the PEM efficiency to 51.0 kWh/kg from 54.6 kWh/kg
 
 ## v0.1.4 [4 February 2025]
 
