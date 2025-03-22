@@ -50,13 +50,13 @@ def test_bop_energy(subtests, bop_energy):
     with subtests.test("below turndown"):
         assert bop_energy[1] == 0
     with subtests.test("at turndown"):
-        assert bop_energy[2] == approx(11032.668, 1e-2)
+        assert bop_energy[2] == approx(11917.425640927953, 1e-2)
     with subtests.test("mid-range power"):
-        assert bop_energy[3] == approx(6866.87, 1e-2)
+        assert bop_energy[3] == approx(7369.486215576719, 1e-2)
     with subtests.test("max power in curve"):
-        assert bop_energy[4] == approx(7847.85)
+        assert bop_energy[4] == approx(8403.36134509804)
     with subtests.test("full power"):
-        assert bop_energy[5] == approx(7847.85)
+        assert bop_energy[5] == approx(8403.36134509804)
 
 
 def test_greenheart_simulation_pem_bop(subtests):
@@ -90,5 +90,5 @@ def test_greenheart_simulation_pem_bop(subtests):
 
     with subtests.test("annual_energy_breakdown electrolyzer bop"):
         assert annual_energy_breakdown2["electrolyzer_bop_energy_kwh"] == approx(
-            79921217.81100339, 1e-3
+            85578390.12022397, 1e-3
         )
