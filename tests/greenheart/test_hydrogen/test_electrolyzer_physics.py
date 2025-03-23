@@ -47,7 +47,7 @@ default_config = {
         "pem_control_type": "basic",
         "include_degradation_penalty": True,
         "eol_eff_percent_loss": 13,
-        "uptime_hours_until_eol": 77600,  # new
+        "uptime_hours_until_eol": 80000,  # new
         "turndown_ratio": 0.1,  # new
         # 'hydrogen_dmd': None,
     },
@@ -159,13 +159,13 @@ def test_offgrid_electrolyzer_physics(offgrid_physics, subtests):
         assert H2_Res["Sim: H2 Warm-Up Losses [kg]"] == approx(234244.2264365242, TOL)
 
     with subtests.test("stack life"):
-        assert H2_Res["Stack Life [hrs]"] == approx(22734.649750791108, TOL)
+        assert H2_Res["Stack Life [hrs]"] == approx(22930.541099671347, TOL)
 
     with subtests.test("time until replacement"):
-        assert H2_Res["Time Until Replacement [hrs]"] == approx(27616.070778223708, TOL)
+        assert H2_Res["Time Until Replacement [hrs]"] == approx(27851.905817983825, TOL)
 
     with subtests.test("life average capacity factor"):
-        assert H2_Res["Life: Capacity Factor"] == approx(0.41664722011496974, TOL)
+        assert H2_Res["Life: Capacity Factor"] == approx(0.4171828535247268, TOL)
 
 
 @fixture
@@ -224,7 +224,7 @@ def test_grid_electrolyzer_physics(grid_physics, grid_baseline_power_profile, su
         assert H2_Res["Sim: H2 Warm-Up Losses [kg]"] == 0
 
     with subtests.test("grid stack life"):
-        assert H2_Res["Stack Life [hrs]"] == approx(78305.60130261908, TOL)
+        assert H2_Res["Stack Life [hrs]"] == approx(80727.42402331255, TOL)
 
     with subtests.test("grid time between replacement"):
         assert H2_Res["Time Until Replacement [hrs]"] == H2_Res["Stack Life [hrs]"]
