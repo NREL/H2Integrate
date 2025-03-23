@@ -110,7 +110,7 @@ def offgrid_physics():
     offgrid_config["project_parameters"]["grid_connection"] = False
     offgrid_config["project_parameters"]["hybrid_electricity_estimated_cf"] = 0.492
     offgrid_config["electrolyzer"]["sizing"]["resize_for_enduse"] = False
-    offgrid_config["electrolyzer"]["rating"] = 960
+    offgrid_config["electrolyzer"]["rating"] = 880
 
     # offgrid_config["electrolyzer"]["sizing"]["hydrogen_dmd"] = []
 
@@ -135,37 +135,37 @@ def test_offgrid_electrolyzer_physics(offgrid_physics, subtests):
         assert H2_Res["Sim: Total Input Power [kWh]"] == approx(3383382801.267635, TOL)
 
     with subtests.test("BOL rated hydrogen production rate"):
-        assert H2_Res["Rated BOL: H2 Production [kg/hr]"] == approx(18824.507369939103, TOL)
+        assert H2_Res["Rated BOL: H2 Production [kg/hr]"] == approx(17255.79842244418, TOL)
 
     with subtests.test("BOL rated power consumption"):
-        assert H2_Res["Rated BOL: Power Consumed [kWh]"] == approx(960018.4015366472, TOL)
+        assert H2_Res["Rated BOL: Power Consumed [kWh]"] == approx(880020.6595786912, TOL)
 
     with subtests.test("BOL rated efficiency"):
         assert H2_Res["Rated BOL: Efficiency [kWh/kg]"] == approx(50.9985477365145, TOL)
 
     with subtests.test("simulation capacity factor"):
-        assert H2_Res["Sim: Capacity Factor"] == approx(0.4051571489990006, TOL)
+        assert H2_Res["Sim: Capacity Factor"] == approx(0.439833757164091, TOL)
 
     with subtests.test("simulation stack off-cycles"):
-        assert H2_Res["Sim: Total Stack Off-Cycles"] == 9483.0
+        assert H2_Res["Sim: Total Stack Off-Cycles"] == 8512.0
 
     with subtests.test("simulation operation time fraction"):
-        assert H2_Res["Sim: Active Time / Sim Time"] == approx(0.8112157534246575, TOL)
+        assert H2_Res["Sim: Active Time / Sim Time"] == approx(0.818560606060606, TOL)
 
     with subtests.test("simulation hydrogen production "):
-        assert H2_Res["Sim: Total H2 Produced [kg]"] == approx(66811501.53888119, TOL)
+        assert H2_Res["Sim: Total H2 Produced [kg]"] == approx(66485620.04036602, TOL)
 
     with subtests.test("simulation hydrogen warm-up losses"):
-        assert H2_Res["Sim: H2 Warm-Up Losses [kg]"] == approx(251319.36892788997, TOL)
+        assert H2_Res["Sim: H2 Warm-Up Losses [kg]"] == approx(234244.2264365242, TOL)
 
     with subtests.test("stack life"):
-        assert H2_Res["Stack Life [hrs]"] == approx(22307.83870260804, TOL)
+        assert H2_Res["Stack Life [hrs]"] == approx(22734.649750791108, TOL)
 
     with subtests.test("time until replacement"):
-        assert H2_Res["Time Until Replacement [hrs]"] == approx(27319.68143044795, TOL)
+        assert H2_Res["Time Until Replacement [hrs]"] == approx(27616.070778223708, TOL)
 
     with subtests.test("life average capacity factor"):
-        assert H2_Res["Life: Capacity Factor"] == approx(0.3840049985083247, TOL)
+        assert H2_Res["Life: Capacity Factor"] == approx(0.41664722011496974, TOL)
 
 
 @fixture
