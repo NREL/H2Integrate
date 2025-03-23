@@ -783,7 +783,7 @@ class PEM_H2_Clusters:
         # ionic resistance [ohms*cm^2]
         R_cell = delta_cm / sigma
         # [ohms*cm^2] from Table 1 in  https://journals.utm.my/jurnalteknologi/article/view/5213/3557
-        R_elec = 0.0  # 3.5 * (10 ** (-5))
+        R_elec = 0.0
         V_ohmic = i * (R_cell + R_elec)
         return V_ohmic
 
