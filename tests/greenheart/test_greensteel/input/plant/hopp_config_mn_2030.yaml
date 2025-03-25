@@ -31,7 +31,7 @@ site:
 technologies:
   wind:
     num_turbines: 218
-    turbine_rating_kw: 6000.0
+    turbine_rating_kw: 6015.407114
     model_name: floris
     timestep: [0, 8760]
     floris_config: input/floris/floris_input_lbw_6MW.yaml
