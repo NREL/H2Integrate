@@ -52,6 +52,12 @@ class PEM_H2_Clusters:
     Create an instance of a low-temperature PEM Electrolyzer System. Each
     stack in the electrolyzer system in this model is rated at 1 MW_DC.
 
+    Stack characteristics are aligned with HFTO PEM 2022 Status technical targets
+        - https://www.energy.gov/eere/fuelcells/technical-targets-proton-exchange-membrane-electrolysis
+        - 2 A/cm2 at 1.9 V/cell
+        - 51 kWh/kg electrical efficiency
+        - stack life of 80,000 hours
+
     Parameters
     _____________
     np_array P_input_external_kW
@@ -76,7 +82,7 @@ class PEM_H2_Clusters:
         cluster_size_mw,
         plant_life,
         eol_eff_percent_loss=10,
-        uptime_hours_until_eol=77600,
+        uptime_hours_until_eol=80000,
         include_degradation_penalty=True,
         turndown_ratio=0.1,
         dt=3600,
@@ -100,9 +106,9 @@ class PEM_H2_Clusters:
         # self.stack_input_current_lower_bound = 400  # [A]
         self.stack_rating_kW = 1000  # 1 MW
 
-        self.cell_active_area = 1920  # 1250 #[cm^2]
-        self.N_cells = 130
-        self.membrane_thickness = 0.018  # cm
+        self.cell_active_area = 1949  # [cm^2]
+        self.N_cells = 135
+        self.membrane_thickness = 0.0077  # cm
         self.cell_max_current_density = 2  # [A/cm^2]
 
         # PEM electrolyzers have a max current density of approx 2 A/cm^2 so max current is
@@ -757,9 +763,9 @@ class PEM_H2_Clusters:
         # Cathode charge transfer coefficient
         a_c = 0.5
         # anode exchange current density
-        i_o_a = 2 * (10 ** (-7))
+        i_o_a = 4 * (10 ** (-7))
         # cathode exchange current density
-        i_o_c = 2 * (10 ** (-3))
+        i_o_c = 4 * (10 ** (-3))
         V_anode = ((self.R * T_K) / (a_a * self.F)) * np.arcsinh(i / (2 * i_o_a))
         V_cathode = ((self.R * T_K) / (a_c * self.F)) * np.arcsinh(i / (2 * i_o_c))
         V_act = V_anode + V_cathode
@@ -777,7 +783,7 @@ class PEM_H2_Clusters:
         # ionic resistance [ohms*cm^2]
         R_cell = delta_cm / sigma
         # [ohms*cm^2] from Table 1 in  https://journals.utm.my/jurnalteknologi/article/view/5213/3557
-        R_elec = 3.5 * (10 ** (-5))
+        R_elec = 0.0
         V_ohmic = i * (R_cell + R_elec)
         return V_ohmic
 
@@ -828,7 +834,7 @@ class PEM_H2_Clusters:
 
         """
         f_1 = 250  # Coefficient (mA2/cm4)
-        f_2 = 0.996  # Coefficient (unitless)
+        f_2 = 0.9909  # Coefficient (unitless)
         I_cell = stack_current * 1000
 
         # Faraday efficiency

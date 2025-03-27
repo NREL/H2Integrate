@@ -47,7 +47,7 @@ default_config = {
         "pem_control_type": "basic",
         "include_degradation_penalty": True,
         "eol_eff_percent_loss": 13,
-        "uptime_hours_until_eol": 77600,  # new
+        "uptime_hours_until_eol": 80000,  # new
         "turndown_ratio": 0.1,  # new
         # 'hydrogen_dmd': None,
     },
@@ -90,13 +90,13 @@ def grid_resize_config():
 
 def test_resize_from_steel_grid(grid_resize_config):
     gh_test = gh_sizing.run_resizing_estimation(grid_resize_config)
-    assert gh_test["electrolyzer"]["rating"] == 480
+    assert gh_test["electrolyzer"]["rating"] == 440
     assert gh_test["electrolyzer"]["sizing"]["hydrogen_dmd"] == approx(8366.311517, TOL)
 
 
 def test_resize_from_steel_offgrid(offgrid_resize_config):
     gh_test = gh_sizing.run_resizing_estimation(offgrid_resize_config)
-    assert gh_test["electrolyzer"]["rating"] == 960
+    assert gh_test["electrolyzer"]["rating"] == 880
     assert gh_test["electrolyzer"]["sizing"]["hydrogen_dmd"] == approx(17004.6982, TOL)
 
 
@@ -110,7 +110,7 @@ def offgrid_physics():
     offgrid_config["project_parameters"]["grid_connection"] = False
     offgrid_config["project_parameters"]["hybrid_electricity_estimated_cf"] = 0.492
     offgrid_config["electrolyzer"]["sizing"]["resize_for_enduse"] = False
-    offgrid_config["electrolyzer"]["rating"] = 960
+    offgrid_config["electrolyzer"]["rating"] = 880
 
     # offgrid_config["electrolyzer"]["sizing"]["hydrogen_dmd"] = []
 
@@ -135,37 +135,37 @@ def test_offgrid_electrolyzer_physics(offgrid_physics, subtests):
         assert H2_Res["Sim: Total Input Power [kWh]"] == approx(3383382801.267635, TOL)
 
     with subtests.test("BOL rated hydrogen production rate"):
-        assert H2_Res["Rated BOL: H2 Production [kg/hr]"] == approx(17579.2991094574, TOL)
+        assert H2_Res["Rated BOL: H2 Production [kg/hr]"] == approx(17255.79842244418, TOL)
 
     with subtests.test("BOL rated power consumption"):
-        assert H2_Res["Rated BOL: Power Consumed [kWh]"] == approx(960018.4015366472, TOL)
+        assert H2_Res["Rated BOL: Power Consumed [kWh]"] == approx(880020.6595786912, TOL)
 
     with subtests.test("BOL rated efficiency"):
-        assert H2_Res["Rated BOL: Efficiency [kWh/kg]"] == approx(54.61073251891887, TOL)
+        assert H2_Res["Rated BOL: Efficiency [kWh/kg]"] == approx(50.9985477365145, TOL)
 
     with subtests.test("simulation capacity factor"):
-        assert H2_Res["Sim: Capacity Factor"] == approx(0.4104064586084918, TOL)
+        assert H2_Res["Sim: Capacity Factor"] == approx(0.439833757164091, TOL)
 
     with subtests.test("simulation stack off-cycles"):
-        assert H2_Res["Sim: Total Stack Off-Cycles"] == 9483.0
+        assert H2_Res["Sim: Total Stack Off-Cycles"] == 8512.0
 
     with subtests.test("simulation operation time fraction"):
-        assert H2_Res["Sim: Active Time / Sim Time"] == approx(0.8112157534246575, TOL)
+        assert H2_Res["Sim: Active Time / Sim Time"] == approx(0.818560606060606, TOL)
 
     with subtests.test("simulation hydrogen production "):
-        assert H2_Res["Sim: Total H2 Produced [kg]"] == approx(63200403.136826776, TOL)
+        assert H2_Res["Sim: Total H2 Produced [kg]"] == approx(66485620.04036602, TOL)
 
     with subtests.test("simulation hydrogen warm-up losses"):
-        assert H2_Res["Sim: H2 Warm-Up Losses [kg]"] == approx(240892.61322440396, TOL)
+        assert H2_Res["Sim: H2 Warm-Up Losses [kg]"] == approx(234244.2264365242, TOL)
 
     with subtests.test("stack life"):
-        assert H2_Res["Stack Life [hrs]"] == approx(23633.651537254333, TOL)
+        assert H2_Res["Stack Life [hrs]"] == approx(22930.541099671347, TOL)
 
     with subtests.test("time until replacement"):
-        assert H2_Res["Time Until Replacement [hrs]"] == approx(28947.55906846945, TOL)
+        assert H2_Res["Time Until Replacement [hrs]"] == approx(27851.905817983825, TOL)
 
     with subtests.test("life average capacity factor"):
-        assert H2_Res["Life: Capacity Factor"] == approx(0.3889240837784226, TOL)
+        assert H2_Res["Life: Capacity Factor"] == approx(0.4171828535247268, TOL)
 
 
 @fixture
@@ -203,16 +203,16 @@ def test_grid_electrolyzer_physics(grid_physics, grid_baseline_power_profile, su
     H2_Res, power_profile = grid_physics
 
     with subtests.test("simulation AEP"):
-        assert H2_Res["Sim: Total Input Power [kWh]"] == approx(4008524165.6783223, TOL)
+        assert H2_Res["Sim: Total Input Power [kWh]"] == approx(3731336095.0704594, TOL)
 
     with subtests.test("power profile AEP"):
-        assert sum(power_profile) == approx(4008524165.6783223, TOL)
+        assert sum(power_profile) == approx(3731336095.07046, TOL)
 
     with subtests.test("power profile trend"):
         assert power_profile[-1] > power_profile[0]
 
     with subtests.test("grid simulation capacity factor"):
-        assert H2_Res["Sim: Capacity Factor"] == approx(0.9518373167475502, TOL)
+        assert H2_Res["Sim: Capacity Factor"] == approx(0.8888757268725689, TOL)
 
     with subtests.test("grid simulation operation time fraction"):
         assert H2_Res["Sim: Active Time / Sim Time"] == 1.0
@@ -224,13 +224,13 @@ def test_grid_electrolyzer_physics(grid_physics, grid_baseline_power_profile, su
         assert H2_Res["Sim: H2 Warm-Up Losses [kg]"] == 0
 
     with subtests.test("grid stack life"):
-        assert H2_Res["Stack Life [hrs]"] == approx(78049.89571256597, TOL)
+        assert H2_Res["Stack Life [hrs]"] == approx(80727.42402331255, TOL)
 
     with subtests.test("grid time between replacement"):
         assert H2_Res["Time Until Replacement [hrs]"] == H2_Res["Stack Life [hrs]"]
 
     with subtests.test("grid life average capacity factor"):
-        assert H2_Res["Life: Capacity Factor"] == approx(0.9518373167475502, TOL)
+        assert H2_Res["Life: Capacity Factor"] == approx(0.8888757268725691, TOL)
 
     with subtests.test("grid power profile start"):
         assert power_profile[0] == approx(
@@ -255,10 +255,10 @@ def test_electrolyzer_tools(subtests):
     )
 
     with subtests.test("electrolyzer BOL efficiency"):
-        assert bol_eff == 54.61
+        assert bol_eff == 51.0
 
     with subtests.test("electrolyzer size for hydrogen demand"):
-        assert np.ceil(electrolyzer_capacity_BOL_MW) == 457
+        assert np.ceil(electrolyzer_capacity_BOL_MW) == 427
 
     with subtests.test("electrolyzer size rounded to nearest cluster capacity"):
-        assert electrolyzer_size_mw == 480
+        assert electrolyzer_size_mw == 440
