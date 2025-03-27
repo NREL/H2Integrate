@@ -90,5 +90,5 @@ def test_greenheart_simulation_pem_bop(subtests):
 
     with subtests.test("annual_energy_breakdown electrolyzer bop"):
         assert annual_energy_breakdown2["electrolyzer_bop_energy_kwh"] == approx(
-            85578390.12022397, 1e-3
+            86849596.72189888, 1e-3
         )

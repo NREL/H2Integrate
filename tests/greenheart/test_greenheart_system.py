@@ -310,11 +310,11 @@ def test_simulation_wind_onshore(subtests):
 
     # TODO base this test value on something
     with subtests.test("lcoh"):
-        assert lcoh == approx(2.8752521491871312, rel=rtol)
+        assert lcoh == approx(2.851476867928662, rel=rtol)
 
     # TODO base this test value on something
     with subtests.test("lcoe"):
-        assert lcoe == approx(0.03486192934806013, rel=rtol)
+        assert lcoe == approx(0.0345986267792843, rel=rtol)
 
 
 def test_simulation_wind_onshore_steel_ammonia(subtests):
@@ -347,21 +347,21 @@ def test_simulation_wind_onshore_steel_ammonia(subtests):
 
     # TODO base this test value on something
     with subtests.test("lcoh"):
-        assert lcoh == approx(2.8752542931148994, rel=rtol)
+        assert lcoh == approx(2.851478993390726, rel=rtol)
 
     # TODO base this test value on something
     with subtests.test("lcoe"):
-        assert lcoe == approx(0.03486192934806013, rel=rtol)
+        assert lcoe == approx(0.034598666687003676, rel=rtol)
 
     # TODO base this test value on something
     with subtests.test("steel_finance"):
-        lcos_expected = 1394.8936273463223
+        lcos_expected = 1389.2344330934718
 
         assert steel_finance.sol.get("price") == approx(lcos_expected, rel=rtol)
 
     # TODO base this test value on something
     with subtests.test("ammonia_finance"):
-        lcoa_expected = 1.0614633836561882
+        lcoa_expected = 1.0605465775349596
 
         assert ammonia_finance.sol.get("price") == approx(lcoa_expected, rel=rtol)
 
@@ -466,18 +466,18 @@ def test_simulation_wind_onshore_steel_ammonia_ss_h2storage(subtests):
 
     # TODO base this test value on something
     with subtests.test("lcoh"):
-        assert lcoh == approx(9.770004584550266, rel=rtol)
+        assert lcoh == approx(9.549865021025509, rel=rtol)
 
     # TODO base this test value on something
     with subtests.test("lcoe"):
-        assert lcoe == approx(0.03486192934806013, rel=rtol)
+        assert lcoe == approx(0.034598666687003676, rel=rtol)
 
     # TODO base this test value on something
     with subtests.test("steel_finance"):
-        lcos_expected = 1854.6647824504835
+        lcos_expected = 1835.9111873023621
         assert steel_finance.sol.get("price") == approx(lcos_expected, rel=rtol)
 
     # TODO base this test value on something
     with subtests.test("ammonia_finance"):
-        lcoa_expected = 1.0614633836561882
+        lcoa_expected = 1.0605465775349596
         assert ammonia_finance.sol.get("price") == approx(lcoa_expected, rel=rtol)

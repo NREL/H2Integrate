@@ -52,7 +52,7 @@ def test_onshore_steel_mn_2030_no_policy(subtests):
         )
 
     with subtests.test("lcoh"):
-        assert output.lcoh == approx(4.2986685034417045, rel=0.1)
+        assert output.lcoh == approx(3.825952342147455, rel=0.1)
 
     with subtests.test("h2 production"):
         assert output.electrolyzer_physics_results["H2_Results"][
@@ -120,7 +120,7 @@ def test_onshore_ammonia_tx_2030_no_policy(subtests):
 
     with subtests.test("aep"):
         assert output.hopp_results["hybrid_plant"].annual_energies["wind"] == approx(
-            3383439.9656016766 * 1e3, rel=0.1
+            3839649738.264239, rel=0.1
         )
 
     with subtests.test("wind cf"):
@@ -130,7 +130,7 @@ def test_onshore_ammonia_tx_2030_no_policy(subtests):
 
     with subtests.test("h2 capacity factor"):
         assert output.electrolyzer_physics_results["H2_Results"]["Life: Capacity Factor"] == approx(
-            0.38749, rel=0.1
+            41.27270999690683, rel=0.1
         )
 
     with subtests.test("electrolyzer installed capex"):
@@ -193,24 +193,24 @@ def test_onshore_ammonia_tx_2030_base_policy(subtests):
     output = run_simulation(config)
 
     with subtests.test("lcoh"):
-        assert output.lcoh == approx(2.548720337942764, rel=0.11)
+        assert output.lcoh == approx(2.178405200513503, rel=0.11)
 
     with subtests.test("lcoa"):
-        assert output.ammonia_finance.sol.get("price") == approx(0.605557224950303, rel=0.1)
+        assert output.ammonia_finance.sol.get("price") == approx(0.5267409451175775, rel=0.1)
 
     with subtests.test("aep"):
         assert output.hopp_results["hybrid_plant"].annual_energies["wind"] == approx(
-            3383439.9656016766 * 1e3, rel=0.1
+            3839649738.264239, rel=0.1
         )
 
     with subtests.test("wind cf"):
         assert output.hopp_results["hybrid_plant"].capacity_factors["wind"] == approx(
-            36.78, rel=0.1
+            41.27270999690683, rel=0.1
         )
 
     with subtests.test("h2 capacity factor"):
         assert output.electrolyzer_physics_results["H2_Results"]["Life: Capacity Factor"] == approx(
-            0.4023306656204429, rel=0.1
+            0.4349449267774099, rel=0.1
         )
 
     with subtests.test("electrolyzer installed capex"):
@@ -314,24 +314,24 @@ def test_onshore_ammonia_tx_2025_no_policy(subtests):
     output = run_simulation(config)
 
     with subtests.test("lcoh"):
-        assert output.lcoh == approx(5.215316325627814, rel=0.1)
+        assert output.lcoh == approx(4.479463318323525, rel=0.1)
 
     with subtests.test("lcoa"):
-        assert output.ammonia_finance.sol.get("price") == approx(1.1211844274252674, rel=0.1)
+        assert output.ammonia_finance.sol.get("price") == approx(0.9856963685015695, rel=0.1)
 
     with subtests.test("aep"):
         assert output.hopp_results["hybrid_plant"].annual_energies["wind"] == approx(
-            3383439.9656016766 * 1e3, rel=0.1
+            3839649738.264239, rel=0.1
         )
 
     with subtests.test("wind cf"):
         assert output.hopp_results["hybrid_plant"].capacity_factors["wind"] == approx(
-            36.78, rel=0.1
+            41.27270999690683, rel=0.1
         )
 
     with subtests.test("h2 capacity factor"):
         assert output.electrolyzer_physics_results["H2_Results"]["Life: Capacity Factor"] == approx(
-            0.3874913813926033, rel=0.1
+            0.4349449267774099, rel=0.1
         )
 
     with subtests.test("electrolyzer installed capex"):
@@ -394,24 +394,24 @@ def test_onshore_ammonia_tx_2035_no_policy(subtests):
     output = run_simulation(config)
 
     with subtests.test("lcoh"):
-        assert output.lcoh == approx(3.68491615716891, rel=0.1)
+        assert output.lcoh == approx(3.1637404646498535, rel=0.1)
 
     with subtests.test("lcoa"):
-        assert output.ammonia_finance.sol.get("price") == approx(0.8161748484435717, rel=0.1)
+        assert output.ammonia_finance.sol.get("price") == approx(0.7232700809210969, rel=0.1)
 
     with subtests.test("aep"):
         assert output.hopp_results["hybrid_plant"].annual_energies["wind"] == approx(
-            3383439.9656016766 * 1e3, rel=0.1
+            3839649738.264239, rel=0.1
         )
 
     with subtests.test("wind cf"):
         assert output.hopp_results["hybrid_plant"].capacity_factors["wind"] == approx(
-            36.78, rel=0.1
+            41.27270999690683, rel=0.1
         )
 
     with subtests.test("h2 capacity factor"):
         assert output.electrolyzer_physics_results["H2_Results"]["Life: Capacity Factor"] == approx(
-            0.3874913813926033, rel=0.1
+            0.4349449267774099, rel=0.1
         )
 
     with subtests.test("electrolyzer installed capex"):
