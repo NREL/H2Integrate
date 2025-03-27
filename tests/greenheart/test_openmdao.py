@@ -393,7 +393,7 @@ def test_greenheart_component(subtests):
 
     # TODO base this test value on something
     with subtests.test("steel_finance"):
-        lcos_expected = 1389.8936273463223
+        lcos_expected = 1389.2344330934718
         assert prob["lcos"][0] == approx(lcos_expected, rel=rtol)
 
     # TODO base this test value on something

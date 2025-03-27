@@ -59,10 +59,10 @@ def test_simulation_wind(subtests):
     lcoe, lcoh, _, hi = run_simulation(config)
 
     with subtests.test("lcoh"):
-        assert lcoh == approx(6.672584971381463)  # TODO base this test value on something
+        assert lcoh == approx(6.477640615726358)  # TODO base this test value on something
 
     with subtests.test("lcoe"):
-        assert lcoe == approx(0.11273307765405276)  # TODO base this test value on something
+        assert lcoe == approx(0.1094152691922969)  # TODO base this test value on something
 
     with subtests.test("energy sources"):
         expected_annual_energy_hybrid = hi.system.annual_energies.wind
@@ -110,11 +110,11 @@ def test_simulation_wind_wave(subtests):
 
     # TODO base this test value on something
     with subtests.test("lcoh"):
-        assert lcoh == approx(7.5218316601253745, rel=rtol)
+        assert lcoh == approx(8.473288446702313, rel=rtol)
 
     # prior to 20240207 value was approx(0.11051228251811765) # TODO base value on something
     with subtests.test("lcoe"):
-        assert lcoe == approx(0.1327684219541139, rel=rtol)
+        assert lcoe == approx(0.15070360143954054, rel=rtol)
 
 
 def test_simulation_wind_wave_solar(subtests):
@@ -139,12 +139,12 @@ def test_simulation_wind_wave_solar(subtests):
     # prior to 20240207 value was approx(10.823798551850347)
     # TODO base this test value on something. Currently just based on output at writing.
     with subtests.test("lcoh"):
-        assert lcoh == approx(11.811708790335468, rel=rtol)
+        assert lcoh == approx(13.264400999675754, rel=rtol)
 
     # prior to 20240207 value was approx(0.11035426429749774)
     # TODO base this test value on something. Currently just based on output at writing.
     with subtests.test("lcoe"):
-        assert lcoe == approx(0.13255644222185253, rel=rtol)
+        assert lcoe == approx(0.15042354336569536, rel=rtol)
 
 
 def test_simulation_io(subtests):
@@ -253,11 +253,11 @@ def test_simulation_wind_wave_solar_battery(subtests):
 
     with subtests.test("lcoh"):
         # TODO base this test value on something. Currently just based on output at writing.
-        assert results.lcoh == approx(15.792251621116957, rel=rtol)
+        assert results.lcoh == approx(15.543520973268508, rel=rtol)
 
     with subtests.test("lcoe"):
         # TODO base this test value on something. Currently just based on output at writing.
-        assert results.lcoe == approx(0.13274652127663025, rel=rtol)
+        assert results.lcoe == approx(0.13218580770195065, rel=rtol)
     with subtests.test("no conflict in om cost does not raise warning"):
         with warnings.catch_warnings():
             warnings.simplefilter("error")

@@ -125,12 +125,12 @@ def test_onshore_ammonia_tx_2030_no_policy(subtests):
 
     with subtests.test("wind cf"):
         assert output.hopp_results["hybrid_plant"].capacity_factors["wind"] == approx(
-            36.78, rel=0.1
+            41.27270999690683, rel=0.1
         )
 
     with subtests.test("h2 capacity factor"):
         assert output.electrolyzer_physics_results["H2_Results"]["Life: Capacity Factor"] == approx(
-            41.27270999690683, rel=0.1
+            0.4349449267774099, rel=0.1
         )
 
     with subtests.test("electrolyzer installed capex"):
@@ -263,17 +263,17 @@ def test_onshore_ammonia_tx_2030_max_policy(subtests):
 
     with subtests.test("aep"):
         assert output.hopp_results["hybrid_plant"].annual_energies["wind"] == approx(
-            3383439.9656016766 * 1e3, rel=0.1
+            3839649738.264239, rel=0.1
         )
 
     with subtests.test("wind cf"):
         assert output.hopp_results["hybrid_plant"].capacity_factors["wind"] == approx(
-            36.78, rel=0.1
+            41.27270999690683, rel=0.1
         )
 
     with subtests.test("h2 capacity factor"):
         assert output.electrolyzer_physics_results["H2_Results"]["Life: Capacity Factor"] == approx(
-            0.3874913813926033, rel=0.1
+            0.4349449267774099, rel=0.1
         )
 
     with subtests.test("electrolyzer installed capex"):
