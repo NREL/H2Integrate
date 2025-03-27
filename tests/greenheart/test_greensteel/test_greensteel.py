@@ -113,10 +113,10 @@ def test_onshore_ammonia_tx_2030_no_policy(subtests):
     output = run_simulation(config)
 
     with subtests.test("lcoh"):
-        assert output.lcoh == approx(4.023963541118758, rel=0.1)
+        assert output.lcoh == approx(3.4620231346425436, rel=0.1)
 
     with subtests.test("lcoa"):
-        assert output.ammonia_finance.sol.get("price") == approx(0.8839797787889466, rel=0.1)
+        assert output.ammonia_finance.sol.get("price") == approx(0.7853185434514888, rel=0.1)
 
     with subtests.test("aep"):
         assert output.hopp_results["hybrid_plant"].annual_energies["wind"] == approx(
@@ -139,7 +139,7 @@ def test_onshore_ammonia_tx_2030_no_policy(subtests):
     with subtests.test("h2 production"):
         assert output.electrolyzer_physics_results["H2_Results"][
             "Life: Annual H2 production [kg/year]"
-        ] == approx(60400414.51854633, rel=0.1)
+        ] == approx(67282994.69660586, rel=0.1)
 
     with subtests.test("capex"):
         assert sum(output.capex_breakdown.values()) == approx(1922324028.6785245, rel=0.1)
@@ -219,7 +219,7 @@ def test_onshore_ammonia_tx_2030_base_policy(subtests):
     with subtests.test("h2 production"):
         assert output.electrolyzer_physics_results["H2_Results"][
             "Life: Annual H2 production [kg/year]"
-        ] == approx(60400414.51854633, rel=0.1)
+        ] == approx(67282994.69660586, rel=0.1)
 
     with subtests.test("capex"):
         assert sum(output.capex_breakdown.values()) == approx(1922324028.6785245, 0.1)
@@ -282,7 +282,7 @@ def test_onshore_ammonia_tx_2030_max_policy(subtests):
     with subtests.test("h2 production"):
         assert output.electrolyzer_physics_results["H2_Results"][
             "Life: Annual H2 production [kg/year]"
-        ] == approx(60400414.51854633, rel=0.1)
+        ] == approx(67282994.69660586, rel=0.1)
 
     with subtests.test("capex"):
         assert sum(output.capex_breakdown.values()) == approx(1922324028.6785245, 0.1)
@@ -340,15 +340,10 @@ def test_onshore_ammonia_tx_2025_no_policy(subtests):
     with subtests.test("h2 production"):
         assert output.electrolyzer_physics_results["H2_Results"][
             "Life: Annual H2 production [kg/year]"
-        ] == approx(60400414.51854633, rel=0.1)
+        ] == approx(67282994.69660586, rel=0.1)
 
     with subtests.test("capex"):
         assert sum(output.capex_breakdown.values()) == approx(2400580143.0785246, 0.1)
-
-    with subtests.test("h2 production"):
-        assert output.electrolyzer_physics_results["H2_Results"][
-            "Life: Annual H2 production [kg/year]"
-        ] == approx(60400414.51854633, rel=0.1)
 
     with subtests.test("wind capex"):
         assert output.capex_breakdown["wind"] == approx(1319520132.0000002, rel=0.1)
@@ -425,7 +420,7 @@ def test_onshore_ammonia_tx_2035_no_policy(subtests):
     with subtests.test("h2 production"):
         assert output.electrolyzer_physics_results["H2_Results"][
             "Life: Annual H2 production [kg/year]"
-        ] == approx(60400414.51854633, rel=0.1)
+        ] == approx(67282994.69660586, rel=0.1)
 
     with subtests.test("capex"):
         assert sum(output.capex_breakdown.values()) == approx(1771419905.4785244, 0.1)

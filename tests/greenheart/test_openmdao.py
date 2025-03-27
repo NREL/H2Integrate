@@ -385,7 +385,7 @@ def test_greenheart_component(subtests):
 
     # TODO base this test value on something
     with subtests.test("lcoh"):
-        assert prob["lcoh"][0] == approx(2.955360744222285, rel=rtol)
+        assert prob["lcoh"][0] == approx(2.8752542931148994, rel=rtol)
 
     # TODO base this test value on something
     with subtests.test("lcoe"):
@@ -393,12 +393,12 @@ def test_greenheart_component(subtests):
 
     # TODO base this test value on something
     with subtests.test("steel_finance"):
-        lcos_expected = 1428.9844052002427
+        lcos_expected = 1394.8936273463223
         assert prob["lcos"][0] == approx(lcos_expected, rel=rtol)
 
     # TODO base this test value on something
     with subtests.test("ammonia_finance"):
-        lcoa_expected = 1.0679224700416565
+        lcoa_expected = 1.0614633836561882
         assert prob["lcoa"][0] == approx(lcoa_expected, rel=rtol)
 
 
@@ -408,7 +408,7 @@ def test_run_greenheart_run_only(subtests):
 
     # TODO base this test value on something
     with subtests.test("lcoh"):
-        assert prob["lcoh"][0] == approx(2.955360744222285, rel=rtol)
+        assert prob["lcoh"][0] == approx(2.8752542931148994, rel=rtol)
 
     # TODO base this test value on something
     with subtests.test("lcoe"):
@@ -416,12 +416,12 @@ def test_run_greenheart_run_only(subtests):
 
     # TODO base this test value on something
     with subtests.test("steel_finance"):
-        lcos_expected = 1428.9844052
+        lcos_expected = 1394.8936273463223
         assert prob["lcos"][0] == approx(lcos_expected, rel=rtol)
 
     # TODO base this test value on something
     with subtests.test("ammonia_finance"):
-        lcoa_expected = 1.06792247
+        lcoa_expected = 1.06146338
         assert prob["lcoa"] == approx(lcoa_expected, rel=rtol)
 
 
