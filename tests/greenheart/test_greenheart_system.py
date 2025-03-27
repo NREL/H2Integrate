@@ -408,21 +408,21 @@ def test_simulation_wind_battery_pv_onshore_steel_ammonia(subtests):
 
     # TODO base this test value on something
     with subtests.test("lcoh"):
-        assert greenheart_output.lcoh == approx(2.856219558092931, rel=rtol)
+        assert greenheart_output.lcoh == approx(2.770837932576975, rel=rtol)
 
     # TODO base this test value on something
     with subtests.test("lcoe"):
-        assert greenheart_output.lcoe == approx(0.03475765253339192, rel=rtol)
+        assert greenheart_output.lcoe == approx(0.03481720005996034, rel=rtol)
 
     # TODO base this test value on something
     with subtests.test("steel_finance"):
-        lcos_expected = 1386.766783710166
+        lcos_expected = 1381.4131479906669
 
         assert greenheart_output.steel_finance.sol.get("price") == approx(lcos_expected, rel=rtol)
 
     # TODO base this test value on something
     with subtests.test("ammonia_finance"):
-        lcoa_expected = 1.0599198593495158
+        lcoa_expected = 1.0599964082520565
 
         assert greenheart_output.ammonia_finance.sol.get("price") == approx(lcoa_expected, rel=rtol)
 
