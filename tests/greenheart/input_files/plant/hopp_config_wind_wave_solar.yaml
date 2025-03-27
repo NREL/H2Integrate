@@ -29,7 +29,7 @@ site: #!include flatirons_site.yaml
 technologies:
   wind:
     num_turbines: 10
-    turbine_rating_kw: 18217.08293
+    turbine_rating_kw: 18000.
     model_name: floris
     timestep: [0, 8760]
     floris_config: input_files/floris/floris_input_osw_18MW.yaml
