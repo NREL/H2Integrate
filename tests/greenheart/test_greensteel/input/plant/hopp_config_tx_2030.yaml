@@ -36,6 +36,7 @@ technologies:
     timestep: [0, 8760]
     floris_config: input/floris/floris_input_lbw_6MW.yaml
     fin_model: !include default_fin_config.yaml
+    layout_mode: "floris_layout"
   # pv:
   #   system_capacity_kw: 500000
   #   dc_degradation: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
