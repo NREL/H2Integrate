@@ -1,7 +1,7 @@
-greenheart.simulation.technologies.offshore
+h2integrate.simulation.technologies.offshore
 ===========================================
 
-.. automodule:: greenheart.simulation.technologies.offshore
+.. automodule:: h2integrate.simulation.technologies.offshore
 
 
 
@@ -27,6 +27,6 @@ greenheart.simulation.technologies.offshore
    :toctree:
    :recursive:
 
-   greenheart.simulation.technologies.offshore.all_platforms
-   greenheart.simulation.technologies.offshore.fixed_platform
-   greenheart.simulation.technologies.offshore.floating_platform
+   h2integrate.simulation.technologies.offshore.all_platforms
+   h2integrate.simulation.technologies.offshore.fixed_platform
+   h2integrate.simulation.technologies.offshore.floating_platform

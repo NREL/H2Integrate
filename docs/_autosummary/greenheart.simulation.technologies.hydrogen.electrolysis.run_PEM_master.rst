@@ -1,7 +1,7 @@
-greenheart.simulation.technologies.hydrogen.electrolysis.run\_PEM\_master
+h2integrate.simulation.technologies.hydrogen.electrolysis.run\_PEM\_master
 =========================================================================
 
-.. automodule:: greenheart.simulation.technologies.hydrogen.electrolysis.run_PEM_master
+.. automodule:: h2integrate.simulation.technologies.hydrogen.electrolysis.run_PEM_master
 
 
 

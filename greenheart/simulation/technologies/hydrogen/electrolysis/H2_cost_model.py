@@ -2,7 +2,7 @@ import warnings
 
 import numpy as np
 
-from greenheart.to_organize.H2_Analysis.simple_cash_annuals import simple_cash_annuals
+from h2integrate.to_organize.H2_Analysis.simple_cash_annuals import simple_cash_annuals
 
 
 def basic_H2_cost_model(

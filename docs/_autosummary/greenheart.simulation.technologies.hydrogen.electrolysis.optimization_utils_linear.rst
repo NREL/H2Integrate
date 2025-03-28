@@ -1,7 +1,7 @@
-greenheart.simulation.technologies.hydrogen.electrolysis.optimization\_utils\_linear
+h2integrate.simulation.technologies.hydrogen.electrolysis.optimization\_utils\_linear
 ====================================================================================
 
-.. automodule:: greenheart.simulation.technologies.hydrogen.electrolysis.optimization_utils_linear
+.. automodule:: h2integrate.simulation.technologies.hydrogen.electrolysis.optimization_utils_linear
 
 
 

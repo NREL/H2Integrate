@@ -11,7 +11,7 @@ from hopp.simulation.technologies.layout.wind_layout_tools import create_grid
 # Function to set up the HOPP model
 def setup_hopp(
     hopp_config,
-    greenheart_config,
+    h2integrate_config,
     orbit_config,
     turbine_config,
     floris_config,
@@ -28,21 +28,21 @@ def setup_hopp(
         or hopp_config["site"]["desired_schedule"] == []
     ):
         hopp_config["site"]["desired_schedule"] = [
-            greenheart_config["electrolyzer"]["rating"]
+            h2integrate_config["electrolyzer"]["rating"]
         ] * 8760
     hopp_site = SiteInfo(**hopp_config["site"])
 
     # adjust mean wind speed if desired
     wind_data = hopp_site.wind_resource._data["data"]
     wind_speed = [W[2] for W in wind_data]
-    if greenheart_config["site"]["mean_windspeed"]:
-        if np.average(wind_speed) != greenheart_config["site"]["mean_windspeed"]:
-            wind_speed += greenheart_config["site"]["mean_windspeed"] - np.average(wind_speed)
+    if h2integrate_config["site"]["mean_windspeed"]:
+        if np.average(wind_speed) != h2integrate_config["site"]["mean_windspeed"]:
+            wind_speed += h2integrate_config["site"]["mean_windspeed"] - np.average(wind_speed)
             for i in np.arange(0, len(wind_speed)):
                 # make sure we don't have negative wind speeds after correction
                 hopp_site.wind_resource._data["data"][i][2] = np.maximum(wind_speed[i], 0)
     else:
-        greenheart_config["site"]["mean_windspeed"] = np.average(wind_speed)
+        h2integrate_config["site"]["mean_windspeed"] = np.average(wind_speed)
 
     ################ set up HOPP technology inputs
 
@@ -72,16 +72,16 @@ def setup_hopp(
                 grid_position = create_grid(
                     site_shape=hopp_site.polygon,
                     center=hopp_site.polygon.centroid,
-                    grid_angle=greenheart_config["site"]["wind_layout"]["grid_angle"],
+                    grid_angle=h2integrate_config["site"]["wind_layout"]["grid_angle"],
                     intrarow_spacing=(
-                        greenheart_config["site"]["wind_layout"]["row_spacing"]
+                        h2integrate_config["site"]["wind_layout"]["row_spacing"]
                         * turbine_config["rotor_diameter"]
                     ),
                     interrow_spacing=(
-                        greenheart_config["site"]["wind_layout"]["turbine_spacing"]
+                        h2integrate_config["site"]["wind_layout"]["turbine_spacing"]
                         * turbine_config["rotor_diameter"]
                     ),
-                    row_phase_offset=greenheart_config["site"]["wind_layout"]["row_phase_offset"],
+                    row_phase_offset=h2integrate_config["site"]["wind_layout"]["row_phase_offset"],
                     max_sites=hopp_config["technologies"]["wind"]["num_turbines"],
                 )
                 # Extracting xy coordinates

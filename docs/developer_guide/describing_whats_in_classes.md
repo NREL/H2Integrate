@@ -1,7 +1,7 @@
 # Expected methods and attributes of classes
 
-Within each technology class, GreenHEART expects certain methods to be defined by the developer.
-This doc page briefly discusses those methods and their impact within GreenHEART.
+Within each technology class, H2Integrate expects certain methods to be defined by the developer.
+This doc page briefly discusses those methods and their impact within H2Integrate.
 
 ## Performance model
 

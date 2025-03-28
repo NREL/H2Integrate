@@ -2,8 +2,8 @@ from pathlib import Path
 
 import openmdao.api as om
 
-from greenheart.simulation.greenheart_simulation import GreenHeartSimulationConfig
-from greenheart.tools.optimization.gc_run_greenheart import run_greenheart
+from h2integrate.simulation.h2integrate_simulation import H2IntegrateSimulationConfig
+from h2integrate.tools.optimization.gc_run_h2integrate import run_h2integrate
 
 
 ROOT_DIR = Path(__file__).parents[2]
@@ -24,8 +24,8 @@ hopp_config_filename = (
     / "plant"
     / "hopp_config_wind_wave_solar_battery.yaml"
 )
-greenheart_config_filename = (
-    Path(__file__).absolute().parent / "input_files" / "plant" / "greenheart_config.yaml"
+h2integrate_config_filename = (
+    Path(__file__).absolute().parent / "input_files" / "plant" / "h2integrate_config.yaml"
 )
 turbine_config_filename = (
     Path(__file__).absolute().parent / "input_files" / "turbines" / "osw_18MW.yaml"
@@ -33,10 +33,10 @@ turbine_config_filename = (
 rtol = 1e-5
 
 
-def setup_greenheart():
-    config = GreenHeartSimulationConfig(
+def setup_h2integrate():
+    config = H2IntegrateSimulationConfig(
         filename_hopp_config=hopp_config_filename,
-        filename_greenheart_config=greenheart_config_filename,
+        filename_h2integrate_config=h2integrate_config_filename,
         filename_turbine_config=turbine_config_filename,
         filename_floris_config=floris_input_filename,
         verbose=False,
@@ -60,11 +60,11 @@ def setup_greenheart():
     # set skip_financial to false for onshore wind
     config.hopp_config["config"]["simulation_options"]["wind"]["skip_financial"] = False
 
-    config.greenheart_config["opt_options"] = {
+    config.h2integrate_config["opt_options"] = {
         "opt_flag": True,
         "general": {
             "folder_output": "output",
-            "fname_output": "test_run_greenheart_optimization_mpi",
+            "fname_output": "test_run_h2integrate_optimization_mpi",
         },
         "design_variables": {
             "electrolyzer_rating_kw": {
@@ -176,7 +176,7 @@ def setup_greenheart():
 
 
 # @pytest.mark.mpi
-def test_run_greenheart_optimize_mpi(subtests):
+def test_run_h2integrate_optimize_mpi(subtests):
     try:
         from mpi4py import MPI
 
@@ -184,9 +184,9 @@ def test_run_greenheart_optimize_mpi(subtests):
     except ModuleNotFoundError:
         is_mpi = False
 
-    config = setup_greenheart()
+    config = setup_h2integrate()
 
-    prob, config = run_greenheart(config, run_only=False)
+    prob, config = run_h2integrate(config, run_only=False)
 
     if is_mpi:
         rank = MPI.COMM_WORLD.Get_rank()

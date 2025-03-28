@@ -6,33 +6,33 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib import ticker
 
-from greenheart.tools.eco.utilities import ceildiv
-from greenheart.simulation.technologies.hydrogen.desal.desal_model_eco import (
+from h2integrate.tools.eco.utilities import ceildiv
+from h2integrate.simulation.technologies.hydrogen.desal.desal_model_eco import (
     RO_desal_eco as RO_desal,
 )
-from greenheart.simulation.technologies.hydrogen.electrolysis.run_h2_PEM import run_h2_PEM
-from greenheart.simulation.technologies.hydrogen.electrolysis.H2_cost_model import (
+from h2integrate.simulation.technologies.hydrogen.electrolysis.run_h2_PEM import run_h2_PEM
+from h2integrate.simulation.technologies.hydrogen.electrolysis.H2_cost_model import (
     basic_H2_cost_model,
 )
-from greenheart.simulation.technologies.hydrogen.electrolysis.pem_cost_tools import (
+from h2integrate.simulation.technologies.hydrogen.electrolysis.pem_cost_tools import (
     calc_electrolyzer_variable_om,
 )
-from greenheart.simulation.technologies.hydrogen.electrolysis.PEM_BOP.PEM_BOP import pem_bop
-from greenheart.simulation.technologies.hydrogen.electrolysis.PEM_costs_custom import (
+from h2integrate.simulation.technologies.hydrogen.electrolysis.PEM_BOP.PEM_BOP import pem_bop
+from h2integrate.simulation.technologies.hydrogen.electrolysis.PEM_costs_custom import (
     calc_custom_electrolysis_capex_fom,
 )
-from greenheart.simulation.technologies.hydrogen.electrolysis.pem_mass_and_footprint import (
+from h2integrate.simulation.technologies.hydrogen.electrolysis.pem_mass_and_footprint import (
     mass as run_electrolyzer_mass,
     footprint as run_electrolyzer_footprint,
 )
-from greenheart.simulation.technologies.hydrogen.electrolysis.PEM_costs_Singlitico_model import (
+from h2integrate.simulation.technologies.hydrogen.electrolysis.PEM_costs_Singlitico_model import (
     PEMCostsSingliticoModel,
 )
 
 
 def run_electrolyzer_physics(
     hopp_results,
-    greenheart_config,
+    h2integrate_config,
     wind_resource,
     design_scenario,
     show_plots=False,
@@ -42,17 +42,17 @@ def run_electrolyzer_physics(
 ):
     if isinstance(output_dir, str):
         output_dir = Path(output_dir).resolve()
-    electrolyzer_size_mw = greenheart_config["electrolyzer"]["rating"]
-    electrolyzer_capex_kw = greenheart_config["electrolyzer"]["electrolyzer_capex"]
+    electrolyzer_size_mw = h2integrate_config["electrolyzer"]["rating"]
+    electrolyzer_capex_kw = h2integrate_config["electrolyzer"]["electrolyzer_capex"]
 
     # IF GRID CONNECTED
-    if greenheart_config["project_parameters"]["grid_connection"]:
+    if h2integrate_config["project_parameters"]["grid_connection"]:
         # NOTE: if grid-connected, it assumes that hydrogen demand is input and there is not
         # multi-cluster control strategies. This capability exists at the cluster level, not at the
         # system level.
-        if greenheart_config["electrolyzer"]["sizing"]["hydrogen_dmd"] is not None:
+        if h2integrate_config["electrolyzer"]["sizing"]["hydrogen_dmd"] is not None:
             grid_connection_scenario = "grid-only"
-            hydrogen_production_capacity_required_kgphr = greenheart_config["electrolyzer"][
+            hydrogen_production_capacity_required_kgphr = h2integrate_config["electrolyzer"][
                 "sizing"
             ]["hydrogen_dmd"]
             energy_to_electrolyzer_kw = []
@@ -70,17 +70,17 @@ def run_electrolyzer_physics(
 
     n_pem_clusters = int(
         ceildiv(
-            round(electrolyzer_size_mw, 1), greenheart_config["electrolyzer"]["cluster_rating_MW"]
+            round(electrolyzer_size_mw, 1), h2integrate_config["electrolyzer"]["cluster_rating_MW"]
         )
     )
 
     electrolyzer_real_capacity_kW = (
-        n_pem_clusters * greenheart_config["electrolyzer"]["cluster_rating_MW"] * 1e3
+        n_pem_clusters * h2integrate_config["electrolyzer"]["cluster_rating_MW"] * 1e3
     )
 
     if np.abs(electrolyzer_real_capacity_kW - (electrolyzer_size_mw * 1e3)) > 1.0:
         electrolyzer_real_capacity_mw = electrolyzer_real_capacity_kW / 1e3
-        cluster_cap_mw = greenheart_config["electrolyzer"]["cluster_rating_MW"]
+        cluster_cap_mw = h2integrate_config["electrolyzer"]["cluster_rating_MW"]
         msg = (
             f"setting electrolyzer capacity to {electrolyzer_real_capacity_mw} MW. "
             f"Input value of {electrolyzer_size_mw:.2f} MW is not a "
@@ -89,15 +89,15 @@ def run_electrolyzer_physics(
         warnings.warn(msg, UserWarning)
     ## run using greensteel model
     pem_param_dict = {
-        "eol_eff_percent_loss": greenheart_config["electrolyzer"]["eol_eff_percent_loss"],
-        "uptime_hours_until_eol": greenheart_config["electrolyzer"]["uptime_hours_until_eol"],
-        "include_degradation_penalty": greenheart_config["electrolyzer"][
+        "eol_eff_percent_loss": h2integrate_config["electrolyzer"]["eol_eff_percent_loss"],
+        "uptime_hours_until_eol": h2integrate_config["electrolyzer"]["uptime_hours_until_eol"],
+        "include_degradation_penalty": h2integrate_config["electrolyzer"][
             "include_degradation_penalty"
         ],
-        "turndown_ratio": greenheart_config["electrolyzer"]["turndown_ratio"],
+        "turndown_ratio": h2integrate_config["electrolyzer"]["turndown_ratio"],
     }
 
-    if "time_between_replacement" in greenheart_config["electrolyzer"]:
+    if "time_between_replacement" in h2integrate_config["electrolyzer"]:
         msg = (
             "`time_between_replacement` as an input is deprecated. It is now calculated internally"
             " and is output in electrolyzer_physics_results['H2_Results']['Time Until Replacement"
@@ -108,11 +108,11 @@ def run_electrolyzer_physics(
     H2_Results, h2_ts, h2_tot, power_to_electrolyzer_kw = run_h2_PEM(
         electrical_generation_timeseries=energy_to_electrolyzer_kw,
         electrolyzer_size=electrolyzer_size_mw,
-        useful_life=greenheart_config["project_parameters"][
+        useful_life=h2integrate_config["project_parameters"][
             "project_lifetime"
         ],  # EG: should be in years for full plant life - only used in financial model
         n_pem_clusters=n_pem_clusters,
-        pem_control_type=greenheart_config["electrolyzer"]["pem_control_type"],
+        pem_control_type=h2integrate_config["electrolyzer"]["pem_control_type"],
         electrolyzer_direct_cost_kw=electrolyzer_capex_kw,
         user_defined_pem_param_dictionary=pem_param_dict,
         grid_connection_scenario=grid_connection_scenario,  # if not offgrid, assumes steady h2 demand in kgphr for full year  # noqa: E501
@@ -212,7 +212,7 @@ def run_electrolyzer_physics(
         tick_spacing = 10
         ax[0, 0].yaxis.set_major_locator(ticker.MultipleLocator(tick_spacing))
 
-        y = greenheart_config["electrolyzer"]["rating"]
+        y = h2integrate_config["electrolyzer"]["rating"]
         ax[1, 0].plot(energy_to_electrolyzer_kw * 1e-3)
         ax[1, 0].axhline(y=y, color="r", linestyle="--", label="Nameplate Capacity")
 
@@ -294,12 +294,12 @@ def run_electrolyzer_physics(
 def run_electrolyzer_cost(
     electrolyzer_physics_results,
     hopp_config,
-    greenheart_config,
+    h2integrate_config,
     design_scenario,
     verbose=False,
 ):
     # unpack inputs
-    electrolyzer_cost_model = greenheart_config["electrolyzer"][
+    electrolyzer_cost_model = h2integrate_config["electrolyzer"][
         "cost_model"
     ]  # can be "basic" or "singlitico2021" or "basic_custom"
 
@@ -308,12 +308,12 @@ def run_electrolyzer_cost(
     if electrolyzer_cost_model == "basic_custom":
         (electrolyzer_total_capital_cost, electrolyzer_OM_cost) = (
             calc_custom_electrolysis_capex_fom(
-                electrolyzer_size_kW, greenheart_config["electrolyzer"]
+                electrolyzer_size_kW, h2integrate_config["electrolyzer"]
             )
         )
 
         electrolyzer_vom_cost = calc_electrolyzer_variable_om(
-            electrolyzer_physics_results, greenheart_config
+            electrolyzer_physics_results, h2integrate_config
         )
 
         electrolyzer_cost_results = {
@@ -324,8 +324,8 @@ def run_electrolyzer_cost(
         return electrolyzer_cost_results
 
     H2_Results = electrolyzer_physics_results["H2_Results"]
-    useful_life = greenheart_config["project_parameters"]["project_lifetime"]
-    atb_year = greenheart_config["project_parameters"]["atb_year"]
+    useful_life = h2integrate_config["project_parameters"]["project_lifetime"]
+    atb_year = h2integrate_config["project_parameters"]["atb_year"]
     electrical_generation_timeseries = electrolyzer_physics_results["power_to_electrolyzer_kw"]
     nturbines = hopp_config["technologies"]["wind"]["num_turbines"]
 
@@ -350,8 +350,8 @@ def run_electrolyzer_cost(
                 h2_tax_credit,
                 h2_itc,
             ) = basic_H2_cost_model(
-                greenheart_config["electrolyzer"]["electrolyzer_capex"],
-                greenheart_config["electrolyzer"]["time_between_replacement"],
+                h2integrate_config["electrolyzer"]["electrolyzer_capex"],
+                h2integrate_config["electrolyzer"]["time_between_replacement"],
                 per_turb_electrolyzer_size_mw,
                 useful_life,
                 atb_year,
@@ -365,7 +365,7 @@ def run_electrolyzer_cost(
 
         elif electrolyzer_cost_model == "singlitico2021":
             P_elec = per_turb_electrolyzer_size_mw * 1e-3  # [GW]
-            RC_elec = greenheart_config["electrolyzer"]["electrolyzer_capex"]  # [USD/kW]
+            RC_elec = h2integrate_config["electrolyzer"]["electrolyzer_capex"]  # [USD/kW]
 
             pem_offshore = PEMCostsSingliticoModel(elec_location=offshore)
 
@@ -395,8 +395,8 @@ def run_electrolyzer_cost(
                 h2_tax_credit,
                 h2_itc,
             ) = basic_H2_cost_model(
-                greenheart_config["electrolyzer"]["electrolyzer_capex"],
-                greenheart_config["electrolyzer"]["time_between_replacement"],
+                h2integrate_config["electrolyzer"]["electrolyzer_capex"],
+                h2integrate_config["electrolyzer"]["time_between_replacement"],
                 electrolyzer_size_mw,
                 useful_life,
                 atb_year,
@@ -409,7 +409,7 @@ def run_electrolyzer_cost(
             )
         elif electrolyzer_cost_model == "singlitico2021":
             P_elec = electrolyzer_size_mw * 1e-3  # [GW]
-            RC_elec = greenheart_config["electrolyzer"]["electrolyzer_capex"]  # [USD/kW]
+            RC_elec = h2integrate_config["electrolyzer"]["electrolyzer_capex"]  # [USD/kW]
 
             pem_offshore = PEMCostsSingliticoModel(elec_location=offshore)
 
@@ -431,7 +431,7 @@ def run_electrolyzer_cost(
             raise ValueError(msg)
 
     electrolyzer_vom_cost = calc_electrolyzer_variable_om(
-        electrolyzer_physics_results, greenheart_config
+        electrolyzer_physics_results, h2integrate_config
     )
 
     # package outputs for return

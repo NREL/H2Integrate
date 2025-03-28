@@ -5,10 +5,10 @@ import numpy as np
 import pandas as pd
 from pyomo.environ import *  # FIXME: no * imports, delete whole comment when fixed # noqa: F403
 
-from greenheart.simulation.technologies.hydrogen.electrolysis.optimization_utils_linear import (
+from h2integrate.simulation.technologies.hydrogen.electrolysis.optimization_utils_linear import (
     optimize,
 )
-from greenheart.simulation.technologies.hydrogen.electrolysis.PEM_H2_LT_electrolyzer_Clusters import (  # noqa: E501
+from h2integrate.simulation.technologies.hydrogen.electrolysis.PEM_H2_LT_electrolyzer_Clusters import (  # noqa: E501
     PEM_H2_Clusters as PEMClusters,
 )
 

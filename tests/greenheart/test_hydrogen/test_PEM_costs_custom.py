@@ -1,6 +1,6 @@
 from pytest import approx
 
-from greenheart.simulation.technologies.hydrogen.electrolysis.PEM_costs_custom import (
+from h2integrate.simulation.technologies.hydrogen.electrolysis.PEM_costs_custom import (
     calc_custom_electrolysis_capex_fom,
 )
 

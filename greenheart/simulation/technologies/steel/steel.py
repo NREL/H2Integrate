@@ -884,7 +884,7 @@ def run_steel_finance_model(
 
 
 def run_steel_full_model(
-    greenheart_config: dict,
+    h2integrate_config: dict,
     save_plots=False,
     show_plots=False,
     output_dir="./output/",
@@ -894,7 +894,7 @@ def run_steel_full_model(
     Runs the full steel model, including capacity, cost, and finance models.
 
     Args:
-        greenheart_config (dict): The configuration for the greenheart model.
+        h2integrate_config (dict): The configuration for the h2integrate model.
 
     Returns:
         Tuple[SteelCapacityModelOutputs, SteelCostModelOutputs, SteelFinanceModelOutputs]:
@@ -902,7 +902,7 @@ def run_steel_full_model(
     """
     # this is likely to change as we refactor to use config dataclasses, but for now
     # we'll just copy the config and modify it as needed
-    config = copy.deepcopy(greenheart_config)
+    config = copy.deepcopy(h2integrate_config)
 
     if config["steel"]["costs"]["lcoh"] != config["steel"]["finances"]["lcoh"]:
         msg = (

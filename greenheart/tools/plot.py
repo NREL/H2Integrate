@@ -36,10 +36,10 @@ def plot_hydrogen_flows(
     show_fig: bool = True,
     save_fig: bool = True,
 ) -> None:
-    """Generates a plot of the hydrogen dispatch from the greenheart output.
+    """Generates a plot of the hydrogen dispatch from the h2integrate output.
 
     Args:
-        energy_flow_data_path (str): path to where the greenheart energy flow output file is saved
+        energy_flow_data_path (str): path to where the h2integrate energy flow output file is saved
         start_date_time (dt.datetime, optional): start time for plot.
             Defaults to dt.datetime(2024, 1, 1, 0).
         end_date_time (dt.datetime, optional): end time for plot.

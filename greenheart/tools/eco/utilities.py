@@ -41,7 +41,7 @@ def convert_relative_to_absolute_path(config_filepath, resource_filepath):
 # Function to load inputs
 def get_inputs(
     filename_hopp_config,
-    filename_greenheart_config,
+    filename_h2integrate_config,
     filename_orbit_config,
     filename_turbine_config,
     filename_floris_config=None,
@@ -58,7 +58,7 @@ def get_inputs(
     hopp_config = load_yaml(filename_hopp_config)
 
     # load eco inputs
-    greenheart_config = load_yaml(filename_greenheart_config)
+    h2integrate_config = load_yaml(filename_h2integrate_config)
 
     # convert relative filepath to absolute for HOPP ingestion
     hopp_config["site"]["solar_resource_file"] = convert_relative_to_absolute_path(
@@ -177,7 +177,7 @@ def get_inputs(
 
     return (
         hopp_config,
-        greenheart_config,
+        h2integrate_config,
         orbit_config,
         turbine_config,
         floris_config,
@@ -252,7 +252,7 @@ def convert_layout_from_floris_for_orbit(turbine_x, turbine_y, save_config=False
 
 def visualize_plant(
     hopp_config,
-    greenheart_config,
+    h2integrate_config,
     turbine_config,
     wind_cost_outputs,
     hopp_results,
@@ -402,7 +402,7 @@ def visualize_plant(
     onshore_substation_y_side_length = 31.8  # [m] based on 1 acre area https://www.power-technology.com/features/making-space-for-power-how-much-land-must-renewables-use/
     onshore_substation_area = onshore_substation_x_side_length * onshore_substation_y_side_length
 
-    if greenheart_config["h2_storage"]["type"] == "pressure_vessel":
+    if h2integrate_config["h2_storage"]["type"] == "pressure_vessel":
         h2_storage_area = h2_storage_results["tank_footprint_m2"]
         h2_storage_side = np.sqrt(h2_storage_area)
     else:
@@ -923,7 +923,7 @@ def visualize_plant(
 
     h2_storage_hatch = "\\\\\\"
     if design_scenario["h2_storage_location"] == "onshore" and (
-        greenheart_config["h2_storage"]["type"] != "none"
+        h2integrate_config["h2_storage"]["type"] != "none"
     ):
         h2_storage_patch = patches.Rectangle(
             (onshorex - h2_storage_side, onshorey - h2_storage_side - 2),
@@ -950,7 +950,7 @@ def visualize_plant(
             ax[ax_index_detail].add_patch(h2_storage_patch)
             component_areas["h2_storage_area_m2"] = h2_storage_area
     elif design_scenario["h2_storage_location"] == "platform" and (
-        greenheart_config["h2_storage"]["type"] != "none"
+        h2integrate_config["h2_storage"]["type"] != "none"
     ):
         s_side_y = equipment_platform_side_length
         s_side_x = h2_storage_area / s_side_y
@@ -972,7 +972,7 @@ def visualize_plant(
         component_areas["h2_storage_area_m2"] = h2_storage_area
 
     elif design_scenario["h2_storage_location"] == "turbine":
-        if greenheart_config["h2_storage"]["type"] == "turbine":
+        if h2integrate_config["h2_storage"]["type"] == "turbine":
             h2_storage_patch = patches.Circle(
                 (turbine_x[0], turbine_y[0]),
                 radius=tower_base_diameter / 2,
@@ -998,8 +998,8 @@ def visualize_plant(
                     hatch=h2_storage_hatch,
                 )
                 ax[ax_index_wind_plant].add_patch(h2_storage_patch)
-        elif greenheart_config["h2_storage"]["type"] == "pressure_vessel":
-            h2_storage_side = np.sqrt(h2_storage_area / greenheart_config["plant"]["num_turbines"])
+        elif h2integrate_config["h2_storage"]["type"] == "pressure_vessel":
+            h2_storage_side = np.sqrt(h2_storage_area / h2integrate_config["plant"]["num_turbines"])
             h2_storage_patch = patches.Rectangle(
                 (
                     turbine_x[0] - h2_storage_side - desal_equipment_side,
@@ -1472,7 +1472,7 @@ def calculate_lca(
     hopp_results,
     electrolyzer_physics_results,
     hopp_config,
-    greenheart_config,
+    h2integrate_config,
     total_accessory_power_renewable_kw,
     total_accessory_power_grid_kw,
     plant_design_scenario_number,
@@ -1493,7 +1493,7 @@ def calculate_lca(
         hopp_results (dict): results from the hopp simulation
         electrolyzer_physics_results (dict): results of the electrolysis simulation
         hopp_config (dict): HOPP configuration inputs based on input files
-        greenheart_config (GreenHeartSimulationConfig): all inputs to the greenheart simulation
+        h2integrate_config (H2IntegrateSimulationConfig): all inputs to the h2integrate simulation
         total_accessory_power_renewable_kw (numpy.ndarray): Total electricity to electrolysis
             peripherals from renewable power (kWh) with shape = (8760,)
         total_accessory_power_grid_kw (numpy.ndarray): Total electricity to electrolysis
@@ -1506,16 +1506,16 @@ def calculate_lca(
             lifetime of plant and other relevant data
     """
 
-    # Load relevant config and results data from HOPP and GreenHEART:
+    # Load relevant config and results data from HOPP and H2Integrate:
     site_latitude = hopp_config["site"]["data"]["lat"]
     site_longitude = hopp_config["site"]["data"]["lon"]
-    project_lifetime = greenheart_config["project_parameters"][
+    project_lifetime = h2integrate_config["project_parameters"][
         "project_lifetime"
     ]  # system lifetime (years)
-    plant_design_scenario = greenheart_config["plant_design"][
+    plant_design_scenario = h2integrate_config["plant_design"][
         f"scenario{plant_design_scenario_number}"
     ]  # plant design scenario number
-    tax_incentive_option = greenheart_config["policy_parameters"][
+    tax_incentive_option = h2integrate_config["policy_parameters"][
         f"option{incentive_option_number}"
     ]  # tax incentive option number
     wind_annual_energy_kwh = hopp_results["annual_energies"][
@@ -1553,8 +1553,8 @@ def calculate_lca(
     # if only grid present -> grid-only?
     # if any renewables + grid present -> hybrid-grid?
     # if only renewables present -> off-grid?
-    if greenheart_config["project_parameters"]["grid_connection"]:
-        if greenheart_config["electrolyzer"]["sizing"]["hydrogen_dmd"] is not None:
+    if h2integrate_config["project_parameters"]["grid_connection"]:
+        if h2integrate_config["electrolyzer"]["sizing"]["hydrogen_dmd"] is not None:
             grid_case = "grid-only"
         else:
             grid_case = "off-grid"
@@ -1562,7 +1562,7 @@ def calculate_lca(
         grid_case = "off-grid"
 
     # Capture electrolyzer configuration variables / strings for output files
-    if greenheart_config["electrolyzer"]["include_degradation_penalty"]:
+    if h2integrate_config["electrolyzer"]["include_degradation_penalty"]:
         electrolyzer_degradation = "True"
     else:
         electrolyzer_degradation = "False"
@@ -1570,12 +1570,12 @@ def calculate_lca(
         electrolyzer_centralization = "Centralized"
     else:
         electrolyzer_centralization = "Distributed"
-    electrolyzer_optimized = greenheart_config["electrolyzer"]["pem_control_type"]
-    electrolyzer_type = greenheart_config["lca_config"]["electrolyzer_type"]
+    electrolyzer_optimized = h2integrate_config["electrolyzer"]["pem_control_type"]
+    electrolyzer_type = h2integrate_config["lca_config"]["electrolyzer_type"]
     number_of_electrolyzer_clusters = int(
         ceildiv(
-            greenheart_config["electrolyzer"]["rating"],
-            greenheart_config["electrolyzer"]["cluster_rating_MW"],
+            h2integrate_config["electrolyzer"]["rating"],
+            h2integrate_config["electrolyzer"]["cluster_rating_MW"],
         )
     )
 
@@ -1688,17 +1688,17 @@ def calculate_lca(
     # ------------------------------------------------------------------------------
     # Water
     # ------------------------------------------------------------------------------
-    if greenheart_config["lca_config"]["feedstock_water_type"] == "desal":
+    if h2integrate_config["lca_config"]["feedstock_water_type"] == "desal":
         H2O_supply_EI = greet_data_dict[
             "desal_H2O_supply_EI"
         ]  # GHG Emissions Intensity of RO desalination and supply of that water to processes
     # (kg CO2e/gal H2O).
-    elif greenheart_config["lca_config"]["feedstock_water_type"] == "ground":
+    elif h2integrate_config["lca_config"]["feedstock_water_type"] == "ground":
         H2O_supply_EI = greet_data_dict[
             "ground_H2O_supply_EI"
         ]  # GHG Emissions Intensity of ground water and supply of that water to processes
     # (kg CO2e/gal H2O).
-    elif greenheart_config["lca_config"]["feedstock_water_type"] == "surface":
+    elif h2integrate_config["lca_config"]["feedstock_water_type"] == "surface":
         H2O_supply_EI = greet_data_dict[
             "surface_H2O_supply_EI"
         ]  # GHG Emissions Intensity of surface water and supply of that water to processes
@@ -1714,7 +1714,7 @@ def calculate_lca(
     # ------------------------------------------------------------------------------
     # Renewable infrastructure embedded emission intensities
     # ------------------------------------------------------------------------------
-    # NOTE: HOPP/GreenHEART version at time of dev can only model PEM electrolysis
+    # NOTE: HOPP/H2Integrate version at time of dev can only model PEM electrolysis
     if electrolyzer_type == "pem":
         # ely_stack_capex_EI = greet_data_dict[
         #     "pem_ely_stack_capex_EI"
@@ -1847,7 +1847,7 @@ def calculate_lca(
     # ------------------------------------------------------------------------------
     # Values agnostic of DRI-EAF config
     # NOTE: in future if accounting for different iron ore mining, pelletizing processes,
-    # and production processes, then add if statement to check greenheart_config for
+    # and production processes, then add if statement to check h2integrate_config for
     # iron production type (DRI, electrowinning, etc)
     # iron_ore_mining_EI_per_MT_steel = greet_data_dict[
     #     "DRI_iron_ore_mining_EI_per_MT_steel"
@@ -1867,7 +1867,7 @@ def calculate_lca(
     # (kg CO2e/metric ton iron ore)
 
     # NOTE: in future if accounting for different steel productin processes (DRI-EAF vs XYZ),
-    # then add if statement to check greenheart_config for steel production process and
+    # then add if statement to check h2integrate_config for steel production process and
     # update HOPP > greet_data.py with specific variables for each process
     steel_H2O_consume = greet_data_dict[
         "steel_H2O_consume"
@@ -1898,16 +1898,16 @@ def calculate_lca(
     ## Cambium
     # Define cambium_year
     # NOTE: at time of dev hopp logic for LCOH = atb_year + 2yr + install_period(3yrs) = 5 years
-    cambium_year = greenheart_config["project_parameters"]["atb_year"] + 5
+    cambium_year = h2integrate_config["project_parameters"]["atb_year"] + 5
     # Pull / download cambium data files
     cambium_data = CambiumData(
         lat=site_latitude,
         lon=site_longitude,
         year=cambium_year,
-        project_uuid=greenheart_config["lca_config"]["cambium"]["project_uuid"],
-        scenario=greenheart_config["lca_config"]["cambium"]["scenario"],
-        location_type=greenheart_config["lca_config"]["cambium"]["location_type"],
-        time_type=greenheart_config["lca_config"]["cambium"]["time_type"],
+        project_uuid=h2integrate_config["lca_config"]["cambium"]["project_uuid"],
+        scenario=h2integrate_config["lca_config"]["cambium"]["scenario"],
+        location_type=h2integrate_config["lca_config"]["cambium"]["location_type"],
+        time_type=h2integrate_config["lca_config"]["cambium"]["time_type"],
     )
 
     # Read in Cambium data file for each year available
@@ -2827,7 +2827,7 @@ def post_process_simulation(
     hopp_results,
     electrolyzer_physics_results,
     hopp_config,
-    greenheart_config,
+    h2integrate_config,
     orbit_config,
     turbine_config,
     h2_storage_results,
@@ -2880,7 +2880,7 @@ def post_process_simulation(
             round(
                 np.sum(electrolyzer_physics_results["power_to_electrolyzer_kw"])
                 * 1e-3
-                / (greenheart_config["electrolyzer"]["rating"] * 365 * 24),
+                / (h2integrate_config["electrolyzer"]["rating"] * 365 * 24),
                 2,
             ),
         )
@@ -2888,18 +2888,18 @@ def post_process_simulation(
             "Electrolyzer CAPEX installed $/kW: ",
             round(
                 capex_breakdown["electrolyzer"]
-                / (greenheart_config["electrolyzer"]["rating"] * 1e3),
+                / (h2integrate_config["electrolyzer"]["rating"] * 1e3),
                 2,
             ),
         )
 
     # Run LCA analysis if config yaml flag = True
-    if greenheart_config["lca_config"]["run_lca"]:
+    if h2integrate_config["lca_config"]["run_lca"]:
         lca_df = calculate_lca(
             hopp_results=hopp_results,
             electrolyzer_physics_results=electrolyzer_physics_results,
             hopp_config=hopp_config,
-            greenheart_config=greenheart_config,
+            h2integrate_config=h2integrate_config,
             total_accessory_power_renewable_kw=total_accessory_power_renewable_kw,
             total_accessory_power_grid_kw=total_accessory_power_grid_kw,
             plant_design_scenario_number=plant_design_number,
@@ -2909,7 +2909,7 @@ def post_process_simulation(
     if show_plots or save_plots:
         visualize_plant(
             hopp_config,
-            greenheart_config,
+            h2integrate_config,
             turbine_config,
             wind_cost_results,
             hopp_results,
@@ -2936,27 +2936,27 @@ def post_process_simulation(
 
     pf_lcoh.get_cost_breakdown().to_csv(
         savepaths[2]
-        / f'cost_breakdown_lcoh_design{plant_design_number}_incentive{incentive_option}_{greenheart_config["h2_storage"]["type"]}storage.csv'  # noqa: E501
+        / f'cost_breakdown_lcoh_design{plant_design_number}_incentive{incentive_option}_{h2integrate_config["h2_storage"]["type"]}storage.csv'  # noqa: E501
     )
     pf_lcoe.get_cost_breakdown().to_csv(
         savepaths[1]
-        / f'cost_breakdown_lcoe_design{plant_design_number}_incentive{incentive_option}_{greenheart_config["h2_storage"]["type"]}storage.csv'  # noqa: E501
+        / f'cost_breakdown_lcoe_design{plant_design_number}_incentive{incentive_option}_{h2integrate_config["h2_storage"]["type"]}storage.csv'  # noqa: E501
     )
 
     # Save LCA results if analysis was run
-    if greenheart_config["lca_config"]["run_lca"]:
+    if h2integrate_config["lca_config"]["run_lca"]:
         lca_savepath = (
             savepaths[3]
-            / f'LCA_results_design{plant_design_number}_incentive{incentive_option}_{greenheart_config["h2_storage"]["type"]}storage.csv'  # noqa: E501
+            / f'LCA_results_design{plant_design_number}_incentive{incentive_option}_{h2integrate_config["h2_storage"]["type"]}storage.csv'  # noqa: E501
         )
         lca_df.to_csv(lca_savepath)
         print("LCA Analysis was run as a postprocessing step. Results were saved to:")
         print(lca_savepath)
 
     # create dataframe for saving all the stuff
-    greenheart_config["design_scenario"] = design_scenario
-    greenheart_config["plant_design_number"] = plant_design_number
-    greenheart_config["incentive_options"] = incentive_option
+    h2integrate_config["design_scenario"] = design_scenario
+    h2integrate_config["plant_design_number"] = plant_design_number
+    h2integrate_config["incentive_options"] = incentive_option
 
     # save power usage data
     if len(solver_results) > 0:
@@ -2978,16 +2978,16 @@ def post_process_simulation(
     if wind_cost_results.orbit_project:
         _, orbit_capex_breakdown, wind_capex_multiplier = adjust_orbit_costs(
             orbit_project=wind_cost_results.orbit_project,
-            greenheart_config=greenheart_config,
+            h2integrate_config=h2integrate_config,
         )
 
         # orbit_capex_breakdown["Onshore Substation"] = orbit_project.phases["ElectricalDesign"].onshore_cost  # noqa: E501
         # discount ORBIT cost information
         for key in orbit_capex_breakdown:
             orbit_capex_breakdown[key] = -npf.fv(
-                greenheart_config["finance_parameters"]["costing_general_inflation"],
-                greenheart_config["project_parameters"]["cost_year"]
-                - greenheart_config["finance_parameters"]["discount_years"]["wind"],
+                h2integrate_config["finance_parameters"]["costing_general_inflation"],
+                h2integrate_config["project_parameters"]["cost_year"]
+                - h2integrate_config["finance_parameters"]["discount_years"]["wind"],
                 0.0,
                 orbit_capex_breakdown[key],
             )
@@ -2999,7 +2999,7 @@ def post_process_simulation(
             savedir.mkdir(parents=True)
         ob_df.to_csv(
             savedir
-            / f'orbit_cost_breakdown_lcoh_design{plant_design_number}_incentive{incentive_option}_{greenheart_config["h2_storage"]["type"]}storage.csv'  # noqa: E501
+            / f'orbit_cost_breakdown_lcoh_design{plant_design_number}_incentive{incentive_option}_{h2integrate_config["h2_storage"]["type"]}storage.csv'  # noqa: E501
         )
         ###############################
 
@@ -3007,7 +3007,7 @@ def post_process_simulation(
 
         _, orbit_capex_breakdown, wind_capex_multiplier = adjust_orbit_costs(
             orbit_project=wind_cost_results.orbit_project,
-            greenheart_config=greenheart_config,
+            h2integrate_config=h2integrate_config,
         )
 
         onshore_substation_costs = (
@@ -3022,9 +3022,9 @@ def post_process_simulation(
         # discount ORBIT cost information
         for key in orbit_capex_breakdown:
             orbit_capex_breakdown[key] = -npf.fv(
-                greenheart_config["finance_parameters"]["costing_general_inflation"],
-                greenheart_config["project_parameters"]["cost_year"]
-                - greenheart_config["finance_parameters"]["discount_years"]["wind"],
+                h2integrate_config["finance_parameters"]["costing_general_inflation"],
+                h2integrate_config["project_parameters"]["cost_year"]
+                - h2integrate_config["finance_parameters"]["discount_years"]["wind"],
                 0.0,
                 orbit_capex_breakdown[key],
             )
@@ -3033,7 +3033,7 @@ def post_process_simulation(
         ob_df = pd.DataFrame(orbit_capex_breakdown, index=[0]).transpose()
         ob_df.to_csv(
             savedir
-            / f'orbit_cost_breakdown_with_onshore_substation_lcoh_design{plant_design_number}_incentive{incentive_option}_{greenheart_config["h2_storage"]["type"]}storage.csv'  # noqa: E501
+            / f'orbit_cost_breakdown_with_onshore_substation_lcoh_design{plant_design_number}_incentive{incentive_option}_{h2integrate_config["h2_storage"]["type"]}storage.csv'  # noqa: E501
         )
 
     ##################################################################################

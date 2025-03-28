@@ -3,9 +3,9 @@ import warnings
 import numpy as np
 import pandas as pd
 
-from greenheart.to_organize.gradient_free import GeneticAlgorithm
-from greenheart.to_organize.H2_Analysis.simple_dispatch import SimpleDispatch
-from greenheart.to_organize.H2_Analysis.h2_setup_optimize import calculate_h_lcoe
+from h2integrate.to_organize.gradient_free import GeneticAlgorithm
+from h2integrate.to_organize.H2_Analysis.simple_dispatch import SimpleDispatch
+from h2integrate.to_organize.H2_Analysis.h2_setup_optimize import calculate_h_lcoe
 
 
 warnings.filterwarnings("ignore")

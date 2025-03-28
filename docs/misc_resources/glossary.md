@@ -1,8 +1,8 @@
 # Glossary
 
-This is an incomplete glossary of terms that used in GreenHEART and this documentation.
+This is an incomplete glossary of terms that used in H2Integrate and this documentation.
 The goal is to have this be a one-stop-shop for defining words and jargon.
-Some of these words have a particular meaning within GreenHEART but might mean something else outside the tool, even in a technical setting.
+Some of these words have a particular meaning within H2Integrate but might mean something else outside the tool, even in a technical setting.
 
 ```{glossary}
 

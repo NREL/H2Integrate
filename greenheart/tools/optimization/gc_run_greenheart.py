@@ -9,22 +9,22 @@ from pathlib import Path
 import numpy as np
 import openmdao.api as om
 
-from greenheart.tools.optimization import fileIO
-from greenheart.tools.optimization.openmdao import GreenHeartComponent
-from greenheart.tools.optimization.mpi_tools import MPI, map_comm_heirarchical
-from greenheart.simulation.greenheart_simulation import (
-    GreenHeartSimulationConfig,
-    setup_greenheart_simulation,
+from h2integrate.tools.optimization import fileIO
+from h2integrate.tools.optimization.openmdao import H2IntegrateComponent
+from h2integrate.tools.optimization.mpi_tools import MPI, map_comm_heirarchical
+from h2integrate.simulation.h2integrate_simulation import (
+    H2IntegrateSimulationConfig,
+    setup_h2integrate_simulation,
 )
-from greenheart.tools.optimization.gc_PoseOptimization import PoseOptimization
+from h2integrate.tools.optimization.gc_PoseOptimization import PoseOptimization
 
 
-def run_greenheart(config: GreenHeartSimulationConfig, overridden_values=None, run_only=False):
-    """This functions sets up and runs greenheart. It can be used for analysis runs, optimizations,
+def run_h2integrate(config: H2IntegrateSimulationConfig, overridden_values=None, run_only=False):
+    """This functions sets up and runs h2integrate. It can be used for analysis runs, optimizations,
     design of experiments, or step size studies
 
     Args:
-        config (GreenHeartSimulationConfig): data structure class containing all simulation options
+        config (H2IntegrateSimulationConfig): data structure class containing all simulation options
         overridden_values (_type_, optional): data values from `config` may be overridden using this
             input at call time. Defaults to None.
         run_only (bool, optional): if True, not optimization or design of experiments will be run.
@@ -36,7 +36,7 @@ def run_greenheart(config: GreenHeartSimulationConfig, overridden_values=None, r
     """
     # Initialize openmdao problem. If running with multiple processors in MPI, use parallel finite
     # differencing equal to the number of cores used.
-    # Otherwise, initialize the GreenHEART system normally. Get the rank number for parallelization.
+    # Otherwise, initialize the H2Integrate system normally. Get the rank number for parallelization.
     # We only print output files using the root processor.
     myopt = PoseOptimization(config)
 
@@ -48,7 +48,7 @@ def run_greenheart(config: GreenHeartSimulationConfig, overridden_values=None, r
 
         if (
             max_cores > n_DV
-            and not config.greenheart_config["opt_options"]["driver"]["design_of_experiments"][
+            and not config.h2integrate_config["opt_options"]["driver"]["design_of_experiments"][
                 "flag"
             ]
         ):
@@ -62,7 +62,7 @@ def run_greenheart(config: GreenHeartSimulationConfig, overridden_values=None, r
                 + " or the parallelization logic will not work"
             )
 
-        if config.greenheart_config["opt_options"]["driver"]["design_of_experiments"]["flag"]:
+        if config.h2integrate_config["opt_options"]["driver"]["design_of_experiments"]["flag"]:
             n_FD = max_cores
 
         else:
@@ -84,20 +84,20 @@ def run_greenheart(config: GreenHeartSimulationConfig, overridden_values=None, r
 
     folder_output = Path(config.output_dir).resolve()
 
-    if "opt_options" in config.greenheart_config.keys():
+    if "opt_options" in config.h2integrate_config.keys():
         design_variables = [
             key
-            for key in [*config.greenheart_config["opt_options"]["design_variables"]]
-            if config.greenheart_config["opt_options"]["design_variables"][key]["flag"]
+            for key in [*config.h2integrate_config["opt_options"]["design_variables"]]
+            if config.h2integrate_config["opt_options"]["design_variables"][key]["flag"]
         ]
     else:
         design_variables = []
 
-    if rank == 0 and "opt_options" in config.greenheart_config.keys():
+    if rank == 0 and "opt_options" in config.h2integrate_config.keys():
         folder_output.mkdir(exist_ok=True)
 
         # create logger
-        logger = logging.getLogger("greenheart")
+        logger = logging.getLogger("h2integrate")
         logger.setLevel(logging.INFO)
 
         # create handlers
@@ -106,7 +106,7 @@ def run_greenheart(config: GreenHeartSimulationConfig, overridden_values=None, r
 
         flog = (
             folder_output
-            / f'{config.greenheart_config["opt_options"]["general"]["fname_output"]}.log'
+            / f'{config.h2integrate_config["opt_options"]["general"]["fname_output"]}.log'
         )
         hf = logging.FileHandler(flog, mode="w")
         hf.setLevel(logging.INFO)
@@ -138,20 +138,20 @@ def run_greenheart(config: GreenHeartSimulationConfig, overridden_values=None, r
             prob = om.Problem(model=om.Group(), reports=False)
 
         prob.model.add_subsystem(
-            "greenheart",
-            GreenHeartComponent(config=config, design_variables=design_variables),
+            "h2integrate",
+            H2IntegrateComponent(config=config, design_variables=design_variables),
             promotes=["*"],
         )
 
         # If at least one of the design variables is active, setup an optimization
-        if not run_only and config.greenheart_config["opt_options"]["opt_flag"]:
-            config, hi, _ = setup_greenheart_simulation(config)
+        if not run_only and config.h2integrate_config["opt_options"]["opt_flag"]:
+            config, hi, _ = setup_h2integrate_simulation(config)
             prob = myopt.set_driver(prob)
             prob = myopt.set_objective(prob)
             prob = myopt.set_design_variables(prob, config, hi)
             prob = myopt.set_constraints(prob, hi)
 
-        if config.greenheart_config["opt_options"]["recorder"]["flag"]:
+        if config.h2integrate_config["opt_options"]["recorder"]["flag"]:
             prob = myopt.set_recorders(prob)
 
         # Setup openmdao problem
@@ -172,21 +172,21 @@ def run_greenheart(config: GreenHeartSimulationConfig, overridden_values=None, r
         if not run_only:
             prob = myopt.set_restart(prob)
 
-            if "check_totals" in config.greenheart_config["opt_options"]["driver"]:
-                if config.greenheart_config["opt_options"]["driver"]["check_totals"]:
+            if "check_totals" in config.h2integrate_config["opt_options"]["driver"]:
+                if config.h2integrate_config["opt_options"]["driver"]["check_totals"]:
                     prob.run_model()
                     prob.compute_totals()
 
-            if "check_partials" in config.greenheart_config["opt_options"]["driver"]:
-                if config.greenheart_config["opt_options"]["driver"]["check_partials"]:
+            if "check_partials" in config.h2integrate_config["opt_options"]["driver"]:
+                if config.h2integrate_config["opt_options"]["driver"]["check_partials"]:
                     prob.run_model()
                     prob.check_partials(compact_print=True)
 
             sys.stdout.flush()
 
-            if config.greenheart_config["opt_options"]["driver"]["step_size_study"]["flag"]:
+            if config.h2integrate_config["opt_options"]["driver"]["step_size_study"]["flag"]:
                 prob.run_model()
-                study_options = config.greenheart_config["opt_options"]["driver"]["step_size_study"]
+                study_options = config.h2integrate_config["opt_options"]["driver"]["step_size_study"]
                 step_sizes = study_options["step_sizes"]
                 all_derivs = {}
                 for idx, step_size in enumerate(step_sizes):
@@ -212,17 +212,17 @@ def run_greenheart(config: GreenHeartSimulationConfig, overridden_values=None, r
                 np.save("total_derivs.npy", all_derivs)
 
             # Run openmdao problem
-            elif config.greenheart_config["opt_options"]["opt_flag"]:
+            elif config.h2integrate_config["opt_options"]["opt_flag"]:
                 prob.run_driver()
         else:
             prob.run_model()
-        if config.greenheart_config["opt_options"]["recorder"]["flag"]:
+        if config.h2integrate_config["opt_options"]["recorder"]["flag"]:
             prob.record("final_state")
 
         if (not MPI) or (MPI and rank == 0):
             # Save data coming from openmdao to an output yaml file
             froot_out = (
-                folder_output / config.greenheart_config["opt_options"]["general"]["fname_output"]
+                folder_output / config.h2integrate_config["opt_options"]["general"]["fname_output"]
             )
 
             # Save data to numpy and matlab arrays

@@ -2,14 +2,14 @@ import numpy as np
 import pandas as pd
 from pytest import approx, fixture
 
-import greenheart.tools.eco.electrolysis as he_elec
-import greenheart.tools.plant_sizing_estimation as gh_sizing
-from greenheart.simulation.technologies.hydrogen.electrolysis import PEM_tools
+import h2integrate.tools.eco.electrolysis as he_elec
+import h2integrate.tools.plant_sizing_estimation as gh_sizing
+from h2integrate.simulation.technologies.hydrogen.electrolysis import PEM_tools
 
 from tests import TEST_ROOT_DIR
 
 
-input_library_path = TEST_ROOT_DIR / "greenheart" / "test_hydrogen" / "input_files"
+input_library_path = TEST_ROOT_DIR / "h2integrate" / "test_hydrogen" / "input_files"
 project_life_years = 30
 
 

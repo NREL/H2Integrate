@@ -1,6 +1,6 @@
 from pytest import approx
 
-from greenheart.simulation.technologies.ammonia import ammonia
+from h2integrate.simulation.technologies.ammonia import ammonia
 
 
 grid_prices_dict = {

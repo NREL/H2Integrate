@@ -1,7 +1,7 @@
 import pytest
 from pytest import fixture
 
-from greenheart.simulation.technologies.hydrogen.h2_storage.lined_rock_cavern.lined_rock_cavern import (  # noqa: E501
+from h2integrate.simulation.technologies.hydrogen.h2_storage.lined_rock_cavern.lined_rock_cavern import (  # noqa: E501
     LinedRockCavernStorage,
 )
 

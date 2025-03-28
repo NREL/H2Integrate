@@ -1,7 +1,7 @@
-﻿greenheart.simulation
+﻿h2integrate.simulation
 =====================
 
-.. automodule:: greenheart.simulation
+.. automodule:: h2integrate.simulation
 
 
 
@@ -27,5 +27,5 @@
    :toctree:
    :recursive:
 
-   greenheart.simulation.greenheart_simulation
-   greenheart.simulation.technologies
+   h2integrate.simulation.h2integrate_simulation
+   h2integrate.simulation.technologies

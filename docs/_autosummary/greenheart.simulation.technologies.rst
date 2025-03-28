@@ -1,7 +1,7 @@
-greenheart.simulation.technologies
+h2integrate.simulation.technologies
 ==================================
 
-.. automodule:: greenheart.simulation.technologies
+.. automodule:: h2integrate.simulation.technologies
 
 
 
@@ -27,7 +27,7 @@ greenheart.simulation.technologies
    :toctree:
    :recursive:
 
-   greenheart.simulation.technologies.ammonia
-   greenheart.simulation.technologies.hydrogen
-   greenheart.simulation.technologies.offshore
-   greenheart.simulation.technologies.steel
+   h2integrate.simulation.technologies.ammonia
+   h2integrate.simulation.technologies.hydrogen
+   h2integrate.simulation.technologies.offshore
+   h2integrate.simulation.technologies.steel

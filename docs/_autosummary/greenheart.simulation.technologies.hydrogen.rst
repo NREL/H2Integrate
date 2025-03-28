@@ -1,7 +1,7 @@
-greenheart.simulation.technologies.hydrogen
+h2integrate.simulation.technologies.hydrogen
 ===========================================
 
-.. automodule:: greenheart.simulation.technologies.hydrogen
+.. automodule:: h2integrate.simulation.technologies.hydrogen
 
 
 
@@ -27,7 +27,7 @@ greenheart.simulation.technologies.hydrogen
    :toctree:
    :recursive:
 
-   greenheart.simulation.technologies.hydrogen.desal
-   greenheart.simulation.technologies.hydrogen.electrolysis
-   greenheart.simulation.technologies.hydrogen.h2_storage
-   greenheart.simulation.technologies.hydrogen.h2_transport
+   h2integrate.simulation.technologies.hydrogen.desal
+   h2integrate.simulation.technologies.hydrogen.electrolysis
+   h2integrate.simulation.technologies.hydrogen.h2_storage
+   h2integrate.simulation.technologies.hydrogen.h2_transport

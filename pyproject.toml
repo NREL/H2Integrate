@@ -3,7 +3,7 @@ requires = ["setuptools", "setuptools-scm"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "greenheart"
+name = "h2integrate"
 dynamic = ["version"]
 authors = [{name = "NREL", email = "dguittet@nrel.gov"}]
 readme = {file = "README.md", content-type = "text/markdown"}
@@ -81,10 +81,10 @@ classifiers = [  # https://pypi.org/classifiers/
 ]
 
 [project.urls]
-source = "https://github.com/NREL/GreenHEART"
-# documentation = "https://greenheart.readthedocs.io/"
-issues = "https://github.com/NREL/GreenHEART/issues"
-changelog = "https://github.com/NREL/GreenHEART/blob/main/CHANGELOG.md"
+source = "https://github.com/NREL/H2Integrate"
+# documentation = "https://h2integrate.readthedocs.io/"
+issues = "https://github.com/NREL/H2Integrate/issues"
+changelog = "https://github.com/NREL/H2Integrate/blob/main/CHANGELOG.md"
 
 [project.optional-dependencies]
 develop = [
@@ -99,19 +99,19 @@ develop = [
     "sphinxcontrib-napoleon"
 ]
 examples = ["jupyterlab"]
-all = ["greenheart[develop,examples]"]
+all = ["h2integrate[develop,examples]"]
 
 [tool.setuptools]
 include-package-data = true
 
 [tool.setuptools.packages.find]
 include = [
-    "greenheart",
+    "h2integrate",
     "hydrogen/h2_transport/data_tables/*.csv",
 ]
 
 [tool.setuptools.dynamic]
-version = {attr = "greenheart.__version__"}
+version = {attr = "h2integrate.__version__"}
 
 [tool.coverage.report]
 exclude_lines = ["# pragma: no cover"]
@@ -120,7 +120,7 @@ exclude_lines = ["# pragma: no cover"]
 # Coverage.py configuration file
 # https://coverage.readthedocs.io/en/latest/config.html
 branch = true
-source = ["greenheart/*"]
+source = ["h2integrate/*"]
 omit = [
   "setup.py",
   "tests/*"
@@ -131,11 +131,11 @@ python_files = [
   "tests/*.py",
 ]
 testpaths = [
-  "test/greenheart/*.py",
+  "test/h2integrate/*.py",
 ]
 
 [tool.isort]
-src_paths = ["greeneart", "tests"]
+src_paths = ["h2integrate", "tests"]
 skip = ["__init__.py"]
 multi_line_output = 3
 sections = [
@@ -145,7 +145,7 @@ sections = [
   "FIRSTPARTY",
   "LOCALFOLDER",
 ]
-known_first_party = "greenheart"
+known_first_party = "h2integrate"
 known_local_folder = "tests"
 combine_as_imports = true
 force_grid_wrap = 0
@@ -156,7 +156,7 @@ lines_after_imports = 2
 line_length = 100
 
 [tool.ruff]
-src = ["greenheart", "tests"]
+src = ["h2integrate", "tests"]
 line-length = 100
 target-version = "py310"
 fix = true
@@ -229,8 +229,8 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 "*/__init__.py" = ["E501", "D104", "F401", "F403"]  # NOTE: F403 discouraged
 "tests/*" = ["D100", "D101", "D102", "D103"]
-"greenheart/to_organize/gradient_free.py" = ["NPY002"]  # TODO: new NumPy needs to be addressed
-"greenheart/to_organize/inputs_py.py" = ["F821"]  # TODO: there are zero inputs, but many vars
+"h2integrate/to_organize/gradient_free.py" = ["NPY002"]  # TODO: new NumPy needs to be addressed
+"h2integrate/to_organize/inputs_py.py" = ["F821"]  # TODO: there are zero inputs, but many vars
 
 [tool.ruff.lint.pycodestyle]
 ignore-overlong-task-comments = true

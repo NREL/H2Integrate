@@ -53,7 +53,7 @@ from pathlib import Path
 
 import ORBIT as orbit
 
-from greenheart.simulation.technologies.offshore.all_platforms import (
+from h2integrate.simulation.technologies.offshore.all_platforms import (
     install_platform,
     calc_platform_opex,
 )

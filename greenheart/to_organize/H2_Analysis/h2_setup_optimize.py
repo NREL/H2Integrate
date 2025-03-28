@@ -13,8 +13,8 @@ from hopp.utilities.keys import set_developer_nrel_gov_key
 from hopp.simulation.hybrid_simulation import HybridSimulation
 from hopp.simulation.technologies.sites import SiteInfo, flatirons_site as sample_site
 
-from greenheart.to_organize.H2_Analysis.simple_dispatch import SimpleDispatch
-from greenheart.simulation.technologies.hydrogen.electrolysis.run_h2_PEM import run_h2_PEM
+from h2integrate.to_organize.H2_Analysis.simple_dispatch import SimpleDispatch
+from h2integrate.simulation.technologies.hydrogen.electrolysis.run_h2_PEM import run_h2_PEM
 
 
 warnings.filterwarnings("ignore")

@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 import ProFAST
 
-from greenheart.to_organize.H2_Analysis import LCA_single_scenario_ProFAST
+from h2integrate.to_organize.H2_Analysis import LCA_single_scenario_ProFAST
 
 
 pf = ProFAST.ProFAST()

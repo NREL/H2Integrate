@@ -1,4 +1,4 @@
-from greenheart.to_organize.H2_Analysis.simple_cash_annuals import simple_cash_annuals
+from h2integrate.to_organize.H2_Analysis.simple_cash_annuals import simple_cash_annuals
 
 
 class Compressor:

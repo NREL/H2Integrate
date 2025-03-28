@@ -1,7 +1,7 @@
 # Features not currently implemented
 
-There are many features that are not currently implemented in GreenHEART that are necessary for current or future projects.
-These will become issues on the GreenHEART GitHub repo.
+There are many features that are not currently implemented in H2Integrate that are necessary for current or future projects.
+These will become issues on the H2Integrate GitHub repo.
 We are listing them here:
 
 - splitting out HOPP into individual systems, including dispatch

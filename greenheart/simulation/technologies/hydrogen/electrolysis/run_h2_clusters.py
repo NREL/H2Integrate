@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 from scipy import interpolate
 
-from greenheart.simulation.technologies.hydrogen.electrolysis.PEM_H2_LT_electrolyzer_Clusters import (  # noqa: E501
+from h2integrate.simulation.technologies.hydrogen.electrolysis.PEM_H2_LT_electrolyzer_Clusters import (  # noqa: E501
     PEM_H2_Clusters as PEMClusters,
 )
 

@@ -3,7 +3,7 @@ from pathlib import Path
 import ORBIT as orbit
 import pytest
 
-from greenheart.simulation.technologies.offshore.floating_platform import (
+from h2integrate.simulation.technologies.offshore.floating_platform import (
     install_platform,
     calc_platform_opex,
     calc_substructure_mass_and_cost,
@@ -19,7 +19,7 @@ from greenheart.simulation.technologies.offshore.floating_platform import (
 @pytest.fixture
 def config():
     offshore_path = (
-        Path(__file__).parents[3] / "greenheart" / "simulation" / "technologies" / "offshore"
+        Path(__file__).parents[3] / "h2integrate" / "simulation" / "technologies" / "offshore"
     )
 
     return orbit.load_config(offshore_path / "example_floating_project.yaml")

@@ -1,7 +1,7 @@
-greenheart.tools.eco
+h2integrate.tools.eco
 ====================
 
-.. automodule:: greenheart.tools.eco
+.. automodule:: h2integrate.tools.eco
 
 
 
@@ -27,8 +27,8 @@ greenheart.tools.eco
    :toctree:
    :recursive:
 
-   greenheart.tools.eco.electrolysis
-   greenheart.tools.eco.finance
-   greenheart.tools.eco.hopp_mgmt
-   greenheart.tools.eco.hydrogen_mgmt
-   greenheart.tools.eco.utilities
+   h2integrate.tools.eco.electrolysis
+   h2integrate.tools.eco.finance
+   h2integrate.tools.eco.hopp_mgmt
+   h2integrate.tools.eco.hydrogen_mgmt
+   h2integrate.tools.eco.utilities

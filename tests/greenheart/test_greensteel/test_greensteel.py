@@ -2,7 +2,7 @@ from pathlib import Path
 
 from pytest import approx
 
-from greenheart.simulation.greenheart_simulation import GreenHeartSimulationConfig, run_simulation
+from h2integrate.simulation.h2integrate_simulation import H2IntegrateSimulationConfig, run_simulation
 
 
 INPUTS = Path(__file__).parent / "input/"
@@ -14,11 +14,11 @@ def test_onshore_steel_mn_2030_no_policy(subtests):
     filename_turbine_config = INPUTS / f"turbines/{turbine_model}.yaml"
     filename_floris_config = INPUTS / "floris/floris_input_lbw_6MW.yaml"
     filename_hopp_config = INPUTS / "plant/hopp_config_mn_2030.yaml"
-    filename_greenheart_config = INPUTS / "plant/greenheart_config_onshore_mn_2030.yaml"
+    filename_h2integrate_config = INPUTS / "plant/h2integrate_config_onshore_mn_2030.yaml"
 
-    config = GreenHeartSimulationConfig(
+    config = H2IntegrateSimulationConfig(
         filename_hopp_config,
-        filename_greenheart_config,
+        filename_h2integrate_config,
         filename_turbine_config,
         filename_floris_config,
         verbose=True,
@@ -65,7 +65,7 @@ def test_onshore_steel_mn_2030_no_policy(subtests):
     with subtests.test("wind capex"):
         assert output.capex_breakdown["wind"] == approx(1706186592.0000002, rel=0.1)
 
-    # Not included in test suite. Difference between GS and GreenHEART
+    # Not included in test suite. Difference between GS and H2Integrate
     # with subtests.test('compressor capex'):
     #     assert output.capex_breakdown['h2_transport_compressor'] == approx(
     #         18749265.76357594, rel=0.1
@@ -73,13 +73,13 @@ def test_onshore_steel_mn_2030_no_policy(subtests):
 
     with subtests.test("electrolyzer capex"):
         assert output.capex_breakdown["electrolyzer"] == approx(642012672.0000001, rel=0.1)
-    # Not included in test suite. Difference between GS and GreenHEART
+    # Not included in test suite. Difference between GS and H2Integrate
     # with subtests.test("h2 storage capex"):
     #     assert output.capex_breakdown["h2_storage"] == approx(
     #         234630860.95910057, rel=0.1
     #     )
 
-    # Not included in test suite. Difference between GS and GreenHEART
+    # Not included in test suite. Difference between GS and H2Integrate
     # with subtests.test('desal capex'):
     #     assert output.capex_breakdown['desal'] == approx(294490.93738406134, rel=0.1)
 
@@ -93,11 +93,11 @@ def test_onshore_ammonia_tx_2030_no_policy(subtests):
     filename_turbine_config = INPUTS / f"turbines/{turbine_model}.yaml"
     filename_floris_config = INPUTS / "floris/floris_input_lbw_6MW.yaml"
     filename_hopp_config = INPUTS / "plant/hopp_config_tx_2030.yaml"
-    filename_greenheart_config = INPUTS / "plant/greenheart_config_onshore_tx_2030.yaml"
+    filename_h2integrate_config = INPUTS / "plant/h2integrate_config_onshore_tx_2030.yaml"
 
-    config = GreenHeartSimulationConfig(
+    config = H2IntegrateSimulationConfig(
         filename_hopp_config,
-        filename_greenheart_config,
+        filename_h2integrate_config,
         filename_turbine_config,
         filename_floris_config,
         verbose=True,
@@ -147,7 +147,7 @@ def test_onshore_ammonia_tx_2030_no_policy(subtests):
     with subtests.test("wind capex"):
         assert output.capex_breakdown["wind"] == approx(1196393976.0, rel=0.1)
 
-    # Not included in test suite. Difference between GS and GreenHEART
+    # Not included in test suite. Difference between GS and H2Integrate
     # with subtests.test('compressor capex'):
     # assert output.capex_breakdown['h2_transport_compressor'] == approx(
     #     14082368.770328939, rel=0.1
@@ -155,12 +155,12 @@ def test_onshore_ammonia_tx_2030_no_policy(subtests):
 
     with subtests.test("electrolyzer capex"):
         assert output.capex_breakdown["electrolyzer"] == approx(531320832.0000001, rel=0.1)
-    # Not included in test suite. Difference between GS and GreenHEART
+    # Not included in test suite. Difference between GS and H2Integrate
     # with subtests.test("h2 storage capex"):
     #     assert output.capex_breakdown["h2_storage"] == approx(
     #         178870827.30895007, rel=0.1
     #     )
-    # Not included in test suite. Difference between GS and GreenHEART
+    # Not included in test suite. Difference between GS and H2Integrate
     # with subtests.test("desal capex"):
     #     assert output.capex_breakdown["desal"] == approx(1656024.5992454647, rel=0.1)
 
@@ -173,11 +173,11 @@ def test_onshore_ammonia_tx_2030_base_policy(subtests):
     filename_turbine_config = INPUTS / f"turbines/{turbine_model}.yaml"
     filename_floris_config = INPUTS / "floris/floris_input_lbw_6MW.yaml"
     filename_hopp_config = INPUTS / "plant/hopp_config_tx_2030.yaml"
-    filename_greenheart_config = INPUTS / "plant/greenheart_config_onshore_tx_2030.yaml"
+    filename_h2integrate_config = INPUTS / "plant/h2integrate_config_onshore_tx_2030.yaml"
 
-    config = GreenHeartSimulationConfig(
+    config = H2IntegrateSimulationConfig(
         filename_hopp_config,
-        filename_greenheart_config,
+        filename_h2integrate_config,
         filename_turbine_config,
         filename_floris_config,
         verbose=True,
@@ -233,11 +233,11 @@ def test_onshore_ammonia_tx_2030_max_policy(subtests):
     filename_turbine_config = INPUTS / f"turbines/{turbine_model}.yaml"
     filename_floris_config = INPUTS / "floris/floris_input_lbw_6MW.yaml"
     filename_hopp_config = INPUTS / "plant/hopp_config_tx_2030.yaml"
-    filename_greenheart_config = INPUTS / "plant/greenheart_config_onshore_tx_2030.yaml"
+    filename_h2integrate_config = INPUTS / "plant/h2integrate_config_onshore_tx_2030.yaml"
 
-    config = GreenHeartSimulationConfig(
+    config = H2IntegrateSimulationConfig(
         filename_hopp_config,
-        filename_greenheart_config,
+        filename_h2integrate_config,
         filename_turbine_config,
         filename_floris_config,
         verbose=True,
@@ -294,11 +294,11 @@ def test_onshore_ammonia_tx_2025_no_policy(subtests):
     filename_turbine_config = INPUTS / f"turbines/{turbine_model}.yaml"
     filename_floris_config = INPUTS / "floris/floris_input_lbw_6MW.yaml"
     filename_hopp_config = INPUTS / "plant/hopp_config_tx_2025.yaml"
-    filename_greenheart_config = INPUTS / "plant/greenheart_config_onshore_tx_2025.yaml"
+    filename_h2integrate_config = INPUTS / "plant/h2integrate_config_onshore_tx_2025.yaml"
 
-    config = GreenHeartSimulationConfig(
+    config = H2IntegrateSimulationConfig(
         filename_hopp_config,
-        filename_greenheart_config,
+        filename_h2integrate_config,
         filename_turbine_config,
         filename_floris_config,
         verbose=True,
@@ -351,17 +351,17 @@ def test_onshore_ammonia_tx_2025_no_policy(subtests):
     with subtests.test("electrolyzer capex"):
         assert output.capex_breakdown["electrolyzer"] == approx(886450790.3999999, rel=0.1)
 
-    # Not included in test suite. Difference between GS and GreenHEART
+    # Not included in test suite. Difference between GS and H2Integrate
     # with subtests.test("h2 storage capex"):
     #     assert output.capex_breakdown["h2_storage"] == approx(
     #         178870827.30895007, rel=0.1
     #     )
 
-    # Not included in test suite. Difference between GS and GreenHEART
+    # Not included in test suite. Difference between GS and H2Integrate
     # with subtests.test('desal capex'):
     #     assert output.capex_breakdown['desal'] == approx(294490.93738406134, rel=0.1)
 
-    # Not included in test suite. Difference between GS and GreenHEART
+    # Not included in test suite. Difference between GS and H2Integrate
     # with subtests.test('compressor capex'):
     # assert output.capex_breakdown['h2_transport_compressor'] == approx(
     #     18749265.76357594, rel=0.1
@@ -374,11 +374,11 @@ def test_onshore_ammonia_tx_2035_no_policy(subtests):
     filename_turbine_config = INPUTS / f"turbines/{turbine_model}.yaml"
     filename_floris_config = INPUTS / "floris/floris_input_lbw_6MW.yaml"
     filename_hopp_config = INPUTS / "plant/hopp_config_tx_2035.yaml"
-    filename_greenheart_config = INPUTS / "plant/greenheart_config_onshore_tx_2035.yaml"
+    filename_h2integrate_config = INPUTS / "plant/h2integrate_config_onshore_tx_2035.yaml"
 
-    config = GreenHeartSimulationConfig(
+    config = H2IntegrateSimulationConfig(
         filename_hopp_config,
-        filename_greenheart_config,
+        filename_h2integrate_config,
         filename_turbine_config,
         filename_floris_config,
         verbose=True,
@@ -431,17 +431,17 @@ def test_onshore_ammonia_tx_2035_no_policy(subtests):
     with subtests.test("electrolyzer capex"):
         assert output.capex_breakdown["electrolyzer"] == approx(439255756.8, rel=0.1)
 
-    # Not included in test suite. Difference between GS and GreenHEART
+    # Not included in test suite. Difference between GS and H2Integrate
     # with subtests.test("h2 storage capex"):
     #     assert output.capex_breakdown["h2_storage"] == approx(
     #         178870827.30895007, rel=0.1
     #     )
 
-    # Not included in test suite. Difference between GS and GreenHEART
+    # Not included in test suite. Difference between GS and H2Integrate
     # with subtests.test('desal capex'):
     #     assert output.capex_breakdown['desal'] == approx(294490.93738406134, rel=0.1)
 
-    # Not included in test suite. Difference between GS and GreenHEART
+    # Not included in test suite. Difference between GS and H2Integrate
     # with subtests.test('compressor capex'):
     # assert output.capex_breakdown['h2_transport_compressor'] == approx(
     #     18749265.76357594, rel=0.1

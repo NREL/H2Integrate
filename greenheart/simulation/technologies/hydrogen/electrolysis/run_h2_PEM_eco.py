@@ -1,7 +1,7 @@
 import numpy as np
 import examples.H2_Analysis.H2AModel as H2AModel
 
-from greenheart.hydrogen.electrolysis.PEM_electrolyzer_IVcurve import PEM_electrolyzer_LT
+from h2integrate.hydrogen.electrolysis.PEM_electrolyzer_IVcurve import PEM_electrolyzer_LT
 
 
 def run_h2_PEM(

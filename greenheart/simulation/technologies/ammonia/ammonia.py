@@ -648,7 +648,7 @@ def run_ammonia_finance_model(
 
 
 def run_ammonia_full_model(
-    greenheart_config: dict,
+    h2integrate_config: dict,
     save_plots=False,
     show_plots=False,
     output_dir="./output/",
@@ -658,7 +658,7 @@ def run_ammonia_full_model(
     Runs the full ammonia production model, including capacity sizing, cost calculation,
 
     Args:
-        greenheart_config (dict): Configuration settings for the ammonia production model,
+        h2integrate_config (dict): Configuration settings for the ammonia production model,
             including capacity, costs, and financial assumptions.
 
     Returns:
@@ -668,7 +668,7 @@ def run_ammonia_full_model(
     """
     # this is likely to change as we refactor to use config dataclasses, but for now
     # we'll just copy the config and modify it as needed
-    config = copy.deepcopy(greenheart_config)
+    config = copy.deepcopy(h2integrate_config)
 
     ammonia_costs = config["ammonia"]["costs"]
     ammonia_capacity = config["ammonia"]["capacity"]

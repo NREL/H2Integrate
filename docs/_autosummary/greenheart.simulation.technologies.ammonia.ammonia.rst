@@ -1,7 +1,7 @@
-greenheart.simulation.technologies.ammonia.ammonia
+h2integrate.simulation.technologies.ammonia.ammonia
 ==================================================
 
-.. automodule:: greenheart.simulation.technologies.ammonia.ammonia
+.. automodule:: h2integrate.simulation.technologies.ammonia.ammonia
 
 
 

@@ -1,5 +1,5 @@
 package:
-    name: greenheart
+    name: h2integrate
     version: {{ environ.get('GIT_DESCRIBE_TAG', '').replace('v', '', 1) }}
 
 source:
@@ -50,8 +50,8 @@ requirements:
     - global_land_mask
 
 about:
-  home: "https://github.com/NREL/GreenHEART"
+  home: "https://github.com/NREL/H2Integrate"
   license: BSD 3-Clause
   summary: "Green Hydrogen Energy and Renewable Technologies"
   doc_url: "https://www.nrel.gov/wind/hybrid-energy-systems-research.html"
-  dev_url: "https://github.com/NREL/GreenHEART"
+  dev_url: "https://github.com/NREL/H2Integrate"

@@ -4,8 +4,8 @@ import numpy as np
 from pytest import approx, fixture
 from ORBIT.core.library import initialize_library
 
-from greenheart.simulation.greenheart_simulation import GreenHeartSimulationConfig, run_simulation
-from greenheart.simulation.technologies.hydrogen.electrolysis.PEM_BOP.PEM_BOP import pem_bop
+from h2integrate.simulation.h2integrate_simulation import H2IntegrateSimulationConfig, run_simulation
+from h2integrate.simulation.technologies.hydrogen.electrolysis.PEM_BOP.PEM_BOP import pem_bop
 
 
 LIBRARY = Path(__file__).parents[1] / "input_files/"
@@ -16,7 +16,7 @@ turbine_model = "osw_18MW"
 filename_turbine_config = LIBRARY / f"turbines/{turbine_model}.yaml"
 filename_orbit_config = LIBRARY / f"plant/orbit-config-{turbine_model}-stripped.yaml"
 filename_floris_config = LIBRARY / f"floris/floris_input_{turbine_model}.yaml"
-filename_greenheart_config = LIBRARY / "plant/greenheart_config.yaml"
+filename_h2integrate_config = LIBRARY / "plant/h2integrate_config.yaml"
 filename_hopp_config = LIBRARY / "plant/hopp_config.yaml"
 
 
@@ -59,10 +59,10 @@ def test_bop_energy(subtests, bop_energy):
         assert bop_energy[5] == approx(8403.36134509804)
 
 
-def test_greenheart_simulation_pem_bop(subtests):
-    config = GreenHeartSimulationConfig(
+def test_h2integrate_simulation_pem_bop(subtests):
+    config = H2IntegrateSimulationConfig(
         filename_hopp_config=filename_hopp_config,
-        filename_greenheart_config=filename_greenheart_config,
+        filename_h2integrate_config=filename_h2integrate_config,
         filename_turbine_config=filename_turbine_config,
         filename_orbit_config=filename_orbit_config,
         filename_floris_config=filename_floris_config,
@@ -77,8 +77,8 @@ def test_greenheart_simulation_pem_bop(subtests):
     )
     lcoh, _, _, _, _, _, _, annual_energy_breakdown = run_simulation(config)
 
-    # include electrolyzer bop power consumption in greenheart simulation
-    config.greenheart_config["electrolyzer"]["include_bop_power"] = True
+    # include electrolyzer bop power consumption in h2integrate simulation
+    config.h2integrate_config["electrolyzer"]["include_bop_power"] = True
 
     lcoh2, _, _, _, _, _, _, annual_energy_breakdown2 = run_simulation(config)
 

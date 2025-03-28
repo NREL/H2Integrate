@@ -1,7 +1,7 @@
-greenheart.tools.eco.hydrogen\_mgmt
+h2integrate.tools.eco.hydrogen\_mgmt
 ===================================
 
-.. automodule:: greenheart.tools.eco.hydrogen_mgmt
+.. automodule:: h2integrate.tools.eco.hydrogen_mgmt
 
 
 

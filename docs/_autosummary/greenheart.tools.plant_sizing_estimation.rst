@@ -1,7 +1,7 @@
-greenheart.tools.plant\_sizing\_estimation
+h2integrate.tools.plant\_sizing\_estimation
 ==========================================
 
-.. automodule:: greenheart.tools.plant_sizing_estimation
+.. automodule:: h2integrate.tools.plant_sizing_estimation
 
 
 

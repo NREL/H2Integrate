@@ -19,24 +19,24 @@ from ProFAST import ProFAST
 from hopp.utilities import load_yaml
 from hopp.simulation import HoppInterface
 
-import greenheart.tools.eco.finance as he_fin
-import greenheart.tools.eco.hopp_mgmt as he_hopp
-import greenheart.tools.eco.utilities as he_util
-import greenheart.tools.eco.electrolysis as he_elec
-import greenheart.tools.eco.hydrogen_mgmt as he_h2
-from greenheart.simulation.technologies.steel.steel import (
+import h2integrate.tools.eco.finance as he_fin
+import h2integrate.tools.eco.hopp_mgmt as he_hopp
+import h2integrate.tools.eco.utilities as he_util
+import h2integrate.tools.eco.electrolysis as he_elec
+import h2integrate.tools.eco.hydrogen_mgmt as he_h2
+from h2integrate.simulation.technologies.steel.steel import (
     SteelCostModelOutputs,
     SteelFinanceModelOutputs,
     SteelCapacityModelOutputs,
     run_steel_full_model,
 )
-from greenheart.simulation.technologies.ammonia.ammonia import (
+from h2integrate.simulation.technologies.ammonia.ammonia import (
     AmmoniaCostModelOutputs,
     AmmoniaFinanceModelOutputs,
     AmmoniaCapacityModelOutputs,
     run_ammonia_full_model,
 )
-from greenheart.simulation.technologies.hydrogen.electrolysis.pem_cost_tools import (
+from h2integrate.simulation.technologies.hydrogen.electrolysis.pem_cost_tools import (
     ElectrolyzerLCOHInputConfig,
 )
 
@@ -90,16 +90,16 @@ def convert_to_serializable(value: Any) -> float | int | str | type(None) | list
 
 
 @define
-class GreenHeartSimulationConfig:
+class H2IntegrateSimulationConfig:
     """
-    Class to hold all the configuration parameters for the GreenHeart model
+    Class to hold all the configuration parameters for the H2Integrate model
 
-    Also sets up the HOPP, GreenHeart, ORBIT, and FLORIS configurations based on the
+    Also sets up the HOPP, H2Integrate, ORBIT, and FLORIS configurations based on the
     input files and configuration parameters passed in.
 
     Args:
         filename_hopp_config (str): filename for the HOPP configuration
-        filename_config.greenheart_config (str): filename for the GreenHeart configuration
+        filename_config.h2integrate_config (str): filename for the H2Integrate configuration
         filename_turbine_config (str): filename for the turbine configuration
         filename_orbit_config (str): filename for the ORBIT configuration
         filename_floris_config (str): filename for the FLORIS configuration
@@ -122,7 +122,7 @@ class GreenHeartSimulationConfig:
     """
 
     filename_hopp_config: str
-    filename_greenheart_config: str
+    filename_h2integrate_config: str
     filename_turbine_config: str
     filename_floris_config: str
     filename_orbit_config: str | None = field(default=None)
@@ -142,11 +142,11 @@ class GreenHeartSimulationConfig:
     plant_design_scenario: int = field(default=1)
     output_level: int = field(default=8)
     grid_connection: bool | None = field(default=None)
-    save_greenheart_output: bool | None = field(default=False)
+    save_h2integrate_output: bool | None = field(default=False)
 
     # these are set in the __attrs_post_init__ method
     hopp_config: dict = field(init=False)
-    greenheart_config: dict = field(init=False)
+    h2integrate_config: dict = field(init=False)
     orbit_config: dict = field(init=False)
     turbine_config: dict = field(init=False)
     floris_config: dict | None = field(init=False)
@@ -156,14 +156,14 @@ class GreenHeartSimulationConfig:
     def __attrs_post_init__(self):
         (
             self.hopp_config,
-            self.greenheart_config,
+            self.h2integrate_config,
             self.orbit_config,
             self.turbine_config,
             self.floris_config,
             self.orbit_hybrid_electrical_export_config,
         ) = he_util.get_inputs(
             self.filename_hopp_config,
-            self.filename_greenheart_config,
+            self.filename_h2integrate_config,
             filename_orbit_config=self.filename_orbit_config,
             filename_floris_config=self.filename_floris_config,
             filename_turbine_config=self.filename_turbine_config,
@@ -173,28 +173,28 @@ class GreenHeartSimulationConfig:
         )
 
         # n scenarios, n discrete variables
-        self.design_scenario = self.greenheart_config["plant_design"][
+        self.design_scenario = self.h2integrate_config["plant_design"][
             f"scenario{self.plant_design_scenario}"
         ]
         self.design_scenario["id"] = self.plant_design_scenario
 
         # if design_scenario["h2_storage_location"] == "turbine":
         #     plant_config["h2_storage"]["type"] = "turbine"
-        if "analysis_start_year" not in self.greenheart_config["finance_parameters"]:
-            analysis_start_year = self.greenheart_config["project_parameters"]["atb_year"] + 2
-            self.greenheart_config["finance_parameters"].update(
+        if "analysis_start_year" not in self.h2integrate_config["finance_parameters"]:
+            analysis_start_year = self.h2integrate_config["project_parameters"]["atb_year"] + 2
+            self.h2integrate_config["finance_parameters"].update(
                 {"analysis_start_year": analysis_start_year}
             )
 
             msg = (
-                "analysis_start_year not provided in greenheart input file."
+                "analysis_start_year not provided in h2integrate input file."
                 f"Setting analysis_start_year to {analysis_start_year}."
             )
             warnings.warn(msg, UserWarning)
 
         if self.electrolyzer_rating_mw is not None:
-            self.greenheart_config["electrolyzer"]["flag"] = True
-            self.greenheart_config["electrolyzer"]["rating"] = self.electrolyzer_rating_mw
+            self.h2integrate_config["electrolyzer"]["flag"] = True
+            self.h2integrate_config["electrolyzer"]["rating"] = self.electrolyzer_rating_mw
 
         if self.solar_rating is not None:
             self.hopp_config["site"]["solar"] = True
@@ -213,7 +213,7 @@ class GreenHeartSimulationConfig:
             )
 
         if self.storage_type is not None:
-            self.greenheart_config["h2_storage"]["type"] = self.storage_type
+            self.h2integrate_config["h2_storage"]["type"] = self.storage_type
 
         if self.wind_rating is not None:
             self.orbit_config["plant"]["capacity"] = int(self.wind_rating * 1e-3)
@@ -225,7 +225,7 @@ class GreenHeartSimulationConfig:
             ]
 
         if self.grid_connection is not None:
-            self.greenheart_config["project_parameters"]["grid_connection"] = self.grid_connection
+            self.h2integrate_config["project_parameters"]["grid_connection"] = self.grid_connection
             if self.grid_connection:
                 self.hopp_config["technologies"]["grid"]["interconnect_kw"] = (
                     self.orbit_config["plant"]["capacity"] * 1e6
@@ -233,12 +233,12 @@ class GreenHeartSimulationConfig:
 
 
 @define
-class GreenHeartSimulationOutput:
-    """This is a dataclass to contain the outputs from GreenHEART
+class H2IntegrateSimulationOutput:
+    """This is a dataclass to contain the outputs from H2Integrate
 
     Args:
-        greenheart_config (GreenHeartSimulationConfig): all inputs to the greenheart simulation
-        hopp_interface (HoppInterface): the hopp interface created and used by GreenHEART in the
+        h2integrate_config (H2IntegrateSimulationConfig): all inputs to the h2integrate simulation
+        hopp_interface (HoppInterface): the hopp interface created and used by H2Integrate in the
             simulation
         profast_lcoe (ProFAST): the profast instance used for the lcoe calculations
         profast_lcoh (ProFAST): the profast instance used for the lcoh calculations
@@ -264,7 +264,7 @@ class GreenHeartSimulationOutput:
     """
 
     # detailed simulation information
-    greenheart_config: GreenHeartSimulationConfig
+    h2integrate_config: H2IntegrateSimulationConfig
     hopp_interface: HoppInterface
 
     # detailed financial outputs
@@ -308,7 +308,7 @@ class GreenHeartSimulationOutput:
         filepath = Path(filename)
 
         ignore = [
-            "greenheart_config",  # fails: max recursion depth
+            "h2integrate_config",  # fails: max recursion depth
             "hopp_interface",  # fails: max recursion depth
             "hopp_results",  # fails: max recursion depth
             "profast_lcoe",  # fails: cannot pickle `dict_keys` object
@@ -336,19 +336,19 @@ class GreenHeartSimulationOutput:
             )
 
     @classmethod
-    def load_from_file(cls, filename: str) -> GreenHeartSimulationOutput:
-        """Creates an incomplete instance of GreenHeartSimulationOutput from a previously saved
-        `.yaml` file. The result is missing the following: `greenheart_config`, `hopp_interface`,
+    def load_from_file(cls, filename: str) -> H2IntegrateSimulationOutput:
+        """Creates an incomplete instance of H2IntegrateSimulationOutput from a previously saved
+        `.yaml` file. The result is missing the following: `h2integrate_config`, `hopp_interface`,
         `profast_lcoe`, `profast_lcoh`, `profast_lcoh_grid_only`, and `hopp_results`. Note that
-        data types will not exactly match the instance of GreenHeartSimulationOutput that was
+        data types will not exactly match the instance of H2IntegrateSimulationOutput that was
         saved due to equired data type conversions for yaml output and easy loading.
 
         Args:
-            filename (str): Path to the file where an instance of GreenHeartSimulationOutput
+            filename (str): Path to the file where an instance of H2IntegrateSimulationOutput
             was saved
 
         Returns:
-            (GreenHeartSimulationOutput): An incomplete instance of GreenHeartSimulationOutput.
+            (H2IntegrateSimulationOutput): An incomplete instance of H2IntegrateSimulationOutput.
         """
 
         def convert(value):
@@ -376,7 +376,7 @@ class GreenHeartSimulationOutput:
         return cls(**kwargs)
 
 
-def setup_greenheart_simulation(config: GreenHeartSimulationConfig):
+def setup_h2integrate_simulation(config: H2IntegrateSimulationConfig):
     # run orbit for wind plant construction and other costs
     ## TODO get correct weather (wind, wave) inputs for ORBIT input (possibly via ERA5)
     if config.design_scenario["wind_location"] == "offshore":
@@ -397,24 +397,24 @@ def setup_greenheart_simulation(config: GreenHeartSimulationConfig):
             )
             warnings.warn(msg, UserWarning)
 
-        if config.orbit_config["site"]["depth"] != config.greenheart_config["site"]["depth"]:
-            config.orbit_config["site"].update({"depth": config.greenheart_config["site"]["depth"]})
+        if config.orbit_config["site"]["depth"] != config.h2integrate_config["site"]["depth"]:
+            config.orbit_config["site"].update({"depth": config.h2integrate_config["site"]["depth"]})
             msg = (
                 f"site depth in the orbit_config was {config.orbit_config['site']['depth']}, but"
                 f" site depth in"
-                f" greenheart_config was {config.greenheart_config['site']['depth']}. The site"
+                f" h2integrate_config was {config.h2integrate_config['site']['depth']}. The site"
                 " depth value in the orbit_config is being overwritten with the value from"
-                " the greenheart_config."
+                " the h2integrate_config."
             )
             warnings.warn(msg, UserWarning)
 
         if (
             config.orbit_config["plant"]["turbine_spacing"]
-            != config.greenheart_config["site"]["wind_layout"]["turbine_spacing"]
+            != config.h2integrate_config["site"]["wind_layout"]["turbine_spacing"]
         ):
             config.orbit_config["plant"].update(
                 {
-                    "turbine_spacing": config.greenheart_config["site"]["wind_layout"][
+                    "turbine_spacing": config.h2integrate_config["site"]["wind_layout"][
                         "turbine_spacing"
                     ]
                 }
@@ -422,34 +422,34 @@ def setup_greenheart_simulation(config: GreenHeartSimulationConfig):
             msg = (
                 f"'turbine_spacing' in the orbit_config was"
                 f" {config.orbit_config['plant']['turbine_spacing']}, but 'turbine_spacing' in"
-                f" greenheart_config was"
-                f" {config.greenheart_config['site']['wind_layout']['turbine_spacing']}. The"
+                f" h2integrate_config was"
+                f" {config.h2integrate_config['site']['wind_layout']['turbine_spacing']}. The"
                 " 'turbine_spacing' value in the orbit_config is being overwritten with the value"
-                " from the greenheart_config"
+                " from the h2integrate_config"
             )
             warnings.warn(msg, UserWarning)
 
         if (
             config.orbit_config["plant"]["row_spacing"]
-            != config.greenheart_config["site"]["wind_layout"]["row_spacing"]
+            != config.h2integrate_config["site"]["wind_layout"]["row_spacing"]
         ):
             config.orbit_config["plant"].update(
-                {"row_spacing": config.greenheart_config["site"]["wind_layout"]["row_spacing"]}
+                {"row_spacing": config.h2integrate_config["site"]["wind_layout"]["row_spacing"]}
             )
             msg = (
                 f"'row_spacing' in the orbit_config was"
                 f" {config.orbit_config['plant']['row_spacing']}, but 'row_spacing' in"
-                f" greenheart_config was"
-                f" {config.greenheart_config['site']['wind_layout']['row_spacing']}. The"
+                f" h2integrate_config was"
+                f" {config.h2integrate_config['site']['wind_layout']['row_spacing']}. The"
                 " 'row_spacing' value in the orbit_config is being overwritten with the value from"
-                " the greenheart_config"
+                " the h2integrate_config"
             )
             warnings.warn(msg, UserWarning)
 
         wind_config = he_fin.WindCostConfig(
             design_scenario=config.design_scenario,
             hopp_config=config.hopp_config,
-            greenheart_config=config.greenheart_config,
+            h2integrate_config=config.h2integrate_config,
             orbit_config=config.orbit_config,
             orbit_hybrid_electrical_export_config=config.orbit_hybrid_electrical_export_config,
         )
@@ -457,12 +457,12 @@ def setup_greenheart_simulation(config: GreenHeartSimulationConfig):
         wind_cost_results = he_fin.run_wind_cost_model(
             wind_cost_inputs=wind_config, verbose=config.verbose
         )
-        if "installation_time" not in config.greenheart_config["project_parameters"].keys():
-            config.greenheart_config["project_parameters"].update(
+        if "installation_time" not in config.h2integrate_config["project_parameters"].keys():
+            config.h2integrate_config["project_parameters"].update(
                 {"installation_time": wind_cost_results.installation_time}
             )
             msg = (
-                "installation_time not provided in greenheart input file."
+                "installation_time not provided in h2integrate input file."
                 "Updating installation_time from Orbit results "
                 f"({wind_cost_results.installation_time} months)."
             )
@@ -470,10 +470,10 @@ def setup_greenheart_simulation(config: GreenHeartSimulationConfig):
     else:
         wind_cost_results = None
 
-    if "installation_time" not in config.greenheart_config["project_parameters"].keys():
-        config.greenheart_config["project_parameters"].update({"installation_time": 0})
+    if "installation_time" not in config.h2integrate_config["project_parameters"].keys():
+        config.h2integrate_config["project_parameters"].update({"installation_time": 0})
         msg = (
-            "installation_time not provided in greenheart input file."
+            "installation_time not provided in h2integrate input file."
             "Setting installation_time to 0 months."
         )
         warnings.warn(msg, UserWarning)
@@ -652,7 +652,7 @@ def setup_greenheart_simulation(config: GreenHeartSimulationConfig):
     # setup HOPP model
     hi = he_hopp.setup_hopp(
         config.hopp_config,
-        config.greenheart_config,
+        config.h2integrate_config,
         config.orbit_config,
         config.turbine_config,
         config.floris_config,
@@ -665,8 +665,8 @@ def setup_greenheart_simulation(config: GreenHeartSimulationConfig):
     return config, hi, wind_cost_results
 
 
-def run_simulation(config: GreenHeartSimulationConfig):
-    config, hi, wind_cost_results = setup_greenheart_simulation(config=config)
+def run_simulation(config: H2IntegrateSimulationConfig):
+    config, hi, wind_cost_results = setup_h2integrate_simulation(config=config)
 
     # run HOPP model
     # hopp_results = he_hopp.run_hopp(
@@ -674,7 +674,7 @@ def run_simulation(config: GreenHeartSimulationConfig):
     # )
     hopp_results = he_hopp.run_hopp(
         hi,
-        project_lifetime=config.greenheart_config["project_parameters"]["project_lifetime"],
+        project_lifetime=config.h2integrate_config["project_parameters"]["project_lifetime"],
         verbose=config.verbose,
     )
 
@@ -682,7 +682,7 @@ def run_simulation(config: GreenHeartSimulationConfig):
         wind_config = he_fin.WindCostConfig(
             design_scenario=config.design_scenario,
             hopp_config=config.hopp_config,
-            greenheart_config=config.greenheart_config,
+            h2integrate_config=config.h2integrate_config,
             turbine_config=config.turbine_config,
             hopp_interface=hopp_results["hopp_interface"],
         )
@@ -699,7 +699,7 @@ def run_simulation(config: GreenHeartSimulationConfig):
         design_scenario=config.design_scenario,
         orbit_config=config.orbit_config,
         hopp_config=config.hopp_config,
-        greenheart_config=config.greenheart_config,
+        h2integrate_config=config.h2integrate_config,
         turbine_config=config.turbine_config,
         wind_resource=hi.system.site.wind_resource,
         verbose=config.verbose,
@@ -739,7 +739,7 @@ def run_simulation(config: GreenHeartSimulationConfig):
         # run electrolyzer physics model
         electrolyzer_physics_results = he_elec.run_electrolyzer_physics(
             hopp_results_internal,
-            config.greenheart_config,
+            config.h2integrate_config,
             wind_resource,
             design_scenario,
             show_plots=show_plots,
@@ -752,14 +752,14 @@ def run_simulation(config: GreenHeartSimulationConfig):
         electrolyzer_cost_results = he_elec.run_electrolyzer_cost(
             electrolyzer_physics_results,
             hopp_config,
-            config.greenheart_config,
+            config.h2integrate_config,
             design_scenario,
             verbose=verbose,
         )
 
         # run electrolyzer bop model
         electrolyzer_energy_consumption_bop_kw = he_elec.run_electrolyzer_bop(
-            greenheart_config, electrolyzer_physics_results
+            h2integrate_config, electrolyzer_physics_results
         )
 
         desal_results = he_elec.run_desal(
@@ -768,7 +768,7 @@ def run_simulation(config: GreenHeartSimulationConfig):
 
         # run array system model
         h2_pipe_array_results = he_h2.run_h2_pipe_array(
-            greenheart_config,
+            h2integrate_config,
             hopp_config,
             turbine_config,
             wind_cost_results,
@@ -782,7 +782,7 @@ def run_simulation(config: GreenHeartSimulationConfig):
             h2_transport_compressor,
             h2_transport_compressor_results,
         ) = he_h2.run_h2_transport_compressor(
-            config.greenheart_config,
+            config.h2integrate_config,
             electrolyzer_physics_results,
             design_scenario,
             verbose=verbose,
@@ -792,7 +792,7 @@ def run_simulation(config: GreenHeartSimulationConfig):
         if design_scenario["wind_location"] == "offshore":
             h2_transport_pipe_results = he_h2.run_h2_transport_pipe(
                 orbit_config,
-                greenheart_config,
+                h2integrate_config,
                 electrolyzer_physics_results,
                 design_scenario,
                 verbose=verbose,
@@ -806,7 +806,7 @@ def run_simulation(config: GreenHeartSimulationConfig):
         # pressure vessel storage
         pipe_storage, h2_storage_results = he_h2.run_h2_storage(
             hopp_config,
-            greenheart_config,
+            h2integrate_config,
             turbine_config,
             electrolyzer_physics_results,
             design_scenario,
@@ -995,7 +995,7 @@ def run_simulation(config: GreenHeartSimulationConfig):
     ## end solver loop here
     platform_results = he_h2.run_equipment_platform(
         config.hopp_config,
-        config.greenheart_config,
+        config.h2integrate_config,
         config.orbit_config,
         config.design_scenario,
         hopp_results,
@@ -1024,7 +1024,7 @@ def run_simulation(config: GreenHeartSimulationConfig):
         h2_transport_pipe_results,
         h2_storage_results,
         config.hopp_config,
-        config.greenheart_config,
+        config.h2integrate_config,
         config.design_scenario,
         desal_results,
         platform_results,
@@ -1041,7 +1041,7 @@ def run_simulation(config: GreenHeartSimulationConfig):
         h2_transport_pipe_results,
         h2_storage_results,
         config.hopp_config,
-        config.greenheart_config,
+        config.h2integrate_config,
         desal_results,
         platform_results,
         verbose=config.verbose,
@@ -1049,7 +1049,7 @@ def run_simulation(config: GreenHeartSimulationConfig):
     )
 
     vopex_breakdown_annual = he_fin.run_variable_opex(
-        electrolyzer_cost_results, config.greenheart_config
+        electrolyzer_cost_results, config.h2integrate_config
     )
 
     opex_breakdown_total = {
@@ -1069,7 +1069,7 @@ def run_simulation(config: GreenHeartSimulationConfig):
 
     if config.use_profast:
         lcoe, pf_lcoe = he_fin.run_profast_lcoe(
-            config.greenheart_config,
+            config.h2integrate_config,
             wind_cost_results,
             capex_breakdown,
             opex_breakdown_annual,
@@ -1084,17 +1084,17 @@ def run_simulation(config: GreenHeartSimulationConfig):
 
         electrolyzer_performance_results = ElectrolyzerLCOHInputConfig(
             electrolyzer_physics_results=electrolyzer_physics_results,
-            electrolyzer_config=config.greenheart_config["electrolyzer"],
-            analysis_start_year=config.greenheart_config["finance_parameters"][
+            electrolyzer_config=config.h2integrate_config["electrolyzer"],
+            analysis_start_year=config.h2integrate_config["finance_parameters"][
                 "analysis_start_year"
             ],
-            installation_period_months=config.greenheart_config["project_parameters"][
+            installation_period_months=config.h2integrate_config["project_parameters"][
                 "installation_time"
             ],
         )
 
         lcoh_grid_only, pf_grid_only = he_fin.run_profast_grid_only(
-            config.greenheart_config,
+            config.h2integrate_config,
             wind_cost_results,
             electrolyzer_performance_results,
             capex_breakdown,
@@ -1109,7 +1109,7 @@ def run_simulation(config: GreenHeartSimulationConfig):
             output_dir=config.output_dir,
         )
         lcoh, pf_lcoh = he_fin.run_profast_full_plant_model(
-            config.greenheart_config,
+            config.h2integrate_config,
             wind_cost_results,
             electrolyzer_performance_results,
             capex_breakdown,
@@ -1129,8 +1129,8 @@ def run_simulation(config: GreenHeartSimulationConfig):
             "Life: Annual H2 production [kg/year]"
         ]
 
-        if "steel" in config.greenheart_config:
-            steel_config = copy.deepcopy(config.greenheart_config)
+        if "steel" in config.h2integrate_config:
+            steel_config = copy.deepcopy(config.h2integrate_config)
             if config.verbose:
                 print("Running steel\n")
 
@@ -1158,8 +1158,8 @@ def run_simulation(config: GreenHeartSimulationConfig):
         else:
             steel_finance = {}
 
-        if "ammonia" in config.greenheart_config:
-            ammonia_config = copy.deepcopy(config.greenheart_config)
+        if "ammonia" in config.h2integrate_config:
+            ammonia_config = copy.deepcopy(config.h2integrate_config)
             if config.verbose:
                 print("Running ammonia\n")
 
@@ -1192,7 +1192,7 @@ def run_simulation(config: GreenHeartSimulationConfig):
             hopp_results,
             electrolyzer_physics_results,
             config.hopp_config,
-            config.greenheart_config,
+            config.h2integrate_config,
             config.orbit_config,
             config.turbine_config,
             h2_storage_results,
@@ -1247,7 +1247,7 @@ def run_simulation(config: GreenHeartSimulationConfig):
     elif config.output_level == 7:
         return lcoe, lcoh, steel_finance, ammonia_finance
     elif config.output_level == 8:
-        output = GreenHeartSimulationOutput(
+        output = H2IntegrateSimulationOutput(
             config,
             hi,
             pf_lcoe,
@@ -1278,21 +1278,21 @@ def run_simulation(config: GreenHeartSimulationConfig):
                 if "hydrogen_storage_soc" not in h2_storage_results
                 else h2_storage_results["hydrogen_storage_soc"]
             ),
-            steel_capacity=(None if "steel" not in config.greenheart_config else steel_capacity),
-            steel_costs=(None if "steel" not in config.greenheart_config else steel_costs),
-            steel_finance=(None if "steel" not in config.greenheart_config else steel_finance),
+            steel_capacity=(None if "steel" not in config.h2integrate_config else steel_capacity),
+            steel_costs=(None if "steel" not in config.h2integrate_config else steel_costs),
+            steel_finance=(None if "steel" not in config.h2integrate_config else steel_finance),
             ammonia_capacity=(
-                None if "ammonia" not in config.greenheart_config else ammonia_capacity
+                None if "ammonia" not in config.h2integrate_config else ammonia_capacity
             ),
-            ammonia_costs=(None if "ammonia" not in config.greenheart_config else ammonia_costs),
+            ammonia_costs=(None if "ammonia" not in config.h2integrate_config else ammonia_costs),
             ammonia_finance=(
-                None if "ammonia" not in config.greenheart_config else ammonia_finance
+                None if "ammonia" not in config.h2integrate_config else ammonia_finance
             ),
             platform_results=platform_results,
         )
 
-        if config.save_greenheart_output:
-            output.save_to_file(Path(config.output_dir).resolve() / "data/greenheart_output.yaml")
+        if config.save_h2integrate_output:
+            output.save_to_file(Path(config.output_dir).resolve() / "data/h2integrate_output.yaml")
 
         return output
 

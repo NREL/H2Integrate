@@ -1,7 +1,7 @@
-greenheart.simulation.technologies.hydrogen.h2\_transport
+h2integrate.simulation.technologies.hydrogen.h2\_transport
 =========================================================
 
-.. automodule:: greenheart.simulation.technologies.hydrogen.h2_transport
+.. automodule:: h2integrate.simulation.technologies.hydrogen.h2_transport
 
 
 
@@ -27,6 +27,6 @@ greenheart.simulation.technologies.hydrogen.h2\_transport
    :toctree:
    :recursive:
 
-   greenheart.simulation.technologies.hydrogen.h2_transport.h2_compression
-   greenheart.simulation.technologies.hydrogen.h2_transport.h2_export_pipe
-   greenheart.simulation.technologies.hydrogen.h2_transport.h2_pipe_array
+   h2integrate.simulation.technologies.hydrogen.h2_transport.h2_compression
+   h2integrate.simulation.technologies.hydrogen.h2_transport.h2_export_pipe
+   h2integrate.simulation.technologies.hydrogen.h2_transport.h2_pipe_array

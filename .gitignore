@@ -116,16 +116,16 @@ ENV/
 *.gz
 *.db-wal
 
-# GreenHEART structure specific
-tests/greenheart/data/*
-tests/greenheart/output.txt
-tests/greenheart/test_hydrogen/data/*
-tests/greenheart/test_hydrogen/output.txt
+# H2Integrate structure specific
+tests/h2integrate/data/*
+tests/h2integrate/output.txt
+tests/h2integrate/test_hydrogen/data/*
+tests/h2integrate/test_hydrogen/output.txt
 *speed_dir_data.csv
-examples/greenheart/*/data
-examples/greenheart/*/figures
-tests/greenheart/reports/
-tests/greenheart/test_hydrogen/output/
+examples/h2integrate/*/data
+examples/h2integrate/*/figures
+tests/h2integrate/reports/
+tests/h2integrate/test_hydrogen/output/
 
 output*
 snopt_history.txt

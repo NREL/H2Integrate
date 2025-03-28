@@ -2,7 +2,7 @@ import copy
 
 from pytest import approx, raises, fixture
 
-from greenheart.simulation.technologies.steel import steel
+from h2integrate.simulation.technologies.steel import steel
 
 
 ng_prices_dict = {

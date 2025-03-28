@@ -1,7 +1,7 @@
-greenheart.simulation.technologies.hydrogen.h2\_storage.on\_turbine
+h2integrate.simulation.technologies.hydrogen.h2\_storage.on\_turbine
 ===================================================================
 
-.. automodule:: greenheart.simulation.technologies.hydrogen.h2_storage.on_turbine
+.. automodule:: h2integrate.simulation.technologies.hydrogen.h2_storage.on_turbine
 
 
 
@@ -27,4 +27,4 @@ greenheart.simulation.technologies.hydrogen.h2\_storage.on\_turbine
    :toctree:
    :recursive:
 
-   greenheart.simulation.technologies.hydrogen.h2_storage.on_turbine.on_turbine_hydrogen_storage
+   h2integrate.simulation.technologies.hydrogen.h2_storage.on_turbine.on_turbine_hydrogen_storage

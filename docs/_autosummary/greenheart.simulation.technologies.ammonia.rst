@@ -1,7 +1,7 @@
-greenheart.simulation.technologies.ammonia
+h2integrate.simulation.technologies.ammonia
 ==========================================
 
-.. automodule:: greenheart.simulation.technologies.ammonia
+.. automodule:: h2integrate.simulation.technologies.ammonia
 
 
 
@@ -27,4 +27,4 @@ greenheart.simulation.technologies.ammonia
    :toctree:
    :recursive:
 
-   greenheart.simulation.technologies.ammonia.ammonia
+   h2integrate.simulation.technologies.ammonia.ammonia

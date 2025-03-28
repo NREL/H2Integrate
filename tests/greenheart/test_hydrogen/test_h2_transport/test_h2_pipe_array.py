@@ -1,4 +1,4 @@
-from greenheart.simulation.technologies.hydrogen.h2_transport.h2_pipe_array import (
+from h2integrate.simulation.technologies.hydrogen.h2_transport.h2_pipe_array import (
     run_pipe_array,
     run_pipe_array_const_diam,
 )

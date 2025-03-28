@@ -1,7 +1,7 @@
-greenheart.simulation.technologies.hydrogen.electrolysis.PEM\_tools
+h2integrate.simulation.technologies.hydrogen.electrolysis.PEM\_tools
 ===================================================================
 
-.. automodule:: greenheart.simulation.technologies.hydrogen.electrolysis.PEM_tools
+.. automodule:: h2integrate.simulation.technologies.hydrogen.electrolysis.PEM_tools
 
 
 

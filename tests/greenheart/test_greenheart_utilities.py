@@ -1,6 +1,6 @@
 from pytest import raises
 
-from greenheart.tools.eco.utilities import ceildiv, visualize_plant
+from h2integrate.tools.eco.utilities import ceildiv, visualize_plant
 
 
 def test_visualize_plant(subtests):

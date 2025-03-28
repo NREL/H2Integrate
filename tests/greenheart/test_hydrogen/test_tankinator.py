@@ -1,8 +1,8 @@
 import numpy as np
 import pytest
 
-from greenheart.simulation.technologies.hydrogen.h2_storage.pressure_vessel import von_mises
-from greenheart.simulation.technologies.hydrogen.h2_storage.pressure_vessel.tankinator import (
+from h2integrate.simulation.technologies.hydrogen.h2_storage.pressure_vessel import von_mises
+from h2integrate.simulation.technologies.hydrogen.h2_storage.pressure_vessel.tankinator import (
     Tank,
     TypeITank,
     TypeIVTank,

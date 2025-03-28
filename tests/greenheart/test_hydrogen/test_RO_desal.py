@@ -1,6 +1,6 @@
 from pytest import approx
 
-from greenheart.simulation.technologies.hydrogen.desal.desal_model_eco import RO_desal_eco
+from h2integrate.simulation.technologies.hydrogen.desal.desal_model_eco import RO_desal_eco
 
 
 # Test values are based on hand calculations

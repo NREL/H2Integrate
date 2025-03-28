@@ -1,7 +1,7 @@
-greenheart.simulation.technologies.hydrogen.electrolysis.run\_h2\_clusters
+h2integrate.simulation.technologies.hydrogen.electrolysis.run\_h2\_clusters
 ==========================================================================
 
-.. automodule:: greenheart.simulation.technologies.hydrogen.electrolysis.run_h2_clusters
+.. automodule:: h2integrate.simulation.technologies.hydrogen.electrolysis.run_h2_clusters
 
 
 

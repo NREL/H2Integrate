@@ -1,7 +1,7 @@
-greenheart.tools.optimization
+h2integrate.tools.optimization
 =============================
 
-.. automodule:: greenheart.tools.optimization
+.. automodule:: h2integrate.tools.optimization
 
 
 
@@ -27,8 +27,8 @@ greenheart.tools.optimization
    :toctree:
    :recursive:
 
-   greenheart.tools.optimization.fileIO
-   greenheart.tools.optimization.gc_PoseOptimization
-   greenheart.tools.optimization.gc_run_greenheart
-   greenheart.tools.optimization.mpi_tools
-   greenheart.tools.optimization.openmdao
+   h2integrate.tools.optimization.fileIO
+   h2integrate.tools.optimization.gc_PoseOptimization
+   h2integrate.tools.optimization.gc_run_h2integrate
+   h2integrate.tools.optimization.mpi_tools
+   h2integrate.tools.optimization.openmdao

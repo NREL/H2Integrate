@@ -1,7 +1,7 @@
-greenheart.simulation.technologies.steel
+h2integrate.simulation.technologies.steel
 ========================================
 
-.. automodule:: greenheart.simulation.technologies.steel
+.. automodule:: h2integrate.simulation.technologies.steel
 
 
 
@@ -27,4 +27,4 @@ greenheart.simulation.technologies.steel
    :toctree:
    :recursive:
 
-   greenheart.simulation.technologies.steel.steel
+   h2integrate.simulation.technologies.steel.steel

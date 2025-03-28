@@ -1,7 +1,7 @@
 # API Documentation
 
 ```{eval-rst}
-.. currentmodule:: greenheart
+.. currentmodule:: h2integrate
 
 .. autosummary::
    :toctree: _autosummary

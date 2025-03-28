@@ -1,7 +1,7 @@
-greenheart.tools.eco.hopp\_mgmt
+h2integrate.tools.eco.hopp\_mgmt
 ===============================
 
-.. automodule:: greenheart.tools.eco.hopp_mgmt
+.. automodule:: h2integrate.tools.eco.hopp_mgmt
 
 
 

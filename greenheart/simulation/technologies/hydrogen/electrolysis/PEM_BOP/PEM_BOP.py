@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import scipy.optimize
 
-from greenheart.simulation.technologies.hydrogen.electrolysis.PEM_tools import (
+from h2integrate.simulation.technologies.hydrogen.electrolysis.PEM_tools import (
     get_electrolyzer_BOL_efficiency,
 )
 

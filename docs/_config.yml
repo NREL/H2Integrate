@@ -1,7 +1,7 @@
 # Book settings
 # Learn more at https://jupyterbook.org/customize/config.html
 
-title: GreenHEART
+title: H2Integrate
 author: National Renewable Energy Laboratory
 # logo: logo.png
 copyright: "2025"
@@ -28,7 +28,7 @@ latex:
 
 # Information about where the book exists on the web
 repository:
-  url: https://github.com/NREL/GreenHEART
+  url: https://github.com/NREL/H2Integrate
   path_to_book: docs
   branch: main
 
@@ -37,7 +37,7 @@ repository:
 html:
   use_issues_button: true
   use_repository_button: true
-  baseurl: https://nrel.github.io/GreenHEART/
+  baseurl: https://nrel.github.io/H2Integrate/
 
 sphinx:
   extra_extensions:

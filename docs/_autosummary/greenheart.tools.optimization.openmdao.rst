@@ -1,7 +1,7 @@
-greenheart.tools.optimization.openmdao
+h2integrate.tools.optimization.openmdao
 ======================================
 
-.. automodule:: greenheart.tools.optimization.openmdao
+.. automodule:: h2integrate.tools.optimization.openmdao
 
 
 
@@ -18,6 +18,6 @@ greenheart.tools.optimization.openmdao
    .. autosummary::
 
       BoundaryDistanceComponent
-      GreenHeartComponent
+      H2IntegrateComponent
       HOPPComponent
       TurbineDistanceComponent

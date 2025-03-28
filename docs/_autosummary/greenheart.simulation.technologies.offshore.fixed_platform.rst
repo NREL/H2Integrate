@@ -1,7 +1,7 @@
-greenheart.simulation.technologies.offshore.fixed\_platform
+h2integrate.simulation.technologies.offshore.fixed\_platform
 ===========================================================
 
-.. automodule:: greenheart.simulation.technologies.offshore.fixed_platform
+.. automodule:: h2integrate.simulation.technologies.offshore.fixed_platform
 
 
 

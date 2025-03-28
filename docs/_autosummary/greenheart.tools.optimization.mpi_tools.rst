@@ -1,7 +1,7 @@
-greenheart.tools.optimization.mpi\_tools
+h2integrate.tools.optimization.mpi\_tools
 ========================================
 
-.. automodule:: greenheart.tools.optimization.mpi_tools
+.. automodule:: h2integrate.tools.optimization.mpi_tools
 
 
 

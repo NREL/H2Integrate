@@ -1,7 +1,7 @@
-greenheart.simulation.greenheart\_simulation
+h2integrate.simulation.h2integrate\_simulation
 ============================================
 
-.. automodule:: greenheart.simulation.greenheart_simulation
+.. automodule:: h2integrate.simulation.h2integrate_simulation
 
 
 
@@ -19,7 +19,7 @@ greenheart.simulation.greenheart\_simulation
       run_simulation
       run_storage_options
       run_sweeps
-      setup_greenheart_simulation
+      setup_h2integrate_simulation
 
 
 
@@ -29,5 +29,5 @@ greenheart.simulation.greenheart\_simulation
 
    .. autosummary::
 
-      GreenHeartSimulationConfig
-      GreenHeartSimulationOutput
+      H2IntegrateSimulationConfig
+      H2IntegrateSimulationOutput

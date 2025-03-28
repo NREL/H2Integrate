@@ -15,7 +15,7 @@ from pathlib import Path
 import numpy as np
 import scipy.optimize as opt
 
-from greenheart.simulation.technologies.hydrogen.h2_storage.pressure_vessel import von_mises
+from h2integrate.simulation.technologies.hydrogen.h2_storage.pressure_vessel import von_mises
 
 
 class MetalMaterial:

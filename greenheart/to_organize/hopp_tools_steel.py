@@ -14,11 +14,11 @@ import hopp.simulation.technologies.hydrogen.electrolysis.run_h2_PEM as run_h2_P
 from lcoe.lcoe import lcoe as lcoe_calc
 from hopp.utilities import load_yaml
 
-from greenheart.to_organize.H2_Analysis import LCA_single_scenario
-from greenheart.to_organize.H2_Analysis.compressor import Compressor
-from greenheart.to_organize.H2_Analysis.hopp_for_h2 import hopp_for_h2
-from greenheart.to_organize.H2_Analysis.simple_dispatch import SimpleDispatch
-from greenheart.simulation.technologies.hydrogen.desal.desal_model import RO_desal
+from h2integrate.to_organize.H2_Analysis import LCA_single_scenario
+from h2integrate.to_organize.H2_Analysis.compressor import Compressor
+from h2integrate.to_organize.H2_Analysis.hopp_for_h2 import hopp_for_h2
+from h2integrate.to_organize.H2_Analysis.simple_dispatch import SimpleDispatch
+from h2integrate.simulation.technologies.hydrogen.desal.desal_model import RO_desal
 
 
 def todict(obj, classkey=None):
@@ -1007,7 +1007,7 @@ def run_HOPP(
         #         },
         #     }
 
-        from greenheart.to_organize.H2_Analysis.hopp_for_h2_floris import hopp_for_h2_floris
+        from h2integrate.to_organize.H2_Analysis.hopp_for_h2_floris import hopp_for_h2_floris
 
         custom_powercurve = False
         (
@@ -1158,7 +1158,7 @@ def compressor_model(hopp_dict):
 
 def pressure_vessel(hopp_dict):
     # Pressure Vessel Model Example
-    from greenheart.simulation.technologies.hydrogen.h2_storage.pipe_storage.underground_pipe_storage import (  # noqa:  E501
+    from h2integrate.simulation.technologies.hydrogen.h2_storage.pipe_storage.underground_pipe_storage import (  # noqa:  E501
         Underground_Pipe_Storage,
     )
 
@@ -1197,8 +1197,8 @@ def pipeline(site_df, H2_Results, useful_life, storage_input):
             site_depth = site_depth + m
     site_depth = int(site_depth)
 
-    # from greenheart.to_organize.H2_Analysis.pipeline_model import Pipeline
-    from greenheart.to_organize.pipelineASME import PipelineASME
+    # from h2integrate.to_organize.H2_Analysis.pipeline_model import Pipeline
+    from h2integrate.to_organize.pipelineASME import PipelineASME
 
     in_dict = {}
     # in_dict['pipeline_model'] = 'nrwl'
@@ -1625,14 +1625,14 @@ def calculate_financials(
         hopp_dict.add("Models", {"calculate_financials": {"input_dict": input_dict}})
 
     turbine_rating_mw = scenario["Turbine Rating"]
-    from greenheart.to_organize.H2_Analysis.simple_cash_annuals import simple_cash_annuals
+    from h2integrate.to_organize.H2_Analysis.simple_cash_annuals import simple_cash_annuals
 
     # Electrolyzer financial model
     if h2_model == "H2A":
         # cf_h2_annuals = H2A_Results['expenses_annual_cashflow'] # This is unreliable.
         pass
     elif h2_model == "Simple":
-        from greenheart.simulation.technologies.hydrogen.electrolysis.H2_cost_model import (
+        from h2integrate.simulation.technologies.hydrogen.electrolysis.H2_cost_model import (
             basic_H2_cost_model,
         )
 
@@ -2042,7 +2042,7 @@ def write_outputs_RODeO(
     ammonia_price_breakdown,
 ):
     scenario["Turbine Rating"]
-    from greenheart.to_organize.H2_Analysis.simple_cash_annuals import simple_cash_annuals
+    from h2integrate.to_organize.H2_Analysis.simple_cash_annuals import simple_cash_annuals
 
     total_elec_production = np.sum(electrical_generation_timeseries)
     np.average(hybrid_plant.wind.om_total_expense)
@@ -2293,7 +2293,7 @@ def write_outputs_ProFAST(
     hopp_dict,
 ):
     scenario["Turbine Rating"]
-    from greenheart.to_organize.H2_Analysis.simple_cash_annuals import simple_cash_annuals
+    from h2integrate.to_organize.H2_Analysis.simple_cash_annuals import simple_cash_annuals
 
     total_elec_production = np.sum(electrical_generation_timeseries)
 
@@ -2779,7 +2779,7 @@ def steel_LCOS(
 
         hopp_dict.add("Models", {"steel_LCOS": {"input_dict": input_dict}})
 
-    from greenheart.to_organize.run_profast_for_steel import run_profast_for_steel
+    from h2integrate.to_organize.run_profast_for_steel import run_profast_for_steel
 
     # Specify file path to PyFAST
     # import sys
@@ -2906,7 +2906,7 @@ def steel_LCOS_SMR(
 
     #     hopp_dict.add('Models', {'steel_LCOS': {'input_dict': input_dict}})
 
-    from greenheart.to_organize.run_profast_for_steel import run_profast_for_steel
+    from h2integrate.to_organize.run_profast_for_steel import run_profast_for_steel
 
     # # Specify file path to PyFAST
     # import sys
@@ -3010,7 +3010,7 @@ def levelized_cost_of_ammonia(
     # sys.path.append('../PyFAST/')
     # import src.PyFAST as PyFAST
 
-    from greenheart.to_organize.run_profast_for_ammonia import run_profast_for_ammonia
+    from h2integrate.to_organize.run_profast_for_ammonia import run_profast_for_ammonia
 
     # Ammonia production break-even price analysis
 
@@ -3122,7 +3122,7 @@ def levelized_cost_of_ammonia_SMR(
 
     #     hopp_dict.add('Models', {'levelized_cost_of_ammonia': {'input_dict': input_dict}})
 
-    from greenheart.to_organize.run_profast_for_ammonia import run_profast_for_ammonia
+    from h2integrate.to_organize.run_profast_for_ammonia import run_profast_for_ammonia
 
     # Specify file path to PyFAST
     # import sys
@@ -3209,7 +3209,7 @@ def levelized_cost_of_h2_transmission(
 
         hopp_dict.add("Models", {"levelized_cost_of_h2_transmission": {"input_dict": input_dict}})
 
-    from greenheart.to_organize.run_profast_for_h2_transmission import (
+    from h2integrate.to_organize.run_profast_for_h2_transmission import (
         run_profast_for_h2_transmission,
     )
 

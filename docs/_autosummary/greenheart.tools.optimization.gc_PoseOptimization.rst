@@ -1,7 +1,7 @@
-greenheart.tools.optimization.gc\_PoseOptimization
+h2integrate.tools.optimization.gc\_PoseOptimization
 ==================================================
 
-.. automodule:: greenheart.tools.optimization.gc_PoseOptimization
+.. automodule:: h2integrate.tools.optimization.gc_PoseOptimization
 
 
 

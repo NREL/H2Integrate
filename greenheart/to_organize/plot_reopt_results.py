@@ -3,9 +3,9 @@ from __future__ import annotations
 import numpy as np
 import matplotlib.pyplot as plt
 
-from greenheart.to_organize.plot_battery import plot_battery
-from greenheart.to_organize.plot_power_to_load import plot_power_to_load
-from greenheart.to_organize.plot_shortfall_curtailment import plot_shortfall_curtailment
+from h2integrate.to_organize.plot_battery import plot_battery
+from h2integrate.to_organize.plot_power_to_load import plot_power_to_load
+from h2integrate.to_organize.plot_shortfall_curtailment import plot_shortfall_curtailment
 
 
 def plot_reopt_results(

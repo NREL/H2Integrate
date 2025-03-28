@@ -1,7 +1,7 @@
-greenheart.simulation.technologies.steel.steel
+h2integrate.simulation.technologies.steel.steel
 ==============================================
 
-.. automodule:: greenheart.simulation.technologies.steel.steel
+.. automodule:: h2integrate.simulation.technologies.steel.steel
 
 
 

@@ -1,7 +1,7 @@
-greenheart.tools.optimization.gc\_run\_greenheart
+h2integrate.tools.optimization.gc\_run\_h2integrate
 =================================================
 
-.. automodule:: greenheart.tools.optimization.gc_run_greenheart
+.. automodule:: h2integrate.tools.optimization.gc_run_h2integrate
 
 
 
@@ -13,4 +13,4 @@ greenheart.tools.optimization.gc\_run\_greenheart
 
    .. autosummary::
 
-      run_greenheart
+      run_h2integrate

@@ -1,7 +1,7 @@
-greenheart.tools.eco.utilities
+h2integrate.tools.eco.utilities
 ==============================
 
-.. automodule:: greenheart.tools.eco.utilities
+.. automodule:: h2integrate.tools.eco.utilities
 
 
 

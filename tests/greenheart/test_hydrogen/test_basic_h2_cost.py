@@ -1,7 +1,7 @@
 import numpy as np
 from pytest import approx
 
-from greenheart.simulation.technologies.hydrogen.electrolysis.H2_cost_model import (
+from h2integrate.simulation.technologies.hydrogen.electrolysis.H2_cost_model import (
     basic_H2_cost_model,
 )
 

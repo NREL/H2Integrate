@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 from hopp.utilities.keys import set_developer_nrel_gov_key
 from hopp.simulation.technologies.sites import SiteInfo, flatirons_site as sample_site
 
-from greenheart.to_organize import inputs_py, hopp_tools, plot_results
+from h2integrate.to_organize import inputs_py, hopp_tools, plot_results
 
 
 sys.path.append("")

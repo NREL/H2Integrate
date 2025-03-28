@@ -1,7 +1,7 @@
-greenheart.tools.optimization.fileIO
+h2integrate.tools.optimization.fileIO
 ====================================
 
-.. automodule:: greenheart.tools.optimization.fileIO
+.. automodule:: h2integrate.tools.optimization.fileIO
 
 
 

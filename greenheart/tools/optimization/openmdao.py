@@ -3,18 +3,18 @@ import openmdao.api as om
 from hopp.simulation import HoppInterface
 from shapely.geometry import Point, Polygon
 
-from greenheart.simulation.greenheart_simulation import GreenHeartSimulationConfig, run_simulation
+from h2integrate.simulation.h2integrate_simulation import H2IntegrateSimulationConfig, run_simulation
 
 
-class GreenHeartComponent(om.ExplicitComponent):
-    """This class is an OpenMDAO wrapper for running a greenheart simulation"""
+class H2IntegrateComponent(om.ExplicitComponent):
+    """This class is an OpenMDAO wrapper for running a h2integrate simulation"""
 
     def initialize(self):
         self.options.declare(
             "config",
-            types=GreenHeartSimulationConfig,
+            types=H2IntegrateSimulationConfig,
             recordable=False,
-            desc="GreenHeartSimulationConfig data class instance",
+            desc="H2IntegrateSimulationConfig data class instance",
         )
         self.options.declare(
             "outputs_for_finite_difference",
@@ -108,7 +108,7 @@ class GreenHeartComponent(om.ExplicitComponent):
         if ninputs == 0 or "electrolyzer_rating_kw" in self.options["design_variables"]:
             self.add_input(
                 "electrolyzer_rating_kw",
-                val=self.options["config"].greenheart_config["electrolyzer"]["rating"] * 1e3,
+                val=self.options["config"].h2integrate_config["electrolyzer"]["rating"] * 1e3,
                 units="kW",
             )
             ninputs += 1
@@ -116,12 +116,12 @@ class GreenHeartComponent(om.ExplicitComponent):
         # add outputs
         self.add_output("lcoe", units="USD/(kW*h)", val=0.0, desc="levelized cost of energy")
         self.add_output("lcoh", units="USD/kg", val=0.0, desc="levelized cost of hydrogen")
-        if "steel" in self.options["config"].greenheart_config.keys():
+        if "steel" in self.options["config"].h2integrate_config.keys():
             self.add_output("lcos", units="USD/t", val=0.0, desc="levelized cost of steel")
-        if "ammonia" in self.options["config"].greenheart_config.keys():
+        if "ammonia" in self.options["config"].h2integrate_config.keys():
             self.add_output("lcoa", units="USD/kg", val=0.0, desc="levelized cost of ammonia")
 
-        if self.options["config"].greenheart_config["opt_options"]["constraints"][
+        if self.options["config"].h2integrate_config["opt_options"]["constraints"][
             "pv_to_platform_area_ratio"
         ]["flag"]:
             self.add_output("pv_area", units="m*m", val=0.0, desc="offshore pv array area")
@@ -165,7 +165,7 @@ class GreenHeartComponent(om.ExplicitComponent):
                     inputs["battery_capacity_kwh"]
                 )
         if "electrolyzer_rating_kw" in inputs:
-            config.greenheart_config["electrolyzer"]["rating"] = (
+            config.h2integrate_config["electrolyzer"]["rating"] = (
                 float(inputs["electrolyzer_rating_kw"]) * 1e-3
             )
 
@@ -204,23 +204,23 @@ class GreenHeartComponent(om.ExplicitComponent):
         elif config.output_level == 7:
             lcoe, lcoh, steel_finance, ammonia_finance = run_simulation(config)
         elif config.output_level == 8:
-            greenheart_output = run_simulation(config)
-            lcoe = greenheart_output.lcoe
-            lcoh = greenheart_output.lcoh
-            steel_finance = greenheart_output.steel_finance
-            ammonia_finance = greenheart_output.ammonia_finance
-            pv_area = greenheart_output.hopp_results["hybrid_plant"].pv.footprint_area
-            platform_area = greenheart_output.platform_results["toparea_m2"]
+            h2integrate_output = run_simulation(config)
+            lcoe = h2integrate_output.lcoe
+            lcoh = h2integrate_output.lcoh
+            steel_finance = h2integrate_output.steel_finance
+            ammonia_finance = h2integrate_output.ammonia_finance
+            pv_area = h2integrate_output.hopp_results["hybrid_plant"].pv.footprint_area
+            platform_area = h2integrate_output.platform_results["toparea_m2"]
 
         outputs["lcoe"] = lcoe
         outputs["lcoh"] = lcoh
 
-        if "steel" in self.options["config"].greenheart_config.keys():
+        if "steel" in self.options["config"].h2integrate_config.keys():
             outputs["lcos"] = steel_finance.sol.get("price")
-        if "ammonia" in self.options["config"].greenheart_config.keys():
+        if "ammonia" in self.options["config"].h2integrate_config.keys():
             outputs["lcoa"] = ammonia_finance.sol.get("price")
 
-        if self.options["config"].greenheart_config["opt_options"]["constraints"][
+        if self.options["config"].h2integrate_config["opt_options"]["constraints"][
             "pv_to_platform_area_ratio"
         ]["flag"]:
             outputs["pv_area"] = pv_area

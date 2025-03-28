@@ -1,7 +1,7 @@
-greenheart.tools.eco.finance
+h2integrate.tools.eco.finance
 ============================
 
-.. automodule:: greenheart.tools.eco.finance
+.. automodule:: h2integrate.tools.eco.finance
 
 
 

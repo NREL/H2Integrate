@@ -6,9 +6,9 @@ import pandas as pd
 from pytest import skip, warns, approx
 from hopp.utilities.keys import set_nrel_key_dot_env
 
-from greenheart.simulation.greenheart_simulation import (
-    GreenHeartSimulationConfig,
-    GreenHeartSimulationOutput,
+from h2integrate.simulation.h2integrate_simulation import (
+    H2IntegrateSimulationConfig,
+    H2IntegrateSimulationOutput,
     run_simulation,
 )
 
@@ -28,8 +28,8 @@ turbine_model = "osw_18MW"
 filename_turbine_config = orbit_library_path / f"turbines/{turbine_model}.yaml"
 filename_orbit_config = orbit_library_path / f"plant/orbit-config-{turbine_model}-stripped.yaml"
 filename_floris_config = orbit_library_path / f"floris/floris_input_{turbine_model}.yaml"
-filename_greenheart_config = orbit_library_path / "plant/greenheart_config.yaml"
-filename_greenheart_config_onshore = orbit_library_path / "plant/greenheart_config_onshore.yaml"
+filename_h2integrate_config = orbit_library_path / "plant/h2integrate_config.yaml"
+filename_h2integrate_config_onshore = orbit_library_path / "plant/h2integrate_config_onshore.yaml"
 filename_hopp_config = orbit_library_path / "plant/hopp_config.yaml"
 filename_hopp_config_wind_wave = orbit_library_path / "plant/hopp_config_wind_wave.yaml"
 filename_hopp_config_wind_wave_solar = orbit_library_path / "plant/hopp_config_wind_wave_solar.yaml"
@@ -41,9 +41,9 @@ rtol = 1e-5
 
 
 def test_simulation_wind(subtests):
-    config = GreenHeartSimulationConfig(
+    config = H2IntegrateSimulationConfig(
         filename_hopp_config=filename_hopp_config,
-        filename_greenheart_config=filename_greenheart_config,
+        filename_h2integrate_config=filename_h2integrate_config,
         filename_turbine_config=filename_turbine_config,
         filename_orbit_config=filename_orbit_config,
         filename_floris_config=filename_floris_config,
@@ -90,9 +90,9 @@ def test_simulation_wind(subtests):
 
 
 def test_simulation_wind_wave(subtests):
-    config = GreenHeartSimulationConfig(
+    config = H2IntegrateSimulationConfig(
         filename_hopp_config=filename_hopp_config_wind_wave,
-        filename_greenheart_config=filename_greenheart_config,
+        filename_h2integrate_config=filename_h2integrate_config,
         filename_turbine_config=filename_turbine_config,
         filename_orbit_config=filename_orbit_config,
         filename_floris_config=filename_floris_config,
@@ -118,9 +118,9 @@ def test_simulation_wind_wave(subtests):
 
 
 def test_simulation_wind_wave_solar(subtests):
-    config = GreenHeartSimulationConfig(
+    config = H2IntegrateSimulationConfig(
         filename_hopp_config=filename_hopp_config_wind_wave_solar,
-        filename_greenheart_config=filename_greenheart_config,
+        filename_h2integrate_config=filename_h2integrate_config,
         filename_turbine_config=filename_turbine_config,
         filename_orbit_config=filename_orbit_config,
         filename_floris_config=filename_floris_config,
@@ -148,9 +148,9 @@ def test_simulation_wind_wave_solar(subtests):
 
 
 def test_simulation_io(subtests):
-    config = GreenHeartSimulationConfig(
+    config = H2IntegrateSimulationConfig(
         filename_hopp_config=filename_hopp_config,
-        filename_greenheart_config=filename_greenheart_config_onshore,
+        filename_h2integrate_config=filename_h2integrate_config_onshore,
         filename_turbine_config=filename_turbine_config,
         filename_floris_config=filename_floris_config,
         verbose=False,
@@ -181,7 +181,7 @@ def test_simulation_io(subtests):
         output_o.save_to_file("tmp.yaml")
 
     with subtests.test("load_saved_output"):
-        output_i = GreenHeartSimulationOutput.load_from_file(temp_file_path)
+        output_i = H2IntegrateSimulationOutput.load_from_file(temp_file_path)
 
     if temp_file_path.exists():
         temp_file_path.unlink()
@@ -233,9 +233,9 @@ def test_simulation_io(subtests):
 
 
 def test_simulation_wind_wave_solar_battery(subtests):
-    config = GreenHeartSimulationConfig(
+    config = H2IntegrateSimulationConfig(
         filename_hopp_config=filename_hopp_config_wind_wave_solar_battery,
-        filename_greenheart_config=filename_greenheart_config,
+        filename_h2integrate_config=filename_h2integrate_config,
         filename_turbine_config=filename_turbine_config,
         filename_orbit_config=filename_orbit_config,
         filename_floris_config=filename_floris_config,
@@ -285,9 +285,9 @@ def test_simulation_wind_wave_solar_battery(subtests):
 
 
 def test_simulation_wind_onshore(subtests):
-    config = GreenHeartSimulationConfig(
+    config = H2IntegrateSimulationConfig(
         filename_hopp_config=filename_hopp_config,
-        filename_greenheart_config=filename_greenheart_config_onshore,
+        filename_h2integrate_config=filename_h2integrate_config_onshore,
         filename_turbine_config=filename_turbine_config,
         filename_floris_config=filename_floris_config,
         verbose=False,
@@ -318,9 +318,9 @@ def test_simulation_wind_onshore(subtests):
 
 
 def test_simulation_wind_onshore_steel_ammonia(subtests):
-    config = GreenHeartSimulationConfig(
+    config = H2IntegrateSimulationConfig(
         filename_hopp_config=filename_hopp_config,
-        filename_greenheart_config=filename_greenheart_config_onshore,
+        filename_h2integrate_config=filename_h2integrate_config_onshore,
         filename_turbine_config=filename_turbine_config,
         filename_floris_config=filename_floris_config,
         verbose=False,
@@ -369,9 +369,9 @@ def test_simulation_wind_onshore_steel_ammonia(subtests):
 def test_simulation_wind_battery_pv_onshore_steel_ammonia(subtests):
     plant_design_scenario = 12
 
-    config = GreenHeartSimulationConfig(
+    config = H2IntegrateSimulationConfig(
         filename_hopp_config=filename_hopp_config_wind_wave_solar_battery,
-        filename_greenheart_config=filename_greenheart_config_onshore,
+        filename_h2integrate_config=filename_h2integrate_config_onshore,
         filename_turbine_config=filename_turbine_config,
         filename_orbit_config=filename_orbit_config,
         filename_floris_config=filename_floris_config,
@@ -399,44 +399,44 @@ def test_simulation_wind_battery_pv_onshore_steel_ammonia(subtests):
     config.hopp_config["technologies"].pop("wave")
     config.hopp_config["site"]["wave"] = False
     # colocated end-use
-    config.greenheart_config["plant_design"][f"scenario{plant_design_scenario}"][
+    config.h2integrate_config["plant_design"][f"scenario{plant_design_scenario}"][
         "transportation"
     ] = "colocated"
 
     # run the simulation
-    greenheart_output = run_simulation(config)
+    h2integrate_output = run_simulation(config)
 
     # TODO base this test value on something
     with subtests.test("lcoh"):
-        assert greenheart_output.lcoh == approx(2.856219558092931, rel=rtol)
+        assert h2integrate_output.lcoh == approx(2.856219558092931, rel=rtol)
 
     # TODO base this test value on something
     with subtests.test("lcoe"):
-        assert greenheart_output.lcoe == approx(0.03475765253339192, rel=rtol)
+        assert h2integrate_output.lcoe == approx(0.03475765253339192, rel=rtol)
 
     # TODO base this test value on something
     with subtests.test("steel_finance"):
         lcos_expected = 1386.766783710166
 
-        assert greenheart_output.steel_finance.sol.get("price") == approx(lcos_expected, rel=rtol)
+        assert h2integrate_output.steel_finance.sol.get("price") == approx(lcos_expected, rel=rtol)
 
     # TODO base this test value on something
     with subtests.test("ammonia_finance"):
         lcoa_expected = 1.0599198593495158
 
-        assert greenheart_output.ammonia_finance.sol.get("price") == approx(lcoa_expected, rel=rtol)
+        assert h2integrate_output.ammonia_finance.sol.get("price") == approx(lcoa_expected, rel=rtol)
 
     with subtests.test("check time series lengths"):
         expected_length = 8760
 
-        for key in greenheart_output.hourly_energy_breakdown.keys():
-            assert len(greenheart_output.hourly_energy_breakdown[key]) == expected_length
+        for key in h2integrate_output.hourly_energy_breakdown.keys():
+            assert len(h2integrate_output.hourly_energy_breakdown[key]) == expected_length
 
 
 def test_simulation_wind_onshore_steel_ammonia_ss_h2storage(subtests):
-    config = GreenHeartSimulationConfig(
+    config = H2IntegrateSimulationConfig(
         filename_hopp_config=filename_hopp_config,
-        filename_greenheart_config=filename_greenheart_config_onshore,
+        filename_h2integrate_config=filename_h2integrate_config_onshore,
         filename_turbine_config=filename_turbine_config,
         filename_floris_config=filename_floris_config,
         verbose=False,
@@ -450,8 +450,8 @@ def test_simulation_wind_onshore_steel_ammonia_ss_h2storage(subtests):
         output_level=7,
     )
 
-    config.greenheart_config["h2_storage"]["size_capacity_from_demand"]["flag"] = True
-    config.greenheart_config["h2_storage"]["type"] = "pipe"
+    config.h2integrate_config["h2_storage"]["size_capacity_from_demand"]["flag"] = True
+    config.h2integrate_config["h2_storage"]["type"] = "pipe"
 
     # based on 2023 ATB moderate case for onshore wind
     config.hopp_config["config"]["cost_info"]["wind_installed_cost_mw"] = 1434000.0

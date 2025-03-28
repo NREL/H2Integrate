@@ -52,7 +52,7 @@ def hydrogen_storage_capacity(H2_Results, electrolyzer_size_mw, hydrogen_demand_
     #     )
     # max_h2_injection_rate_kgphr = max(hydrogen_injection_withdrawal_rate)
 
-    # # Get storage compressor capacity. TODO: sync compressor calculation here with GreenHEART
+    # # Get storage compressor capacity. TODO: sync compressor calculation here with H2Integrate
     # compressor model
     # compressor_total_capacity_kW = (
     #     max_h2_injection_rate_kgphr / 3600 / 2.0158 * 8641.678424

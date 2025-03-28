@@ -8,14 +8,14 @@ from hopp.utilities import load_yaml
 from hopp.simulation import HoppInterface
 from ORBIT.core.library import initialize_library
 
-from greenheart.tools.optimization.openmdao import (
+from h2integrate.tools.optimization.openmdao import (
     HOPPComponent,
-    GreenHeartComponent,
+    H2IntegrateComponent,
     TurbineDistanceComponent,
     BoundaryDistanceComponent,
 )
-from greenheart.simulation.greenheart_simulation import GreenHeartSimulationConfig
-from greenheart.tools.optimization.gc_run_greenheart import run_greenheart
+from h2integrate.simulation.h2integrate_simulation import H2IntegrateSimulationConfig
+from h2integrate.tools.optimization.gc_run_h2integrate import run_h2integrate
 
 
 ROOT = Path(__file__).parent
@@ -28,8 +28,8 @@ wind_resource_file = (
 floris_input_file = ROOT / "inputs" / "floris_input.yaml"
 hopp_config_filename = ROOT / "inputs" / "hopp_config.yaml"
 hopp_config_steel_ammonia_filename = ROOT / "input_files" / "plant" / "hopp_config.yaml"
-greenheart_config_onshore_filename = (
-    ROOT / "input_files" / "plant" / "greenheart_config_onshore.yaml"
+h2integrate_config_onshore_filename = (
+    ROOT / "input_files" / "plant" / "h2integrate_config_onshore.yaml"
 )
 turbine_config_filename = ROOT / "input_files" / "turbines" / "osw_18MW.yaml"
 floris_input_filename_steel_ammonia = ROOT / "input_files" / "floris" / "floris_input_osw_18MW.yaml"
@@ -39,7 +39,7 @@ initialize_library(orbit_library_path)
 offshore_hopp_config_wind_wave_solar_battery = (
     orbit_library_path / "plant/hopp_config_wind_wave_solar_battery.yaml"
 )
-offshore_greenheart_config = orbit_library_path / "plant/greenheart_config.yaml"
+offshore_h2integrate_config = orbit_library_path / "plant/h2integrate_config.yaml"
 offshore_turbine_model = "osw_18MW"
 offshore_turbine_config = orbit_library_path / f"turbines/{offshore_turbine_model}.yaml"
 offshore_floris_config = orbit_library_path / f"floris/floris_input_{offshore_turbine_model}.yaml"
@@ -108,10 +108,10 @@ def setup_hopp():
     return prob, turbine_x, hybrid_config_dict
 
 
-def setup_greenheart():
-    config = GreenHeartSimulationConfig(
+def setup_h2integrate():
+    config = H2IntegrateSimulationConfig(
         filename_hopp_config=hopp_config_steel_ammonia_filename,
-        filename_greenheart_config=greenheart_config_onshore_filename,
+        filename_h2integrate_config=h2integrate_config_onshore_filename,
         filename_turbine_config=turbine_config_filename,
         filename_floris_config=floris_input_filename_steel_ammonia,
         verbose=False,
@@ -135,11 +135,11 @@ def setup_greenheart():
     # set skip_financial to false for onshore wind
     config.hopp_config["config"]["simulation_options"]["wind"]["skip_financial"] = False
 
-    config.greenheart_config["opt_options"] = {
+    config.h2integrate_config["opt_options"] = {
         "opt_flag": True,
         "general": {
             "folder_output": "output",
-            "fname_output": "test_run_greenheart_optimization",
+            "fname_output": "test_run_h2integrate_optimization",
         },
         "design_variables": {
             "electrolyzer_rating_kw": {
@@ -368,14 +368,14 @@ def test_hopp_component(subtests):
         assert prob.get_val("pv_capacity_kw")[0] == new_pv_capacity_kw
 
 
-def test_greenheart_component(subtests):
-    config = setup_greenheart()
+def test_h2integrate_component(subtests):
+    config = setup_h2integrate()
 
     model = om.Group()
 
     model.add_subsystem(
-        "greenheart",
-        GreenHeartComponent(config=config, design_variables=["electrolyzer_rating_kw"]),
+        "h2integrate",
+        H2IntegrateComponent(config=config, design_variables=["electrolyzer_rating_kw"]),
         promotes=["*"],
     )
 
@@ -402,9 +402,9 @@ def test_greenheart_component(subtests):
         assert prob["lcoa"][0] == approx(lcoa_expected, rel=rtol)
 
 
-def test_run_greenheart_run_only(subtests):
-    config = setup_greenheart()
-    prob, config = run_greenheart(config, run_only=True)
+def test_run_h2integrate_run_only(subtests):
+    config = setup_h2integrate()
+    prob, config = run_h2integrate(config, run_only=True)
 
     # TODO base this test value on something
     with subtests.test("lcoh"):
@@ -425,12 +425,12 @@ def test_run_greenheart_run_only(subtests):
         assert prob["lcoa"] == approx(lcoa_expected, rel=rtol)
 
 
-def test_run_greenheart_optimize(subtests):
-    config = setup_greenheart()
-    config.greenheart_config["electrolyzer"]["cluster_rating_MW"] = 20.0
-    config.greenheart_config["electrolyzer"]["rating"] = 100.0
+def test_run_h2integrate_optimize(subtests):
+    config = setup_h2integrate()
+    config.h2integrate_config["electrolyzer"]["cluster_rating_MW"] = 20.0
+    config.h2integrate_config["electrolyzer"]["rating"] = 100.0
 
-    prob, config = run_greenheart(config, run_only=False)
+    prob, config = run_h2integrate(config, run_only=False)
 
     cr = om.CaseReader(Path(__file__).absolute().parent / "output" / "recorder.sql")
 

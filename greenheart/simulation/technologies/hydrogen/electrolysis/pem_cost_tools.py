@@ -1,7 +1,7 @@
 import numpy as np
 from attrs import field, define
 
-from greenheart.tools.profast_tools import create_years_of_operation
+from h2integrate.tools.profast_tools import create_years_of_operation
 
 
 @define
@@ -11,7 +11,7 @@ class ElectrolyzerLCOHInputConfig:
 
     Args:
         electrolyzer_physics_results (dict): results from run_electrolyzer_physics()
-        electrolyzer_config (dict): sub-dictionary of greenheart_config
+        electrolyzer_config (dict): sub-dictionary of h2integrate_config
         analysis_start_year (int): analysis start year
         installation_period_months (int|float|None): installation period in months. defaults to 36.
     """
@@ -153,18 +153,18 @@ class ElectrolyzerLCOHInputConfig:
         return utilization_dict
 
 
-def calc_electrolyzer_variable_om(electrolyzer_physics_results, greenheart_config):
+def calc_electrolyzer_variable_om(electrolyzer_physics_results, h2integrate_config):
     """Calculate variable O&M of electrolyzer system in $/kg-H2.
 
     Args:
         electrolyzer_physics_results (dict): results from run_electrolyzer_physics()
-        greenheart_config (:obj:`greenheart_simulation.GreenHeartSimulationConfig`): greenheart
+        h2integrate_config (:obj:`h2integrate_simulation.H2IntegrateSimulationConfig`): h2integrate
             simulation config.
 
     Returns:
         dict | float: electrolyzer variable o&m in $/kg-H2.
     """
-    electrolyzer_config = greenheart_config["electrolyzer"]
+    electrolyzer_config = h2integrate_config["electrolyzer"]
     annual_performance = electrolyzer_physics_results["H2_Results"]["Performance Schedules"]
 
     if "var_om" in electrolyzer_config.keys():
@@ -173,19 +173,19 @@ def calc_electrolyzer_variable_om(electrolyzer_physics_results, greenheart_confi
             * annual_performance["Annual Average Efficiency [kWh/kg]"].values
         )
 
-        if "analysis_start_year" not in greenheart_config["finance_parameters"]:
-            analysis_start_year = greenheart_config["project_parameters"]["atb_year"] + 2
+        if "analysis_start_year" not in h2integrate_config["finance_parameters"]:
+            analysis_start_year = h2integrate_config["project_parameters"]["atb_year"] + 2
         else:
-            analysis_start_year = greenheart_config["finance_parameters"]["analysis_start_year"]
-        if "installation_time" not in greenheart_config["project_parameters"]:
+            analysis_start_year = h2integrate_config["finance_parameters"]["analysis_start_year"]
+        if "installation_time" not in h2integrate_config["project_parameters"]:
             installation_period_months = 36
         else:
-            installation_period_months = greenheart_config["project_parameters"][
+            installation_period_months = h2integrate_config["project_parameters"][
                 "installation_time"
             ]
 
         years_of_operation = create_years_of_operation(
-            greenheart_config["project_parameters"]["project_lifetime"],
+            h2integrate_config["project_parameters"]["project_lifetime"],
             analysis_start_year,
             installation_period_months,
         )

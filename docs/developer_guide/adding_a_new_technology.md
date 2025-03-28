@@ -1,16 +1,16 @@
-# Adding a new technology to new GreenHEART
+# Adding a new technology to new H2Integrate
 
-This doc page describes the steps to add a new technology to the new GreenHEART.
-In broad strokes, this involves writing performance and cost wrappers for your technology in the format that GreenHEART expects, then adding those to the list of available technologies in the GreenHEART codebase.
+This doc page describes the steps to add a new technology to the new H2Integrate.
+In broad strokes, this involves writing performance and cost wrappers for your technology in the format that H2Integrate expects, then adding those to the list of available technologies in the H2Integrate codebase.
 We'll first walk through a relatively straightforward example of adding a new technology, then discuss some of the more complex cases you might encounter.
 
 ## Adding a new technology
 
-We'll start by walking through the process to add a simple solar performance model to GreenHEART.
+We'll start by walking through the process to add a simple solar performance model to H2Integrate.
 
-1. Determine what type of technology you're adding and if it fits into an existing GreenHEART bucket.
+1. Determine what type of technology you're adding and if it fits into an existing H2Integrate bucket.
 In this case, we're adding a solar technology, which has an existing set of baseclasses that we will use.
-These baseclasses are defined in `greenheart/converters/solar/solar_baseclass.py`.
+These baseclasses are defined in `h2integrate/converters/solar/solar_baseclass.py`.
 They provide the basic structure for a solar technology, including the required inputs and outputs for the models.
 Here's what that baseclass looks like:
 
@@ -73,12 +73,12 @@ For this simplistic case, we will skip the cost model.
 The process for writing a cost model is similar to the performance model, with the required inputs and outputs defined in the baseclass.
 
 4. Next, add the new technology to the `supported_models.py` file.
-This file contains a dictionary of all the available technologies in GreenHEART.
+This file contains a dictionary of all the available technologies in H2Integrate.
 Add your new technology to the dictionary with the appropriate keys depending on if it a performance, cost, or financial model.
 Here's what the updated `supported_models.py` file looks like with our new solar technology added as the first entry:
 
 ```python
-from new_greenheart.converters.solar.solar_pysam import PYSAMSolarPlantPerformanceComponent
+from new_h2integrate.converters.solar.solar_pysam import PYSAMSolarPlantPerformanceComponent
 
 supported_models = {
     'pysam_solar_plant_performance' : PYSAMSolarPlantPerformanceComponent,
@@ -94,13 +94,13 @@ supported_models = {
 }
 ```
 
-5. Finally, you can now use your new technology in GreenHEART.
+5. Finally, you can now use your new technology in H2Integrate.
 You can create a new case that uses this technology in the `tech_config.yaml` level or add it to an existing scenario and run the model to see the results.
 
 
 ## More complex cases
 
-Adding a new technology to GreenHEART can be more complex than the simple example we walked through.
+Adding a new technology to H2Integrate can be more complex than the simple example we walked through.
 For example, your technology might not fit into an existing bucket, or you might need to add additional inputs or outputs than what's defined in the baseclass.
 Let's briefly discuss these cases and how to handle them.
 
@@ -132,7 +132,7 @@ class ECOElectrolyzerPerformanceModel(ElectrolyzerPerformanceBaseClass):
 
 In some cases, the performance and cost models are tightly coupled, and it might make sense to combine them into a single model.
 This is currently the case for the HOPP and h2_storage wrappers, where the performance and cost models are combined into a single component.
-If you're adding a technology where this makes sense, you can follow the same steps as above but you also need to modify the `greenheart_model.py` file for this special logic.
+If you're adding a technology where this makes sense, you can follow the same steps as above but you also need to modify the `h2integrate_model.py` file for this special logic.
 For now, modify a single  the `create_technology_models.py` file to include your new technology as such:
 
 ```python
@@ -154,6 +154,6 @@ for tech_name, individual_tech_config in self.technology_config['technologies'].
 
 ### Other cases
 
-If you encounter a case that isn't covered here, please discuss it with the GreenHEART dev team for guidance.
-GreenHEART is constantly evolving and we plan to encounter new challenges as we add more technologies to the model.
-Your feedback and suggestions help you and others use GreenHEART successfully.
+If you encounter a case that isn't covered here, please discuss it with the H2Integrate dev team for guidance.
+H2Integrate is constantly evolving and we plan to encounter new challenges as we add more technologies to the model.
+Your feedback and suggestions help you and others use H2Integrate successfully.

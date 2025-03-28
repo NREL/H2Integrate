@@ -12,11 +12,11 @@ from lcoe.lcoe import lcoe as lcoe_calc
 from hopp.utilities.keys import set_developer_nrel_gov_key
 from hopp.simulation.technologies.sites import SiteInfo, flatirons_site as sample_site
 
-from greenheart.to_organize.run_reopt import run_reopt
-from greenheart.to_organize.plot_reopt_results import plot_reopt_results
-from greenheart.to_organize.H2_Analysis.run_h2a import run_h2a as run_h2a
-from greenheart.to_organize.H2_Analysis.hopp_for_h2 import hopp_for_h2
-from greenheart.to_organize.H2_Analysis.simple_dispatch import SimpleDispatch
+from h2integrate.to_organize.run_reopt import run_reopt
+from h2integrate.to_organize.plot_reopt_results import plot_reopt_results
+from h2integrate.to_organize.H2_Analysis.run_h2a import run_h2a as run_h2a
+from h2integrate.to_organize.H2_Analysis.hopp_for_h2 import hopp_for_h2
+from h2integrate.to_organize.H2_Analysis.simple_dispatch import SimpleDispatch
 
 
 warnings.filterwarnings("ignore")

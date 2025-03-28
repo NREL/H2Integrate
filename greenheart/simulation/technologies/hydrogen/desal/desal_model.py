@@ -19,7 +19,7 @@ Energy recovery system: A system where a portion of the pressure energy of the b
 
 import numpy as np
 
-from greenheart.to_organize.H2_Analysis.simple_cash_annuals import simple_cash_annuals
+from h2integrate.to_organize.H2_Analysis.simple_cash_annuals import simple_cash_annuals
 
 
 def RO_desal(

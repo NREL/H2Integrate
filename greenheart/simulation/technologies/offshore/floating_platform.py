@@ -53,7 +53,7 @@ from ORBIT.core.library import initialize_library
 from ORBIT.phases.design import DesignPhase, MooringSystemDesign
 from ORBIT.phases.install import InstallPhase
 
-from greenheart.simulation.technologies.offshore.all_platforms import (
+from h2integrate.simulation.technologies.offshore.all_platforms import (
     install_platform,
     calc_platform_opex,
 )

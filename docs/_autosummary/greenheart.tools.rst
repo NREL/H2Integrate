@@ -1,7 +1,7 @@
-﻿greenheart.tools
+﻿h2integrate.tools
 ================
 
-.. automodule:: greenheart.tools
+.. automodule:: h2integrate.tools
 
 
 
@@ -27,6 +27,6 @@
    :toctree:
    :recursive:
 
-   greenheart.tools.eco
-   greenheart.tools.optimization
-   greenheart.tools.plant_sizing_estimation
+   h2integrate.tools.eco
+   h2integrate.tools.optimization
+   h2integrate.tools.plant_sizing_estimation

@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from pytest import approx
 
-from greenheart.simulation.technologies.hydrogen.h2_storage.pressure_vessel.compressed_gas_storage_model_20221021.Compressed_all import (  # noqa: E501
+from h2integrate.simulation.technologies.hydrogen.h2_storage.pressure_vessel.compressed_gas_storage_model_20221021.Compressed_all import (  # noqa: E501
     PressureVessel,
 )
 

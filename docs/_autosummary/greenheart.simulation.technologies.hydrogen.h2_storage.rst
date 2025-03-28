@@ -1,7 +1,7 @@
-greenheart.simulation.technologies.hydrogen.h2\_storage
+h2integrate.simulation.technologies.hydrogen.h2\_storage
 =======================================================
 
-.. automodule:: greenheart.simulation.technologies.hydrogen.h2_storage
+.. automodule:: h2integrate.simulation.technologies.hydrogen.h2_storage
 
 
 
@@ -27,9 +27,9 @@ greenheart.simulation.technologies.hydrogen.h2\_storage
    :toctree:
    :recursive:
 
-   greenheart.simulation.technologies.hydrogen.h2_storage.lined_rock_cavern
-   greenheart.simulation.technologies.hydrogen.h2_storage.on_turbine
-   greenheart.simulation.technologies.hydrogen.h2_storage.pipe_storage
-   greenheart.simulation.technologies.hydrogen.h2_storage.pressure_vessel
-   greenheart.simulation.technologies.hydrogen.h2_storage.salt_cavern
-   greenheart.simulation.technologies.hydrogen.h2_storage.storage_sizing
+   h2integrate.simulation.technologies.hydrogen.h2_storage.lined_rock_cavern
+   h2integrate.simulation.technologies.hydrogen.h2_storage.on_turbine
+   h2integrate.simulation.technologies.hydrogen.h2_storage.pipe_storage
+   h2integrate.simulation.technologies.hydrogen.h2_storage.pressure_vessel
+   h2integrate.simulation.technologies.hydrogen.h2_storage.salt_cavern
+   h2integrate.simulation.technologies.hydrogen.h2_storage.storage_sizing

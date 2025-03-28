@@ -1,7 +1,7 @@
-# Installing GreenHeart
+# Installing H2Integrate
 
 ```bash
-pip install greenheart
+pip install h2integrate
 ```
 
 ## NREL Resource Data
@@ -30,13 +30,13 @@ For most use cases, installing from source will be the preferred installation ro
 1. Using Git, navigate to a local target directory and clone repository:
 
     ```bash
-    git clone https://github.com/NREL/GreenHEART.git
+    git clone https://github.com/NREL/H2Integrate.git
     ```
 
-2. Navigate to `GreenHEART`
+2. Navigate to `H2Integrate`
 
     ```bash
-    cd GreenHEART
+    cd H2Integrate
     ```
 
 3. (Optional) If using NREL resource data, you will need an NREL API key, which can be obtined from:
@@ -52,7 +52,7 @@ For most use cases, installing from source will be the preferred installation ro
           NREL_API_EMAIL=<email-address>
         ```
 
-4. Create a conda environment and install GreenHEART and all its dependencies
+4. Create a conda environment and install H2Integrate and all its dependencies
 
     ```bash
     conda env create -f environment.yml
@@ -87,24 +87,24 @@ pip install -e ".[all]"
 1. Using Git, navigate to a local target directory and clone repository:
 
     ```bash
-    git clone https://github.com/NREL/GreenHEART.git
+    git clone https://github.com/NREL/H2Integrate.git
     ```
 
-2. Navigate to `GreenHEART`
+2. Navigate to `H2Integrate`
 
     ```bash
-    cd GreenHEART
+    cd H2Integrate
     ```
 
 3. Create a new virtual environment and change to it. Using Conda Python 3.11 (choose your favorite
-   supported version) and naming it 'greenheart' (choose your desired name):
+   supported version) and naming it 'h2integrate' (choose your desired name):
 
     ```bash
-    conda create --name greenheart python=3.11 -y
-    conda activate greenheart
+    conda create --name h2integrate python=3.11 -y
+    conda activate h2integrate
     ```
 
-4. Install GreenHEART and its dependencies:
+4. Install H2Integrate and its dependencies:
 
     ```bash
     conda install -y -c conda-forge glpk
@@ -120,7 +120,7 @@ pip install -e ".[all]"
     Windows users should install Cbc manually according to https://github.com/coin-or/Cbc.
     ````
 
-    - If you want to just use GreenHEART:
+    - If you want to just use H2Integrate:
 
        ```bash
        pip install .

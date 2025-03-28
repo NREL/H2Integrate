@@ -11,23 +11,23 @@ import numpy as np
 import openmdao.api as om
 from hopp.simulation import HoppInterface
 
-from greenheart.tools.optimization.openmdao import (
+from h2integrate.tools.optimization.openmdao import (
     TurbineDistanceComponent,
     BoundaryDistanceComponent,
 )
-from greenheart.simulation.greenheart_simulation import GreenHeartSimulationConfig
+from h2integrate.simulation.h2integrate_simulation import H2IntegrateSimulationConfig
 
 
 class PoseOptimization:
     """This class contains a collection of methods for setting up an openmdao optimization problem
-    for a greenheart simulation.
+    for a h2integrate simulation.
 
     Args:
-        config (GreenHeartSimulationConfig): instance of a greenheart config containing all desired
+        config (H2IntegrateSimulationConfig): instance of a h2integrate config containing all desired
             simulation set up
     """
 
-    def __init__(self, config: GreenHeartSimulationConfig):
+    def __init__(self, config: H2IntegrateSimulationConfig):
         """This method primarily establishes lists of optimization methods available through
         different optimization drivers.
         """
@@ -56,35 +56,35 @@ class PoseOptimization:
         # Determine the number of design variables
         n_DV = 0
 
-        if self.config.greenheart_config["opt_options"]["design_variables"][
+        if self.config.h2integrate_config["opt_options"]["design_variables"][
             "electrolyzer_rating_kw"
         ]["flag"]:
             n_DV += 1
-        if self.config.greenheart_config["opt_options"]["design_variables"]["pv_capacity_kw"][
+        if self.config.h2integrate_config["opt_options"]["design_variables"]["pv_capacity_kw"][
             "flag"
         ]:
             n_DV += 1
-        if self.config.greenheart_config["opt_options"]["design_variables"]["wave_capacity_kw"][
+        if self.config.h2integrate_config["opt_options"]["design_variables"]["wave_capacity_kw"][
             "flag"
         ]:
             n_DV += 1
-        if self.config.greenheart_config["opt_options"]["design_variables"]["battery_capacity_kw"][
+        if self.config.h2integrate_config["opt_options"]["design_variables"]["battery_capacity_kw"][
             "flag"
         ]:
             n_DV += 1
-        if self.config.greenheart_config["opt_options"]["design_variables"]["battery_capacity_kwh"][
+        if self.config.h2integrate_config["opt_options"]["design_variables"]["battery_capacity_kwh"][
             "flag"
         ]:
             n_DV += 1
-        if self.config.greenheart_config["opt_options"]["design_variables"]["turbine_x"]["flag"]:
+        if self.config.h2integrate_config["opt_options"]["design_variables"]["turbine_x"]["flag"]:
             n_DV += self.config.hopp_config["technologies"]["wind"]["num_turbines"]
-        if self.config.greenheart_config["opt_options"]["design_variables"]["turbine_y"]["flag"]:
+        if self.config.h2integrate_config["opt_options"]["design_variables"]["turbine_y"]["flag"]:
             n_DV += self.config.hopp_config["technologies"]["wind"]["num_turbines"]
 
         # Wrap-up at end with multiplier for finite differencing
-        if "form" in self.config.greenheart_config["opt_options"]["driver"]["optimization"].keys():
+        if "form" in self.config.h2integrate_config["opt_options"]["driver"]["optimization"].keys():
             if (
-                self.config.greenheart_config["opt_options"]["driver"]["optimization"]["form"]
+                self.config.h2integrate_config["opt_options"]["driver"]["optimization"]["form"]
                 == "central"
             ):
                 # TODO this should probably be handled at the MPI point to avoid confusion with
@@ -103,17 +103,17 @@ class PoseOptimization:
 
         if (
             "step_size"
-            not in self.config.greenheart_config["opt_options"]["driver"]["optimization"]
+            not in self.config.h2integrate_config["opt_options"]["driver"]["optimization"]
         ):
             step_size = 1.0e-6
             msg = (
                 f"Step size was not specified, setting step size to {step_size}. Step size may"
-                f" be set in the greenheart config file under"
+                f" be set in the h2integrate config file under"
                 f" 'opt_options/driver/optimization/step_size' and should be of type float"
             )
             warnings.warn(msg, UserWarning)
         else:
-            step_size = self.config.greenheart_config["opt_options"]["driver"]["optimization"][
+            step_size = self.config.h2integrate_config["opt_options"]["driver"]["optimization"][
                 "step_size"
             ]
 
@@ -142,7 +142,7 @@ class PoseOptimization:
                 settings applied.
         """
 
-        opt_options = self.config.greenheart_config["opt_options"]["driver"]["optimization"]
+        opt_options = self.config.h2integrate_config["opt_options"]["driver"]["optimization"]
 
         # Loop through all of the options provided and set them in the OM driver object
         for key in options_keys:
@@ -186,11 +186,11 @@ class PoseOptimization:
         """
 
         folder_output = Path(
-            self.config.greenheart_config["opt_options"]["general"]["folder_output"]
+            self.config.h2integrate_config["opt_options"]["general"]["folder_output"]
         ).resolve()
 
-        if self.config.greenheart_config["opt_options"]["driver"]["optimization"]["flag"]:
-            opt_options = self.config.greenheart_config["opt_options"]["driver"]["optimization"]
+        if self.config.h2integrate_config["opt_options"]["driver"]["optimization"]["flag"]:
+            opt_options = self.config.h2integrate_config["opt_options"]["driver"]["optimization"]
             step_size = self._get_step_size()
 
             if "step_calc" in opt_options.keys():
@@ -324,7 +324,7 @@ class PoseOptimization:
             else:
                 msg = (
                     f"The"
-                    f" {self.config.greenheart_config['opt_options']['driver']['optimization']['solver']}"  # noqa: E501
+                    f" {self.config.h2integrate_config['opt_options']['driver']['optimization']['solver']}"  # noqa: E501
                     f" optimizer is not yet supported!"
                 )
                 raise ValueError(msg)
@@ -338,10 +338,10 @@ class PoseOptimization:
                     "totals",
                 ]
 
-        elif self.config.greenheart_config["opt_options"]["driver"]["design_of_experiments"][
+        elif self.config.h2integrate_config["opt_options"]["driver"]["design_of_experiments"][
             "flag"
         ]:
-            doe_options = self.config.greenheart_config["opt_options"]["driver"][
+            doe_options = self.config.h2integrate_config["opt_options"]["driver"][
                 "design_of_experiments"
             ]
             if doe_options["generator"].lower() == "uniform":
@@ -380,7 +380,7 @@ class PoseOptimization:
             # options
             opt_prob.driver.options["run_parallel"] = doe_options["run_parallel"]
 
-        elif self.config.greenheart_config["opt_options"]["driver"]["step_size_study"]["flag"]:
+        elif self.config.h2integrate_config["opt_options"]["driver"]["step_size_study"]["flag"]:
             pass
 
         else:
@@ -405,16 +405,16 @@ class PoseOptimization:
                 problem with objective set
         """
         #
-        if self.config.greenheart_config["opt_options"]["merit_figure_user"]["name"] != "":
+        if self.config.h2integrate_config["opt_options"]["merit_figure_user"]["name"] != "":
             coeff = (
                 -1.0
-                if self.config.greenheart_config["opt_options"]["merit_figure_user"]["max_flag"]
+                if self.config.h2integrate_config["opt_options"]["merit_figure_user"]["max_flag"]
                 else 1.0
             )
             opt_prob.model.add_objective(
-                self.config.greenheart_config["opt_options"]["merit_figure_user"]["name"],
+                self.config.h2integrate_config["opt_options"]["merit_figure_user"]["name"],
                 ref=coeff
-                * np.abs(self.config.greenheart_config["opt_options"]["merit_figure_user"]["ref"]),
+                * np.abs(self.config.h2integrate_config["opt_options"]["merit_figure_user"]["ref"]),
             )
 
         return opt_prob
@@ -425,7 +425,7 @@ class PoseOptimization:
         Args:
             opt_prob (openmdao problem instance): openmdao problem instance for current optimization
                 problem
-            config (GreenHeartSimulationConfig): data class containing modeling, simulation, and
+            config (H2IntegrateSimulationConfig): data class containing modeling, simulation, and
                 optimization settings
             hi (HoppInterface): Main HOPP class
 
@@ -435,9 +435,9 @@ class PoseOptimization:
         """
 
         design_variables_dict = {}
-        for key in self.config.greenheart_config["opt_options"]["design_variables"].keys():
-            if self.config.greenheart_config["opt_options"]["design_variables"][key]["flag"]:
-                design_variables_dict[key] = config.greenheart_config["opt_options"][
+        for key in self.config.h2integrate_config["opt_options"]["design_variables"].keys():
+            if self.config.h2integrate_config["opt_options"]["design_variables"][key]["flag"]:
+                design_variables_dict[key] = config.h2integrate_config["opt_options"][
                     "design_variables"
                 ][key]
 
@@ -449,7 +449,7 @@ class PoseOptimization:
         return opt_prob
 
     def set_constraints(self, opt_prob, hi: None | HoppInterface | None = None):
-        """sets up optimization constraints for the greenheart optimization problem
+        """sets up optimization constraints for the h2integrate optimization problem
 
         Args:
             opt_prob (openmdao problem instance): openmdao problem instance for current optimization
@@ -482,8 +482,8 @@ class PoseOptimization:
             )
 
         # turbine spacing constraint
-        if self.config.greenheart_config["opt_options"]["constraints"]["turbine_spacing"]["flag"]:
-            lower = self.config.greenheart_config["opt_options"]["constraints"]["turbine_spacing"][
+        if self.config.h2integrate_config["opt_options"]["constraints"]["turbine_spacing"]["flag"]:
+            lower = self.config.h2integrate_config["opt_options"]["constraints"]["turbine_spacing"][
                 "lower"
             ]
 
@@ -497,14 +497,14 @@ class PoseOptimization:
             opt_prob.model.add_constraint("spacing_vec", lower=lower)
 
         # bondary distance constraint
-        if self.config.greenheart_config["opt_options"]["constraints"]["boundary_distance"]["flag"]:
-            lower = self.config.greenheart_config["opt_options"]["constraints"][
+        if self.config.h2integrate_config["opt_options"]["constraints"]["boundary_distance"]["flag"]:
+            lower = self.config.h2integrate_config["opt_options"]["constraints"][
                 "boundary_distance"
             ]["lower"]
             opt_prob.model.add_subsystem(
                 "con_boundary",
                 subsys=BoundaryDistanceComponent(
-                    hopp_interface=self.config.greenheart_config,
+                    hopp_interface=self.config.h2integrate_config,
                     turbine_x_init=turbine_x_init,
                     turbine_y_init=turbine_y_init,
                 ),
@@ -513,10 +513,10 @@ class PoseOptimization:
             opt_prob.model.add_constraint("boundary_distance_vec", lower=lower)
 
         # solar/platform size
-        if self.config.greenheart_config["opt_options"]["constraints"]["pv_to_platform_area_ratio"][
+        if self.config.h2integrate_config["opt_options"]["constraints"]["pv_to_platform_area_ratio"][
             "flag"
         ]:
-            upper = self.config.greenheart_config["opt_options"]["constraints"][
+            upper = self.config.h2integrate_config["opt_options"]["constraints"][
                 "pv_to_platform_area_ratio"
             ]["upper"]
             opt_prob.model.add_subsystem(
@@ -527,7 +527,7 @@ class PoseOptimization:
             opt_prob.model.add_constraint("pv_platform_ratio", upper=upper)
 
         # User constraints
-        user_constr = self.config.greenheart_config["opt_options"]["constraints"]["user"]
+        user_constr = self.config.h2integrate_config["opt_options"]["constraints"]["user"]
         for k in range(len(user_constr)):
             var_k = user_constr[k]["name"]
 
@@ -569,15 +569,15 @@ class PoseOptimization:
                 optimization problem edited to include a set up recorder
         """
         folder_output = Path(
-            self.config.greenheart_config["opt_options"]["general"]["folder_output"]
+            self.config.h2integrate_config["opt_options"]["general"]["folder_output"]
         ).resolve()
 
         # Set recorder on the OpenMDAO driver level using the `optimization_log`
         # filename supplied in the optimization yaml
-        if self.config.greenheart_config["opt_options"]["recorder"]["flag"]:
+        if self.config.h2integrate_config["opt_options"]["recorder"]["flag"]:
             recorder = om.SqliteRecorder(
                 folder_output
-                / self.config.greenheart_config["opt_options"]["recorder"]["file_name"]
+                / self.config.h2integrate_config["opt_options"]["recorder"]["file_name"]
             )
             opt_prob.driver.add_recorder(recorder)
             opt_prob.add_recorder(recorder)
@@ -587,8 +587,8 @@ class PoseOptimization:
             opt_prob.driver.recording_options["record_desvars"] = True
             opt_prob.driver.recording_options["record_objectives"] = True
 
-            if self.config.greenheart_config["opt_options"]["recorder"]["includes"]:
-                opt_prob.driver.recording_options["includes"] = self.config.greenheart_config[
+            if self.config.h2integrate_config["opt_options"]["recorder"]["includes"]:
+                opt_prob.driver.recording_options["includes"] = self.config.h2integrate_config[
                     "opt_options"
                 ]["recorder"]["includes"]
 
@@ -612,13 +612,13 @@ class PoseOptimization:
 
         if (
             "warmstart_file"
-            in self.config.greenheart_config["opt_options"]["driver"]["optimization"]
+            in self.config.h2integrate_config["opt_options"]["driver"]["optimization"]
         ):
             # Directly read the pyoptsparse sqlite db file
             from pyoptsparse import SqliteDict
 
             db = SqliteDict(
-                self.config.greenheart_config["opt_options"]["driver"]["optimization"][
+                self.config.h2integrate_config["opt_options"]["driver"]["optimization"][
                     "warmstart_file"
                 ]
             )

@@ -1,8 +1,8 @@
-# GreenHEART: Green Hydrogen Energy and Renewable Technologies
+# H2Integrate: Green Hydrogen Energy and Renewable Technologies
 
-[![PyPI version](https://badge.fury.io/py/GreenHEART.svg)](https://badge.fury.io/py/GreenHEART)
-![CI Tests](https://github.com/NREL/GreenHEART/actions/workflows/ci.yml/badge.svg)
-[![image](https://img.shields.io/pypi/pyversions/GreenHEART.svg)](https://pypi.python.org/pypi/GreenHEART)
+[![PyPI version](https://badge.fury.io/py/H2Integrate.svg)](https://badge.fury.io/py/H2Integrate)
+![CI Tests](https://github.com/NREL/H2Integrate/actions/workflows/ci.yml/badge.svg)
+[![image](https://img.shields.io/pypi/pyversions/H2Integrate.svg)](https://pypi.python.org/pypi/H2Integrate)
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 
 [![DOI 10.1088/1742-6596/2767/8/082019](https://img.shields.io/badge/DOI-10.1088%2F1742--6596%2F2767%2F8%2F082019-brightgreen?link=[https://doi.org/10.1088/1742-6596/2767/8/082019](https://doi.org/10.1088/1742-6596/2767/8/082019))](https://iopscience.iop.org/article/10.1088/1742-6596/2767/8/082019/pdf)
@@ -10,13 +10,13 @@
 [![DOI 10.21203/rs.3.rs-4326648/v1](https://img.shields.io/badge/DOI-10.21203%2Frs.3.rs--4326648%2Fv1-brightgreen?link=[https://doi.org/10.21203/rs.3.rs-4326648/v1](https://doi.org/10.21203/rs.3.rs-4326648/v1))](https://assets-eu.researchsquare.com/files/rs-4326648/v1_covered_338a5071-b74b-4ecd-9d2a-859e8d988b5c.pdf?c=1716199726)
 
 Hybrid project power-to-x component-level system performance and financial modeling for control and
-design optimization. GreenHEART currently includes renewable energy, hydrogen, ammonia, and steel.
+design optimization. H2Integrate currently includes renewable energy, hydrogen, ammonia, and steel.
 Other elements such as desalination systems, pipelines, compressors, and storage systems can also be
 included as needed.
 
-## Publications where GreenHEART has been used
+## Publications where H2Integrate has been used
 
-For more context about GreenHEART and to see analyses that have been performed using the tool, please see some of these publications.
+For more context about H2Integrate and to see analyses that have been performed using the tool, please see some of these publications.
 PDFs are available in the linked titles.
 
 ### Nationwide techno-economic analysis of clean hydrogen production powered by a hybrid renewable energy plant for over 50,000 locations in the United States.
@@ -47,8 +47,8 @@ concerns.
 
 Breunig, Hanna, et al. "[Hydrogen Storage Materials Could Meet Requirements for GW-Scale Seasonal Storage and Green Steel.](https://assets-eu.researchsquare.com/files/rs-4326648/v1_covered_338a5071-b74b-4ecd-9d2a-859e8d988b5c.pdf?c=1716199726)" (2024).
 
-### DOE Hydrogen Program review presentation of GreenHEART
-King, J. and Hammond, S. "[Integrated Modeling, TEA, and Reference Design for Renewable Hydrogen to Green Steel and Ammonia - GreenHEART](https://www.hydrogen.energy.gov/docs/hydrogenprogramlibraries/pdfs/review24/sdi001_king_2024_o.pdf?sfvrsn=a800ca84_3)" (2024).
+### DOE Hydrogen Program review presentation of H2Integrate
+King, J. and Hammond, S. "[Integrated Modeling, TEA, and Reference Design for Renewable Hydrogen to Green Steel and Ammonia - H2Integrate](https://www.hydrogen.energy.gov/docs/hydrogenprogramlibraries/pdfs/review24/sdi001_king_2024_o.pdf?sfvrsn=a800ca84_3)" (2024).
 
 ## Software requirements
 
@@ -58,7 +58,7 @@ King, J. and Hammond, S. "[Integrated Modeling, TEA, and Reference Design for Re
 ## Installing from Package Repositories
 
 ```bash
-pip install greenheart
+pip install h2integrate
 ```
 
 ## Installing from Source
@@ -68,16 +68,16 @@ pip install greenheart
 1. Using Git, navigate to a local target directory and clone repository:
 
     ```bash
-    git clone https://github.com/NREL/GreenHEART.git
+    git clone https://github.com/NREL/H2Integrate.git
     ```
 
-2. Navigate to `GreenHEART`
+2. Navigate to `H2Integrate`
 
     ```bash
-    cd GreenHEART
+    cd H2Integrate
     ```
 
-3. Create a conda environment and install GreenHEART and all its dependencies
+3. Create a conda environment and install H2Integrate and all its dependencies
 
     ```bash
     conda env create -f environment.yml
@@ -112,24 +112,24 @@ pip install -e ".[all]"
 1. Using Git, navigate to a local target directory and clone repository:
 
     ```bash
-    git clone https://github.com/NREL/GreenHEART.git
+    git clone https://github.com/NREL/H2Integrate.git
     ```
 
-2. Navigate to `GreenHEART`
+2. Navigate to `H2Integrate`
 
     ```bash
-    cd GreenHEART
+    cd H2Integrate
     ```
 
 3. Create a new virtual environment and change to it. Using Conda Python 3.11 (choose your favorite
-   supported version) and naming it 'greenheart' (choose your desired name):
+   supported version) and naming it 'h2integrate' (choose your desired name):
 
     ```bash
-    conda create --name greenheart python=3.11 -y
-    conda activate greenheart
+    conda create --name h2integrate python=3.11 -y
+    conda activate h2integrate
     ```
 
-4. Install GreenHEART and its dependencies:
+4. Install H2Integrate and its dependencies:
 
     ```bash
     conda install -y -c conda-forge glpk
@@ -143,7 +143,7 @@ pip install -e ".[all]"
 
     Windows users will have to manually install Cbc: https://github.com/coin-or/Cbc.
 
-    - If you want to just use GreenHEART:
+    - If you want to just use H2Integrate:
 
        ```bash
        pip install .
@@ -209,9 +209,9 @@ pip install -e ".[all]"
    the `.env` file method, the file should go in the working directory of your Python project, e.g.
    directory from where you run `python`.
 
-## Parallel processing for GreenHEART finite differences and design of experiments
+## Parallel processing for H2Integrate finite differences and design of experiments
 
-GreenHEART is set up to run in parallel using MPI and PETSc for finite differencing and for design
+H2Integrate is set up to run in parallel using MPI and PETSc for finite differencing and for design
 of experiments runs through OpenMDAO. To use this capability you will need to follow the additional
 installation
 instruction below:
@@ -225,18 +225,18 @@ For more details on implementation and installation, reference the documentation
 To check that your installation is working, do the following:
 
 ```bash
-cd tests/greenheart/
+cd tests/h2integrate/
 mpirun -n 2 pytest test_openmdao_mpi.py
 ```
 
 ## Getting Started
 
 The [Examples](./examples/) contain Jupyter notebooks and sample YAML files for common usage
-scenarios in GreenHEART. These are actively maintained and updated to demonstrate GreenHEART's
+scenarios in H2Integrate. These are actively maintained and updated to demonstrate H2Integrate's
 capabilities. For full details on simulation options and other features, documentation is
 forthcoming.
 
 ## Contributing
 
-Interested in improving GreenHEART? Please see the [Contributor's Guide](./docs/CONTRIBUTING.md)
+Interested in improving H2Integrate? Please see the [Contributor's Guide](./docs/CONTRIBUTING.md)
 section for more information.
