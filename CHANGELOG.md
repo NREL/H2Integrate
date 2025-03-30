@@ -11,6 +11,7 @@
 - Update the PEM efficiency to 51.0 kWh/kg from 54.6 kWh/kg
 - Bumped PySAM version to 6+ and HOPP to 3.2.0
 - Removed defunct conda build and upload scripts
+- Return full solution dictionary from ProFAST, allowing access to CRF and WACC
 
 ## v0.1.4 [4 February 2025]
 

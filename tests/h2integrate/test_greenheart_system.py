@@ -191,6 +191,12 @@ def test_simulation_io(subtests):
 
     ignore = ["ammonia_finance", "steel_finance"]
 
+    with subtests.test("WACC"):
+        assert output_i.profast_sol_lcoh["wacc"] == approx(0.0620373)
+
+    with subtests.test("CRF"):
+        assert output_i.profast_sol_lcoh["crf"] == approx(0.071903176)
+
     for i, obj in enumerate(members_i):
         with subtests.test(f"io equality {i}/{obj}"):
             if obj[0] in ignore:
