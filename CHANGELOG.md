@@ -12,6 +12,7 @@
 - Bumped PySAM version to 6+ and HOPP to 3.2.0
 - Removed defunct conda build and upload scripts
 - Return full solution dictionary from ProFAST, allowing access to CRF and WACC
+- Renamed code from GreenHEART to H2Integrate
 
 ## v0.1.4 [4 February 2025]
 
