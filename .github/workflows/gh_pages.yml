@@ -22,6 +22,7 @@ jobs:
 
     - name: Install dependencies
       run: |
+        pip install git+https://github.com/NREL/HOPP@develop
         pip install -e ".[develop]"
 
     # (optional) Cache your executed notebooks between runs

@@ -34,6 +34,7 @@ technologies:
     timestep: [0, 8760]
     floris_config: input_files/floris/floris_input_osw_18MW.yaml
     fin_model: !include default_fin_config.yaml
+    layout_mode: "floris_layout"
   wave:
     device_rating_kw: 286
     wave_power_matrix:

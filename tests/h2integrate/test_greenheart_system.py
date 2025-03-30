@@ -110,11 +110,11 @@ def test_simulation_wind_wave(subtests):
 
     # TODO base this test value on something
     with subtests.test("lcoh"):
-        assert lcoh == approx(7.5218316601253745, rel=rtol)
+        assert lcoh == approx(7.684496636250683, rel=rtol)
 
     # prior to 20240207 value was approx(0.11051228251811765) # TODO base value on something
     with subtests.test("lcoe"):
-        assert lcoe == approx(0.1327684219541139, rel=rtol)
+        assert lcoe == approx(0.1359140179164504, rel=rtol)
 
 
 def test_simulation_wind_wave_solar(subtests):
@@ -139,12 +139,12 @@ def test_simulation_wind_wave_solar(subtests):
     # prior to 20240207 value was approx(10.823798551850347)
     # TODO base this test value on something. Currently just based on output at writing.
     with subtests.test("lcoh"):
-        assert lcoh == approx(11.811708790335468, rel=rtol)
+        assert lcoh == approx(11.977286578936068, rel=rtol)
 
     # prior to 20240207 value was approx(0.11035426429749774)
     # TODO base this test value on something. Currently just based on output at writing.
     with subtests.test("lcoe"):
-        assert lcoe == approx(0.13255644222185253, rel=rtol)
+        assert lcoe == approx(0.13569490554319152, rel=rtol)
 
 
 def test_simulation_io(subtests):
@@ -253,11 +253,11 @@ def test_simulation_wind_wave_solar_battery(subtests):
 
     with subtests.test("lcoh"):
         # TODO base this test value on something. Currently just based on output at writing.
-        assert results.lcoh == approx(15.792251621116957, rel=rtol)
+        assert results.lcoh == approx(15.957807582256383, rel=rtol)
 
     with subtests.test("lcoe"):
         # TODO base this test value on something. Currently just based on output at writing.
-        assert results.lcoe == approx(0.13274652127663025, rel=rtol)
+        assert results.lcoe == approx(0.13588498391763934, rel=rtol)
     with subtests.test("no conflict in om cost does not raise warning"):
         with warnings.catch_warnings():
             warnings.simplefilter("error")

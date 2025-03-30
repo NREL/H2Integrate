@@ -21,6 +21,7 @@ jobs:
         run: |
           sudo apt-get update && sudo apt-get install -y libglpk-dev glpk-utils coinor-cbc
           python -m pip install --upgrade pip
+          pip install git+https://github.com/NREL/HOPP@develop
           pip install ".[develop]"
       - name: Create env file
         run: |
