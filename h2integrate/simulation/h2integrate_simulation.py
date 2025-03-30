@@ -398,7 +398,9 @@ def setup_h2integrate_simulation(config: H2IntegrateSimulationConfig):
             warnings.warn(msg, UserWarning)
 
         if config.orbit_config["site"]["depth"] != config.h2integrate_config["site"]["depth"]:
-            config.orbit_config["site"].update({"depth": config.h2integrate_config["site"]["depth"]})
+            config.orbit_config["site"].update(
+                {"depth": config.h2integrate_config["site"]["depth"]}
+            )
             msg = (
                 f"site depth in the orbit_config was {config.orbit_config['site']['depth']}, but"
                 f" site depth in"

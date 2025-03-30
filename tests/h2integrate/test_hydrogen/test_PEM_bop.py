@@ -4,7 +4,10 @@ import numpy as np
 from pytest import approx, fixture
 from ORBIT.core.library import initialize_library
 
-from h2integrate.simulation.h2integrate_simulation import H2IntegrateSimulationConfig, run_simulation
+from h2integrate.simulation.h2integrate_simulation import (
+    H2IntegrateSimulationConfig,
+    run_simulation,
+)
 from h2integrate.simulation.technologies.hydrogen.electrolysis.PEM_BOP.PEM_BOP import pem_bop
 
 

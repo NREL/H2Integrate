@@ -424,7 +424,9 @@ def test_simulation_wind_battery_pv_onshore_steel_ammonia(subtests):
     with subtests.test("ammonia_finance"):
         lcoa_expected = 1.0599198593495158
 
-        assert h2integrate_output.ammonia_finance.sol.get("price") == approx(lcoa_expected, rel=rtol)
+        assert h2integrate_output.ammonia_finance.sol.get("price") == approx(
+            lcoa_expected, rel=rtol
+        )
 
     with subtests.test("check time series lengths"):
         expected_length = 8760

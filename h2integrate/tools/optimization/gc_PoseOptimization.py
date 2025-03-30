@@ -23,8 +23,8 @@ class PoseOptimization:
     for a h2integrate simulation.
 
     Args:
-        config (H2IntegrateSimulationConfig): instance of a h2integrate config containing all desired
-            simulation set up
+        config (H2IntegrateSimulationConfig): instance of a h2integrate config containing all
+            desired simulation set up
     """
 
     def __init__(self, config: H2IntegrateSimulationConfig):
@@ -72,9 +72,9 @@ class PoseOptimization:
             "flag"
         ]:
             n_DV += 1
-        if self.config.h2integrate_config["opt_options"]["design_variables"]["battery_capacity_kwh"][
-            "flag"
-        ]:
+        if self.config.h2integrate_config["opt_options"]["design_variables"][
+            "battery_capacity_kwh"
+        ]["flag"]:
             n_DV += 1
         if self.config.h2integrate_config["opt_options"]["design_variables"]["turbine_x"]["flag"]:
             n_DV += self.config.hopp_config["technologies"]["wind"]["num_turbines"]
@@ -497,7 +497,9 @@ class PoseOptimization:
             opt_prob.model.add_constraint("spacing_vec", lower=lower)
 
         # bondary distance constraint
-        if self.config.h2integrate_config["opt_options"]["constraints"]["boundary_distance"]["flag"]:
+        if self.config.h2integrate_config["opt_options"]["constraints"]["boundary_distance"][
+            "flag"
+        ]:
             lower = self.config.h2integrate_config["opt_options"]["constraints"][
                 "boundary_distance"
             ]["lower"]
@@ -513,9 +515,9 @@ class PoseOptimization:
             opt_prob.model.add_constraint("boundary_distance_vec", lower=lower)
 
         # solar/platform size
-        if self.config.h2integrate_config["opt_options"]["constraints"]["pv_to_platform_area_ratio"][
-            "flag"
-        ]:
+        if self.config.h2integrate_config["opt_options"]["constraints"][
+            "pv_to_platform_area_ratio"
+        ]["flag"]:
             upper = self.config.h2integrate_config["opt_options"]["constraints"][
                 "pv_to_platform_area_ratio"
             ]["upper"]

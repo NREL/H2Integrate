@@ -2,7 +2,10 @@ from pathlib import Path
 
 from pytest import approx
 
-from h2integrate.simulation.h2integrate_simulation import H2IntegrateSimulationConfig, run_simulation
+from h2integrate.simulation.h2integrate_simulation import (
+    H2IntegrateSimulationConfig,
+    run_simulation,
+)
 
 
 INPUTS = Path(__file__).parent / "input/"

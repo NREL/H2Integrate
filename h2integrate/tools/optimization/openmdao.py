@@ -3,7 +3,10 @@ import openmdao.api as om
 from hopp.simulation import HoppInterface
 from shapely.geometry import Point, Polygon
 
-from h2integrate.simulation.h2integrate_simulation import H2IntegrateSimulationConfig, run_simulation
+from h2integrate.simulation.h2integrate_simulation import (
+    H2IntegrateSimulationConfig,
+    run_simulation,
+)
 
 
 class H2IntegrateComponent(om.ExplicitComponent):

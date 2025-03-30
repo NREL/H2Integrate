@@ -36,7 +36,8 @@ def run_h2integrate(config: H2IntegrateSimulationConfig, overridden_values=None,
     """
     # Initialize openmdao problem. If running with multiple processors in MPI, use parallel finite
     # differencing equal to the number of cores used.
-    # Otherwise, initialize the H2Integrate system normally. Get the rank number for parallelization.
+    # Otherwise, initialize the H2Integrate system normally. Get the rank number for
+    # parallelization.
     # We only print output files using the root processor.
     myopt = PoseOptimization(config)
 
@@ -186,7 +187,9 @@ def run_h2integrate(config: H2IntegrateSimulationConfig, overridden_values=None,
 
             if config.h2integrate_config["opt_options"]["driver"]["step_size_study"]["flag"]:
                 prob.run_model()
-                study_options = config.h2integrate_config["opt_options"]["driver"]["step_size_study"]
+                study_options = config.h2integrate_config["opt_options"]["driver"][
+                    "step_size_study"
+                ]
                 step_sizes = study_options["step_sizes"]
                 all_derivs = {}
                 for idx, step_size in enumerate(step_sizes):

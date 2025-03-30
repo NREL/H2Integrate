@@ -634,14 +634,15 @@ def calc_financial_parameter_weighted_average_by_capex(
 
     Args:
         parameter_name (str): The name of the parameter to be weighted by capex. The name should
-        correspond to the name in the h2integrate config h2integrate_config (dict): Dictionary form of
-        the h2integrate config capex_breakdown (dict): Output from `run_capex`, a dictionary of all
-        capital items for the financial model
+            correspond to the name in the h2integrate config
+        h2integrate_config (dict): Dictionary form of the h2integrate config
+        capex_breakdown (dict): Output from `run_capex`, a dictionary of all capital items for
+            the financial model
 
     Returns:
-        parameter_value (float): if the parameter in the h2integrate config is given as a dictionary,
-        then the weighted average by capex parameter value is returnd. Otherwise no averaging is
-        done and the value of the parameter in the h2integrate_config is returned.
+        parameter_value (float): if the parameter in the h2integrate config is given as a
+            dictionary, then the weighted average by capex parameter value is returnd. Otherwise no
+            averaging is done and the value of the parameter in the h2integrate_config is returned.
     """
 
     if type(h2integrate_config["finance_parameters"][parameter_name]) is not dict:
@@ -1499,7 +1500,9 @@ def run_profast_full_plant_model(
             name="H2 pipe array system",
             cost=capex_breakdown["h2_pipe_array"],
             depr_type=h2integrate_config["finance_parameters"]["depreciation_method"],
-            depr_period=h2integrate_config["finance_parameters"]["depreciation_period_electrolyzer"],
+            depr_period=h2integrate_config["finance_parameters"][
+                "depreciation_period_electrolyzer"
+            ],
             refurb=[0],
         )
         finance_param_weights["h2_pipe_array"] = capex_breakdown["h2_pipe_array"]
@@ -1526,7 +1529,9 @@ def run_profast_full_plant_model(
             name="H2 transport compressor system",
             cost=capex_breakdown["h2_transport_compressor"],
             depr_type=h2integrate_config["finance_parameters"]["depreciation_method"],
-            depr_period=h2integrate_config["finance_parameters"]["depreciation_period_electrolyzer"],
+            depr_period=h2integrate_config["finance_parameters"][
+                "depreciation_period_electrolyzer"
+            ],
             refurb=[0],
         )
         finance_param_weights["h2_transport_compressor"] = capex_breakdown[
@@ -1536,7 +1541,9 @@ def run_profast_full_plant_model(
             name="H2 transport pipeline system",
             cost=capex_breakdown["h2_transport_pipeline"],
             depr_type=h2integrate_config["finance_parameters"]["depreciation_method"],
-            depr_period=h2integrate_config["finance_parameters"]["depreciation_period_electrolyzer"],
+            depr_period=h2integrate_config["finance_parameters"][
+                "depreciation_period_electrolyzer"
+            ],
             refurb=[0],
         )
         finance_param_weights["h2_transport_pipeline"] = capex_breakdown["h2_transport_pipeline"]
@@ -1561,7 +1568,9 @@ def run_profast_full_plant_model(
             name="Hydrogen storage system",
             cost=capex_breakdown["h2_storage"],
             depr_type=h2integrate_config["finance_parameters"]["depreciation_method"],
-            depr_period=h2integrate_config["finance_parameters"]["depreciation_period_electrolyzer"],
+            depr_period=h2integrate_config["finance_parameters"][
+                "depreciation_period_electrolyzer"
+            ],
             refurb=[0],
         )
         finance_param_weights["h2_storage"] = capex_breakdown["h2_storage"]
@@ -1587,7 +1596,9 @@ def run_profast_full_plant_model(
             name="Desal system",
             cost=capex_breakdown["desal"],
             depr_type=h2integrate_config["finance_parameters"]["depreciation_method"],
-            depr_period=h2integrate_config["finance_parameters"]["depreciation_period_electrolyzer"],
+            depr_period=h2integrate_config["finance_parameters"][
+                "depreciation_period_electrolyzer"
+            ],
             refurb=[0],
         )
         finance_param_weights["desal"] = capex_breakdown["desal"]
