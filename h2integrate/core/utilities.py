@@ -102,6 +102,22 @@ def merge_shared_cost_inputs(config):
         return config["shared_parameters"]
 
 
+def merge_shared_finance_inputs(config):
+    """Merges two dictionaries and raises ValueError if duplicate keys exist."""
+    if "finance_parameters" in config.keys() and "shared_parameters" in config.keys():
+        common_keys = config["finance_parameters"].keys() & config["shared_parameters"].keys()
+        if common_keys:
+            raise ValueError(
+                f"Duplicate parameters found: {', '.join(common_keys)}. "
+                f"Please define parameters only once in the shared and cost dictionaries."
+            )
+        return {**config["finance_parameters"], **config["shared_parameters"]}
+    elif "shared_parameters" not in config.keys():
+        return config["finance_parameters"]
+    else:
+        return config["shared_parameters"]
+
+
 @define
 class BaseConfig:
     """

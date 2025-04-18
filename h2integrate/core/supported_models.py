@@ -11,6 +11,11 @@ from h2integrate.storage.hydrogen.tank_baseclass import (
     HydrogenTankPerformanceModel,
 )
 from h2integrate.converters.wind.wind_plant_pysam import PYSAMWindPlantPerformanceModel
+from h2integrate.converters.methanol.methanol_plant import (
+    MethanolPlantCostModel,
+    MethanolPlantFinanceModel,
+    MethanolPlantPerformanceModel,
+)
 from h2integrate.converters.wind.dummy_wind_turbine import DummyPlantCost, DummyPlantPerformance
 from h2integrate.converters.ammonia.ammonia_baseclass import (
     AmmoniaCostModel,
@@ -58,6 +63,9 @@ supported_models = {
     "ammonia_cost": AmmoniaCostModel,
     "steel_performance": SteelPerformanceModel,
     "steel_cost": SteelCostAndFinancialModel,
+    "methanol_plant_performance": MethanolPlantPerformanceModel,
+    "methanol_plant_cost": MethanolPlantCostModel,
+    "methanol_plant_financial": MethanolPlantFinanceModel,
     # Transport
     "cable": CablePerformanceModel,
     "pipe": PipePerformanceModel,

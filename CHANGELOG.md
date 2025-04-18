@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## Unreleased [TBD]
+
+- Added example standalone methanol module with just steam methane reforming (SMR)
+
 ## 0.2 [7 April 2025]
 
 - Allow users to save the H2IntegrateOutput class as a yaml file and read that yaml to an instance of the output class

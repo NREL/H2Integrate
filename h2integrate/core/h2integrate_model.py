@@ -226,6 +226,10 @@ class H2IntegrateModel:
                 commodity_type = "steel"
             elif "electrolyzer" in tech_configs:
                 commodity_type = "hydrogen"
+            elif "methanol" in tech_configs:
+                commodity_type = "methanol"
+                # Note: methanol is the only tech importing is own (non-ProFAST) finance model
+                from h2integrate.converters.methanol.methanol_plant import MethanolPlantFinanceModel
             else:
                 commodity_type = "electricity"
 
@@ -244,11 +248,19 @@ class H2IntegrateModel:
             )
 
             # Add profast component
-            profast_comp = ProFastComp(
-                tech_config=tech_configs,
-                plant_config=self.plant_config,
-                commodity_type=commodity_type,
-            )
+            if commodity_type == "methanol":
+                # Note: this "ProFAST component" returns NaNs - it is just there to prevent errors
+                # TODO integrate methanol model with ProFAST and/or allow non-profast financials
+                profast_comp = MethanolPlantFinanceModel(
+                    tech_config=tech_configs["methanol"],
+                    plant_config=self.plant_config,
+                )
+            else:
+                profast_comp = ProFastComp(
+                    tech_config=tech_configs,
+                    plant_config=self.plant_config,
+                    commodity_type=commodity_type,
+                )
             financial_group.add_subsystem("profast_comp", profast_comp, promotes=["*"])
 
             self.plant.add_subsystem(f"financials_group_{group_id}", financial_group)
@@ -336,6 +348,8 @@ class H2IntegrateModel:
             for group_id, tech_configs in self.financial_groups.items():
                 # Skip steel financials; it provides its own financials
                 if "steel" in tech_configs:
+                    continue
+                if "methanol" in tech_configs:
                     continue
 
                 for tech_name in tech_configs.keys():
