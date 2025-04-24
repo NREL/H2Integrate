@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## Unreleased, TBD
+- Added optional inputs to electrolyzer model, including curve coefficients and water usage rate.
+- Bug-fix in electrolyzer outputs (H2_Results) if some stacks are never turned on.
+
 ## 0.2 [7 April 2025]
 
 - Allow users to save the H2IntegrateOutput class as a yaml file and read that yaml to an instance of the output class
