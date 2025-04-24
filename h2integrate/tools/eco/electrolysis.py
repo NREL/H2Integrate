@@ -97,6 +97,13 @@ def run_electrolyzer_physics(
         "turndown_ratio": h2integrate_config["electrolyzer"]["turndown_ratio"],
     }
 
+    if "water_usage_gal_pr_kg" in h2integrate_config["electrolyzer"].keys():
+        pem_param_dict.update(
+            {"water_usage_gal_pr_kg": h2integrate_config["electrolyzer"]["water_usage_gal_pr_kg"]}
+        )
+    if "curve_coeff" in h2integrate_config["electrolyzer"].keys():
+        pem_param_dict.update({"curve_coeff": h2integrate_config["electrolyzer"]["curve_coeff"]})
+
     if "time_between_replacement" in h2integrate_config["electrolyzer"]:
         msg = (
             "`time_between_replacement` as an input is deprecated. It is now calculated internally"
