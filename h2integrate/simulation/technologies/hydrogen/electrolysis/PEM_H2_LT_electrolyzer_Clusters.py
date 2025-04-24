@@ -87,6 +87,7 @@ class PEM_H2_Clusters:
         turndown_ratio=0.1,
         dt=3600,
         curve_coeff=None,
+        water_usage_gal_pr_kg=10 / 3.79,
     ):
         # self.input_dict = input_dict
         # print('RUNNING CLUSTERS PEM')
@@ -102,6 +103,7 @@ class PEM_H2_Clusters:
         self.dt = dt
         self.max_stacks = cluster_size_mw
 
+        self.water_usage_rate_kg = water_usage_gal_pr_kg * 3.79
         # any current below this amount (10% rated) will saturate the H2 production to zero, used
         # to be 500 (12.5% of rated)
         # self.stack_input_current_lower_bound = 400  # [A]
@@ -898,7 +900,7 @@ class PEM_H2_Clusters:
         # deminersalisation stoichometrically its just 9:1 but ... theres inefficiencies in the
         # water purification process
 
-        water_used_kg_hr_system = h2_kg_hr * 10
+        water_used_kg_hr_system = h2_kg_hr * self.water_usage_rate_kg
         self.output_dict["water_used_kg_hr"] = water_used_kg_hr_system
         self.output_dict["water_used_kg_annual"] = np.sum(water_used_kg_hr_system)
         water_used_gal_hr_system = water_used_kg_hr_system / 3.79
