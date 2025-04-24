@@ -5,6 +5,7 @@ from pytest import approx, fixture
 import h2integrate.tools.eco.electrolysis as he_elec
 import h2integrate.tools.plant_sizing_estimation as gh_sizing
 from h2integrate.simulation.technologies.hydrogen.electrolysis import PEM_tools
+from h2integrate.simulation.technologies.hydrogen.electrolysis.run_h2_PEM import run_h2_PEM
 
 from tests import TEST_ROOT_DIR
 
@@ -262,3 +263,46 @@ def test_electrolyzer_tools(subtests):
 
     with subtests.test("electrolyzer size rounded to nearest cluster capacity"):
         assert electrolyzer_size_mw == 440
+
+
+def compare_electrolyzer_initialization(offgrid_physics, subtests):
+    power_profile_filename = "GS_offgrid_power_signal.csv"
+    offgrid_power_profile_filename = input_library_path / power_profile_filename
+    offgrid_power_profile = pd.read_csv(offgrid_power_profile_filename)
+    H2_Res, power_profile = offgrid_physics
+
+    pem_param_dict1 = {
+        "eol_eff_percent_loss": 13,  # percent - for calculating EOL voltage and steady deg rate
+        "uptime_hours_until_eol": 77600,  # for calculating steady deg rate
+        "include_degradation_penalty": True,
+        "turndown_ratio": 0.1,
+        "curve_coeff": [
+            4.0519644766515644e-08,
+            -0.00026186723338675105,
+            3.8985774154190334,
+            7.615382921418666,
+            -20.075110413404484,
+            1.0,
+        ],
+    }
+    useful_life = 30
+    electrolyzer_size_mw = 880
+    n_pem_clusters = 880 // 40
+
+    H2_Results1, h2_ts, h2_tot, energy_input_to_electrolyzer = run_h2_PEM(
+        offgrid_power_profile,
+        electrolyzer_size_mw,
+        useful_life,
+        n_pem_clusters,
+        pem_control_type="basic",
+        electrolyzer_direct_cost_kw=0.0,
+        user_defined_pem_param_dictionary=pem_param_dict1,
+        grid_connection_scenario="off-grid",
+        hydrogen_production_capacity_required_kgphr=0.0,
+        debug_mode=False,
+        verbose=True,
+    )
+    with subtests.test("Sim: Total H2 Produced [kg]"):
+        assert H2_Results1["Sim: Total H2 Produced [kg]"] == approx(
+            H2_Res["Sim: Total H2 Produced [kg]"], TOL
+        )
