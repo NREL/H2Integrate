@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## Unreleased
+## 0.2 [7 April 2025]
 
 - Allow users to save the H2IntegrateOutput class as a yaml file and read that yaml to an instance of the output class
 - Include new plotting capabilities: (1) hydrogen storage, production, and dispatch; (2) electricity and hydrogen dispatch
@@ -13,6 +13,11 @@
 - Removed defunct conda build and upload scripts
 - Return full solution dictionary from ProFAST, allowing access to CRF and WACC
 - Renamed code from GreenHEART to H2Integrate
+- Added iron processing framework and capabilities [PR 90](https://github.com/NREL/H2Integrate/pull/90)
+- Added Martin and Rosner iron ore models, performance and cost for each [PR 90](https://github.com/NREL/H2Integrate/pull/90)
+- Added Rosner direct reduction iron (DRI) model, performance and cost [PR 90](https://github.com/NREL/H2Integrate/pull/90)
+- Added Martin transport module for performance and cost of iron [PR 90](https://github.com/NREL/H2Integrate/pull/90)
+- Added generalized Stinn cost model for electrolysis of arbitrary materials [PR 90](https://github.com/NREL/H2Integrate/pull/90)
 
 ## v0.1.4 [4 February 2025]
 

@@ -5,9 +5,34 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "h2integrate"
 dynamic = ["version"]
-authors = [{name = "NREL", email = "dguittet@nrel.gov"}]
+authors = [
+  {name = "Kaitlin Brunik"},
+  {name = "Elenya Grant"},
+  {name = "Jared Thomas"},
+  {name = "Genevieve Starke"},
+  {name = "Jonathan Martin"},
+  {name = "Dakota Ramos"},
+  {name = "Mariya Koleva"},
+  {name = "Evan Reznicek"},
+  {name = "Rob Hammond"},
+  {name = "Brooke Stanislawski"},
+  {name = "Charlie Kiefer"},
+  {name = "Cameron Irmas"},
+  {name = "Sanjana Vijayshankar"},
+  {name = "Nicholas Riccobono"},
+  {name = "Corey Frontin"},
+  {name = "Caitlyn Clark"},
+  {name = "Aaron Barker"},
+  {name = "Abhineet Gupta"},
+  {name = "Benjamin Kee"},
+  {name = "Jennifer King"},
+]
+maintainers = [
+  {name = "John Jasa", email = "john.jasa@nrel.gov"},
+  {name = "Christopher Bay", email = "christopher.bay@nrel.gov"},
+]
 readme = {file = "README.md", content-type = "text/markdown"}
-description = "Green Hydrogen Energy and Renewable Technologies"
+description = "Holistic Hybrids Optimization and Design Tool"
 requires-python = ">=3.9, <3.12"
 license = {file = "LICENSE"}
 dependencies = [
@@ -18,6 +43,7 @@ dependencies = [
     "fastkml",
     "floris==4.3",
     "future",
+    "geopy",
     "global_land_mask",
     "hybridbosse",
     "lcoe",

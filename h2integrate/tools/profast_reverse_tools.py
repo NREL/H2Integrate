@@ -110,15 +110,7 @@ def convert_pf_res_to_pf_config(pf_config):
 
 
 def make_pf_config_from_profast(pf):
-    """Convert ProFAST object into dictionary
-
-    Args:
-        pf (ProFAST object): ProFAST object that has been initialized and populated
-
-    Returns:
-        dict: dictionary of ProFAST inputs, can be used to recreate replcia of ProFAST simulation.
-    """
-    pf_res = {
+    pf_config = {
         "params": pf.vals,
         "capital_items": pf.capital_items,
         "fixed_costs": pf.fixed_costs,
@@ -127,5 +119,4 @@ def make_pf_config_from_profast(pf):
         "coproducts": pf.coproducts,
         "LCO": pf.LCO,
     }
-    pf_config = convert_pf_res_to_pf_config(pf_res)
     return pf_config

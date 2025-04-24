@@ -1,4 +1,4 @@
-# H2Integrate: Green Hydrogen Energy and Renewable Technologies
+# H2Integrate: Holistic Hybrids Optimization and Design Tool
 
 [![PyPI version](https://badge.fury.io/py/H2Integrate.svg)](https://badge.fury.io/py/H2Integrate)
 ![CI Tests](https://github.com/NREL/H2Integrate/actions/workflows/ci.yml/badge.svg)
