@@ -7,7 +7,7 @@ parts:
 - caption: Getting Started
   chapters:
     - file: getting_started/install
-    - file: getting_started/what_h2integrate_does
+    - file: getting_started/how_h2integrate_works
     - file: getting_started/expected_user_knowledge
 
 - caption: User Guide
@@ -22,7 +22,7 @@ parts:
   chapters:
   - file: CONTRIBUTING
   - file: developer_guide/coding_guidelines
-  - file: developer_guide/why_make_new_h2integrate
+  - file: developer_guide/why_make_h2integrate
   - file: developer_guide/adding_a_new_technology
   - file: developer_guide/features_not_currently_implemented
   - file: developer_guide/class_structure

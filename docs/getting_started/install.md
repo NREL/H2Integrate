@@ -1,10 +1,18 @@
 # Installing H2Integrate
 
+## Install H2Integrate via PyPI
+
+If you just want to use H2Integrate, you can install it from PyPI using pip:
+
 ```bash
 pip install h2integrate
 ```
 
-## NREL Resource Data
+## Installing from Source
+
+For most use cases, installing from source will be the preferred installation route.
+
+### NREL Resource Data
 
 1. The functions which download resource data require an NREL API key. Obtain a key from:
 
@@ -21,10 +29,6 @@ pip install h2integrate
     NREL_API_EMAIL=your.name@email.com
     ```
 
-## Installing from Source
-
-For most use cases, installing from source will be the preferred installation route.
-
 ### NREL-Provided Conda Environment Specification (recommended)
 
 1. Using Git, navigate to a local target directory and clone repository:
@@ -39,7 +43,7 @@ For most use cases, installing from source will be the preferred installation ro
     cd H2Integrate
     ```
 
-3. (Optional) If using NREL resource data, you will need an NREL API key, which can be obtined from:
+3. (Optional) If using NREL resource data, you will need an NREL API key, which can be obtained from:
     [https://developer.nrel.gov/signup/](https://developer.nrel.gov/signup/)
 
     1. In `environment.yml`, add the following lines to the bottom of the file, and replace the
