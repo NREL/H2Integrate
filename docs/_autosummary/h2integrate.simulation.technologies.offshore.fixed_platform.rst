@@ -1,5 +1,5 @@
 h2integrate.simulation.technologies.offshore.fixed\_platform
-===========================================================
+============================================================
 
 .. automodule:: h2integrate.simulation.technologies.offshore.fixed_platform
 

@@ -1,5 +1,5 @@
 h2integrate.tools.eco.hydrogen\_mgmt
-===================================
+====================================
 
 .. automodule:: h2integrate.tools.eco.hydrogen_mgmt
 

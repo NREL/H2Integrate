@@ -1,5 +1,5 @@
 h2integrate.tools.optimization.fileIO
-====================================
+=====================================
 
 .. automodule:: h2integrate.tools.optimization.fileIO
 

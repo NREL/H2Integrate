@@ -1,5 +1,5 @@
 h2integrate.simulation.technologies.offshore
-===========================================
+============================================
 
 .. automodule:: h2integrate.simulation.technologies.offshore
 

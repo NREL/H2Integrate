@@ -131,11 +131,11 @@ site:
 # with the reverse definition.
 # this will naturally grow as we mature the interconnected tech
 technology_interconnections: [
-  ["hopp", "electrolyzer", "electricity", "cable"],
+  ["wind", "electrolyzer", "electricity", "cable"],
   ["electrolyzer", "h2_storage", "efficiency"],
   ["electrolyzer", "h2_storage", "hydrogen", "pipe"],
   ["financials_group_1", "steel", "LCOH"],
-  ["hopp", "steel", "electricity", "cable"],
+  ["wind", "steel", "electricity", "cable"],
   # etc
 ]
 
@@ -173,12 +173,12 @@ from h2integrate.core.h2integrate_model import H2IntegrateModel
 
 
 # Create a H2Integrate model
-gh = H2IntegrateModel("top_level_config.yaml")
+model = H2IntegrateModel("top_level_config.yaml")
 
 # Run the model
-gh.run()
+model.run()
 
-gh.post_process()
+model.post_process()
 ```
 
 This will run the analysis defined in the config files and generate the output files in the through the `post_process` method.

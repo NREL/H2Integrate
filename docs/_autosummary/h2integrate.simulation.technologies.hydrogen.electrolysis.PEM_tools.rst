@@ -1,5 +1,5 @@
 h2integrate.simulation.technologies.hydrogen.electrolysis.PEM\_tools
-===================================================================
+====================================================================
 
 .. automodule:: h2integrate.simulation.technologies.hydrogen.electrolysis.PEM_tools
 

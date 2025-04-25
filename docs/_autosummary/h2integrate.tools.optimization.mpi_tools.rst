@@ -1,5 +1,5 @@
 h2integrate.tools.optimization.mpi\_tools
-========================================
+=========================================
 
 .. automodule:: h2integrate.tools.optimization.mpi_tools
 

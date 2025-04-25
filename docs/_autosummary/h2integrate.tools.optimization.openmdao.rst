@@ -1,5 +1,5 @@
 h2integrate.tools.optimization.openmdao
-======================================
+=======================================
 
 .. automodule:: h2integrate.tools.optimization.openmdao
 

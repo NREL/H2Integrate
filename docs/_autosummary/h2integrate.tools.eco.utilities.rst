@@ -1,5 +1,5 @@
 h2integrate.tools.eco.utilities
-==============================
+===============================
 
 .. automodule:: h2integrate.tools.eco.utilities
 

@@ -1,5 +1,5 @@
 h2integrate.simulation.h2integrate\_simulation
-============================================
+==============================================
 
 .. automodule:: h2integrate.simulation.h2integrate_simulation
 
@@ -13,13 +13,17 @@ h2integrate.simulation.h2integrate\_simulation
 
    .. autosummary::
 
+      convert_to_serializable
       run_design_options
+      run_financials
+      run_physics
       run_policy_options_storage_types
       run_policy_storage_design_options
       run_simulation
       run_storage_options
       run_sweeps
-      setup_h2integrate_simulation
+      setup_simulation
+      setup_simulation_for_iron
 
 
 
