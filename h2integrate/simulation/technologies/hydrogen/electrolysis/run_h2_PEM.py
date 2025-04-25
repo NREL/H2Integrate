@@ -207,9 +207,7 @@ def run_h2_PEM(
     if n_stacks_new > 0:
         never_on_cluster_list = np.isnan(h2_tot.loc["Stack Life [hours]"].to_list())
         user_defined_pem_param_dictionary.setdefault("curve_coeff", None)
-        pem = create_1MW_reference_PEM(
-            curve_coeff=user_defined_pem_param_dictionary["pem_param_dict"]["curve_coeff"]
-        )
+        pem = create_1MW_reference_PEM(curve_coeff=user_defined_pem_param_dictionary["curve_coeff"])
         # Update: 'Time Until Replacement [hrs]', 'Life: Efficiency [kWh/kg]', and
         # 'Life: Efficiency [%-HHV]'
         # In Performance Schedules, update "Annual Average Efficiency [kWh/kg]" and
