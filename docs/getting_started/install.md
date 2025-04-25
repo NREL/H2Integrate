@@ -2,7 +2,7 @@
 
 ## Install H2Integrate via PyPI
 
-If you just want to use H2Integrate, you can install it from PyPI using pip:
+If you just want to use H2Integrate and aren't developing new models, you can install it from PyPI using pip:
 
 ```bash
 pip install h2integrate
@@ -10,7 +10,7 @@ pip install h2integrate
 
 ## Installing from Source
 
-For most use cases, installing from source will be the preferred installation route.
+If you want to develop new models or contribute to H2Integrate, you can install it from source.
 
 ### NREL Resource Data
 

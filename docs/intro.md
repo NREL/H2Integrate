@@ -11,6 +11,7 @@ H2Integrate is designed to be flexible and extensible, allowing users to create 
 The tool currently includes renewable energy generation, battery storage, hydrogen, ammonia, and steel technologies.
 Other elements such as desalination systems, pipelines, compressors, and storage systems can also be included as developed by users.
 Some modeling capabilities in H2Integrate are provided by integrating existing tools, such as [HOPP](https://github.com/NREL/HOPP), [PySAM](https://github.com/NREL/pysam), [ORBIT](https://github.com/wisdem/ORBIT), and [ProFAST](https://github.com/NREL/ProFAST).
+The H2Integrate tool is built on top of [NASA's OpenMDAO framework](https://github.com/OpenMDAO/OpenMDAO/), which provides a powerful and flexible environment for modeling and optimization.
 
 ```{note}
 H2Integrate was previously known as GreenHEART. The name was update to H2Integrate to better reflect its expanded capabilities and focus on integrated energy systems.
