@@ -7,7 +7,6 @@ parts:
 - caption: Getting Started
   chapters:
     - file: getting_started/install
-    - file: getting_started/how_h2integrate_works
     - file: getting_started/expected_user_knowledge
 
 - caption: User Guide

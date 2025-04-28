@@ -1,7 +1,7 @@
 # Postprocessing results
 
 When running H2Integrate, results from the simulation and individual technologies are generated automatically.
-Additionally, the raw numerical results are available in the resulting Python object `self.prob` after a simulation.
+Additionally, the raw numerical results are available in the resulting Python object `prob` after a simulation.
 This doc page will walk you through the steps to postprocess the results from a simulation.
 
 ```{note}
@@ -42,15 +42,19 @@ plant
 Anywhere that the value is listed as a magnitude (e.g. `|85854400.89803042|`), this indicates that the value reported is the magnitude of the array.
 Other values are reported as arrays (e.g. `[4.00631628e+09]`), which indicates that the value is a single element.
 The units of the value are also reported, as well as the name of the variable in the model.
-The name of the variable in the model is the last column in the table, and is used to access the value in the `self.prob` object.
+The name of the variable in the model is the last column in the table, and is used to access the value in the `prob` object.
+
+```{note}
+If the technologies you're modeling have been set up to generate results, the results will be printed or saved at this time as well.
+```
 
 ## Manually postprocessing results
 
-Once the simulation is complete, the results are available in the `self.prob` object.
+Once the simulation is complete, the results are available in the `prob` object.
 This object is a dictionary-like object that contains all the inputs and outputs for the model.
 The keys in the object are the names of the variables in the model, and the values are the values of the variables.
 
-Here is an example of how to access the results from the `self.prob` object:
+Here is an example of how to access the results from the `prob` object:
 
 ```python
 from h2integrate.core.h2integrate_model import H2IntegrateModel
@@ -68,5 +72,5 @@ print(model.prob.get_val("electrolyzer.total_hydrogen_produced", units='kg'))
 ```
 
 This will print the total hydrogen produced by the electrolyzer in kg.
-The `get_val` method is used to access the value of the variable in the `self.prob` object.
+The `get_val` method is used to access the value of the variable in the `prob` object.
 The `units` argument is used to specify the units of the value to be returned.
