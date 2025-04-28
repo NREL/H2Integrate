@@ -77,7 +77,7 @@ dependencies = [
     "utm",
     "hopp>=3.2.0",
     "orbit-nrel==1.1",
-    "openmdao[all]",
+    "openmdao",
     "ProFAST",
     "CoolProp",
     "ruamel.yaml",
