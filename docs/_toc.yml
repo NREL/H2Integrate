@@ -11,7 +11,6 @@ parts:
 
 - caption: User Guide
   chapters:
-  - file: user_guide/user_guide
   - file: user_guide/how_to_set_up_an_analysis
   - file: user_guide/postprocessing_results
 
