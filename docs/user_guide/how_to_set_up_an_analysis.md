@@ -11,13 +11,13 @@ Its main purpose is to define the analysis type and the configuration files for 
 Here is an example of a top-level config file:
 
 ```yaml
-name: "H2Integrate_config"
+name: H2Integrate_config
 
-system_summary: "This reference hybrid plant is located in Minnesota and contains wind, solar, and battery storage technologies. The system is designed to produce hydrogen using an electrolyzer and also produce steel using a grid-connected plant."
+system_summary: This reference hybrid plant is located in Minnesota and contains wind, solar, and battery storage technologies. The system is designed to produce hydrogen using an electrolyzer and also produce steel using a grid-connected plant.
 
-driver_config: "driver_config.yaml"
-technology_config: "tech_config.yaml"
-plant_config: "plant_config.yaml"
+driver_config: driver_config.yaml
+technology_config: tech_config.yaml
+plant_config: plant_config.yaml
 ```
 
 The top-level config file contains the following keys:
@@ -38,15 +38,15 @@ The driver config file defines the analysis type and the optimization settings.
 If you are running a basic analysis and not an optimization, the driver config file is quite straightforward and might look like this:
 
 ```yaml
-name: "driver_config"
-description: "This analysis runs a hybrid plant to match the first example in H2Integrate"
+name: driver_config
+description: This analysis runs a hybrid plant to match the first example in H2Integrate
 
 general:
   folder_output: outputs
 ```
 
 If you are running an optimization, the driver config file will contain additional keys to define the optimization settings, including design variables, constraints, and objective functions.
-Further details more complex instances of the driver config file can be found in more advanced examples as they are developed.
+Further details of more complex instances of the driver config file can be found in more advanced examples as they are developed.
 
 ## Technology config file
 
@@ -55,35 +55,35 @@ The yaml file is organized into sections for each technology included in the ana
 Here is an example of part of a technology config that is defining an energy system with only one technology, an electrolyzer:
 
 ```yaml
-name: "technology_config"
-description: "This hybrid plant produces steel"
+name: technology_config
+description: This hybrid plant produces steel
 
 technologies:
   electrolyzer:
     performance_model:
-      model: "eco_pem_electrolyzer_performance"
+      model: eco_pem_electrolyzer_performance
     cost_model:
-      model: "eco_pem_electrolyzer_cost"
+      model: eco_pem_electrolyzer_cost
     model_inputs:
       shared_parameters:
         rating: 1125.165 # MW
-        location: "onshore"
+        location: onshore
         electrolyzer_capex: 2000 # $/kW overnight installed capital costs
 
       performance_parameters:
         sizing:
           resize_for_enduse: False
-          size_for: 'BOL' #'BOL' (generous) or 'EOL' (conservative)
+          size_for: BOL #'BOL' (generous) or 'EOL' (conservative)
           hydrogen_dmd:
         cluster_rating_MW: 40
-        pem_control_type: 'basic'
+        pem_control_type: basic
         eol_eff_percent_loss: 13 #eol defined as x% change in efficiency from bol
         uptime_hours_until_eol: 77600 #number of 'on' hours until electrolyzer reaches eol
         include_degradation_penalty: True #include degradation
         turndown_ratio: 0.1 #turndown_ratio = minimum_cluster_power/cluster_rating_MW
 
       cost_parameters:
-        cost_model: "singlitico2021"
+        cost_model: singlitico2021
 
       financial_parameters:
         replacement_cost_percent: 0.15 # percent of capex - H2A default case
@@ -117,8 +117,8 @@ The plant config file defines the system configuration, any parameters that migh
 Here is a snippet of an example plant config file:
 
 ```yaml
-name: "plant_config"
-description: "This plant is located in MN, USA..."
+name: plant_config
+description: This plant is located in MN, USA
 
 site:
   latitude: 47.5233

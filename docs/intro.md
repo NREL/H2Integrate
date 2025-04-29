@@ -24,11 +24,11 @@ H2Integrate was previously known as GreenHEART. The name was updated to H2Integr
 H2Integrate models energy systems on a yearly basis using hourly timesteps (i.e., 8760 operational data points across a year).
 Results from these simulations are then processed across the project's lifecycle to provide insights into the system's performance, costs, and financial viability.
 Depending on the models used and the size of the system, H2Integrate can simulate systems ranging from the kW to GW scale in seconds on a personal computer.
-Additionally, H2Integrate tracks the flow of electricity, fuels (e.g., hydrogen, ammonia, methanol), and other products (e.g., steel) between different technologies in the energy system.
+Additionally, H2Integrate tracks the flow of electricity, molecules (e.g., hydrogen, ammonia, methanol), and other products (e.g., steel) between different technologies in the energy system.
 
 
 H2Integrate models hybrid energy systems by:
-- Generating electricity output profiles from renewable energy sources (e.g., wind, solar, hydro) and storage systems (e.g., batteries, pumped hydro)
+- Generating electricity output profiles from renewable energy sources (e.g., wind, solar, hydro) and storage systems (e.g., batteries, pumped hydro, vanadium flow batteries)
 - Modeling the performance of hydrogen electrolyzers, steel furnaces, methanol plants, or ammonia synthesis systems using the generated electricity profiles
 - Performing techno-economic analysis of the system to evaluate its costs and financial viability
 
@@ -40,9 +40,15 @@ This process is shown for an example energy system in the figure below:
 
 H2Integrate is developed at NREL, which has a long history of developing high-quality tools for renewable energy systems.
 Although there are many tools available for modeling hybrid energy systems, H2Integrate is unique in its focus on component-level modeling and design including nonlinear physics models, as well as its modularity and extensibility.
+H2Integrate stands out by offering a modular approach that models the entire energy system, from generation to end-use products such as hydrogen, ammonia, methanol, and steel, which is a capability not commonly found in other tools.
 
-[REopt](https://reopt.nrel.gov/tool) is similar to H2Integrate in that it models hybrid energy systems, though it is a much more high-level tool that focuses on optimization.
-[SAM](https://sam.nrel.gov/) is another relevant tool (that H2Integrate partially uses), which has gives more detailed performance and financial modeling capabilities than REopt.
+[REopt](https://reopt.nrel.gov/tool) is similar to H2Integrate in that it models hybrid energy systems, though it is a higher-level tool that focuses on linear optimization.
+One significant difference is that REopt can accommodate various external loads such as steel or ammonia, as long as the user provides the load profiles for those end-uses.
+H2Integrate models the processes themselves and does not require the user to provide a load profile, instead modeling what the load profile would be based on physics-based or analytical models.
+
+[SAM](https://sam.nrel.gov/) is another relevant tool (that H2Integrate partially uses), which gives more detailed performance and financial modeling capabilities than REopt.
+Like REopt, SAM also does not model loads or end-uses but accepts timeseries data of the loads for design purposes.
+
 H2Integrate goes into more component-level details than those tools, especially in terms of nonlinear physics-based modeling and design.
 
 ```{tableofcontents}
