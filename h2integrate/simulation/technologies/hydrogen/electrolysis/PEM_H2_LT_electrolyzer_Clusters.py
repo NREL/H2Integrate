@@ -38,6 +38,10 @@ np.set_printoptions(threshold=sys.maxsize)
 #     pwr,tempc=P_T
 #     i_stack=p1*(pwr**2) + p2*(tempc**2)+ (p3*pwr*tempc) +  (p4*pwr) + (p5*tempc) + (p6)
 #     return i_stack
+
+eta_h2_hhv = 39.41  # Higher-heating value of H2 in kWh/kg
+
+
 def calc_current(
     P_T, p1, p2, p3, p4, p5, p6
 ):  # calculates i-v curve coefficients given the stack power and stack temp
