@@ -4,6 +4,9 @@ import pandas as pd
 from h2integrate.simulation.technologies.hydrogen.electrolysis.run_PEM_master import (
     run_PEM_clusters,
 )
+from h2integrate.simulation.technologies.hydrogen.electrolysis.PEM_H2_LT_electrolyzer_Clusters import (  # noqa: E501
+    eta_h2_hhv,
+)
 
 
 def clean_up_final_outputs(h2_tot, h2_ts):
@@ -96,13 +99,13 @@ def run_h2_PEM(
     hydrogen_hourly_production = h2_ts.loc["hydrogen_hourly_production"].sum()
     hourly_system_electrical_usage = h2_ts.loc["Power Consumed [kWh]"].sum()
     water_hourly_usage = h2_ts.loc["water_hourly_usage_kg"].sum()
-    avg_eff_perc = 39.41 * hydrogen_hourly_production / hourly_system_electrical_usage
+    avg_eff_perc = eta_h2_hhv * hydrogen_hourly_production / hourly_system_electrical_usage
     np.nan_to_num(avg_eff_perc)
     # simulation based average performance (unchanged)
     h2_tot.loc["Total Uptime [sec]"].mean() / 3600
     water_annual_usage = np.sum(water_hourly_usage)
     np.sum(hourly_system_electrical_usage)
-    tot_avg_eff = 39.41 / h2_tot.loc["Total kWh/kg"].mean()
+    tot_avg_eff = eta_h2_hhv / h2_tot.loc["Total kWh/kg"].mean()
     cap_factor_sim = h2_tot.loc["PEM Capacity Factor (simulation)"].mean()
 
     # Beginning of Life (BOL) Rated Specs (attributes/system design)
@@ -198,6 +201,49 @@ def run_h2_PEM(
     if not debug_mode:
         h2_ts, h2_tot = clean_up_final_outputs(h2_tot, h2_ts)
 
+    n_stacks_new = int(sum(np.isnan(h2_tot.loc["Stack Life [hours]"].to_list())))
+
+    # if some stacks were never turned on (are "new") there may be inf and nans in some outputs
+    if n_stacks_new > 0:
+        unused_cluster_list = np.isnan(h2_tot.loc["Stack Life [hours]"].to_list())
+        user_defined_pem_param_dictionary.setdefault("curve_coeff", None)
+
+        annual_eff_kWh_pr_kg = np.zeros((n_pem_clusters - n_stacks_new, int(useful_life)))
+        cluster_index = 0
+        for is_unused, cluster in zip(
+            unused_cluster_list, h2_tot.loc["Performance By Year"].index.to_list()
+        ):
+            if not is_unused:  # aka - its been turned on
+                annual_eff_kWh_pr_kg[cluster_index] = list(
+                    h2_tot.loc["Performance By Year"]
+                    .loc[cluster]["Annual Average Efficiency [kWh/kg]"]
+                    .values()
+                )
+                cluster_index += 1
+        annual_avg_eff_kWh_pr_kg = annual_eff_kWh_pr_kg.mean(axis=0)
+        # In Performance Schedules, update "Annual Average Efficiency [kWh/kg]"
+        H2_Results["Performance Schedules"]["Annual Average Efficiency [kWh/kg]"] = (
+            annual_avg_eff_kWh_pr_kg
+        )
+        # In Performance Schedules, update 'Annual Average Efficiency [%-HHV]'
+        H2_Results["Performance Schedules"]["Annual Average Efficiency [%-HHV]"] = (
+            eta_h2_hhv / annual_avg_eff_kWh_pr_kg
+        )
+
+        # Update: 'Life: Efficiency [kWh/kg]'
+        H2_Results["Life: Efficiency [kWh/kg]"] = annual_avg_eff_kWh_pr_kg.mean()
+
+        # Update: 'Life: Efficiency [%-HHV]'
+        H2_Results["Life: Efficiency [%-HHV]"] = eta_h2_hhv / annual_avg_eff_kWh_pr_kg.mean()
+
+        # Update: 'Time Until Replacement [hrs]'
+        H2_Results["Time Until Replacement [hrs]"] = (
+            h2_tot.loc["Time until replacement [hours]"].replace(np.inf, np.nan).dropna().mean()
+        )
+        # Update: 'Stack Life [hrs]'
+        H2_Results["Stack Life [hrs]"] = h2_tot.loc["Stack Life [hours]"].dropna().mean()
+
+    H2_Results.update({"# Stacks Never Used": n_stacks_new})
     return H2_Results, h2_ts, h2_tot, energy_input_to_electrolyzer
 
 

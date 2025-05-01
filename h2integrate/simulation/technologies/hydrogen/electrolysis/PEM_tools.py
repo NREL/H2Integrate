@@ -5,12 +5,13 @@ from h2integrate.simulation.technologies.hydrogen.electrolysis.PEM_H2_LT_electro
 )
 
 
-def create_1MW_reference_PEM():
+def create_1MW_reference_PEM(curve_coeff=None):
     pem_param_dict = {
         "eol_eff_percent_loss": 10,
         "uptime_hours_until_eol": 77600,
         "include_degradation_penalty": True,
         "turndown_ratio": 0.1,
+        "curve_coeff": curve_coeff,
     }
     pem = PEMClusters(cluster_size_mw=1, plant_life=30, **pem_param_dict)
     return pem

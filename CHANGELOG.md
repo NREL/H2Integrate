@@ -1,9 +1,14 @@
 # CHANGELOG
 
-## Unreleased
+## 0.3.0, Unreleased, TBD
 
 - Introduced a fully new underlying framework for H2Integrate which uses [OpenMDAO](https://openmdao.org/), allowing for more flexibility and extensibility in the future
 - Expanded introductory documentation
+
+## 0.2.1, Unreleased, TBD
+- Fixed iron data save issue [PR 122](https://github.com/NREL/H2Integrate/pull/122)
+- Added optional inputs to electrolyzer model, including curve coefficients and water usage rate.
+- Bug-fix in electrolyzer outputs (H2_Results) if some stacks are never turned on.
 
 ## 0.2 [7 April 2025]
 

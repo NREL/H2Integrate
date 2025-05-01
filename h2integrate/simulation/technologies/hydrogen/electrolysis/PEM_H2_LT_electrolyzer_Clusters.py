@@ -38,6 +38,10 @@ np.set_printoptions(threshold=sys.maxsize)
 #     pwr,tempc=P_T
 #     i_stack=p1*(pwr**2) + p2*(tempc**2)+ (p3*pwr*tempc) +  (p4*pwr) + (p5*tempc) + (p6)
 #     return i_stack
+
+eta_h2_hhv = 39.41  # Higher-heating value of H2 in kWh/kg
+
+
 def calc_current(
     P_T, p1, p2, p3, p4, p5, p6
 ):  # calculates i-v curve coefficients given the stack power and stack temp
@@ -86,6 +90,8 @@ class PEM_H2_Clusters:
         include_degradation_penalty=True,
         turndown_ratio=0.1,
         dt=3600,
+        curve_coeff=None,
+        water_usage_gal_pr_kg=10 / 3.79,
     ):
         # self.input_dict = input_dict
         # print('RUNNING CLUSTERS PEM')
@@ -101,6 +107,7 @@ class PEM_H2_Clusters:
         self.dt = dt
         self.max_stacks = cluster_size_mw
 
+        self.water_usage_rate_kg = water_usage_gal_pr_kg * 3.79
         # any current below this amount (10% rated) will saturate the H2 production to zero, used
         # to be 500 (12.5% of rated)
         # self.stack_input_current_lower_bound = 400  # [A]
@@ -137,7 +144,14 @@ class PEM_H2_Clusters:
         self.onoff_deg_rate = 1.47821515e-04  # [V/off-cycle]
         self.rate_fatigue = 3.33330244e-07  # multiply by rf_track
 
-        self.curve_coeff = self.iv_curve()  # this initializes the I-V curve to calculate current
+        if curve_coeff is None:
+            self.curve_coeff = (
+                self.iv_curve()
+            )  # this initializes the I-V curve to calculate current
+        else:
+            if isinstance(curve_coeff, list):
+                curve_coeff = np.array(curve_coeff)
+            self.curve_coeff = curve_coeff
 
         self.make_BOL_efficiency_curve()
         # if user_defined_EOL_percent_eff_loss:
@@ -890,7 +904,7 @@ class PEM_H2_Clusters:
         # deminersalisation stoichometrically its just 9:1 but ... theres inefficiencies in the
         # water purification process
 
-        water_used_kg_hr_system = h2_kg_hr * 10
+        water_used_kg_hr_system = h2_kg_hr * self.water_usage_rate_kg
         self.output_dict["water_used_kg_hr"] = water_used_kg_hr_system
         self.output_dict["water_used_kg_annual"] = np.sum(water_used_kg_hr_system)
         water_used_gal_hr_system = water_used_kg_hr_system / 3.79
@@ -988,6 +1002,14 @@ if __name__ == "__main__":
         "uptime_hours_until_eol": 77600,  # for calculating steady deg rate
         "include_degradation_penalty": True,
         "turndown_ratio": 0.1,
+        "curve_coeff": [
+            4.0519644766515644e-08,
+            -0.00026186723338675105,
+            3.8985774154190334,
+            7.615382921418666,
+            -20.075110413404484,
+            1.0,
+        ],
     }
     # Create PEM and initialize parameters
     pem = PEM_H2_Clusters(cluster_size_mw, plant_life, **electrolyzer_model_parameters)
