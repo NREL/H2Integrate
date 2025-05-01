@@ -224,15 +224,16 @@ class H2IntegrateModel:
 
         # Add each financial group to the plant
         for group_id, tech_configs in financial_groups.items():
-            if "steel" in tech_configs:
-                commodity_type = "steel"
-            elif "electrolyzer" in tech_configs:
-                commodity_type = "hydrogen"
+            commodity_types = []
+            if "electrolyzer" in tech_configs:
+                commodity_types.append("hydrogen")
+            if "ammonia" in tech_configs:
+                commodity_types.append("ammonia")
             else:
-                commodity_type = "electricity"
+                commodity_types.append("electricity")
 
             # Steel provides its own financials
-            if commodity_type == "steel":
+            if "steel" in tech_configs:
                 continue
 
             financial_group = om.Group()
@@ -245,13 +246,14 @@ class H2IntegrateModel:
                 "adjusted_capex_opex_comp", adjusted_capex_opex_comp, promotes=["*"]
             )
 
-            # Add profast component
-            profast_comp = ProFastComp(
-                tech_config=tech_configs,
-                plant_config=self.plant_config,
-                commodity_type=commodity_type,
-            )
-            financial_group.add_subsystem("profast_comp", profast_comp, promotes=["*"])
+            # Add profast components
+            for idx, commodity_type in enumerate(commodity_types):
+                profast_comp = ProFastComp(
+                    tech_config=tech_configs,
+                    plant_config=self.plant_config,
+                    commodity_type=commodity_type,
+                )
+                financial_group.add_subsystem(f"profast_comp_{idx}", profast_comp, promotes=["*"])
 
             self.plant.add_subsystem(f"financials_group_{group_id}", financial_group)
 
@@ -358,7 +360,23 @@ class H2IntegrateModel:
                             f"financials_group_{group_id}.time_until_replacement",
                         )
 
+                    if "ammonia" in tech_name:
+                        self.plant.connect(
+                            f"{tech_name}.total_ammonia_produced",
+                            f"financials_group_{group_id}.total_ammonia_produced",
+                        )
+
         self.plant.options["auto_order"] = True
+
+        # Check if there are any connections FROM a financial group to ammonia
+        # This handles the case where LCOH is computed in the financial group and passed to ammonia
+        for connection in technology_interconnections:
+            if connection[0].startswith("financials_group_") and connection[1] == "ammonia":
+                # If the connection is from a financial group, set solvers for the
+                # plant to resolve the coupling
+                self.plant.nonlinear_solver = om.NonlinearBlockGS()
+                self.plant.linear_solver = om.DirectSolver()
+                break
 
         if pyxdsm is not None:
             create_xdsm_from_config(self.plant_config)

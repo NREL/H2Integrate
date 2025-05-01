@@ -49,7 +49,7 @@ finance_parameters:
   debt_equity_ratio: 2.62 # 2024 ATB uses 72.4% debt for land-based wind
   property_tax: 0.02 # https://www.house.mn.gov/hrd/issinfo/clsrates.aspx
   property_insurance: 0.01 # percent of CAPEX estimated based on https://www.nrel.gov/docs/fy25osti/91775.pdf
-  total_income_tax_rate: 0.308 # 0.257 tax rate in 2024 atb baseline workbook, value here is based on federal (21%) and state in MN (9.8)
+  total_income_tax_rate: 0.257 # 0.257 tax rate in 2024 atb baseline workbook, value here is based on federal (21%) and state in MN (9.8)
   capital_gains_tax_rate: 0.15 # H2FAST default
   sales_tax_rate: 0.07375 # total state and local sales tax in St. Louis County https://taxmaps.state.mn.us/salestax/
   debt_interest_rate: 0.07 # based on 2024 ATB nominal interest rate for land-based wind

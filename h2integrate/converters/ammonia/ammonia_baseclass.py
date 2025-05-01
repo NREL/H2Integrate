@@ -70,7 +70,7 @@ class AmmoniaPerformanceModel(om.ExplicitComponent):
         )
         self.add_input("hydrogen", val=0.0, shape_by_conn=True, copy_shape="ammonia", units="kg/h")
         self.add_output("ammonia", val=0.0, shape_by_conn=True, copy_shape="hydrogen", units="kg/h")
-        self.add_output("total_ammonia_production", val=0.0, units="kg/year")
+        self.add_output("total_ammonia_produced", val=0.0, units="kg/year")
 
     def compute(self, inputs, outputs):
         ammonia_production_kgpy = run_ammonia_model(
@@ -78,7 +78,7 @@ class AmmoniaPerformanceModel(om.ExplicitComponent):
             self.config.plant_capacity_factor,
         )
         outputs["ammonia"] = ammonia_production_kgpy / len(inputs["hydrogen"])
-        outputs["total_ammonia_production"] = ammonia_production_kgpy
+        outputs["total_ammonia_produced"] = ammonia_production_kgpy
 
 
 @define

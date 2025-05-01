@@ -50,7 +50,7 @@ technologies:
       group: 1
     model_inputs:
       shared_parameters:
-        rating: 1125.165
+        rating: 720.
         size_capacity_from_demand:
           flag: True # If True, then storage is sized to provide steady-state storage
         capacity_from_max_on_turbine_storage: False # if True, then days of storage is ignored and storage capacity is based on how much h2 storage fits on the turbines in the plant using Kottenstete 2003.

@@ -64,15 +64,18 @@ class ProFastComp(om.ExplicitComponent):
         if self.options["commodity_type"] == "hydrogen":
             self.add_output("LCOH", val=0.0, units="USD/kg")
 
-        if self.options["commodity_type"] == "steel":
-            self.add_output("LCOS", val=0.0, units="USD/ton")
-
         if self.options["commodity_type"] == "electricity":
             self.add_output("LCOE", val=0.0, units="USD/kW/h")
+
+        if self.options["commodity_type"] == "ammonia":
+            self.add_output("LCOA", val=0.0, units="USD/kg")
 
         if "electrolyzer" in tech_config:
             self.add_input("total_hydrogen_produced", val=0.0, units="kg/year")
             self.add_input("time_until_replacement", units="h")
+
+        if "ammonia" in tech_config:
+            self.add_input("total_ammonia_produced", val=0.0, units="kg/year")
 
     def compute(self, inputs, outputs):
         gen_inflation = self.plant_config["finance_parameters"]["profast_general_inflation"]
@@ -80,6 +83,7 @@ class ProFastComp(om.ExplicitComponent):
         land_cost = 0.0
 
         pf = ProFAST.ProFAST()
+
         if self.options["commodity_type"] == "hydrogen":
             pf.set_params(
                 "commodity",
@@ -94,6 +98,21 @@ class ProFastComp(om.ExplicitComponent):
                 "capacity",
                 float(inputs["total_hydrogen_produced"]) / 365.0,
             )  # kg/day
+        elif self.options["commodity_type"] == "ammonia":
+            pf.set_params(
+                "commodity",
+                {
+                    "name": "Ammonia",
+                    "unit": "kg",
+                    "initial price": 100,
+                    "escalation": gen_inflation,
+                },
+            )
+            pf.set_params(
+                "capacity",
+                float(inputs["total_ammonia_produced"]) / 365.0,
+            )
+
         pf.set_params("maintenance", {"value": 0, "escalation": gen_inflation})
         pf.set_params(
             "analysis start year",
@@ -225,5 +244,7 @@ class ProFastComp(om.ExplicitComponent):
 
         # Only hydrogen supported in the very short term
         if self.options["commodity_type"] == "hydrogen":
-            lcoh = sol["price"]
-            outputs["LCOH"] = lcoh
+            outputs["LCOH"] = sol["price"]
+
+        elif self.options["commodity_type"] == "ammonia":
+            outputs["LCOA"] = sol["price"]
