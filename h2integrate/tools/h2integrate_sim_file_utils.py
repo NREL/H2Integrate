@@ -39,6 +39,25 @@ def save_pickle_data(output_data_dict, config, pkl_fn):
             dill.dump(data, f)
 
 
+def save_pickle_data_iron_out(output_data_dict, config, pkl_fn):
+    """
+    Save data to pickle files in specified directories.
+
+    Args:
+        output_data_dict (dict): Dictionary where keys are output names and
+            values are the data to be pickled.
+        config (object): Configuration object that contains the attribute
+            `iron_out_fn` which specifies the base directory for saving files.
+        pkl_fn (str): Filename for the pickle file.
+    """
+    for output_name, data in output_data_dict.items():
+        path = Path(config.iron_out_fn) / Path(output_name)
+        path.mkdir(parents=True, exist_ok=True)
+        filepath = path / Path(pkl_fn)
+        with Path.open(filepath, "wb") as f:
+            dill.dump(data, f)
+
+
 def save_physics_results_h2integrate_setup(config, wind_cost_results):
     """
     Save physics results for H2Integrate setup.
@@ -225,7 +244,7 @@ def save_iron_ore_results(
     output_data = [iron_ore_performance, iron_ore_costs, iron_ore_finance]
     output_data_dict = dict(zip(output_names, output_data))
 
-    save_pickle_data(output_data_dict, config, pkl_fn)
+    save_pickle_data_iron_out(output_data_dict, config, pkl_fn)
 
 
 def save_iron_results(config, iron_performance, iron_costs, iron_finance, iron_CI=None):
@@ -257,4 +276,4 @@ def save_iron_results(config, iron_performance, iron_costs, iron_finance, iron_C
         output_data.append(iron_CI)
     output_data_dict = dict(zip(output_names, output_data))
 
-    save_pickle_data(output_data_dict, config, pkl_fn)
+    save_pickle_data_iron_out(output_data_dict, config, pkl_fn)
