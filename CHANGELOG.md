@@ -1,9 +1,13 @@
 # CHANGELOG
 
-## Unreleased
+## 0.3.0, Unreleased TBD
 
 - Introduced a fully new underlying framework for H2Integrate which uses [OpenMDAO](https://openmdao.org/), allowing for more flexibility and extensibility in the future
 - Expanded introductory documentation
+
+## 0.2.1, Unreleased TBD
+
+- Fixed iron data save issue [PR 122](https://github.com/NREL/H2Integrate/pull/122)
 
 ## 0.2 [7 April 2025]
 
