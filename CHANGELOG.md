@@ -6,6 +6,7 @@
 - Expanded introductory documentation
 
 ## 0.2.1, Unreleased, TBD
+
 - Fixed iron data save issue [PR 122](https://github.com/NREL/H2Integrate/pull/122)
 - Added optional inputs to electrolyzer model, including curve coefficients and water usage rate.
 - Bug-fix in electrolyzer outputs (H2_Results) if some stacks are never turned on.
