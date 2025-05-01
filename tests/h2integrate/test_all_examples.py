@@ -84,13 +84,13 @@ def test_ammonia_example(subtests):
     with subtests.test("Check H2 storage CapEx"):
         assert (
             pytest.approx(model.prob.get_val("plant.h2_storage.h2_storage.CapEx"), rel=1e-3)
-            == 65645817.61620798
+            == 65336874.189441
         )
 
     with subtests.test("Check H2 storage OpEx"):
         assert (
             pytest.approx(model.prob.get_val("plant.h2_storage.h2_storage.OpEx"), rel=1e-3)
-            == 2368353.86994941
+            == 2358776.66234517
         )
 
     with subtests.test("Check ammonia CapEx"):
@@ -110,7 +110,7 @@ def test_ammonia_example(subtests):
             pytest.approx(
                 model.prob.get_val("plant.financials_group_1.total_capex_adjusted"), rel=1e-3
             )
-            == 2.5775031e09
+            == 2.76180599e09
         )
 
     with subtests.test("Check total adjusted OpEx"):
@@ -118,11 +118,18 @@ def test_ammonia_example(subtests):
             pytest.approx(
                 model.prob.get_val("plant.financials_group_1.total_opex_adjusted"), rel=1e-3
             )
-            == 53172258.6808771
+            == 66599592.71371833
         )
 
+    # Currently underestimated compared to the Reference Design Doc
     with subtests.test("Check LCOH"):
         assert (
             pytest.approx(model.prob.get_val("plant.financials_group_1.LCOH"), rel=1e-3)
-            == 4.33286562
+            == 4.39187968
+        )
+    # Currently underestimated compared to the Reference Design Doc
+    with subtests.test("Check LCOA"):
+        assert (
+            pytest.approx(model.prob.get_val("plant.financials_group_1.LCOA"), rel=1e-3)
+            == 1.06313924
         )
