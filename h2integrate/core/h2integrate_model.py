@@ -7,7 +7,8 @@ import openmdao.api as om
 from h2integrate.core.finances import ProFastComp, AdjustedCapexOpexComp
 from h2integrate.core.utilities import create_xdsm_from_config
 from h2integrate.core.feedstocks import FeedstockComponent
-from h2integrate.core.supported_models import supported_models
+from h2integrate.core.resource_summer import ElectricitySumComp
+from h2integrate.core.supported_models import supported_models, electricity_producing_techs
 from h2integrate.core.inputs.validation import load_tech_yaml, load_plant_yaml, load_driver_yaml
 from h2integrate.core.pose_optimization import PoseOptimization
 
@@ -238,6 +239,11 @@ class H2IntegrateModel:
 
             financial_group = om.Group()
 
+            # Add the ExecComp to the plant model
+            financial_group.add_subsystem(
+                "electricity_sum", ElectricitySumComp(tech_configs=tech_configs)
+            )
+
             # Add adjusted capex component
             adjusted_capex_opex_comp = AdjustedCapexOpexComp(
                 tech_config=tech_configs, plant_config=self.plant_config
@@ -341,6 +347,20 @@ class H2IntegrateModel:
                 # Skip steel financials; it provides its own financials
                 if "steel" in tech_configs:
                     continue
+
+                # Loop through technologies and connect electricity outputs to the ExecComp
+                for tech_name in self.tech_names:
+                    if tech_name in electricity_producing_techs:
+                        self.plant.connect(
+                            f"{tech_name}.electricity",
+                            f"financials_group_{group_id}.electricity_sum.electricity_{tech_name}",
+                        )
+
+                # Connect total electricity produced to the financial group
+                self.plant.connect(
+                    f"financials_group_{group_id}.electricity_sum.total_electricity_produced",
+                    f"financials_group_{group_id}.total_electricity_produced",
+                )
 
                 for tech_name in tech_configs.keys():
                     self.plant.connect(
