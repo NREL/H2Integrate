@@ -47,7 +47,6 @@ class H2IntegrateModel:
 
         # create driver model
         # might be an analysis or optimization
-        # can draw a fair amount from WEIS
         self.create_driver_model()
 
     def load_config(self, config_file):
@@ -225,13 +224,11 @@ class H2IntegrateModel:
 
         # Add each financial group to the plant
         for group_id, tech_configs in financial_groups.items():
-            commodity_types = []
+            commodity_types = ["electricity"]
             if "electrolyzer" in tech_configs:
                 commodity_types.append("hydrogen")
             if "ammonia" in tech_configs:
                 commodity_types.append("ammonia")
-            else:
-                commodity_types.append("electricity")
 
             # Steel provides its own financials
             if "steel" in tech_configs:
