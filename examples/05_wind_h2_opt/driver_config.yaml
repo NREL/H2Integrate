@@ -18,7 +18,7 @@ design_variables:
     electrolyzer_size_mw:
       flag: True
       lower: 200
-      upper: 2000.
+      upper: 1800.
       units: MW
 
 constraints:
