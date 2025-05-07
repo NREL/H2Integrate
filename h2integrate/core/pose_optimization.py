@@ -295,7 +295,7 @@ class PoseOptimization:
                 opt_prob = self._set_optimizer_properties(opt_prob, options_keys)
 
             else:
-                raise ValueError(f"Optimizer {opt_options["solver"]} is not yet supported.")
+                raise ValueError(f"Optimizer {opt_options['solver']} is not yet supported.")
 
             if opt_options["debug_print"]:
                 opt_prob.driver.options["debug_print"] = [
