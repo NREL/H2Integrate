@@ -356,7 +356,7 @@ class PEM_H2_Clusters:
     def make_yearly_performance_dict(self, power_in_kW, V_deg, V_cell, I_op, grid_connected):
         # NOTE: this is not the most accurate for cases where simulation length is not close to 8760
         # I_op only needed if grid connected, should be singular value
-        refturb_schedule = np.zeros(self.plant_life_years)
+        refturb_schedule = np.zeros(int(self.plant_life_years))
         # refturb_period=int(np.floor(time_between_replacements/8760))
         # refturb_schedule[refturb_period:int(self.plant_life_years):refturb_period]=1
 
