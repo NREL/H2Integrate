@@ -133,3 +133,46 @@ def test_ammonia_example(subtests):
             pytest.approx(model.prob.get_val("plant.financials_group_1.LCOA"), rel=1e-3)
             == 1.06313924
         )
+
+
+def test_wind_h2_opt_example(subtests):
+    # Change the current working directory to the example's directory
+    os.chdir(examples_dir / "05_wind_h2_opt")
+
+    # Create a H2Integrate model
+    model = H2IntegrateModel(Path.cwd() / "wind_plant_electrolyzer.yaml")
+
+    # Run the model
+    model.run()
+
+    model.post_process()
+
+    # Subtests for checking specific values
+    with subtests.test("Check LCOH"):
+        assert pytest.approx(model.prob.get_val("financials_group_1.LCOH"), rel=1e-3) == 4.635287
+
+    with subtests.test("Check LCOE"):
+        assert pytest.approx(model.prob.get_val("financials_group_1.LCOE"), rel=1e-3) == 0.09009908
+
+    with subtests.test("Check total adjusted CapEx"):
+        assert (
+            pytest.approx(model.prob.get_val("financials_group_1.total_capex_adjusted"), rel=1e-3)
+            == 1.82152792e09
+        )
+
+    with subtests.test("Check total adjusted OpEx"):
+        assert (
+            pytest.approx(model.prob.get_val("financials_group_1.total_opex_adjusted"), rel=1e-3)
+            == 51995875.99756081
+        )
+
+    with subtests.test("Check electrolyzer size (MW)"):
+        assert (
+            pytest.approx(model.prob.get_val("electrolyzer.electrolyzer_size_mw"), rel=1e-3)
+            == 1515.0
+        )
+
+    with subtests.test("Check minimum total hydrogen produced"):
+        assert (
+            model.prob.get_val("electrolyzer.total_hydrogen_produced", units="kg/year") >= 60500000
+        )

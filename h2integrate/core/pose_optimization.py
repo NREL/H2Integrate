@@ -295,10 +295,7 @@ class PoseOptimization:
                 opt_prob = self._set_optimizer_properties(opt_prob, options_keys)
 
             else:
-                raise ValueError(
-                    f"The {self.config['driver']['optimization']['solver']} \
-                        optimizer is not yet supported!"
-                )
+                raise ValueError(f"Optimizer {opt_options["solver"]} is not yet supported.")
 
             if opt_options["debug_print"]:
                 opt_prob.driver.options["debug_print"] = [
@@ -387,16 +384,11 @@ class PoseOptimization:
                 current optimization problem with design variables set
         """
 
-        design_variables_dict = {}
         for technology, variables in self.config["design_variables"].items():
             for key, value in variables.items():
                 if value["flag"]:
-                    design_variables_dict[f"{technology}.{key}"] = value
-
-        print("ADDING DESIGN VARIABLES:")
-        for dv, d in design_variables_dict.items():
-            print(f"   {dv}")
-            opt_prob.model.add_design_var(dv, lower=d["lower"], upper=d["upper"], units=d["units"])
+                    value.pop("flag")
+                    opt_prob.model.add_design_var(f"{technology}.{key}", **value)
 
         return opt_prob
 
@@ -415,7 +407,11 @@ class PoseOptimization:
             opt_prob (openmdao problem instance): openmdao problem instance for
                 current optimization problem edited to include constraint setup
         """
-        pass
+        for technology, variables in self.config["constraints"].items():
+            for key, value in variables.items():
+                if value["flag"]:
+                    value.pop("flag")
+                    opt_prob.model.add_constraint(f"{technology}.{key}", **value)
 
     def set_recorders(self, opt_prob):
         """sets up a recorder for the openmdao problem as desired in the input yaml
