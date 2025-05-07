@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 0.3.1, Unreleased, TBD
+
+- Added a new optimization example with a wind plant and electrolyzer to showcase how to define design variables, constraints, and objective functions
+
 ## 0.3.0 [May 2 2025]
 
 - Introduced a fully new underlying framework for H2Integrate which uses [OpenMDAO](https://openmdao.org/), allowing for more flexibility and extensibility in the future
