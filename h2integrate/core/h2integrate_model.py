@@ -87,7 +87,7 @@ class H2IntegrateModel:
 
                         if not model_class_name or not model_location:
                             raise ValueError(
-                                f"Custom {model_type} for {tech_name} must specify"
+                                f"Custom {model_type} for {tech_name} must specify "
                                 "'model_class_name' and 'model_location'."
                             )
 

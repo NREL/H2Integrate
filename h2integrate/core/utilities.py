@@ -132,7 +132,7 @@ class BaseConfig:
             extra_args = [d for d in data if d not in class_attr_names]
             if len(extra_args):
                 raise AttributeError(
-                    f"The initialization for {cls.__name__} was given extraneous"
+                    f"The initialization for {cls.__name__} was given extraneous "
                     "inputs: {extra_args}"
                 )
 
