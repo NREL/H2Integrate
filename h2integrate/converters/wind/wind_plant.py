@@ -29,6 +29,10 @@ class WindPlantPerformanceModelConfig(BaseConfig):
     timestep: list = field()
     fin_model: list = field()
     name: str = field()
+    turbine_name: str = field()
+    turbine_group: str = field()
+    override_wind_resource_height: bool = field()
+    adjust_air_density_for_elevation: bool = field()
 
 
 @define
@@ -44,7 +48,6 @@ class WindPlantPerformanceModel(WindPerformanceBaseClass):
 
     def setup(self):
         super().setup()
-        print(self.options["tech_config"]["model_inputs"])
         self.config = WindPlantPerformanceModelConfig.from_dict(
             merge_shared_performance_inputs(self.options["tech_config"]["model_inputs"])
         )
@@ -91,4 +94,4 @@ class WindPlantCostModel(WindCostBaseClass):
         # Calculate CapEx
         total_capacity_kw = num_turbines * turbine_rating_kw
         outputs["CapEx"] = total_capacity_kw * cost_per_kw
-        outputs["OpEx"] = 0.1 * total_capacity_kw * cost_per_kw  # placeholder scalar value
+        outputs["OpEx"] = 0.03 * total_capacity_kw * cost_per_kw  # placeholder scalar value

@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## Unreleased, TBD
+
+- Added capability for user-defined technologies in the H2Integrate framework, allowing for custom models to be integrated into the system.
+- Added an example of a user-defined technology in the `examples` directory, demonstrating an extremely simple paper mill model.
+
 ## 0.3.0 [May 2 2025]
 
 - Introduced a fully new underlying framework for H2Integrate which uses [OpenMDAO](https://openmdao.org/), allowing for more flexibility and extensibility in the future

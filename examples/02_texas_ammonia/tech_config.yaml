@@ -40,9 +40,9 @@ technologies:
 
   h2_storage:
     performance_model:
-      model: "eco_h2_storage"
+      model: "h2_storage"
     cost_model:
-      model: "eco_h2_storage"
+      model: "h2_storage"
     model_inputs:
       shared_parameters:
         rating: 640

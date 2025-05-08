@@ -43,9 +43,9 @@ technologies:
         replacement_cost_percent: 0.15 # percent of capex - H2A default case
   h2_storage:
     performance_model:
-      model: "eco_h2_storage"
+      model: "h2_storage"
     cost_model:
-      model: "eco_h2_storage"
+      model: "h2_storage"
     financial_model:
       group: 1
     model_inputs:
