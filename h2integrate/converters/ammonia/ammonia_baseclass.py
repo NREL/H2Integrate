@@ -1,11 +1,7 @@
 import openmdao.api as om
 from attrs import field, define
 
-from h2integrate.core.utilities import (
-    BaseConfig,
-    merge_shared_cost_inputs,
-    merge_shared_performance_inputs,
-)
+from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
 from h2integrate.simulation.technologies.ammonia.ammonia import (
     run_ammonia_model,
     run_ammonia_cost_model,
@@ -66,7 +62,7 @@ class AmmoniaPerformanceModel(om.ExplicitComponent):
 
     def setup(self):
         self.config = AmmoniaPerformanceModelConfig.from_dict(
-            merge_shared_performance_inputs(self.options["tech_config"]["model_inputs"])
+            merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance")
         )
         self.add_input("hydrogen", val=0.0, shape_by_conn=True, copy_shape="ammonia", units="kg/h")
         self.add_output("ammonia", val=0.0, shape_by_conn=True, copy_shape="hydrogen", units="kg/h")
@@ -124,7 +120,7 @@ class AmmoniaCostModel(om.ExplicitComponent):
         self.add_output("credits_byproduct", val=0.0, units="USD", desc="Byproduct credits")
 
         self.cost_config = AmmoniaCostModelConfig.from_dict(
-            merge_shared_cost_inputs(self.options["tech_config"]["model_inputs"])
+            merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost")
         )
 
         if self.cost_config.feedstocks.hydrogen_cost is None:
