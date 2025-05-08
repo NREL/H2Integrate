@@ -81,7 +81,7 @@ class H2IntegrateModel:
             for model_type in ["performance_model", "cost_model", "financial_model"]:
                 if model_type in tech_config:
                     model_name = tech_config[model_type].get("model")
-                    if model_name not in self.supported_models:
+                    if model_name not in self.supported_models and model_name is not None:
                         model_class_name = tech_config[model_type].get("model_class_name")
                         model_location = tech_config[model_type].get("model_location")
 
@@ -164,15 +164,15 @@ class H2IntegrateModel:
                 tech_group = self.plant.add_subsystem(tech_name, om.Group())
                 self.tech_names.append(tech_name)
 
-                # Special HOPP handling for short-term
+                # Special handling for short-term components that share performance and cost models
                 if tech_name in combined_performance_and_cost_model_technologies:
-                    hopp_comp = self.supported_models[tech_name](
+                    comp = self.supported_models[tech_name](
                         plant_config=self.plant_config, tech_config=individual_tech_config
                     )
-                    tech_group.add_subsystem(tech_name, hopp_comp, promotes=["*"])
-                    self.performance_models.append(hopp_comp)
-                    self.cost_models.append(hopp_comp)
-                    self.financial_models.append(hopp_comp)
+                    tech_group.add_subsystem(tech_name, comp, promotes=["*"])
+                    self.performance_models.append(comp)
+                    self.cost_models.append(comp)
+                    self.financial_models.append(comp)
                     continue
 
                 # Process the technology models
