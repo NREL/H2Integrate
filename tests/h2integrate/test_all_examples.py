@@ -133,3 +133,25 @@ def test_ammonia_example(subtests):
             pytest.approx(model.prob.get_val("plant.financials_group_1.LCOA"), rel=1e-3)
             == 1.06313924
         )
+
+
+def test_paper_example(subtests):
+    # Change the current working directory to the example's directory
+    os.chdir(examples_dir / "06_custom_tech")
+
+    # Create a H2Integrate model
+    model = H2IntegrateModel(Path.cwd() / "wind_plant_paper.yaml")
+
+    # Run the model
+    model.run()
+
+    model.post_process()
+
+    # Subtests for checking specific values
+    with subtests.test("Check LCOP"):
+        assert (
+            pytest.approx(
+                model.prob.get_val("plant.paper_mill.paper_mill_financial.LCOP"), rel=1e-3
+            )
+            == 51.91476681
+        )

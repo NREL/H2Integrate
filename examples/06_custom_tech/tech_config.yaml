@@ -1,0 +1,57 @@
+name: "technology_config"
+description: "This plant has wind feeding into an electrolyzer with optimization"
+
+technologies:
+  wind:
+    performance_model:
+      model: "wind_plant_performance"
+    cost_model:
+      model: "wind_plant_cost"
+    resource:
+      type: "pysam_wind"
+      wind_speed: 9.
+    model_inputs:
+      shared_parameters:
+        num_turbines: 4
+        turbine_rating_kw: 8300
+      performance_parameters:
+        rotor_diameter: 196.
+        hub_height: 130.
+        layout_mode: "basicgrid"
+        model_name: "pysam"
+        model_input_file: null
+        layout_params:
+          row_D_spacing: 10.
+          turbine_D_spacing: 10.
+        rating_range_kw: [1000, 5000]
+        floris_config: null
+        operational_losses: 10.0
+        timestep: [1, 60]
+        fin_model: "default"
+        name: "UtilityScaleWindPlant"
+        turbine_name: "2023NREL_Bespoke_8.3MW_196" #turbine model to use
+        turbine_group: "onshore"
+        override_wind_resource_height: False
+        adjust_air_density_for_elevation: True
+      cost_parameters:
+        cost_per_kw: 1500.0
+  paper_mill:
+    performance_model:
+      model: "paper_mill_performance"
+      model_class_name: "PaperMillPerformance"
+      model_location: "paper_mill.py"
+    cost_model:
+      model: "paper_mill_cost"
+      model_class_name: "PaperMillCost"
+      model_location: "paper_mill.py"
+    financial_model:
+      model: "paper_mill_finance"
+      model_class_name: "PaperMillFinance"
+      model_location: "paper_mill.py"
+    model_inputs:
+      performance_parameters:
+        electricity_usage_rate: 0.6  # MWh/ton
+      cost_parameters:
+        plant_capacity: 10.0  # tonnes/day
+        cost_per_tonne: 4000000.  # $/tonne
+        opex_rate: 0.05  # 5% of CAPEX
