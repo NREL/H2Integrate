@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 0.3.X, Unreleased, TBD
+
+- Added geologic hydrogen (geoh2) converter and examples [PR 129](https://github.com/NREL/H2Integrate/pull/129)
+
 ## 0.3.0 [May 2 2025]
 
 - Introduced a fully new underlying framework for H2Integrate which uses [OpenMDAO](https://openmdao.org/), allowing for more flexibility and extensibility in the future

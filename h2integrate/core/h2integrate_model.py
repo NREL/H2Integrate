@@ -229,9 +229,11 @@ class H2IntegrateModel:
                 commodity_types.append("hydrogen")
             if "ammonia" in tech_configs:
                 commodity_types.append("ammonia")
+            if "geoh2" in tech_configs:
+                commodity_types.append("hydrogen")
 
             # Steel provides its own financials
-            if "steel" in tech_configs:
+            if "steel" in tech_configs or "geoh2" in tech_configs:
                 continue
 
             financial_group = om.Group()
@@ -342,7 +344,7 @@ class H2IntegrateModel:
             # Connect the outputs of the technology models to the appropriate financial groups
             for group_id, tech_configs in self.financial_groups.items():
                 # Skip steel financials; it provides its own financials
-                if "steel" in tech_configs:
+                if "steel" in tech_configs or "geoh2" in tech_configs:
                     continue
 
                 # Loop through technologies and connect electricity outputs to the ExecComp

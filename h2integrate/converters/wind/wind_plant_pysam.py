@@ -2,7 +2,7 @@ import PySAM.Windpower as Windpower
 from attrs import field, define
 from hopp.simulation.technologies.resource import WindResource
 
-from h2integrate.core.utilities import BaseConfig, merge_shared_performance_inputs
+from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
 from h2integrate.converters.wind.wind_plant_baseclass import WindPerformanceBaseClass
 
 
@@ -38,7 +38,7 @@ class PYSAMWindPlantPerformanceModel(WindPerformanceBaseClass):
     def setup(self):
         super().setup()
         self.config = PYSAMWindPlantPerformanceModelConfig.from_dict(
-            merge_shared_performance_inputs(self.options["tech_config"]["model_inputs"])
+            merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance")
         )
         self.site_config = PYSAMWindPlantPerformanceModelSiteConfig.from_dict(
             self.options["plant_config"]["site"], strict=False
