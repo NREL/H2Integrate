@@ -4,11 +4,17 @@ from h2integrate.simulation.technologies.hydrogen.h2_storage.mch.mch_cost import
 
 
 # Test values are based on Supplementary Table 3 of https://doi.org/10.1038/s41467-024-53189-2
-# https://rdcu.be/elUsB
-Dc_tpd = 80
-Hc_tpd = 80
-As_tpy = 1500
-Ms_tpy = 1000
+Dc_tpd = 304
+Hc_tpd = 304
+As_tpy = 35000
+Ms_tpy = 16200
+
+# Supplementary Table 3
+toc_actual = 639375591
+foc_actual = 10239180
+voc_actual = 17332229
+
+max_cost_error_rel = 0.06
 
 in_dict = {
     "max_H2_production_kg_pr_hr": (Hc_tpd + Dc_tpd) * 1e3 / 24,
@@ -48,19 +54,19 @@ def test_cost_calculation_methods(tol_mch_storage, subtests):
     fixed_om = tol_mch_storage.calc_fixed_om()
     var_om = tol_mch_storage.calc_variable_om()
     with subtests.test("CapEx"):
-        assert capex == approx(125018316, abs=1)
+        assert capex == approx(toc_actual, rel=max_cost_error_rel)
     with subtests.test("Fixed O&M"):
-        assert fixed_om == approx(4622049, abs=1)
+        assert fixed_om == approx(foc_actual, rel=max_cost_error_rel)
     with subtests.test("Variable O&M"):
-        assert var_om == approx(6941258, abs=1)
+        assert var_om == approx(voc_actual, rel=max_cost_error_rel)
 
 
 def test_run_costs(tol_mch_storage, subtests):
     cost_res = tol_mch_storage.run_costs()
 
     with subtests.test("CapEx"):
-        assert cost_res["mch_capex"] == approx(125018316, abs=1)
+        assert cost_res["mch_capex"] == approx(toc_actual, rel=max_cost_error_rel)
     with subtests.test("Fixed O&M"):
-        assert cost_res["mch_opex"] == approx(4622049, abs=1)
+        assert cost_res["mch_opex"] == approx(foc_actual, rel=max_cost_error_rel)
     with subtests.test("Variable O&M"):
-        assert cost_res["mch_variable_om"] == approx(6941258, abs=1)
+        assert cost_res["mch_variable_om"] == approx(voc_actual, rel=max_cost_error_rel)
