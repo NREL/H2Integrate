@@ -366,8 +366,13 @@ class PoseOptimization:
                 current optimization problem with objective set
         """
         if self.config.get("objective", False):
+            if "ref" in self.config["objective"]:
+                ref = self.config["objective"]["ref"]
+            else:
+                ref = None
             opt_prob.model.add_objective(
-                self.config["objective"]["name"], ref=self.config["objective"]["ref"]
+                self.config["objective"]["name"],
+                ref=ref,
             )
 
         return opt_prob

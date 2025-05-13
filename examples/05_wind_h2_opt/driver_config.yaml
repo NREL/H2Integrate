@@ -30,4 +30,3 @@ constraints:
 
 objective:
   name: financials_group_1.LCOH
-  ref: 1.
