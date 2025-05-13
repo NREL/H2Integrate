@@ -68,6 +68,7 @@ class ProFastComp(om.ExplicitComponent):
         if self.options["commodity_type"] == "electricity":
             self.add_input("total_electricity_produced", val=0.0, units="kW*h/year")
             self.add_output("LCOE", val=0.0, units="USD/kW/h")
+            self.add_output("NPV", val=0.0, units="USD")
 
         if self.options["commodity_type"] == "ammonia":
             self.add_input("total_ammonia_produced", val=0.0, units="kg/year")
@@ -264,3 +265,4 @@ class ProFastComp(om.ExplicitComponent):
 
         elif self.options["commodity_type"] == "electricity":
             outputs["LCOE"] = sol["price"]
+            outputs["NPV"] = sol["NPV"]
