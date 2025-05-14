@@ -178,12 +178,10 @@ class H2IntegrateModel:
 
                 # Process the financial models
                 if "financial_model" in individual_tech_config:
-                    financial_name = cost_name  # TODO: Should this be a separate name?
                     if "model" in individual_tech_config["financial_model"]:
                         financial_name = individual_tech_config["financial_model"]["model"]
 
-                    try:  # TODO: migrate to explicit model naming once financial side is figured out
-                        financial_object = supported_models[f"{financial_name}_financial"]
+                        financial_object = supported_models[financial_name]
                         tech_group.add_subsystem(
                             f"{tech_name}_financial",
                             financial_object(
@@ -192,9 +190,6 @@ class H2IntegrateModel:
                             promotes=["*"],
                         )
                         self.financial_models.append(financial_object)
-                    except KeyError:
-                        # TODO: Is this currently a bypass until the financial portion is more concrete?
-                        pass
 
     def create_financial_model(self):
         """
@@ -224,14 +219,25 @@ class H2IntegrateModel:
 
         # Add each financial group to the plant
         for group_id, tech_configs in financial_groups.items():
-            commodity_types = ["electricity"]
+            commodity_types = []
+            if "steel" in tech_configs:
+                commodity_types.append("steel")
             if "electrolyzer" in tech_configs:
                 commodity_types.append("hydrogen")
+            if "methanol" in tech_configs:
+                commodity_types.append("methanol")
             if "ammonia" in tech_configs:
                 commodity_types.append("ammonia")
+            for tech in electricity_producing_techs:
+                if tech in tech_configs:
+                    commodity_types.append("electricity")
+                    continue
 
-            # Steel provides its own financials
-            if "steel" in tech_configs:
+            # Steel, methanol provides their own financials
+            if any(c in commodity_types for c in ("steel", "methanol")):
+                continue
+
+            if commodity_types == []:
                 continue
 
             financial_group = om.Group()
@@ -342,8 +348,10 @@ class H2IntegrateModel:
             # Connect the outputs of the technology models to the appropriate financial groups
             for group_id, tech_configs in self.financial_groups.items():
                 # Skip steel financials; it provides its own financials
-                if "steel" in tech_configs:
+                if any(c in tech_configs for c in ("steel", "methanol")):
                     continue
+
+                plant_producing_electricity = False
 
                 # Loop through technologies and connect electricity outputs to the ExecComp
                 for tech_name in self.tech_names:
@@ -352,12 +360,14 @@ class H2IntegrateModel:
                             f"{tech_name}.electricity",
                             f"financials_group_{group_id}.electricity_sum.electricity_{tech_name}",
                         )
+                        plant_producing_electricity = True
 
-                # Connect total electricity produced to the financial group
-                self.plant.connect(
-                    f"financials_group_{group_id}.electricity_sum.total_electricity_produced",
-                    f"financials_group_{group_id}.total_electricity_produced",
-                )
+                if plant_producing_electricity:
+                    # Connect total electricity produced to the financial group
+                    self.plant.connect(
+                        f"financials_group_{group_id}.electricity_sum.total_electricity_produced",
+                        f"financials_group_{group_id}.total_electricity_produced",
+                    )
 
                 for tech_name in tech_configs.keys():
                     self.plant.connect(

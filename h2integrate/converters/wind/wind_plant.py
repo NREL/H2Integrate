@@ -2,11 +2,7 @@ from attrs import field, define
 from hopp.simulation.technologies.sites import SiteInfo, flatirons_site
 from hopp.simulation.technologies.wind.wind_plant import WindPlant
 
-from h2integrate.core.utilities import (
-    BaseConfig,
-    merge_shared_cost_inputs,
-    merge_shared_performance_inputs,
-)
+from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
 from h2integrate.converters.wind.wind_plant_baseclass import (
     WindCostBaseClass,
     WindPerformanceBaseClass,
@@ -46,7 +42,7 @@ class WindPlantPerformanceModel(WindPerformanceBaseClass):
         super().setup()
         print(self.options["tech_config"]["model_inputs"])
         self.config = WindPlantPerformanceModelConfig.from_dict(
-            merge_shared_performance_inputs(self.options["tech_config"]["model_inputs"])
+            merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance")
         )
         self.plant_config = WindPlantPerformanceModelPlantConfig.from_dict(
             self.options["plant_config"]["plant"], strict=False
@@ -80,7 +76,7 @@ class WindPlantCostModel(WindCostBaseClass):
     def setup(self):
         super().setup()
         self.config = WindPlantCostModelConfig.from_dict(
-            merge_shared_cost_inputs(self.options["tech_config"]["model_inputs"])
+            merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost")
         )
 
     def compute(self, inputs, outputs):

@@ -83,7 +83,6 @@ class ProFastComp(om.ExplicitComponent):
         land_cost = 0.0
 
         pf = ProFAST.ProFAST()
-
         if self.options["commodity_type"] == "hydrogen":
             pf.set_params(
                 "commodity",
