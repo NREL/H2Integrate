@@ -13,6 +13,7 @@ parts:
   chapters:
   - file: user_guide/how_to_set_up_an_analysis
   - file: user_guide/postprocessing_results
+  - file: user_guide/how_to_interface_with_user_defined_model
 
 - caption: Examples
   chapters:
