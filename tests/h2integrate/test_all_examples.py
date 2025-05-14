@@ -45,6 +45,14 @@ def test_steel_example(subtests):
     with subtests.test("Check steel OpEx"):
         assert pytest.approx(model.prob.get_val("steel.OpEx"), rel=1e-3) == 1.0129052e08
 
+    with subtests.test("Check LCOE"):
+        assert pytest.approx(model.prob.get_val("financials_group_1.LCOE"), rel=1e-3) == 0.09795931
+
+    with subtests.test("Check NPV"):
+        assert (
+            pytest.approx(model.prob.get_val("financials_group_1.NPV"), rel=1e-3) == 2.00452057e10
+        )
+
 
 def test_ammonia_example(subtests):
     # Change the current working directory to the example's directory

@@ -265,4 +265,12 @@ class ProFastComp(om.ExplicitComponent):
 
         elif self.options["commodity_type"] == "electricity":
             outputs["LCOE"] = sol["price"]
-            outputs["NPV"] = sol["NPV"]
+
+            cost_breakdown = pf.get_cost_breakdown(per_volume=False)
+            electricity_sales_npv = None
+            for name, npv in zip(cost_breakdown["Name"], cost_breakdown["NPV"]):
+                if name == "Electricity sales":
+                    electricity_sales_npv = npv
+                    break
+
+            outputs["NPV"] = electricity_sales_npv
