@@ -4,6 +4,7 @@
 
 - Added methanol production base class
 - Added steam methane reforming methanol production technology
+- Added NPV calc to finances
 
 ## 0.3.0 [May 2 2025]
 
