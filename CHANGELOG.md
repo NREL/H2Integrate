@@ -2,6 +2,8 @@
 
 ## 0.3.1, Unreleased, TBD
 
+- Added methanol production base class
+- Added steam methane reforming methanol production technology
 - Added a new optimization example with a wind plant and electrolyzer to showcase how to define design variables, constraints, and objective functions
 
 ## 0.3.0 [May 2 2025]
