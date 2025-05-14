@@ -44,23 +44,27 @@ You can combine an H2Integrate model and a custom model for the same technology 
 
 To use a custom model in your H2Integrate project:
 
-1. **Create Configuration Classes**  
+1. **Create Configuration Classes**
+
    Subclass `BaseConfig` for any performance, cost, or financial parameters your model needs.
 
-2. **Implement OpenMDAO Components**  
+2. **Implement OpenMDAO Components**
+
    Define your model logic using `om.ExplicitComponent`.
 
-3. **Merge Inputs**  
+3. **Merge Inputs**
+
    Use `merge_shared_performance_inputs` and `merge_shared_cost_inputs` to integrate with existing input structures.
 
-4. **Use in a Pipeline**  
+4. **Use in a Pipeline**
+
    Treat your custom model as a drop-in component in your analysis pipeline.
 
 ```{note}
 Custom models can include external calls—for example, to an Excel macro—within the `compute` function, as long as the required inputs and outputs are properly defined and handled.
 ```
 
-Refer to the [Paper Mill Model Example](examples/06_custom_tech) for a complete walkthrough.
+Refer to the [Paper Mill Model Example](https://github.com/NREL/H2Integrate/tree/main/examples/06_custom_tech/) for a complete walkthrough.
 ---
 
 This enhancement supports broader adoption of H2I by allowing integration with the tools and models users already trust.
