@@ -234,16 +234,5 @@ class ECOElectrolyzerCostModel(ElectrolyzerCostBaseClass):
             )
             raise ValueError(msg)
 
-        # print some results if desired
-        # print("\nHydrogen Cost Results:")
-        # print(
-        #     "Electrolyzer Total CAPEX $/kW: ",
-        #     electrolyzer_total_capital_cost / (electrolyzer_size_mw * 1e3),
-        # )
-        # print(
-        #     "Electrolyzer O&M $/kW: ",
-        #     electrolyzer_OM_cost / (electrolyzer_size_mw * 1e3),
-        # )
-
         outputs["CapEx"] = electrolyzer_total_capital_cost
         outputs["OpEx"] = electrolyzer_OM_cost

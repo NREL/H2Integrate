@@ -56,6 +56,11 @@ objective:
   name: financials_group_1.LCOH
 ```
 
+```{note}
+We currently only support continuous design variables and constraints in H2Integrate.
+Integer design variables, such as the number of wind turbines, are not supported at this time.
+```
+
 ## Driver specifications
 
 The `driver` section of the driver config file defines the optimization settings.
