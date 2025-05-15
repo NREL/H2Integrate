@@ -55,7 +55,7 @@ Then you can follow these steps:
 
 3. **Merge inputs**
 
-   Use `merge_shared_performance_inputs` and `merge_shared_cost_inputs` to integrate with existing input structures.
+   Use `merge_shared_inputs` to integrate with existing input structures.
 
 4. **Use in a workflow**
 

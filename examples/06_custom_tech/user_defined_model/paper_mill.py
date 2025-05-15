@@ -3,11 +3,7 @@ import openmdao.api as om
 import numpy_financial as npf
 from attrs import field, define
 
-from h2integrate.core.utilities import (
-    BaseConfig,
-    merge_shared_cost_inputs,
-    merge_shared_performance_inputs,
-)
+from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
 
 
 n_timesteps = 8760
@@ -25,7 +21,7 @@ class PaperMillPerformance(om.ExplicitComponent):
 
     def setup(self):
         self.config = PaperMillConfig.from_dict(
-            merge_shared_performance_inputs(self.options["tech_config"]["model_inputs"])
+            merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance")
         )
         self.add_input(
             "electricity",
@@ -61,7 +57,7 @@ class PaperMillCost(om.ExplicitComponent):
 
     def setup(self):
         self.config = PaperMillCostConfig.from_dict(
-            merge_shared_cost_inputs(self.options["tech_config"]["model_inputs"])
+            merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost")
         )
         self.add_output("CapEx", val=0.0, units="USD", desc="Capital expenditure")
         self.add_output("OpEx", val=0.0, units="USD/year", desc="Operational expenditure")
