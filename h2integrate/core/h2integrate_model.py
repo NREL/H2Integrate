@@ -95,27 +95,7 @@ class H2IntegrateModel:
         the same for each technology. This includes site information, project parameters,
         control strategy, and finance parameters.
         """
-        # Create a plant-level component
-        plant_component = om.IndepVarComp()
-        plant_component.add_output("plant_component_example_value", val=1.0)
-        project_parameters = self.plant_config.get("project_parameters", {})
-        for key, value in project_parameters.items():
-            plant_component.add_output(key, val=value)
-
-        # Add control strategy parameters
-        control_strategy = self.plant_config.get("control_strategy", {})
-        for key, value in control_strategy.items():
-            plant_component.add_output(key, val=value)
-
-        # Add finance parameters
-        # Not using financial parameters through OpenMDAO right now; instead
-        # using the config dicts directly.
-        # finance_parameters = self.plant_config.get('finance_parameters', {})
-        # for key, value in finance_parameters.items():
-        #     plant_component.add_output(key, val=value)
-
         plant_group = om.Group()
-        plant_group.add_subsystem("plant_info", plant_component, promotes=["*"])
 
         # Create the plant model group and add components
         self.plant = self.model.add_subsystem("plant", plant_group, promotes=["*"])
