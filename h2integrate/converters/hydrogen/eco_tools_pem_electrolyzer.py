@@ -1,10 +1,6 @@
 from attrs import field, define
 
-from h2integrate.core.utilities import (
-    BaseConfig,
-    merge_shared_cost_inputs,
-    merge_shared_performance_inputs,
-)
+from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
 from h2integrate.core.validators import gt_zero, contains
 from h2integrate.tools.eco.utilities import ceildiv
 from h2integrate.converters.hydrogen.electrolyzer_baseclass import (
@@ -69,15 +65,20 @@ class ECOElectrolyzerPerformanceModel(ElectrolyzerPerformanceBaseClass):
     def setup(self):
         super().setup()
         self.config = ECOElectrolyzerPerformanceModelConfig.from_dict(
-            merge_shared_performance_inputs(self.options["tech_config"]["model_inputs"])
+            merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance")
         )
         self.add_output("efficiency", val=0.0, desc="Average efficiency of the electrolyzer")
 
-        self.add_input("electrolyzer_size_mw", units="MW", desc="Size of the electrolyzer in MW")
+        self.add_input(
+            "electrolyzer_size_mw",
+            val=self.config.rating,
+            units="MW",
+            desc="Size of the electrolyzer in MW",
+        )
 
     def compute(self, inputs, outputs):
         plant_life = self.options["plant_config"]["plant"]["plant_life"]
-        electrolyzer_size_mw = self.config.rating
+        electrolyzer_size_mw = inputs["electrolyzer_size_mw"]
         electrolyzer_capex_kw = self.config.electrolyzer_capex
 
         # # IF GRID CONNECTED
@@ -164,7 +165,7 @@ class ECOElectrolyzerCostModel(ElectrolyzerCostBaseClass):
     def setup(self):
         super().setup()
         self.config = ECOElectrolyzerCostModelConfig.from_dict(
-            merge_shared_cost_inputs(self.options["tech_config"]["model_inputs"])
+            merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost")
         )
 
     def compute(self, inputs, outputs):
@@ -228,17 +229,6 @@ class ECOElectrolyzerCostModel(ElectrolyzerCostBaseClass):
                 f"'{electrolyzer_cost_model}' was given"
             )
             raise ValueError(msg)
-
-        # print some results if desired
-        print("\nHydrogen Cost Results:")
-        print(
-            "Electrolyzer Total CAPEX $/kW: ",
-            electrolyzer_total_capital_cost / (electrolyzer_size_mw * 1e3),
-        )
-        print(
-            "Electrolyzer O&M $/kW: ",
-            electrolyzer_OM_cost / (electrolyzer_size_mw * 1e3),
-        )
 
         outputs["CapEx"] = electrolyzer_total_capital_cost
         outputs["OpEx"] = electrolyzer_OM_cost

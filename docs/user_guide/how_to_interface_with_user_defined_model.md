@@ -1,10 +1,10 @@
-# Custom User Defined Model
+# Custom user-defined models
 
 ## Overview
 
 H2Integrate now supports **user-defined models** that operate alongside built-in wrapped models for performance, cost, and financial analysis. This feature enables users to integrate proprietary or external tools with the H2Integrate framework, unlocking more flexible and extensible workflows.
 
-## Why Use Custom Models?
+## Why use custom models?
 
 Users may want to:
 - Use proprietary models developed in-house.
@@ -13,7 +13,7 @@ Users may want to:
 
 This feature allows any custom model that conforms to OpenMDAO standards and uses the appropriate configuration interfaces to be used within the H2Integrate ecosystem.
 
-## Example: Paper Mill Model
+## Example: paper mill model
 
 To demonstrate this capability, we include a minimal example of a custom model: a **paper mill**. This example includes:
 
@@ -27,44 +27,44 @@ These models use standard H2Integrate configuration utilities and OpenMDAO compo
 You can combine an H2Integrate model and a custom model for the same technology within a single analysis.
 ```
 
-## Key Benefits
+## Key benefits
 
 - **Flexibility**: Use any modeling tool or codebase that suits your domain or organization.
 - **Interoperability**: Integrate with the broader H2Integrate pipeline, including downstream analyses.
 - **Confidentiality**: Keep proprietary models external to the H2Integrate codebase.
 
-## Key Concepts
+## Key concepts
 
 - **Custom models are defined as OpenMDAO components.**
 - **Configuration is handled using `attrs` and `BaseConfig`** for consistent validation and input/output management.
 - **Inputs and outputs should follow standard naming and unit conventions** where applicable.
 - **Models can be integrated into the broader H2Integrate workflow**, including scenario execution and results processing.
 
-## Getting Started
+## Getting started
 
-To use a custom model in your H2Integrate project:
+To use a custom model in your H2Integrate project, we recommend you look at existing models in the H2Integrate codebase to help guide the process.
+Then you can follow these steps:
 
-1. **Create Configuration Classes**
+1. **Create configuration classes**
 
-   Subclass `BaseConfig` for any performance, cost, or financial parameters your model needs.
+   Create a configuration class that inherits from `BaseConfig` for any performance, cost, or financial parameters your model needs.
 
-2. **Implement OpenMDAO Components**
+2. **Implement OpenMDAO components**
 
    Define your model logic using `om.ExplicitComponent`.
 
-3. **Merge Inputs**
+3. **Merge inputs**
 
    Use `merge_shared_performance_inputs` and `merge_shared_cost_inputs` to integrate with existing input structures.
 
-4. **Use in a Pipeline**
+4. **Use in a workflow**
 
-   Treat your custom model as a drop-in component in your analysis pipeline.
+   Treat your custom model as a drop-in component in your analysis workflow.
 
 ```{note}
-Custom models can include external calls—for example, to an Excel macro—within the `compute` function, as long as the required inputs and outputs are properly defined and handled.
+Custom models can include calls to external tools (e.g. an Excel macro) within the `compute` function as long as the required inputs and outputs are properly defined and handled.
 ```
 
-Refer to the [Paper Mill Model Example](https://github.com/NREL/H2Integrate/tree/main/examples/06_custom_tech/) for a complete walkthrough.
----
+Refer to the [Paper Mill Model Example](https://github.com/NREL/H2Integrate/tree/develop/examples/06_custom_tech/) for a complete walkthrough.
 
-This enhancement supports broader adoption of H2I by allowing integration with the tools and models users already trust.
+This feature supports broader adoption of H2I by allowing integration with the tools and models users already trust.

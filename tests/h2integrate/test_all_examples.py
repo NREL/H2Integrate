@@ -135,6 +135,42 @@ def test_ammonia_example(subtests):
         )
 
 
+def test_wind_h2_opt_example(subtests):
+    # Change the current working directory to the example's directory
+    os.chdir(examples_dir / "05_wind_h2_opt")
+
+    # Create a H2Integrate model
+    model = H2IntegrateModel(Path.cwd() / "wind_plant_electrolyzer.yaml")
+
+    # Run the model
+    model.run()
+
+    model.post_process()
+
+    with subtests.test("Check LCOH"):
+        assert model.prob.get_val("financials_group_1.LCOH")[0] < 4.64
+
+    with subtests.test("Check LCOE"):
+        assert pytest.approx(model.prob.get_val("financials_group_1.LCOE"), rel=1e-3) == 0.09009908
+
+    with subtests.test("Check total adjusted CapEx"):
+        assert (
+            pytest.approx(model.prob.get_val("financials_group_1.total_capex_adjusted"), rel=1e-3)
+            == 1.82152792e09
+        )
+
+    with subtests.test("Check total adjusted OpEx"):
+        assert (
+            pytest.approx(model.prob.get_val("financials_group_1.total_opex_adjusted"), rel=1e-3)
+            == 51995875.99756081
+        )
+
+    with subtests.test("Check minimum total hydrogen produced"):
+        assert (
+            model.prob.get_val("electrolyzer.total_hydrogen_produced", units="kg/year") >= 60500000
+        )
+
+
 def test_paper_example(subtests):
     # Change the current working directory to the example's directory
     os.chdir(examples_dir / "06_custom_tech")
