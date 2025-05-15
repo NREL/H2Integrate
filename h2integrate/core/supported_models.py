@@ -37,6 +37,21 @@ from h2integrate.converters.hydrogen.eco_tools_pem_electrolyzer import (
     ECOElectrolyzerCostModel,
     ECOElectrolyzerPerformanceModel,
 )
+from h2integrate.converters.hydrogen.geologic.natural_geoh2_plant import (
+    NaturalGeoH2CostModel,
+    NaturalGeoH2FinanceModel,
+    NaturalGeoH2PerformanceModel,
+)
+from h2integrate.converters.hydrogen.geologic.combined_geoh2_plant import (
+    CombinedGeoH2CostModel,
+    CombinedGeoH2FinanceModel,
+    CombinedGeoH2PerformanceModel,
+)
+from h2integrate.converters.hydrogen.geologic.stimulated_geoh2_plant import (
+    StimulatedGeoH2CostModel,
+    StimulatedGeoH2FinanceModel,
+    StimulatedGeoH2PerformanceModel,
+)
 
 
 supported_models = {
@@ -64,6 +79,15 @@ supported_models = {
     "smr_methanol_plant_performance": SMRMethanolPlantPerformanceModel,
     "smr_methanol_plant_cost": SMRMethanolPlantCostModel,
     "methanol_plant_financial": SMRMethanolPlantFinanceModel,
+    "combined_geoh2_performance": CombinedGeoH2PerformanceModel,
+    "combined_geoh2_cost": CombinedGeoH2CostModel,
+    "combined_geoh2_financial": CombinedGeoH2FinanceModel,
+    "natural_geoh2_performance": NaturalGeoH2PerformanceModel,
+    "natural_geoh2_cost": NaturalGeoH2CostModel,
+    "natural_geoh2_financial": NaturalGeoH2FinanceModel,
+    "stimulated_geoh2_performance": StimulatedGeoH2PerformanceModel,
+    "stimulated_geoh2_cost": StimulatedGeoH2CostModel,
+    "stimulated_geoh2_financial": StimulatedGeoH2FinanceModel,
     # Transport
     "cable": CablePerformanceModel,
     "pipe": PipePerformanceModel,
