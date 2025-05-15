@@ -85,7 +85,6 @@ supported_models = {
 
     'pem_electrolyzer_performance': ElectrolyzerPerformanceModel,
     'pem_electrolyzer_cost': ElectrolyzerCostModel,
-    'pem_electrolyzer_financial': ElectrolyzerFinanceModel,
 
     'eco_pem_electrolyzer_performance': ECOElectrolyzerPerformanceModel,
     'eco_pem_electrolyzer_cost': ECOElectrolyzerCostModel,

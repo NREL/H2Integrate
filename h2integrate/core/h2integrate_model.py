@@ -1,3 +1,4 @@
+import importlib.util
 from pathlib import Path
 
 import yaml
@@ -23,6 +24,9 @@ class H2IntegrateModel:
     def __init__(self, config_file):
         # read in config file; it's a yaml dict that looks like this:
         self.load_config(config_file)
+
+        # load custom models
+        self.collect_custom_models()
 
         # create site-level model
         # this is an OpenMDAO group that contains all the site information
@@ -59,10 +63,50 @@ class H2IntegrateModel:
 
         # Load each config file as yaml and save as dict on this object
         self.driver_config = load_driver_yaml(config_path.parent / config.get("driver_config"))
-        self.technology_config = load_tech_yaml(
-            config_path.parent / config.get("technology_config")
-        )
+        self.tech_config_path = config_path.parent / config.get("technology_config")
+        self.technology_config = load_tech_yaml(self.tech_config_path)
         self.plant_config = load_plant_yaml(config_path.parent / config.get("plant_config"))
+
+    def collect_custom_models(self):
+        """
+        Collect custom models from the technology configuration.
+
+        This method loads custom models from the specified directory and adds them to the
+        supported models dictionary.
+        """
+
+        self.supported_models = supported_models.copy()
+
+        for tech_name, tech_config in self.technology_config["technologies"].items():
+            for model_type in ["performance_model", "cost_model", "financial_model"]:
+                if model_type in tech_config:
+                    model_name = tech_config[model_type].get("model")
+                    if model_name not in self.supported_models and model_name is not None:
+                        model_class_name = tech_config[model_type].get("model_class_name")
+                        model_location = tech_config[model_type].get("model_location")
+
+                        if not model_class_name or not model_location:
+                            raise ValueError(
+                                f"Custom {model_type} for {tech_name} must specify "
+                                "'model_class_name' and 'model_location'."
+                            )
+
+                        # Resolve the full path of the model location
+                        model_path = self.tech_config_path.parent / model_location
+
+                        if not model_path.exists():
+                            raise FileNotFoundError(
+                                f"Custom model location {model_path} does not exist."
+                            )
+
+                        # Dynamically import the custom model class
+                        spec = importlib.util.spec_from_file_location(model_class_name, model_path)
+                        module = importlib.util.module_from_spec(spec)
+                        spec.loader.exec_module(module)
+                        custom_model_class = getattr(module, model_class_name)
+
+                        # Add the custom model to the supported models dictionary
+                        self.supported_models[model_name] = custom_model_class
 
     def create_site_model(self):
         # Create a site-level component
@@ -95,27 +139,7 @@ class H2IntegrateModel:
         the same for each technology. This includes site information, project parameters,
         control strategy, and finance parameters.
         """
-        # Create a plant-level component
-        plant_component = om.IndepVarComp()
-        plant_component.add_output("plant_component_example_value", val=1.0)
-        project_parameters = self.plant_config.get("project_parameters", {})
-        for key, value in project_parameters.items():
-            plant_component.add_output(key, val=value)
-
-        # Add control strategy parameters
-        control_strategy = self.plant_config.get("control_strategy", {})
-        for key, value in control_strategy.items():
-            plant_component.add_output(key, val=value)
-
-        # Add finance parameters
-        # Not using financial parameters through OpenMDAO right now; instead
-        # using the config dicts directly.
-        # finance_parameters = self.plant_config.get('finance_parameters', {})
-        # for key, value in finance_parameters.items():
-        #     plant_component.add_output(key, val=value)
-
         plant_group = om.Group()
-        plant_group.add_subsystem("plant_info", plant_component, promotes=["*"])
 
         # Create the plant model group and add components
         self.plant = self.model.add_subsystem("plant", plant_group, promotes=["*"])
@@ -140,20 +164,20 @@ class H2IntegrateModel:
                 tech_group = self.plant.add_subsystem(tech_name, om.Group())
                 self.tech_names.append(tech_name)
 
-                # Special HOPP handling for short-term
+                # Special handling for short-term components that share performance and cost models
                 if tech_name in combined_performance_and_cost_model_technologies:
-                    hopp_comp = supported_models[tech_name](
+                    comp = self.supported_models[tech_name](
                         plant_config=self.plant_config, tech_config=individual_tech_config
                     )
-                    tech_group.add_subsystem(tech_name, hopp_comp, promotes=["*"])
-                    self.performance_models.append(hopp_comp)
-                    self.cost_models.append(hopp_comp)
-                    self.financial_models.append(hopp_comp)
+                    tech_group.add_subsystem(tech_name, comp, promotes=["*"])
+                    self.performance_models.append(comp)
+                    self.cost_models.append(comp)
+                    self.financial_models.append(comp)
                     continue
 
                 # Process the technology models
                 performance_name = individual_tech_config["performance_model"]["model"]
-                performance_object = supported_models[performance_name]
+                performance_object = self.supported_models[performance_name]
                 tech_group.add_subsystem(
                     performance_name,
                     performance_object(
@@ -166,7 +190,7 @@ class H2IntegrateModel:
                 # Process the cost models
                 if "cost_model" in individual_tech_config:
                     cost_name = individual_tech_config["cost_model"]["model"]
-                    cost_object = supported_models[cost_name]
+                    cost_object = self.supported_models[cost_name]
                     tech_group.add_subsystem(
                         cost_name,
                         cost_object(
@@ -178,12 +202,10 @@ class H2IntegrateModel:
 
                 # Process the financial models
                 if "financial_model" in individual_tech_config:
-                    financial_name = cost_name  # TODO: Should this be a separate name?
                     if "model" in individual_tech_config["financial_model"]:
                         financial_name = individual_tech_config["financial_model"]["model"]
 
-                    try:  # TODO: migrate to explicit model naming once financial side is figured out
-                        financial_object = supported_models[f"{financial_name}_financial"]
+                        financial_object = self.supported_models[financial_name]
                         tech_group.add_subsystem(
                             f"{tech_name}_financial",
                             financial_object(
@@ -192,9 +214,6 @@ class H2IntegrateModel:
                             promotes=["*"],
                         )
                         self.financial_models.append(financial_object)
-                    except KeyError:
-                        # TODO: Is this currently a bypass until the financial portion is more concrete?
-                        pass
 
     def create_financial_model(self):
         """
@@ -224,14 +243,25 @@ class H2IntegrateModel:
 
         # Add each financial group to the plant
         for group_id, tech_configs in financial_groups.items():
-            commodity_types = ["electricity"]
+            commodity_types = []
+            if "steel" in tech_configs:
+                commodity_types.append("steel")
             if "electrolyzer" in tech_configs:
                 commodity_types.append("hydrogen")
+            if "methanol" in tech_configs:
+                commodity_types.append("methanol")
             if "ammonia" in tech_configs:
                 commodity_types.append("ammonia")
+            for tech in electricity_producing_techs:
+                if tech in tech_configs:
+                    commodity_types.append("electricity")
+                    continue
 
-            # Steel provides its own financials
-            if "steel" in tech_configs:
+            # Steel, methanol provides their own financials
+            if any(c in commodity_types for c in ("steel", "methanol")):
+                continue
+
+            if commodity_types == []:
                 continue
 
             financial_group = om.Group()
@@ -277,7 +307,7 @@ class H2IntegrateModel:
                 connection_name = f"{source_tech}_to_{dest_tech}_{transport_type}"
 
                 # Create the transport object
-                connection_component = supported_models[transport_type]()
+                connection_component = self.supported_models[transport_type]()
 
                 # Add the connection component to the model
                 self.plant.add_subsystem(connection_name, connection_component)
@@ -342,8 +372,10 @@ class H2IntegrateModel:
             # Connect the outputs of the technology models to the appropriate financial groups
             for group_id, tech_configs in self.financial_groups.items():
                 # Skip steel financials; it provides its own financials
-                if "steel" in tech_configs:
+                if any(c in tech_configs for c in ("steel", "methanol")):
                     continue
+
+                plant_producing_electricity = False
 
                 # Loop through technologies and connect electricity outputs to the ExecComp
                 for tech_name in self.tech_names:
@@ -352,12 +384,14 @@ class H2IntegrateModel:
                             f"{tech_name}.electricity",
                             f"financials_group_{group_id}.electricity_sum.electricity_{tech_name}",
                         )
+                        plant_producing_electricity = True
 
-                # Connect total electricity produced to the financial group
-                self.plant.connect(
-                    f"financials_group_{group_id}.electricity_sum.total_electricity_produced",
-                    f"financials_group_{group_id}.total_electricity_produced",
-                )
+                if plant_producing_electricity:
+                    # Connect total electricity produced to the financial group
+                    self.plant.connect(
+                        f"financials_group_{group_id}.electricity_sum.total_electricity_produced",
+                        f"financials_group_{group_id}.total_electricity_produced",
+                    )
 
                 for tech_name in tech_configs.keys():
                     self.plant.connect(

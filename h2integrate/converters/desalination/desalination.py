@@ -1,10 +1,6 @@
 from attrs import field, define
 
-from h2integrate.core.utilities import (
-    BaseConfig,
-    merge_shared_cost_inputs,
-    merge_shared_performance_inputs,
-)
+from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
 from h2integrate.core.validators import gt_zero, contains
 from h2integrate.converters.desalination.desalination_baseclass import (
     DesalinationCostBaseClass,
@@ -38,7 +34,7 @@ class ReverseOsmosisPerformanceModel(DesalinationPerformanceBaseClass):
     def setup(self):
         super().setup()
         self.config = ReverseOsmosisPerformanceModelConfig.from_dict(
-            merge_shared_performance_inputs(self.options["tech_config"]["model_inputs"])
+            merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance")
         )
         self.add_output(
             "electricity",
@@ -127,7 +123,7 @@ class ReverseOsmosisCostModel(DesalinationCostBaseClass):
     def setup(self):
         super().setup()
         self.config = ReverseOsmosisCostModelConfig.from_dict(
-            merge_shared_cost_inputs(self.options["tech_config"]["model_inputs"])
+            merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost")
         )
 
     def compute(self, inputs, outputs):
