@@ -2,6 +2,7 @@ import warnings
 
 import numpy as np
 
+
 def basic_H2_cost_model(
     electrolyzer_capex_kw,
     time_between_replacement,
@@ -183,7 +184,7 @@ def basic_H2_cost_model(
             electrolyzer_repair_schedule = np.append(electrolyzer_repair_schedule, [0])
         counter += 1
     electrolyzer_repair_schedule * (stack_replacment_cost * electrolyzer_total_installed_capex)
-    
+
     # Include Hydrogen PTC from the Inflation Reduction Act (range $0.60 - $3/kg-H2)
     h2_tax_credit = [0] * useful_life
     h2_tax_credit[0:10] = [hydrogen_annual_output * PTC_USD_kg] * 10
