@@ -155,7 +155,6 @@ def test_wind_h2_opt_example(subtests):
 
     model.post_process()
 
-    # Subtests for checking specific values
     with subtests.test("Check LCOH"):
         assert model.prob.get_val("financials_group_1.LCOH")[0] < 4.64
 
@@ -177,4 +176,26 @@ def test_wind_h2_opt_example(subtests):
     with subtests.test("Check minimum total hydrogen produced"):
         assert (
             model.prob.get_val("electrolyzer.total_hydrogen_produced", units="kg/year") >= 60500000
+        )
+
+
+def test_paper_example(subtests):
+    # Change the current working directory to the example's directory
+    os.chdir(examples_dir / "06_custom_tech")
+
+    # Create a H2Integrate model
+    model = H2IntegrateModel(Path.cwd() / "wind_plant_paper.yaml")
+
+    # Run the model
+    model.run()
+
+    model.post_process()
+
+    # Subtests for checking specific values
+    with subtests.test("Check LCOP"):
+        assert (
+            pytest.approx(
+                model.prob.get_val("plant.paper_mill.paper_mill_financial.LCOP"), rel=1e-3
+            )
+            == 51.91476681
         )
