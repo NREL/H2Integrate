@@ -19,6 +19,7 @@ Energy recovery system: A system where a portion of the pressure energy of the b
 
 import numpy as np
 
+
 def RO_desal(
     net_power_supply_kW,
     desal_sys_size,
@@ -124,6 +125,7 @@ def RO_desal(
         desal_capex,
         desal_opex,
     )
+
 
 if __name__ == "__main__":
     Power = np.array([446, 500, 183, 200, 250, 100])
