@@ -19,9 +19,6 @@ Energy recovery system: A system where a portion of the pressure energy of the b
 
 import numpy as np
 
-from h2integrate.to_organize.H2_Analysis.simple_cash_annuals import simple_cash_annuals
-
-
 def RO_desal(
     net_power_supply_kW,
     desal_sys_size,
@@ -107,39 +104,18 @@ def RO_desal(
         feed_water_flowrate.append(instantaneous_feed_water_flowrate)
         fresh_water_flowrate.append(instantaneous_fresh_water_flowrate)
 
-    # print("Fresh water flowrate: ", fresh_water_flowrate, "m^3/hr")
-    # print(net_power_for_desal)
-    # net_power_supply_kW = np.where(net_power_supply_kW >= desal_power_max, \
-    #     desal_power_max, net_power_supply_kW)
-    # net_power_supply_kW = np.where(net_power_supply_kW < 0.5 * desal_power_max, \
-    #      0, net_power_supply_kW)
-    # print("Net power supply after checks: ",net_power_supply_kW, "kW")
-
     """Values for CAPEX and OPEX given as $/(kg/s)
     Source: https://www.nrel.gov/docs/fy16osti/66073.pdf
     Assumed density of recovered water = 997 kg/m^3"""
 
     desal_capex = 32894 * (997 * desal_sys_size / 3600)  # Output in USD
-    # print("Desalination capex: ", desal_capex, " USD")
 
     desal_opex = 4841 * (997 * desal_sys_size / 3600)  # Output in USD/yr
-    # print("Desalination opex: ", desal_opex, " USD/yr")
 
     """
     Assumed useful life = payment period for capital expenditure.
     compressor amortization interest = 3%
     """
-    desal_annuals = simple_cash_annuals(plant_life, useful_life, desal_capex, desal_opex, 0.03)
-    # a = 0.03
-    # desal_annuals = [0] * useful_life
-
-    # desal_amortization = desal_capex * \
-    #     ((a*(1+a)**useful_life)/((1+a)**useful_life - 1))
-
-    # for i in range(len(desal_annuals)):
-    #     if desal_annuals[i] == 0:
-    #         desal_annuals[i] = desal_amortization + desal_opex
-    #     return desal_annuals        #[USD]
 
     return (
         fresh_water_flowrate,
@@ -147,19 +123,7 @@ def RO_desal(
         operational_flags,
         desal_capex,
         desal_opex,
-        desal_annuals,
     )
-
-
-# Power = np.linspace(0, 100, 100)
-# system_size = np.linspace(1,1000,1000)        #m^3/hr
-
-# f = RO_desal(Power,system_size)
-
-# plt.plot(system_size,f,color="C0")
-# plt.xlabel("Desalination System Size [m^3/hr]")
-# plt.ylabel("Desalination OPEX [USD/yr]")
-# plt.show()
 
 if __name__ == "__main__":
     Power = np.array([446, 500, 183, 200, 250, 100])
