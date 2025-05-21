@@ -50,9 +50,9 @@ def test_sizing(tol_mch_storage, subtests):
 
 
 def test_cost_calculation_methods(tol_mch_storage, subtests):
-    capex = tol_mch_storage.calc_capex()
-    fixed_om = tol_mch_storage.calc_fixed_om()
-    var_om = tol_mch_storage.calc_variable_om()
+    capex = tol_mch_storage.calc_cost_value(*tol_mch_storage.occ_coeff)
+    fixed_om = tol_mch_storage.calc_cost_value(*tol_mch_storage.foc_coeff)
+    var_om = tol_mch_storage.calc_cost_value(*tol_mch_storage.voc_coeff)
     with subtests.test("CapEx"):
         assert capex == approx(toc_actual, rel=max_cost_error_rel)
     with subtests.test("Fixed O&M"):

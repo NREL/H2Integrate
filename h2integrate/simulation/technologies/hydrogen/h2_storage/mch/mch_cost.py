@@ -3,16 +3,12 @@ from attrs import field, define
 from h2integrate.core.utilities import BaseConfig
 
 
-def calc_value(sizes, b0, b1, b2, b3, b4):
-    Hc, Dc, Ms, As = sizes
-    cost = b0 + (b1 * Hc) + (b2 * Dc) + (b3 * Ms) + b4 * As
-    return cost
-
-
 @define
 class MCHStorage(BaseConfig):
     """
     Cost model representing a toluene/methylcyclohexane (TOL/MCH) hydrogen storage system.
+
+    Costs are in 2024 USD.
 
     Sources:
         Breunig, H., Rosner, F., Saqline, S. et al. "Achieving gigawatt-scale green hydrogen
@@ -71,35 +67,21 @@ class MCHStorage(BaseConfig):
         # Defined in paragraph between Equation (2) and (3)
         self.Ms = self.hydrogen_storage_capacity_kg / 1e3
 
-    def calc_capex(self):
-        """Calculate the overnight capital cost of TOL/MCH storage.
-
-        Returns:
-            float: overnight capital cost in TOL/MCH storage in 2024 USD
+    def calc_cost_value(self, b0, b1, b2, b3, b4):
         """
+        Calculate the value of the cost function for the given coefficients.
 
-        capex = calc_value((self.Hc, self.Dc, self.Ms, self.As), *self.occ_coeff)
-        return capex
-
-    def calc_variable_om(self):
-        """Calculate the variable operating cost of TOL/MCH storage.
-
+        Args:
+            b0 (float): Coefficient representing the base cost.
+            b1 (float): Coefficient for the Hc (hydrogenation capacity) term.
+            b2 (float): Coefficient for the Dc (dehydrogenation capacity) term.
+            b3 (float): Coefficient for the Ms (maximum storage) term.
+            b4 (float): Coefficient for the As (annual hydrogen into storage) term.
         Returns:
-            float: variable operating cost in TOL/MCH storage in 2024 USD
+            float: The calculated cost value based on the provided coefficients and attributes.
+
         """
-
-        vom = calc_value((self.Hc, self.Dc, self.Ms, self.As), *self.voc_coeff)
-        return vom
-
-    def calc_fixed_om(self):
-        """Calculate the fixed operating cost of TOL/MCH storage.
-
-        Returns:
-            float: fixed operating cost in TOL/MCH storage in 2024 USD
-        """
-
-        fixed_om = calc_value((self.Hc, self.Dc, self.Ms, self.As), *self.foc_coeff)
-        return fixed_om
+        return b0 + (b1 * self.Hc) + (b2 * self.Dc) + (b3 * self.Ms) + b4 * self.As
 
     def run_costs(self):
         """Calculate the costs of TOL/MCH hydrogen storage.
@@ -107,14 +89,10 @@ class MCHStorage(BaseConfig):
         Returns:
             dict: dictionary of costs for TOL/MCH storage
         """
-        capex = self.calc_capex()
-        var_om = self.calc_variable_om()
-        fixed_om = self.calc_fixed_om()
-
         cost_results = {
-            "mch_capex": capex,
-            "mch_opex": fixed_om,
-            "mch_variable_om": var_om,
+            "mch_capex": self.calc_cost_value(*self.occ_coeff),
+            "mch_opex": self.calc_cost_value(*self.foc_coeff),
+            "mch_variable_om": self.calc_cost_value(*self.voc_coeff),
             "mch_cost_year": self.cost_year,
         }
         return cost_results

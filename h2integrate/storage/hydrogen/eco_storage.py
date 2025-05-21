@@ -154,6 +154,7 @@ class H2Storage(om.ExplicitComponent):
                 "lined_rock_cavern_storage_opex"
             ]
             h2_storage_results["storage_energy"] = 0.0
+
         elif self.config.type == "mch":
             max_rated_h2 = np.max(
                 [inputs["rated_h2_production_kg_pr_hr"][0], storage_max_fill_rate]
