@@ -1,0 +1,5 @@
+name: "driver_config"
+description: "This analysis runs a river hydro plant"
+
+general:
+  folder_output: outputs

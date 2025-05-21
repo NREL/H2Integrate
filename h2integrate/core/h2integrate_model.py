@@ -28,6 +28,9 @@ class H2IntegrateModel:
         # load custom models
         self.collect_custom_models()
 
+        self.prob = om.Problem()
+        self.model = self.prob.model
+
         # create site-level model
         # this is an OpenMDAO group that contains all the site information
         self.create_site_model()
@@ -109,6 +112,8 @@ class H2IntegrateModel:
                         self.supported_models[model_name] = custom_model_class
 
     def create_site_model(self):
+        site_group = om.Group()
+
         # Create a site-level component
         site_config = self.plant_config.get("site", {})
         site_component = om.IndepVarComp()
@@ -124,9 +129,19 @@ class H2IntegrateModel:
             site_component.add_output(f"boundary_{i}_x", val=np.array(boundary.get("x", [])))
             site_component.add_output(f"boundary_{i}_y", val=np.array(boundary.get("y", [])))
 
-        self.prob = om.Problem()
-        self.model = self.prob.model
-        self.model.add_subsystem("site", site_component, promotes=["*"])
+        site_group.add_subsystem("site_component", site_component, promotes=["*"])
+
+        # Add the site resource component
+        if "resources" in site_config:
+            for resource_name, resource_config in site_config["resources"].items():
+                resource_class = self.supported_models.get(resource_name)
+                if resource_class:
+                    resource_component = resource_class(
+                        filename=resource_config.get("filename"),
+                    )
+                    site_group.add_subsystem(resource_name, resource_component)
+
+        self.model.add_subsystem("site", site_group, promotes=["*"])
 
     def create_plant_model(self):
         """
@@ -365,6 +380,22 @@ class H2IntegrateModel:
             else:
                 err_msg = f"Invalid connection: {connection}"
                 raise ValueError(err_msg)
+
+        # Loop through the technologies and connect resource outputs if present
+        for tech_name, tech_config in self.technology_config["technologies"].items():
+            if "resources" in tech_config:
+                for resource_name in tech_config["resources"]:
+                    plant_resources = self.plant_config.get("site", {}).get("resources", {})
+                    if resource_name in plant_resources:
+                        resource_config = plant_resources[resource_name]
+                        for output in resource_config.get("outputs", []):
+                            self.model.connect(
+                                f"{resource_name}.{output}",
+                                f"{tech_name}.{output}",
+                            )
+                            print(
+                                "connecting ", f"{resource_name}.{output}", f"{tech_name}.{output}"
+                            )
 
         # TODO: connect outputs of the technology models to the cost and financial models of the
         # same name if the cost and financial models are not None

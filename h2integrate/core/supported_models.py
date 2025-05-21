@@ -1,3 +1,4 @@
+from h2integrate.resource.river import RiverResource
 from h2integrate.transporters.pipe import PipePerformanceModel
 from h2integrate.transporters.cable import CablePerformanceModel
 from h2integrate.converters.steel.steel import SteelPerformanceModel, SteelCostAndFinancialModel
@@ -44,6 +45,8 @@ from h2integrate.converters.hydrogen.eco_tools_pem_electrolyzer import (
 
 
 supported_models = {
+    # Resources
+    "river_resource": RiverResource,
     # Converters
     "dummy_wind_turbine_performance": DummyPlantPerformance,
     "dummy_wind_turbine_cost": DummyPlantCost,
@@ -79,4 +82,4 @@ supported_models = {
     "hydrogen_tank_cost": HydrogenTankCostModel,
 }
 
-electricity_producing_techs = ["wind", "solar", "run_of_river_hydro", "hopp"]
+electricity_producing_techs = ["wind", "solar", "river", "hopp"]

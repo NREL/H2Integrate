@@ -27,7 +27,6 @@ class RunOfRiverHydroPerformanceConfig(BaseConfig):
     acceleration_gravity: float = field()
     turbine_efficiency: float = field()
     head: float = field()
-    flow_rate: list = field()
 
 
 class RunOfRiverHydroPerformanceModel(HydroPerformanceBaseClass):
@@ -45,6 +44,8 @@ class RunOfRiverHydroPerformanceModel(HydroPerformanceBaseClass):
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance")
         )
 
+        self.add_input("discharge", val=0.0, shape=8760, units="m**3/s")
+
     def compute(self, inputs, outputs):
         # Calculate the power output of the hydro plant
         power_output = (
@@ -52,7 +53,7 @@ class RunOfRiverHydroPerformanceModel(HydroPerformanceBaseClass):
             * self.config.acceleration_gravity
             * self.config.turbine_efficiency
             * self.config.head
-            * self.config.flow_rate
+            * inputs["discharge"]  # m^3/s
         ) / 1e3  # Convert to kW
 
         # power_output can't be greater than plant_capacity_mw
@@ -71,7 +72,8 @@ class RunOfRiverHydroCostConfig(BaseConfig):
     Args:
         plant_capacity_mw (float): Capacity of the hydro plant in MW.
         capital_cost (float): Capital cost of the hydro plant in USD/kW.
-        operational_cost (float): Operational cost of the hydro plant in USD/year.
+        operational_cost (float): Operational cost as a fraction of CapEx
+            for the hydro plant in USD/year.
     """
 
     plant_capacity_mw: float = field()
@@ -97,8 +99,9 @@ class RunOfRiverHydroCostModel(HydroCostBaseClass):
 
     def compute(self, inputs, outputs):
         capex_kw = self.config.capital_cost
-        opex_kw = self.config.operational_cost
         total_capacity_kw = self.config.plant_capacity_mw * 1e3
 
         outputs["CapEx"] = capex_kw * total_capacity_kw
-        outputs["OpEx"] = opex_kw * total_capacity_kw
+        outputs["OpEx"] = self.config.operational_cost * outputs["CapEx"]
+
+        print(f"CapEx: {outputs['CapEx']}, OpEx: {outputs['OpEx']}")
