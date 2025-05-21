@@ -1,13 +1,8 @@
 from attrs import field, define
 
-from h2integrate.core.utilities import (
-    BaseConfig,
-    merge_shared_cost_inputs,
-    merge_shared_performance_inputs,
-)
+from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
 from h2integrate.converters.hydrogen.electrolyzer_baseclass import (
     ElectrolyzerCostBaseClass,
-    ElectrolyzerFinanceBaseClass,
     ElectrolyzerPerformanceBaseClass,
 )
 from h2integrate.simulation.technologies.hydrogen.electrolysis import (
@@ -37,7 +32,7 @@ class ElectrolyzerPerformanceModel(ElectrolyzerPerformanceBaseClass):
     def setup(self):
         super().setup()
         self.config = ElectrolyzerPerformanceModelConfig.from_dict(
-            merge_shared_performance_inputs(self.options["tech_config"]["model_inputs"])
+            merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance")
         )
         self.electrolyzer = PEM_H2_LT_electrolyzer_Clusters(
             self.config.cluster_size_mw,
@@ -75,7 +70,7 @@ class ElectrolyzerCostModel(ElectrolyzerCostBaseClass):
         self.cost_model = PEMCostsSingliticoModel(elec_location=1)
         # Define inputs: electrolyzer capacity and reference cost
         self.config = ElectrolyzeCostModelConfig.from_dict(
-            merge_shared_cost_inputs(self.options["tech_config"]["model_inputs"])
+            merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost")
         )
         self.add_input(
             "P_elec",
@@ -100,12 +95,3 @@ class ElectrolyzerCostModel(ElectrolyzerCostBaseClass):
 
         outputs["CapEx"] = capex * 1.0e-6  # Convert to MUSD
         outputs["OpEx"] = opex * 1.0e-6  # Convert to MUSD
-
-
-class ElectrolyzerFinanceModel(ElectrolyzerFinanceBaseClass):
-    """
-    Placeholder for the financial model of the PEM electrolyzer.
-    """
-
-    def compute(self, inputs, outputs):
-        outputs["LCOH"] = 4.11  # Placeholder value

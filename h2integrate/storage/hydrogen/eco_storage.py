@@ -2,7 +2,7 @@ import numpy as np
 import openmdao.api as om
 from attrs import field, define
 
-from h2integrate.core.utilities import BaseConfig, merge_shared_performance_inputs
+from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
 from h2integrate.simulation.technologies.hydrogen.h2_storage.mch.mch_cost import MCHStorage
 
 
@@ -31,7 +31,7 @@ class H2Storage(om.ExplicitComponent):
 
     def setup(self):
         self.config = H2StorageModelConfig.from_dict(
-            merge_shared_performance_inputs(self.options["tech_config"]["model_inputs"])
+            merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance")
         )
         self.add_input(
             "hydrogen_input",
@@ -154,6 +154,7 @@ class H2Storage(om.ExplicitComponent):
                 "lined_rock_cavern_storage_opex"
             ]
             h2_storage_results["storage_energy"] = 0.0
+
         elif self.config.type == "mch":
             if not self.config.size_capacity_from_demand["flag"]:
                 msg = (

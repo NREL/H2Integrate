@@ -59,45 +59,41 @@ def create_xdsm_from_config(config, output_file="connections_xdsm"):
     print(f"XDSM diagram written to {output_file}.tex")
 
 
-def merge_inputs(dict1, dict2):
-    """Merges two dictionaries and raises ValueError if duplicate keys exist."""
-    common_keys = dict1.keys() & dict2.keys()
-    if common_keys:
-        raise ValueError(
-            f"Duplicate parameters found: {', '.join(common_keys)}. "
-            f"Please define parameters only once in the shared, performance, and cost dictionaries."
-        )
-    return {**dict1, **dict2}
+def merge_shared_inputs(config, input_type):
+    """
+    Merges two dictionaries from a configuration object and resolves potential conflicts.
 
+    This function combines the dictionaries associated with `shared_parameters` and
+    `performance_parameters`, `cost_parameters`, or `finance_parameters` in the provided
+    `config` dictionary. If both dictionaries contain the same keys,
+    a ValueError is raised to prevent duplicate parameter definitions.
 
-def merge_shared_performance_inputs(config):
-    """Merges two dictionaries and raises ValueError if duplicate keys exist."""
-    if "performance_parameters" in config.keys() and "shared_parameters" in config.keys():
-        common_keys = config["performance_parameters"].keys() & config["shared_parameters"].keys()
+    Parameters:
+        config (dict): A dictionary containing configuration data. It must include keys
+                       like `shared_parameters` and `{input_type}_parameters`.
+        input_type (str): The type of input parameters to merge. Valid values are
+                          'performance', 'cost', or 'finance'.
+
+    Returns:
+        dict: A merged dictionary containing parameters from both `shared_parameters`
+              and `{input_type}_parameters`. If one of the dictionaries is missing,
+              the function returns the existing dictionary.
+
+    Raises:
+        ValueError: If duplicate keys are found in `shared_parameters` and
+                    `{input_type}_parameters`.
+    """
+
+    if f"{input_type}_parameters" in config.keys() and "shared_parameters" in config.keys():
+        common_keys = config[f"{input_type}_parameters"].keys() & config["shared_parameters"].keys()
         if common_keys:
             raise ValueError(
                 f"Duplicate parameters found: {', '.join(common_keys)}. "
-                f"Please define parameters only once in the shared and performance dictionaries."
+                f"Please define parameters only once in the shared and {input_type} dictionaries."
             )
-        return {**config["performance_parameters"], **config["shared_parameters"]}
+        return {**config[f"{input_type}_parameters"], **config["shared_parameters"]}
     elif "shared_parameters" not in config.keys():
-        return config["performance_parameters"]
-    else:
-        return config["shared_parameters"]
-
-
-def merge_shared_cost_inputs(config):
-    """Merges two dictionaries and raises ValueError if duplicate keys exist."""
-    if "cost_parameters" in config.keys() and "shared_parameters" in config.keys():
-        common_keys = config["cost_parameters"].keys() & config["shared_parameters"].keys()
-        if common_keys:
-            raise ValueError(
-                f"Duplicate parameters found: {', '.join(common_keys)}. "
-                f"Please define parameters only once in the shared and cost dictionaries."
-            )
-        return {**config["cost_parameters"], **config["shared_parameters"]}
-    elif "shared_parameters" not in config.keys():
-        return config["cost_parameters"]
+        return config[f"{input_type}_parameters"]
     else:
         return config["shared_parameters"]
 
@@ -132,8 +128,8 @@ class BaseConfig:
             extra_args = [d for d in data if d not in class_attr_names]
             if len(extra_args):
                 raise AttributeError(
-                    f"The initialization for {cls.__name__} \
-                        was given extraneous inputs: {extra_args}"
+                    f"The initialization for {cls.__name__} was given extraneous "
+                    "inputs: {extra_args}"
                 )
 
         kwargs = {a.name: data[a.name] for a in cls.__attrs_attrs__ if a.name in data and a.init}
