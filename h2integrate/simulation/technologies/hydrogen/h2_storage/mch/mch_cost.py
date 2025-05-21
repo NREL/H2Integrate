@@ -1,16 +1,14 @@
 from attrs import field, define
 
-from h2integrate.core.utilities import BaseConfig
-
 
 def calc_value(sizes, b0, b1, b2, b3, b4):
     Hc, Dc, Ms, As = sizes
-    cost = b0 + (b1 * Hc) + (b2 * Dc) + (b3 * Ms) + b4 * As
+    cost = b0 + (b1 * Hc) + (b2 * Dc) + (b3 * Ms) + (b4 * As)
     return cost
 
 
 @define
-class MCHStorage(BaseConfig):
+class MCHStorage:
     """
     Cost model representing a toluene/methylcyclohexane (TOL/MCH) hydrogen storage system.
 
@@ -26,6 +24,14 @@ class MCHStorage(BaseConfig):
         hydrogen_demand_kg_pr_hr (float):  Hydrogen demand in kg/hr.
         annual_hydrogen_stored_kg_pr_yr (float): Sum of hydrogen used to fill storage
             in kg/year.
+
+    Note:
+        Hydrogenation capacity (HC) should be sized to allow for peak hydrogen charge rate.
+        Dehydrogenation capacity (DC) sized to assume that end-use requires a consistent H2 supply.
+        Maximum storage capacity (MS) is the maximum consecutive quantity of H2 stored
+            with lowest frequency of discharge.
+        Annual hydrogen storage (AS) is the hydrogen curtailed from production into storage.
+
     """
 
     max_H2_production_kg_pr_hr: float
@@ -53,6 +59,12 @@ class MCHStorage(BaseConfig):
 
     #: variable O&M cost coefficients
     voc_coeff = (711326.78, 1698.76, 6844.86, 36.04, 376.31)
+
+    #: lcos cost coefficients for a capital charge factor of 0.0710
+    lcos_coeff = (8014882.91, 15683.82, 62475.19, 1575.86, 377.04)
+
+    #: hydrogen storage efficiency
+    eta = 0.9984
 
     #: cost year associated with the costs in this model
     cost_year = 2024
@@ -118,3 +130,35 @@ class MCHStorage(BaseConfig):
             "mch_cost_year": self.cost_year,
         }
         return cost_results
+
+    def estimate_lcos(self):
+        """Estimate the levelized cost of hydrogen storage. Based on Equation (7) of the
+        reference article.
+
+        Returns:
+            float: levelized cost of storage in $2024/kg-H2 stored
+        """
+
+        lcos_numerator = calc_value((self.Hc, self.Dc, self.Ms, self.As), *self.lcos_coeff)
+        lcos_denom = self.As * self.eta * 1e3
+        lcos_est = lcos_numerator / lcos_denom
+        return lcos_est
+
+    def estimate_lcos_from_costs(self, ccf=0.0710):
+        """Estimate the levelized cost of hydrogen storage. Based on Equation (5) of the
+        reference article.
+
+        Args:
+            ccf (float, optional): Capital charge factor. Defaults to 0.0710.
+
+        Returns:
+            float: levelized cost of storage in $2024/kg-H2 stored
+        """
+
+        toc = self.calc_capex()
+        voc = self.calc_variable_om()
+        foc = self.calc_fixed_om()
+        costs = (toc * ccf) + voc + foc
+        denom = self.As * self.eta * 1e3
+        lcos_est = costs / denom
+        return lcos_est

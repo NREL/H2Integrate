@@ -155,6 +155,13 @@ class H2Storage(om.ExplicitComponent):
             ]
             h2_storage_results["storage_energy"] = 0.0
         elif self.config.type == "mch":
+            if not self.config.size_capacity_from_demand["flag"]:
+                msg = (
+                    "To use MCH hydrogen storage, the size_capacity_from_demand "
+                    "flag must be True."
+                )
+                raise ValueError(msg)
+
             max_rated_h2 = np.max(
                 [inputs["rated_h2_production_kg_pr_hr"][0], storage_max_fill_rate]
             )

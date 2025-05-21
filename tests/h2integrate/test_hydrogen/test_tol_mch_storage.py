@@ -70,3 +70,13 @@ def test_run_costs(tol_mch_storage, subtests):
         assert cost_res["mch_opex"] == approx(foc_actual, rel=max_cost_error_rel)
     with subtests.test("Variable O&M"):
         assert cost_res["mch_variable_om"] == approx(voc_actual, rel=max_cost_error_rel)
+
+
+def test_run_lcos(tol_mch_storage, subtests):
+    lcos_est = tol_mch_storage.estimate_lcos()
+    lcos_est_from_costs = tol_mch_storage.estimate_lcos_from_costs()
+
+    with subtests.test("lcos equation"):
+        assert lcos_est == approx(2.05, rel=max_cost_error_rel)
+    with subtests.test("lcos equation from costs"):
+        assert lcos_est_from_costs == approx(2.05, rel=max_cost_error_rel)
