@@ -73,6 +73,17 @@ def test_run_costs(tol_mch_storage, subtests):
 
 
 def test_run_lcos(tol_mch_storage, subtests):
+    """
+    This test is to highlight the difference between the LCOS when computed
+    using different methods from the same reference.
+    Specifically, the estimate_lcos and estimate_lcos_from_costs methods which
+    use Eq. 7 and Eq. 5 respectively from the source.
+
+    Sources:
+        Breunig, H., Rosner, F., Saqline, S. et al. "Achieving gigawatt-scale green hydrogen
+    production and seasonal storage at industrial locations across the U.S." *Nat Commun*
+    **15**, 9049 (2024). https://doi.org/10.1038/s41467-024-53189-2
+    """
     lcos_est = tol_mch_storage.estimate_lcos()
     lcos_est_from_costs = tol_mch_storage.estimate_lcos_from_costs()
 
