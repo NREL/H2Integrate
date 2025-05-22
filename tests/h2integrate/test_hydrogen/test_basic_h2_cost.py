@@ -25,7 +25,6 @@ class TestBasicH2Costs:
 
     def test_on_turbine_capex(self):
         (
-            cf_h2_annuals,
             per_turb_electrolyzer_total_capital_cost,
             per_turb_electrolyzer_OM_cost,
             per_turb_electrolyzer_capex_kw,
@@ -53,7 +52,6 @@ class TestBasicH2Costs:
 
     def test_on_platform_capex(self):
         (
-            cf_h2_annuals,
             electrolyzer_total_capital_cost,
             electrolyzer_OM_cost,
             electrolyzer_capex_kw,
@@ -78,7 +76,6 @@ class TestBasicH2Costs:
 
     def test_on_land_capex(self):
         (
-            cf_h2_annuals,
             per_turb_electrolyzer_total_capital_cost,
             per_turb_electrolyzer_OM_cost,
             per_turb_electrolyzer_capex_kw,
@@ -106,7 +103,6 @@ class TestBasicH2Costs:
 
     def test_on_turbine_opex(self):
         (
-            cf_h2_annuals,
             per_turb_electrolyzer_total_capital_cost,
             per_turb_electrolyzer_OM_cost,
             per_turb_electrolyzer_capex_kw,
@@ -134,7 +130,6 @@ class TestBasicH2Costs:
 
     def test_on_platform_opex(self):
         (
-            cf_h2_annuals,
             electrolyzer_total_capital_cost,
             electrolyzer_OM_cost,
             electrolyzer_capex_kw,
@@ -159,7 +154,6 @@ class TestBasicH2Costs:
 
     def test_on_land_opex(self):
         (
-            cf_h2_annuals,
             per_turb_electrolyzer_total_capital_cost,
             per_turb_electrolyzer_OM_cost,
             per_turb_electrolyzer_capex_kw,
