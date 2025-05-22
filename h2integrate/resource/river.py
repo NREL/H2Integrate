@@ -60,12 +60,10 @@ class RiverResource(om.ExplicitComponent):
 
         # Reset index if to use datetime as a column again
         df_hourly = df_hourly.reset_index()
+
+        # Forward fill NaN values with the last valid observation
+        df_hourly = df_hourly.ffill(limit=1)
+
         outputs["discharge"] = df_hourly["discharge_cfs"].values
 
-        print(df_hourly.head())
-
         df_hourly.to_csv("output.csv", index=False)
-
-        ### upsample and downsample - bespoke!
-        # resource base class for the upsampling and down sapling
-        # compute method is what's on this screen

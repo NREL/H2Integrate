@@ -23,6 +23,9 @@ site:
     river_resource:
       filename: "river_data.csv"
       outputs: ['discharge']
+    wind_resource:
+      filename: "wind_data.csv"
+      outputs: ['wind_speed', 'air_density']
 
 # array of arrays containing left-to-right technology
 # interconnections; can support bidirectional connections

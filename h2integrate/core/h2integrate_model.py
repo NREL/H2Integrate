@@ -393,9 +393,6 @@ class H2IntegrateModel:
                                 f"{resource_name}.{output}",
                                 f"{tech_name}.{output}",
                             )
-                            print(
-                                "connecting ", f"{resource_name}.{output}", f"{tech_name}.{output}"
-                            )
 
         # TODO: connect outputs of the technology models to the cost and financial models of the
         # same name if the cost and financial models are not None

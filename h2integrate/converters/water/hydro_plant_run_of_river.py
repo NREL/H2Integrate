@@ -103,5 +103,3 @@ class RunOfRiverHydroCostModel(HydroCostBaseClass):
 
         outputs["CapEx"] = capex_kw * total_capacity_kw
         outputs["OpEx"] = self.config.operational_cost * outputs["CapEx"]
-
-        print(f"CapEx: {outputs['CapEx']}, OpEx: {outputs['OpEx']}")
