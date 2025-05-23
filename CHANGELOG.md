@@ -14,6 +14,7 @@
 
 - Introduced a fully new underlying framework for H2Integrate which uses [OpenMDAO](https://openmdao.org/), allowing for more flexibility and extensibility in the future
 - Expanded introductory documentation
+- Added TOL/MCH hydrogen storage cost model
 
 ## 0.2.1, Unreleased, TBD
 

@@ -3,6 +3,7 @@ import openmdao.api as om
 from attrs import field, define
 
 from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
+from h2integrate.simulation.technologies.hydrogen.h2_storage.mch.mch_cost import MCHStorage
 
 
 # TODO: fix import structure in future refactor
@@ -38,6 +39,13 @@ class H2Storage(om.ExplicitComponent):
             shape_by_conn=True,
             copy_shape="hydrogen_output",
             units="kg/h",
+        )
+
+        self.add_input(
+            "rated_h2_production_kg_pr_hr",
+            val=0.0,
+            units="kg/h",
+            desc="Rated hydrogen production of electrolyzer",
         )
         self.add_input("efficiency", val=0.0, desc="Average efficiency of the electrolyzer")
 
@@ -146,10 +154,39 @@ class H2Storage(om.ExplicitComponent):
                 "lined_rock_cavern_storage_opex"
             ]
             h2_storage_results["storage_energy"] = 0.0
+
+        elif self.config.type == "mch":
+            if not self.config.size_capacity_from_demand["flag"]:
+                msg = (
+                    "To use MCH hydrogen storage, the size_capacity_from_demand "
+                    "flag must be True."
+                )
+                raise ValueError(msg)
+
+            max_rated_h2 = np.max(
+                [inputs["rated_h2_production_kg_pr_hr"][0], storage_max_fill_rate]
+            )
+            h2_charge_discharge = np.diff(hydrogen_storage_soc, prepend=False)
+            h2_charged_idx = np.argwhere(h2_charge_discharge > 0).flatten()
+            annual_h2_stored = sum([h2_charge_discharge[i] for i in h2_charged_idx])
+
+            h2_storage = MCHStorage(
+                max_H2_production_kg_pr_hr=max_rated_h2,
+                hydrogen_storage_capacity_kg=h2_storage_capacity_kg,
+                hydrogen_demand_kg_pr_hr=hydrogen_demand_kgphr,
+                annual_hydrogen_stored_kg_pr_yr=annual_h2_stored,
+            )
+            h2_storage_costs = h2_storage.run_costs()
+            h2_storage_results["storage_capex"] = h2_storage_costs["mch_capex"]
+            h2_storage_results["storage_opex"] = (
+                h2_storage_costs["mch_variable_om"] + h2_storage_costs["mch_opex"]
+            )
+            h2_storage_results["storage_energy"] = 0.0
+
         else:
             msg = (
                 "H2 storage type %s was given, but must be one of ['none', 'turbine', 'pipe',"
-                " 'pressure_vessel', 'salt_cavern', 'lined_rock_cavern']"
+                " 'pressure_vessel', 'salt_cavern', 'lined_rock_cavern', 'mch']"
             )
             raise ValueError(msg)
 

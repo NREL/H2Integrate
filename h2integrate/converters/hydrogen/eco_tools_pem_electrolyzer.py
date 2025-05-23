@@ -68,6 +68,12 @@ class ECOElectrolyzerPerformanceModel(ElectrolyzerPerformanceBaseClass):
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance")
         )
         self.add_output("efficiency", val=0.0, desc="Average efficiency of the electrolyzer")
+        self.add_output(
+            "rated_h2_production_kg_pr_hr",
+            val=0.0,
+            units="kg/h",
+            desc="Rated hydrogen production of system in kg/hour",
+        )
 
         self.add_input(
             "electrolyzer_size_mw",
@@ -132,6 +138,7 @@ class ECOElectrolyzerPerformanceModel(ElectrolyzerPerformanceBaseClass):
         outputs["total_hydrogen_produced"] = H2_Results["Life: Annual H2 production [kg/year]"]
         outputs["efficiency"] = H2_Results["Sim: Average Efficiency [%-HHV]"]
         outputs["time_until_replacement"] = H2_Results["Time Until Replacement [hrs]"]
+        outputs["rated_h2_production_kg_pr_hr"] = H2_Results["Rated BOL: H2 Production [kg/hr]"]
 
 
 @define
