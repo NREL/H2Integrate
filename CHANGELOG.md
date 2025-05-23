@@ -8,6 +8,7 @@
 - Added capability for user-defined technologies in the H2Integrate framework, allowing for custom models to be integrated into the system.
 - Added an example of a user-defined technology in the `examples` directory, demonstrating an extremely simple paper mill model.
 - Remove the `to_organize` directory.
+- Added a run of river hydro plant model, an example, and a documentation page.
 
 ## 0.3.0 [May 2 2025]
 
