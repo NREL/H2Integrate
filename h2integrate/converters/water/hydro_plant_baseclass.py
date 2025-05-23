@@ -22,7 +22,7 @@ class HydroPerformanceBaseClass(om.ExplicitComponent):
         """
         Computation for the OM component.
 
-        For a template class this is not implement and raises an error.
+        For a template class this is not implemented and raises an error.
         """
 
         raise NotImplementedError("This method should be implemented in a subclass.")
@@ -42,7 +42,7 @@ class HydroCostBaseClass(om.ExplicitComponent):
         """
         Computation for the OM component.
 
-        For a template class this is not implement and raises an error.
+        For a template class this is not implemented and raises an error.
         """
 
         raise NotImplementedError("This method should be implemented in a subclass.")
@@ -62,7 +62,7 @@ class HydroFinanceBaseClass(om.ExplicitComponent):
         """
         Computation for the OM component.
 
-        For a template class this is not implement and raises an error.
+        For a template class this is not implemented and raises an error.
         """
 
         raise NotImplementedError("This method should be implemented in a subclass.")

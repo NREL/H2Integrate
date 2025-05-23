@@ -102,4 +102,4 @@ class RunOfRiverHydroCostModel(HydroCostBaseClass):
         total_capacity_kw = self.config.plant_capacity_mw * 1e3
 
         outputs["CapEx"] = capex_kw * total_capacity_kw
-        outputs["OpEx"] = self.config.operational_cost * outputs["CapEx"]
+        outputs["OpEx"] = self.config.operational_cost * total_capacity_kw

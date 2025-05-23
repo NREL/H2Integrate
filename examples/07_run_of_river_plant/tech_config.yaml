@@ -16,6 +16,6 @@ technologies:
         turbine_efficiency: 0.9
         head: 10.0 # m
       cost_parameters:
-        capital_cost: 3000. # $/kW
-        operational_cost: 0.025 # $/capex
+        capital_cost: 7648. # $/kW
+        operational_cost: 50. # $/kW-yr
     resources: ["river_resource"]
