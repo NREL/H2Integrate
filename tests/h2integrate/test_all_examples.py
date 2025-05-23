@@ -107,32 +107,22 @@ def test_ammonia_example(subtests):
 
     with subtests.test("Check total adjusted CapEx"):
         assert (
-            pytest.approx(
-                model.prob.get_val("plant.financials_group_1.total_capex_adjusted"), rel=1e-3
-            )
+            pytest.approx(model.prob.get_val("financials_group_1.total_capex_adjusted"), rel=1e-3)
             == 2.76180599e09
         )
 
     with subtests.test("Check total adjusted OpEx"):
         assert (
-            pytest.approx(
-                model.prob.get_val("plant.financials_group_1.total_opex_adjusted"), rel=1e-3
-            )
+            pytest.approx(model.prob.get_val("financials_group_1.total_opex_adjusted"), rel=1e-3)
             == 66599592.71371833
         )
 
     # Currently underestimated compared to the Reference Design Doc
     with subtests.test("Check LCOH"):
-        assert (
-            pytest.approx(model.prob.get_val("plant.financials_group_1.LCOH"), rel=1e-3)
-            == 4.39187968
-        )
+        assert pytest.approx(model.prob.get_val("financials_group_1.LCOH"), rel=1e-3) == 4.39187968
     # Currently underestimated compared to the Reference Design Doc
     with subtests.test("Check LCOA"):
-        assert (
-            pytest.approx(model.prob.get_val("plant.financials_group_1.LCOA"), rel=1e-3)
-            == 1.06313924
-        )
+        assert pytest.approx(model.prob.get_val("financials_group_1.LCOA"), rel=1e-3) == 1.06313924
 
 
 def test_wind_h2_opt_example(subtests):
