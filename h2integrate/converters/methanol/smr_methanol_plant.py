@@ -133,9 +133,7 @@ class SMRMethanolPlantCostModel(MethanolCostBaseClass):
         self.add_input("electricity", shape=8760, units="kW*h/h")
         self.add_input("meoh_syn_cat_price", units="USD/ft**3", val=self.config.meoh_syn_cat_price)
         self.add_input("meoh_atr_cat_price", units="USD/ft**3", val=self.config.meoh_atr_cat_price)
-        self.add_input(
-            "ng_price", units="USD/MMBtu", val=self.config.ng_price
-        )  # TODO: get OpenMDAO to recognize 'MMBtu'
+        self.add_input("ng_price", units="USD/MMBtu", val=self.config.ng_price)
 
         self.add_output("meoh_syn_cat_cost", units="USD/year")
         self.add_output("meoh_atr_cat_cost", units="USD/year")
