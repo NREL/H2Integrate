@@ -1,3 +1,4 @@
+from h2integrate.resource.river import RiverResource
 from h2integrate.transporters.pipe import PipePerformanceModel
 from h2integrate.transporters.cable import CablePerformanceModel
 from h2integrate.converters.steel.steel import SteelPerformanceModel, SteelCostAndFinancialModel
@@ -33,6 +34,10 @@ from h2integrate.converters.methanol.smr_methanol_plant import (
     SMRMethanolPlantFinanceModel,
     SMRMethanolPlantPerformanceModel,
 )
+from h2integrate.converters.water.hydro_plant_run_of_river import (
+    RunOfRiverHydroCostModel,
+    RunOfRiverHydroPerformanceModel,
+)
 from h2integrate.converters.hydrogen.eco_tools_pem_electrolyzer import (
     ECOElectrolyzerCostModel,
     ECOElectrolyzerPerformanceModel,
@@ -40,6 +45,8 @@ from h2integrate.converters.hydrogen.eco_tools_pem_electrolyzer import (
 
 
 supported_models = {
+    # Resources
+    "river_resource": RiverResource,
     # Converters
     "dummy_wind_turbine_performance": DummyPlantPerformance,
     "dummy_wind_turbine_cost": DummyPlantCost,
@@ -49,6 +56,8 @@ supported_models = {
     "wind_plant_cost": WindPlantCostModel,
     "pysam_wind_plant_performance": PYSAMWindPlantPerformanceModel,
     "pysam_solar_plant_performance": PYSAMSolarPlantPerformanceModel,
+    "run_of_river_hydro_performance": RunOfRiverHydroPerformanceModel,
+    "run_of_river_hydro_cost": RunOfRiverHydroCostModel,
     "pem_electrolyzer_performance": ElectrolyzerPerformanceModel,
     "pem_electrolyzer_cost": ElectrolyzerCostModel,
     "eco_pem_electrolyzer_performance": ECOElectrolyzerPerformanceModel,
@@ -73,4 +82,4 @@ supported_models = {
     "hydrogen_tank_cost": HydrogenTankCostModel,
 }
 
-electricity_producing_techs = ["wind", "solar", "hopp"]
+electricity_producing_techs = ["wind", "solar", "river", "hopp"]

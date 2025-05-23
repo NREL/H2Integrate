@@ -18,7 +18,7 @@ parts:
 
 - caption: Technology Models
   chapters:
-  - file: technology_models/overview
+  - file: technology_models/run_of_river
 
 - caption: Examples
   chapters:
