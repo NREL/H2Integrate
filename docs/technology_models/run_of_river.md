@@ -40,7 +40,7 @@ We'll guide you through the process of obtaining the flow rate from the USGS web
    For this example, we'll select the `KANSAS R AT DESOTO, KS` site as shown in the image below.
    This gives us the site number `06892350` which we will use to download the relevant river data.
 
-| ![Selecting site on map](images/river_map.png) |
+| ![Selecting site on map](images/river_map.jpg) |
 |-|
 
 4. Next, return to the [USGS National Water Information System homepage](https://waterdata.usgs.gov/nwis/uv) and select the `Site Number` option then click `Submit`.
