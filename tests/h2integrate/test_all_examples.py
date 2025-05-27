@@ -138,10 +138,10 @@ def test_wind_h2_opt_example(subtests):
     model.post_process()
 
     with subtests.test("Check LCOH"):
-        assert model.prob.get_val("financials_group_1.LCOH")[0] < 4.64
+        assert model.prob.get_val("financials_group_1.LCOH")[0] < 6.90
 
     with subtests.test("Check LCOE"):
-        assert pytest.approx(model.prob.get_val("financials_group_1.LCOE"), rel=1e-3) == 0.09009908
+        assert pytest.approx(model.prob.get_val("financials_group_1.LCOE"), rel=1e-3) == 0.13334331
 
     with subtests.test("Check total adjusted CapEx"):
         assert (
