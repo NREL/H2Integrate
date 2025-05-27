@@ -34,7 +34,8 @@ from h2integrate.converters.methanol.smr_methanol_plant import (
     SMRMethanolPlantPerformanceModel,
 )
 from h2integrate.converters.hydrogen.eco_tools_pem_electrolyzer import (
-    ECOElectrolyzerCostModel,
+    SingliticoCostModel,
+    BasicElectrolyzerCostModel,
     ECOElectrolyzerPerformanceModel,
 )
 
@@ -52,7 +53,8 @@ supported_models = {
     "pem_electrolyzer_performance": ElectrolyzerPerformanceModel,
     "pem_electrolyzer_cost": ElectrolyzerCostModel,
     "eco_pem_electrolyzer_performance": ECOElectrolyzerPerformanceModel,
-    "eco_pem_electrolyzer_cost": ECOElectrolyzerCostModel,
+    "singlitico_electrolyzer_cost": SingliticoCostModel,
+    "basic_electrolyzer_cost": BasicElectrolyzerCostModel,
     "h2_storage": H2Storage,
     "hopp": HOPPComponent,
     "reverse_osmosis_desalination_performance": ReverseOsmosisPerformanceModel,
