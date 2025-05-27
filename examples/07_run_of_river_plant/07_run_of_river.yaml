@@ -1,6 +1,6 @@
 name: "H2Integrate_config"
 
-system_summary: "This reference hybrid plant contains a simple run of river hydro plant"
+system_summary: "This reference hybrid plant contains a simple run-of-river hydropower plant"
 
 driver_config: "driver_config.yaml"
 technology_config: "tech_config.yaml"

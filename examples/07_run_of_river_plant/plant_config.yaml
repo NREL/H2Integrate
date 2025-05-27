@@ -27,7 +27,9 @@ site:
 # array of arrays containing left-to-right technology
 # interconnections; can support bidirectional connections
 # with the reverse definition.
-# this will naturally grow as we mature the interconnected tech
+# in this example the run-of-river hydro plant is behind-the-meter
+# and not connected to additional technologies.
+# hence the empty array.
 technology_interconnections: [
 ]
 

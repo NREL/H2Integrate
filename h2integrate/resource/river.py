@@ -16,12 +16,20 @@ class RiverResource(om.ExplicitComponent):
         # Read the CSV file
         filename = self.options["filename"]
 
+        # Check if the file exists
+        if not Path(filename).is_file():
+            raise FileNotFoundError(f"The file '{filename}' does not exist.")
+
         df = pd.read_csv(
             filename,
             sep="\t",
             comment="#",  # Ignore comment lines starting with #
             skiprows=13,  # Skip top metadata until actual headers
         )
+
+        # Check if the DataFrame is empty or has insufficient data
+        if df.empty or len(df) < 8760:
+            raise ValueError("Insufficient data for resampling.")
 
         # Extract the column name for discharge
         with Path.open(filename) as file:

@@ -1,5 +1,5 @@
 name: "technology_config"
-description: "This hybrid plant produces electricity from river hydro"
+description: "This plant produces electricity from river hydro"
 
 technologies:
   river:

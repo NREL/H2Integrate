@@ -10,11 +10,11 @@ from h2integrate.converters.water.hydro_plant_baseclass import (
 
 @define
 class RunOfRiverHydroPerformanceConfig(BaseConfig):
-    """Configuration class for the HydroPlantPerformanceComponent.
-    This class defines the parameters for the hydro plant performance model.
+    """Configuration class for the RunOfRiverHydroPerformanceComponent.
+    This class defines the parameters for the run-of-river hydropower plant performance model.
 
     Args:
-        plant_capacity_mw (float): Capacity of the hydro plant in MW.
+        plant_capacity_mw (float): Capacity of the run-of-river hydropower plant in MW.
         water_density (float): Density of water in kg/m^3.
         acceleration_gravity (float): Acceleration due to gravity in m/s^2.
         turbine_efficiency (float): Efficiency of the turbine as a decimal.
@@ -31,7 +31,7 @@ class RunOfRiverHydroPerformanceConfig(BaseConfig):
 
 class RunOfRiverHydroPerformanceModel(HydroPerformanceBaseClass):
     """
-    An OpenMDAO component for modeling the performance of a hydro plant.
+    An OpenMDAO component for modeling the performance of a run-of-river hydropower plant.
     Computes annual electricity production based on water flow rate and turbine efficiency.
     """
 
@@ -47,7 +47,7 @@ class RunOfRiverHydroPerformanceModel(HydroPerformanceBaseClass):
         self.add_input("discharge", val=0.0, shape=8760, units="m**3/s")
 
     def compute(self, inputs, outputs):
-        # Calculate the power output of the hydro plant
+        # Calculate the power output of the run-of-river hydropower plant
         power_output = (
             self.config.water_density
             * self.config.acceleration_gravity
@@ -66,14 +66,14 @@ class RunOfRiverHydroPerformanceModel(HydroPerformanceBaseClass):
 
 @define
 class RunOfRiverHydroCostConfig(BaseConfig):
-    """Configuration class for the HydroPlantCostComponent.
-    This class defines the parameters for the hydro plant cost model.
+    """Configuration class for the RunOfRiverHydroCostComponent.
+    This class defines the parameters for the run-of-river hydropower plant cost model.
 
     Args:
-        plant_capacity_mw (float): Capacity of the hydro plant in MW.
-        capital_cost (float): Capital cost of the hydro plant in USD/kW.
+        plant_capacity_mw (float): Capacity of the run-of-river hydropower plant in MW.
+        capital_cost (float): Capital cost of the run-of-river hydropower plant in USD/kW.
         operational_cost (float): Operational cost as a fraction of CapEx
-            for the hydro plant in USD/year.
+            for the run-of-river hydropower plant in USD/year.
     """
 
     plant_capacity_mw: float = field()
@@ -83,7 +83,8 @@ class RunOfRiverHydroCostConfig(BaseConfig):
 
 class RunOfRiverHydroCostModel(HydroCostBaseClass):
     """
-    An OpenMDAO component that calculates the capital expenditure (CapEx) for a hydro plant.
+    An OpenMDAO component that calculates the capital expenditure (CapEx) for a run-of-river
+        hydropower plant.
 
     Just a placeholder for now, but can be extended with more detailed cost models.
     """
