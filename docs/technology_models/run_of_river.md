@@ -1,6 +1,7 @@
-# Run of river hydropower model
+# Run-of-river hydropower model
 
-The `RunOfRiverHydro` model simulates the generation of electricity from a river generation source (e.g. dam), taking into account the flow rate and the efficiency of the turbine.
+The `RunOfRiverHydro` model simulates the generation of electricity from a river generation source, taking into account the flow rate and the efficiency of the turbine.
+The run-of-river model is representative of a canal and/or penstock that produces energy by using the natural decline of the river bed elevation.
 The model uses a simple formula to calculate the power generated based on the flow rate and the height difference between the water source and the turbine.
 This doc page walks you through how to obtain resource information and how to use the model.
 
@@ -22,7 +23,7 @@ We'll guide you through the process of obtaining the flow rate from the USGS web
 
    Determine the site number of the river you want to obtain information for.
    You can find the site number by searching for the river name or location on the USGS website.
-   Here, we'll select the `State/Territory` option and hit `Submit`.
+   Here, we'll select the `State/Territory` option and click `Submit`.
 
 2. On the next screen, you can select the area of interest.
    For this example, we'll select Kansas then scroll to the bottom of the page and select `Show sites on a map` then `Submit`.
@@ -42,7 +43,7 @@ We'll guide you through the process of obtaining the flow rate from the USGS web
 | ![Selecting site on map](images/river_map.png) |
 |-|
 
-4. Next, return to the [USGS National Water Information System homepage](https://waterdata.usgs.gov/nwis/uv) and select the `Site Number` option then hit `Submit`.
+4. Next, return to the [USGS National Water Information System homepage](https://waterdata.usgs.gov/nwis/uv) and select the `Site Number` option then click `Submit`.
    On the next screen, enter the site number `06892350` as shown below then scroll to the bottom of the page.
 
 | ![Selecting site number](images/site_number_input.png) |
@@ -56,7 +57,7 @@ Please check the site information to ensure that the site you selected has disch
 5. Now you can select the date range that you're interested in.
    H2Integrate requires exactly one year of data, so you can select the start and end dates accordingly.
    In this example, we select the start date as `2024-05-01` and the end date as `2025-04-30`.
-   Then, select the `Tab-separated data` option and hit `Submit`.
+   Then, select the `Tab-separated data` option and click `Submit`.
    This will download a file with the river data in tab-separated format.
    Rename this file to have a `.csv` extension for use in H2Integrate.
 
@@ -70,3 +71,7 @@ Follow the `07_run_of_river_plant` example script and yaml files to see how to u
 
 You will need to specify the path to the downloaded river data file in the `plant_config` yaml and also specify the resource being used for the river technology model in the `tech_config` yaml.
 Also within the `tech_config` yaml, you can set the performance and cost parameters for the hydroelectric plant.
+
+For additional information regarding hydropower technology and performance see
+[New Stream-reach Development: A Comprehensive Assessment of Hydropower Energy Potential in the United States](https://info.ornl.gov/sites/publications/Files/Pub46481.pdf) and
+for relevant performance and cost assumptions see the [Annual Technology Baseline - Hydropower](https://atb.nrel.gov/electricity/2024/hydropower).
