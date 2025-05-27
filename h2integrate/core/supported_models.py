@@ -20,6 +20,7 @@ from h2integrate.converters.desalination.desalination import (
     ReverseOsmosisCostModel,
     ReverseOsmosisPerformanceModel,
 )
+from h2integrate.converters.hydrogen.basic_cost_model import BasicElectrolyzerCostModel
 from h2integrate.converters.hydrogen.pem_electrolyzer import (
     ElectrolyzerCostModel,
     ElectrolyzerPerformanceModel,
@@ -33,9 +34,8 @@ from h2integrate.converters.methanol.smr_methanol_plant import (
     SMRMethanolPlantFinanceModel,
     SMRMethanolPlantPerformanceModel,
 )
+from h2integrate.converters.hydrogen.singlitico_cost_model import SingliticoCostModel
 from h2integrate.converters.hydrogen.eco_tools_pem_electrolyzer import (
-    SingliticoCostModel,
-    BasicElectrolyzerCostModel,
     ECOElectrolyzerPerformanceModel,
 )
 
