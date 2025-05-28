@@ -8,6 +8,7 @@
 - Added capability for user-defined technologies in the H2Integrate framework, allowing for custom models to be integrated into the system.
 - Added an example of a user-defined technology in the `examples` directory, demonstrating an extremely simple paper mill model.
 - Remove the `to_organize` directory.
+- Updated the naming scheme throughout the framework so resources produced always have `_out` and resources consumed always have `_in` in their names.
 
 ## 0.3.0 [May 2 2025]
 
