@@ -72,6 +72,11 @@ class RiverResource(om.ExplicitComponent):
         # Forward fill NaN values with the last valid observation
         df_hourly = df_hourly.ffill(limit=1)
 
-        outputs["discharge"] = df_hourly["discharge_cfs"].values
+        # Check if the output length matches 8760
+        if len(df_hourly) != 8760:
+            raise ValueError(
+                f"Resampled data does not have the expected length of 8760 hours."
+                f"Actual length: {len(df_hourly)}"
+            )
 
-        df_hourly.to_csv("output.csv", index=False)
+        outputs["discharge"] = df_hourly["discharge_cfs"].values
