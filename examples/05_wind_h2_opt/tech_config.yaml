@@ -39,7 +39,7 @@ technologies:
     performance_model:
       model: "eco_pem_electrolyzer_performance"
     cost_model:
-      model: "basic_electrolyzer_cost"
+      model: "singlitico_electrolyzer_cost"
     model_inputs:
       shared_parameters:
         rating: 500. # MW

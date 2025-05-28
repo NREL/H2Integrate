@@ -66,20 +66,10 @@ def test_ammonia_example(subtests):
         assert pytest.approx(model.prob.get_val("plant.hopp.hopp.OpEx"), rel=1e-3) == 32953490.4
 
     with subtests.test("Check electrolyzer CapEx"):
-        assert (
-            pytest.approx(
-                model.prob.get_val("plant.electrolyzer.eco_pem_electrolyzer_cost.CapEx"), rel=1e-3
-            )
-            == 6.00412524e08
-        )
+        assert pytest.approx(model.prob.get_val("electrolyzer.CapEx"), rel=1e-3) == 6.00412524e08
 
     with subtests.test("Check electrolyzer OpEx"):
-        assert (
-            pytest.approx(
-                model.prob.get_val("plant.electrolyzer.eco_pem_electrolyzer_cost.OpEx"), rel=1e-3
-            )
-            == 14703155.39207595
-        )
+        assert pytest.approx(model.prob.get_val("electrolyzer.OpEx"), rel=1e-3) == 14703155.39207595
 
     with subtests.test("Check H2 storage CapEx"):
         assert (
@@ -138,10 +128,10 @@ def test_wind_h2_opt_example(subtests):
     model.post_process()
 
     with subtests.test("Check LCOH"):
-        assert model.prob.get_val("financials_group_1.LCOH")[0] < 6.90
+        assert model.prob.get_val("financials_group_1.LCOH")[0] < 4.64
 
     with subtests.test("Check LCOE"):
-        assert pytest.approx(model.prob.get_val("financials_group_1.LCOE"), rel=1e-3) == 0.13334331
+        assert pytest.approx(model.prob.get_val("financials_group_1.LCOE"), rel=1e-3) == 0.09009908
 
     with subtests.test("Check total adjusted CapEx"):
         assert (
