@@ -236,7 +236,11 @@ class H2IntegrateModel:
                     continue
 
             # Steel, methanol provides their own financials
-            if any(c in commodity_types for c in ("steel", "methanol", "geoh2")):
+            if any(c in commodity_types for c in ("steel", "methanol")):
+                continue
+
+            # GeoH2 provides own financials
+            if "geoh2" in tech_configs:
                 continue
 
             if commodity_types == []:

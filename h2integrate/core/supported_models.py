@@ -84,10 +84,10 @@ supported_models = {
     "combined_geoh2_financial": CombinedGeoH2FinanceModel,
     "natural_geoh2_performance": NaturalGeoH2PerformanceModel,
     "natural_geoh2_cost": NaturalGeoH2CostModel,
-    "natural_geoh2_financial": NaturalGeoH2FinanceModel,
+    "natural_geoh2": NaturalGeoH2FinanceModel,
     "stimulated_geoh2_performance": StimulatedGeoH2PerformanceModel,
     "stimulated_geoh2_cost": StimulatedGeoH2CostModel,
-    "stimulated_geoh2_financial": StimulatedGeoH2FinanceModel,
+    "stimulated_geoh2": StimulatedGeoH2FinanceModel,
     # Transport
     "cable": CablePerformanceModel,
     "pipe": PipePerformanceModel,
