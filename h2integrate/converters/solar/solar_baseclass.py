@@ -11,7 +11,7 @@ class SolarPerformanceBaseClass(om.ExplicitComponent):
 
     def setup(self):
         self.add_output(
-            "electricity",
+            "electricity_out",
             val=0.0,
             shape=n_timesteps,
             units="kW",

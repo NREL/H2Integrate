@@ -11,7 +11,6 @@ from h2integrate.storage.hydrogen.tank_baseclass import (
     HydrogenTankPerformanceModel,
 )
 from h2integrate.converters.wind.wind_plant_pysam import PYSAMWindPlantPerformanceModel
-from h2integrate.converters.wind.dummy_wind_turbine import DummyPlantCost, DummyPlantPerformance
 from h2integrate.converters.ammonia.ammonia_baseclass import (
     AmmoniaCostModel,
     AmmoniaPerformanceModel,
@@ -23,10 +22,6 @@ from h2integrate.converters.desalination.desalination import (
 from h2integrate.converters.hydrogen.pem_electrolyzer import (
     ElectrolyzerCostModel,
     ElectrolyzerPerformanceModel,
-)
-from h2integrate.converters.hydrogen.dummy_electrolyzer import (
-    DummyElectrolyzerCostModel,
-    DummyElectrolyzerPerformanceModel,
 )
 from h2integrate.converters.methanol.smr_methanol_plant import (
     SMRMethanolPlantCostModel,
@@ -41,10 +36,6 @@ from h2integrate.converters.hydrogen.eco_tools_pem_electrolyzer import (
 
 supported_models = {
     # Converters
-    "dummy_wind_turbine_performance": DummyPlantPerformance,
-    "dummy_wind_turbine_cost": DummyPlantCost,
-    "dummy_electrolyzer_performance": DummyElectrolyzerPerformanceModel,
-    "dummy_electrolyzer_cost": DummyElectrolyzerCostModel,
     "wind_plant_performance": WindPlantPerformanceModel,
     "wind_plant_cost": WindPlantCostModel,
     "pysam_wind_plant_performance": PYSAMWindPlantPerformanceModel,

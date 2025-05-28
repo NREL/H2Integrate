@@ -21,22 +21,36 @@ varname                               val                  units     prom_name
 plant
   hopp
     hopp
-      electricity                     |85854400.89803042|  kW        hopp.electricity
-      CapEx                           [4.00631628e+09]     USD       hopp.CapEx
-      OpEx                            [70417369.71000001]  USD/year  hopp.OpEx
+      electricity_out                 |85694382.72934064|   kW         hopp.electricity_out
+      CapEx                           [4.00631628e+09]      USD        hopp.CapEx
+      OpEx                            [70417369.71000001]   USD/year   hopp.OpEx
   hopp_to_steel_cable
-    electricity_output                |85854400.89803042|  kW        hopp_to_steel_cable.electricity_output
+    electricity_out                   |85694382.72934064|   kW         hopp_to_steel_cable.electricity_out
   hopp_to_electrolyzer_cable
-    electricity_output                |85854400.89803042|  kW        hopp_to_electrolyzer_cable.electricity_output
+    electricity_out                   |85694382.72934064|   kW         hopp_to_electrolyzer_cable.electricity_out
   electrolyzer
     eco_pem_electrolyzer_performance
-      hydrogen                        |1514447.39634248|   kg/h      electrolyzer.hydrogen
-      time_until_replacement          [43961.84207719]     h         electrolyzer.time_until_replacement
-      total_hydrogen_produced         [1.18206537e+08]     kg/year   electrolyzer.total_hydrogen_produced
-      efficiency                      [0.7206635]          None      electrolyzer.efficiency
+      hydrogen_out                    |1100221.2561732|     kg/h       electrolyzer.hydrogen_out
+      time_until_replacement          [47705.10433122]      h          electrolyzer.time_until_replacement
+      total_hydrogen_produced         [89334697.48304178]   kg/year    electrolyzer.total_hydrogen_produced
+      efficiency                      [0.54540813]          None       electrolyzer.efficiency
+      rated_h2_production_kg_pr_hr    [14118.38052482]      kg/h       electrolyzer.rated_h2_production_kg_pr_hr
     eco_pem_electrolyzer_cost
-      CapEx                           [1.63021997e+09]     USD       electrolyzer.CapEx
-      OpEx                            [39921515.0500124]   USD/year  electrolyzer.OpEx
+      CapEx                           [6.75464089e+08]      USD        electrolyzer.CapEx
+      OpEx                            [16541049.81608545]   USD/year   electrolyzer.OpEx
+<...>
+  financials_group_1
+    profast_comp_0
+      LCOH                            [7.47944016]          USD/kg     financials_group_1.LCOH
+    profast_comp_1
+      LCOE                            [0.09795931]          USD/kW/h   financials_group_1.LCOE
+  steel
+    steel_performance
+      steel                           |9615.91147134|       t/year     steel.steel
+    steel_cost
+      CapEx                           [5.78060014e+08]      USD        steel.CapEx
+      OpEx                            [1.0129052e+08]       USD/year   steel.OpEx
+      LCOS                            [1213.87728644]       USD/t      steel.LCOS
 ```
 
 Anywhere that the value is listed as a magnitude (e.g. `|85854400.89803042|`), this indicates that the value reported is the magnitude of the array.

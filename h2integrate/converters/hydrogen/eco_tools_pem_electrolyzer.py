@@ -107,7 +107,7 @@ class ECOElectrolyzerPerformanceModel(ElectrolyzerPerformanceBaseClass):
         # else:
         hydrogen_production_capacity_required_kgphr = []
         grid_connection_scenario = "off-grid"
-        energy_to_electrolyzer_kw = inputs["electricity"]
+        energy_to_electrolyzer_kw = inputs["electricity_in"]
 
         n_pem_clusters = int(ceildiv(electrolyzer_size_mw, self.config.cluster_rating_MW))
 
@@ -134,7 +134,7 @@ class ECOElectrolyzerPerformanceModel(ElectrolyzerPerformanceBaseClass):
         )
 
         # Assuming `h2_results` includes hydrogen and oxygen rates per timestep
-        outputs["hydrogen"] = H2_Results["Hydrogen Hourly Production [kg/hr]"]
+        outputs["hydrogen_out"] = H2_Results["Hydrogen Hourly Production [kg/hr]"]
         outputs["total_hydrogen_produced"] = H2_Results["Life: Annual H2 production [kg/year]"]
         outputs["efficiency"] = H2_Results["Sim: Average Efficiency [%-HHV]"]
         outputs["time_until_replacement"] = H2_Results["Time Until Replacement [hrs]"]
@@ -207,7 +207,7 @@ class ECOElectrolyzerCostModel(ElectrolyzerCostBaseClass):
                 electrolyzer_size_mw,
                 useful_life,
                 atb_year,
-                inputs["electricity"],
+                inputs["electricity_in"],
                 total_hydrogen_produced,
                 0.0,
                 0.0,
