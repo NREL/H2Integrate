@@ -7,8 +7,9 @@
 - Added a new optimization example with a wind plant and electrolyzer to showcase how to define design variables, constraints, and objective functions
 - Added capability for user-defined technologies in the H2Integrate framework, allowing for custom models to be integrated into the system.
 - Added an example of a user-defined technology in the `examples` directory, demonstrating an extremely simple paper mill model.
-- Remove the `to_organize` directory.
 - Updated the naming scheme throughout the framework so resources produced always have `_out` and resources consumed always have `_in` in their names.
+- Removed the `to_organize` directory.
+- Split out the electrolyzer cost models `basic` and `singlitico` for clarity.
 
 ## 0.3.0 [May 2 2025]
 
