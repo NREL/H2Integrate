@@ -33,52 +33,28 @@ maintainers = [
 ]
 readme = {file = "README.md", content-type = "text/markdown"}
 description = "Holistic Hybrids Optimization and Design Tool"
-requires-python = ">=3.11"
+requires-python = ">=3.9, <3.12"
 license = {file = "LICENSE"}
 dependencies = [
-    "Plotly",
-    "Pyomo>=6.1.2",
-    "fastkml",
+    "attrs",
+    "CoolProp",
     "floris==4.3",
-    "future",
     "geopy",
-    "global_land_mask",
+    "hopp>=3.3.0",
     "jsonschema",
-    "lcoe",
-    "lxml",
     "matplotlib",
     "multiprocessing-on-dill",
     "numpy",
     "numpy-financial",
-    "pandas>=2.0.3",
-    "pint",
-    "plotly",
-    "pvmismatch",
-    "pyDOE2",
-    "pyproj",
-    "pysolar",
-    "python-dotenv",
-    "python-rapidjson",
-    "pytz",
-    "PyYAML",
-    "rainflow",
-    "requests",
-    "scikit-learn",
-    "scikit-optimize",
-    "scipy",
-    "shapely",
-    "setuptools",
-    "timezonefinder",
-    "urllib3",
-    "openpyxl",
-    "attrs",
-    "utm",
-    "hopp>=3.2.0",
-    "orbit-nrel==1.1",
     "openmdao",
+    "openpyxl",
+    "orbit-nrel==1.1",
+    "pandas>=2.0.3",
     "ProFAST",
-    "CoolProp",
+    "Pyomo>=6.1.2",
+    "rainflow",
     "ruamel.yaml",
+    "scipy",
 ]
 keywords = [
     "python3",
@@ -97,16 +73,16 @@ classifiers = [  # https://pypi.org/classifiers/
     "Operating System :: OS Independent",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3.13",
     "Topic :: Scientific/Engineering",
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 
 [project.urls]
 source = "https://github.com/NREL/H2Integrate"
-# documentation = "https://h2integrate.readthedocs.io/"
+documentation = "https://h2integrate.readthedocs.io/"
 issues = "https://github.com/NREL/H2Integrate/issues"
 changelog = "https://github.com/NREL/H2Integrate/blob/main/CHANGELOG.md"
 
@@ -128,11 +104,8 @@ all = ["h2integrate[develop,examples]"]
 [tool.setuptools]
 include-package-data = true
 
-[tool.setuptools.packages.find]
-include = [
-    "h2integrate",
-    "hydrogen/h2_transport/data_tables/*.csv",
-]
+[tool.setuptools.packages]
+find = {}
 
 [tool.setuptools.dynamic]
 version = {attr = "h2integrate.__version__"}
@@ -146,7 +119,6 @@ exclude_lines = ["# pragma: no cover"]
 branch = true
 source = ["h2integrate/*"]
 omit = [
-  "setup.py",
   "tests/*"
 ]
 
