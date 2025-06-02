@@ -48,7 +48,7 @@ dependencies = [
     "numpy-financial",
     "openmdao",
     "openpyxl",
-    "orbit-nrel==1.1",
+    "orbit-nrel",
     "pandas>=2.0.3",
     "ProFAST",
     "Pyomo>=6.1.2",
