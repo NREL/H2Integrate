@@ -44,7 +44,7 @@ class ECOElectrolyzerPerformanceModelConfig(BaseConfig):
     uptime_hours_until_eol: int = field(validator=gt_zero)
     include_degradation_penalty: bool = field()
     turndown_ratio: float = field(validator=gt_zero)
-    electrolyzer_capex: int = field(validator=gt_zero)
+    electrolyzer_capex: int = field()
 
 
 class ECOElectrolyzerPerformanceModel(ElectrolyzerPerformanceBaseClass):
