@@ -381,18 +381,17 @@ class H2IntegrateModel:
                 err_msg = f"Invalid connection: {connection}"
                 raise ValueError(err_msg)
 
-        # Loop through the technologies and connect resource outputs if present
-        for tech_name, tech_config in self.technology_config["technologies"].items():
-            if "resources" in tech_config:
-                for resource_name in tech_config["resources"]:
-                    plant_resources = self.plant_config.get("site", {}).get("resources", {})
-                    if resource_name in plant_resources:
-                        resource_config = plant_resources[resource_name]
-                        for output in resource_config.get("outputs", []):
-                            self.model.connect(
-                                f"{resource_name}.{output}",
-                                f"{tech_name}.{output}",
-                            )
+        resource_to_tech_connections = self.plant_config.get("resource_to_tech_connections", [])
+
+        for connection in resource_to_tech_connections:
+            if len(connection) != 3:
+                err_msg = f"Invalid resource to tech connection: {connection}"
+                raise ValueError(err_msg)
+
+            resource_name, tech_name, variable = connection
+
+            # Connect the resource output to the technology input
+            self.model.connect(f"{resource_name}.{variable}", f"{tech_name}.{variable}")
 
         # TODO: connect outputs of the technology models to the cost and financial models of the
         # same name if the cost and financial models are not None

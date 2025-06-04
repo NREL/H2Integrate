@@ -61,7 +61,7 @@ class RunOfRiverHydroPerformanceModel(HydroPerformanceBaseClass):
         power_output = np.clip(power_output, 0, plant_capacity_kw)
 
         # Distribute the power output over the number of time steps
-        outputs["electricity"] = power_output
+        outputs["electricity_out"] = power_output
 
 
 @define

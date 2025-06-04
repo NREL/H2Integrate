@@ -18,4 +18,3 @@ technologies:
       cost_parameters:
         capital_cost: 7648. # $/kW
         operational_cost: 50. # $/kW-yr
-    resources: ["river_resource"]
