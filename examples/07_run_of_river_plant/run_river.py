@@ -7,4 +7,5 @@ h2i = H2IntegrateModel("07_run_of_river.yaml")
 # Run the model
 h2i.run()
 
+# Post-process the results
 h2i.post_process()

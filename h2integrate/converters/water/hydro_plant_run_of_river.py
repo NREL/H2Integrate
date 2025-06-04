@@ -71,14 +71,14 @@ class RunOfRiverHydroCostConfig(BaseConfig):
 
     Args:
         plant_capacity_mw (float): Capacity of the run-of-river hydropower plant in MW.
-        capital_cost (float): Capital cost of the run-of-river hydropower plant in USD/kW.
-        operational_cost (float): Operational cost as a fraction of CapEx
-            for the run-of-river hydropower plant in USD/year.
+        capital_cost_usd_per_kw (float): Capital cost of the run-of-river plant in USD/kW.
+        operational_cost_usd_per_kw_year (float): Operational cost as a percentage of total
+            capacity, expressed in USD/kW/year.
     """
 
     plant_capacity_mw: float = field()
-    capital_cost: float = field()
-    operational_cost: float = field()
+    capital_cost_usd_per_kw: float = field()
+    operational_cost_usd_per_kw_year: float = field()
 
 
 class RunOfRiverHydroCostModel(HydroCostBaseClass):
@@ -99,8 +99,8 @@ class RunOfRiverHydroCostModel(HydroCostBaseClass):
         )
 
     def compute(self, inputs, outputs):
-        capex_kw = self.config.capital_cost
+        capex_kw = self.config.capital_cost_usd_per_kw
         total_capacity_kw = self.config.plant_capacity_mw * 1e3
 
         outputs["CapEx"] = capex_kw * total_capacity_kw
-        outputs["OpEx"] = self.config.operational_cost * total_capacity_kw
+        outputs["OpEx"] = self.config.operational_cost_usd_per_kw_year * total_capacity_kw

@@ -5,6 +5,32 @@ import openmdao.api as om
 
 
 class RiverResource(om.ExplicitComponent):
+    """
+    A resource component for processing river discharge data from a CSV file.
+
+    This component reads a CSV file containing river discharge data, processes it,
+    and outputs hourly discharge values for a full year (8760 hours). The input
+    file is expected to have specific formatting, including metadata and discharge
+    data columns with some error handling for missing or malformed data.
+
+    CSV files are assumed to have the structure outputted from the USGS Water
+    Information System: https://waterdata.usgs.gov/nwis/uv
+
+    Methods:
+        initialize():
+            Declares the options for the component, including the required "filename" option.
+        setup():
+            Defines the outputs for the component, in this case just the "discharge" array.
+        compute(inputs, outputs):
+            Reads, processes, and resamples the discharge data from the input file.
+            Outputs the hourly discharge values.
+
+    Raises:
+        FileNotFoundError: If the specified file does not exist.
+        ValueError: If the file does not contain sufficient data or the required
+            discharge column is not found.
+    """
+
     def initialize(self):
         self.options.declare("filename", types=str)
 
