@@ -11,6 +11,7 @@
 - Updated the naming scheme throughout the framework so resources produced always have `_out` and resources consumed always have `_in` in their names.
 - Removed the `to_organize` directory.
 - Split out the electrolyzer cost models `basic` and `singlitico` for clarity.
+- Bump min Python version and removed unnecessary packages from `pyproject.toml.
 
 ## 0.3.0 [May 2 2025]
 
