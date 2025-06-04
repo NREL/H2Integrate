@@ -8,7 +8,7 @@ We'll first walk through a relatively straightforward example of adding a new te
 
 We'll start by walking through the process to add a simple solar performance model to H2Integrate.
 
-1. Determine what type of technology you're adding and if it fits into an existing H2Integrate bucket.
+1. **Determine what type of technology you're adding** and if it fits into an existing H2Integrate bucket.
 In this case, we're adding a solar technology, which has an existing set of baseclasses that we will use.
 These baseclasses are defined in `h2integrate/converters/solar/solar_baseclass.py`.
 They provide the basic structure for a solar technology, including the required inputs and outputs for the models.
@@ -34,7 +34,7 @@ class SolarPerformanceBaseClass(om.ExplicitComponent):
         raise NotImplementedError("This method should be implemented in a subclass.")
 ```
 
-2. Write the performance model for your technology.
+2. **Write the performance model for your technology.**
 We'll be wrapping a PySAM model for this example.
 We inherit from the baseclass and implement the `setup` and `compute` methods.
 The baseclass describes the required inputs and outputs that the model should have, and the `compute` method is where the actual computation happens.
@@ -68,11 +68,11 @@ The `setup` method is where we initialize the PySAM model and set the solar reso
 We call the baseclass's `setup` method using the `super()` function, then added additional setup steps for the PySAM model.
 ```
 
-3. Write the cost model for your technology.
+3. **Write the cost model for your technology.**
 For this simplistic case, we will skip the cost model.
 The process for writing a cost model is similar to the performance model, with the required inputs and outputs defined in the baseclass.
 
-4. Next, add the new technology to the `supported_models.py` file.
+4. **Next, add the new technology to the `supported_models.py` file.**
 This file contains a dictionary of all the available technologies in H2Integrate.
 Add your new technology to the dictionary with the appropriate keys depending on if it a performance, cost, or financial model.
 Here's what the updated `supported_models.py` file looks like with our new solar technology added as the first entry:
@@ -93,7 +93,7 @@ supported_models = {
 }
 ```
 
-5. Finally, you can now use your new technology in H2Integrate.
+5. **Finally, you can now use your new technology in H2Integrate.**
 You can create a new case that uses this technology in the `tech_config.yaml` level or add it to an existing scenario and run the model to see the results.
 
 
