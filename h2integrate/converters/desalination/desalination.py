@@ -37,7 +37,7 @@ class ReverseOsmosisPerformanceModel(DesalinationPerformanceBaseClass):
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance")
         )
         self.add_output(
-            "electricity",
+            "electricity_in",
             val=0.0,
             units="kW",
             desc="Electricity required to run desalination plant",
@@ -94,7 +94,7 @@ class ReverseOsmosisPerformanceModel(DesalinationPerformanceBaseClass):
         desal_size_m2 = freshwater_m3_per_hr * 0.467  # [m^2]
 
         outputs["water"] = freshwater_m3_per_hr
-        outputs["electricity"] = desal_power
+        outputs["electricity_in"] = desal_power
         outputs["feedwater"] = feedwater_m3_per_hr
         outputs["mass"] = desal_mass_kg
         outputs["footprint"] = desal_size_m2

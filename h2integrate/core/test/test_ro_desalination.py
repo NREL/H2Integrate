@@ -34,7 +34,7 @@ def test_brackish_performance(subtests):
     with subtests.test("feedwater"):
         assert prob["feedwater"] == approx(13.37, rel=1e-3)
     with subtests.test("electricity"):
-        assert prob["electricity"] == approx(15.04, rel=1e-3)
+        assert prob["electricity_in"] == approx(15.04, rel=1e-3)
 
 
 def test_seawater_performance(subtests):
@@ -64,7 +64,7 @@ def test_seawater_performance(subtests):
     with subtests.test("feedwater"):
         assert prob["feedwater"] == approx(20.06, rel=1e-5)
     with subtests.test("electricity"):
-        assert prob["electricity"] == approx(40.12, rel=1e-5)
+        assert prob["electricity_in"] == approx(40.12, rel=1e-5)
 
 
 def test_ro_desalination_cost(subtests):

@@ -330,14 +330,14 @@ class H2IntegrateModel:
                 if "storage" in source_tech:
                     # Connect the source technology to the connection component
                     self.plant.connect(
-                        f"{source_tech}.{transport_item}_output",
-                        f"{connection_name}.{transport_item}_input",
+                        f"{source_tech}.{transport_item}_out",
+                        f"{connection_name}.{transport_item}_in",
                     )
                 else:
                     # Connect the source technology to the connection component
                     self.plant.connect(
-                        f"{source_tech}.{transport_item}",
-                        f"{connection_name}.{transport_item}_input",
+                        f"{source_tech}.{transport_item}_out",
+                        f"{connection_name}.{transport_item}_in",
                     )
 
                 # Check if the transport type is a combiner
@@ -351,22 +351,22 @@ class H2IntegrateModel:
 
                     # Connect the connection component to the destination technology
                     self.plant.connect(
-                        f"{connection_name}.{transport_item}_output",
-                        f"{dest_tech}.electricity_input{combiner_counts[dest_tech]}",
+                        f"{connection_name}.{transport_item}_out",
+                        f"{dest_tech}.electricity_in{combiner_counts[dest_tech]}",
                     )
 
                 elif "storage" in dest_tech:
                     # Connect the connection component to the destination technology
                     self.plant.connect(
-                        f"{connection_name}.{transport_item}_output",
-                        f"{dest_tech}.{transport_item}_input",
+                        f"{connection_name}.{transport_item}_out",
+                        f"{dest_tech}.{transport_item}_in",
                     )
 
                 else:
                     # Connect the connection component to the destination technology
                     self.plant.connect(
-                        f"{connection_name}.{transport_item}_output",
-                        f"{dest_tech}.{transport_item}",
+                        f"{connection_name}.{transport_item}_out",
+                        f"{dest_tech}.{transport_item}_in",
                     )
 
             elif len(connection) == 3:
@@ -409,7 +409,7 @@ class H2IntegrateModel:
                 for tech_name in self.tech_names:
                     if tech_name in electricity_producing_techs:
                         self.plant.connect(
-                            f"{tech_name}.electricity",
+                            f"{tech_name}.electricity_out",
                             f"financials_group_{group_id}.electricity_sum.electricity_{tech_name}",
                         )
                         plant_producing_electricity = True

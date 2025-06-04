@@ -58,4 +58,4 @@ class PYSAMWindPlantPerformanceModel(WindPerformanceBaseClass):
 
     def compute(self, inputs, outputs):
         self.system_model.execute(0)
-        outputs["electricity"] = self.system_model.Outputs.gen
+        outputs["electricity_out"] = self.system_model.Outputs.gen

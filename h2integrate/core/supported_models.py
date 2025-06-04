@@ -12,7 +12,6 @@ from h2integrate.storage.hydrogen.tank_baseclass import (
     HydrogenTankPerformanceModel,
 )
 from h2integrate.converters.wind.wind_plant_pysam import PYSAMWindPlantPerformanceModel
-from h2integrate.converters.wind.dummy_wind_turbine import DummyPlantCost, DummyPlantPerformance
 from h2integrate.converters.ammonia.ammonia_baseclass import (
     AmmoniaCostModel,
     AmmoniaPerformanceModel,
@@ -21,25 +20,22 @@ from h2integrate.converters.desalination.desalination import (
     ReverseOsmosisCostModel,
     ReverseOsmosisPerformanceModel,
 )
+from h2integrate.converters.hydrogen.basic_cost_model import BasicElectrolyzerCostModel
 from h2integrate.converters.hydrogen.pem_electrolyzer import (
     ElectrolyzerCostModel,
     ElectrolyzerPerformanceModel,
-)
-from h2integrate.converters.hydrogen.dummy_electrolyzer import (
-    DummyElectrolyzerCostModel,
-    DummyElectrolyzerPerformanceModel,
 )
 from h2integrate.converters.methanol.smr_methanol_plant import (
     SMRMethanolPlantCostModel,
     SMRMethanolPlantFinanceModel,
     SMRMethanolPlantPerformanceModel,
 )
+from h2integrate.converters.hydrogen.singlitico_cost_model import SingliticoCostModel
 from h2integrate.converters.water.hydro_plant_run_of_river import (
     RunOfRiverHydroCostModel,
     RunOfRiverHydroPerformanceModel,
 )
 from h2integrate.converters.hydrogen.eco_tools_pem_electrolyzer import (
-    ECOElectrolyzerCostModel,
     ECOElectrolyzerPerformanceModel,
 )
 
@@ -48,10 +44,6 @@ supported_models = {
     # Resources
     "river_resource": RiverResource,
     # Converters
-    "dummy_wind_turbine_performance": DummyPlantPerformance,
-    "dummy_wind_turbine_cost": DummyPlantCost,
-    "dummy_electrolyzer_performance": DummyElectrolyzerPerformanceModel,
-    "dummy_electrolyzer_cost": DummyElectrolyzerCostModel,
     "wind_plant_performance": WindPlantPerformanceModel,
     "wind_plant_cost": WindPlantCostModel,
     "pysam_wind_plant_performance": PYSAMWindPlantPerformanceModel,
@@ -61,7 +53,8 @@ supported_models = {
     "pem_electrolyzer_performance": ElectrolyzerPerformanceModel,
     "pem_electrolyzer_cost": ElectrolyzerCostModel,
     "eco_pem_electrolyzer_performance": ECOElectrolyzerPerformanceModel,
-    "eco_pem_electrolyzer_cost": ECOElectrolyzerCostModel,
+    "singlitico_electrolyzer_cost": SingliticoCostModel,
+    "basic_electrolyzer_cost": BasicElectrolyzerCostModel,
     "h2_storage": H2Storage,
     "hopp": HOPPComponent,
     "reverse_osmosis_desalination_performance": ReverseOsmosisPerformanceModel,
