@@ -171,3 +171,22 @@ def test_paper_example(subtests):
             )
             == 51.91476681
         )
+
+
+def test_hydro_example(subtests):
+    # Change the current working directory to the example's directory
+    os.chdir(examples_dir / "07_run_of_river_plant")
+
+    # Create a H2Integrate model
+    model = H2IntegrateModel(Path.cwd() / "07_run_of_river.yaml")
+
+    # Run the model
+    model.run()
+
+    model.post_process()
+
+    print(model.prob.get_val("financials_group_1.LCOE"))
+
+    # Subtests for checking specific values
+    with subtests.test("Check LCOE"):
+        assert pytest.approx(model.prob.get_val("financials_group_1.LCOE"), rel=1e-3) == 0.17653979

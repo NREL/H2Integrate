@@ -28,6 +28,9 @@ class H2IntegrateModel:
         # load custom models
         self.collect_custom_models()
 
+        self.prob = om.Problem()
+        self.model = self.prob.model
+
         # create site-level model
         # this is an OpenMDAO group that contains all the site information
         self.create_site_model()
@@ -109,6 +112,8 @@ class H2IntegrateModel:
                         self.supported_models[model_name] = custom_model_class
 
     def create_site_model(self):
+        site_group = om.Group()
+
         # Create a site-level component
         site_config = self.plant_config.get("site", {})
         site_component = om.IndepVarComp()
@@ -124,9 +129,19 @@ class H2IntegrateModel:
             site_component.add_output(f"boundary_{i}_x", val=np.array(boundary.get("x", [])))
             site_component.add_output(f"boundary_{i}_y", val=np.array(boundary.get("y", [])))
 
-        self.prob = om.Problem()
-        self.model = self.prob.model
-        self.model.add_subsystem("site", site_component, promotes=["*"])
+        site_group.add_subsystem("site_component", site_component, promotes=["*"])
+
+        # Add the site resource component
+        if "resources" in site_config:
+            for resource_name, resource_config in site_config["resources"].items():
+                resource_class = self.supported_models.get(resource_name)
+                if resource_class:
+                    resource_component = resource_class(
+                        filename=resource_config.get("filename"),
+                    )
+                    site_group.add_subsystem(resource_name, resource_component)
+
+        self.model.add_subsystem("site", site_group, promotes=["*"])
 
     def create_plant_model(self):
         """
@@ -365,6 +380,18 @@ class H2IntegrateModel:
             else:
                 err_msg = f"Invalid connection: {connection}"
                 raise ValueError(err_msg)
+
+        resource_to_tech_connections = self.plant_config.get("resource_to_tech_connections", [])
+
+        for connection in resource_to_tech_connections:
+            if len(connection) != 3:
+                err_msg = f"Invalid resource to tech connection: {connection}"
+                raise ValueError(err_msg)
+
+            resource_name, tech_name, variable = connection
+
+            # Connect the resource output to the technology input
+            self.model.connect(f"{resource_name}.{variable}", f"{tech_name}.{variable}")
 
         # TODO: connect outputs of the technology models to the cost and financial models of the
         # same name if the cost and financial models are not None
