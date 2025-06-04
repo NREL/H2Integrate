@@ -69,11 +69,16 @@ class ECOElectrolyzerPerformanceModel(ElectrolyzerPerformanceBaseClass):
         )
         self.add_output("efficiency", val=0.0, desc="Average efficiency of the electrolyzer")
 
-        self.add_input("electrolyzer_size_mw", units="MW", desc="Size of the electrolyzer in MW")
+        self.add_input(
+            "electrolyzer_size_mw",
+            val=self.config.rating,
+            units="MW",
+            desc="Size of the electrolyzer in MW",
+        )
 
     def compute(self, inputs, outputs):
         plant_life = self.options["plant_config"]["plant"]["plant_life"]
-        electrolyzer_size_mw = self.config.rating
+        electrolyzer_size_mw = inputs["electrolyzer_size_mw"]
         electrolyzer_capex_kw = self.config.electrolyzer_capex
 
         # # IF GRID CONNECTED
@@ -224,17 +229,6 @@ class ECOElectrolyzerCostModel(ElectrolyzerCostBaseClass):
                 f"'{electrolyzer_cost_model}' was given"
             )
             raise ValueError(msg)
-
-        # print some results if desired
-        print("\nHydrogen Cost Results:")
-        print(
-            "Electrolyzer Total CAPEX $/kW: ",
-            electrolyzer_total_capital_cost / (electrolyzer_size_mw * 1e3),
-        )
-        print(
-            "Electrolyzer O&M $/kW: ",
-            electrolyzer_OM_cost / (electrolyzer_size_mw * 1e3),
-        )
 
         outputs["CapEx"] = electrolyzer_total_capital_cost
         outputs["OpEx"] = electrolyzer_OM_cost

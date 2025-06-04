@@ -8,6 +8,10 @@
 
 - Added methanol production base class
 - Added steam methane reforming methanol production technology
+- Added a new optimization example with a wind plant and electrolyzer to showcase how to define design variables, constraints, and objective functions
+- Added capability for user-defined technologies in the H2Integrate framework, allowing for custom models to be integrated into the system.
+- Added an example of a user-defined technology in the `examples` directory, demonstrating an extremely simple paper mill model.
+- Remove the `to_organize` directory.
 
 ## 0.3.0 [May 2 2025]
 
