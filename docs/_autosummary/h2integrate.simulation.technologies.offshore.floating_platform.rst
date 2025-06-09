@@ -1,4 +1,4 @@
-﻿h2integrate.simulation.technologies.offshore.floating\_platform
+h2integrate.simulation.technologies.offshore.floating\_platform
 ===============================================================
 
 .. automodule:: h2integrate.simulation.technologies.offshore.floating_platform

@@ -1,4 +1,4 @@
-﻿h2integrate.simulation.technologies.hydrogen.h2\_storage
+h2integrate.simulation.technologies.hydrogen.h2\_storage
 ========================================================
 
 .. automodule:: h2integrate.simulation.technologies.hydrogen.h2_storage
@@ -28,6 +28,7 @@
    :recursive:
 
    h2integrate.simulation.technologies.hydrogen.h2_storage.lined_rock_cavern
+   h2integrate.simulation.technologies.hydrogen.h2_storage.mch
    h2integrate.simulation.technologies.hydrogen.h2_storage.on_turbine
    h2integrate.simulation.technologies.hydrogen.h2_storage.pipe_storage
    h2integrate.simulation.technologies.hydrogen.h2_storage.pressure_vessel

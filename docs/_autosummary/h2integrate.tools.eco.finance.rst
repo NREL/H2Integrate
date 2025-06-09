@@ -1,4 +1,4 @@
-﻿h2integrate.tools.eco.finance
+h2integrate.tools.eco.finance
 =============================
 
 .. automodule:: h2integrate.tools.eco.finance

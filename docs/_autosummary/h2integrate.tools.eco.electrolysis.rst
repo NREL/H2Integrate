@@ -1,4 +1,4 @@
-﻿h2integrate.tools.eco.electrolysis
+h2integrate.tools.eco.electrolysis
 ==================================
 
 .. automodule:: h2integrate.tools.eco.electrolysis
