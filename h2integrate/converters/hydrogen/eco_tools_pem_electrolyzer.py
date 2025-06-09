@@ -3,17 +3,8 @@ from attrs import field, define
 from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
 from h2integrate.core.validators import gt_zero, contains
 from h2integrate.tools.eco.utilities import ceildiv
-from h2integrate.converters.hydrogen.electrolyzer_baseclass import (
-    ElectrolyzerCostBaseClass,
-    ElectrolyzerPerformanceBaseClass,
-)
+from h2integrate.converters.hydrogen.electrolyzer_baseclass import ElectrolyzerPerformanceBaseClass
 from h2integrate.simulation.technologies.hydrogen.electrolysis.run_h2_PEM import run_h2_PEM
-from h2integrate.simulation.technologies.hydrogen.electrolysis.H2_cost_model import (
-    basic_H2_cost_model,
-)
-from h2integrate.simulation.technologies.hydrogen.electrolysis.PEM_costs_Singlitico_model import (
-    PEMCostsSingliticoModel,
-)
 
 
 @define
@@ -53,7 +44,7 @@ class ECOElectrolyzerPerformanceModelConfig(BaseConfig):
     uptime_hours_until_eol: int = field(validator=gt_zero)
     include_degradation_penalty: bool = field()
     turndown_ratio: float = field(validator=gt_zero)
-    electrolyzer_capex: int = field(validator=gt_zero)
+    electrolyzer_capex: int = field()
 
 
 class ECOElectrolyzerPerformanceModel(ElectrolyzerPerformanceBaseClass):
@@ -68,6 +59,12 @@ class ECOElectrolyzerPerformanceModel(ElectrolyzerPerformanceBaseClass):
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance")
         )
         self.add_output("efficiency", val=0.0, desc="Average efficiency of the electrolyzer")
+        self.add_output(
+            "rated_h2_production_kg_pr_hr",
+            val=0.0,
+            units="kg/h",
+            desc="Rated hydrogen production of system in kg/hour",
+        )
 
         self.add_input(
             "electrolyzer_size_mw",
@@ -101,7 +98,7 @@ class ECOElectrolyzerPerformanceModel(ElectrolyzerPerformanceBaseClass):
         # else:
         hydrogen_production_capacity_required_kgphr = []
         grid_connection_scenario = "off-grid"
-        energy_to_electrolyzer_kw = inputs["electricity"]
+        energy_to_electrolyzer_kw = inputs["electricity_in"]
 
         n_pem_clusters = int(ceildiv(electrolyzer_size_mw, self.config.cluster_rating_MW))
 
@@ -128,107 +125,8 @@ class ECOElectrolyzerPerformanceModel(ElectrolyzerPerformanceBaseClass):
         )
 
         # Assuming `h2_results` includes hydrogen and oxygen rates per timestep
-        outputs["hydrogen"] = H2_Results["Hydrogen Hourly Production [kg/hr]"]
+        outputs["hydrogen_out"] = H2_Results["Hydrogen Hourly Production [kg/hr]"]
         outputs["total_hydrogen_produced"] = H2_Results["Life: Annual H2 production [kg/year]"]
         outputs["efficiency"] = H2_Results["Sim: Average Efficiency [%-HHV]"]
         outputs["time_until_replacement"] = H2_Results["Time Until Replacement [hrs]"]
-
-
-@define
-class ECOElectrolyzerCostModelConfig(BaseConfig):
-    """
-    Configuration class for the ECOElectrolyzerPerformanceModel.
-
-    Args:
-        rating (float): The rating of the electrolyzer in MW.
-        location (str): The location of the electrolyzer; options include "onshore" or "offshore".
-        electrolyzer_capex (int): $/kW overnight installed capital costs for a 1 MW system in
-            2022 USD/kW (DOE hydrogen program record 24005 Clean Hydrogen Production Cost Scenarios
-            with PEM Electrolyzer Technology 05/20/24) #TODO: convert to refs
-            (https://www.hydrogen.energy.gov/docs/hydrogenprogramlibraries/pdfs/24005-clean-hydrogen-production-cost-pem-electrolyzer.pdf?sfvrsn=8cb10889_1)
-        cost_model (str): The cost model used for the electrolyzer. Options include "basic", which
-            is based on the H2a project and HFTO's program record for PEM electrolysis, and
-            "singlitico2021", which uses cost estimates from that paper. #TODO: convert to refs
-    """
-
-    rating: float = field(validator=gt_zero)
-    location: str = field(validator=contains(["onshore", "offshore"]))
-    electrolyzer_capex: int = field(validator=gt_zero)
-    cost_model: str = field(validator=contains(["basic", "singlitico2021"]))
-
-
-class ECOElectrolyzerCostModel(ElectrolyzerCostBaseClass):
-    """
-    An OpenMDAO component that computes the cost of a PEM electrolyzer.
-    """
-
-    def setup(self):
-        super().setup()
-        self.config = ECOElectrolyzerCostModelConfig.from_dict(
-            merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost")
-        )
-
-    def compute(self, inputs, outputs):
-        # unpack inputs
-        plant_config = self.options["plant_config"]
-
-        total_hydrogen_produced = float(inputs["total_hydrogen_produced"])
-        electrolyzer_size_mw = self.config.rating
-        useful_life = plant_config["plant"]["plant_life"]
-        atb_year = plant_config["plant"]["atb_year"]
-
-        electrolyzer_cost_model = self.config.cost_model  # can be "basic" or "singlitico2021"
-
-        # run hydrogen production cost model - from hopp examples
-        if self.config.location == "onshore":
-            offshore = 0
-        else:
-            offshore = 1
-
-        if electrolyzer_cost_model == "basic":
-            (
-                cf_h2_annuals,
-                electrolyzer_total_capital_cost,
-                electrolyzer_OM_cost,
-                electrolyzer_capex_kw,
-                time_between_replacement,
-                h2_tax_credit,
-                h2_itc,
-            ) = basic_H2_cost_model(
-                self.config.electrolyzer_capex,
-                self.config.time_between_replacement,
-                electrolyzer_size_mw,
-                useful_life,
-                atb_year,
-                inputs["electricity"],
-                total_hydrogen_produced,
-                0.0,
-                0.0,
-                include_refurb_in_opex=False,
-                offshore=offshore,
-            )
-        elif electrolyzer_cost_model == "singlitico2021":
-            P_elec = electrolyzer_size_mw * 1e-3  # [GW]
-            RC_elec = self.config.electrolyzer_capex  # [USD/kW]
-
-            pem_offshore = PEMCostsSingliticoModel(elec_location=offshore)
-
-            (
-                electrolyzer_capital_cost_musd,
-                electrolyzer_om_cost_musd,
-            ) = pem_offshore.run(P_elec, RC_elec)
-
-            electrolyzer_total_capital_cost = (
-                electrolyzer_capital_cost_musd * 1e6
-            )  # convert from M USD to USD
-            electrolyzer_OM_cost = electrolyzer_om_cost_musd * 1e6  # convert from M USD to USD
-
-        else:
-            msg = (
-                f"Electrolyzer cost model must be one of['basic', 'singlitico2021'] but "
-                f"'{electrolyzer_cost_model}' was given"
-            )
-            raise ValueError(msg)
-
-        outputs["CapEx"] = electrolyzer_total_capital_cost
-        outputs["OpEx"] = electrolyzer_OM_cost
+        outputs["rated_h2_production_kg_pr_hr"] = H2_Results["Rated BOL: H2 Production [kg/hr]"]

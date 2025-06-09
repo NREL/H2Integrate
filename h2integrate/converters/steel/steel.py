@@ -41,7 +41,7 @@ class SteelPerformanceModel(SteelPerformanceBaseClass):
             self.config.plant_capacity_mtpy,
             self.config.capacity_factor,
         )
-        outputs["steel"] = steel_production_mtpy / len(inputs["electricity"])
+        outputs["steel"] = steel_production_mtpy / len(inputs["electricity_in"])
 
 
 @define

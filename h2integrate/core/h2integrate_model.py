@@ -28,6 +28,9 @@ class H2IntegrateModel:
         # load custom models
         self.collect_custom_models()
 
+        self.prob = om.Problem()
+        self.model = self.prob.model
+
         # create site-level model
         # this is an OpenMDAO group that contains all the site information
         self.create_site_model()
@@ -109,6 +112,8 @@ class H2IntegrateModel:
                         self.supported_models[model_name] = custom_model_class
 
     def create_site_model(self):
+        site_group = om.Group()
+
         # Create a site-level component
         site_config = self.plant_config.get("site", {})
         site_component = om.IndepVarComp()
@@ -124,9 +129,19 @@ class H2IntegrateModel:
             site_component.add_output(f"boundary_{i}_x", val=np.array(boundary.get("x", [])))
             site_component.add_output(f"boundary_{i}_y", val=np.array(boundary.get("y", [])))
 
-        self.prob = om.Problem()
-        self.model = self.prob.model
-        self.model.add_subsystem("site", site_component, promotes=["*"])
+        site_group.add_subsystem("site_component", site_component, promotes=["*"])
+
+        # Add the site resource component
+        if "resources" in site_config:
+            for resource_name, resource_config in site_config["resources"].items():
+                resource_class = self.supported_models.get(resource_name)
+                if resource_class:
+                    resource_component = resource_class(
+                        filename=resource_config.get("filename"),
+                    )
+                    site_group.add_subsystem(resource_name, resource_component)
+
+        self.model.add_subsystem("site", site_group, promotes=["*"])
 
     def create_plant_model(self):
         """
@@ -315,14 +330,14 @@ class H2IntegrateModel:
                 if "storage" in source_tech:
                     # Connect the source technology to the connection component
                     self.plant.connect(
-                        f"{source_tech}.{transport_item}_output",
-                        f"{connection_name}.{transport_item}_input",
+                        f"{source_tech}.{transport_item}_out",
+                        f"{connection_name}.{transport_item}_in",
                     )
                 else:
                     # Connect the source technology to the connection component
                     self.plant.connect(
-                        f"{source_tech}.{transport_item}",
-                        f"{connection_name}.{transport_item}_input",
+                        f"{source_tech}.{transport_item}_out",
+                        f"{connection_name}.{transport_item}_in",
                     )
 
                 # Check if the transport type is a combiner
@@ -336,22 +351,22 @@ class H2IntegrateModel:
 
                     # Connect the connection component to the destination technology
                     self.plant.connect(
-                        f"{connection_name}.{transport_item}_output",
-                        f"{dest_tech}.electricity_input{combiner_counts[dest_tech]}",
+                        f"{connection_name}.{transport_item}_out",
+                        f"{dest_tech}.electricity_in{combiner_counts[dest_tech]}",
                     )
 
                 elif "storage" in dest_tech:
                     # Connect the connection component to the destination technology
                     self.plant.connect(
-                        f"{connection_name}.{transport_item}_output",
-                        f"{dest_tech}.{transport_item}_input",
+                        f"{connection_name}.{transport_item}_out",
+                        f"{dest_tech}.{transport_item}_in",
                     )
 
                 else:
                     # Connect the connection component to the destination technology
                     self.plant.connect(
-                        f"{connection_name}.{transport_item}_output",
-                        f"{dest_tech}.{transport_item}",
+                        f"{connection_name}.{transport_item}_out",
+                        f"{dest_tech}.{transport_item}_in",
                     )
 
             elif len(connection) == 3:
@@ -365,6 +380,18 @@ class H2IntegrateModel:
             else:
                 err_msg = f"Invalid connection: {connection}"
                 raise ValueError(err_msg)
+
+        resource_to_tech_connections = self.plant_config.get("resource_to_tech_connections", [])
+
+        for connection in resource_to_tech_connections:
+            if len(connection) != 3:
+                err_msg = f"Invalid resource to tech connection: {connection}"
+                raise ValueError(err_msg)
+
+            resource_name, tech_name, variable = connection
+
+            # Connect the resource output to the technology input
+            self.model.connect(f"{resource_name}.{variable}", f"{tech_name}.{variable}")
 
         # TODO: connect outputs of the technology models to the cost and financial models of the
         # same name if the cost and financial models are not None
@@ -381,7 +408,7 @@ class H2IntegrateModel:
                 for tech_name in self.tech_names:
                     if tech_name in electricity_producing_techs:
                         self.plant.connect(
-                            f"{tech_name}.electricity",
+                            f"{tech_name}.electricity_out",
                             f"financials_group_{group_id}.electricity_sum.electricity_{tech_name}",
                         )
                         plant_producing_electricity = True

@@ -8,19 +8,19 @@ class CablePerformanceModel(om.ExplicitComponent):
 
     def setup(self):
         self.add_input(
-            "electricity_input",
+            "electricity_in",
             val=0.0,
             shape_by_conn=True,
-            copy_shape="electricity_output",
+            copy_shape="electricity_out",
             units="kW",
         )
         self.add_output(
-            "electricity_output",
+            "electricity_out",
             val=0.0,
             shape_by_conn=True,
-            copy_shape="electricity_input",
+            copy_shape="electricity_in",
             units="kW",
         )
 
     def compute(self, inputs, outputs):
-        outputs["electricity_output"] = inputs["electricity_input"]
+        outputs["electricity_out"] = inputs["electricity_in"]

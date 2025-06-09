@@ -64,7 +64,7 @@ class SMRMethanolPlantPerformanceModel(MethanolPerformanceBaseClass):
         self.add_output("meoh_syn_cat_consumption", units="ft**3/yr")
         self.add_output("meoh_atr_cat_consumption", units="ft**3/yr")
         self.add_output("ng_consumption", shape=8760, units="kg/h")
-        self.add_output("electricity", shape=8760, units="kW*h/h")
+        self.add_output("electricity_out", shape=8760, units="kW*h/h")
 
     def compute(self, inputs, outputs):
         # Calculate methanol production #TODO get shape from output shape
@@ -89,7 +89,7 @@ class SMRMethanolPlantPerformanceModel(MethanolPerformanceBaseClass):
             np.sum(meoh_kgph) * inputs["meoh_syn_cat_consume_ratio"]
         )
         outputs["ng_consumption"] = meoh_kgph * inputs["ng_consume_ratio"]
-        outputs["electricity"] = meoh_kgph * inputs["elec_produce_ratio"]
+        outputs["electricity_out"] = meoh_kgph * inputs["elec_produce_ratio"]
 
 
 @define
@@ -112,7 +112,7 @@ class SMRMethanolPlantCostModel(MethanolCostBaseClass):
         electricity: hourly electricity consumption (kW*h/h)
         meoh_syn_cat_price: price of methanol synthesis catalyst (USD/ft**3)
         meoh_atr_cat_price: price of methanol ATR catalyst (USD/ft**3)
-        ng_price: price of NG (USD/MBtu)
+        ng_price: price of NG (USD/MMBtu)
     Outputs:
         meoh_syn_cat_cost: annual cost of methanol synthesis catalyst (USD/year)
         meoh_atr_cat_cost: annual cost of methanol ATR catalyst (USD/year)
@@ -130,12 +130,10 @@ class SMRMethanolPlantCostModel(MethanolCostBaseClass):
         self.add_input("meoh_syn_cat_consumption", units="ft**3/yr")
         self.add_input("meoh_atr_cat_consumption", units="ft**3/yr")
         self.add_input("ng_consumption", shape=8760, units="kg/h")
-        self.add_input("electricity", shape=8760, units="kW*h/h")
+        self.add_input("electricity_in", shape=8760, units="kW*h/h")
         self.add_input("meoh_syn_cat_price", units="USD/ft**3", val=self.config.meoh_syn_cat_price)
         self.add_input("meoh_atr_cat_price", units="USD/ft**3", val=self.config.meoh_atr_cat_price)
-        self.add_input(
-            "ng_price", units="USD/MBtu", val=self.config.ng_price
-        )  # TODO: get OpenMDAO to recognize 'MMBtu'
+        self.add_input("ng_price", units="USD/MMBtu", val=self.config.ng_price)
 
         self.add_output("meoh_syn_cat_cost", units="USD/year")
         self.add_output("meoh_atr_cat_cost", units="USD/year")
@@ -150,7 +148,7 @@ class SMRMethanolPlantCostModel(MethanolCostBaseClass):
         ppa_price = self.options["plant_config"]["plant"]["ppa_price"]
 
         lhv_mj = inputs["ng_lhv"]
-        lhv_mmbtu = convert_units(lhv_mj, "MJ", "MBtu")
+        lhv_mmbtu = convert_units(lhv_mj, "MJ", "MMBtu")
 
         outputs["CapEx"] = toc_usd
         outputs["OpEx"] = foc_usd_y + voc_usd_y
@@ -163,7 +161,7 @@ class SMRMethanolPlantCostModel(MethanolCostBaseClass):
             inputs["meoh_atr_cat_consumption"] * inputs["meoh_atr_cat_price"]
         )
         outputs["ng_cost"] = np.sum(inputs["ng_consumption"]) * lhv_mmbtu * inputs["ng_price"]
-        outputs["elec_revenue"] = np.sum(inputs["electricity"]) * ppa_price
+        outputs["elec_revenue"] = np.sum(inputs["electricity_in"]) * ppa_price
 
 
 class SMRMethanolPlantFinanceModel(MethanolFinanceBaseClass):

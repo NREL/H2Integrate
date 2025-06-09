@@ -24,7 +24,7 @@ class PaperMillPerformance(om.ExplicitComponent):
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance")
         )
         self.add_input(
-            "electricity",
+            "electricity_in",
             val=0.0,
             shape=n_timesteps,
             units="MW",
@@ -40,7 +40,7 @@ class PaperMillPerformance(om.ExplicitComponent):
 
     def compute(self, inputs, outputs):
         # Calculate the paper produced
-        outputs["paper"] = inputs["electricity"] * self.config.electricity_usage_rate
+        outputs["paper"] = inputs["electricity_in"] * self.config.electricity_usage_rate
 
 
 @define
