@@ -1,5 +1,5 @@
 import numpy as np
-from attrs import define
+from attrs import field, define
 
 from h2integrate.core.utilities import merge_shared_inputs
 from h2integrate.converters.hydrogen.geologic.geoh2_baseclass import (
@@ -14,13 +14,15 @@ from h2integrate.converters.hydrogen.geologic.geoh2_baseclass import (
 
 @define
 class NaturalGeoH2PerformanceConfig(GeoH2PerformanceConfig):
-    pass
+    site_prospectivity: float = field()  # years
+    initial_wellhead_flow: float = field()  # kg/hr
+    gas_reservoir_size: float = field()  # tonnes
 
 
 class NaturalGeoH2PerformanceModel(GeoH2PerformanceBaseClass):
     """
-    An OpenMDAO component for modeling the performance of a geologic hydrogen plant.
-    Combines modeling for both natural and stimulated geoH2.
+    An OpenMDAO component for modeling the performance of a natural geologic hydrogen plant.
+    Contains parameters specific to natural geologic hydrogen sub-model.
     yada yada yada
 
     Inputs:
@@ -34,6 +36,11 @@ class NaturalGeoH2PerformanceModel(GeoH2PerformanceBaseClass):
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance")
         )
         super().setup()
+
+        self.add_input("site_prospectivity", units=None, val=self.config.site_prospectivity)
+        self.add_input("initial_wellhead_flow", units="kg/h", val=self.config.initial_wellhead_flow)
+        self.add_input("gas_reservoir_size", units="t", val=self.config.gas_reservoir_size)
+
         self.add_output("wellhead_h2_conc", units="percent")
         self.add_output("lifetime_wellhead_flow", units="kg/h")
         self.add_output("hydrogen_accumulated", units="kg/h", shape=(8760,))
@@ -66,8 +73,8 @@ class NaturalGeoH2CostConfig(GeoH2CostConfig):
 
 class NaturalGeoH2CostModel(GeoH2CostBaseClass):
     """
-    An OpenMDAO component for modeling the cost of a geologic hydrogen plant.
-    Combines modeling for both natural and stimulated geoH2.
+    An OpenMDAO component for modeling the cost of a natural geologic hydrogen plant.
+    Contains parameters specific to natural geologic hydrogen sub-model.
     yada yada yada
 
     Inputs:
@@ -123,8 +130,8 @@ class NaturalGeoH2FinanceConfig(GeoH2FinanceConfig):
 
 class NaturalGeoH2FinanceModel(GeoH2FinanceBaseClass):
     """
-    An OpenMDAO component for modeling the financing of a geologic hydrogen plant.
-    Combines modeling for both natural and stimulated geoH2.
+    An OpenMDAO component for modeling the financing of a natural geologic hydrogen plant.
+    Contains parameters specific to natural geologic hydrogen sub-model.
     yada yada yada
 
     Inputs:

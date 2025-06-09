@@ -4,11 +4,17 @@ description: "This hybrid plant produces geologic hydrogen"
 technologies:
   geoh2:
     performance_model:
-      model: "stimulated_geoh2_performance"
+      model: "stim_geoh2_performance"
+      model_class_name: StimulatedGeoH2PerformanceModel
+      model_location: h2i_modules/public/stimulated_geoh2_plant.py
     cost_model:
-      model: "stimulated_geoh2_cost"
+      model: "stim_geoh2_cost"
+      model_class_name: StimulatedGeoH2CostModel
+      model_location: h2i_modules/public/stimulated_geoh2_plant.py
     financial_model:
-      model: "stimulated_geoh2"
+      model: "stim_geoh2"
+      model_class_name: StimulatedGeoH2FinanceModel
+      model_location: h2i_modules/public/stimulated_geoh2_plant.py
     model_inputs:
       shared_parameters:
         well_lifetime: 20
@@ -20,9 +26,6 @@ technologies:
         borehole_depth: 1000
         inj_prod_distance: 100
         reaction_zone_width: 50
-        site_prospectivity: 0.7
-        initial_wellhead_flow: 200
-        gas_reservoir_size: 1000
         iron_II_conc: 15
         bulk_density: 2700
         water_temp: 90

@@ -1,5 +1,5 @@
 import numpy as np
-from attrs import define
+from attrs import field, define
 
 from h2integrate.core.utilities import merge_shared_inputs
 from h2integrate.converters.hydrogen.geologic.geoh2_baseclass import (
@@ -14,14 +14,19 @@ from h2integrate.converters.hydrogen.geologic.geoh2_baseclass import (
 
 @define
 class StimulatedGeoH2PerformanceConfig(GeoH2PerformanceConfig):
-    pass
+    serp_rate: float = field()  # 1/sec
+    caprock_depth: float = field()  # meters
+    borehole_depth: float = field()  # meters
+    inj_prod_distance: float = field()  # meters
+    reaction_zone_width: float = field()  # meters
+    iron_II_conc: float = field()  # wt_pct
+    bulk_density: float = field()  # kg/m^3
+    water_temp: float = field()  # deg C
 
 
 class StimulatedGeoH2PerformanceModel(GeoH2PerformanceBaseClass):
     """
-    An OpenMDAO component for modeling the performance of a geologic hydrogen plant.
-    Combines modeling for both natural and stimulated geoH2.
-    yada yada yada
+    An OpenMDAO component for modeling the performance of a stimulated geologic hydrogen plant.
 
     Inputs:
         -yada yada yada
@@ -34,6 +39,16 @@ class StimulatedGeoH2PerformanceModel(GeoH2PerformanceBaseClass):
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance")
         )
         super().setup()
+
+        self.add_input("serp_rate", units="1/s", val=self.config.serp_rate)
+        self.add_input("caprock_depth", units="m", val=self.config.caprock_depth)
+        self.add_input("borehole_depth", units="m", val=self.config.borehole_depth)
+        self.add_input("inj_prod_distance", units="m", val=self.config.inj_prod_distance)
+        self.add_input("reaction_zone_width", units="m", val=self.config.reaction_zone_width)
+        self.add_input("iron_II_conc", units="percent", val=self.config.iron_II_conc)
+        self.add_input("bulk_density", units="kg/m**3", val=self.config.bulk_density)
+        self.add_input("water_temp", units="C", val=self.config.water_temp)
+
         self.add_output("hydrogen_produced", units="kg/h", shape=(8760,))
 
     def compute(self, inputs, outputs):
@@ -79,9 +94,7 @@ class StimulatedGeoH2CostConfig(GeoH2CostConfig):
 
 class StimulatedGeoH2CostModel(GeoH2CostBaseClass):
     """
-    An OpenMDAO component for modeling the cost of a geologic hydrogen plant.
-    Combines modeling for both natural and stimulated geoH2.
-    yada yada yada
+    An OpenMDAO component for modeling the cost of a stimulated geologic hydrogen plant.
 
     Inputs:
         -yada yada yada
@@ -136,9 +149,7 @@ class StimulatedGeoH2FinanceConfig(GeoH2FinanceConfig):
 
 class StimulatedGeoH2FinanceModel(GeoH2FinanceBaseClass):
     """
-    An OpenMDAO component for modeling the financing of a geologic hydrogen plant.
-    Combines modeling for both natural and stimulated geoH2.
-    yada yada yada
+    An OpenMDAO component for modeling the financing of a stimulated geologic hydrogen plant.
 
     Inputs:
         -yada yada yada

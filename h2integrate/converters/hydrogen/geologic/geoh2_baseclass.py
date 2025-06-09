@@ -9,28 +9,18 @@ class GeoH2PerformanceConfig(BaseConfig):
     well_lifetime: float = field()  # years
     rock_type: str = field()
     grain_size: float = field()  # meters
-    serp_rate: float = field()  # 1/sec
-    caprock_depth: float = field()  # meters
-    borehole_depth: float = field()  # meters
-    inj_prod_distance: float = field()  # meters
-    reaction_zone_width: float = field()  # meters
-    site_prospectivity: float = field()  # years
-    initial_wellhead_flow: float = field()  # kg/hr
-    gas_reservoir_size: float = field()  # tonnes
-    iron_II_conc: float = field()  # wt_pct
-    bulk_density: float = field()  # kg/m^3
-    water_temp: float = field()  # deg C
 
 
 class GeoH2PerformanceBaseClass(om.ExplicitComponent):
     """
     An OpenMDAO component for modeling the performance of a geologic hydrogen plant.
-    yada yada yada
+    Contains parameters shared across both natural and geologic hydrogen sub-models
 
     Inputs:
-        -yada yada yada
+        -well_lifetime: The length of time in years that the well will operate for.
+        -grain_size: The grain size in m of the rocks used to extract hydrogen.
     Outputs:
-        -yada yada yada
+        -hydrogen: The hydrogen production in kg/h
     """
 
     def initialize(self):
@@ -40,17 +30,6 @@ class GeoH2PerformanceBaseClass(om.ExplicitComponent):
     def setup(self):
         self.add_input("well_lifetime", units="year", val=self.config.well_lifetime)
         self.add_input("grain_size", units="m", val=self.config.grain_size)
-        self.add_input("serp_rate", units="1/s", val=self.config.serp_rate)
-        self.add_input("caprock_depth", units="m", val=self.config.caprock_depth)
-        self.add_input("borehole_depth", units="m", val=self.config.borehole_depth)
-        self.add_input("inj_prod_distance", units="m", val=self.config.inj_prod_distance)
-        self.add_input("reaction_zone_width", units="m", val=self.config.reaction_zone_width)
-        self.add_input("site_prospectivity", units=None, val=self.config.site_prospectivity)
-        self.add_input("initial_wellhead_flow", units="kg/h", val=self.config.initial_wellhead_flow)
-        self.add_input("gas_reservoir_size", units="t", val=self.config.gas_reservoir_size)
-        self.add_input("iron_II_conc", units="percent", val=self.config.iron_II_conc)
-        self.add_input("bulk_density", units="kg/m**3", val=self.config.bulk_density)
-        self.add_input("water_temp", units="C", val=self.config.water_temp)
 
         self.add_output("hydrogen", units="kg/h", shape=(8760,))
 
@@ -72,10 +51,10 @@ class GeoH2CostConfig(BaseConfig):
 class GeoH2CostBaseClass(om.ExplicitComponent):
     """
     An OpenMDAO component for modeling the cost of a geologic hydrogen plant.
-    yada yada yada
+    Contains parameters shared across both natural and geologic hydrogen sub-models
 
     Inputs:
-        -yada yada yada
+        -well_lifetime: The length of time in years that the well will operate for.
     Outputs:
         -yada yada yada
     """
@@ -115,8 +94,8 @@ class GeoH2FinanceConfig(BaseConfig):
 
 class GeoH2FinanceBaseClass(om.ExplicitComponent):
     """
-    An OpenMDAO component for modeling the financial aspects of a geologic hydrogen plant.
-    yada yada yada
+    An OpenMDAO component for modeling the financials of a geologic hydrogen plant.
+    Contains parameters shared across both natural and geologic hydrogen sub-models.
 
     Inputs:
         -yada yada yada
