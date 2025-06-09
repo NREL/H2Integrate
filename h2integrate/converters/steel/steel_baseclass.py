@@ -7,10 +7,12 @@ class SteelPerformanceBaseClass(om.ExplicitComponent):
         self.options.declare("tech_config", types=dict)
 
     def setup(self):
-        self.add_input("electricity", val=0.0, shape_by_conn=True, copy_shape="steel", units="kW")
-        self.add_input("hydrogen", val=0.0, shape_by_conn=True, copy_shape="steel", units="kg/h")
+        self.add_input(
+            "electricity_in", val=0.0, shape_by_conn=True, copy_shape="steel", units="kW"
+        )
+        self.add_input("hydrogen_in", val=0.0, shape_by_conn=True, copy_shape="steel", units="kg/h")
         self.add_output(
-            "steel", val=0.0, shape_by_conn=True, copy_shape="electricity", units="t/year"
+            "steel", val=0.0, shape_by_conn=True, copy_shape="electricity_in", units="t/year"
         )
 
     def compute(self, inputs, outputs):

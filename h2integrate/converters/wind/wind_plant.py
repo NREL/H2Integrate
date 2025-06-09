@@ -56,7 +56,7 @@ class WindPlantPerformanceModel(WindPerformanceBaseClass):
     def compute(self, inputs, outputs):
         # Assumes the WindPlant instance has a method to simulate and return power output
         self.wind_plant.simulate_power(self.plant_config.plant_life)
-        outputs["electricity"] = self.wind_plant._system_model.value("gen")
+        outputs["electricity_out"] = self.wind_plant._system_model.value("gen")
 
 
 @define

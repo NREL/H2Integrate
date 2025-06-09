@@ -9,7 +9,7 @@ class HydrogenTankPerformanceModel(om.ExplicitComponent):
     def setup(self):
         config_details = self.options["tech_config"]["details"]
         self.add_input(
-            "hydrogen",
+            "hydrogen_in",
             val=0.0,
             shape_by_conn=True,
             copy_shape="hydrogen_out",
@@ -29,7 +29,7 @@ class HydrogenTankPerformanceModel(om.ExplicitComponent):
             "hydrogen_out",
             val=0.0,
             shape_by_conn=True,
-            copy_shape="hydrogen",
+            copy_shape="hydrogen_in",
             units="kg/h",
             desc="Hydrogen output over a year",
         )
@@ -37,14 +37,14 @@ class HydrogenTankPerformanceModel(om.ExplicitComponent):
             "stored_hydrogen",
             val=0.0,
             shape_by_conn=True,
-            copy_shape="hydrogen",
+            copy_shape="hydrogen_in",
             units="kg",
             desc="Amount of hydrogen stored",
         )
 
     def compute(self, inputs, outputs):
         initial_hydrogen = inputs["initial_hydrogen"]
-        hydrogen_in = inputs["hydrogen"]
+        hydrogen_in = inputs["hydrogen_in"]
         hydrogen_out = inputs["hydrogen_out"]
 
         outputs["stored_hydrogen"] = initial_hydrogen + hydrogen_in - hydrogen_out

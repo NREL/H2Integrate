@@ -9,10 +9,10 @@ class ElectrolyzerPerformanceBaseClass(om.ExplicitComponent):
     def setup(self):
         # Define inputs for electricity and outputs for hydrogen and oxygen generation
         self.add_input(
-            "electricity", val=0.0, shape_by_conn=True, copy_shape="hydrogen", units="kW"
+            "electricity_in", val=0.0, shape_by_conn=True, copy_shape="hydrogen_out", units="kW"
         )
         self.add_output(
-            "hydrogen", val=0.0, shape_by_conn=True, copy_shape="electricity", units="kg/h"
+            "hydrogen_out", val=0.0, shape_by_conn=True, copy_shape="electricity_in", units="kg/h"
         )
         self.add_output(
             "time_until_replacement", val=80000.0, units="h", desc="Time until replacement"
@@ -37,7 +37,7 @@ class ElectrolyzerCostBaseClass(om.ExplicitComponent):
 
     def setup(self):
         self.add_input("total_hydrogen_produced", val=0.0, units="kg/year")
-        self.add_input("electricity", val=0.0, shape_by_conn=True, units="kW")
+        self.add_input("electricity_in", val=0.0, shape_by_conn=True, units="kW")
         # Define outputs: CapEx and OpEx costs
         self.add_output("CapEx", val=0.0, units="USD", desc="Capital expenditure")
         self.add_output("OpEx", val=0.0, units="USD/year", desc="Operational expenditure")
