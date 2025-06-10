@@ -72,7 +72,7 @@ Here are some guidelines to help with the review process, both as the person sub
 
 ### As the person submitting the pull request
 
-- Quality is a priority -- take the time to ensure your code is clear, well-documented, and tested..
+- Quality is a priority -- take the time to ensure your code is clear, well-documented, and tested.
 - Keep pull requests small enough to be reviewed in under 30 minutes; this helps reviewers give thorough feedback and makes the process more efficient.
 - Value readability and understandability, but balance this with computational efficiency. Readable code is preferred unless a more abstract or optimized approach is clearly necessary and well-justified.
 - Be open to discussion and feedback. If written communication becomes challenging, consider scheduling a call to clarify intent and resolve misunderstandings.
