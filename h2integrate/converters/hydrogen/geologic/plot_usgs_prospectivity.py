@@ -1,3 +1,8 @@
+"""
+A script to plot the geoH2 prospectivity map from USGS, Gelman et al.
+doi.org/10.3133/pp1900
+"""
+
 from pathlib import Path
 
 import numpy as np
