@@ -49,6 +49,9 @@ class StimulatedGeoH2PerformanceConfig(GeoH2PerformanceConfig):
 class StimulatedGeoH2PerformanceModel(GeoH2PerformanceBaseClass):
     """
     An OpenMDAO component for modeling the performance of a stimulated geologic hydrogen plant.
+    Based on the work of:
+        - Mathur et al. (Stanford): https://eartharxiv.org/repository/view/8321/
+        - Templeton et al. (UC Boulder): https://doi.org/10.3389/fgeoc.2024.1366268
 
     All inputs come from StimulatedGeoH2PerformanceConfig
 
@@ -135,7 +138,9 @@ class StimulatedGeoH2CostConfig(GeoH2CostConfig):
 class StimulatedGeoH2CostModel(GeoH2CostBaseClass):
     """
     An OpenMDAO component for modeling the cost of a stimulated geologic hydrogen plant
-    Based on guidelines found in NETL-PUB-22580
+    Based on the work of:
+        - Mathur et al. (Stanford): https://eartharxiv.org/repository/view/8321/
+        - NETL Quality Guidelines: https://doi.org/10.2172/1567736
 
     All inputs come from StimulatedGeoH2CostConfig, except for inputs in *asterisks* which come
         from StimulatedGeoH2PerformanceModel
@@ -204,7 +209,9 @@ class StimulatedGeoH2FinanceConfig(GeoH2FinanceConfig):
 class StimulatedGeoH2FinanceModel(GeoH2FinanceBaseClass):
     """
     An OpenMDAO component for modeling the financing of a stimulated geologic hydrogen plant
-    Based on guidelines found in NETL-PUB-22580
+    Based on the work of:
+        - Mathur et al. (Stanford): https://eartharxiv.org/repository/view/8321/
+        - NETL Quality Guidelines: https://doi.org/10.2172/1567736
 
     All inputs come from StimulatedGeoH2FinanceConfig, except for inputs in *asterisks* which come
         from StimulatedGeoH2PerformanceModel or StimulatedGeoH2CostModel outputs

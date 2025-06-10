@@ -34,6 +34,9 @@ class NaturalGeoH2PerformanceConfig(GeoH2PerformanceConfig):
 class NaturalGeoH2PerformanceModel(GeoH2PerformanceBaseClass):
     """
     An OpenMDAO component for modeling the performance of a natural geologic hydrogen plant.
+    Based on the work of:
+        - Mathur et al. (Stanford): https://eartharxiv.org/repository/view/8321/
+        - Gelman et al. (USGS): https://pubs.usgs.gov/pp/1900/pp1900.pdf
 
     All inputs come from NaturalGeoH2PerformanceConfig
 
@@ -101,7 +104,9 @@ class NaturalGeoH2CostConfig(GeoH2CostConfig):
 class NaturalGeoH2CostModel(GeoH2CostBaseClass):
     """
     An OpenMDAO component for modeling the cost of a natural geologic hydrogen plant
-    Based on guidelines found in NETL-PUB-22580 doi.org/10.2172/1567736
+    Based on the work of:
+        - Mathur et al. (Stanford): https://eartharxiv.org/repository/view/8321/
+        - NETL Quality Guidelines: https://doi.org/10.2172/1567736
 
     All inputs come from NaturalGeoH2CostConfig, except for inputs in *asterisks* which come from
         NaturalGeoH2PerformanceModel
@@ -170,7 +175,10 @@ class NaturalGeoH2FinanceConfig(GeoH2FinanceConfig):
 class NaturalGeoH2FinanceModel(GeoH2FinanceBaseClass):
     """
     An OpenMDAO component for modeling the financing of a natural geologic hydrogen plant
-    Based on guidelines found in NETL-PUB-22580 doi.org/10.2172/1567736
+    Based on the work of:
+        - Mathur et al. (Stanford): https://eartharxiv.org/repository/view/8321/
+        - NETL Quality Guidelines: https://doi.org/10.2172/1567736
+
 
     All inputs come from NaturalGeoH2FinanceConfig, except for inputs in *asterisks* which come
         from NaturalGeoH2PerformanceModel or NaturalGeoH2CostModel outputs
