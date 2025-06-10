@@ -27,7 +27,9 @@ class HOPPComponent(om.ExplicitComponent):
 
     def setup(self):
         # Outputs
-        self.add_output("electricity", val=np.zeros(n_timesteps), units="kW", desc="Power output")
+        self.add_output(
+            "electricity_out", val=np.zeros(n_timesteps), units="kW", desc="Power output"
+        )
         self.add_output("CapEx", val=0.0, units="USD", desc="Total capital expenditures")
         self.add_output("OpEx", val=0.0, units="USD/year", desc="Total fixed operating costs")
 
@@ -80,6 +82,6 @@ class HOPPComponent(om.ExplicitComponent):
                 dill.dump(subset_of_hopp_results, f)
 
         # Set the outputs from the cached or newly computed results
-        outputs["electricity"] = subset_of_hopp_results["combined_hybrid_power_production_hopp"]
+        outputs["electricity_out"] = subset_of_hopp_results["combined_hybrid_power_production_hopp"]
         outputs["CapEx"] = subset_of_hopp_results["capex"]
         outputs["OpEx"] = subset_of_hopp_results["opex"]

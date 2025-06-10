@@ -15,17 +15,9 @@ technologies:
       performance_parameters:
         rock_type: 'peridotite'
         grain_size: 0.01
-        serp_rate: 1.0e-13
-        caprock_depth: 100
-        borehole_depth: 1000
-        inj_prod_distance: 100
-        reaction_zone_width: 50
         site_prospectivity: 0.7
         initial_wellhead_flow: 200
         gas_reservoir_size: 35000
-        iron_II_conc: 5
-        bulk_density: 2700
-        water_temp: 30
       cost_parameters:
         cost_year: 2020
         test_drill_cost: 500000
@@ -36,3 +28,10 @@ technologies:
         success_chance: 20
         fixed_opex: 200000
         variable_opex: 0.
+        contracting_pct: 20
+        contingency_pct: 50
+        preprod_time: 6
+        as_spent_ratio: 1.10
+      finance_parameters:
+        eff_tax_rate: 25.74
+        atwacc: 4.73

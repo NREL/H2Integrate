@@ -1,5 +1,5 @@
 import numpy as np
-from attrs import define
+from attrs import field, define
 
 from h2integrate.core.utilities import merge_shared_inputs
 from h2integrate.converters.hydrogen.geologic.geoh2_baseclass import (
@@ -12,21 +12,58 @@ from h2integrate.converters.hydrogen.geologic.geoh2_baseclass import (
 )
 
 
+# Globals - molecular weights
+M_Fe = 55.8  # kg/kmol
+M_H2 = 1.00  # kg/kmol
+
+
 @define
 class StimulatedGeoH2PerformanceConfig(GeoH2PerformanceConfig):
-    pass
+    """
+    Performance parameters specific to the stimulated geologic hydrogen sub-models
+    Values are set in the tech_config.yaml:
+        technologies/geoh2/model_inputs/shared_parameters for paramters marked with *asterisks*
+        technologies/geoh2/model_inputs/performance_parameters all other parameters
+
+    Parameters (in addition to those in geoh2_baseclass.GeoH2PerformanceConfig):
+        -serp_rate:             float [1/s] - Rate constant of serpentinization reaction
+        -caprock_depth:         float [m] - Depth below surface of caprock not participating in rxn
+        -borehole_depth:        float [m] - Total depth of borehole (potentially including turns)
+        -inj_prod_distance:     float [m] - Distance between injection and production wells
+        -reaction_zone_width:   float [m] - Estimated width of rock volume participating in the rxn
+        -iron_II_conc:          float [percent] - Mass % of iron (II) in the rock
+        -bulk_density:          float [kg/m**3] - Bulk density of rock
+        -water_temp:            float [C] - Temperature of water being injected
+    """
+
+    serp_rate: float = field()  # 1/sec
+    caprock_depth: float = field()  # meters
+    borehole_depth: float = field()  # meters
+    inj_prod_distance: float = field()  # meters
+    reaction_zone_width: float = field()  # meters
+    iron_II_conc: float = field()  # wt_pct
+    bulk_density: float = field()  # kg/m^3
+    water_temp: float = field()  # deg C
 
 
 class StimulatedGeoH2PerformanceModel(GeoH2PerformanceBaseClass):
     """
-    An OpenMDAO component for modeling the performance of a geologic hydrogen plant.
-    Combines modeling for both natural and stimulated geoH2.
-    yada yada yada
+    An OpenMDAO component for modeling the performance of a stimulated geologic hydrogen plant.
 
-    Inputs:
-        -yada yada yada
-    Outputs:
-        -yada yada yada
+    All inputs come from StimulatedGeoH2PerformanceConfig
+
+    Inputs (in addition to those in geoh2_baseclass.GeoH2PerformanceBaseClass):
+        -serp_rate:             float [1/s", val=self.config.serp_rate)
+        -caprock_depth:         float [m", val=self.config.caprock_depth)
+        -borehole_depth:        float [m", val=self.config.borehole_depth)
+        -inj_prod_distance:     float [m", val=self.config.inj_prod_distance)
+        -reaction_zone_width:   float [m", val=self.config.reaction_zone_width)
+        -iron_II_conc:          float [percent", val=self.config.iron_II_conc)
+        -bulk_density:          float [kg/m**3", val=self.config.bulk_density)
+        -water_temp:            float [C", val=self.config.water_temp)
+    Outputs (in addition to those in geoh2_baseclass.GeoH2PerformanceBaseClass):
+        -hydrogen_produced:     array [kg/h] - The hydrogen production profile from stimulation
+                                        over 1 year (8760 hours)
     """
 
     def setup(self):
@@ -34,15 +71,26 @@ class StimulatedGeoH2PerformanceModel(GeoH2PerformanceBaseClass):
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance")
         )
         super().setup()
+
+        self.add_input("serp_rate", units="1/s", val=self.config.serp_rate)
+        self.add_input("caprock_depth", units="m", val=self.config.caprock_depth)
+        self.add_input("borehole_depth", units="m", val=self.config.borehole_depth)
+        self.add_input("inj_prod_distance", units="m", val=self.config.inj_prod_distance)
+        self.add_input("reaction_zone_width", units="m", val=self.config.reaction_zone_width)
+        self.add_input("iron_II_conc", units="percent", val=self.config.iron_II_conc)
+        self.add_input("bulk_density", units="kg/m**3", val=self.config.bulk_density)
+        self.add_input("water_temp", units="C", val=self.config.water_temp)
+
         self.add_output("hydrogen_produced", units="kg/h", shape=(8760,))
 
     def compute(self, inputs, outputs):
         lifetime = int(inputs["well_lifetime"][0])
 
-        # Calculate serpentinization penetration rate
-        grain_size = inputs["grain_size"]
-        serp_rate = inputs["serp_rate"]
-        pen_rate = grain_size * serp_rate
+        if self.config.rock_type == "peridotite":  # TODO: sub-models for different rock types
+            # Calculate serpentinization penetration rate
+            grain_size = inputs["grain_size"]
+            serp_rate = inputs["serp_rate"]
+            pen_rate = grain_size * serp_rate
 
         # Model rock deposit size
         height = inputs["borehole_depth"] - inputs["caprock_depth"]
@@ -52,8 +100,6 @@ class StimulatedGeoH2PerformanceModel(GeoH2PerformanceBaseClass):
         n_grains = rock_volume / grain_size**3
         rho = inputs["bulk_density"]
         X_Fe = inputs["iron_II_conc"]
-        M_Fe = 55.8
-        M_H2 = 1.00
 
         # Model shrinking reactive particle
         years = np.linspace(1, lifetime, lifetime)
@@ -74,19 +120,27 @@ class StimulatedGeoH2PerformanceModel(GeoH2PerformanceBaseClass):
 
 @define
 class StimulatedGeoH2CostConfig(GeoH2CostConfig):
+    """
+    Cost parameters specific to the stimulated geologic hydrogen sub-models
+    Values are set in the tech_config.yaml:
+        technologies/geoh2/model_inputs/shared_parameters for paramters marked with *asterisks*
+        technologies/geoh2/model_inputs/cost_parameters all other parameters
+
+    Currently no parameters other than those in geoh2_baseclass.GeoH2CostConfig
+    """
+
     pass
 
 
 class StimulatedGeoH2CostModel(GeoH2CostBaseClass):
     """
-    An OpenMDAO component for modeling the cost of a geologic hydrogen plant.
-    Combines modeling for both natural and stimulated geoH2.
-    yada yada yada
+    An OpenMDAO component for modeling the cost of a stimulated geologic hydrogen plant
+    Based on guidelines found in NETL-PUB-22580
 
-    Inputs:
-        -yada yada yada
-    Outputs:
-        -yada yada yada
+    All inputs come from StimulatedGeoH2CostConfig, except for inputs in *asterisks* which come
+        from StimulatedGeoH2PerformanceModel
+
+    Currently no inputs/outputs other than those in geoh2_baseclass.GeoH2CostBaseClass
     """
 
     def setup(self):
@@ -118,32 +172,44 @@ class StimulatedGeoH2CostModel(GeoH2CostBaseClass):
         outputs["OpEx"] = fopex + vopex * np.sum(production)
 
         # Apply cost multipliers to bare erected cost via NETL-PUB-22580
-        contracting_costs = bare_capex * 0.20
+        contracting = inputs["contracting_pct"]
+        contingency = inputs["contingency_pct"]
+        preproduction = inputs["preprod_time"]
+        as_spent_ratio = inputs["as_spent_ratio"]
+        contracting_costs = bare_capex * contracting / 100
         epc_cost = bare_capex + contracting_costs
-        contingency_costs = epc_cost * 0.50
+        contingency_costs = epc_cost * contingency / 100
         total_plant_cost = epc_cost + contingency_costs
-        preprod_cost = fopex * 0.50
+        preprod_cost = fopex * preproduction / 12
         total_overnight_cost = total_plant_cost + preprod_cost
-        tasc_toc_multiplier = 1.10  # simplifying for now
+        tasc_toc_multiplier = as_spent_ratio  # simplifying for now - TODO model on well_lifetime
         total_as_spent_cost = total_overnight_cost * tasc_toc_multiplier
         outputs["CapEx"] = total_as_spent_cost
 
 
 @define
 class StimulatedGeoH2FinanceConfig(GeoH2FinanceConfig):
+    """
+    Finance parameters specific to the stimulated geologic hydrogen sub-models
+    Values are set in the tech_config.yaml:
+        technologies/geoh2/model_inputs/shared_parameters for paramters marked with *asterisks*
+        technologies/geoh2/model_inputs/finance_parameters all other parameters
+
+    Currently no parameters other than those in geoh2_baseclass.GeoH2FinanceConfig
+    """
+
     pass
 
 
 class StimulatedGeoH2FinanceModel(GeoH2FinanceBaseClass):
     """
-    An OpenMDAO component for modeling the financing of a geologic hydrogen plant.
-    Combines modeling for both natural and stimulated geoH2.
-    yada yada yada
+    An OpenMDAO component for modeling the financing of a stimulated geologic hydrogen plant
+    Based on guidelines found in NETL-PUB-22580
 
-    Inputs:
-        -yada yada yada
-    Outputs:
-        -yada yada yada
+    All inputs come from StimulatedGeoH2FinanceConfig, except for inputs in *asterisks* which come
+        from StimulatedGeoH2PerformanceModel or StimulatedGeoH2CostModel outputs
+
+    Currently no inputs/outputs other than those in geoh2_baseclass.GeoH2FinanceBaseClass
     """
 
     def setup(self):
@@ -153,10 +219,10 @@ class StimulatedGeoH2FinanceModel(GeoH2FinanceBaseClass):
         super().setup()
 
     def compute(self, inputs, outputs):
-        # Calculate fixed charge rate via NETL-PUB-22580
+        # Calculate fixed charge rate
         lifetime = int(inputs["well_lifetime"][0])
-        etr = 0.2574  # effective tax rate
-        atwacc = 0.0473  # after-tax weighted average cost of capital - see NETL Exhibit 3-2
+        etr = inputs["eff_tax_rate"] / 100
+        atwacc = inputs["atwacc"] / 100
         dep_n = 1 / lifetime  # simplifying the IRS tax depreciation tables to avoid lookup
         crf = (
             atwacc * (1 + atwacc) ** lifetime / ((1 + atwacc) ** lifetime - 1)

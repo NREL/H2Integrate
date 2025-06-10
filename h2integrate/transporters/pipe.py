@@ -8,19 +8,19 @@ class PipePerformanceModel(om.ExplicitComponent):
 
     def setup(self):
         self.add_input(
-            "hydrogen_input",
+            "hydrogen_in",
             val=0.0,
             shape_by_conn=True,
-            copy_shape="hydrogen_output",
+            copy_shape="hydrogen_out",
             units="kg/s",
         )
         self.add_output(
-            "hydrogen_output",
+            "hydrogen_out",
             val=0.0,
             shape_by_conn=True,
-            copy_shape="hydrogen_input",
+            copy_shape="hydrogen_in",
             units="kg/s",
         )
 
     def compute(self, inputs, outputs):
-        outputs["hydrogen_output"] = inputs["hydrogen_input"]
+        outputs["hydrogen_out"] = inputs["hydrogen_in"]

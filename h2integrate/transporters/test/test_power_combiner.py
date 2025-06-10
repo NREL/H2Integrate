@@ -27,4 +27,4 @@ def test_combiner_performance():
     prob.set_val("electricity_input2", electricity_input2, units="kW")
     prob.run_model()
 
-    assert prob.get_val("electricity", units="kW") == approx(electricity_output, rel=1e-5)
+    assert prob.get_val("electricity_out", units="kW") == approx(electricity_output, rel=1e-5)
