@@ -19,6 +19,23 @@ M_H2 = 1.00  # kg/kmol
 
 @define
 class StimulatedGeoH2PerformanceConfig(GeoH2PerformanceConfig):
+    """
+    Performance parameters specific to the stimulated geologic hydrogen sub-models
+    Values are set in the tech_config.yaml:
+        technologies/geoh2/model_inputs/shared_parameters for paramters marked with *asterisks*
+        technologies/geoh2/model_inputs/performance_parameters all other parameters
+
+    Parameters (in addition to those in geoh2_baseclass.GeoH2PerformanceConfig):
+        -serp_rate:             float [1/s] - Rate constant of serpentinization reaction
+        -caprock_depth:         float [m] - Depth below surface of caprock not participating in rxn
+        -borehole_depth:        float [m] - Total depth of borehole (potentially including turns)
+        -inj_prod_distance:     float [m] - Distance between injection and production wells
+        -reaction_zone_width:   float [m] - Estimated width of rock volume participating in the rxn
+        -iron_II_conc:          float [percent] - Mass % of iron (II) in the rock
+        -bulk_density:          float [kg/m**3] - Bulk density of rock
+        -water_temp:            float [C] - Temperature of water being injected
+    """
+
     serp_rate: float = field()  # 1/sec
     caprock_depth: float = field()  # meters
     borehole_depth: float = field()  # meters
@@ -33,10 +50,20 @@ class StimulatedGeoH2PerformanceModel(GeoH2PerformanceBaseClass):
     """
     An OpenMDAO component for modeling the performance of a stimulated geologic hydrogen plant.
 
-    Inputs:
-        -yada yada yada
-    Outputs:
-        -yada yada yada
+    All inputs come from StimulatedGeoH2PerformanceConfig
+
+    Inputs (in addition to those in geoh2_baseclass.GeoH2PerformanceBaseClass):
+        -serp_rate:             float [1/s", val=self.config.serp_rate)
+        -caprock_depth:         float [m", val=self.config.caprock_depth)
+        -borehole_depth:        float [m", val=self.config.borehole_depth)
+        -inj_prod_distance:     float [m", val=self.config.inj_prod_distance)
+        -reaction_zone_width:   float [m", val=self.config.reaction_zone_width)
+        -iron_II_conc:          float [percent", val=self.config.iron_II_conc)
+        -bulk_density:          float [kg/m**3", val=self.config.bulk_density)
+        -water_temp:            float [C", val=self.config.water_temp)
+    Outputs (in addition to those in geoh2_baseclass.GeoH2PerformanceBaseClass):
+        -hydrogen_produced:     array [kg/h] - The hydrogen production profile from stimulation
+                                        over 1 year (8760 hours)
     """
 
     def setup(self):
@@ -93,17 +120,27 @@ class StimulatedGeoH2PerformanceModel(GeoH2PerformanceBaseClass):
 
 @define
 class StimulatedGeoH2CostConfig(GeoH2CostConfig):
+    """
+    Cost parameters specific to the stimulated geologic hydrogen sub-models
+    Values are set in the tech_config.yaml:
+        technologies/geoh2/model_inputs/shared_parameters for paramters marked with *asterisks*
+        technologies/geoh2/model_inputs/cost_parameters all other parameters
+
+    Currently no parameters other than those in geoh2_baseclass.GeoH2CostConfig
+    """
+
     pass
 
 
 class StimulatedGeoH2CostModel(GeoH2CostBaseClass):
     """
-    An OpenMDAO component for modeling the cost of a stimulated geologic hydrogen plant.
+    An OpenMDAO component for modeling the cost of a stimulated geologic hydrogen plant
+    Based on guidelines found in NETL-PUB-22580
 
-    Inputs:
-        -yada yada yada
-    Outputs:
-        -yada yada yada
+    All inputs come from StimulatedGeoH2CostConfig, except for inputs in *asterisks* which come
+        from StimulatedGeoH2PerformanceModel
+
+    Currently no inputs/outputs other than those in geoh2_baseclass.GeoH2CostBaseClass
     """
 
     def setup(self):
@@ -152,17 +189,27 @@ class StimulatedGeoH2CostModel(GeoH2CostBaseClass):
 
 @define
 class StimulatedGeoH2FinanceConfig(GeoH2FinanceConfig):
+    """
+    Finance parameters specific to the stimulated geologic hydrogen sub-models
+    Values are set in the tech_config.yaml:
+        technologies/geoh2/model_inputs/shared_parameters for paramters marked with *asterisks*
+        technologies/geoh2/model_inputs/finance_parameters all other parameters
+
+    Currently no parameters other than those in geoh2_baseclass.GeoH2FinanceConfig
+    """
+
     pass
 
 
 class StimulatedGeoH2FinanceModel(GeoH2FinanceBaseClass):
     """
-    An OpenMDAO component for modeling the financing of a stimulated geologic hydrogen plant.
+    An OpenMDAO component for modeling the financing of a stimulated geologic hydrogen plant
+    Based on guidelines found in NETL-PUB-22580
 
-    Inputs:
-        -yada yada yada
-    Outputs:
-        -yada yada yada
+    All inputs come from StimulatedGeoH2FinanceConfig, except for inputs in *asterisks* which come
+        from StimulatedGeoH2PerformanceModel or StimulatedGeoH2CostModel outputs
+
+    Currently no inputs/outputs other than those in geoh2_baseclass.GeoH2FinanceBaseClass
     """
 
     def setup(self):
@@ -172,7 +219,7 @@ class StimulatedGeoH2FinanceModel(GeoH2FinanceBaseClass):
         super().setup()
 
     def compute(self, inputs, outputs):
-        # Calculate fixed charge rate via NETL-PUB-22580
+        # Calculate fixed charge rate
         lifetime = int(inputs["well_lifetime"][0])
         etr = inputs["eff_tax_rate"] / 100
         atwacc = inputs["atwacc"] / 100

@@ -14,21 +14,38 @@ from h2integrate.converters.hydrogen.geologic.geoh2_baseclass import (
 
 @define
 class NaturalGeoH2PerformanceConfig(GeoH2PerformanceConfig):
-    site_prospectivity: float = field()  # years
-    initial_wellhead_flow: float = field()  # kg/hr
-    gas_reservoir_size: float = field()  # tonnes
+    """
+    Performance parameters specific to the natural geologic hydrogen sub-models
+    Values are set in the tech_config.yaml:
+        technologies/geoh2/model_inputs/shared_parameters for paramters marked with *asterisks*
+        technologies/geoh2/model_inputs/performance_parameters all other parameters
+
+    Parameters (in addition to those in geoh2_baseclass.GeoH2PerformanceConfig):
+        -site_prospectivity:    float [None] - Site assessment of natural H2 production potential
+        -initial_wellhead_flow: float [kg/h] - The hydrogen flow when the drill is first completed
+        -gas_reservoir_size:    float [t] - The total amount of hydrogen in the accumulation
+    """
+
+    site_prospectivity: float = field()
+    initial_wellhead_flow: float = field()
+    gas_reservoir_size: float = field()
 
 
 class NaturalGeoH2PerformanceModel(GeoH2PerformanceBaseClass):
     """
     An OpenMDAO component for modeling the performance of a natural geologic hydrogen plant.
-    Contains parameters specific to natural geologic hydrogen sub-model.
-    yada yada yada
 
-    Inputs:
-        -yada yada yada
-    Outputs:
-        -yada yada yada
+    All inputs come from NaturalGeoH2PerformanceConfig
+
+    Inputs (in addition to those in geoh2_baseclass.GeoH2PerformanceBaseClass):
+        -site_prospectivity:        float [None] - Assessment of natural H2 production potential
+        -initial_wellhead_flow:     float [kg/h] - The H2 flow when the drill is first completed
+        -gas_reservoir_size:        float [t] - The total amount of hydrogen in the accumulation
+    Outputs (in addition to those in geoh2_baseclass.GeoH2PerformanceBaseClass):
+        -wellhead_h2_conc:          float [percent] - The mass % of H2 in the wellhead fluid
+        -lifetime_wellhead_flow:    float [kg/h] - The average gas flow over the well lifetime
+        -hydrogen_accumulated:      array [kg/h] - The accumulated hydrogen production profile
+                                        over 1 year (8760 hours)
     """
 
     def setup(self):
@@ -69,19 +86,27 @@ class NaturalGeoH2PerformanceModel(GeoH2PerformanceBaseClass):
 
 @define
 class NaturalGeoH2CostConfig(GeoH2CostConfig):
+    """
+    Cost parameters specific to the natural geologic hydrogen sub-models
+    Values are set in the tech_config.yaml:
+        technologies/geoh2/model_inputs/shared_parameters for paramters marked with *asterisks*
+        technologies/geoh2/model_inputs/cost_parameters all other parameters
+
+    Currently no parameters other than those in geoh2_baseclass.GeoH2CostConfig
+    """
+
     pass
 
 
 class NaturalGeoH2CostModel(GeoH2CostBaseClass):
     """
-    An OpenMDAO component for modeling the cost of a natural geologic hydrogen plant.
-    Contains parameters specific to natural geologic hydrogen sub-model.
-    yada yada yada
+    An OpenMDAO component for modeling the cost of a natural geologic hydrogen plant
+    Based on guidelines found in NETL-PUB-22580
 
-    Inputs:
-        -yada yada yada
-    Outputs:
-        -yada yada yada
+    All inputs come from NaturalGeoH2CostConfig, except for inputs in *asterisks* which come from
+        NaturalGeoH2PerformanceModel
+
+    Currently no inputs/outputs other than those in geoh2_baseclass.GeoH2CostBaseClass
     """
 
     def setup(self):
@@ -130,19 +155,27 @@ class NaturalGeoH2CostModel(GeoH2CostBaseClass):
 
 @define
 class NaturalGeoH2FinanceConfig(GeoH2FinanceConfig):
+    """
+    Finance parameters specific to the natural geologic hydrogen sub-models
+    Values are set in the tech_config.yaml:
+        technologies/geoh2/model_inputs/shared_parameters for paramters marked with *asterisks*
+        technologies/geoh2/model_inputs/finance_parameters all other parameters
+
+    Currently no parameters other than those in geoh2_baseclass.GeoH2FinanceConfig
+    """
+
     pass
 
 
 class NaturalGeoH2FinanceModel(GeoH2FinanceBaseClass):
     """
-    An OpenMDAO component for modeling the financing of a natural geologic hydrogen plant.
-    Contains parameters specific to natural geologic hydrogen sub-model.
-    yada yada yada
+    An OpenMDAO component for modeling the financing of a natural geologic hydrogen plant
+    Based on guidelines found in NETL-PUB-22580
 
-    Inputs:
-        -yada yada yada
-    Outputs:
-        -yada yada yada
+    All inputs come from NaturalGeoH2FinanceConfig, except for inputs in *asterisks* which come
+        from NaturalGeoH2PerformanceModel or NaturalGeoH2CostModel outputs
+
+    Currently no inputs/outputs other than those in geoh2_baseclass.GeoH2FinanceBaseClass
     """
 
     def setup(self):
@@ -152,7 +185,7 @@ class NaturalGeoH2FinanceModel(GeoH2FinanceBaseClass):
         super().setup()
 
     def compute(self, inputs, outputs):
-        # Calculate fixed charge rate via NETL-PUB-22580
+        # Calculate fixed charge rate
         lifetime = int(inputs["well_lifetime"][0])
         etr = inputs["eff_tax_rate"] / 100
         atwacc = inputs["atwacc"] / 100
