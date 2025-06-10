@@ -101,7 +101,7 @@ class NaturalGeoH2CostConfig(GeoH2CostConfig):
 class NaturalGeoH2CostModel(GeoH2CostBaseClass):
     """
     An OpenMDAO component for modeling the cost of a natural geologic hydrogen plant
-    Based on guidelines found in NETL-PUB-22580
+    Based on guidelines found in NETL-PUB-22580 doi.org/10.2172/1567736
 
     All inputs come from NaturalGeoH2CostConfig, except for inputs in *asterisks* which come from
         NaturalGeoH2PerformanceModel
@@ -170,7 +170,7 @@ class NaturalGeoH2FinanceConfig(GeoH2FinanceConfig):
 class NaturalGeoH2FinanceModel(GeoH2FinanceBaseClass):
     """
     An OpenMDAO component for modeling the financing of a natural geologic hydrogen plant
-    Based on guidelines found in NETL-PUB-22580
+    Based on guidelines found in NETL-PUB-22580 doi.org/10.2172/1567736
 
     All inputs come from NaturalGeoH2FinanceConfig, except for inputs in *asterisks* which come
         from NaturalGeoH2PerformanceModel or NaturalGeoH2CostModel outputs
