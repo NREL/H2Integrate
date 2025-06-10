@@ -43,7 +43,7 @@ You can combine an H2Integrate model and a custom model for the same technology 
 ## Getting started
 
 To use a custom model in your H2Integrate project, we recommend you look at existing models in the H2Integrate codebase to help guide the process.
-Then you can follow these steps:
+After learning the basic structure from those models, you can follow these steps:
 
 1. **Create configuration classes**
 
@@ -62,9 +62,13 @@ Then you can follow these steps:
    Treat your custom model as a drop-in component in your analysis workflow.
 
 ```{note}
-Custom models can include calls to external tools (e.g. an Excel macro) within the `compute` function as long as the required inputs and outputs are properly defined and handled.
+Your custom model cannot have the same name as an existing H2Integrate model. To remove ambiguity of which model would be used, an error will be raised if a custom model shares a name with an existing H2Integrate model.
 ```
 
 Refer to the [Paper Mill Model Example](https://github.com/NREL/H2Integrate/tree/develop/examples/06_custom_tech/) for a complete walkthrough.
 
 This feature supports broader adoption of H2I by allowing integration with the tools and models users already trust.
+
+```{note}
+Custom models can include calls to external tools (e.g. an Excel macro) within the `compute` function as long as the required inputs and outputs are properly defined and handled.
+```
