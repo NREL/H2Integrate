@@ -4,17 +4,11 @@ description: "This hybrid plant produces geologic hydrogen"
 technologies:
   geoh2:
     performance_model:
-      model: "stim_geoh2_performance"
-      model_class_name: StimulatedGeoH2PerformanceModel
-      model_location: h2i_modules/public/stimulated_geoh2_plant.py
+      model: "stimulated_geoh2_performance"
     cost_model:
-      model: "stim_geoh2_cost"
-      model_class_name: StimulatedGeoH2CostModel
-      model_location: h2i_modules/public/stimulated_geoh2_plant.py
+      model: "stimulated_geoh2_cost"
     financial_model:
-      model: "stim_geoh2"
-      model_class_name: StimulatedGeoH2FinanceModel
-      model_location: h2i_modules/public/stimulated_geoh2_plant.py
+      model: "stimulated_geoh2"
     model_inputs:
       shared_parameters:
         well_lifetime: 20
@@ -39,3 +33,10 @@ technologies:
         success_chance: 80
         fixed_opex: 200000
         variable_opex: 0.298514591393227
+        contracting_pct: 20
+        contingency_pct: 50
+        preprod_time: 6
+        as_spent_ratio: 1.10
+      finance_parameters:
+        eff_tax_rate: 25.74
+        atwacc: 4.73

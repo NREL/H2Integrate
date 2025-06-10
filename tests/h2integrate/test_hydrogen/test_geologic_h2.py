@@ -10,7 +10,7 @@ cd = Path(__file__).resolve().parent
 
 
 def test_natural_geoh2(subtests):
-    h2i_nat = H2IntegrateModel(cd / "input_files/geologic/geo_h2_natural.yaml")
+    h2i_nat = H2IntegrateModel(cd / "../../../examples/04_geo_h2/04_geo_h2_natural.yaml")
     h2i_nat.run()
 
     with subtests.test("H2 Production"):
@@ -22,7 +22,7 @@ def test_natural_geoh2(subtests):
 
 
 def test_stimulated_geoh2(subtests):
-    h2i_stim = H2IntegrateModel(cd / "input_files/geologic/geo_h2_stimulated.yaml")
+    h2i_stim = H2IntegrateModel(cd / "../../../examples/04_geo_h2/04_geo_h2_stimulated.yaml")
     h2i_stim.run()
 
     with subtests.test("H2 Production"):

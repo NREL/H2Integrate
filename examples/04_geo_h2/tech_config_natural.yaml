@@ -28,3 +28,10 @@ technologies:
         success_chance: 20
         fixed_opex: 200000
         variable_opex: 0.
+        contracting_pct: 20
+        contingency_pct: 50
+        preprod_time: 6
+        as_spent_ratio: 1.10
+      finance_parameters:
+        eff_tax_rate: 25.74
+        atwacc: 4.73

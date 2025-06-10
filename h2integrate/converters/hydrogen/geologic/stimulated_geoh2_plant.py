@@ -12,6 +12,11 @@ from h2integrate.converters.hydrogen.geologic.geoh2_baseclass import (
 )
 
 
+# Globals - molecular weights
+M_Fe = 55.8  # kg/kmol
+M_H2 = 1.00  # kg/kmol
+
+
 @define
 class StimulatedGeoH2PerformanceConfig(GeoH2PerformanceConfig):
     serp_rate: float = field()  # 1/sec
@@ -54,10 +59,11 @@ class StimulatedGeoH2PerformanceModel(GeoH2PerformanceBaseClass):
     def compute(self, inputs, outputs):
         lifetime = int(inputs["well_lifetime"][0])
 
-        # Calculate serpentinization penetration rate
-        grain_size = inputs["grain_size"]
-        serp_rate = inputs["serp_rate"]
-        pen_rate = grain_size * serp_rate
+        if self.config.rock_type == "peridotite":  # TODO: sub-models for different rock types
+            # Calculate serpentinization penetration rate
+            grain_size = inputs["grain_size"]
+            serp_rate = inputs["serp_rate"]
+            pen_rate = grain_size * serp_rate
 
         # Model rock deposit size
         height = inputs["borehole_depth"] - inputs["caprock_depth"]
@@ -67,8 +73,6 @@ class StimulatedGeoH2PerformanceModel(GeoH2PerformanceBaseClass):
         n_grains = rock_volume / grain_size**3
         rho = inputs["bulk_density"]
         X_Fe = inputs["iron_II_conc"]
-        M_Fe = 55.8
-        M_H2 = 1.00
 
         # Model shrinking reactive particle
         years = np.linspace(1, lifetime, lifetime)
@@ -131,13 +135,17 @@ class StimulatedGeoH2CostModel(GeoH2CostBaseClass):
         outputs["OpEx"] = fopex + vopex * np.sum(production)
 
         # Apply cost multipliers to bare erected cost via NETL-PUB-22580
-        contracting_costs = bare_capex * 0.20
+        contracting = inputs["contracting_pct"]
+        contingency = inputs["contingency_pct"]
+        preproduction = inputs["preprod_time"]
+        as_spent_ratio = inputs["as_spent_ratio"]
+        contracting_costs = bare_capex * contracting / 100
         epc_cost = bare_capex + contracting_costs
-        contingency_costs = epc_cost * 0.50
+        contingency_costs = epc_cost * contingency / 100
         total_plant_cost = epc_cost + contingency_costs
-        preprod_cost = fopex * 0.50
+        preprod_cost = fopex * preproduction / 12
         total_overnight_cost = total_plant_cost + preprod_cost
-        tasc_toc_multiplier = 1.10  # simplifying for now
+        tasc_toc_multiplier = as_spent_ratio  # simplifying for now - TODO model on well_lifetime
         total_as_spent_cost = total_overnight_cost * tasc_toc_multiplier
         outputs["CapEx"] = total_as_spent_cost
 
@@ -166,8 +174,8 @@ class StimulatedGeoH2FinanceModel(GeoH2FinanceBaseClass):
     def compute(self, inputs, outputs):
         # Calculate fixed charge rate via NETL-PUB-22580
         lifetime = int(inputs["well_lifetime"][0])
-        etr = 0.2574  # effective tax rate
-        atwacc = 0.0473  # after-tax weighted average cost of capital - see NETL Exhibit 3-2
+        etr = inputs["eff_tax_rate"] / 100
+        atwacc = inputs["atwacc"] / 100
         dep_n = 1 / lifetime  # simplifying the IRS tax depreciation tables to avoid lookup
         crf = (
             atwacc * (1 + atwacc) ** lifetime / ((1 + atwacc) ** lifetime - 1)

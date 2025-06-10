@@ -46,9 +46,10 @@ class NaturalGeoH2PerformanceModel(GeoH2PerformanceBaseClass):
         self.add_output("hydrogen_accumulated", units="kg/h", shape=(8760,))
 
     def compute(self, inputs, outputs):
-        # Calculate expected wellhead h2 concentration from prospectivity
-        prospectivity = inputs["site_prospectivity"]
-        wh_h2_conc = 58.92981751 * prospectivity**2.460718753  # percent
+        if self.config.rock_type == "peridotite":  # TODO: sub-models for different rock types
+            # Calculate expected wellhead h2 concentration from prospectivity
+            prospectivity = inputs["site_prospectivity"]
+            wh_h2_conc = 58.92981751 * prospectivity**2.460718753  # percent
 
         # Calculated average wellhead gas flow over well lifetime
         init_wh_flow = inputs["initial_wellhead_flow"]
@@ -112,13 +113,17 @@ class NaturalGeoH2CostModel(GeoH2CostBaseClass):
         outputs["OpEx"] = fopex + vopex * np.sum(production)
 
         # Apply cost multipliers to bare erected cost via NETL-PUB-22580
-        contracting_costs = bare_capex * 0.20
+        contracting = inputs["contracting_pct"]
+        contingency = inputs["contingency_pct"]
+        preproduction = inputs["preprod_time"]
+        as_spent_ratio = inputs["as_spent_ratio"]
+        contracting_costs = bare_capex * contracting / 100
         epc_cost = bare_capex + contracting_costs
-        contingency_costs = epc_cost * 0.50
+        contingency_costs = epc_cost * contingency / 100
         total_plant_cost = epc_cost + contingency_costs
-        preprod_cost = fopex * 0.50
+        preprod_cost = fopex * preproduction / 12
         total_overnight_cost = total_plant_cost + preprod_cost
-        tasc_toc_multiplier = 1.10  # simplifying for now
+        tasc_toc_multiplier = as_spent_ratio  # simplifying for now - TODO model on well_lifetime
         total_as_spent_cost = total_overnight_cost * tasc_toc_multiplier
         outputs["CapEx"] = total_as_spent_cost
 
@@ -149,8 +154,8 @@ class NaturalGeoH2FinanceModel(GeoH2FinanceBaseClass):
     def compute(self, inputs, outputs):
         # Calculate fixed charge rate via NETL-PUB-22580
         lifetime = int(inputs["well_lifetime"][0])
-        etr = 0.2574  # effective tax rate
-        atwacc = 0.0473  # after-tax weighted average cost of capital - see NETL Exhibit 3-2
+        etr = inputs["eff_tax_rate"] / 100
+        atwacc = inputs["atwacc"] / 100
         dep_n = 1 / lifetime  # simplifying the IRS tax depreciation tables to avoid lookup
         crf = (
             atwacc * (1 + atwacc) ** lifetime / ((1 + atwacc) ** lifetime - 1)
