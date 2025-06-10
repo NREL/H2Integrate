@@ -15,7 +15,7 @@ technologies:
     performance_model:
       model: "eco_pem_electrolyzer_performance"
     cost_model:
-      model: "eco_pem_electrolyzer_cost"
+      model: "singlitico_electrolyzer_cost"
     financial_model:
       group: 1
     model_inputs:
@@ -36,16 +36,13 @@ technologies:
         include_degradation_penalty: True #include degradation
         turndown_ratio: 0.1 #turndown_ratio = minimum_cluster_power/cluster_rating_MW
 
-      cost_parameters:
-        cost_model: "singlitico2021" # "basic" is a basic cost model based on H2a and HFTO program record for PEM electrolysis. "singlitico2021" uses cost estimates from that paper
-
       financial_parameters:
         replacement_cost_percent: 0.15 # percent of capex - H2A default case
   h2_storage:
     performance_model:
-      model: "eco_h2_storage"
+      model: "h2_storage"
     cost_model:
-      model: "eco_h2_storage"
+      model: "h2_storage"
     financial_model:
       group: 1
     model_inputs:

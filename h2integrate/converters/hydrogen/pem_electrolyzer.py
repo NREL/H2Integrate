@@ -47,10 +47,10 @@ class ElectrolyzerPerformanceModel(ElectrolyzerPerformanceBaseClass):
     def compute(self, inputs, outputs):
         # Run the PEM electrolyzer model using the input power signal
         self.electrolyzer.max_stacks = inputs["cluster_size"]
-        h2_results, h2_results_aggregates = self.electrolyzer.run(inputs["electricity"])
+        h2_results, h2_results_aggregates = self.electrolyzer.run(inputs["electricity_in"])
 
         # Assuming `h2_results` includes hydrogen and oxygen rates per timestep
-        outputs["hydrogen"] = h2_results["hydrogen_hourly_production"]
+        outputs["hydrogen_out"] = h2_results["hydrogen_hourly_production"]
         outputs["total_hydrogen_produced"] = h2_results_aggregates["Total H2 Production [kg]"]
 
 

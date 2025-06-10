@@ -66,20 +66,10 @@ def test_ammonia_example(subtests):
         assert pytest.approx(model.prob.get_val("plant.hopp.hopp.OpEx"), rel=1e-3) == 32953490.4
 
     with subtests.test("Check electrolyzer CapEx"):
-        assert (
-            pytest.approx(
-                model.prob.get_val("plant.electrolyzer.eco_pem_electrolyzer_cost.CapEx"), rel=1e-3
-            )
-            == 6.00412524e08
-        )
+        assert pytest.approx(model.prob.get_val("electrolyzer.CapEx"), rel=1e-3) == 6.00412524e08
 
     with subtests.test("Check electrolyzer OpEx"):
-        assert (
-            pytest.approx(
-                model.prob.get_val("plant.electrolyzer.eco_pem_electrolyzer_cost.OpEx"), rel=1e-3
-            )
-            == 14703155.39207595
-        )
+        assert pytest.approx(model.prob.get_val("electrolyzer.OpEx"), rel=1e-3) == 14703155.39207595
 
     with subtests.test("Check H2 storage CapEx"):
         assert (
@@ -107,29 +97,96 @@ def test_ammonia_example(subtests):
 
     with subtests.test("Check total adjusted CapEx"):
         assert (
-            pytest.approx(
-                model.prob.get_val("plant.financials_group_1.total_capex_adjusted"), rel=1e-3
-            )
+            pytest.approx(model.prob.get_val("financials_group_1.total_capex_adjusted"), rel=1e-3)
             == 2.76180599e09
         )
 
     with subtests.test("Check total adjusted OpEx"):
         assert (
-            pytest.approx(
-                model.prob.get_val("plant.financials_group_1.total_opex_adjusted"), rel=1e-3
-            )
+            pytest.approx(model.prob.get_val("financials_group_1.total_opex_adjusted"), rel=1e-3)
             == 66599592.71371833
         )
 
     # Currently underestimated compared to the Reference Design Doc
     with subtests.test("Check LCOH"):
-        assert (
-            pytest.approx(model.prob.get_val("plant.financials_group_1.LCOH"), rel=1e-3)
-            == 4.39187968
-        )
+        assert pytest.approx(model.prob.get_val("financials_group_1.LCOH"), rel=1e-3) == 4.39187968
     # Currently underestimated compared to the Reference Design Doc
     with subtests.test("Check LCOA"):
+        assert pytest.approx(model.prob.get_val("financials_group_1.LCOA"), rel=1e-3) == 1.06313924
+
+
+def test_wind_h2_opt_example(subtests):
+    # Change the current working directory to the example's directory
+    os.chdir(examples_dir / "05_wind_h2_opt")
+
+    # Create a H2Integrate model
+    model = H2IntegrateModel(Path.cwd() / "wind_plant_electrolyzer.yaml")
+
+    # Run the model
+    model.run()
+
+    model.post_process()
+
+    with subtests.test("Check LCOH"):
+        assert model.prob.get_val("financials_group_1.LCOH")[0] < 4.64
+
+    with subtests.test("Check LCOE"):
+        assert pytest.approx(model.prob.get_val("financials_group_1.LCOE"), rel=1e-3) == 0.09009908
+
+    with subtests.test("Check total adjusted CapEx"):
         assert (
-            pytest.approx(model.prob.get_val("plant.financials_group_1.LCOA"), rel=1e-3)
-            == 1.06313924
+            pytest.approx(model.prob.get_val("financials_group_1.total_capex_adjusted"), rel=1e-3)
+            == 1.82152792e09
         )
+
+    with subtests.test("Check total adjusted OpEx"):
+        assert (
+            pytest.approx(model.prob.get_val("financials_group_1.total_opex_adjusted"), rel=1e-3)
+            == 51995875.99756081
+        )
+
+    with subtests.test("Check minimum total hydrogen produced"):
+        assert (
+            model.prob.get_val("electrolyzer.total_hydrogen_produced", units="kg/year") >= 60500000
+        )
+
+
+def test_paper_example(subtests):
+    # Change the current working directory to the example's directory
+    os.chdir(examples_dir / "06_custom_tech")
+
+    # Create a H2Integrate model
+    model = H2IntegrateModel(Path.cwd() / "wind_plant_paper.yaml")
+
+    # Run the model
+    model.run()
+
+    model.post_process()
+
+    # Subtests for checking specific values
+    with subtests.test("Check LCOP"):
+        assert (
+            pytest.approx(
+                model.prob.get_val("plant.paper_mill.paper_mill_financial.LCOP"), rel=1e-3
+            )
+            == 51.91476681
+        )
+
+
+def test_hydro_example(subtests):
+    # Change the current working directory to the example's directory
+    os.chdir(examples_dir / "07_run_of_river_plant")
+
+    # Create a H2Integrate model
+    model = H2IntegrateModel(Path.cwd() / "07_run_of_river.yaml")
+
+    # Run the model
+    model.run()
+
+    model.post_process()
+
+    print(model.prob.get_val("financials_group_1.LCOE"))
+
+    # Subtests for checking specific values
+    with subtests.test("Check LCOE"):
+        assert pytest.approx(model.prob.get_val("financials_group_1.LCOE"), rel=1e-3) == 0.17653979

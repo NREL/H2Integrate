@@ -128,8 +128,8 @@ class BaseConfig:
             extra_args = [d for d in data if d not in class_attr_names]
             if len(extra_args):
                 raise AttributeError(
-                    f"The initialization for {cls.__name__} \
-                        was given extraneous inputs: {extra_args}"
+                    f"The initialization for {cls.__name__} was given extraneous "
+                    f"inputs: {extra_args}"
                 )
 
         kwargs = {a.name: data[a.name] for a in cls.__attrs_attrs__ if a.name in data and a.init}
