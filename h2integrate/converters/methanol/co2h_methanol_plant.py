@@ -61,7 +61,8 @@ class CO2HMethanolPlantPerformanceModel(MethanolPerformanceBaseClass):
         self.add_input("h2_consume_ratio", units="kg/kg", val=self.config.h2_consume_ratio)
         self.add_input("elec_consume_ratio", units="kg/kW/h", val=self.config.elec_consume_ratio)
 
-        self.add_input("hydrogen_in", shape=8760, units="kg/h")
+        # Hydrogen input comes from another converter, and is in kg/s
+        self.add_input("hydrogen_in", shape=8760, units="kg/s")
         self.add_output("hydrogen_required", units="kg/yr")
         self.add_output("hydrogen_capacity", units="kg/yr")
         self.add_output("methanol_capacity", units="kg/yr")
@@ -90,7 +91,7 @@ class CO2HMethanolPlantPerformanceModel(MethanolPerformanceBaseClass):
 
     def compute(self, inputs, outputs):
         # Calculate methanol production from hydrogen in
-        h2_kgph = inputs["hydrogen_in"]
+        h2_kgph = inputs["hydrogen_in"] * 3600
         meoh_kgph = h2_kgph / inputs["h2_consume_ratio"]
 
         # Parse outputs

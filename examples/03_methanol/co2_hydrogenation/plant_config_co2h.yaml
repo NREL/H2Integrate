@@ -26,14 +26,14 @@ site:
 technology_interconnections: [
   ["hopp", "electrolyzer", "electricity", "cable"],
 #   ["hopp", "methanol", "electricity", "cable"],
-#   ["electrolyzer", "methanol", "hydrogen", "pipe"],
+  ["electrolyzer", "methanol", "hydrogen", "pipe"],
   ["financials_group_1", "methanol", "LCOE"],
   ["financials_group_1", "methanol", "LCOH"],
 ]
 
 plant:
   plant_life: 30
-  grid_connection: False # option, can be turned on or off
+  grid_connection: True # option, can be turned on or off
   ppa_price: 0.027498168 # based off correlations of LBNL PPA data
   hybrid_electricity_estimated_cf: 0.492 #should equal 1 if grid_connection = True
   atb_year: 2030
