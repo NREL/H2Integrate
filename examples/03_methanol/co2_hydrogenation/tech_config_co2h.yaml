@@ -15,7 +15,7 @@ technologies:
     performance_model:
       model: "eco_pem_electrolyzer_performance"
     cost_model:
-      model: "eco_pem_electrolyzer_cost"
+      model: "singlitico_electrolyzer_cost"
     financial_model:
       group: "1"
     model_inputs:
@@ -34,8 +34,6 @@ technologies:
         uptime_hours_until_eol: 80000 #number of 'on' hours until electrolyzer reaches eol
         include_degradation_penalty: True #include degradation
         turndown_ratio: 0.1 #turndown_ratio = minimum_cluster_power/cluster_rating_MW
-      cost_parameters:
-        cost_model: "singlitico2021" # "basic" is a basic cost model based on H2a and HFTO program record for PEM electrolysis. "singlitico2021" uses cost estimates from that paper
       financial_parameters:
         replacement_cost_percent: 0.15 # percent of capex - H2A default case
   methanol:
@@ -49,6 +47,7 @@ technologies:
     model_inputs:
       shared_parameters:
         plant_capacity_kgpy: 127893196.8
+        plant_capacity_flow: "methanol"
       performance_parameters:
         capacity_factor: 0.9
         co2e_emit_ratio: 0.020296

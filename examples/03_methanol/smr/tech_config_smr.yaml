@@ -12,6 +12,7 @@ technologies:
     model_inputs:
       shared_parameters:
         plant_capacity_kgpy: 127893196.8
+        plant_capacity_flow: "methanol"
       performance_parameters:
         capacity_factor: 0.9
         co2e_emit_ratio: 1.13442
