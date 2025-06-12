@@ -72,7 +72,7 @@ class CO2HMethanolPlantPerformanceModel(MethanolPerformanceBaseClass):
         self.add_output("carbon_dioxide_in", shape=8760, units="kg/h")
         self.add_output("electricity_in", shape=8760, units="kW*h/h")
 
-    def size(self):
+    def size_upstream(self):
         self.config = CO2HPerformanceConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance")
         )

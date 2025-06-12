@@ -4,8 +4,8 @@ from h2integrate.core.h2integrate_model import H2IntegrateModel
 # Create an H2I model
 h2i = H2IntegrateModel("03_co2h_methanol.yaml")
 
-# Size the components
-h2_kgpy = h2i.plant.methanol.co2h_methanol_plant_performance.size()
+# Size the upstream H2 electrolyzer to provide necessary flow to methanol plant
+h2_kgpy = h2i.plant.methanol.co2h_methanol_plant_performance.size_upstream()
 h2_MW = h2_kgpy * 55 / 8760 / 1000  # 55 kWh/kg, 8760 h/year, 1000 MW/kW
 h2i.technology_config["technologies"]["electrolyzer"]["model_inputs"]["shared_parameters"][
     "rating"
