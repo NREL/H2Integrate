@@ -208,9 +208,7 @@ def test_hybrid_energy_plant_example(subtests):
     with subtests.test("Check LCOE"):
         assert (
             pytest.approx(
-                model.prob.get_val(
-                    "plant.financials_group_profast.profast_comp_0.LCOE", units="USD/MW/h"
-                )[0],
+                model.prob.get_val("financials_group_1.LCOE", units="USD/MW/h")[0],
                 rel=1e-5,
             )
             == 83.2123

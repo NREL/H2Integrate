@@ -4,7 +4,7 @@ from h2integrate.transporters.cable import CablePerformanceModel
 from h2integrate.converters.steel.steel import SteelPerformanceModel, SteelCostAndFinancialModel
 from h2integrate.converters.wind.wind_plant import WindPlantCostModel, WindPlantPerformanceModel
 from h2integrate.transporters.power_combiner import CombinerPerformanceModel
-from h2integrate.converters.hopp.hopp_wrapper import HOPPSubGroup, HOPPComponent
+from h2integrate.converters.hopp.hopp_wrapper import HOPPComponent
 from h2integrate.converters.solar.solar_pysam import PYSAMSolarPlantPerformanceModel
 from h2integrate.storage.hydrogen.eco_storage import H2Storage
 from h2integrate.storage.hydrogen.tank_baseclass import (
@@ -57,7 +57,6 @@ supported_models = {
     "basic_electrolyzer_cost": BasicElectrolyzerCostModel,
     "h2_storage": H2Storage,
     "hopp": HOPPComponent,
-    "hybrid": HOPPSubGroup,
     "reverse_osmosis_desalination_performance": ReverseOsmosisPerformanceModel,
     "reverse_osmosis_desalination_cost": ReverseOsmosisCostModel,
     "ammonia_performance": AmmoniaPerformanceModel,
@@ -76,4 +75,4 @@ supported_models = {
     "hydrogen_tank_cost": HydrogenTankCostModel,
 }
 
-electricity_producing_techs = ["wind", "solar", "river", "hopp", "hybrid"]
+electricity_producing_techs = ["wind", "solar", "river", "hopp"]

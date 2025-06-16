@@ -63,7 +63,6 @@ technologies:
 config:
   simulation_options:
     cache: false
-    design_variables: ["wind_turbine_rating_kw", "pv_capacity", "battery_capacity_kw", "battery_capacity_kwh"]
     wind:
       skip_financial: false
   dispatch_options:

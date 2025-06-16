@@ -8,13 +8,13 @@ driver:
   optimization:
     flag: True
     tol: 0.1
-    max_iter: 3
+    max_iter: 1
     solver: COBYLA
     rhobeg: 1000.
     debug_print: False
 
 design_variables:
-  hybrid:
+  hopp:
     wind_turbine_rating_kw:
       flag: True
       lower: 0.0
@@ -37,7 +37,7 @@ design_variables:
       units: MW*h
 
 constraints:
-  hybrid:
+  hopp:
     percent_load_missed:
       flag: True
       lower: 20.
@@ -60,4 +60,4 @@ constraints:
       units: unitless
 
 objective:
-  name: plant.financials_group_profast.profast_comp_0.LCOE
+  name: financials_group_1.LCOE
