@@ -63,3 +63,8 @@ technologies:
         cooling_water_cost: 0.00516275276753 # # 2022 USD/gal
         iron_based_catalyst_cost: 25 #2022 USD/kg
         oxygen_cost: 0
+        electricity_consumption: 0.0001207
+        hydrogen_consumption: 0.197284403
+        cooling_water_consumption: 0.049236824
+        iron_based_catalyst_consumption: 0.000091295354067341
+        oxygen_byproduct: 0.29405077250145

@@ -6,6 +6,15 @@ from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
 
 @define
 class AmmoniaPerformanceModelConfig(BaseConfig):
+    """Configuration inputs for the ammonia performance model, including plant capacity and
+    capacity factor.
+
+    Attributes:
+        plant_capacity_kgpy (float): Annual production capacity of the plant in kg.
+        plant_capacity_factor (float): The ratio of actual production to maximum
+            possible production over a year.
+    """
+
     plant_capacity_kgpy: float = field()
     plant_capacity_factor: float = field()
 
@@ -55,15 +64,14 @@ class AmmoniaCostModelConfig(BaseConfig):
         iron_based_catalyst_cost (float): Cost per kg of iron-based catalyst.
         oxygen_cost (float): Cost per kg of oxygen.
         electricity_consumption (float): Electricity consumption in MWh per kg of
-            ammonia production, default is 0.1207 / 1000.
+            ammonia production.
         hydrogen_consumption (float): Hydrogen consumption in kg per kg of ammonia
-            production, default is 0.197284403.
+            production.
         cooling_water_consumption (float): Cooling water consumption in gallons per
-            kg of ammonia production, default is 0.049236824.
+            kg of ammonia production.
         iron_based_catalyst_consumption (float): Iron-based catalyst consumption in kg
-            per kg of ammonia production, default is 0.000091295354067341.
-        oxygen_byproduct (float): Oxygen byproduct in kg per kg of ammonia production,
-            default is 0.29405077250145.
+            per kg of ammonia production.
+        oxygen_byproduct (float): Oxygen byproduct in kg per kg of ammonia production.
     """
 
     plant_capacity_kgpy: float = field()
@@ -72,11 +80,11 @@ class AmmoniaCostModelConfig(BaseConfig):
     cooling_water_cost: float = field()
     iron_based_catalyst_cost: float = field()
     oxygen_cost: float = field()
-    electricity_consumption: float = field(default=0.1207 / 1000)
-    hydrogen_consumption: float = field(default=0.197284403)
-    cooling_water_consumption: float = field(default=0.049236824)
-    iron_based_catalyst_consumption: float = field(default=0.000091295354067341)
-    oxygen_byproduct: float = field(default=0.29405077250145)
+    electricity_consumption: float = field()
+    hydrogen_consumption: float = field()
+    cooling_water_consumption: float = field()
+    iron_based_catalyst_consumption: float = field()
+    oxygen_byproduct: float = field()
 
 
 class SimpleAmmoniaCostModel(om.ExplicitComponent):
@@ -184,13 +192,6 @@ class SimpleAmmoniaCostModel(om.ExplicitComponent):
             desc="Variable cost in the startup year",
         )
         self.add_output("credits_byproduct", val=0.0, units="USD", desc="Credits from byproducts")
-
-        # Constants for consumptions and byproduct
-        self.electricity_consumption = 0.1207 / 1000  # MWh/kg
-        self.hydrogen_consumption = 0.197284403  # kg/kg
-        self.cooling_water_consumption = 0.049236824  # gallon/kg
-        self.iron_based_catalyst_consumption = 0.000091295354067341  # kg/kg
-        self.oxygen_byproduct = 0.29405077250145  # kg/kg
 
     def compute(self, inputs, outputs):
         # Prepare config object
