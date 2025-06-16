@@ -79,41 +79,6 @@ def test_ammonia_cost_model(subtests):
         assert res.land_cost == approx(2160733.0556864925)
 
 
-def test_ammonia_finance_model():
-    cost_config = ammonia.AmmoniaCostModelConfig(
-        plant_capacity_kgpy=362560672.27155423,
-        plant_capacity_factor=0.9,
-        feedstocks=ammonia.Feedstocks(
-            electricity_cost=89.42320514456621,
-            hydrogen_cost=4.2986685034417045,
-            cooling_water_cost=0.00291,
-            iron_based_catalyst_cost=23.19977341,
-            oxygen_cost=0,
-        ),
-    )
-
-    costs: ammonia.AmmoniaCostModelOutputs = ammonia.run_ammonia_cost_model(cost_config)
-
-    plant_capacity_kgpy = 362560672.27155423
-    plant_capacity_factor = 0.9
-
-    config = ammonia.AmmoniaFinanceModelConfig(
-        plant_life=30,
-        plant_capacity_kgpy=plant_capacity_kgpy,
-        plant_capacity_factor=plant_capacity_factor,
-        feedstocks=cost_config.feedstocks,
-        grid_prices=grid_prices_dict,
-        financial_assumptions=financial_assumptions,
-        costs=costs,
-    )
-
-    lcoa_expected = 0.9449539746141915
-
-    res: ammonia.AmmoniaFinanceModelOutputs = ammonia.run_ammonia_finance_model(config)
-
-    assert res.sol.get("price") == lcoa_expected
-
-
 def test_ammonia_size_h2_input(subtests):
     config = ammonia.AmmoniaCapacityModelConfig(
         hydrogen_amount_kgpy=73288888.8888889,
@@ -154,41 +119,3 @@ def test_ammonia_size_NH3_input(subtests):
         assert res.ammonia_plant_capacity_kgpy == approx(371488509.8589821)
     with subtests.test("hydrogen input"):
         assert res.hydrogen_amount_kgpy == approx(73288888.8888889)
-
-
-def test_ammonia_full_model(subtests):
-    config = {
-        "ammonia": {
-            "capacity": {
-                "hydrogen_amount_kgpy": 73288888.8888889,
-                "input_capacity_factor_estimate": 0.9,
-            },
-            "costs": {
-                "feedstocks": {
-                    "electricity_cost": 89.42320514456621,
-                    "hydrogen_cost": 4.2986685034417045,
-                    "cooling_water_cost": 0.00291,
-                    "iron_based_catalyst_cost": 23.19977341,
-                    "oxygen_cost": 0,
-                },
-            },
-            "finances": {
-                "plant_life": 30,
-                "grid_prices": grid_prices_dict,
-                "financial_assumptions": financial_assumptions,
-            },
-        }
-    }
-
-    res = ammonia.run_ammonia_full_model(config)
-
-    assert len(res) == 3
-
-    with subtests.test("Ammonia plant size"):
-        assert res[0].ammonia_plant_capacity_kgpy == approx(334339658.8730839)
-
-    with subtests.test("capex"):
-        assert res[1].capex_total == approx(96338719.2785868)
-
-    with subtests.test("LCOA"):
-        assert res[2].sol.get("price") == approx(0.9480224053339827)

@@ -9,48 +9,12 @@ from h2integrate.simulation.technologies.ammonia.ammonia import (
 
 
 @define
-class Feedstocks(BaseConfig):
-    """
-    Represents the costs and consumption rates of various feedstocks and resources
-    used in ammonia production.
-
-    Attributes:
-        electricity_cost (float): Cost per MWh of electricity.
-        hydrogen_cost (float): Cost per kg of hydrogen.
-        cooling_water_cost (float): Cost per gallon of cooling water.
-        iron_based_catalyst_cost (float): Cost per kg of iron-based catalyst.
-        oxygen_cost (float): Cost per kg of oxygen.
-        electricity_consumption (float): Electricity consumption in MWh per kg of
-            ammonia production, default is 0.1207 / 1000.
-        hydrogen_consumption (float): Hydrogen consumption in kg per kg of ammonia
-            production, default is 0.197284403.
-        cooling_water_consumption (float): Cooling water consumption in gallons per
-            kg of ammonia production, default is 0.049236824.
-        iron_based_catalyst_consumption (float): Iron-based catalyst consumption in kg
-            per kg of ammonia production, default is 0.000091295354067341.
-        oxygen_byproduct (float): Oxygen byproduct in kg per kg of ammonia production,
-            default is 0.29405077250145.
-    """
-
-    electricity_cost: float = field()
-    cooling_water_cost: float = field()
-    iron_based_catalyst_cost: float = field()
-    oxygen_cost: float = field()
-    hydrogen_cost: float = field(default=None)
-    electricity_consumption: float = field(default=0.1207 / 1000)
-    hydrogen_consumption: float = field(default=0.197284403)
-    cooling_water_consumption: float = field(default=0.049236824)
-    iron_based_catalyst_consumption: float = field(default=0.000091295354067341)
-    oxygen_byproduct: float = field(default=0.29405077250145)
-
-
-@define
 class AmmoniaPerformanceModelConfig(BaseConfig):
     plant_capacity_kgpy: float = field()
     plant_capacity_factor: float = field()
 
 
-class AmmoniaPerformanceModel(om.ExplicitComponent):
+class SimpleAmmoniaPerformanceModel(om.ExplicitComponent):
     """
     An OpenMDAO component for modeling the performance of an ammonia plant.
     Computes annual ammonia production based on plant capacity and capacity factor.
@@ -91,16 +55,38 @@ class AmmoniaCostModelConfig(BaseConfig):
         plant_capacity_kgpy (float): Annual production capacity of the plant in kg.
         plant_capacity_factor (float): The ratio of actual production to maximum
             possible production over a year.
-        feedstocks (dict): A dictionary that is passed to the `Feedstocks` class detailing the
-            costs and consumption rates of resources used in production.
+        electricity_cost (float): Cost per MWh of electricity.
+        hydrogen_cost (float): Cost per kg of hydrogen.
+        cooling_water_cost (float): Cost per gallon of cooling water.
+        iron_based_catalyst_cost (float): Cost per kg of iron-based catalyst.
+        oxygen_cost (float): Cost per kg of oxygen.
+        electricity_consumption (float): Electricity consumption in MWh per kg of
+            ammonia production, default is 0.1207 / 1000.
+        hydrogen_consumption (float): Hydrogen consumption in kg per kg of ammonia
+            production, default is 0.197284403.
+        cooling_water_consumption (float): Cooling water consumption in gallons per
+            kg of ammonia production, default is 0.049236824.
+        iron_based_catalyst_consumption (float): Iron-based catalyst consumption in kg
+            per kg of ammonia production, default is 0.000091295354067341.
+        oxygen_byproduct (float): Oxygen byproduct in kg per kg of ammonia production,
+            default is 0.29405077250145.
     """
 
     plant_capacity_kgpy: float = field()
     plant_capacity_factor: float = field()
-    feedstocks: dict = field(converter=Feedstocks.from_dict)
+    electricity_cost: float = field()
+    cooling_water_cost: float = field()
+    iron_based_catalyst_cost: float = field()
+    oxygen_cost: float = field()
+    hydrogen_cost: float = field(default=None)
+    electricity_consumption: float = field(default=0.1207 / 1000)
+    hydrogen_consumption: float = field(default=0.197284403)
+    cooling_water_consumption: float = field(default=0.049236824)
+    iron_based_catalyst_consumption: float = field(default=0.000091295354067341)
+    oxygen_byproduct: float = field(default=0.29405077250145)
 
 
-class AmmoniaCostModel(om.ExplicitComponent):
+class SimpleAmmoniaCostModel(om.ExplicitComponent):
     """
     An OpenMDAO component for calculating the costs associated with ammonia production.
     Includes CapEx, OpEx, and byproduct credits.
@@ -127,12 +113,12 @@ class AmmoniaCostModel(om.ExplicitComponent):
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost")
         )
 
-        if self.cost_config.feedstocks.hydrogen_cost is None:
+        if self.cost_config.hydrogen_cost is None:
             self.add_input("LCOH", val=0.0, units="USD/kg", desc="Levelized cost of hydrogen")
 
     def compute(self, inputs, outputs):
-        if self.cost_config.feedstocks.hydrogen_cost is None:
-            self.cost_config.feedstocks.hydrogen_cost = inputs["LCOH"]
+        if self.cost_config.hydrogen_cost is None:
+            self.cost_config.hydrogen_cost = inputs["LCOH"]
 
         cost_model_outputs = run_ammonia_cost_model(self.cost_config)
 

@@ -50,50 +50,16 @@ technologies:
         days: 0 #how many days worth of production we should be able to store (this is ignored if `capacity_from_max_on_turbine_storage` is set to True)
   ammonia:
     performance_model:
-      model: "ammonia_performance"
+      model: "simple_ammonia_performance"
     cost_model:
-      model: "ammonia_cost"
+      model: "simple_ammonia_cost"
     model_inputs:
       shared_parameters:
         plant_capacity_factor: 0.9
         plant_capacity_kgpy: 362560000.
       cost_parameters:
-        feedstocks:
-          electricity_cost: 91 # 2022 USD - not actually used in cost/finance model
-          # hydrogen_cost: 4.023963541079105
-          cooling_water_cost: 0.00516275276753 # # 2022 USD/gal
-          iron_based_catalyst_cost: 25 #2022 USD/kg
-          oxygen_cost: 0
-        # finances:
-        #   plant_life: 30
-        #   grid_prices:
-        #     "2030": 90.55992559
-        #     "2031": 93.672107012
-        #     "2032": 96.78428843400002
-        #     "2033": 99.896469856
-        #     "2034": 103.008651278
-        #     "2035": 106.1208327
-        #     "2036": 106.95373244000001
-        #     "2037": 107.78663218
-        #     "2038": 108.61953192
-        #     "2039": 109.45243166
-        #     "2040": 110.2853314
-        #     "2041": 107.790684938
-        #     "2042": 105.296038476
-        #     "2043": 102.801392014
-        #     "2044": 100.30674555200002
-        #     "2045": 97.81209909
-        #     "2046": 98.99585243200002
-        #     "2047": 100.17960577400001
-        #     "2048": 101.363359116
-        #     "2049": 102.54711245800002
-        #     "2050": 103.7308658
-        #     "2051": 103.7308658
-        #     "2052": 103.7308658
-        #     "2053": 103.7308658
-        #     "2054": 103.7308658
-        #     "2055": 103.7308658
-        #     "2056": 103.7308658
-        #     "2057": 103.7308658
-        #     "2058": 103.7308658
-        #     "2059": 103.7308658
+        electricity_cost: 91 # 2022 USD - not actually used in cost/finance model
+        # hydrogen_cost: 4.023963541079105
+        cooling_water_cost: 0.00516275276753 # # 2022 USD/gal
+        iron_based_catalyst_cost: 25 #2022 USD/kg
+        oxygen_cost: 0
