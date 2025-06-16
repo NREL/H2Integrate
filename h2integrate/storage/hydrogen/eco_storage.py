@@ -27,7 +27,7 @@ class H2Storage(om.ExplicitComponent):
     def initialize(self):
         self.options.declare("tech_config", types=dict)
         self.options.declare("plant_config", types=dict)
-        self.options.declare("verbose", types=bool, default=True)
+        self.options.declare("verbose", types=bool, default=False)
 
     def setup(self):
         self.config = H2StorageModelConfig.from_dict(

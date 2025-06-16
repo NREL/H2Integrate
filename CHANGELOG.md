@@ -7,6 +7,7 @@
 - Added a new optimization example with a wind plant and electrolyzer to showcase how to define design variables, constraints, and objective functions
 - Added capability for user-defined technologies in the H2Integrate framework, allowing for custom models to be integrated into the system.
 - Added an example of a user-defined technology in the `examples` directory, demonstrating an extremely simple paper mill model.
+- Added a run of river hydro plant model, an example, and a documentation page.
 - Updated the naming scheme throughout the framework so resources produced always have `_out` and resources consumed always have `_in` in their names.
 - Removed the `to_organize` directory.
 - Split out the electrolyzer cost models `basic` and `singlitico` for clarity.
@@ -15,7 +16,8 @@
 - Enable optimization with HOPP technology ratings using `recreate_hopp_config_for_optimization`
 - Added example for running with HOPP as the only technology in the H2Integrate system
 - Made caching in the HOPP wrapper optional
-
+- Expanded docs to include a new section on modifying config dicts after model instantiation.
+- Added a check for if a custom model's name clashes with an existing model name in the H2Integrate framework, raising an error if it does.
 
 ## 0.3.0 [May 2 2025]
 

@@ -1,4 +1,4 @@
-﻿h2integrate.simulation.technologies.steel
+h2integrate.simulation.technologies.steel
 =========================================
 
 .. automodule:: h2integrate.simulation.technologies.steel

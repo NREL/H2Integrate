@@ -1,4 +1,4 @@
-﻿h2integrate.simulation.technologies.hydrogen.electrolysis
+h2integrate.simulation.technologies.hydrogen.electrolysis
 =========================================================
 
 .. automodule:: h2integrate.simulation.technologies.hydrogen.electrolysis
