@@ -17,6 +17,7 @@
 - Split out the electrolyzer cost models `basic` and `singlitico` for clarity.
 - Bump min Python version and removed unnecessary packages from `pyproject.toml.
 - Expanded docs to include a new section on modifying config dicts after model instantiation.
+- Added a check for if a custom model's name clashes with an existing model name in the H2Integrate framework, raising an error if it does.
 
 ## 0.3.0 [May 2 2025]
 

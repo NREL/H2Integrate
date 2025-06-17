@@ -1,4 +1,4 @@
-﻿h2integrate.tools.eco
+h2integrate.tools.eco
 =====================
 
 .. automodule:: h2integrate.tools.eco

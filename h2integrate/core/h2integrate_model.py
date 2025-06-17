@@ -84,7 +84,7 @@ class H2IntegrateModel:
             for model_type in ["performance_model", "cost_model", "financial_model"]:
                 if model_type in tech_config:
                     model_name = tech_config[model_type].get("model")
-                    if model_name not in self.supported_models and model_name is not None:
+                    if (model_name not in self.supported_models) and (model_name is not None):
                         model_class_name = tech_config[model_type].get("model_class_name")
                         model_location = tech_config[model_type].get("model_location")
 
@@ -110,6 +110,21 @@ class H2IntegrateModel:
 
                         # Add the custom model to the supported models dictionary
                         self.supported_models[model_name] = custom_model_class
+
+                    else:
+                        if (
+                            tech_config[model_type].get("model_class_name") is not None
+                            or tech_config[model_type].get("model_location") is not None
+                        ):
+                            msg = (
+                                f"Custom model_class_name or model_location "
+                                f"specified for '{model_name}', "
+                                f"but '{model_name}' is a built-in H2Integrate "
+                                "model. Using built-in model instead is not allowed. "
+                                f"If you want to use a custom model, please rename it "
+                                "in your configuration."
+                            )
+                            raise ValueError(msg)
 
     def create_site_model(self):
         site_group = om.Group()

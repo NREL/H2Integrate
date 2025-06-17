@@ -1,4 +1,4 @@
-﻿h2integrate.simulation.technologies.hydrogen.desal.desal\_model
+h2integrate.simulation.technologies.hydrogen.desal.desal\_model
 ===============================================================
 
 .. automodule:: h2integrate.simulation.technologies.hydrogen.desal.desal_model
