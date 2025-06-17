@@ -158,20 +158,6 @@ class NaturalGeoH2CostModel(GeoH2CostBaseClass):
         outputs["CapEx"] = total_as_spent_cost
 
 
-@define
-class NaturalGeoH2FinanceConfig(GeoH2FinanceConfig):
-    """
-    Finance parameters specific to the natural geologic hydrogen sub-models
-    Values are set in the tech_config.yaml:
-        technologies/geoh2/model_inputs/shared_parameters for parameters marked with *asterisks*
-        technologies/geoh2/model_inputs/finance_parameters all other parameters
-
-    Currently no parameters other than those in geoh2_baseclass.GeoH2FinanceConfig
-    """
-
-    pass
-
-
 class NaturalGeoH2FinanceModel(GeoH2FinanceBaseClass):
     """
     An OpenMDAO component for modeling the financing of a natural geologic hydrogen plant
@@ -187,7 +173,7 @@ class NaturalGeoH2FinanceModel(GeoH2FinanceBaseClass):
     """
 
     def setup(self):
-        self.config = NaturalGeoH2FinanceConfig.from_dict(
+        self.config = GeoH2FinanceConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "finance")
         )
         super().setup()

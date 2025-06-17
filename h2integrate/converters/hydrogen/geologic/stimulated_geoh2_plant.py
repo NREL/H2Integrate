@@ -113,7 +113,6 @@ class StimulatedGeoH2PerformanceModel(GeoH2PerformanceBaseClass):
         reacted_volume = n_grains * (grain_size**3 - core_diameter**3)
         reacted_mass = reacted_volume * rho * X_Fe / 100
         h2_produced = reacted_mass * M_H2 / M_Fe
-        np.average(h2_produced)
 
         # Parse outputs
         h2_prod_avg = h2_produced[-1] / lifetime / 8760
@@ -192,20 +191,6 @@ class StimulatedGeoH2CostModel(GeoH2CostBaseClass):
         outputs["CapEx"] = total_as_spent_cost
 
 
-@define
-class StimulatedGeoH2FinanceConfig(GeoH2FinanceConfig):
-    """
-    Finance parameters specific to the stimulated geologic hydrogen sub-models
-    Values are set in the tech_config.yaml:
-        technologies/geoh2/model_inputs/shared_parameters for parameters marked with *asterisks*
-        technologies/geoh2/model_inputs/finance_parameters all other parameters
-
-    Currently no parameters other than those in geoh2_baseclass.GeoH2FinanceConfig
-    """
-
-    pass
-
-
 class StimulatedGeoH2FinanceModel(GeoH2FinanceBaseClass):
     """
     An OpenMDAO component for modeling the financing of a stimulated geologic hydrogen plant
@@ -220,7 +205,7 @@ class StimulatedGeoH2FinanceModel(GeoH2FinanceBaseClass):
     """
 
     def setup(self):
-        self.config = StimulatedGeoH2FinanceConfig.from_dict(
+        self.config = GeoH2FinanceConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "finance")
         )
         super().setup()
