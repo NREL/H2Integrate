@@ -140,7 +140,10 @@ class HOPPComponent(om.ExplicitComponent):
 
         outputs["battery_duration"] = inputs["battery_capacity_kwh"] / inputs["battery_capacity_kw"]
 
-        uphours = np.count_nonzero(self.hopp_config["site"]["desired_schedule"])
+        if "desired_schedule" in self.hopp_config["site"]:
+            uphours = np.count_nonzero(self.hopp_config["site"]["desired_schedule"])
+        else:
+            uphours = 8760
         interconnect_kw = self.hopp_config["technologies"]["grid"]["interconnect_kw"]
         interconnect_kwh = interconnect_kw * uphours
         outputs["annual_energy_to_interconnect_potential_ratio"] = outputs["aep"] / interconnect_kwh
