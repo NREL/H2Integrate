@@ -27,6 +27,7 @@ class AmmoniaSynLoopPerformanceConfig(BaseConfig):
 class AmmoniaSynLoopPerformanceModel(om.ExplicitComponent):
     """
     OpenMDAO component modeling the performance of an ammonia synthesis loop.
+
     This component calculates the hourly ammonia production based on the available
     hydrogen, nitrogen, and electricity inputs, considering the stoichiometric and
     energetic requirements of the synthesis process. It also computes the unused
@@ -39,21 +40,21 @@ class AmmoniaSynLoopPerformanceModel(om.ExplicitComponent):
         nitrogen conversion rate, and hydrogen conversion rate.
     Inputs
     ------
-    hydrogen_in : float or ndarray [kg/h]
+    hydrogen_in : array [kg/h]
         Hourly hydrogen feed to the synthesis loop.
-    nitrogen_in : float or ndarray [kg/h]
+    nitrogen_in : array [kg/h]
         Hourly nitrogen feed to the synthesis loop.
-    electricity_in : float or ndarray [MW]
+    electricity_in : array [MW]
         Hourly electricity supplied to the synthesis loop.
     Outputs
     -------
-    ammonia_out : float or ndarray [kg/h]
+    ammonia_out : array [kg/h]
         Hourly ammonia produced by the synthesis loop.
-    nitrogen_out : float or ndarray [kg/h]
+    nitrogen_out : array [kg/h]
         Hourly unused nitrogen after synthesis.
-    hydrogen_out : float or ndarray [kg/h]
+    hydrogen_out : array [kg/h]
         Hourly unused hydrogen after synthesis.
-    heat_out : float or ndarray [MW]
+    heat_out : array [MW]
         Hourly unused electricity (as heat) after synthesis.
     total_ammonia_produced : float [kg/year]
         Total ammonia produced over the modeled period.
@@ -126,3 +127,57 @@ class AmmoniaSynLoopPerformanceModel(om.ExplicitComponent):
         outputs["nitrogen_out"] = n2_in - used_n2
         outputs["heat_out"] = elec_in - used_elec
         outputs["total_ammonia_produced"] = nh3_prod.sum()
+
+        @define
+        class AmmoniaSynLoopCostConfig(BaseConfig):
+            """
+            Configuration inputs for the ammonia synthesis loop cost model.
+
+            Attributes:
+                capex (float): Capital expenditure for the synthesis loop [$].
+                rebuild_cost (float): Annualized catalyst replacement or rebuild cost [$ per year].
+            """
+
+            capex: float = field()
+            rebuild_cost: float = field()
+
+        class AmmoniaSynLoopCostModel(om.ExplicitComponent):
+            """
+            OpenMDAO component modeling the cost of an ammonia synthesis loop.
+
+            This component outputs the capital expenditure (CapEx) and annual operating
+            expenditure (OpEx) associated with the synthesis loop, based on provided
+            configuration values.
+
+            Attributes
+            ----------
+            config : AmmoniaSynLoopCostConfig
+                Configuration object containing CapEx and annual rebuild cost.
+
+            Outputs
+            -------
+            CapEx : float [$]
+                Capital expenditure for the synthesis loop.
+            OpEx : float [$ per year]
+                Annual operating expenditure (catalyst replacement/rebuild).
+            Notes
+            -----
+            This model assumes all OpEx is due to annualized catalyst replacement/rebuild.
+            """
+
+            def initialize(self):
+                self.options.declare("plant_config", types=dict)
+                self.options.declare("tech_config", types=dict)
+
+            def setup(self):
+                self.config = AmmoniaSynLoopCostConfig.from_dict(
+                    merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost")
+                )
+
+                self.add_output("CapEx", val=0.0, units="USD")
+                self.add_output("OpEx", val=0.0, units="USD/year")
+
+            def compute(self, inputs, outputs):
+                # Get config values
+                outputs["CapEx"] = self.config.capex
+                outputs["OpEx"] = self.config.rebuild_cost

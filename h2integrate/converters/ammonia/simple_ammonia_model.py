@@ -107,23 +107,7 @@ class SimpleAmmoniaCostModel(om.ExplicitComponent):
             "plant_capacity_kgpy", val=0.0, units="kg/year", desc="Annual plant capacity"
         )
         self.add_input("plant_capacity_factor", val=0.0, units=None, desc="Capacity factor")
-        self.add_input(
-            "electricity_cost", val=0.0, units="USD/(MW*h)", desc="Cost per MWh of electricity"
-        )
         self.add_input("LCOH", val=0.0, units="USD/kg", desc="Cost per kg of hydrogen")
-        self.add_input(
-            "cooling_water_cost",
-            val=0.0,
-            units="USD/galUS",
-            desc="Cost per gallon of cooling water",
-        )
-        self.add_input(
-            "iron_based_catalyst_cost",
-            val=0.0,
-            units="USD/kg",
-            desc="Cost per kg of iron-based catalyst",
-        )
-        self.add_input("oxygen_cost", val=0.0, units="USD/kg", desc="Cost per kg of oxygen")
 
         # Outputs for all cost model outputs
         self.add_output(
