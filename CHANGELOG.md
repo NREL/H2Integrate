@@ -18,6 +18,7 @@
 - Made caching in the HOPP wrapper optional
 - Expanded docs to include a new section on modifying config dicts after model instantiation.
 - Added a check for if a custom model's name clashes with an existing model name in the H2Integrate framework, raising an error if it does.
+- Added more available constraints from the HOPP wrapper useful for design optimizations
 
 ## 0.3.0 [May 2 2025]
 
