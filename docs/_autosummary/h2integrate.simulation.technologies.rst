@@ -1,4 +1,4 @@
-h2integrate.simulation.technologies
+﻿h2integrate.simulation.technologies
 ===================================
 
 .. automodule:: h2integrate.simulation.technologies
@@ -27,7 +27,6 @@ h2integrate.simulation.technologies
    :toctree:
    :recursive:
 
-   h2integrate.simulation.technologies.ammonia
    h2integrate.simulation.technologies.hydrogen
    h2integrate.simulation.technologies.iron
    h2integrate.simulation.technologies.offshore
