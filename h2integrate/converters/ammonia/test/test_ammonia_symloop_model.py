@@ -17,45 +17,39 @@ def make_synloop_config():
     }
 
 
-def test_ammonia_synloop_limiting_cases(subtests):
+def test_ammonia_synloop_limiting_cases():
     config = make_synloop_config()
-    # Each test is a single hour (shape=1)
+    # Each test is a single array of 3 hours, each with a different limiting case
     # Case 1: N2 limiting
-    n2 = np.array([8.2])  # can make 10 kg NH3 (limiting: 8.2/0.82 = 10)
-    h2 = np.array([10.0])  # can make 55.555... kg NH3 (10/0.18)
-    elec = np.array([0.006])  # can make 10 kg NH3 (0.006/0.0006)
-    # Case 2: H2 limiting
-    h2_2 = np.array([1.8])  # can make 10 kg NH3 (limiting: 1.8/0.18 = 10)
-    n2_2 = np.array([20.0])  # can make 24.39 kg NH3 (20/0.82)
-    elec_2 = np.array([0.006])  # can make 10 kg NH3 (0.006/0.0006)
-    # Case 3: Elec limiting
-    elec_3 = np.array([0.003])  # can make 5 kg NH3 (limiting: 0.003/0.0006 = 5)
-    h2_3 = np.array([10.0])  # can make 55.555... kg NH3
-    n2_3 = np.array([20.0])  # can make 24.39 kg NH3
-    cases = [
-        ("N2 limiting", h2, n2, elec, 10.0),
-        ("H2 limiting", h2_2, n2_2, elec_2, 10.0),
-        ("Electricity limiting", h2_3, n2_3, elec_3, 5.0),
-    ]
-    for name, h2_in, n2_in, elec_in, expected_nh3 in cases:
-        with subtests.test(name):
-            prob = om.Problem()
-            comp = AmmoniaSynLoopPerformanceModel(plant_config={}, tech_config=config)
-            prob.model.add_subsystem("synloop", comp)
-            prob.setup()
-            prob.set_val("synloop.hydrogen_in", h2_in, units="kg/h")
-            prob.set_val("synloop.nitrogen_in", n2_in, units="kg/h")
-            prob.set_val("synloop.electricity_in", elec_in, units="MW")
-            prob.run_model()
-            nh3 = prob.get_val("synloop.ammonia_out")[0]
-            total = prob.get_val("synloop.total_ammonia_produced")
-            # Check NH3 output
-            assert pytest.approx(nh3, rel=1e-6) == expected_nh3
-            assert pytest.approx(total, rel=1e-6) == expected_nh3
-            # Check unused resources
-            if name == "N2 limiting":
-                assert pytest.approx(prob.get_val("synloop.nitrogen_out")[0], rel=1e-6) == 0.0
-            elif name == "H2 limiting":
-                assert pytest.approx(prob.get_val("synloop.hydrogen_out")[0], rel=1e-6) == 0.0
-            elif name == "Electricity limiting":
-                assert pytest.approx(prob.get_val("synloop.heat_out")[0], rel=1e-6) == 0.0
+    n2 = np.array([8.2, 20.0, 20.0])  # Only first entry is N2 limiting
+    h2 = np.array([10.0, 1.8, 10.0])  # Second entry is H2 limiting
+    elec = np.array([0.006, 0.006, 0.003])  # Third entry is electricity limiting
+
+    expected_nh3 = np.array(
+        [
+            10.0,  # N2 limiting: 8.2/0.82 = 10
+            10.0,  # H2 limiting: 1.8/0.18 = 10
+            5.0,  # Electricity limiting: 0.003/0.0006 = 5
+        ]
+    )
+
+    prob = om.Problem()
+    comp = AmmoniaSynLoopPerformanceModel(plant_config={}, tech_config=config)
+    prob.model.add_subsystem("synloop", comp)
+    prob.setup()
+    prob.set_val("synloop.hydrogen_in", h2, units="kg/h")
+    prob.set_val("synloop.nitrogen_in", n2, units="kg/h")
+    prob.set_val("synloop.electricity_in", elec, units="MW")
+    prob.run_model()
+    nh3 = prob.get_val("synloop.ammonia_out")
+    total = prob.get_val("synloop.total_ammonia_produced")
+
+    # Check NH3 output
+    assert np.allclose(nh3, expected_nh3, rtol=1e-6)
+    assert np.allclose(total, np.sum(expected_nh3), rtol=1e-6)
+
+    # Check unused resources
+    # N2 limiting: index 0, H2 limiting: index 1, Electricity limiting: index 2
+    assert pytest.approx(prob.get_val("synloop.nitrogen_out")[0], rel=1e-6) == 0.0
+    assert pytest.approx(prob.get_val("synloop.hydrogen_out")[1], rel=1e-6) == 0.0
+    assert pytest.approx(prob.get_val("synloop.heat_out")[2], rel=1e-6) == 0.0
