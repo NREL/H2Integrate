@@ -8,16 +8,17 @@ from h2integrate.core.validators import contains
 @define
 class GeoH2PerformanceConfig(BaseConfig):
     """
-    Performance parameters shared across both natural and geologic hydrogen sub-models
+    Performance parameters shared across both natural and geologic hydrogen sub-models.
+
     Values are set in the tech_config.yaml:
-        technologies/geoh2/model_inputs/shared_parameters for paramters marked with *asterisks*
+        technologies/geoh2/model_inputs/shared_parameters for parameters marked with *asterisks*
         technologies/geoh2/model_inputs/performance_parameters all other parameters
 
     Parameters:
-        -rock_type:         str - The type of rock being drilled into to extract geologic hydrogen
+        rock_type:         str - The type of rock being drilled into to extract geologic hydrogen
                                 valid options: "peridotite"
-        -*well_lifetime*:   float [years] - The length of time in years that the well will operate
-        -grain_size:        float [m] - The grain size of the rocks used to extract hydrogen
+        *well_lifetime*:   float [years] - The length of time in years that the well will operate
+        grain_size:        float [m] - The grain size of the rocks used to extract hydrogen
     """
 
     rock_type: str = field(validator=contains(["peridotite"]))
@@ -27,15 +28,16 @@ class GeoH2PerformanceConfig(BaseConfig):
 
 class GeoH2PerformanceBaseClass(om.ExplicitComponent):
     """
-    An OpenMDAO component for modeling the performance of a geologic hydrogen plant
-    Can be either natural or stimulated
-    All inputs come from GeoH2PerformanceConfig
+    An OpenMDAO component for modeling the performance of a geologic hydrogen plant.
+
+    Can be either natural or stimulated.
+    All inputs come from GeoH2PerformanceConfig.
 
     Inputs:
-        -well_lifetime: float [years] - The length of time in years that the well will operate
-        -grain_size:    float [m] - The grain size of the rocks used to extract hydrogen
+        well_lifetime: float [years] - The length of time in years that the well will operate
+        grain_size:    float [m] - The grain size of the rocks used to extract hydrogen
     Outputs:
-        -hydrogen:      array [kg/h] - The hydrogen production profile over 1 year (8760 hours)
+        hydrogen:      array [kg/h] - The hydrogen production profile over 1 year (8760 hours)
     """
 
     def initialize(self):
@@ -46,7 +48,7 @@ class GeoH2PerformanceBaseClass(om.ExplicitComponent):
         self.add_input("well_lifetime", units="year", val=self.config.well_lifetime)
         self.add_input("grain_size", units="m", val=self.config.grain_size)
 
-        self.add_output("hydrogen", units="kg/h", shape=(8760,))
+        self.add_output("hydrogen_out", units="kg/h", shape=(8760,))
 
 
 @define
@@ -54,25 +56,25 @@ class GeoH2CostConfig(BaseConfig):
     """
     Cost parameters shared across both natural and geologic hydrogen sub-models
     Values are set in the tech_config.yaml:
-        technologies/geoh2/model_inputs/shared_parameters for paramters marked with *asterisks*
+        technologies/geoh2/model_inputs/shared_parameters for parameters marked with *asterisks*
         technologies/geoh2/model_inputs/cost_parameters all other parameters
 
     Parameters:
-        -*well_lifetime*:   float [years] - the length of time that the wells will operate
-        -cost_year:         int [year] - The dollar year in which costs are modeled
-        -test_drill_cost:   float [USD] - The CAPEX cost of a test drill for a potential geoH2 well
-        -permit_fees:       float [USD] - The CAPEX cost required to obtain permits for drilling
-        -acreage:           float [acre] - The amount of land needed for the drilling operation
-        -rights_cost:       float [USD/acre] - The CAPEX cost to obtain drilling rights
-        -completion_cost:   float [USD] - The CAPEX cost per well required to complete a successful
+        *well_lifetime*:   float [years] - the length of time that the wells will operate
+        cost_year:         int [year] - The dollar year in which costs are modeled
+        test_drill_cost:   float [USD] - The CAPEX cost of a test drill for a potential geoH2 well
+        permit_fees:       float [USD] - The CAPEX cost required to obtain permits for drilling
+        acreage:           float [acre] - The amount of land needed for the drilling operation
+        rights_cost:       float [USD/acre] - The CAPEX cost to obtain drilling rights
+        completion_cost:   float [USD] - The CAPEX cost per well required to complete a successful
                                 test drill site into a full-bore production well
-        -success_chance:    float [pct] - The chance of success at any particular test drill site
-        -fixed_opex:        float [USD/year] - The OPEX cost that does not scale with H2 production
-        -variable_opex:     float [USD/kg] - The OPEX cost component that scales with H2 production
-        -contracting_pct:   float [pct] - contracting costs as % of bare capital cost
-        -contingency_pct:   float [pct] - contingency costs as % of bare capital cost
-        -preprod_time:      float [months] - time in preproduction (Fixed OPEX is charged)
-        -as_spent_ratio:    float [None] - ratio of as-spent costs to overnight costs
+        success_chance:    float [pct] - The chance of success at any particular test drill site
+        fixed_opex:        float [USD/year] - The OPEX cost that does not scale with H2 production
+        variable_opex:     float [USD/kg] - The OPEX cost component that scales with H2 production
+        contracting_pct:   float [pct] - contracting costs as % of bare capital cost
+        contingency_pct:   float [pct] - contingency costs as % of bare capital cost
+        preprod_time:      float [months] - time in preproduction (Fixed OPEX is charged)
+        as_spent_ratio:    float [None] - ratio of as-spent costs to overnight costs
     """
 
     well_lifetime: float = field()
@@ -93,34 +95,35 @@ class GeoH2CostConfig(BaseConfig):
 
 class GeoH2CostBaseClass(om.ExplicitComponent):
     """
-    An OpenMDAO component for modeling the cost of a geologic hydrogen plant
-    Can be either natural or stimulated
+    An OpenMDAO component for modeling the cost of a geologic hydrogen plant.
+
+    Can be either natural or stimulated.
     All inputs come from GeoH2CostConfig, except for inputs in *asterisks* which come from
-        GeoH2PerformanceBaseClass outputs
+        GeoH2PerformanceBaseClass outputs.
 
     Inputs:
-        -well_lifetime:     float [years] - the length of time that the wells will operate
-        -cost_year:         int [year] - The dollar year in which costs are modeled
-        -test_drill_cost:   float [USD] - The CAPEX cost of a test drill for a potential geoH2 well
-        -permit_fees:       float [USD] - The CAPEX cost required to obtain permits for drilling
-        -acreage:           float [acre] - The amount of land needed for the drilling operation
-        -rights_cost:       float [USD/acre] - The CAPEX cost to obtain drilling rights
-        -completion_cost:   float [USD] - The CAPEX cost per well required to complete a successful
+        well_lifetime:     float [years] - the length of time that the wells will operate
+        cost_year:         int [year] - The dollar year in which costs are modeled
+        test_drill_cost:   float [USD] - The CAPEX cost of a test drill for a potential geoH2 well
+        permit_fees:       float [USD] - The CAPEX cost required to obtain permits for drilling
+        acreage:           float [acre] - The amount of land needed for the drilling operation
+        rights_cost:       float [USD/acre] - The CAPEX cost to obtain drilling rights
+        completion_cost:   float [USD] - The CAPEX cost per well required to complete a successful
                                 test drill site into a full-bore production well
-        -success_chance:    float [pct] - The chance of success at any particular test drill site
-        -fixed_opex:        float [USD/year] - The OPEX cost that does not scale with H2 production
-        -variable_opex:     float [USD/kg] - The OPEX cost that scales with H2 production
-        -contracting_pct:   float [pct] - contracting costs as % of bare capital cost
-        -contingency_pct:   float [pct] - contingency costs as % of bare capital cost
-        -preprod_time:      float [months] - time in preproduction (Fixed OPEX is charged)
-        -as_spent_ratio:    float [None] - ratio of as-spent costs to overnight costs
-        -*hydrogen*:        array [kg/h] - The hydrogen production profile over 1 year (8760 hours)
+        success_chance:    float [pct] - The chance of success at any particular test drill site
+        fixed_opex:        float [USD/year] - The OPEX cost that does not scale with H2 production
+        variable_opex:     float [USD/kg] - The OPEX cost that scales with H2 production
+        contracting_pct:   float [pct] - contracting costs as % of bare capital cost
+        contingency_pct:   float [pct] - contingency costs as % of bare capital cost
+        preprod_time:      float [months] - time in preproduction (Fixed OPEX is charged)
+        as_spent_ratio:    float [None] - ratio of as-spent costs to overnight costs
+        *hydrogen*:        array [kg/h] - The hydrogen production profile over 1 year (8760 hours)
     Outputs:
-        -bare_capital_cost  float [units] - The raw CAPEX cost without any multipliers applied
-        -CapEx              float [USD] - The effective CAPEX cost with multipliers applied
-        -OpEx               float [USD/year] - The total OPEX cost
-        -Fixed_OpEx         float [USD/year] - The OPEX cost that does not scale with H2 production
-        -Variable_OpEx      float [USD/kg] - The OPEX cost that scales with H2 production
+        bare_capital_cost  float [USD] - The raw CAPEX cost without any multipliers applied
+        CapEx              float [USD] - The effective CAPEX cost with multipliers applied
+        OpEx               float [USD/year] - The total OPEX cost
+        Fixed_OpEx         float [USD/year] - The OPEX cost that does not scale with H2 production
+        Variable_OpEx      float [USD/kg] - The OPEX cost that scales with H2 production
     """
 
     def initialize(self):
@@ -142,7 +145,7 @@ class GeoH2CostBaseClass(om.ExplicitComponent):
         self.add_input("preprod_time", units="month", val=self.config.preprod_time)
         self.add_input("as_spent_ratio", units=None, val=self.config.as_spent_ratio)
         self.add_input(
-            "hydrogen",
+            "hydrogen_out",
             shape=8760,
             units="kg/h",
             desc="Hydrogen production rate in kg/h over 8760 hours.",
@@ -160,13 +163,13 @@ class GeoH2FinanceConfig(BaseConfig):
     """
     Finance parameters shared across both natural and geologic hydrogen sub-models
     Values are set in the tech_config.yaml:
-        technologies/geoh2/model_inputs/shared_parameters for paramters marked with *asterisks*
+        technologies/geoh2/model_inputs/shared_parameters for parameters marked with *asterisks*
         technologies/geoh2/model_inputs/finance_parameters all other parameters
 
     Parameters:
-        -*well_lifetime*:   float [years] - the length of time that the wells will operate
-        -eff_tax_rate:      float [percent] - effective tax rate
-        -atwacc:            float [percent] - after-tax weighted average cost of capital
+        *well_lifetime*:   float [years] - the length of time that the wells will operate
+        eff_tax_rate:      float [percent] - effective tax rate
+        atwacc:            float [percent] - after-tax weighted average cost of capital
     """
 
     well_lifetime: float = field()
@@ -176,25 +179,26 @@ class GeoH2FinanceConfig(BaseConfig):
 
 class GeoH2FinanceBaseClass(om.ExplicitComponent):
     """
-    An OpenMDAO component for modeling the cost of a geologic hydrogen plant
-    Can be either natural or stimulated
+    An OpenMDAO component for modeling the financials of a geologic hydrogen plant.
+
+    Can be either natural or stimulated.
     All inputs come from GeoH2FinanceConfig, except for inputs in *asterisks* which come from
-        GeoH2PerformanceBaseClass or GeoH2CostBaseClass outputs
+        GeoH2PerformanceBaseClass or GeoH2CostBaseClass outputs.
 
     Inputs:
-        -well_lifetime:     float [years] - the length of time that the wells will operate
-        -eff_tax_rate:      float [percent] - effective tax rate
-        -atwacc:            float [percent] - after-tax weighted average cost of capital
-        -*CapEx*            float [USD] - The effective CAPEX cost with multipliers applied
-        -*OpEx*             float [USD/year] - The total OPEX cost
-        -*Fixed_OpEx*       float [USD/year] - The OPEX cost that does not scale with H2 production
-        -*Variable_OpEx*    float [USD/kg] - The OPEX cost that scales with H2 production
-        -*hydrogen*:        array [kg/h] - The hydrogen production profile over 1 year (8760 hours)
+        well_lifetime:     float [years] - the length of time that the wells will operate
+        eff_tax_rate:      float [percent] - effective tax rate
+        atwacc:            float [percent] - after-tax weighted average cost of capital
+        *CapEx*            float [USD] - The effective CAPEX cost with multipliers applied
+        *OpEx*             float [USD/year] - The total OPEX cost
+        *Fixed_OpEx*       float [USD/year] - The OPEX cost that does not scale with H2 production
+        *Variable_OpEx*    float [USD/kg] - The OPEX cost that scales with H2 production
+        *hydrogen*:        array [kg/h] - The hydrogen production profile over 1 year (8760 hours)
     Outputs:
-        -LCOH:              float [USD/kg] - the levelized cost of hydrogen (LCOH), per kg H2
-        -LCOH_capex:        float [USD/kg] - the LCOH component attributable to CAPEX
-        -LCOH_fopex:        float [USD/kg] - the LCOH component attributable to fixed OPEX
-        -LCOH_vopex:        float [USD/kg] - the LCOH component attributable to variable OPEX
+        LCOH:              float [USD/kg] - the levelized cost of hydrogen (LCOH), per kg H2
+        LCOH_capex:        float [USD/kg] - the LCOH component attributable to CAPEX
+        LCOH_fopex:        float [USD/kg] - the LCOH component attributable to fixed OPEX
+        LCOH_vopex:        float [USD/kg] - the LCOH component attributable to variable OPEX
     """
 
     def initialize(self):
@@ -222,10 +226,10 @@ class GeoH2FinanceBaseClass(om.ExplicitComponent):
             desc="Variable operational expenditure in USD/kg.",
         )
         self.add_input(
-            "hydrogen",
+            "hydrogen_out",
             shape=8760,
             units="kg/h",
-            desc="Hydrogen production rate in kg/h over 8760 hours.",
+            desc="Hydrogen production rate in kg/h.",
         )
 
         self.add_output("LCOH", units="USD/kg", desc="Levelized cost of hydrogen in USD/kg.")

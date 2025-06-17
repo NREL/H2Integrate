@@ -14,7 +14,7 @@ def test_natural_geoh2(subtests):
     h2i_nat.run()
 
     with subtests.test("H2 Production"):
-        h2_prod = h2i_nat.plant.geoh2.natural_geoh2_performance.get_val("hydrogen")
+        h2_prod = h2i_nat.plant.geoh2.natural_geoh2_performance.get_val("hydrogen_out")
         assert np.mean(h2_prod) == approx(48.94393478, 1e-6)
     with subtests.test("LCOH"):
         lcoh = h2i_nat.plant.geoh2.geoh2_financial.get_val("LCOH")
@@ -26,7 +26,7 @@ def test_stimulated_geoh2(subtests):
     h2i_stim.run()
 
     with subtests.test("H2 Production"):
-        h2_prod = h2i_stim.plant.geoh2.stimulated_geoh2_performance.get_val("hydrogen")
+        h2_prod = h2i_stim.plant.geoh2.stimulated_geoh2_performance.get_val("hydrogen_out")
         assert np.mean(h2_prod) == approx(108.49331847, 1e-6)
     with subtests.test("LCOH"):
         lcoh = h2i_stim.plant.geoh2.geoh2_financial.get_val("LCOH")

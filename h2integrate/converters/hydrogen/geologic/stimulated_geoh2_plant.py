@@ -22,7 +22,7 @@ class StimulatedGeoH2PerformanceConfig(GeoH2PerformanceConfig):
     """
     Performance parameters specific to the stimulated geologic hydrogen sub-models
     Values are set in the tech_config.yaml:
-        technologies/geoh2/model_inputs/shared_parameters for paramters marked with *asterisks*
+        technologies/geoh2/model_inputs/shared_parameters for parameters marked with *asterisks*
         technologies/geoh2/model_inputs/performance_parameters all other parameters
 
     Parameters (in addition to those in geoh2_baseclass.GeoH2PerformanceConfig):
@@ -118,7 +118,7 @@ class StimulatedGeoH2PerformanceModel(GeoH2PerformanceBaseClass):
         # Parse outputs
         h2_prod_avg = h2_produced[-1] / lifetime / 8760
         outputs["hydrogen_produced"] = h2_prod_avg
-        outputs["hydrogen"] = h2_prod_avg
+        outputs["hydrogen_out"] = h2_prod_avg
 
 
 @define
@@ -126,7 +126,7 @@ class StimulatedGeoH2CostConfig(GeoH2CostConfig):
     """
     Cost parameters specific to the stimulated geologic hydrogen sub-models
     Values are set in the tech_config.yaml:
-        technologies/geoh2/model_inputs/shared_parameters for paramters marked with *asterisks*
+        technologies/geoh2/model_inputs/shared_parameters for parameters marked with *asterisks*
         technologies/geoh2/model_inputs/cost_parameters all other parameters
 
     Currently no parameters other than those in geoh2_baseclass.GeoH2CostConfig
@@ -173,7 +173,7 @@ class StimulatedGeoH2CostModel(GeoH2CostBaseClass):
         vopex = inputs["variable_opex"]
         outputs["Fixed_OpEx"] = fopex
         outputs["Variable_OpEx"] = vopex
-        production = np.sum(inputs["hydrogen"])
+        production = np.sum(inputs["hydrogen_out"])
         outputs["OpEx"] = fopex + vopex * np.sum(production)
 
         # Apply cost multipliers to bare erected cost via NETL-PUB-22580
@@ -197,7 +197,7 @@ class StimulatedGeoH2FinanceConfig(GeoH2FinanceConfig):
     """
     Finance parameters specific to the stimulated geologic hydrogen sub-models
     Values are set in the tech_config.yaml:
-        technologies/geoh2/model_inputs/shared_parameters for paramters marked with *asterisks*
+        technologies/geoh2/model_inputs/shared_parameters for parameters marked with *asterisks*
         technologies/geoh2/model_inputs/finance_parameters all other parameters
 
     Currently no parameters other than those in geoh2_baseclass.GeoH2FinanceConfig
@@ -241,7 +241,7 @@ class StimulatedGeoH2FinanceModel(GeoH2FinanceBaseClass):
         capex = inputs["CapEx"]
         fopex = inputs["Fixed_OpEx"]
         vopex = inputs["Variable_OpEx"]
-        production = np.sum(inputs["hydrogen"])
+        production = np.sum(inputs["hydrogen_out"])
         lcoh = (capex * fcr + fopex) / production + vopex
         outputs["LCOH"] = lcoh
         outputs["LCOH_capex"] = (capex * fcr) / production

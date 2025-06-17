@@ -17,13 +17,13 @@ class NaturalGeoH2PerformanceConfig(GeoH2PerformanceConfig):
     """
     Performance parameters specific to the natural geologic hydrogen sub-models
     Values are set in the tech_config.yaml:
-        technologies/geoh2/model_inputs/shared_parameters for paramters marked with *asterisks*
+        technologies/geoh2/model_inputs/shared_parameters for parameters marked with *asterisks*
         technologies/geoh2/model_inputs/performance_parameters all other parameters
 
     Parameters (in addition to those in geoh2_baseclass.GeoH2PerformanceConfig):
-        -site_prospectivity:    float [None] - Site assessment of natural H2 production potential
-        -initial_wellhead_flow: float [kg/h] - The hydrogen flow when the drill is first completed
-        -gas_reservoir_size:    float [t] - The total amount of hydrogen in the accumulation
+        site_prospectivity:    float [None] - Site assessment of natural H2 production potential
+        initial_wellhead_flow: float [kg/h] - The hydrogen flow when the drill is first completed
+        gas_reservoir_size:    float [t] - The total amount of hydrogen in the accumulation
     """
 
     site_prospectivity: float = field()
@@ -41,13 +41,13 @@ class NaturalGeoH2PerformanceModel(GeoH2PerformanceBaseClass):
     All inputs come from NaturalGeoH2PerformanceConfig
 
     Inputs (in addition to those in geoh2_baseclass.GeoH2PerformanceBaseClass):
-        -site_prospectivity:        float [None] - Assessment of natural H2 production potential
-        -initial_wellhead_flow:     float [kg/h] - The H2 flow when the drill is first completed
-        -gas_reservoir_size:        float [t] - The total amount of hydrogen in the accumulation
+        site_prospectivity:        float [None] - Assessment of natural H2 production potential
+        initial_wellhead_flow:     float [kg/h] - The H2 flow when the drill is first completed
+        gas_reservoir_size:        float [t] - The total amount of hydrogen in the accumulation
     Outputs (in addition to those in geoh2_baseclass.GeoH2PerformanceBaseClass):
-        -wellhead_h2_conc:          float [percent] - The mass % of H2 in the wellhead fluid
-        -lifetime_wellhead_flow:    float [kg/h] - The average gas flow over the well lifetime
-        -hydrogen_accumulated:      array [kg/h] - The accumulated hydrogen production profile
+        wellhead_h2_conc:          float [percent] - The mass % of H2 in the wellhead fluid
+        lifetime_wellhead_flow:    float [kg/h] - The average gas flow over the well lifetime
+        hydrogen_accumulated:      array [kg/h] - The accumulated hydrogen production profile
                                         over 1 year (8760 hours)
     """
 
@@ -84,7 +84,7 @@ class NaturalGeoH2PerformanceModel(GeoH2PerformanceBaseClass):
         outputs["wellhead_h2_conc"] = wh_h2_conc
         outputs["lifetime_wellhead_flow"] = avg_wh_flow
         outputs["hydrogen_accumulated"] = h2_accum
-        outputs["hydrogen"] = h2_accum
+        outputs["hydrogen_out"] = h2_accum
 
 
 @define
@@ -92,7 +92,7 @@ class NaturalGeoH2CostConfig(GeoH2CostConfig):
     """
     Cost parameters specific to the natural geologic hydrogen sub-models
     Values are set in the tech_config.yaml:
-        technologies/geoh2/model_inputs/shared_parameters for paramters marked with *asterisks*
+        technologies/geoh2/model_inputs/shared_parameters for parameters marked with *asterisks*
         technologies/geoh2/model_inputs/cost_parameters all other parameters
 
     Currently no parameters other than those in geoh2_baseclass.GeoH2CostConfig
@@ -139,7 +139,7 @@ class NaturalGeoH2CostModel(GeoH2CostBaseClass):
         vopex = inputs["variable_opex"]
         outputs["Fixed_OpEx"] = fopex
         outputs["Variable_OpEx"] = vopex
-        production = np.sum(inputs["hydrogen"])
+        production = np.sum(inputs["hydrogen_out"])
         outputs["OpEx"] = fopex + vopex * np.sum(production)
 
         # Apply cost multipliers to bare erected cost via NETL-PUB-22580
@@ -163,7 +163,7 @@ class NaturalGeoH2FinanceConfig(GeoH2FinanceConfig):
     """
     Finance parameters specific to the natural geologic hydrogen sub-models
     Values are set in the tech_config.yaml:
-        technologies/geoh2/model_inputs/shared_parameters for paramters marked with *asterisks*
+        technologies/geoh2/model_inputs/shared_parameters for parameters marked with *asterisks*
         technologies/geoh2/model_inputs/finance_parameters all other parameters
 
     Currently no parameters other than those in geoh2_baseclass.GeoH2FinanceConfig
@@ -208,7 +208,7 @@ class NaturalGeoH2FinanceModel(GeoH2FinanceBaseClass):
         capex = inputs["CapEx"]
         fopex = inputs["Fixed_OpEx"]
         vopex = inputs["Variable_OpEx"]
-        production = np.sum(inputs["hydrogen"])
+        production = np.sum(inputs["hydrogen_out"])
         lcoh = (capex * fcr + fopex) / production + vopex
         outputs["LCOH"] = lcoh
         outputs["LCOH_capex"] = (capex * fcr) / production
