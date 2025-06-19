@@ -1,5 +1,5 @@
 name: "technology_config"
-description: "This plant has wind feeding into an electrolyzer without optimization"
+description: "This plant has offshore wind and wave energy connected to a direct ocean capture device"
 
 technologies:
   hopp:
