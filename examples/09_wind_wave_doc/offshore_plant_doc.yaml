@@ -1,6 +1,6 @@
 name: "H2Integrate Config"
 
-system_summary: "This reference hybrid plant..."
+system_summary: "This offshore hybrid plant combines wind and wave energy to produce CO2 via direct ocean capture"
 
 driver_config: "driver_config.yaml"
 technology_config: "tech_config.yaml"

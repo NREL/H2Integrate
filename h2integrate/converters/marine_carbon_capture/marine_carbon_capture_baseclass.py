@@ -15,12 +15,12 @@ class MarineCarbonCapturePerformanceConfig(BaseConfig):
     """Configuration options for marine carbon capture performance modeling.
 
     Attributes:
-        power_single_ed_w (float): Power requirement of a single electrodialysis (ED) unit in watts.
-        flow_rate_single_ed_m3s (float): Flow rate of a single ED unit in cubic meters per second.
+        power_single_ed_w (float): Power requirement of a single electrodialysis (ED) unit (watts).
+        flow_rate_single_ed_m3s (float): Flow rate of a single ED unit (cubic meters per second).
         number_ed_min (int): Minimum number of ED units to operate.
         number_ed_max (int): Maximum number of ED units available.
         use_storage_tanks (bool): Flag indicating whether to use storage tanks.
-        store_hours (float): Number of hours of CO₂ storage capacity.
+        store_hours (float): Number of hours of CO₂ storage capacity (hours).
     """
 
     power_single_ed_w: float = field()
@@ -56,18 +56,16 @@ class MarineCarbonCapturePerformanceBaseClass(om.ExplicitComponent):
 
     def setup(self):
         self.add_input(
-            "electricity_in", val=0.0, shape=8760, units="W", desc="Hourly input electricity [W]"
+            "electricity_in", val=0.0, shape=8760, units="W", desc="Hourly input electricity (W)"
         )
         self.add_output(
             "co2_capture_rate_mt",
             val=0.0,
             shape=8760,
             units="t",
-            desc="Hourly CO₂ capture rate [t]",
+            desc="Hourly CO₂ capture rate (t)",
         )
-        self.add_output(
-            "average_co2_capture_mtpy", units="t/year", desc="Average annual CO₂ captured [t/year]"
-        )
+        self.add_output("co2_capture_mtpy", units="t/year", desc="Annual CO₂ captured (t/year)")
 
 
 class MarineCarbonCaptureCostBaseClass(om.ExplicitComponent):
@@ -95,27 +93,27 @@ class MarineCarbonCaptureCostBaseClass(om.ExplicitComponent):
 
     def setup(self):
         self.add_input(
-            "electricity_in", val=0.0, shape=8760, units="W", desc="Hourly input electricity [W]"
+            "electricity_in", val=0.0, shape=8760, units="W", desc="Hourly input electricity (W)"
         )
         self.add_input(
-            "average_co2_capture_mtpy",
+            "co2_capture_mtpy",
             val=0.0,
             units="t/year",
-            desc="Average annual CO₂ captured [t/year]",
+            desc="Annual CO₂ captured (t/year)",
         )
         self.add_input(
             "plant_mCC_capacity_mtph",
             val=0.0,
             units="t/h",
-            desc="Theoretical plant maximum CO₂ capture [t/h]",
+            desc="Theoretical plant maximum CO₂ capture (t/h)",
         )
 
-        self.add_output("CapEx", val=0.0, units="USD", desc="Total capital expenditure [USD]")
+        self.add_output("CapEx", val=0.0, units="USD", desc="Total capital expenditure (USD)")
         self.add_output(
             "OpEx",
             val=0.0,
             units="USD/year",
-            desc="Total annual fixed operating expenses [USD/year]",
+            desc="Total annual operating expenses (USD/year)",
         )
 
     def compute(self, inputs, outputs):

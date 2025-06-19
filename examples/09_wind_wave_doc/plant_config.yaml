@@ -33,7 +33,7 @@ plant:
 # with the reverse definition.
 # this will naturally grow as we mature the interconnected tech
 technology_interconnections: [
-  ["wind", "doc", "electricity", "cable"],
+  ["hopp", "doc", "electricity", "cable"],
   # etc
 ]
 
@@ -57,6 +57,5 @@ finance_parameters:
   depreciation_period: 5 # years - for clean energy facilities as specified by the IRS MACRS schedule https://www.irs.gov/publications/p946#en_US_2020_publink1000107507
   depreciation_period_electrolyzer: 7 # based on PEM Electrolysis H2A Production Case Study Documentation estimate of 7 years. also see https://www.irs.gov/publications/p946#en_US_2020_publink1000107507
   discount_years:
-    wind: 2019
-    desal: 2013 # from code citation: https://www.nrel.gov/docs/fy16osti/66073.pdf
+    hopp: 2022
     doc: 2023

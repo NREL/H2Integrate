@@ -52,7 +52,7 @@ class DOCPerformanceModel(MarineCarbonCapturePerformanceBaseClass):
 
     Computes:
         - Hourly CO2 capture rate (t/h)
-        - Annual average CO2 capture (t/year)
+        - Annual CO2 capture (t/year)
     """
 
     def setup(self):
@@ -64,7 +64,7 @@ class DOCPerformanceModel(MarineCarbonCapturePerformanceBaseClass):
             "plant_mCC_capacity_mtph",
             val=0.0,
             units="t/h",
-            desc="Theoretical maximum CO₂ capture [t/h]",
+            desc="Theoretical maximum CO₂ capture (t/h)",
         )
         self.add_output(
             "total_tank_volume_m3",
@@ -101,11 +101,12 @@ class DOCPerformanceModel(MarineCarbonCapturePerformanceBaseClass):
             ),
             save_outputs=True,
             save_plots=True,
+            output_dir="./output/",  # TODO: how do I change this to be based on folder_output in driver_config.yaml?
             plot_range=[3910, 4030],
         )
 
         outputs["co2_capture_rate_mt"] = ed_outputs.ED_outputs["mCC"]
-        outputs["average_co2_capture_mtpy"] = ed_outputs.mCC_yr
+        outputs["co2_capture_mtpy"] = ed_outputs.mCC_yr
         outputs["total_tank_volume_m3"] = range_outputs.V_aT_max + range_outputs.V_bT_max
         outputs["plant_mCC_capacity_mtph"] = max(range_outputs.S1["mCC"])
 
@@ -115,16 +116,10 @@ class DOCCostModelConfig(BaseConfig):
     """Configuration for the DOC cost model.
 
     Attributes:
-        average_co2_capture_mtpy (float): Average annual CO2 captured (t/year).
-        total_tank_volume_m3 (float): Total volume of tanks used (m³).
-        infrastructure_type (str): Type of supporting infrastructure (e.g., "floating", "fixed").
-        plant_mCC_capacity_mtpy (float): Maximum CO2 capture capacity of the plant (t/year).
+        infrastructure_type (str): Type of infrastructure (e.g., "desal", "swCool", "new"").
     """
 
-    # average_co2_capture_mtpy: float = field()
-    # total_tank_volume_m3: float = field()
     infrastructure_type: str = field()
-    # plant_mCC_capacity_mtpy: float = field()
 
 
 class DOCCostModel(MarineCarbonCaptureCostBaseClass):
@@ -174,7 +169,7 @@ class DOCCostModel(MarineCarbonCaptureCostBaseClass):
         res = echem_mcc.electrodialysis_cost_model(
             echem_mcc.ElectrodialysisCostInputs(
                 electrodialysis_inputs=ED_inputs,
-                mCC_yr=inputs["average_co2_capture_mtpy"],
+                mCC_yr=inputs["co2_capture_mtpy"],
                 total_tank_volume=inputs["total_tank_volume_m3"],
                 infrastructure_type=self.config.infrastructure_type,
                 max_theoretical_mCC=inputs["plant_mCC_capacity_mtph"],
@@ -190,24 +185,24 @@ class DOCFinance(om.ExplicitComponent):
     """OpenMDAO component to compute the levelized cost of CO2 (LCOC) for DOC systems.
 
     Inputs:
-        CapEx (float): Capital expenditure [USD].
-        OpEx (float): Operating expenditure [USD/year].
-        average_co2_capture_mtpy (float): Average annual CO2 capture [t/year].
+        CapEx (float): Capital expenditure (USD).
+        OpEx (float): Operating expenditure (USD/year).
+        co2_capture_mtpy (float): Annual CO2 capture (t/year).
 
     Outputs:
-        LCOC (float): Levelized cost of CO2 captured [USD/t].
+        LCOC (float): Levelized cost of CO2 captured (USD/t).
     """
+
+    # TODO: further develop LCOC metric using LCOE for electricity costs and outputs from cost and performance model
 
     def initialize(self):
         self.options.declare("plant_config", types=dict)
         self.options.declare("tech_config", types=dict)
 
     def setup(self):
-        self.add_input("CapEx", val=0.0, units="USD", desc="Capital expenditure")
-        self.add_input("OpEx", val=0.0, units="USD/year", desc="Operational expenditure")
-        self.add_input(
-            "average_co2_capture_mtpy", units="t/year", desc="Average annual CO2 capture"
-        )
+        self.add_input("CapEx", val=0.0, units="USD", desc="Capital expenditure (USD)")
+        self.add_input("OpEx", val=0.0, units="USD/year", desc="Operational expenditure (USD/year)")
+        self.add_input("co2_capture_mtpy", units="t/year", desc="Annual CO2 capture (t/year)")
 
         self.add_output(
             "LCOC",
@@ -230,4 +225,4 @@ class DOCFinance(om.ExplicitComponent):
         total_annual_cost = annualized_CapEx + inputs["OpEx"]
 
         # Calculate the levelized cost of CO2 captured
-        outputs["LCOC"] = total_annual_cost / np.sum(inputs["average_co2_capture_mtpy"])
+        outputs["LCOC"] = total_annual_cost / np.sum(inputs["co2_capture_mtpy"])
