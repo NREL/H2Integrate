@@ -14,6 +14,22 @@ from h2integrate.converters.marine_carbon_capture.marine_carbon_capture_baseclas
 
 @define
 class DOCPerformanceConfig(MarineCarbonCapturePerformanceConfig):
+    """Extended configuration for Direct Ocean Capture (DOC) performance model.
+
+    Attributes:
+        E_HCl (float): Energy required per mole of HCl produced (kWh/mol).
+        E_NaOH (float): Energy required per mole of NaOH produced (kWh/mol).
+        y_ext (float): CO2 extraction efficiency (unitless fraction).
+        y_pur (float): CO2 purity in the product stream (unitless fraction).
+        y_vac (float): Vacuum pump efficiency (unitless fraction).
+        frac_ed_flow (float): Fraction of intake flow directed to electrodialysis (unitless).
+        temp_C (float): Temperature of input seawater (°C).
+        sal (float): Salinity of seawater (ppt).
+        dic_i (float): Initial dissolved inorganic carbon (mol/L).
+        pH_i (float): Initial pH of seawater.
+        initial_tank_volume_m3 (float): Initial volume of the tank (m³).
+    """
+
     E_HCl: float = field()
     E_NaOH: float = field()
     y_ext: float = field()
@@ -30,21 +46,13 @@ class DOCPerformanceConfig(MarineCarbonCapturePerformanceConfig):
 class DOCPerformanceModel(MarineCarbonCapturePerformanceBaseClass):
     """
     An OpenMDAO component for modeling the performance of a Direct Ocean Capture (DOC) plant.
-    This model extends the MarineCarbonCapturePerformanceBaseClass to
-    implement specific performance calculations for DOC technology.
 
-    Inputs:
-        - E_HCl: Energy consumption for HCl in kWh/mol
-        - E_NaOH: Energy consumption for NaOH in kWh/mol
-        - y_ext: CO2 extraction efficiency as a fraction (unitless)
-        - y_pur: Purity of CO2 extracted as a fraction (unitless)
-        - y_vac: Vacuum efficiency as a fraction (unitless)
-        - frac_ed_flow: Fraction of intake flow directed to ED units (unitless)
-        - temp_C: Temperature in degrees Celsius
-        - sal: Salinity in parts per thousand (ppt)
-        - dic_i: Initial dissolved inorganic carbon concentration in mol/L
-        - pH_i: Initial pH value (unitless)
-        - initial_tank_volume_m3: Initial volume of the tank in cubic meters (m^3)
+    Extends:
+        MarineCarbonCapturePerformanceBaseClass
+
+    Computes:
+        - Hourly CO2 capture rate (t/h)
+        - Annual average CO2 capture (t/year)
     """
 
     def setup(self):
@@ -52,6 +60,17 @@ class DOCPerformanceModel(MarineCarbonCapturePerformanceBaseClass):
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance")
         )
         super().setup()
+        self.add_output(
+            "plant_mCC_capacity_mtph",
+            val=0.0,
+            units="t/h",
+            desc="Theoretical maximum CO₂ capture [t/h]",
+        )
+        self.add_output(
+            "total_tank_volume_m3",
+            val=0.0,
+            units="m**3",
+        )
 
     def compute(self, inputs, outputs):
         ED_inputs = echem_mcc.ElectrodialysisInputs(
@@ -85,22 +104,36 @@ class DOCPerformanceModel(MarineCarbonCapturePerformanceBaseClass):
             plot_range=[3910, 4030],
         )
 
-        outputs["co2_capture_rate_mtph"] = ed_outputs.ED_outputs["mCC"]
+        outputs["co2_capture_rate_mt"] = ed_outputs.ED_outputs["mCC"]
         outputs["average_co2_capture_mtpy"] = ed_outputs.mCC_yr
+        outputs["total_tank_volume_m3"] = range_outputs.V_aT_max + range_outputs.V_bT_max
+        outputs["plant_mCC_capacity_mtph"] = max(range_outputs.S1["mCC"])
 
 
 @define
 class DOCCostModelConfig(BaseConfig):
-    average_co2_capture_mtpy: float = field()
-    total_tank_volume_m3: float = field()
+    """Configuration for the DOC cost model.
+
+    Attributes:
+        average_co2_capture_mtpy (float): Average annual CO2 captured (t/year).
+        total_tank_volume_m3 (float): Total volume of tanks used (m³).
+        infrastructure_type (str): Type of supporting infrastructure (e.g., "floating", "fixed").
+        plant_mCC_capacity_mtpy (float): Maximum CO2 capture capacity of the plant (t/year).
+    """
+
+    # average_co2_capture_mtpy: float = field()
+    # total_tank_volume_m3: float = field()
     infrastructure_type: str = field()
-    plant_mCC_capacity_mtpy: float = field()
+    # plant_mCC_capacity_mtpy: float = field()
 
 
 class DOCCostModel(MarineCarbonCaptureCostBaseClass):
-    """
-    An OpenMDAO component that calculates the capital expenditure (CapEx) for a direct
-    ocean capture (DOC) plant.
+    """OpenMDAO component for computing capital (CapEx) and operational (OpEx) costs of a
+        direct ocean capture (DOC) system.
+
+    Computes:
+        - CapEx (USD)
+        - OpEx (USD/year)
     """
 
     def initialize(self):
@@ -113,6 +146,13 @@ class DOCCostModel(MarineCarbonCaptureCostBaseClass):
         )
         self.config = DOCCostModelConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost")
+        )
+
+        # TODO: figure out how to share this input between finance and cost model. it's an output of performance model
+        self.add_input(
+            "total_tank_volume_m3",
+            val=0.0,
+            units="m**3",
         )
 
     def compute(self, inputs, outputs):
@@ -134,10 +174,10 @@ class DOCCostModel(MarineCarbonCaptureCostBaseClass):
         res = echem_mcc.electrodialysis_cost_model(
             echem_mcc.ElectrodialysisCostInputs(
                 electrodialysis_inputs=ED_inputs,
-                mCC_yr=self.config.average_co2_capture_mtpy,
-                total_tank_volume=self.config.total_tank_volume_m3,
+                mCC_yr=inputs["average_co2_capture_mtpy"],
+                total_tank_volume=inputs["total_tank_volume_m3"],
                 infrastructure_type=self.config.infrastructure_type,
-                max_theoretical_mCC=self.config.plant_mCC_capacity_mtpy,
+                max_theoretical_mCC=inputs["plant_mCC_capacity_mtph"],
             )
         )
 
@@ -147,6 +187,17 @@ class DOCCostModel(MarineCarbonCaptureCostBaseClass):
 
 
 class DOCFinance(om.ExplicitComponent):
+    """OpenMDAO component to compute the levelized cost of CO2 (LCOC) for DOC systems.
+
+    Inputs:
+        CapEx (float): Capital expenditure [USD].
+        OpEx (float): Operating expenditure [USD/year].
+        average_co2_capture_mtpy (float): Average annual CO2 capture [t/year].
+
+    Outputs:
+        LCOC (float): Levelized cost of CO2 captured [USD/t].
+    """
+
     def initialize(self):
         self.options.declare("plant_config", types=dict)
         self.options.declare("tech_config", types=dict)
