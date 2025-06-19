@@ -38,6 +38,11 @@ from h2integrate.converters.water.hydro_plant_run_of_river import (
 from h2integrate.converters.hydrogen.eco_tools_pem_electrolyzer import (
     ECOElectrolyzerPerformanceModel,
 )
+from h2integrate.converters.marine_carbon_capture.direct_ocean_capture import (
+    DOCFinance,
+    DOCCostModel,
+    DOCPerformanceModel,
+)
 
 
 supported_models = {
@@ -66,6 +71,9 @@ supported_models = {
     "smr_methanol_plant_performance": SMRMethanolPlantPerformanceModel,
     "smr_methanol_plant_cost": SMRMethanolPlantCostModel,
     "methanol_plant_financial": SMRMethanolPlantFinanceModel,
+    "direct_ocean_capture_performance": DOCPerformanceModel,
+    "direct_ocean_capture_cost": DOCCostModel,
+    "direct_ocean_capture_finance": DOCFinance,
     # Transport
     "cable": CablePerformanceModel,
     "pipe": PipePerformanceModel,

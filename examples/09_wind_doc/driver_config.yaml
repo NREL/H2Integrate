@@ -1,0 +1,5 @@
+name: "driver_config"
+description: "This analysis runs a wind plant hooked up to a direct ocean capture device"
+
+general:
+  folder_output: wind_doc
