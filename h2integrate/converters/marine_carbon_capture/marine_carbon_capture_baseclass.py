@@ -46,14 +46,6 @@ class MarineCarbonCapturePerformanceBaseClass(om.ExplicitComponent):
 
     def setup(self):
         self.add_input("electricity_in", val=0.0, shape=8760, units="W")
-        # self.add_input("power_single_ed_w", val=self.config.power_single_ed_w, units="W")
-        # self.add_input(
-        #     "flow_rate_single_ed_m3s", val=self.config.flow_rate_single_ed_m3s, units="m**3/s"
-        # )
-        # self.add_input("number_ed_min", val=self.config.number_ed_min, units="unitless",shape=int)
-        # self.add_input("num_ed_max", val=self.config.number_ed_max, units="unitless",shape=int)
-        # self.add_input("use_storage_tanks", val=self.config.use_storage_tanks, units="unitless")
-        # self.add_input("store_hours", val=self.config.store_hours, units="h")
         self.add_output(
             "co2_capture_rate_mtph", val=0.0, shape=8760, units="t/h", desc="CO2 capture rate"
         )

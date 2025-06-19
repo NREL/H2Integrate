@@ -63,4 +63,7 @@ technologies:
         pH_i: 8.1 # initial pH
 
       cost_parameters: # DRAFT NOT REAL ADD REAL COST MODEL
-        cost_per_kw: 1500.0 # $/kW
+        average_co2_capture_mtpy: 100000. # metric tonnes per year
+        total_tank_volume_m3: 10 # m^3
+        infrastructure_type: "new"
+        plant_mCC_capacity_mtpy: 1000. # MW
