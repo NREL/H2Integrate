@@ -1,7 +1,7 @@
-import mcm
 import numpy as np
 import openmdao.api as om
 import numpy_financial as npf
+from mcm import echem_mcc
 from attrs import field, define
 
 from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
@@ -54,60 +54,57 @@ class DOCPerformanceModel(MarineCarbonCapturePerformanceBaseClass):
         super().setup()
 
         # Add specific inputs for DOC performance model
-        self.add_input("E_HCl", val=self.config.E_HCl, units="kW*h/mol")
-        self.add_input("E_NaOH", val=self.config.E_NaOH, units="kW*h/mol")
-        self.add_input("y_ext", val=self.config.y_ext, units="unitless")
-        self.add_input("y_pur", val=self.config.y_pur, units="unitless")
-        self.add_input("y_vac", val=self.config.y_vac, units="unitless")
-        self.add_input("frac_ed_flow", val=self.config.frac_ed_flow, units="unitless")
-        self.add_input("temp_C", val=self.config.temp_C, units="degC")
-        self.add_input("sal", val=self.config.sal, units="ppt")
-        self.add_input("dic_i", val=self.config.dic_i, units="mol/L")
-        self.add_input("pH_i", val=self.config.pH_i, units="unitless")
-        self.add_input(
-            "initial_tank_volume_m3", val=self.config.initial_tank_volume_m3, units="m**3"
-        )
+        # self.add_input("E_HCl", val=self.config.E_HCl, units="kW*h/mol")
+        # self.add_input("E_NaOH", val=self.config.E_NaOH, units="kW*h/mol")
+        # self.add_input("y_ext", val=self.config.y_ext, units="unitless")
+        # self.add_input("y_pur", val=self.config.y_pur, units="unitless")
+        # self.add_input("y_vac", val=self.config.y_vac, units="unitless")
+        # self.add_input("frac_ed_flow", val=self.config.frac_ed_flow, units="unitless")
+        # self.add_input("temp_C", val=self.config.temp_C, units="degC")
+        # self.add_input("sal", val=self.config.sal, units="ppt")
+        # self.add_input("dic_i", val=self.config.dic_i, units="mol/L")
+        # self.add_input("pH_i", val=self.config.pH_i, units="unitless")
+        # self.add_input(
+        #     "initial_tank_volume_m3", val=self.config.initial_tank_volume_m3, units="m**3"
+        # )
 
     def compute(self, inputs, outputs):
-        ED_inputs = mcm.capture.echem_mcc.ElectrodialysisInputs(
-            P_ed1=inputs["power_single_ed_w"],
-            Q_ed1=inputs["flow_rate_single_ed_m3s"],
-            N_edMin=inputs["number_ed_min"],
-            N_edMax=inputs["num_ed_max"],
-            E_HCl=inputs["E_HCl"],
-            E_NaOH=inputs["E_NaOH"],
-            y_ext=inputs["y_ext"],
-            y_pur=inputs["y_pur"],
-            y_vac=inputs["y_vac"],
-            frac_EDflow=inputs["frac_EDflow"],
-            use_storage_tanks=inputs["use_storage_tanks"],
-            store_hours=inputs["store_hours"],
+        ED_inputs = echem_mcc.ElectrodialysisInputs(
+            P_ed1=self.config.power_single_ed_w,
+            Q_ed1=self.config.flow_rate_single_ed_m3s,
+            N_edMin=self.config.number_ed_min,
+            N_edMax=self.config.number_ed_max,
+            E_HCl=self.config.E_HCl,
+            E_NaOH=self.config.E_NaOH,
+            y_ext=self.config.y_ext,
+            y_pur=self.config.y_pur,
+            y_vac=self.config.y_vac,
+            frac_EDflow=self.config.frac_ed_flow,
+            use_storage_tanks=self.config.use_storage_tanks,
+            store_hours=self.config.store_hours,
         )
 
-        co_2_outputs, range_outputs, ed_outputs = (
-            mcm.capture.echem_mcc.run_electrodialysis_physics_model(
-                power_profile_w=inputs["electricity_in"],
-                initial_tank_volume_m3=inputs["initial_tank_volume_m3"],
-                electrodialysis_config=ED_inputs,
-                pump_config=mcm.capture.echem_mcc.PumpInputs(),
-                seawater_config=mcm.capture.echem_mcc.SeaWaterInputs(
-                    sal=inputs["sal"],
-                    tempC=inputs["temp_C"],
-                    dic_i=inputs["dic_i"],
-                    pH_i=inputs["pH_i"],
-                ),
-                save_outputs=True,
-                save_plots=True,
-                plot_range=[3910, 4030],
-            )
+        co_2_outputs, range_outputs, ed_outputs = echem_mcc.run_electrodialysis_physics_model(
+            power_profile_w=inputs["electricity_in"],
+            initial_tank_volume_m3=self.config.initial_tank_volume_m3,
+            electrodialysis_config=ED_inputs,
+            pump_config=echem_mcc.PumpInputs(),
+            seawater_config=echem_mcc.SeaWaterInputs(
+                sal=self.config.sal,
+                tempC=self.config.temp_C,
+                dic_i=self.config.dic_i,
+                pH_i=self.config.pH_i,
+            ),
+            save_outputs=True,
+            save_plots=True,
+            plot_range=[3910, 4030],
         )
 
-        outputs["co2_capture_rate_mtph"] = co_2_outputs.mCC_yr
+        outputs["co2_capture_rate_mtph"] = ed_outputs.mCC_yr
 
 
 @define
 class DOCCostModelConfig(BaseConfig):
-    average_co2_capture_mtpy: float = field()
     cost_per_kw: float = field()
 
 
@@ -126,12 +123,15 @@ class DOCCostModel(MarineCarbonCaptureCostBaseClass):
         self.config = DOCCostModelConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost")
         )
+        # self.add_input(
+        #     "average_co2_capture_mtpy", units="t/year", desc="Average annual CO2 capture"
+        # )
 
     def compute(self, inputs, outputs):
         cost_per_kw = self.config.cost_per_kw
 
         # Calculate CapEx
-        total_capacity_kw = self.config.average_co2_capture_mtpy
+        total_capacity_kw = 10000
         outputs["CapEx"] = total_capacity_kw * cost_per_kw
         outputs["OpEx"] = 0.03 * total_capacity_kw * cost_per_kw  # placeholder scalar value
 

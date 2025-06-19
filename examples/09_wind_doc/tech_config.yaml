@@ -43,11 +43,8 @@ technologies:
     financial_model:
       model: "direct_ocean_capture_finance"
     model_inputs:
-      shared_parameters:
-        average_co2_capture_mtpy: 1000000 # metric tonnes per year
-
       performance_parameters:
-        power_single_ed_w: 24000000 # W
+        power_single_ed_w: 24000000. # W
         flow_rate_single_ed_m3s: 0.6 # m^3/s
         number_ed_min: 1
         number_ed_max: 10
@@ -59,9 +56,9 @@ technologies:
         frac_ed_flow: 0.01
         use_storage_tanks: True
         initial_tank_volume_m3: 0. #m^3
-        store_hours: 12 # hours
-        sal: 35 # ppt
-        temp_C: 25 # degrees Celsius
+        store_hours: 12. # hours
+        sal: 35. # ppt
+        temp_C: 25. # degrees Celsius
         dic_i: 0.0022 # mol/L
         pH_i: 8.1 # initial pH
 
