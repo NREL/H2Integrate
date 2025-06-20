@@ -122,14 +122,6 @@ omit = [
   "tests/*"
 ]
 
-[tool.pytest.ini_options]
-python_files = [
-  "tests/*.py",
-]
-testpaths = [
-  "test/h2integrate/*.py",
-]
-
 [tool.isort]
 src_paths = ["h2integrate", "tests"]
 skip = ["__init__.py"]
