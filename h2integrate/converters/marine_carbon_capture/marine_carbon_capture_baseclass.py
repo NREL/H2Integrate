@@ -37,6 +37,7 @@ class MarineCarbonCapturePerformanceBaseClass(om.ExplicitComponent):
     """
 
     def initialize(self):
+        self.options.declare("driver_config", types=dict)
         self.options.declare("plant_config", types=dict)
         self.options.declare("tech_config", types=dict)
 
@@ -66,6 +67,7 @@ class MarineCarbonCaptureCostBaseClass(om.ExplicitComponent):
     """
 
     def initialize(self):
+        self.options.declare("driver_config", types=dict)
         self.options.declare("plant_config", types=dict)
         self.options.declare("tech_config", types=dict)
 

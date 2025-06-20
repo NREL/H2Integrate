@@ -6,6 +6,7 @@ n_timesteps = 8760
 
 class HydroPerformanceBaseClass(om.ExplicitComponent):
     def initialize(self):
+        self.options.declare("driver_config", types=dict)
         self.options.declare("plant_config", types=dict)
         self.options.declare("tech_config", types=dict)
 
@@ -30,6 +31,7 @@ class HydroPerformanceBaseClass(om.ExplicitComponent):
 
 class HydroCostBaseClass(om.ExplicitComponent):
     def initialize(self):
+        self.options.declare("driver_config", types=dict)
         self.options.declare("plant_config", types=dict)
         self.options.declare("tech_config", types=dict)
 
@@ -50,6 +52,7 @@ class HydroCostBaseClass(om.ExplicitComponent):
 
 class HydroFinanceBaseClass(om.ExplicitComponent):
     def initialize(self):
+        self.options.declare("driver_config", types=dict)
         self.options.declare("plant_config", types=dict)
         self.options.declare("tech_config", types=dict)
 

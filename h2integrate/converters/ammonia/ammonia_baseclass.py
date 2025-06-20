@@ -57,6 +57,7 @@ class AmmoniaPerformanceModel(om.ExplicitComponent):
     """
 
     def initialize(self):
+        self.options.declare("driver_config", types=dict)
         self.options.declare("plant_config", types=dict)
         self.options.declare("tech_config", types=dict)
 
@@ -107,6 +108,7 @@ class AmmoniaCostModel(om.ExplicitComponent):
     """
 
     def initialize(self):
+        self.options.declare("driver_config", types=dict)
         self.options.declare("plant_config", types=dict)
         self.options.declare("tech_config", types=dict)
 

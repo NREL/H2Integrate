@@ -197,7 +197,9 @@ class H2IntegrateModel:
                 # Special handling for short-term components that share performance and cost models
                 if tech_name in combined_performance_and_cost_model_technologies:
                     comp = self.supported_models[tech_name](
-                        plant_config=self.plant_config, tech_config=individual_tech_config
+                        driver_config=self.driver_config,
+                        plant_config=self.plant_config,
+                        tech_config=individual_tech_config,
                     )
                     tech_group.add_subsystem(tech_name, comp, promotes=["*"])
                     self.performance_models.append(comp)
@@ -211,7 +213,9 @@ class H2IntegrateModel:
                 tech_group.add_subsystem(
                     performance_name,
                     performance_object(
-                        plant_config=self.plant_config, tech_config=individual_tech_config
+                        driver_config=self.driver_config,
+                        plant_config=self.plant_config,
+                        tech_config=individual_tech_config,
                     ),
                     promotes=["*"],
                 )
@@ -224,7 +228,9 @@ class H2IntegrateModel:
                     tech_group.add_subsystem(
                         cost_name,
                         cost_object(
-                            plant_config=self.plant_config, tech_config=individual_tech_config
+                            driver_config=self.driver_config,
+                            plant_config=self.plant_config,
+                            tech_config=individual_tech_config,
                         ),
                         promotes=["*"],
                     )
@@ -239,7 +245,9 @@ class H2IntegrateModel:
                         tech_group.add_subsystem(
                             f"{tech_name}_financial",
                             financial_object(
-                                plant_config=self.plant_config, tech_config=individual_tech_config
+                                driver_config=self.driver_config,
+                                plant_config=self.plant_config,
+                                tech_config=individual_tech_config,
                             ),
                             promotes=["*"],
                         )

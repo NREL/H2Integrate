@@ -37,7 +37,15 @@ class TestDOCPerformanceModel(unittest.TestCase):
             },
         }
 
-        doc_model = DOCPerformanceModel(plant_config={}, tech_config=self.config)
+        driver_config = {
+            "general": {
+                "folder_output": "output",
+            },
+        }
+
+        doc_model = DOCPerformanceModel(
+            driver_config=driver_config, plant_config={}, tech_config=self.config
+        )
         self.prob = om.Problem(model=om.Group())
         self.prob.model.add_subsystem("DOC", doc_model, promotes=["*"])
         self.prob.setup()

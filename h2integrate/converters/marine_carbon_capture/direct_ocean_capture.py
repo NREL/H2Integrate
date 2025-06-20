@@ -114,7 +114,7 @@ class DOCPerformanceModel(MarineCarbonCapturePerformanceBaseClass):
             ),
             save_outputs=True,
             save_plots=True,
-            output_dir="./output/",  # TODO: how do I change this to be based on folder_output in driver_config.yaml?
+            output_dir=self.options["driver_config"]["general"]["folder_output"],
             plot_range=[3910, 4030],
         )
 
@@ -214,6 +214,7 @@ class DOCFinance(om.ExplicitComponent):
     # TODO: further develop LCOC metric using LCOE for electricity costs and outputs from cost and performance model
 
     def initialize(self):
+        self.options.declare("driver_config", types=dict)
         self.options.declare("plant_config", types=dict)
         self.options.declare("tech_config", types=dict)
 
