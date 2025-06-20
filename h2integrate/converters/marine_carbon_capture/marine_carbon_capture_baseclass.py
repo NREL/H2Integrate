@@ -1,12 +1,6 @@
 import openmdao.api as om
 from attrs import field, define
 
-
-try:
-    import mcm
-except ImportError:
-    mcm = None
-
 from h2integrate.core.utilities import BaseConfig
 
 
@@ -40,17 +34,9 @@ class MarineCarbonCapturePerformanceBaseClass(om.ExplicitComponent):
     Attributes:
         plant_config (dict): Configuration dictionary for plant-level parameters.
         tech_config (dict): Configuration dictionary for technology-specific parameters.
-
-    Raises:
-        ImportError: If the `mcm` package is not installed.
     """
 
     def initialize(self):
-        if mcm is None:
-            raise ImportError(
-                "The `mcm` package is required. Install it via:\n"
-                "pip install git+https://github.com/NREL/MarineCarbonManagement.git"
-            )
         self.options.declare("plant_config", types=dict)
         self.options.declare("tech_config", types=dict)
 
@@ -77,17 +63,9 @@ class MarineCarbonCaptureCostBaseClass(om.ExplicitComponent):
     Attributes:
         plant_config (dict): Configuration dictionary for plant-level parameters.
         tech_config (dict): Configuration dictionary for technology-specific parameters.
-
-    Raises:
-        ImportError: If the `mcm` package is not installed.
     """
 
     def initialize(self):
-        if mcm is None:
-            raise ImportError(
-                "The `mcm` package is required. Install it via:\n"
-                "pip install git+https://github.com/NREL/MarineCarbonManagement.git"
-            )
         self.options.declare("plant_config", types=dict)
         self.options.declare("tech_config", types=dict)
 

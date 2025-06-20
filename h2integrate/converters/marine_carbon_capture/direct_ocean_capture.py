@@ -1,7 +1,6 @@
 import numpy as np
 import openmdao.api as om
 import numpy_financial as npf
-from mcm import echem_mcc
 from attrs import field, define
 
 from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
@@ -10,6 +9,12 @@ from h2integrate.converters.marine_carbon_capture.marine_carbon_capture_baseclas
     MarineCarbonCapturePerformanceConfig,
     MarineCarbonCapturePerformanceBaseClass,
 )
+
+
+try:
+    from mcm import echem_mcc
+except ImportError:
+    echem_mcc = None
 
 
 @define
@@ -54,6 +59,14 @@ class DOCPerformanceModel(MarineCarbonCapturePerformanceBaseClass):
         - Hourly CO2 capture rate (t/h)
         - Annual CO2 capture (t/year)
     """
+
+    def initialize(self):
+        super().initialize()
+        if echem_mcc is None:
+            raise ImportError(
+                "The `mcm` package is required. Install it via:\n"
+                "pip install git+https://github.com/NREL/MarineCarbonManagement.git"
+            )
 
     def setup(self):
         self.config = DOCPerformanceConfig.from_dict(
@@ -133,6 +146,11 @@ class DOCCostModel(MarineCarbonCaptureCostBaseClass):
 
     def initialize(self):
         super().initialize()
+        if echem_mcc is None:
+            raise ImportError(
+                "The `mcm` package is required. Install it via:\n"
+                "pip install git+https://github.com/NREL/MarineCarbonManagement.git"
+            )
 
     def setup(self):
         super().setup()

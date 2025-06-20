@@ -2,7 +2,7 @@
 
 The DOC model—short for Direct Ocean Capture—simulates the removal of carbon dioxide (CO₂) from ocean water. In the H2Integrate framework, this technology is implemented as a wrapper around the electrodialysis-based marine carbon capture unit from the [MarineCarbonManagement repository](https://github.com/NREL/MarineCarbonManagement).
 
-The model requires a range of inputs, including parameters for the electrodialysis (ED) unit, seawater chemistry, initial operating conditions, and electrical power input to operate the system.
+The model requires a range of inputs, including parameters for the electrodialysis unit, seawater chemistry, initial operating conditions, and electrical power input to operate the system.
 
 Note that the [MarineCarbonManagement repository](https://github.com/NREL/MarineCarbonManagement) is not available as a pip-installable package on PyPI. As a result, it is not included in the default installation of H2Integrate via pip or through the setup instructions on the H2Integrate GitHub page.
 
