@@ -33,23 +33,28 @@ class HOPPComponent(om.ExplicitComponent):
         else:
             self.cache = True
 
-        wind_turbine_rating_kw_init = self.hopp_config["technologies"]["wind"].get(
-            "turbine_rating_kw", 0.0
-        )
-        self.add_input("wind_turbine_rating_kw", val=wind_turbine_rating_kw_init, units="kW")
+        if "wind" in self.hopp_config["technologies"]:
+            wind_turbine_rating_kw_init = self.hopp_config["technologies"]["wind"].get(
+                "turbine_rating_kw", 0.0
+            )
+            self.add_input("wind_turbine_rating_kw", val=wind_turbine_rating_kw_init, units="kW")
 
-        pv_capacity_kw_init = self.hopp_config["technologies"]["pv"].get("system_capacity_kw", 0.0)
-        self.add_input("pv_capacity_kw", val=pv_capacity_kw_init, units="kW")
+        if "pv" in self.hopp_config["technologies"]:
+            pv_capacity_kw_init = self.hopp_config["technologies"]["pv"].get(
+                "system_capacity_kw", 0.0
+            )
+            self.add_input("pv_capacity_kw", val=pv_capacity_kw_init, units="kW")
 
-        battery_capacity_kw_init = self.hopp_config["technologies"]["battery"].get(
-            "system_capacity_kw", 4140.0
-        )
-        self.add_input("battery_capacity_kw", val=battery_capacity_kw_init, units="kW")
+        if "battery" in self.hopp_config["technologies"]:
+            battery_capacity_kw_init = self.hopp_config["technologies"]["battery"].get(
+                "system_capacity_kw", 4140.0
+            )
+            self.add_input("battery_capacity_kw", val=battery_capacity_kw_init, units="kW")
 
-        battery_capacity_kwh_init = self.hopp_config["technologies"]["battery"].get(
-            "system_capacity_kwh", 0.0
-        )
-        self.add_input("battery_capacity_kwh", val=battery_capacity_kwh_init, units="kW*h")
+            battery_capacity_kwh_init = self.hopp_config["technologies"]["battery"].get(
+                "system_capacity_kwh", 0.0
+            )
+            self.add_input("battery_capacity_kwh", val=battery_capacity_kwh_init, units="kW*h")
 
         # Outputs
         self.add_output("percent_load_missed", units="percent", val=0.0)
@@ -109,12 +114,29 @@ class HOPPComponent(om.ExplicitComponent):
             if "electrolyzer_rating" in self.options["tech_config"]:
                 electrolyzer_rating = self.options["tech_config"]["electrolyzer_rating"]
 
+            if "pv" in self.hopp_config["technologies"]:
+                pv_capacity_kw = float(inputs["pv_capacity_kw"])
+            else:
+                pv_capacity_kw = None
+
+            if "battery" in self.hopp_config["technologies"]:
+                battery_capacity_kw = float(inputs["battery_capacity_kw"])
+                battery_capacity_kwh = float(inputs["battery_capacity_kwh"])
+            else:
+                battery_capacity_kw = None
+                battery_capacity_kwh = None
+
+            if "wind" in self.hopp_config["technologies"]:
+                wind_turbine_rating_kw = float(inputs["wind_turbine_rating_kw"])
+            else:
+                wind_turbine_rating_kw = None
+
             self.hybrid_interface = setup_hopp(
                 hopp_config=self.options["tech_config"]["performance_model"]["config"],
-                wind_turbine_rating_kw=float(inputs["wind_turbine_rating_kw"]),
-                pv_rating_kw=float(inputs["pv_capacity_kw"]),
-                battery_rating_kw=float(inputs["battery_capacity_kw"]),
-                battery_rating_kwh=float(inputs["battery_capacity_kwh"]),
+                wind_turbine_rating_kw=wind_turbine_rating_kw,
+                pv_rating_kw=pv_capacity_kw,
+                battery_rating_kw=battery_capacity_kw,
+                battery_rating_kwh=battery_capacity_kwh,
                 electrolyzer_rating=electrolyzer_rating,
             )
 
@@ -138,7 +160,10 @@ class HOPPComponent(om.ExplicitComponent):
         outputs["CapEx"] = subset_of_hopp_results["capex"]
         outputs["OpEx"] = subset_of_hopp_results["opex"]
 
-        outputs["battery_duration"] = inputs["battery_capacity_kwh"] / inputs["battery_capacity_kw"]
+        if "battery" in self.hopp_config["technologies"]:
+            outputs["battery_duration"] = (
+                inputs["battery_capacity_kwh"] / inputs["battery_capacity_kw"]
+            )
 
         if "desired_schedule" in self.hopp_config["site"]:
             uphours = np.count_nonzero(self.hopp_config["site"]["desired_schedule"])

@@ -69,7 +69,7 @@ def recreate_hopp_config_for_optimization(
     smooth_tol = 1.0
 
     if wind_turbine_rating_kw is not None and "wind" in hopp_config_internal["technologies"]:
-        if pv_rating_kw <= min_tol and wind_turbine_rating_kw <= min_tol:
+        if wind_turbine_rating_kw <= min_tol:
             hopp_config_internal["technologies"]["wind"]["turbine_rating_kw"] = min_tol
         elif wind_turbine_rating_kw <= rating_tol:
             if wind_turbine_rating_kw <= smooth_tol:
@@ -90,7 +90,7 @@ def recreate_hopp_config_for_optimization(
             )
 
     if pv_rating_kw is not None:
-        if pv_rating_kw <= min_tol and wind_turbine_rating_kw <= min_tol:
+        if pv_rating_kw <= min_tol:
             hopp_config_internal["technologies"]["pv"]["system_capacity_kw"] = min_tol
         elif pv_rating_kw <= rating_tol:
             if pv_rating_kw <= smooth_tol:
