@@ -9,7 +9,7 @@ def make_synloop_config():
     return {
         "model_inputs": {
             "performance_parameters": {
-                "energy_demand": 0.0006,  # MW per kg NH3
+                "energy_demand": 0.0006,  # MWh per kg NH3
                 "nitrogen_conversion_rate": 0.82,  # kg N2 per kg NH3
                 "hydrogen_conversion_rate": 0.18,  # kg H2 per kg NH3
             }
