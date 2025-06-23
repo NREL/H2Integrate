@@ -290,6 +290,8 @@ class H2IntegrateModel:
                 commodity_types.append("methanol")
             if "ammonia" in tech_configs:
                 commodity_types.append("ammonia")
+            if "geoh2" in tech_configs:
+                commodity_types.append("hydrogen")
             for tech in electricity_producing_techs:
                 if tech in tech_configs:
                     commodity_types.append("electricity")
@@ -297,6 +299,10 @@ class H2IntegrateModel:
 
             # Steel, methanol provides their own financials
             if any(c in commodity_types for c in ("steel", "methanol")):
+                continue
+
+            # GeoH2 provides own financials
+            if "geoh2" in tech_configs:
                 continue
 
             if commodity_types == []:
@@ -422,7 +428,7 @@ class H2IntegrateModel:
             # Connect the outputs of the technology models to the appropriate financial groups
             for group_id, tech_configs in self.financial_groups.items():
                 # Skip steel financials; it provides its own financials
-                if any(c in tech_configs for c in ("steel", "methanol")):
+                if any(c in tech_configs for c in ("steel", "methanol", "geoh2")):
                     continue
 
                 plant_producing_electricity = False
