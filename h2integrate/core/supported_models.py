@@ -12,10 +12,6 @@ from h2integrate.storage.hydrogen.tank_baseclass import (
     HydrogenTankPerformanceModel,
 )
 from h2integrate.converters.wind.wind_plant_pysam import PYSAMWindPlantPerformanceModel
-from h2integrate.converters.ammonia.ammonia_baseclass import (
-    AmmoniaCostModel,
-    AmmoniaPerformanceModel,
-)
 from h2integrate.converters.desalination.desalination import (
     ReverseOsmosisCostModel,
     ReverseOsmosisPerformanceModel,
@@ -29,6 +25,10 @@ from h2integrate.converters.methanol.smr_methanol_plant import (
     SMRMethanolPlantCostModel,
     SMRMethanolPlantFinanceModel,
     SMRMethanolPlantPerformanceModel,
+)
+from h2integrate.converters.ammonia.simple_ammonia_model import (
+    SimpleAmmoniaCostModel,
+    SimpleAmmoniaPerformanceModel,
 )
 from h2integrate.converters.hydrogen.singlitico_cost_model import SingliticoCostModel
 from h2integrate.converters.water.hydro_plant_run_of_river import (
@@ -69,8 +69,8 @@ supported_models = {
     "hopp": HOPPComponent,
     "reverse_osmosis_desalination_performance": ReverseOsmosisPerformanceModel,
     "reverse_osmosis_desalination_cost": ReverseOsmosisCostModel,
-    "ammonia_performance": AmmoniaPerformanceModel,
-    "ammonia_cost": AmmoniaCostModel,
+    "simple_ammonia_performance": SimpleAmmoniaPerformanceModel,
+    "simple_ammonia_cost": SimpleAmmoniaCostModel,
     "steel_performance": SteelPerformanceModel,
     "steel_cost": SteelCostAndFinancialModel,
     "smr_methanol_plant_performance": SMRMethanolPlantPerformanceModel,

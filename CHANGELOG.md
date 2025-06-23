@@ -18,6 +18,8 @@
 - Bump min Python version and removed unnecessary packages from `pyproject.toml.
 - Expanded docs to include a new section on modifying config dicts after model instantiation.
 - Added a check for if a custom model's name clashes with an existing model name in the H2Integrate framework, raising an error if it does.
+- Refactored the ammonia production model to use the new H2Integrate framework natively and removed the prior performance and cost functions.
+- Added a new ammonia production model which has nitrogen, hydrogen, and electricity inputs and ammonia output, with performance and cost functions.
 
 ## 0.3.0 [May 2 2025]
 
