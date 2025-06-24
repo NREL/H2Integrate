@@ -43,6 +43,7 @@ class GeoH2PerformanceBaseClass(om.ExplicitComponent):
     def initialize(self):
         self.options.declare("plant_config", types=dict)
         self.options.declare("tech_config", types=dict)
+        self.options.declare("driver_config", types=dict)
 
     def setup(self):
         self.add_input("well_lifetime", units="year", val=self.config.well_lifetime)
@@ -129,6 +130,7 @@ class GeoH2CostBaseClass(om.ExplicitComponent):
     def initialize(self):
         self.options.declare("plant_config", types=dict)
         self.options.declare("tech_config", types=dict)
+        self.options.declare("driver_config", types=dict)
 
     def setup(self):
         self.add_input("well_lifetime", units="year", val=self.config.well_lifetime)
