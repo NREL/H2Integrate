@@ -42,6 +42,7 @@ class WOMBATCostModel(ElectrolyzerCostBaseClass):
         np.random.default_rng(0)
 
         config = load_yaml(".", "poly_electrolyzer.yml")
+        # add external power here after config is loaded
         sim = Simulation(
             library_path=library_folder,  # automatically directs to the provided library
             config=config,
@@ -53,6 +54,8 @@ class WOMBATCostModel(ElectrolyzerCostBaseClass):
             self.config.rating_kw / 1000.0
         )  # The baseline electrolyzer in WOMBAT is 1MW
 
+        # Do the project and divide by the project lifetime
+        # use sim.env.simulation_years
         outputs["OpEx"] = sim.metrics.opex("annual").iloc[0, 0] * scaling_factor
         outputs["capacity_factor"] = sim.metrics.capacity_factor(
             which="net", frequency="project", by="electrolyzer"
