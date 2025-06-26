@@ -183,7 +183,7 @@ class H2IntegrateModel:
         self.cost_models = []
         self.financial_models = []
 
-        combined_performance_and_cost_model_technologies = ["hopp", "h2_storage"]
+        combined_performance_and_cost_models = ["hopp", "h2_storage", "wombat"]
 
         # Create a technology group for each technology
         for tech_name, individual_tech_config in self.technology_config["technologies"].items():
@@ -194,9 +194,17 @@ class H2IntegrateModel:
                 tech_group = self.plant.add_subsystem(tech_name, om.Group())
                 self.tech_names.append(tech_name)
 
-                # Special handling for short-term components that share performance and cost models
-                if tech_name in combined_performance_and_cost_model_technologies:
-                    comp = self.supported_models[tech_name](
+                # Check if performance, cost, and financial models are the same
+                # and in combined_performance_and_cost_models
+                perf_model = individual_tech_config.get("performance_model", {}).get("model")
+                cost_model = individual_tech_config.get("cost_model", {}).get("model")
+                individual_tech_config.get("financial_model", {}).get("model")
+                if (
+                    perf_model
+                    and perf_model == cost_model
+                    and perf_model in combined_performance_and_cost_models
+                ):
+                    comp = self.supported_models[perf_model](
                         plant_config=self.plant_config, tech_config=individual_tech_config
                     )
                     tech_group.add_subsystem(tech_name, comp, promotes=["*"])

@@ -32,7 +32,6 @@ def test_wombat_model_outputs(subtests):
                         "uptime_hours_until_eol": 80000.0,
                         "include_degradation_penalty": True,
                         "turndown_ratio": 0.1,
-                        "electrolyzer_capex_per_kw": 1295,
                     },
                 }
             },
