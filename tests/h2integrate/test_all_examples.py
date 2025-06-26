@@ -84,16 +84,10 @@ def test_ammonia_example(subtests):
         )
 
     with subtests.test("Check ammonia CapEx"):
-        assert (
-            pytest.approx(model.prob.get_val("plant.ammonia.ammonia_cost.CapEx"), rel=1e-3)
-            == 1.0124126e08
-        )
+        assert pytest.approx(model.prob.get_val("ammonia.CapEx"), rel=1e-3) == 1.0124126e08
 
     with subtests.test("Check ammonia OpEx"):
-        assert (
-            pytest.approx(model.prob.get_val("plant.ammonia.ammonia_cost.OpEx"), rel=1e-3)
-            == 11178036.31197754
-        )
+        assert pytest.approx(model.prob.get_val("ammonia.OpEx"), rel=1e-3) == 11178036.31197754
 
     with subtests.test("Check total adjusted CapEx"):
         assert (
