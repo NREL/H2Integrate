@@ -1,7 +1,6 @@
 from pathlib import Path
 
 import numpy as np
-import wombat
 import openmdao.api as om
 from attrs import field, define
 from wombat import Simulation
@@ -34,9 +33,7 @@ class WOMBATCostModel(ElectrolyzerCostBaseClass):
 
     def compute(self, inputs, outputs):
         outputs["CapEx"] = self.config.electrolyzer_capex_per_kw * self.config.rating_kw
-        # Get the base path where the wombat package is located
-        wombat_base_path = Path(wombat.__file__).resolve().parent
-        library_folder = (wombat_base_path / ".." / "tests" / "library").resolve()
+        library_folder = Path(__file__).parents[3] / "resource_files" / "wombat_library"
 
         # Seed the random variable for consistently randomized results
         np.random.default_rng(0)

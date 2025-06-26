@@ -1,5 +1,5 @@
 name: Single Turbine Plant with Electrolyzer (Poly Efficiency)
-weather: test_weather.csv
+weather: test_weather_one_year.csv
 service_equipment:
   - - ctv
     - 2
