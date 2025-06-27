@@ -1,5 +1,5 @@
 name: "technology_config"
-description: "This plant has wind feeding into an electrolyzer with optimization"
+description: "This plant is a simple passthrough wind+solar+battery hybrid energy plant within HOPP"
 
 technologies:
   hopp:
