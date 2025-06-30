@@ -55,6 +55,7 @@ dependencies = [
     "rainflow",
     "ruamel.yaml",
     "scipy==1.15.3",
+    "wombat>=0.11",
 ]
 keywords = [
     "python3",
