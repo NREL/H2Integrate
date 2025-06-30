@@ -65,6 +65,34 @@ When you push to your fork, or open a PR, your tests will be run against the
 that runs all tests on your branch against multiple Python versions, and will also test
 documentation builds.
 
+## Code Review Process
+
+All pull requests will be reviewed by at least one other person before being merged into the develop branch.
+Here are some guidelines to help with the review process, both as the person submitting the pull request, and as the reviewer.
+
+### As the person submitting the pull request
+
+- Quality is a priority -- take the time to ensure your code is clear, well-documented, and tested.
+- Keep pull requests small enough to be reviewed in under 30 minutes; this helps reviewers give thorough feedback and makes the process more efficient.
+- Value readability and understandability, but balance this with computational efficiency. Readable code is preferred unless a more abstract or optimized approach is clearly necessary and well-justified.
+- Be open to discussion and feedback. If written communication becomes challenging, consider scheduling a call to clarify intent and resolve misunderstandings.
+- Express appreciation for feedback, even if it's critical -- good reviews take time and effort.
+- When requesting a review, notify the reviewer directly (e.g., via email or Teams) to ensure timely attention.
+- Ask for a review, not just approval. The goal is to improve the codebase together and constructive feedback is an integral part of that process
+
+### As the reviewer
+
+- Test the code locally when possible to verify changes.
+- Aim to either accept the pull request or request specific changes, rather than leaving only comments.
+- Provide feedback constructively -- focus on the code and its functionality, not the person who wrote it.
+- If you leave several critical suggestions, include positive feedback on aspects you appreciate.
+- Communicate promptly once the PR author has addressed your feedback; aim to complete reviews within 2-3 days barring extenuating circumstances.
+- Remember, communication is key -- maintain a collaborative and respectful tone throughout the process.
+
+```{note}
+Code readability and understandability are highly valued, but not at the expense of significant inefficiency. Strive for a balance between clear code and appropriate performance with a slight preference for clear code.
+```
+
 ## Release Process
 
 ### Standard

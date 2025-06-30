@@ -84,16 +84,10 @@ def test_ammonia_example(subtests):
         )
 
     with subtests.test("Check ammonia CapEx"):
-        assert (
-            pytest.approx(model.prob.get_val("plant.ammonia.ammonia_cost.CapEx"), rel=1e-3)
-            == 1.0124126e08
-        )
+        assert pytest.approx(model.prob.get_val("ammonia.CapEx"), rel=1e-3) == 1.0124126e08
 
     with subtests.test("Check ammonia OpEx"):
-        assert (
-            pytest.approx(model.prob.get_val("plant.ammonia.ammonia_cost.OpEx"), rel=1e-3)
-            == 11178036.31197754
-        )
+        assert pytest.approx(model.prob.get_val("ammonia.OpEx"), rel=1e-3) == 11178036.31197754
 
     with subtests.test("Check total adjusted CapEx"):
         assert (
@@ -190,3 +184,26 @@ def test_hydro_example(subtests):
     # Subtests for checking specific values
     with subtests.test("Check LCOE"):
         assert pytest.approx(model.prob.get_val("financials_group_1.LCOE"), rel=1e-3) == 0.17653979
+
+
+def test_hybrid_energy_plant_example(subtests):
+    # Change the current working directory to the example's directory
+    os.chdir(examples_dir / "11_hybrid_energy_plant")
+
+    # Create a H2Integrate model
+    model = H2IntegrateModel(Path.cwd() / "wind_pv_battery.yaml")
+
+    # Run the model
+    model.run()
+
+    model.post_process()
+
+    # Subtests for checking specific values
+    with subtests.test("Check LCOE"):
+        assert (
+            pytest.approx(
+                model.prob.get_val("financials_group_1.LCOE", units="USD/MW/h")[0],
+                rel=1e-5,
+            )
+            == 83.2123
+        )
