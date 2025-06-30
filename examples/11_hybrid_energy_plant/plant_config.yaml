@@ -1,0 +1,49 @@
+name: "plant_config"
+description: "This plant is located in TX, USA near Sheffield"
+
+site:
+  latitude: 30.6617
+  longitude: -101.7096
+  elevation_m: 930.0
+  time_zone: -5
+
+  # array of polygons defining boundaries with x/y coords
+  boundaries: [
+    {
+      x: [0.0, 1000.0, 1000.0, 0.0],
+      y: [0.0, 0.0, 100.0, 1000.0],
+    },
+    {
+      x: [2000.0, 2500.0, 2000.0],
+      y: [2000.0, 2000.0, 2500.0],
+    }
+  ]
+
+plant:
+  plant_life: 30
+  grid_connection: False # option, can be turned on or off
+  ppa_price: 0.025 # $/kWh based on 2022 land based wind market report (ERCOT area ppa prices) https://www.energy.gov/sites/default/files/2022-08/land_based_wind_market_report_2202.pdf
+  atb_year: 2030
+  cost_year: 2025
+  installation_time: 12 # months
+
+finance_parameters:
+  costing_general_inflation: 0.025 # used to adjust modeled costs to cost_year
+  profast_general_inflation: 0.025 # 0 for nominal analysis
+  discount_rate: 0.089 # nominal return
+  debt_equity_split: 68.5
+  debt_equity_ratio: False # 2024 ATB uses 72.4% debt for land-based wind
+  property_tax: 0.01
+  property_insurance: 0.005 # percent of CAPEX estimated based on https://www.nrel.gov/docs/fy25osti/91775.pdf
+  total_income_tax_rate: 0.257 # 0.257 tax rate in 2024 atb baseline workbook, value here is based on federal (21%) and state in MN (9.8)
+  capital_gains_tax_rate: 0.15 # H2FAST default
+  sales_tax_rate: 0.045
+  debt_interest_rate: 0.06 # based on 2024 ATB nominal interest rate for land-based wind
+  debt_type: "Revolving debt" # can be "Revolving debt" or "One time loan". Revolving debt is H2FAST default and leads to much lower LCOH
+  loan_period: 0 # H2FAST default, not used for revolving debt
+  cash_onhand_months: 1 # H2FAST default
+  administrative_expense_percent_of_sales: 0.01
+  depreciation_method: "MACRS" # can be "MACRS" or "Straight line" - MACRS may be better and can reduce LCOH by more than $1/kg and is spec'd in the IRS MACRS schedule https://www.irs.gov/publications/p946#en_US_2020_publink1000107507
+  depreciation_period: 5 # years - for clean energy facilities as specified by the IRS MACRS schedule https://www.irs.gov/publications/p946#en_US_2020_publink1000107507
+  discount_years:
+    hopp: 2024
