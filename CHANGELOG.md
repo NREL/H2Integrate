@@ -16,10 +16,15 @@
 - Removed the `to_organize` directory.
 - Split out the electrolyzer cost models `basic` and `singlitico` for clarity.
 - Bump min Python version and removed unnecessary packages from `pyproject.toml.
+- Moved `overwrite_fin_values` to HOPP
+- Enable optimization with HOPP technology ratings using `recreate_hopp_config_for_optimization`
+- Added example for running with HOPP as the only technology in the H2Integrate system
+- Made caching in the HOPP wrapper optional
 - Expanded docs to include a new section on modifying config dicts after model instantiation.
 - Added a check for if a custom model's name clashes with an existing model name in the H2Integrate framework, raising an error if it does.
 - Refactored the ammonia production model to use the new H2Integrate framework natively and removed the prior performance and cost functions.
 - Added a new ammonia production model which has nitrogen, hydrogen, and electricity inputs and ammonia output, with performance and cost functions.
+- Added more available constraints from the HOPP wrapper useful for design optimizations
 
 ## 0.3.0 [May 2 2025]
 
