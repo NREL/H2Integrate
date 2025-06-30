@@ -56,7 +56,8 @@ class ECOElectrolyzerPerformanceModel(ElectrolyzerPerformanceBaseClass):
     def setup(self):
         super().setup()
         self.config = ECOElectrolyzerPerformanceModelConfig.from_dict(
-            merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance")
+            merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance"),
+            strict=False,
         )
         self.add_output("efficiency", val=0.0, desc="Average efficiency of the electrolyzer")
         self.add_output(

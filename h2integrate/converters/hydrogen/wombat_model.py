@@ -14,12 +14,25 @@ from h2integrate.converters.hydrogen.eco_tools_pem_electrolyzer import (
 
 @define
 class WOMBATModelConfig(ECOElectrolyzerPerformanceModelConfig):
-    library_path: Path = field(
-        factory=lambda: Path(__file__).parents[3] / "resource_files" / "wombat_library"
-    )
+    """
+    library_path: Path to the WOMBAT library directory, relative from this file
+    if not an absolute path.
+    """
+
+    library_path: Path = field()
 
 
 class WOMBATElectrolyzerModel(ECOElectrolyzerPerformanceModel):
+    """
+    WOMBATElectrolyzerModel is a joint performance and cost model for electrolyzers
+    using the WOMBAT simulation framework.
+
+    This class extends ECOElectrolyzerPerformanceModel and configures the WOMBAT model based
+    on provided technology configuration inputs. It sets up output variables related to
+    electrolyzer performance, including capacity factor, CapEx, OpEx, percent hydrogen
+    lost due to operations and maintenance (O&M), and electrolyzer availability.
+    """
+
     def setup(self):
         super().setup()
         self.config = WOMBATModelConfig.from_dict(
@@ -42,10 +55,20 @@ class WOMBATElectrolyzerModel(ECOElectrolyzerPerformanceModel):
     def compute(self, inputs, outputs):
         super().compute(inputs, outputs)
 
-        wombat_config = load_yaml(self.config.library_path, "electrolyzer.yml")
+        # Ensure library_path is a Path object
+        library_path = self.config.library_path
+        if not isinstance(library_path, Path):
+            library_path = Path(library_path)
+        # Determine the correct library path: use as-is if absolute, else relative to this file
+        if library_path.is_absolute():
+            library_path = library_path
+        else:
+            library_path = Path(__file__).parents[3] / library_path
+
+        wombat_config = load_yaml(library_path, "electrolyzer.yml")
         # add external power here after config is loaded
         sim = Simulation(
-            library_path=self.config.library_path,
+            library_path=library_path,
             config=wombat_config,
             random_seed=314,
         )
