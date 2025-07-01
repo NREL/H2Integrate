@@ -21,7 +21,7 @@ WOMBAT’s scheduled and unscheduled maintenance models are informed by real-wor
 
 ## Model Structure: Integrating Performance and O&M
 
-The `WOMBATElectrolyzerModel` builds on the existing `ECOElectrolyzerPerformanceModel`, which simulates PEM electrolyzer performance (hydrogen output, efficiency, CapEx, etc.) based on plant and technology configuration. The WOMBAT model then modifies the performance outputs by simulating O&M events:
+The `WOMBATElectrolyzerModel` builds on the existing `ECOElectrolyzerPerformanceModel`, which simulates PEM electrolyzer performance (hydrogen output, efficiency, etc.) based on plant and technology configuration. The WOMBAT model then modifies the performance outputs by simulating O&M events:
 
 1. **Performance Calculation**: The base PEM model computes hydrogen output and efficiency for a given electricity input profile.
 2. **O&M Simulation**: WOMBAT simulates maintenance and failure events, generating a time series of electrolyzer availability and O&M costs. The system model encapsulates subassemblies (collections of component models), each with their own failure and maintenance tasks, and coordinates repairs and status checking at the system level.
@@ -29,9 +29,14 @@ The `WOMBATElectrolyzerModel` builds on the existing `ECOElectrolyzerPerformance
 
 This approach enables much more accurate and dynamic cost modeling, especially for scenarios with high utilization or challenging maintenance environments. The model can be used for a single 1 MW electrolyzer or scaled to larger systems by adjusting the input profiles and configuration.
 
+```{note}
+The `electrolyzer.yml` configuration file may include sections such as `turbines` and `substation` that do not appear directly relevant to electrolyzer modeling. This is because WOMBAT currently assumes a certain system setup inherited from its wind O&M origins. These sections are required for the model to run, even if their parameters are not used in the electrolyzer context.
+```
+
 ## Example: Using the WOMBAT Electrolyzer Model
 
-To use the WOMBAT electrolyzer model in H2Integrate, configure your `tech_config.yaml` as follows:
+To use the WOMBAT electrolyzer model in H2Integrate, configure your `tech_config.yaml` to use `wombat` for both the performance and cost models.
+An example is shown below:
 
 ### tech_config.yaml (excerpt)
 

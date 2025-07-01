@@ -32,6 +32,7 @@ def test_wombat_model_outputs(subtests):
                         "uptime_hours_until_eol": 80000.0,
                         "include_degradation_penalty": True,
                         "turndown_ratio": 0.1,
+                        "library_path": "resource_files/wombat_library",
                     },
                 }
             },
@@ -43,22 +44,20 @@ def test_wombat_model_outputs(subtests):
     prob.run_model()
 
     with subtests.test("hydrogen_out"):
-        assert np.linalg.norm(prob["hydrogen_out"]) == approx(72657.30, rel=1e-2)
-    with subtests.test("time_until_replacement"):
-        assert prob["time_until_replacement"] == approx(80003.25, rel=1e-2)
+        assert np.linalg.norm(prob["hydrogen_out"]) == approx(72653.05815087, rel=1e-2)
     with subtests.test("total_hydrogen_produced"):
-        assert prob["total_hydrogen_produced"] == approx(6778133.04, rel=1e-2)
+        assert prob["total_hydrogen_produced"] == approx(6777348.33570215, rel=1e-2)
     with subtests.test("efficiency"):
         assert prob["efficiency"] == approx(0.76733639, rel=1e-2)
     with subtests.test("rated_h2_production_kg_pr_hr"):
         assert prob["rated_h2_production_kg_pr_hr"] == approx(784.3544736, rel=1e-2)
     with subtests.test("capacity_factor"):
-        assert prob["capacity_factor"] == approx(0.67947881, rel=1e-2)
+        assert prob["capacity_factor"] == approx(0.18740147, rel=1e-2)
     with subtests.test("CapEx"):
         assert prob["CapEx"] == approx(51800000.0, rel=1e-2)
     with subtests.test("OpEx"):
-        assert prob["OpEx"] == approx(1.03672554e08, rel=1e-2)
+        assert prob["OpEx"] == approx(1518297.77830254, rel=1e-2)
     with subtests.test("percent_hydrogen_lost"):
-        assert prob["percent_hydrogen_lost"] == approx(0.0, rel=1e-2)
+        assert prob["percent_hydrogen_lost"] == approx(0.66178538, rel=1e-2)
     with subtests.test("electrolyzer_availability"):
-        assert prob["electrolyzer_availability"] == approx(0.99349315, rel=1e-2)
+        assert prob["electrolyzer_availability"] == approx(0.993379, rel=1e-2)

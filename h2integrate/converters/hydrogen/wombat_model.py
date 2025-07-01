@@ -66,7 +66,6 @@ class WOMBATElectrolyzerModel(ECOElectrolyzerPerformanceModel):
             library_path = Path(__file__).parents[3] / library_path
 
         wombat_config = load_yaml(library_path, "electrolyzer.yml")
-        # add external power here after config is loaded
         sim = Simulation(
             library_path=library_path,
             config=wombat_config,
