@@ -79,9 +79,13 @@ class WOMBATElectrolyzerModel(ECOElectrolyzerPerformanceModel):
         # TODO: handle cases where the project is longer than one year.
         # Do the project and divide by the project lifetime using sim.env.simulation_years
 
-        hydrogen_out = outputs["hydrogen_out"].copy()
+        # Only support single electrolyzer systems for now, check the size of the returned values
+        availability_values = sim.metrics.operations[sim.metrics.electrolyzer_id].values
+        if availability_values.shape[1] > 1:
+            raise ValueError("Only single electrolyzer systems are supported at this time.")
+        availability = availability_values.flatten()
 
-        availability = sim.metrics.operations[["ELC1"]].values.flatten()
+        original_hydrogen_out = outputs["hydrogen_out"].copy()
 
         # Adjust hydrogen_out by availability
         hydrogen_out_with_availability = outputs["hydrogen_out"] * availability
@@ -94,7 +98,7 @@ class WOMBATElectrolyzerModel(ECOElectrolyzerPerformanceModel):
 
         # Compute percent hydrogen lost due to O&M maintenance
         percent_hydrogen_lost = 100 * (
-            1 - outputs["total_hydrogen_produced"] / np.sum(hydrogen_out)
+            1 - outputs["total_hydrogen_produced"] / np.sum(outputs["hydrogen_out"])
         )
 
         outputs["percent_hydrogen_lost"] = percent_hydrogen_lost
@@ -104,6 +108,10 @@ class WOMBATElectrolyzerModel(ECOElectrolyzerPerformanceModel):
         outputs["electrolyzer_availability"] = sim.metrics.time_based_availability(
             "annual", "electrolyzer"
         ).values[0]
+        sim.metrics.potential[sim.metrics.electrolyzer_id] = original_hydrogen_out
+        sim.metrics.production[sim.metrics.electrolyzer_id] = hydrogen_out_with_availability
+
+        # CF calculation goes here
         outputs["capacity_factor"] = sim.metrics.capacity_factor(
             which="net", frequency="project", by="electrolyzer"
         ).values[0][0]
