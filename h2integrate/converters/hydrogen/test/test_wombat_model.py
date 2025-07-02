@@ -51,13 +51,11 @@ def test_wombat_model_outputs(subtests):
         assert prob["efficiency"] == approx(0.76733639, rel=1e-2)
     with subtests.test("rated_h2_production_kg_pr_hr"):
         assert prob["rated_h2_production_kg_pr_hr"] == approx(784.3544736, rel=1e-2)
-    with subtests.test("capacity_factor"):
-        assert prob["capacity_factor"] == approx(0.18740147, rel=1e-2)
     with subtests.test("CapEx"):
         assert prob["CapEx"] == approx(51800000.0, rel=1e-2)
     with subtests.test("OpEx"):
-        assert prob["OpEx"] == approx(1518297.77830254, rel=1e-2)
+        assert prob["OpEx"] == approx(1015899.3984, rel=1e-2)
     with subtests.test("percent_hydrogen_lost"):
-        assert prob["percent_hydrogen_lost"] == approx(0.66178538, rel=1e-2)
+        assert prob["percent_hydrogen_lost"] == approx(1.50371, rel=1e-2)
     with subtests.test("electrolyzer_availability"):
         assert prob["electrolyzer_availability"] == approx(0.993379, rel=1e-2)

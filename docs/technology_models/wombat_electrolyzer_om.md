@@ -72,4 +72,3 @@ The WOMBAT electrolyzer model provides the following outputs:
 - **OpEx**: Annual operational expenditure, based on simulated maintenance events
 - **CapEx**: Capital expenditure (from configuration)
 - **electrolyzer_availability**: Simulated time-based availability
-- **capacity_factor**: Actual capacity factor, accounting for downtime

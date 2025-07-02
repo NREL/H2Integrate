@@ -88,7 +88,7 @@ vessels:
     max_waveheight_repair: 99
     onsite: false
     mobilization_cost: 1500
-    mobilization_days: 0
+    mobilization_days: 1
     charter_days: 20
     port_distance: 30
     crew_transfer_time: 0.1
@@ -99,39 +99,7 @@ vessels:
       hourly_rate: 0
       n_hourly_rate: 0
 electrolyzers:
-  test_electrolyzer_poly:
-    stack_capacity_kw: 1000
-    capex_kw: 800
-    n_stacks: 1
-    power_curve:
-      p1: 4.0519644766515644e-08
-      p2: -0.00026186723338675105
-      p3: 3.8985774154190334
-      p4: 7.615382921418666
-      p5: -20.075110413404484
-      FE: 0.9999999
-      n_cells: 135
-      turndown_ratio: 0.1
-    power_system:
-      name: Power System
-      maintenance:
-      - description: Hydrogen in oxygen sensor
-        time: 1
-        materials: 1110
-        service_equipment: OFS
-        frequency: 3
-        frequency_basis: months
-      failures:
-      -
-        scale: 0
-        shape: 0
-        time: 0
-        materials: 0
-        service_equipment: [OFS]
-        operation_reduction: 0
-        level: 1
-        description: n/a
-  test_electrolyzer_linear:
+  central_electrolyzer:
     stack_capacity_kw: 1000
     capex_kw: 800
     n_stacks: 1
@@ -145,10 +113,10 @@ electrolyzers:
       maintenance:
       - description: DC current transducer
         time: 40
-        materials: 600
+        materials: 1200
         service_equipment: OFS
         frequency: 5
-        frequency_basis: years
+        frequency_basis: months
       failures:
       -
         scale: 0

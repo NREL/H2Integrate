@@ -29,7 +29,7 @@ class WOMBATElectrolyzerModel(ECOElectrolyzerPerformanceModel):
 
     This class extends ECOElectrolyzerPerformanceModel and configures the WOMBAT model based
     on provided technology configuration inputs. It sets up output variables related to
-    electrolyzer performance, including capacity factor, CapEx, OpEx, percent hydrogen
+    electrolyzer performance, including CapEx, OpEx, percent hydrogen
     lost due to operations and maintenance (O&M), and electrolyzer availability.
     """
 
@@ -39,7 +39,6 @@ class WOMBATElectrolyzerModel(ECOElectrolyzerPerformanceModel):
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance")
         )
 
-        self.add_output("capacity_factor", val=0.0, units=None)
         self.add_output("CapEx", val=0.0, units="USD", desc="Capital expenditure")
         self.add_output("OpEx", val=0.0, units="USD/year", desc="Operational expenditure")
         self.add_output(
@@ -98,7 +97,7 @@ class WOMBATElectrolyzerModel(ECOElectrolyzerPerformanceModel):
 
         # Compute percent hydrogen lost due to O&M maintenance
         percent_hydrogen_lost = 100 * (
-            1 - outputs["total_hydrogen_produced"] / np.sum(outputs["hydrogen_out"])
+            1 - outputs["total_hydrogen_produced"] / np.sum(original_hydrogen_out)
         )
 
         outputs["percent_hydrogen_lost"] = percent_hydrogen_lost
@@ -108,10 +107,3 @@ class WOMBATElectrolyzerModel(ECOElectrolyzerPerformanceModel):
         outputs["electrolyzer_availability"] = sim.metrics.time_based_availability(
             "annual", "electrolyzer"
         ).values[0]
-        sim.metrics.potential[sim.metrics.electrolyzer_id] = original_hydrogen_out
-        sim.metrics.production[sim.metrics.electrolyzer_id] = hydrogen_out_with_availability
-
-        # CF calculation goes here
-        outputs["capacity_factor"] = sim.metrics.capacity_factor(
-            which="net", frequency="project", by="electrolyzer"
-        ).values[0][0]

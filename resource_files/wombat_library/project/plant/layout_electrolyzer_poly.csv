@@ -1,4 +1,4 @@
 ﻿id,substation_id,name,type,longitude,latitude,string,order,distance,subassembly,upstream_cable
 OSS1,OSS1,OSS1,substation,0,0,,,,offshore_substation,export
-ELC1,OSS1,ELC1,electrolyzer,0,0,,,,test_electrolyzer_poly,export
+ELC1,OSS1,ELC1,electrolyzer,0,0,,,,central_electrolyzer,export
 S00T1,OSS1,WTG001,turbine,0,0,0,0,0,vestas_v90,export
