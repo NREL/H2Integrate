@@ -29,7 +29,7 @@ class WOMBATElectrolyzerModel(ECOElectrolyzerPerformanceModel):
 
     This class extends ECOElectrolyzerPerformanceModel and configures the WOMBAT model based
     on provided technology configuration inputs. It sets up output variables related to
-    electrolyzer performance, including CapEx, OpEx, percent hydrogen
+    electrolyzer performance, including capacity factor, CapEx, OpEx, percent hydrogen
     lost due to operations and maintenance (O&M), and electrolyzer availability.
     """
 
@@ -39,6 +39,7 @@ class WOMBATElectrolyzerModel(ECOElectrolyzerPerformanceModel):
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance")
         )
 
+        self.add_output("capacity_factor", val=0.0, units=None)
         self.add_output("CapEx", val=0.0, units="USD", desc="Capital expenditure")
         self.add_output("OpEx", val=0.0, units="USD/year", desc="Operational expenditure")
         self.add_output(
@@ -65,13 +66,28 @@ class WOMBATElectrolyzerModel(ECOElectrolyzerPerformanceModel):
             library_path = Path(__file__).parents[3] / library_path
 
         wombat_config = load_yaml(library_path, "electrolyzer.yml")
+
+        # do a manual check to make sure that stack_capacity_kw * n_stacks is equal to the rating
+        stack_capacity_mw = (
+            wombat_config["electrolyzers"]["central_electrolyzer"]["stack_capacity_kw"] * 1e-3
+        )
+        n_stacks = wombat_config["electrolyzers"]["central_electrolyzer"]["n_stacks"]
+        if self.config.rating != stack_capacity_mw * n_stacks:
+            raise ValueError(
+                f"Electrolyzer rating {self.config.rating} does not match the product of "
+                f"stack capacity {stack_capacity_mw} and number of stacks "
+                f"{n_stacks} in the WOMBAT config. "
+                "Ensure that the rating is equal to stack_capacity_kw * n_stacks."
+            )
+
         sim = Simulation(
             library_path=library_path,
             config=wombat_config,
             random_seed=314,
         )
 
-        sim.run(delete_logs=True, save_metrics_inputs=False)
+        # The "until" parameter is set to 8760 to simulate one year of operation.
+        sim.run(delete_logs=True, save_metrics_inputs=False, until=8760)
 
         scaling_factor = self.config.rating  # The baseline electrolyzer in WOMBAT is 1MW
 
@@ -102,8 +118,21 @@ class WOMBATElectrolyzerModel(ECOElectrolyzerPerformanceModel):
 
         outputs["percent_hydrogen_lost"] = percent_hydrogen_lost
 
+        # We're currently grabbing the annual measure and since we're enforcing a single year,
+        # that's fine. In the future we may need to adjust this to handle multiple years and
+        # output OpEx as an array.
         outputs["CapEx"] = self.config.electrolyzer_capex * self.config.rating * 1e3
-        outputs["OpEx"] = sim.metrics.opex("annual").iloc[0, 0] * scaling_factor
+        outputs["OpEx"] = sim.metrics.opex("annual").squeeze() * scaling_factor
         outputs["electrolyzer_availability"] = sim.metrics.time_based_availability(
             "annual", "electrolyzer"
-        ).values[0]
+        ).squeeze()
+
+        sim.metrics.potential[sim.metrics.electrolyzer_id] = np.atleast_2d(original_hydrogen_out).T
+        sim.metrics.production[sim.metrics.electrolyzer_id] = np.atleast_2d(
+            hydrogen_out_with_availability
+        ).T
+
+        # CF calculation goes here
+        outputs["capacity_factor"] = sim.metrics.capacity_factor(
+            which="net", frequency="project", by="electrolyzer"
+        ).squeeze()

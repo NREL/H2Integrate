@@ -62,6 +62,10 @@ For a full example, see the `10_electrolyzer_om` example in the `examples/` dire
 The provided electrolyzer library and associated O&M costs in this model are illustrative and do not represent real-world or proprietary data. Actual O&M costs and failure rates can vary significantly depending on technology, vendor, and operating environment. Because we cannot publish actual numbers, users are strongly encouraged to conduct their own research and data collection to ensure the model inputs reflect their specific use case and the most current industry information.
 ```
 
+```{note}
+The WOMBAT model is designed to simulate a single electrolyzer unit for one year. If you need to model multiple units or longer time periods, you may need to adjust the H2Integrate source code accordingly.
+```
+
 ## Key Outputs
 
 The WOMBAT electrolyzer model provides the following outputs:

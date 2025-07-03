@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 import openmdao.api as om
 from pytest import approx
 
@@ -51,6 +52,8 @@ def test_wombat_model_outputs(subtests):
         assert prob["efficiency"] == approx(0.76733639, rel=1e-2)
     with subtests.test("rated_h2_production_kg_pr_hr"):
         assert prob["rated_h2_production_kg_pr_hr"] == approx(784.3544736, rel=1e-2)
+    with subtests.test("capacity_factor"):
+        assert prob["capacity_factor"] == approx(0.75637315, rel=1e-2)
     with subtests.test("CapEx"):
         assert prob["CapEx"] == approx(51800000.0, rel=1e-2)
     with subtests.test("OpEx"):
@@ -59,3 +62,44 @@ def test_wombat_model_outputs(subtests):
         assert prob["percent_hydrogen_lost"] == approx(1.50371, rel=1e-2)
     with subtests.test("electrolyzer_availability"):
         assert prob["electrolyzer_availability"] == approx(0.993379, rel=1e-2)
+
+
+def test_wombat_error(subtests):
+    prob = om.Problem()
+    prob.model.add_subsystem(
+        "wombat_model",
+        WOMBATElectrolyzerModel(
+            plant_config={
+                "plant": {
+                    "plant_life": 20,
+                },
+            },
+            tech_config={
+                "model_inputs": {
+                    "shared_parameters": {
+                        "rating": 30.0,
+                        "location": "onshore",
+                        "electrolyzer_capex": 1295,
+                        "sizing": {
+                            "resize_for_enduse": False,
+                            "size_for": "BOL",
+                            "hydrogen_dmd": None,
+                        },
+                        "cluster_rating_MW": 40,
+                        "pem_control_type": "basic",
+                        "eol_eff_percent_loss": 13,
+                        "uptime_hours_until_eol": 80000.0,
+                        "include_degradation_penalty": True,
+                        "turndown_ratio": 0.1,
+                        "library_path": "resource_files/wombat_library",
+                    },
+                }
+            },
+        ),
+        promotes=["*"],
+    )
+    prob.setup()
+    prob.set_val("electricity_in", np.ones(8760) * 40.0, units="MW")
+
+    with pytest.raises(ValueError, match="Electrolyzer rating .* does not match the product of"):
+        prob.run_model()
