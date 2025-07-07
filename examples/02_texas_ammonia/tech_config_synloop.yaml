@@ -1,0 +1,43 @@
+name: "technology_config"
+description: "This hybrid plant produces ammonia"
+
+technologies:
+  ammonia:
+    performance_model:
+      model: "synloop_ammonia_performance"
+    cost_model:
+      model: "synloop_ammonia_cost"
+    model_inputs:
+      shared_parameters:
+        production_capacity: 52777.6
+        catalyst_consumption_rate: 0.000091295354067341
+        catalyst_repalcement_interval: 3
+      performance_parameters:
+        energy_demand: 0.530645243
+        nitrogen_conversion_rate: 1
+        hydrogen_conversion_rate: 1
+        ammonia_conversion_eff: 1
+        heat_output: 0
+      cost_parameters:
+        baseline_capacity: 52777.6
+        base_cost_year: 2016
+        capex_scaling_exponent: 0.6
+        labor_scaling_exponent: 0.25
+        synloop_capex_base: 41148900
+        heat_capex_base: 7069100
+        cool_capex_base: 4799200
+        land_capex_base: 4112701.84103543
+        deprec_noneq_capex: 0.42
+        labor_rate_base: 57
+        num_workers_base: 50
+        hours_yr: 2080
+        gen_admin: 0.2
+        prop_tax_ins: 0.02
+        oxygen_byproduct_rate: 0.29405077250145
+        water_consumption_rate: 0.049236824
+        rebuild_cost: 0
+        hydrogen_cost: 4.83
+        electricity_cost: 0.0698251854259061
+        cooling_water_cost: 0.00516275276753 # # 2022 USD/gal
+        catalyst_cost: 23.19977341
+        oxygen_price: 0.0285210891617726

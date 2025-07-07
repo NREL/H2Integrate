@@ -24,7 +24,7 @@ class AmmoniaSynLoopPerformanceConfig(BaseConfig):
         ammonia_conversion_eff (float): The total mass percentage of nitrogen and hydrogen
             converted to ammonia in the synthesis loop (as a deciamal).
         *catalyst_consumption_rate (float): The mass ratio of catalyst consumed by the reactor over
-            its lifetime to ammonia produced
+            its lifetime to ammonia produced (in kg catalyst / kg ammonia)
         *catalyst_replacement_interval (float): The interval in years when the catalyst is replaced
         heat_output (float): The total heat output of the ammonia synthesis loop
             (in MWh thermal per kg ammonia)
@@ -190,7 +190,7 @@ class AmmoniaSynLoopCostConfig(BaseConfig):
         cool_capex_base (float) : Baseline capital expenditure for the cooling tower [$].
         other_direct_capex_base (float): Other baseline direct capital expenditures [$].
         land_capex_base (float): Baseline capital expenditure for land to construct the plant [$].
-        deprec_noneq_capex_base (float): Baseline depreciable nonequipment capital expenditures [$].
+        deprec_noneq_capex_rate (float): Fraction of eqpt capex for depreciable nonequipment [$].
         ---OPEX---
         labor_rate_base (float) : Baseline all-in labor rate [$/hr].
         num_workers_base (float) : Baseline number of workers for the entire ammonia plant [-].
@@ -202,12 +202,13 @@ class AmmoniaSynLoopCostConfig(BaseConfig):
             its lifetime to ammonia produced
         *catalyst_consumption_rate (float): The mass ratio of catalyst consumed by the reactor over
             its lifetime to ammonia produced
+        *catalyst_replacement_interval (float): The interval in years when the catalyst is replaced
         rebuild_cost (float): Cost to teardown/rebuild reactor after catalyst replacement [USD].
         ---Feedstock Costs---
-        hydrogen_price
-        electricity_price
-        cooling_water_price
-        catalyst_price
+        hydrogen_cost
+        electricity_cost
+        cooling_water_cost
+        catalyst_cost
         oxygen_price
 
     """
