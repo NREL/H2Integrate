@@ -3,6 +3,7 @@ import openmdao.api as om
 from attrs import field, define
 
 from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
+from h2integrate.tools.inflation.inflate import inflate_cpi, inflate_cepci
 
 
 @define
@@ -78,6 +79,10 @@ class AmmoniaSynLoopPerformanceModel(om.ExplicitComponent):
         Total catalyst mass needed in synthesis loop.
     total_ammonia_produced : float [kg/year]
         Total ammonia produced over the modeled period.
+    total_hydrogen_consumed : float [kg/year]
+        Total hydrogen consumed over the modeled period.
+    total_electricity_consumed : float [kWh/year]
+        Total electricity consumed over the modeled period.
     Notes
     -----
     The ammonia production is limited by the most constraining input (hydrogen,
@@ -121,6 +126,8 @@ class AmmoniaSynLoopPerformanceModel(om.ExplicitComponent):
         )
         self.add_output("catalyst_mass", val=0.0, units="kg")
         self.add_output("total_ammonia_produced", val=0.0, units="kg/year")
+        self.add_output("total_hydrogen_consumed", val=0.0, units="kg/year")
+        self.add_output("total_electricity_consumed", val=0.0, units="kW*h/year")
 
     def compute(self, inputs, outputs):
         # Get config values
@@ -140,12 +147,12 @@ class AmmoniaSynLoopPerformanceModel(om.ExplicitComponent):
 
         # Calculate max NH3 production for each input - all kg NH3 / hr
         nh3_from_h2 = h2_in * nh3_eff / h2_rate
-        nh3_from_n2 = n2_in * nh3_eff / n2_rate
-        nh3_from_elec = elec_in / energy_demand
+        n2_in * nh3_eff / n2_rate
+        elec_in / energy_demand
 
         # Limiting NH3 production per hour
-        nh3_prod = np.minimum.reduce([nh3_from_h2, nh3_from_n2, nh3_from_elec])
-        nh3_prod = np.minimum.reduce([nh3_prod, nh3_cap])
+        nh3_prod = np.minimum.reduce([nh3_from_h2])  # , nh3_from_n2, nh3_from_elec])
+        nh3_prod = np.minimum.reduce([nh3_prod, np.full(8760, nh3_cap)])
 
         # Calculate unused inputs
         used_h2 = nh3_prod * h2_rate
@@ -163,6 +170,8 @@ class AmmoniaSynLoopPerformanceModel(om.ExplicitComponent):
         outputs["heat_out"] = nh3_prod * heat_output
         outputs["catalyst_mass"] = cat_mass
         outputs["total_ammonia_produced"] = nh3_prod.sum()
+        outputs["total_hydrogen_consumed"] = h2_in.sum()
+        outputs["total_electricity_consumed"] = elec_in.sum()
 
 
 @define
@@ -188,33 +197,53 @@ class AmmoniaSynLoopCostConfig(BaseConfig):
         synloop_capex_base (float): Baseline capital expenditure for the synthesis loop [$].
         heat_capex_base (float) : Baseline capital expenditure for the boiler and steam turbine [$].
         cool_capex_base (float) : Baseline capital expenditure for the cooling tower [$].
-        other_direct_capex_base (float): Other baseline direct capital expenditures [$].
+        other_eqpt_capex_base (float): Other baseline direct capital expenditures [$].
         land_capex_base (float): Baseline capital expenditure for land to construct the plant [$].
         deprec_noneq_capex_rate (float): Fraction of eqpt capex for depreciable nonequipment [$].
         ---OPEX---
         labor_rate_base (float) : Baseline all-in labor rate [$/hr].
         num_workers_base (float) : Baseline number of workers for the entire ammonia plant [-].
         hours_yr (float) : Work hours per year per worker [hr/year].
-        gen_admin (float) : General and administrative expenses as a percentage of labor [pct].
-        prop_tax_ins (float) : Property tax and insurance as a percentage of labor [pct].
-        oxygen_byproduct_rate
-        water_consumption_rate (float): The mass ratio of cooling water consumed by the reactor over
-            its lifetime to ammonia produced
+        gen_admin (float) : General and administrative expenses as a fraction of labor [-].
+        prop_tax_ins (float) : Property tax and insurance as a fraction of total capex [-].
+        maint_rep (float) : Maintenance and repair cost as a fraction of equipment capex [-].
+        oxygen_byproduct_rate (float): Rate at which oxygen byproduct is generated [kg O2/kg NH3]
+        water_consumption_rate (float): Ratio of cooling water consumed by the reactor [gal/kg NH3]
         *catalyst_consumption_rate (float): The mass ratio of catalyst consumed by the reactor over
             its lifetime to ammonia produced
         *catalyst_replacement_interval (float): The interval in years when the catalyst is replaced
-        rebuild_cost (float): Cost to teardown/rebuild reactor after catalyst replacement [USD].
+        rebuild_cost_base (float): Cost to rebuild baseline reactor for catalyst replacement [USD].
         ---Feedstock Costs---
-        hydrogen_cost
-        electricity_cost
-        cooling_water_cost
-        catalyst_cost
-        oxygen_price
-
+        cooling_water_cost_base (float): Cost of cooling water [$/gal H2O]
+        catalyst_cost_base (float): Cost of iron-based catalyst [$/kg cat]
+        oxygen_price_base (float): Sales price of oxygen co-product [$/kg O2]
     """
 
-    capex: float = field()
-    rebuild_cost: float = field()
+    production_capacity: float = field()
+    baseline_capacity: float = field()
+    base_cost_year: int = field()
+    capex_scaling_exponent: float = field()
+    labor_scaling_exponent: float = field()
+    synloop_capex_base: float = field()
+    heat_capex_base: float = field()
+    cool_capex_base: float = field()
+    other_eqpt_capex_base: float = field()
+    land_capex_base: float = field()
+    deprec_noneq_capex_rate: float = field()
+    labor_rate_base: float = field()
+    num_workers_base: float = field()
+    hours_yr: float = field()
+    gen_admin: float = field()
+    prop_tax_ins: float = field()
+    maint_rep: float = field()
+    oxygen_byproduct_rate: float = field()
+    water_consumption_rate: float = field()
+    catalyst_consumption_rate: float = field()
+    catalyst_replacement_interval: float = field()
+    rebuild_cost_base: float = field()
+    cooling_water_cost_base: float = field()
+    catalyst_cost_base: float = field()
+    oxygen_price_base: float = field()
 
 
 class AmmoniaSynLoopCostModel(om.ExplicitComponent):
@@ -230,6 +259,16 @@ class AmmoniaSynLoopCostModel(om.ExplicitComponent):
     config : AmmoniaSynLoopCostConfig
         Configuration object containing CapEx and annual rebuild cost.
 
+    Inputs
+    -------
+    total_ammonia_produced : float [kg/year]
+        Total ammonia produced over the modeled period.
+    total_hydrogen_consumed : float [kg/year]
+        Total hydrogen consumed over the modeled period.
+    total_electricity_consumed : float [kg/year]
+        Total electricity consumed over the modeled period.
+    LCOH : float [USD/kg H2]
+        Levelized cost of hydrogen, from hydrogen production module
     Outputs
     -------
     CapEx : float [$]
@@ -250,10 +289,102 @@ class AmmoniaSynLoopCostModel(om.ExplicitComponent):
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost")
         )
 
+        self.add_input("total_ammonia_produced", val=0.0, units="kg/year")
+        self.add_input("total_hydrogen_consumed", val=0.0, units="kg/year")
+        self.add_input("total_electricity_consumed", val=0.0, units="kW*h/year")
+        self.add_input("LCOH", val=0.0, units="USD/kg", desc="Cost per kg of hydrogen")
         self.add_output("CapEx", val=0.0, units="USD")
         self.add_output("OpEx", val=0.0, units="USD/year")
 
     def compute(self, inputs, outputs):
+        ##---Scaling Ratios---
+
         # Get config values
-        outputs["CapEx"] = self.config.capex
-        outputs["OpEx"] = self.config.rebuild_cost
+        capacity = self.config.production_capacity  # kg NH3 / hr
+        base_cap = self.config.baseline_capacity  # kg NH3 / hr
+        year = self.options["plant_config"]["plant"]["cost_year"]  # dollar year
+        base_year = self.config.base_cost_year  # dollar year
+        capex_exp = self.config.capex_scaling_exponent  # unitless
+        labor_exp = self.config.labor_scaling_exponent  # unitless
+
+        # Get ratios
+        cap_ratio = capacity / base_cap
+        cepci_ratio = inflate_cepci(1, base_year, year)
+        cpi_ratio = inflate_cpi(1, base_year, year)
+        capex_ratio = cap_ratio**capex_exp
+        labor_ratio = cap_ratio**labor_exp
+
+        ##---CAPEX---
+
+        # Get config values
+        synloop_capex_base = self.config.synloop_capex_base  # USD (base year)
+        heat_capex_base = self.config.heat_capex_base  # USD (base year)
+        cool_capex_base = self.config.cool_capex_base  # USD (base year)
+        other_eqpt_capex_base = self.config.other_eqpt_capex_base  # USD (base year)
+        land_capex_base = self.config.land_capex_base  # USD (base year)
+        deprec_noneq_capex_rate = self.config.deprec_noneq_capex_rate  # unitless
+
+        # Apply scaling
+        synloop_capex = synloop_capex_base * capex_ratio * cepci_ratio
+        heat_capex = heat_capex_base * capex_ratio * cepci_ratio
+        cool_capex = cool_capex_base * capex_ratio * cepci_ratio
+        other_eqpt_capex = other_eqpt_capex_base * capex_ratio * cepci_ratio
+        land_capex = land_capex_base * capex_ratio * cpi_ratio  # Using CPI not CEPCI for land
+
+        # Calculate capex - all in USD
+        eqpt_capex = synloop_capex + heat_capex + cool_capex + other_eqpt_capex
+        deprec_noneq_capex = land_capex + eqpt_capex * deprec_noneq_capex_rate
+        total_capex = eqpt_capex + deprec_noneq_capex
+
+        ##---Fixed OPEX---
+
+        # Get config values
+        labor_rate_base = self.config.labor_rate_base  # USD / hr (base year)
+        num_workers_base = self.config.num_workers_base  # Workers / plant (base capacity)
+        hours_yr = self.config.hours_yr  # hours / year
+        gen_admin = self.config.gen_admin  # fraction of labor
+        prop_tax_ins = self.config.prop_tax_ins  # fraction of total capex
+        maint_rep = self.config.maint_rep  # fraction of equipment capex
+
+        # Apply scaling
+        labor_rate = labor_rate_base * cpi_ratio
+        num_workers = num_workers_base * labor_ratio
+
+        # Calculate fixed opex - all in USD/year
+        labor_opex = labor_rate * num_workers * hours_yr
+        gen_admin_opex = labor_opex * gen_admin
+        prop_tax_ins_opex = prop_tax_ins * total_capex
+        maint_rep_opex = maint_rep * eqpt_capex
+        fixed_opex = labor_opex = gen_admin_opex + prop_tax_ins_opex + maint_rep_opex
+
+        ##---Variable OPEX---
+
+        # Get config values
+        o2_rate = self.config.oxygen_byproduct_rate  # kg O2 / kg NH3
+        h2o_rate = self.config.water_consumption_rate  # kg O2 / kg NH3
+        cat_rate = self.config.catalyst_consumption_rate  # kg O2 / kg NH3
+        cat_int = self.config.catalyst_replacement_interval  # kg O2 / kg NH3
+        rebuild_cost_base = self.config.rebuild_cost_base  # USD
+        h2o_cost_base = self.config.cooling_water_cost_base  # USD / kg H2O
+        cat_cost_base = self.config.catalyst_cost_base  # USD / kg cat
+        o2_price_base = self.config.oxygen_price_base  # USD / kg O2
+
+        # Get total production/consumption
+        nh3_prod = inputs["total_ammonia_produced"]  # kg NH3 /year
+
+        # Apply scaling
+        rebuild_cost = rebuild_cost_base * capex_ratio * cepci_ratio
+        h2o_cost = h2o_cost_base * cpi_ratio
+        cat_cost = cat_cost_base * cpi_ratio
+        o2_price = o2_price_base * cpi_ratio
+
+        # Calculate variable opex - all in USD/year
+        rebuild_opex = rebuild_cost * cat_int
+        cat_opex = cat_cost * cat_rate * nh3_prod
+        h2o_opex = h2o_cost * h2o_rate * nh3_prod
+        o2_opex = -1 * o2_price * o2_rate * nh3_prod
+        variable_opex = rebuild_opex + cat_opex + h2o_opex + o2_opex
+
+        ##---Final Outputs---
+        outputs["CapEx"] = total_capex
+        outputs["OpEx"] = fixed_opex + variable_opex
