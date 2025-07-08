@@ -17,6 +17,24 @@ except ImportError:
     echem_mcc = None
 
 
+def setup_electrodialysis_inputs(config):
+    """Helper function to set up electrodialysis inputs from the configuration."""
+    return echem_mcc.ElectrodialysisInputs(
+        P_ed1=config.power_single_ed_w,
+        Q_ed1=config.flow_rate_single_ed_m3s,
+        N_edMin=config.number_ed_min,
+        N_edMax=config.number_ed_max,
+        E_HCl=config.E_HCl,
+        E_NaOH=config.E_NaOH,
+        y_ext=config.y_ext,
+        y_pur=config.y_pur,
+        y_vac=config.y_vac,
+        frac_EDflow=config.frac_ed_flow,
+        use_storage_tanks=config.use_storage_tanks,
+        store_hours=config.store_hours,
+    )
+
+
 @define
 class DOCPerformanceConfig(MarineCarbonCapturePerformanceConfig):
     """Extended configuration for Direct Ocean Capture (DOC) performance model.
@@ -86,20 +104,7 @@ class DOCPerformanceModel(MarineCarbonCapturePerformanceBaseClass):
         )
 
     def compute(self, inputs, outputs):
-        ED_inputs = echem_mcc.ElectrodialysisInputs(
-            P_ed1=self.config.power_single_ed_w,
-            Q_ed1=self.config.flow_rate_single_ed_m3s,
-            N_edMin=self.config.number_ed_min,
-            N_edMax=self.config.number_ed_max,
-            E_HCl=self.config.E_HCl,
-            E_NaOH=self.config.E_NaOH,
-            y_ext=self.config.y_ext,
-            y_pur=self.config.y_pur,
-            y_vac=self.config.y_vac,
-            frac_EDflow=self.config.frac_ed_flow,
-            use_storage_tanks=self.config.use_storage_tanks,
-            store_hours=self.config.store_hours,
-        )
+        ED_inputs = setup_electrodialysis_inputs(self.config)
 
         co_2_outputs, range_outputs, ed_outputs = echem_mcc.run_electrodialysis_physics_model(
             power_profile_w=inputs["electricity_in"],
@@ -154,7 +159,7 @@ class DOCCostModel(MarineCarbonCaptureCostBaseClass):
 
     def setup(self):
         super().setup()
-        self.performance_config = DOCPerformanceConfig.from_dict(
+        self.config = DOCPerformanceConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance")
         )
         self.config = DOCCostModelConfig.from_dict(
@@ -168,21 +173,16 @@ class DOCCostModel(MarineCarbonCaptureCostBaseClass):
             units="m**3",
         )
 
-    def compute(self, inputs, outputs):
-        ED_inputs = echem_mcc.ElectrodialysisInputs(
-            P_ed1=self.performance_config.power_single_ed_w,
-            Q_ed1=self.performance_config.flow_rate_single_ed_m3s,
-            N_edMin=self.performance_config.number_ed_min,
-            N_edMax=self.performance_config.number_ed_max,
-            E_HCl=self.performance_config.E_HCl,
-            E_NaOH=self.performance_config.E_NaOH,
-            y_ext=self.performance_config.y_ext,
-            y_pur=self.performance_config.y_pur,
-            y_vac=self.performance_config.y_vac,
-            frac_EDflow=self.performance_config.frac_ed_flow,
-            use_storage_tanks=self.performance_config.use_storage_tanks,
-            store_hours=self.performance_config.store_hours,
+        self.add_input(
+            "plant_mCC_capacity_mtph",
+            val=0.0,
+            units="t/h",
+            desc="Theoretical plant maximum CO₂ capture (t/h)",
         )
+
+    def compute(self, inputs, outputs):
+        # Set up electrodialysis inputs
+        ED_inputs = setup_electrodialysis_inputs(self.config)
 
         res = echem_mcc.electrodialysis_cost_model(
             echem_mcc.ElectrodialysisCostInputs(

@@ -81,12 +81,6 @@ class MarineCarbonCaptureCostBaseClass(om.ExplicitComponent):
             units="t/year",
             desc="Annual CO₂ captured (t/year)",
         )
-        self.add_input(
-            "plant_mCC_capacity_mtph",
-            val=0.0,
-            units="t/h",
-            desc="Theoretical plant maximum CO₂ capture (t/h)",
-        )
 
         self.add_output("CapEx", val=0.0, units="USD", desc="Total capital expenditure (USD)")
         self.add_output(

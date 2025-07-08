@@ -1,0 +1,61 @@
+name: "technology_config"
+description: "This plant has wind feeding into an electrolyzer with optimization"
+
+technologies:
+  wind:
+    performance_model:
+      model: "wind_plant_performance"
+    cost_model:
+      model: "wind_plant_cost"
+    resource:
+      type: "pysam_wind"
+      wind_speed: 9.
+    model_inputs:
+      shared_parameters:
+        num_turbines: 2
+        turbine_rating_kw: 8300
+      performance_parameters:
+        rotor_diameter: 196.
+        hub_height: 130.
+        layout_mode: "basicgrid"
+        model_name: "pysam"
+        model_input_file: null
+        layout_params:
+          row_D_spacing: 10.
+          turbine_D_spacing: 10.
+        rating_range_kw: [1000, 5000]
+        floris_config: null
+        operational_losses: 10.0
+        timestep: [1, 60]
+        fin_model: "default"
+        name: "UtilityScaleWindPlant"
+        turbine_name: "2023NREL_Bespoke_8.3MW_196" #turbine model to use
+        turbine_group: "onshore"
+        override_wind_resource_height: False
+        adjust_air_density_for_elevation: True
+      cost_parameters:
+        cost_per_kw: 1500.0
+  electrolyzer:
+    performance_model:
+      model: "wombat"
+    cost_model:
+      model: "wombat"
+    model_inputs:
+      shared_parameters:
+        rating: 10. # MW
+        location: "onshore"
+        electrolyzer_capex: 1295 # $/kW overnight installed capital costs for a 1 MW system in 2022
+        sizing:
+          resize_for_enduse: False
+          size_for: 'BOL' #'BOL' (generous) or 'EOL' (conservative)
+          hydrogen_dmd:
+        cluster_rating_MW: 10
+        pem_control_type: 'basic'
+        eol_eff_percent_loss: 13 #eol defined as x% change in efficiency from bol
+        uptime_hours_until_eol: 80000. #number of 'on' hours until electrolyzer reaches eol
+        include_degradation_penalty: True #include degradation
+        turndown_ratio: 0.1 #turndown_ratio = minimum_cluster_power/cluster_rating_MW
+        library_path: "resource_files/wombat_library"
+
+      financial_parameters:
+        replacement_cost_percent: 0.15 # percent of capex - H2A default case
