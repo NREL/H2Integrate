@@ -18,12 +18,10 @@ class AmmoniaSynLoopPerformanceConfig(BaseConfig):
             (in kg ammonia per hour)
         energy_demand (float): The total energy demand of the ammonia synthesis loop
             (in MWh electricity per kg ammonia).
-        nitrogen_conversion_rate (float): The mass fraction of nitrogen converted to ammonia in
-            the synthesis loop (as a decimal).
-        hydrogen_conversion_rate (float): The mass fraction of hydrogen converted to ammonia in
-            the synthesis loop (as a decimal).
-        ammonia_conversion_eff (float): The total mass percentage of nitrogen and hydrogen
-            converted to ammonia in the synthesis loop (as a deciamal).
+        nitrogen_consumption_rate (float): The mass ratio of nitrogen consumed to ammonia produced
+            in the synthesis loop (as a decimal).
+        hydrogen_consumption_rate (float): The mass ratio of hydrogen consumed to ammonia produced
+            in the synthesis loop (as a decimal).
         *catalyst_consumption_rate (float): The mass ratio of catalyst consumed by the reactor over
             its lifetime to ammonia produced (in kg catalyst / kg ammonia)
         *catalyst_replacement_interval (float): The interval in years when the catalyst is replaced
@@ -33,9 +31,8 @@ class AmmoniaSynLoopPerformanceConfig(BaseConfig):
 
     production_capacity: float = field()
     energy_demand: float = field()
-    nitrogen_conversion_rate: float = field()
-    hydrogen_conversion_rate: float = field()
-    ammonia_conversion_eff: float = field()
+    nitrogen_consumption_rate: float = field()
+    hydrogen_consumption_rate: float = field()
     catalyst_consumption_rate: float = field()
     catalyst_replacement_interval: float = field()
     heat_output: float = field()
@@ -133,9 +130,8 @@ class AmmoniaSynLoopPerformanceModel(om.ExplicitComponent):
         # Get config values
         nh3_cap = self.config.production_capacity  # kg NH3 per hour
         energy_demand = self.config.energy_demand  # MWh per kg NH3
-        n2_rate = self.config.nitrogen_conversion_rate  # kg N2 per kg NH3
-        h2_rate = self.config.hydrogen_conversion_rate  # kg H2 per kg NH3
-        nh3_eff = self.config.ammonia_conversion_eff  # kg NH3 per (kg H2 + kg N2)
+        n2_rate = self.config.nitrogen_consumption_rate  # kg N2 per kg NH3
+        h2_rate = self.config.hydrogen_consumption_rate  # kg H2 per kg NH3
         cat_consume = self.config.catalyst_consumption_rate  # kg Cat per kg NH3
         cat_replace = self.config.catalyst_replacement_interval  # years
         heat_output = self.config.heat_output  # MWh per kg NH3
@@ -146,9 +142,9 @@ class AmmoniaSynLoopPerformanceModel(om.ExplicitComponent):
         elec_in = inputs["electricity_in"]
 
         # Calculate max NH3 production for each input - all kg NH3 / hr
-        nh3_from_h2 = h2_in * nh3_eff / h2_rate
-        n2_in * nh3_eff / n2_rate
-        elec_in / energy_demand
+        nh3_from_h2 = h2_in / h2_rate
+        # nh3_from_n2 = n2_in / n2_rate #TODO: Get nitrogen_in
+        # nh3_from_elec = elec_in / energy_demand #TODO: Get electricity_in
 
         # Limiting NH3 production per hour
         nh3_prod = np.minimum.reduce([nh3_from_h2])  # , nh3_from_n2, nh3_from_elec])
@@ -194,6 +190,7 @@ class AmmoniaSynLoopCostConfig(BaseConfig):
         labor_scaling_exponent (float): Power applied to ratio of capacities when calculating labor
             cost from a baseline value at a different capacity.
         ---CAPEX---
+        asu_capex_base (float): Baseline capital expenditure for the air separation unit [$].
         synloop_capex_base (float): Baseline capital expenditure for the synthesis loop [$].
         heat_capex_base (float) : Baseline capital expenditure for the boiler and steam turbine [$].
         cool_capex_base (float) : Baseline capital expenditure for the cooling tower [$].
@@ -224,6 +221,7 @@ class AmmoniaSynLoopCostConfig(BaseConfig):
     base_cost_year: int = field()
     capex_scaling_exponent: float = field()
     labor_scaling_exponent: float = field()
+    asu_capex_base: float = field()
     synloop_capex_base: float = field()
     heat_capex_base: float = field()
     cool_capex_base: float = field()
@@ -267,17 +265,34 @@ class AmmoniaSynLoopCostModel(om.ExplicitComponent):
         Total hydrogen consumed over the modeled period.
     total_electricity_consumed : float [kg/year]
         Total electricity consumed over the modeled period.
-    LCOH : float [USD/kg H2]
-        Levelized cost of hydrogen, from hydrogen production module
     Outputs
     -------
     CapEx : float [$]
         Capital expenditure for the synthesis loop.
     OpEx : float [$ per year]
         Annual operating expenditure (catalyst replacement/rebuild).
-    Notes
-    -----
-    This model assumes all OpEx is due to annualized catalyst replacement/rebuild.
+    capex_asu : float [$]
+        Capital cost for air separation unit
+    capex_synloop : float [$]
+        Capital cost for NH3 synthesis loop
+    capex_boiler : float [$]
+        Capital cost for boilers
+    capex_cooling_tower : float [$]
+        Capital cost for cooling towers
+    capex_direct : float [$]
+        Direct capital costs
+    capex_depreciable_nonequipment : float [$]
+        Depreciable non-equipment capital costs",
+    land_cost : float [$]
+        Cost of land
+    labor_cost : float [$]
+        Annual labor cost")
+    general_administration_cost : float [$]
+        Annual general and administrative cost
+    property_tax_insurance : float [$]
+        Annual property tax and insurance cost",
+    maintenance_cost : float [$]
+        Annual maintenance cost
     """
 
     def initialize(self):
@@ -292,9 +307,43 @@ class AmmoniaSynLoopCostModel(om.ExplicitComponent):
         self.add_input("total_ammonia_produced", val=0.0, units="kg/year")
         self.add_input("total_hydrogen_consumed", val=0.0, units="kg/year")
         self.add_input("total_electricity_consumed", val=0.0, units="kW*h/year")
-        self.add_input("LCOH", val=0.0, units="USD/kg", desc="Cost per kg of hydrogen")
         self.add_output("CapEx", val=0.0, units="USD")
         self.add_output("OpEx", val=0.0, units="USD/year")
+        self.add_output(
+            "capex_asu", val=0.0, units="USD", desc="Capital cost for air separation unit"
+        )
+        self.add_output(
+            "capex_synloop", val=0.0, units="USD", desc="Capital cost for NH3 synthesis loop"
+        )
+        self.add_output("capex_boiler", val=0.0, units="USD", desc="Capital cost for boilers")
+        self.add_output(
+            "capex_cooling_tower", val=0.0, units="USD", desc="Capital cost for cooling towers"
+        )
+        self.add_output("capex_direct", val=0.0, units="USD", desc="Direct capital costs")
+        self.add_output(
+            "capex_depreciable_nonequipment",
+            val=0.0,
+            units="USD",
+            desc="Depreciable non-equipment capital costs",
+        )
+        self.add_output("land_cost", val=0.0, units="USD", desc="Cost of land")
+
+        self.add_output("labor_cost", val=0.0, units="USD/year", desc="Annual labor cost")
+        self.add_output(
+            "general_administration_cost",
+            val=0.0,
+            units="USD/year",
+            desc="Annual general and administrative cost",
+        )
+        self.add_output(
+            "property_tax_insurance",
+            val=0.0,
+            units="USD/year",
+            desc="Annual property tax and insurance cost",
+        )
+        self.add_output(
+            "maintenance_cost", val=0.0, units="USD/year", desc="Annual maintenance cost"
+        )
 
     def compute(self, inputs, outputs):
         ##---Scaling Ratios---
@@ -317,6 +366,7 @@ class AmmoniaSynLoopCostModel(om.ExplicitComponent):
         ##---CAPEX---
 
         # Get config values
+        asu_capex_base = self.config.asu_capex_base  # USD (base year)
         synloop_capex_base = self.config.synloop_capex_base  # USD (base year)
         heat_capex_base = self.config.heat_capex_base  # USD (base year)
         cool_capex_base = self.config.cool_capex_base  # USD (base year)
@@ -325,14 +375,15 @@ class AmmoniaSynLoopCostModel(om.ExplicitComponent):
         deprec_noneq_capex_rate = self.config.deprec_noneq_capex_rate  # unitless
 
         # Apply scaling
+        asu_capex = asu_capex_base * capex_ratio * cepci_ratio
         synloop_capex = synloop_capex_base * capex_ratio * cepci_ratio
         heat_capex = heat_capex_base * capex_ratio * cepci_ratio
         cool_capex = cool_capex_base * capex_ratio * cepci_ratio
         other_eqpt_capex = other_eqpt_capex_base * capex_ratio * cepci_ratio
-        land_capex = land_capex_base * capex_ratio * cpi_ratio  # Using CPI not CEPCI for land
+        land_capex = land_capex_base * cap_ratio * cpi_ratio  # Using CPI not CEPCI for land
 
         # Calculate capex - all in USD
-        eqpt_capex = synloop_capex + heat_capex + cool_capex + other_eqpt_capex
+        eqpt_capex = asu_capex + synloop_capex + heat_capex + cool_capex + other_eqpt_capex
         deprec_noneq_capex = land_capex + eqpt_capex * deprec_noneq_capex_rate
         total_capex = eqpt_capex + deprec_noneq_capex
 
@@ -388,3 +439,16 @@ class AmmoniaSynLoopCostModel(om.ExplicitComponent):
         ##---Final Outputs---
         outputs["CapEx"] = total_capex
         outputs["OpEx"] = fixed_opex + variable_opex
+
+        outputs["capex_asu"] = asu_capex
+        outputs["capex_synloop"] = synloop_capex
+        outputs["capex_boiler"] = heat_capex
+        outputs["capex_cooling_tower"] = cool_capex
+        outputs["capex_direct"] = eqpt_capex
+        outputs["capex_depreciable_nonequipment"] = total_capex - eqpt_capex
+        outputs["land_cost"] = land_capex
+
+        outputs["labor_cost"] = labor_opex
+        outputs["general_administration_cost"] = gen_admin_opex
+        outputs["property_tax_insurance"] = prop_tax_ins_opex
+        outputs["maintenance_cost"] = maint_rep_opex
