@@ -9,9 +9,7 @@ from openmdao.utils.assert_utils import assert_near_equal
 @unittest.skipUnless(importlib.util.find_spec("mcm") is not None, "mcm is not installed")
 class TestDOCPerformanceModel(unittest.TestCase):
     def setUp(self):
-        from h2integrate.converters.marine_carbon_capture.direct_ocean_capture import (
-            DOCPerformanceModel,
-        )
+        from h2integrate.converters.co2.marine.direct_ocean_capture import DOCPerformanceModel
 
         self.config = {
             "model_inputs": {
@@ -77,9 +75,7 @@ class TestDOCPerformanceModel(unittest.TestCase):
 @unittest.skipUnless(importlib.util.find_spec("mcm") is None, "mcm is installed")
 class TestDOCPerformanceModelNoMCM(unittest.TestCase):
     def test_no_mcm_import(self):
-        from h2integrate.converters.marine_carbon_capture.direct_ocean_capture import (
-            DOCPerformanceModel,
-        )
+        from h2integrate.converters.co2.marine.direct_ocean_capture import DOCPerformanceModel
 
         try:
             self.model = DOCPerformanceModel(plant_config={}, tech_config={})

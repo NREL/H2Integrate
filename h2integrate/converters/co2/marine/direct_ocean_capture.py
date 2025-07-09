@@ -4,7 +4,7 @@ import numpy_financial as npf
 from attrs import field, define
 
 from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
-from h2integrate.converters.marine_carbon_capture.marine_carbon_capture_baseclass import (
+from h2integrate.converters.co2.marine.marine_carbon_capture_baseclass import (
     MarineCarbonCaptureCostBaseClass,
     MarineCarbonCapturePerformanceConfig,
     MarineCarbonCapturePerformanceBaseClass,
