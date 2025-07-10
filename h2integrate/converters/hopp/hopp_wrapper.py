@@ -29,8 +29,11 @@ class HOPPComponent(om.ExplicitComponent):
     def setup(self):
         self.hopp_config = self.options["tech_config"]["performance_model"]["config"]
 
-        if "cache" in self.hopp_config["config"]["simulation_options"]:
-            self.cache = self.hopp_config["config"]["simulation_options"]["cache"]
+        if "simulation_options" in self.hopp_config:
+            if "cache" in self.hopp_config["simulation_options"]:
+                self.cache = self.hopp_config["simulation_options"]["cache"]
+            else:
+                self.cache = True
         else:
             self.cache = True
 

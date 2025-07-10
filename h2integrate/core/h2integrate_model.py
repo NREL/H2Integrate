@@ -300,6 +300,8 @@ class H2IntegrateModel:
                 commodity_types.append("ammonia")
             if "geoh2" in tech_configs:
                 commodity_types.append("hydrogen")
+            if "doc" in tech_configs:
+                commodity_types.append("co2")
             for tech in electricity_producing_techs:
                 if tech in tech_configs:
                     commodity_types.append("electricity")
@@ -479,6 +481,12 @@ class H2IntegrateModel:
                         self.plant.connect(
                             f"{tech_name}.total_ammonia_produced",
                             f"financials_group_{group_id}.total_ammonia_produced",
+                        )
+
+                    if "doc" in tech_name:
+                        self.plant.connect(
+                            f"{tech_name}.co2_capture_mtpy",
+                            f"financials_group_{group_id}.co2_capture_kgpy",
                         )
 
         self.plant.options["auto_order"] = True

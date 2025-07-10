@@ -1,9 +1,6 @@
-import numpy as np
-import openmdao.api as om
-import numpy_financial as npf
 from attrs import field, define
 
-from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
+from h2integrate.core.utilities import merge_shared_inputs
 from h2integrate.converters.co2.marine.marine_carbon_capture_baseclass import (
     MarineCarbonCaptureCostBaseClass,
     MarineCarbonCapturePerformanceConfig,
@@ -130,7 +127,7 @@ class DOCPerformanceModel(MarineCarbonCapturePerformanceBaseClass):
 
 
 @define
-class DOCCostModelConfig(BaseConfig):
+class DOCCostModelConfig(DOCPerformanceConfig):
     """Configuration for the DOC cost model.
 
     Attributes:
@@ -159,14 +156,10 @@ class DOCCostModel(MarineCarbonCaptureCostBaseClass):
 
     def setup(self):
         super().setup()
-        self.config = DOCPerformanceConfig.from_dict(
-            merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance")
-        )
         self.config = DOCCostModelConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost")
         )
 
-        # TODO: figure out how to share this input between finance and cost model. it's an output of performance model
         self.add_input(
             "total_tank_volume_m3",
             val=0.0,
@@ -197,51 +190,3 @@ class DOCCostModel(MarineCarbonCaptureCostBaseClass):
         # Calculate CapEx
         outputs["CapEx"] = res.initial_capital_cost
         outputs["OpEx"] = res.yearly_operational_cost
-
-
-class DOCFinance(om.ExplicitComponent):
-    """OpenMDAO component to compute the levelized cost of CO2 (LCOC) for DOC systems.
-
-    Inputs:
-        CapEx (float): Capital expenditure (USD).
-        OpEx (float): Operating expenditure (USD/year).
-        co2_capture_mtpy (float): Annual CO2 capture (t/year).
-
-    Outputs:
-        LCOC (float): Levelized cost of CO2 captured (USD/t).
-    """
-
-    # TODO: further develop LCOC metric using LCOE for electricity costs and outputs from cost and performance model
-
-    def initialize(self):
-        self.options.declare("driver_config", types=dict)
-        self.options.declare("plant_config", types=dict)
-        self.options.declare("tech_config", types=dict)
-
-    def setup(self):
-        self.add_input("CapEx", val=0.0, units="USD", desc="Capital expenditure (USD)")
-        self.add_input("OpEx", val=0.0, units="USD/year", desc="Operational expenditure (USD/year)")
-        self.add_input("co2_capture_mtpy", units="t/year", desc="Annual CO2 capture (t/year)")
-
-        self.add_output(
-            "LCOC",
-            val=0.0,
-            units="USD/t",
-            desc="Levelized cost of CO2 captured",
-        )
-
-    def compute(self, inputs, outputs):
-        # Financial parameters
-        project_lifetime = self.options["plant_config"]["plant"]["plant_life"]  # years
-        discount_rate = self.options["plant_config"]["finance_parameters"][
-            "discount_rate"
-        ]  # annual discount rate
-
-        # Calculate the annualized CapEx using the present value of an annuity formula
-        annualized_CapEx = npf.pmt(discount_rate, project_lifetime, -inputs["CapEx"])
-
-        # Total annual cost
-        total_annual_cost = annualized_CapEx + inputs["OpEx"]
-
-        # Calculate the levelized cost of CO2 captured
-        outputs["LCOC"] = total_annual_cost / np.sum(inputs["co2_capture_mtpy"])

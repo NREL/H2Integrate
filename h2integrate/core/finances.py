@@ -75,6 +75,10 @@ class ProFastComp(om.ExplicitComponent):
             self.add_input("total_ammonia_produced", val=0.0, units="kg/year")
             self.add_output("LCOA", val=0.0, units="USD/kg")
 
+        if self.options["commodity_type"] == "co2":
+            self.add_input("co2_capture_kgpy", val=0.0, units="kg/year")
+            self.add_output("LCOC", val=0.0, units="USD/kg")
+
         if "electrolyzer" in tech_config:
             self.add_input("time_until_replacement", units="h")
 
@@ -125,6 +129,20 @@ class ProFastComp(om.ExplicitComponent):
             pf.set_params(
                 "capacity",
                 float(inputs["total_electricity_produced"]) / 365.0,
+            )
+        elif self.options["commodity_type"] == "co2":
+            pf.set_params(
+                "commodity",
+                {
+                    "name": "CO2",
+                    "unit": "kg",
+                    "initial price": 100,
+                    "escalation": gen_inflation,
+                },
+            )
+            pf.set_params(
+                "capacity",
+                float(inputs["co2_capture_kgpy"]) / 365.0,
             )
 
         pf.set_params("maintenance", {"value": 0, "escalation": gen_inflation})
@@ -265,3 +283,6 @@ class ProFastComp(om.ExplicitComponent):
 
         elif self.options["commodity_type"] == "electricity":
             outputs["LCOE"] = sol["price"]
+
+        elif self.options["commodity_type"] == "co2":
+            outputs["LCOC"] = sol["price"]

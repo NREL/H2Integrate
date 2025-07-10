@@ -167,6 +167,26 @@ def test_paper_example(subtests):
         )
 
 
+def test_wind_wave_doc_example(subtests):
+    # Change the current working directory to the example's directory
+    os.chdir(examples_dir / "09_wind_wave_doc")
+
+    # Create a H2Integrate model
+    model = H2IntegrateModel(Path.cwd() / "offshore_plant_doc.yaml")
+
+    # Run the model
+    model.run()
+
+    model.post_process()
+
+    # Subtests for checking specific values
+    with subtests.test("Check LCOC"):
+        assert pytest.approx(model.prob.get_val("financials_group_1.LCOC"), rel=1e-3) == 2.26955589
+
+    with subtests.test("Check LCOE"):
+        assert pytest.approx(model.prob.get_val("financials_group_1.LCOE"), rel=1e-3) == 1.05281478
+
+
 def test_hydro_example(subtests):
     # Change the current working directory to the example's directory
     os.chdir(examples_dir / "07_run_of_river_plant")

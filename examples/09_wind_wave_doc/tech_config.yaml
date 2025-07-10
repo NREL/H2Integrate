@@ -8,17 +8,13 @@ technologies:
       config: !include tech_inputs/hopp_config.yaml
     cost_model:
       model: "hopp"
-    financial_model:
-      group: 1
   doc:
     performance_model:
       model: "direct_ocean_capture_performance"
     cost_model:
       model: "direct_ocean_capture_cost"
-    financial_model:
-      model: "direct_ocean_capture_finance"
     model_inputs:
-      performance_parameters:
+      shared_parameters:
         power_single_ed_w: 24000000. # W
         flow_rate_single_ed_m3s: 0.6 # m^3/s
         number_ed_min: 1
