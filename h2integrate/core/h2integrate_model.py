@@ -275,9 +275,16 @@ class H2IntegrateModel:
                     financial_groups[financial_group_id] = {}
                 financial_groups[financial_group_id][tech_name] = individual_tech_config
 
-        # If no financial groups are defined, add all technologies to a single group
-        if not financial_groups:
-            financial_groups["1"] = self.technology_config["technologies"]
+        # Find technologies not assigned to any financial group and add them to group "1"
+        all_grouped_techs = set()
+        for group in financial_groups.values():
+            all_grouped_techs.update(group.keys())
+
+        for tech_name, tech_config in self.technology_config["technologies"].items():
+            if tech_name not in all_grouped_techs:
+                if 1 not in financial_groups:
+                    financial_groups[1] = {}
+                financial_groups[1][tech_name] = tech_config
 
         # Add each financial group to the plant
         for group_id, tech_configs in financial_groups.items():

@@ -3,6 +3,8 @@ import ProFAST  # system financial model
 import openmdao.api as om
 import numpy_financial as npf
 
+from h2integrate.core.supported_models import electricity_producing_techs
+
 
 class AdjustedCapexOpexComp(om.ExplicitComponent):
     def initialize(self):
@@ -78,11 +80,12 @@ class ProFastComp(om.ExplicitComponent):
 
     def compute(self, inputs, outputs):
         gen_inflation = self.plant_config["finance_parameters"]["profast_general_inflation"]
+        commodity_type = self.options["commodity_type"]
 
         land_cost = 0.0
 
         pf = ProFAST.ProFAST()
-        if self.options["commodity_type"] == "hydrogen":
+        if commodity_type == "hydrogen":
             pf.set_params(
                 "commodity",
                 {
@@ -96,7 +99,7 @@ class ProFastComp(om.ExplicitComponent):
                 "capacity",
                 float(inputs["total_hydrogen_produced"]) / 365.0,
             )  # kg/day
-        elif self.options["commodity_type"] == "ammonia":
+        elif commodity_type == "ammonia":
             pf.set_params(
                 "commodity",
                 {
@@ -110,7 +113,7 @@ class ProFastComp(om.ExplicitComponent):
                 "capacity",
                 float(inputs["total_ammonia_produced"]) / 365.0,
             )
-        elif self.options["commodity_type"] == "electricity":
+        elif commodity_type == "electricity":
             pf.set_params(
                 "commodity",
                 {
@@ -204,6 +207,11 @@ class ProFastComp(om.ExplicitComponent):
         )
         pf.set_params("cash onhand", self.plant_config["finance_parameters"]["cash_onhand_months"])
 
+        last_tech_that_produces_electricity = None
+        for tech in self.tech_config:
+            if tech in electricity_producing_techs:
+                last_tech_that_produces_electricity = tech
+
         # --------------------------------- Add capital and fixed items to ProFAST --------------
         for tech in self.tech_config:
             if "electrolyzer" in tech:
@@ -249,6 +257,11 @@ class ProFastComp(om.ExplicitComponent):
                     cost=float(inputs[f"opex_adjusted_{tech}"]),
                     escalation=gen_inflation,
                 )
+
+                # If we're calculating LCOE, we should only include technologies upstream of the
+                # last technology that produces electricity.
+                if commodity_type == "electricity" and tech == last_tech_that_produces_electricity:
+                    break
 
         # ------------------------------------ solve and post-process -----------------------------
 
