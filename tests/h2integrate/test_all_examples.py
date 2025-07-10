@@ -1,4 +1,6 @@
 import os
+import unittest
+import importlib
 from pathlib import Path
 
 import pytest
@@ -167,6 +169,7 @@ def test_paper_example(subtests):
         )
 
 
+@unittest.skipUnless(importlib.util.find_spec("mcm") is not None, "mcm is not installed")
 def test_wind_wave_doc_example(subtests):
     # Change the current working directory to the example's directory
     os.chdir(examples_dir / "09_wind_wave_doc")
