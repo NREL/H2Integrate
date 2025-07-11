@@ -6,6 +6,11 @@ from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
 from h2integrate.tools.inflation.inflate import inflate_cpi, inflate_cepci
 
 
+h_mw = 1.008
+n_mw = 14.007
+ar_mw = 39.948
+
+
 @define
 class AmmoniaSynLoopPerformanceConfig(BaseConfig):
     """
@@ -16,26 +21,49 @@ class AmmoniaSynLoopPerformanceConfig(BaseConfig):
     Attributes:
         *production_capacity (float): The total production capacity of the ammonia synthesis loop
             (in kg ammonia per hour)
-        energy_demand (float): The total energy demand of the ammonia synthesis loop
-            (in MWh electricity per kg ammonia).
-        nitrogen_consumption_rate (float): The mass ratio of nitrogen consumed to ammonia produced
-            in the synthesis loop (as a decimal).
-        hydrogen_consumption_rate (float): The mass ratio of hydrogen consumed to ammonia produced
-            in the synthesis loop (as a decimal).
         *catalyst_consumption_rate (float): The mass ratio of catalyst consumed by the reactor over
             its lifetime to ammonia produced (in kg catalyst / kg ammonia)
         *catalyst_replacement_interval (float): The interval in years when the catalyst is replaced
+        capacity_factor (float): The ratio of ammonia produced over a year to maximum production
+            capacity (as a decimal)
+        energy_demand (float): The total energy demand of the ammonia synthesis loop
+            (in MWh electricity per kg ammonia).
         heat_output (float): The total heat output of the ammonia synthesis loop
-            (in MWh thermal per kg ammonia)
+            (in kWh thermal per kg ammonia)
+        feed_gas_t (float): The synloop makeup feed gas temperature (in Kelvin)
+        feed_gas_p (float): The synloop makeup feed gas pressure (in bar)
+        feed_gas_x_n2 (float): The synloop makeup feed gas molar fraction of nitrogen (as a decimal)
+        feed_gas_x_h2 (float): The synloop makeup feed gas molar fraction of hydrogen (as a decimal)
+        feed_gas_mass_ratio (float): The synloop makeup feed gas mass ratio to ammonia produced (as
+            a decimal)
+        purge_gas_t (float): The synloop purge gas temperature (in Kelvin)
+        purge_gas_p (float): The synloop purge gas pressure (in bar)
+        purge_gas_x_n2 (float): The synloop purge gas molar fraction of nitrogen (as a decimal)
+        purge_gas_x_h2 (float): The synloop purge gas molar fraction of hydrogen (as a decimal)
+        purge_gas_x_ar (float): The synloop purge gas molar fraction of argon (as a decimal)
+        purge_gas_x_nh3 (float): The synloop purge gas molar fraction of hydrogen (as a decimal)
+        purge_gas_mass_ratio (float): The synloop purge gas mass ratio to ammonia produced (as a
+            decimal)
     """
 
     production_capacity: float = field()
-    energy_demand: float = field()
-    nitrogen_consumption_rate: float = field()
-    hydrogen_consumption_rate: float = field()
     catalyst_consumption_rate: float = field()
     catalyst_replacement_interval: float = field()
+    capacity_factor: float = field()
+    energy_demand: float = field()
     heat_output: float = field()
+    feed_gas_t: float = field()
+    feed_gas_p: float = field()
+    feed_gas_x_n2: float = field()
+    feed_gas_x_h2: float = field()
+    feed_gas_mass_ratio: float = field()
+    purge_gas_t: float = field()
+    purge_gas_p: float = field()
+    purge_gas_x_n2: float = field()
+    purge_gas_x_h2: float = field()
+    purge_gas_x_ar: float = field()
+    purge_gas_x_nh3: float = field()
+    purge_gas_mass_ratio: float = field()
 
 
 class AmmoniaSynLoopPerformanceModel(om.ExplicitComponent):
@@ -99,27 +127,27 @@ class AmmoniaSynLoopPerformanceModel(om.ExplicitComponent):
         self.add_input(
             "hydrogen_in", val=0.0, shape_by_conn=True, copy_shape="ammonia_out", units="kg/h"
         )
-        self.add_input(
-            "nitrogen_in", val=0.0, shape_by_conn=True, copy_shape="ammonia_out", units="kg/h"
-        )
-        self.add_input(
-            "electricity_in", val=0.0, shape_by_conn=True, copy_shape="ammonia_out", units="MW"
-        )
+        # self.add_input(
+        #     "nitrogen_in", val=0.0, shape_by_conn=True, copy_shape="ammonia_out", units="kg/h"
+        # )
+        # self.add_input(
+        #     "electricity_in", val=0.0, shape_by_conn=True, copy_shape="ammonia_out", units="MW"
+        # )
 
         self.add_output(
             "ammonia_out", val=0.0, shape_by_conn=True, copy_shape="hydrogen_in", units="kg/h"
         )
         self.add_output(
-            "nitrogen_out", val=0.0, shape_by_conn=True, copy_shape="nitrogen_in", units="kg/h"
+            "nitrogen_out", val=0.0, shape_by_conn=True, copy_shape="hydrogen_in", units="kg/h"
         )
         self.add_output(
             "hydrogen_out", val=0.0, shape_by_conn=True, copy_shape="hydrogen_in", units="kg/h"
         )
         self.add_output(
-            "electricity_out", val=0.0, shape_by_conn=True, copy_shape="nitrogen_in", units="MW"
+            "electricity_out", val=0.0, shape_by_conn=True, copy_shape="hydrogen_in", units="MW"
         )
         self.add_output(
-            "heat_out", val=0.0, shape_by_conn=True, copy_shape="nitrogen_in", units="MW"
+            "heat_out", val=0.0, shape_by_conn=True, copy_shape="hydrogen_in", units="kW*h/kg"
         )
         self.add_output("catalyst_mass", val=0.0, units="kg")
         self.add_output("total_ammonia_produced", val=0.0, units="kg/year")
@@ -129,25 +157,45 @@ class AmmoniaSynLoopPerformanceModel(om.ExplicitComponent):
     def compute(self, inputs, outputs):
         # Get config values
         nh3_cap = self.config.production_capacity  # kg NH3 per hour
-        energy_demand = self.config.energy_demand  # MWh per kg NH3
-        n2_rate = self.config.nitrogen_consumption_rate  # kg N2 per kg NH3
-        h2_rate = self.config.hydrogen_consumption_rate  # kg H2 per kg NH3
         cat_consume = self.config.catalyst_consumption_rate  # kg Cat per kg NH3
         cat_replace = self.config.catalyst_replacement_interval  # years
+        energy_demand = self.config.energy_demand  # MWh per kg NH3
         heat_output = self.config.heat_output  # MWh per kg NH3
+        x_h2_feed = self.config.feed_gas_x_h2  # mol frac
+        x_n2_feed = self.config.feed_gas_x_n2  # mol frac
+        ratio_feed = self.config.feed_gas_mass_ratio  # kg/kg NH3
+        x_h2_purge = self.config.purge_gas_x_h2  # mol frac
+        x_n2_purge = self.config.purge_gas_x_n2  # mol frac
+        ratio_purge = self.config.purge_gas_mass_ratio  # kg/kg NH3
 
         # Inputs (arrays of length 8760)
         h2_in = inputs["hydrogen_in"]
-        n2_in = inputs["nitrogen_in"]
-        elec_in = inputs["electricity_in"]
+        n2_in = h2_in / h_mw * 3 * n_mw  # TODO: Replace with connected input
+        # n2_in = inputs["nitrogen_in"]
+        elec_in = (
+            np.ones(
+                8760,
+            )
+            * nh3_cap
+            * energy_demand
+        )  # TODO: replace with connected input
+        # elec_in = inputs["electricity_in"]
 
-        # Calculate max NH3 production for each input - all kg NH3 / hr
-        nh3_from_h2 = h2_in / h2_rate
-        # nh3_from_n2 = n2_in / n2_rate #TODO: Get nitrogen_in
-        # nh3_from_elec = elec_in / energy_demand #TODO: Get electricity_in
+        # Calculate max NH3 production for each input
+        feed_mw = x_h2_feed * h_mw * 2 + x_n2_feed * n_mw * 2  # g / mol
+
+        w_h2_feed = x_h2_feed * h_mw / feed_mw  # kg H2 / kg feed gas
+        h2_rate = w_h2_feed * ratio_feed  # kg H2 / kg NH3
+        nh3_from_h2 = h2_in / h2_rate  # kg nh3 / hr
+
+        w_n2_feed = x_n2_feed * n_mw / feed_mw  # kg N2 / kg feed gas
+        n2_rate = w_n2_feed * ratio_feed  # kg N2 / kg NH3
+        nh3_from_n2 = n2_in / n2_rate  # kg nh3 / hr
+
+        nh3_from_elec = elec_in / energy_demand
 
         # Limiting NH3 production per hour
-        nh3_prod = np.minimum.reduce([nh3_from_h2])  # , nh3_from_n2, nh3_from_elec])
+        nh3_prod = np.minimum.reduce([nh3_from_h2, nh3_from_n2, nh3_from_elec])
         nh3_prod = np.minimum.reduce([nh3_prod, np.full(8760, nh3_cap)])
 
         # Calculate unused inputs
@@ -155,13 +203,22 @@ class AmmoniaSynLoopPerformanceModel(om.ExplicitComponent):
         used_n2 = nh3_prod * n2_rate
         used_elec = nh3_prod * energy_demand
 
+        # Calculate output in purge gas
+        purge_mw = x_h2_purge * h_mw * 2 + x_n2_purge * n_mw * 2  # g / mol
+
+        w_h2_purge = x_h2_purge * h_mw / purge_mw  # kg H2 / kg purge gas
+        h2_purge = w_h2_purge * ratio_purge * nh3_prod  # kg H2 / hr
+
+        w_n2_purge = x_n2_purge * h_mw / purge_mw  # kg N2 / kg purge gas
+        n2_purge = w_n2_purge * ratio_purge * nh3_prod  # kg N2 / hr
+
         # Calculate catalyst mass
         cat_rate = cat_consume * nh3_prod  # kg Cat / hr
         cat_mass = np.sum(cat_rate) * cat_replace  # kg
 
         outputs["ammonia_out"] = nh3_prod
-        outputs["hydrogen_out"] = h2_in - used_h2
-        outputs["nitrogen_out"] = n2_in - used_n2
+        outputs["hydrogen_out"] = h2_in - used_h2 + h2_purge
+        outputs["nitrogen_out"] = n2_in - used_n2 + n2_purge
         outputs["electricity_out"] = elec_in - used_elec
         outputs["heat_out"] = nh3_prod * heat_output
         outputs["catalyst_mass"] = cat_mass
