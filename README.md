@@ -51,7 +51,7 @@ King, J. and Hammond, S. "[Integrated Modeling, TEA, and Reference Design for Re
 
 ## Software requirements
 
-- Python version 3.11, 3.12, 3.13 64-bit
+- Python version 3.11, 3.12 64-bit
 - Other versions may still work, but have not been extensively tested at this time
 
 ## Installing from Package Repositories

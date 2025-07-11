@@ -19,6 +19,7 @@ parts:
 - caption: Technology Models
   chapters:
   - file: technology_models/run_of_river
+  - file: technology_models/wombat_electrolyzer_om
 
 - caption: Examples
   chapters:

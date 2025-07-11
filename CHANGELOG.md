@@ -5,6 +5,7 @@
 - Added ammonia synloop, partially addressing https://github.com/NREL/H2Integrate/issues/169
 - Added geologic hydrogen (geoh2) converter and examples [PR 135](https://github.com/NREL/H2Integrate/pull/135)
 
+
 ## 0.3.1, Unreleased, TBD
 
 - Added methanol production base class
@@ -26,6 +27,8 @@
 - Refactored the ammonia production model to use the new H2Integrate framework natively and removed the prior performance and cost functions.
 - Added a new ammonia production model which has nitrogen, hydrogen, and electricity inputs and ammonia output, with performance and cost functions.
 - Added more available constraints from the HOPP wrapper useful for design optimizations
+- Added geologic hydrogen (geoh2) converter and examples [PR 135](https://github.com/NREL/H2Integrate/pull/135)
+- Added WOMBAT electrolyzer O&M model
 
 ## 0.3.0 [May 2 2025]
 
