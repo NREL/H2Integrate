@@ -46,7 +46,7 @@ def test_steel_example(subtests):
         assert pytest.approx(model.prob.get_val("steel.OpEx"), rel=1e-3) == 1.0129052e08
 
 
-def test_ammonia_example(subtests):
+def test_simple_ammonia_example(subtests):
     # Change the current working directory to the example's directory
     os.chdir(examples_dir / "02_texas_ammonia")
 
@@ -107,6 +107,68 @@ def test_ammonia_example(subtests):
     # Currently underestimated compared to the Reference Design Doc
     with subtests.test("Check LCOA"):
         assert pytest.approx(model.prob.get_val("financials_group_1.LCOA"), rel=1e-3) == 1.06313924
+
+
+def test_ammonia_synloop_example(subtests):
+    # Change the current working directory to the example's directory
+    os.chdir(examples_dir / "12_ammonia_synloop")
+
+    # Create a H2Integrate model
+    model = H2IntegrateModel(Path.cwd() / "12_ammonia_synloop.yaml")
+
+    # Run the model
+    model.run()
+
+    model.post_process()
+
+    # Subtests for checking specific values
+    with subtests.test("Check HOPP CapEx"):
+        assert pytest.approx(model.prob.get_val("plant.hopp.hopp.CapEx"), rel=1e-6) == 1.75469962e09
+
+    with subtests.test("Check HOPP OpEx"):
+        assert pytest.approx(model.prob.get_val("plant.hopp.hopp.OpEx"), rel=1e-6) == 32952000.0
+
+    with subtests.test("Check electrolyzer CapEx"):
+        assert pytest.approx(model.prob.get_val("electrolyzer.CapEx"), rel=1e-6) == 6.00412524e08
+
+    with subtests.test("Check electrolyzer OpEx"):
+        assert pytest.approx(model.prob.get_val("electrolyzer.OpEx"), rel=1e-6) == 14703155.39207595
+
+    with subtests.test("Check H2 storage CapEx"):
+        assert (
+            pytest.approx(model.prob.get_val("plant.h2_storage.h2_storage.CapEx"), rel=1e-6)
+            == 65337437.18075897
+        )
+
+    with subtests.test("Check H2 storage OpEx"):
+        assert (
+            pytest.approx(model.prob.get_val("plant.h2_storage.h2_storage.OpEx"), rel=1e-6)
+            == 2358794.11507603
+        )
+
+    with subtests.test("Check ammonia CapEx"):
+        assert pytest.approx(model.prob.get_val("ammonia.CapEx"), rel=1e-6) == 1.15173753e09
+
+    with subtests.test("Check ammonia OpEx"):
+        assert pytest.approx(model.prob.get_val("ammonia.OpEx"), rel=1e-6) == 25318447.90064406
+
+    with subtests.test("Check total adjusted CapEx"):
+        assert (
+            pytest.approx(model.prob.get_val("financials_group_1.total_capex_adjusted"), rel=1e-6)
+            == 3.83856529e09
+        )
+
+    with subtests.test("Check total adjusted OpEx"):
+        assert (
+            pytest.approx(model.prob.get_val("financials_group_1.total_opex_adjusted"), rel=1e-6)
+            == 81091928.8588633
+        )
+
+    with subtests.test("Check LCOH"):
+        assert pytest.approx(model.prob.get_val("financials_group_1.LCOH"), rel=1e-6) == 5.85372877
+
+    with subtests.test("Check LCOA"):
+        assert pytest.approx(model.prob.get_val("financials_group_1.LCOA"), rel=1e-6) == 1.10368535
 
 
 def test_wind_h2_opt_example(subtests):
