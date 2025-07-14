@@ -35,9 +35,11 @@ from h2integrate.converters.water.hydro_plant_run_of_river import (
     RunOfRiverHydroCostModel,
     RunOfRiverHydroPerformanceModel,
 )
+from h2integrate.converters.nitrogen.simple_ASU_performance import SimpleASUPerformanceModel
 from h2integrate.converters.hydrogen.eco_tools_pem_electrolyzer import (
     ECOElectrolyzerPerformanceModel,
 )
+from h2integrate.converters.nitrogen.simple_air_separation_cost import SimpleASUCostModel
 from h2integrate.converters.hydrogen.geologic.natural_geoh2_plant import (
     NaturalGeoH2CostModel,
     NaturalGeoH2FinanceModel,
@@ -65,6 +67,8 @@ supported_models = {
     "eco_pem_electrolyzer_performance": ECOElectrolyzerPerformanceModel,
     "singlitico_electrolyzer_cost": SingliticoCostModel,
     "basic_electrolyzer_cost": BasicElectrolyzerCostModel,
+    "simple_ASU_cost": SimpleASUCostModel,
+    "simple_ASU_performance": SimpleASUPerformanceModel,
     "h2_storage": H2Storage,
     "hopp": HOPPComponent,
     "reverse_osmosis_desalination_performance": ReverseOsmosisPerformanceModel,
