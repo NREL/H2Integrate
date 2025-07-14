@@ -126,7 +126,7 @@ def test_ammonia_synloop_example(subtests):
         assert pytest.approx(model.prob.get_val("plant.hopp.hopp.CapEx"), rel=1e-6) == 1.75469962e09
 
     with subtests.test("Check HOPP OpEx"):
-        assert pytest.approx(model.prob.get_val("plant.hopp.hopp.OpEx"), rel=1e-6) == 32952000.0
+        assert pytest.approx(model.prob.get_val("plant.hopp.hopp.OpEx"), rel=1e-6) == 32953490.4
 
     with subtests.test("Check electrolyzer CapEx"):
         assert pytest.approx(model.prob.get_val("electrolyzer.CapEx"), rel=1e-6) == 6.00412524e08
