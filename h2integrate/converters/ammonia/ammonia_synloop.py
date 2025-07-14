@@ -108,6 +108,8 @@ class AmmoniaSynLoopPerformanceModel(om.ExplicitComponent):
         Total hydrogen consumed over the modeled period.
     total_electricity_consumed : float [kWh/year]
         Total electricity consumed over the modeled period.
+    limiting_output: array of ints [-]
+        0: nitrogen-limited, 1: hydrogen-limited, 2: electricity-limited 3
     Notes
     -----
     The ammonia production is limited by the most constraining input (hydrogen,
@@ -127,12 +129,12 @@ class AmmoniaSynLoopPerformanceModel(om.ExplicitComponent):
         self.add_input(
             "hydrogen_in", val=0.0, shape_by_conn=True, copy_shape="ammonia_out", units="kg/h"
         )
-        # self.add_input(
-        #     "nitrogen_in", val=0.0, shape_by_conn=True, copy_shape="ammonia_out", units="kg/h"
-        # )
-        # self.add_input(
-        #     "electricity_in", val=0.0, shape_by_conn=True, copy_shape="ammonia_out", units="MW"
-        # )
+        self.add_input(
+            "nitrogen_in", val=0.0, shape_by_conn=True, copy_shape="ammonia_out", units="kg/h"
+        )
+        self.add_input(
+            "electricity_in", val=0.0, shape_by_conn=True, copy_shape="ammonia_out", units="MW"
+        )
 
         self.add_output(
             "ammonia_out", val=0.0, shape_by_conn=True, copy_shape="hydrogen_in", units="kg/h"
@@ -153,14 +155,17 @@ class AmmoniaSynLoopPerformanceModel(om.ExplicitComponent):
         self.add_output("total_ammonia_produced", val=0.0, units="kg/year")
         self.add_output("total_hydrogen_consumed", val=0.0, units="kg/year")
         self.add_output("total_electricity_consumed", val=0.0, units="kW*h/year")
+        self.add_output(
+            "limiting_input", val=0, shape_by_conn=True, copy_shape="hydrogen_in", units=None
+        )
 
     def compute(self, inputs, outputs):
         # Get config values
         nh3_cap = self.config.production_capacity  # kg NH3 per hour
         cat_consume = self.config.catalyst_consumption_rate  # kg Cat per kg NH3
         cat_replace = self.config.catalyst_replacement_interval  # years
-        energy_demand = self.config.energy_demand  # MWh per kg NH3
-        heat_output = self.config.heat_output  # MWh per kg NH3
+        energy_demand = self.config.energy_demand  # kWh electric per kg NH3
+        heat_output = self.config.heat_output  # kWh thermal per kg NH3
         x_h2_feed = self.config.feed_gas_x_h2  # mol frac
         x_n2_feed = self.config.feed_gas_x_n2  # mol frac
         ratio_feed = self.config.feed_gas_mass_ratio  # kg/kg NH3
@@ -170,16 +175,18 @@ class AmmoniaSynLoopPerformanceModel(om.ExplicitComponent):
 
         # Inputs (arrays of length 8760)
         h2_in = inputs["hydrogen_in"]
-        n2_in = h2_in / h_mw * 3 * n_mw  # TODO: Replace with connected input
-        # n2_in = inputs["nitrogen_in"]
-        elec_in = (
-            np.ones(
-                8760,
-            )
-            * nh3_cap
-            * energy_demand
-        )  # TODO: replace with connected input
-        # elec_in = inputs["electricity_in"]
+        n2_in = inputs["nitrogen_in"]
+        if np.max(n2_in) == 0:  # Temporary until ASU is added
+            n2_in = h2_in / h_mw * 3 * n_mw  # TODO: Replace with connected input
+        elec_in = inputs["electricity_in"]  # Temporary until HOPP is connected
+        if np.max(elec_in) == 0:
+            elec_in = (
+                np.ones(
+                    len(h2_in),
+                )
+                * nh3_cap
+                * energy_demand
+            )  # TODO: replace with connected input
 
         # Calculate max NH3 production for each input
         feed_mw = x_h2_feed * h_mw * 2 + x_n2_feed * n_mw * 2  # g / mol
@@ -192,11 +199,19 @@ class AmmoniaSynLoopPerformanceModel(om.ExplicitComponent):
         n2_rate = w_n2_feed * ratio_feed  # kg N2 / kg NH3
         nh3_from_n2 = n2_in / n2_rate  # kg nh3 / hr
 
-        nh3_from_elec = elec_in / energy_demand
+        nh3_from_elec = elec_in / energy_demand * 1000  # kg nh3 / hr
 
-        # Limiting NH3 production per hour
-        nh3_prod = np.minimum.reduce([nh3_from_h2, nh3_from_n2, nh3_from_elec])
-        nh3_prod = np.minimum.reduce([nh3_prod, np.full(8760, nh3_cap)])
+        # Limiting NH3 production per hour by each input
+        nh3_prod = np.minimum.reduce([nh3_from_n2, nh3_from_h2, nh3_from_elec])
+        limiters = np.argmin([nh3_from_n2, nh3_from_h2, nh3_from_elec], axis=0)
+
+        # Limiting NH3 production per hour by capacity
+        nh3_prod = np.minimum.reduce([nh3_prod, np.full(len(nh3_prod), nh3_cap)])
+        cap_lim = 1 - np.argmax([nh3_prod, list(np.full(len(nh3_prod), nh3_cap))], axis=0)
+
+        # Determine what the limiting factor is for each hour
+        limiters = np.maximum.reduce([cap_lim * 3, limiters])
+        outputs["limiting_input"] = limiters
 
         # Calculate unused inputs
         used_h2 = nh3_prod * h2_rate
