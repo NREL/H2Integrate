@@ -23,7 +23,7 @@
 - Added more available constraints from the HOPP wrapper useful for design optimizations
 - Added geologic hydrogen (geoh2) converter and examples [PR 135](https://github.com/NREL/H2Integrate/pull/135)
 - Added WOMBAT electrolyzer O&M model
-- Fixed the LCOE calculation to only include technologies that produce electricity
+- Allow users to specify the technologies to include in the metrics calculations in the plant configuration file
 
 ## 0.3.0 [May 2 2025]
 

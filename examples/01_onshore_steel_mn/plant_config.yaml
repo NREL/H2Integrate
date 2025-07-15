@@ -71,7 +71,6 @@ finance_parameters:
   technologies_included_in_metrics:
     LCOE: ["hopp"]
     LCOH: ["hopp", "electrolyzer", "h2_storage"]
-    LCOS: ["hopp", "electrolyzer", "h2_storage", "steel"]
 
 policy_parameters: # these should be adjusted for inflation prior to application - order of operations: rate in 1992 $, then prevailing wage multiplier if applicable, then inflation
   electricity_itc: 0

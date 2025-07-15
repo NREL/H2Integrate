@@ -7,7 +7,7 @@ general:
 driver:
   optimization:
     flag: True
-    tol: 0.1
+    tol: 0.0001
     max_iter: 100
     solver: COBYLA
     rhobeg: 500.
