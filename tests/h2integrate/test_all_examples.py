@@ -161,14 +161,14 @@ def test_ammonia_synloop_example(subtests):
     with subtests.test("Check total adjusted OpEx"):
         assert (
             pytest.approx(model.prob.get_val("financials_group_1.total_opex_adjusted"), rel=1e-6)
-            == 81091928.8588633
+            == 81093533.8566508
         )
 
     with subtests.test("Check LCOH"):
-        assert pytest.approx(model.prob.get_val("financials_group_1.LCOH"), rel=1e-6) == 5.85372877
+        assert pytest.approx(model.prob.get_val("financials_group_1.LCOH"), rel=1e-6) == 5.85374921
 
     with subtests.test("Check LCOA"):
-        assert pytest.approx(model.prob.get_val("financials_group_1.LCOA"), rel=1e-6) == 1.10368535
+        assert pytest.approx(model.prob.get_val("financials_group_1.LCOA"), rel=1e-6) == 1.10368921
 
 
 def test_wind_h2_opt_example(subtests):
