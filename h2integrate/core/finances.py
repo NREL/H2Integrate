@@ -53,7 +53,7 @@ class ProFastComp(om.ExplicitComponent):
     def setup(self):
         tech_config = self.tech_config = self.options["tech_config"]
         plant_config = self.plant_config = self.options["plant_config"]
-        self.discount_rate = plant_config["finance_parameters"]["discount_rate"]
+        # self.discount_rate = plant_config["finance_parameters"]["discount_rate"]
         self.inflation_rate = plant_config["finance_parameters"]["costing_general_inflation"]
         self.cost_year = plant_config["plant"]["cost_year"]
 
@@ -125,84 +125,95 @@ class ProFastComp(om.ExplicitComponent):
                 float(inputs["total_electricity_produced"]) / 365.0,
             )
 
-        pf.set_params("maintenance", {"value": 0, "escalation": gen_inflation})
-        pf.set_params(
-            "analysis start year",
-            self.plant_config["plant"]["atb_year"] + 2,  # Add financial analysis start year
-        )
-        pf.set_params("operating life", self.plant_config["plant"]["plant_life"])
-        pf.set_params(
-            "installation months",
-            self.plant_config["plant"][
-                "installation_time"
-            ],  # Add installation time to yaml default=0
-        )
-        pf.set_params(
-            "installation cost",
-            {
-                "value": 0,
-                "depr type": "Straight line",
-                "depr period": 4,
-                "depreciable": False,
-            },
-        )
-        if land_cost > 0:
-            pf.set_params("non depr assets", land_cost)
+        if "pf_params" in self.plant_config["finance_parameters"]:
+            params = self.plant_config["finance_parameters"]["pf_params"]["params"]
+            avoided_params = ["capacity", "commodity"]
+            params = {k: v for k, v in params.items() if k not in avoided_params}
+            for i in params:
+                pf.set_params(i, params[i])
+        else:
+            pf.set_params("maintenance", {"value": 0, "escalation": gen_inflation})
             pf.set_params(
-                "end of proj sale non depr assets",
-                land_cost * (1 + gen_inflation) ** self.plant_config["plant"]["plant_life"],
+                "analysis start year",
+                self.plant_config["plant"]["atb_year"] + 2,  # Add financial analysis start year
             )
-        pf.set_params("demand rampup", 0)
-        pf.set_params("long term utilization", 1)  # TODO should use utilization
-        pf.set_params("credit card fees", 0)
-        pf.set_params("sales tax", self.plant_config["finance_parameters"]["sales_tax_rate"])
-        pf.set_params("license and permit", {"value": 00, "escalation": gen_inflation})
-        pf.set_params("rent", {"value": 0, "escalation": gen_inflation})
-        # TODO how to handle property tax and insurance for fully offshore?
-        pf.set_params(
-            "property tax and insurance",
-            self.plant_config["finance_parameters"]["property_tax"]
-            + self.plant_config["finance_parameters"]["property_insurance"],
-        )
-        pf.set_params(
-            "admin expense",
-            self.plant_config["finance_parameters"]["administrative_expense_percent_of_sales"],
-        )
-        pf.set_params(
-            "total income tax rate",
-            self.plant_config["finance_parameters"]["total_income_tax_rate"],
-        )
-        pf.set_params(
-            "capital gains tax rate",
-            self.plant_config["finance_parameters"]["capital_gains_tax_rate"],
-        )
-        pf.set_params("sell undepreciated cap", True)
-        pf.set_params("tax losses monetized", True)
-        pf.set_params("general inflation rate", gen_inflation)
-        pf.set_params(
-            "leverage after tax nominal discount rate",
-            self.plant_config["finance_parameters"]["discount_rate"],
-        )
-        if self.plant_config["finance_parameters"]["debt_equity_split"]:
+            pf.set_params("operating life", self.plant_config["plant"]["plant_life"])
             pf.set_params(
-                "debt equity ratio of initial financing",
-                (
-                    self.plant_config["finance_parameters"]["debt_equity_split"]
-                    / (100 - self.plant_config["finance_parameters"]["debt_equity_split"])
-                ),
-            )  # TODO this may not be put in right
-        elif self.plant_config["finance_parameters"]["debt_equity_ratio"]:
+                "installation months",
+                self.plant_config["plant"][
+                    "installation_time"
+                ],  # Add installation time to yaml default=0
+            )
             pf.set_params(
-                "debt equity ratio of initial financing",
-                (self.plant_config["finance_parameters"]["debt_equity_ratio"]),
-            )  # TODO this may not be put in right
-        pf.set_params("debt type", self.plant_config["finance_parameters"]["debt_type"])
-        pf.set_params("loan period if used", self.plant_config["finance_parameters"]["loan_period"])
-        pf.set_params(
-            "debt interest rate",
-            self.plant_config["finance_parameters"]["debt_interest_rate"],
-        )
-        pf.set_params("cash onhand", self.plant_config["finance_parameters"]["cash_onhand_months"])
+                "installation cost",
+                {
+                    "value": 0,
+                    "depr type": "Straight line",
+                    "depr period": 4,
+                    "depreciable": False,
+                },
+            )
+            if land_cost > 0:
+                pf.set_params("non depr assets", land_cost)
+                pf.set_params(
+                    "end of proj sale non depr assets",
+                    land_cost * (1 + gen_inflation) ** self.plant_config["plant"]["plant_life"],
+                )
+            pf.set_params("demand rampup", 0)
+            pf.set_params("long term utilization", 1)  # TODO should use utilization
+            pf.set_params("credit card fees", 0)
+            pf.set_params("sales tax", self.plant_config["finance_parameters"]["sales_tax_rate"])
+            pf.set_params("license and permit", {"value": 00, "escalation": gen_inflation})
+            pf.set_params("rent", {"value": 0, "escalation": gen_inflation})
+            # TODO how to handle property tax and insurance for fully offshore?
+            pf.set_params(
+                "property tax and insurance",
+                self.plant_config["finance_parameters"]["property_tax"]
+                + self.plant_config["finance_parameters"]["property_insurance"],
+            )
+            pf.set_params(
+                "admin expense",
+                self.plant_config["finance_parameters"]["administrative_expense_percent_of_sales"],
+            )
+            pf.set_params(
+                "total income tax rate",
+                self.plant_config["finance_parameters"]["total_income_tax_rate"],
+            )
+            pf.set_params(
+                "capital gains tax rate",
+                self.plant_config["finance_parameters"]["capital_gains_tax_rate"],
+            )
+            pf.set_params("sell undepreciated cap", True)
+            pf.set_params("tax losses monetized", True)
+            pf.set_params("general inflation rate", gen_inflation)
+            pf.set_params(
+                "leverage after tax nominal discount rate",
+                self.plant_config["finance_parameters"]["discount_rate"],
+            )
+            if self.plant_config["finance_parameters"]["debt_equity_split"]:
+                pf.set_params(
+                    "debt equity ratio of initial financing",
+                    (
+                        self.plant_config["finance_parameters"]["debt_equity_split"]
+                        / (100 - self.plant_config["finance_parameters"]["debt_equity_split"])
+                    ),
+                )  # TODO this may not be put in right
+            elif self.plant_config["finance_parameters"]["debt_equity_ratio"]:
+                pf.set_params(
+                    "debt equity ratio of initial financing",
+                    (self.plant_config["finance_parameters"]["debt_equity_ratio"]),
+                )  # TODO this may not be put in right
+            pf.set_params("debt type", self.plant_config["finance_parameters"]["debt_type"])
+            pf.set_params(
+                "loan period if used", self.plant_config["finance_parameters"]["loan_period"]
+            )
+            pf.set_params(
+                "debt interest rate",
+                self.plant_config["finance_parameters"]["debt_interest_rate"],
+            )
+            pf.set_params(
+                "cash onhand", self.plant_config["finance_parameters"]["cash_onhand_months"]
+            )
 
         # --------------------------------- Add capital and fixed items to ProFAST --------------
         for tech in self.tech_config:
