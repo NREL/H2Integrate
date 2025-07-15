@@ -3,8 +3,6 @@ import ProFAST  # system financial model
 import openmdao.api as om
 import numpy_financial as npf
 
-from h2integrate.core.supported_models import electricity_producing_techs
-
 
 class AdjustedCapexOpexComp(om.ExplicitComponent):
     def initialize(self):
@@ -50,7 +48,7 @@ class ProFastComp(om.ExplicitComponent):
     def initialize(self):
         self.options.declare("tech_config", types=dict)
         self.options.declare("plant_config", types=dict)
-        self.options.declare("commodity_type", types=str, default="hydrogen")
+        self.options.declare("commodity_type", types=str)
 
     def setup(self):
         tech_config = self.tech_config = self.options["tech_config"]
@@ -58,6 +56,34 @@ class ProFastComp(om.ExplicitComponent):
         self.discount_rate = plant_config["finance_parameters"]["discount_rate"]
         self.inflation_rate = plant_config["finance_parameters"]["costing_general_inflation"]
         self.cost_year = plant_config["plant"]["cost_year"]
+
+        # Check if the user defined specific technologies to include in the metrics.
+        # If provided, only include those technologies in the stackup.
+        # If not provided, include all technologies in the financial group in the stackup.
+        metrics_map = {
+            "hydrogen": "LCOH",
+            "electricity": "LCOE",
+            "ammonia": "LCOA",
+        }
+        metric_key = metrics_map.get(self.options["commodity_type"])
+        self.included_techs = (
+            plant_config["finance_parameters"]
+            .get("technologies_included_in_metrics", {})
+            .get(metric_key, None)
+        )
+
+        # Check if the included technologies are valid
+        if self.included_techs is not None:
+            missing_techs = [tech for tech in self.included_techs if tech not in tech_config]
+            if missing_techs:
+                raise ValueError(
+                    f"Included technology(ies) {missing_techs} not found in tech_config. "
+                    f"Available techs: {list(tech_config.keys())}"
+                )
+
+        # If no specific technologies are included, default to all technologies in tech_config
+        if self.included_techs is None:
+            self.included_techs = list(tech_config.keys())
 
         for tech in tech_config:
             self.add_input(f"capex_adjusted_{tech}", val=0.0, units="USD")
@@ -79,7 +105,8 @@ class ProFastComp(om.ExplicitComponent):
             self.add_input("time_until_replacement", units="h")
 
     def compute(self, inputs, outputs):
-        gen_inflation = self.plant_config["finance_parameters"]["profast_general_inflation"]
+        finance_parameters = self.plant_config["finance_parameters"]
+        gen_inflation = finance_parameters["profast_general_inflation"]
         commodity_type = self.options["commodity_type"]
 
         land_cost = 0.0
@@ -158,62 +185,59 @@ class ProFastComp(om.ExplicitComponent):
         pf.set_params("demand rampup", 0)
         pf.set_params("long term utilization", 1)  # TODO should use utilization
         pf.set_params("credit card fees", 0)
-        pf.set_params("sales tax", self.plant_config["finance_parameters"]["sales_tax_rate"])
+        pf.set_params("sales tax", finance_parameters["sales_tax_rate"])
         pf.set_params("license and permit", {"value": 00, "escalation": gen_inflation})
         pf.set_params("rent", {"value": 0, "escalation": gen_inflation})
         # TODO how to handle property tax and insurance for fully offshore?
         pf.set_params(
             "property tax and insurance",
-            self.plant_config["finance_parameters"]["property_tax"]
-            + self.plant_config["finance_parameters"]["property_insurance"],
+            finance_parameters["property_tax"] + finance_parameters["property_insurance"],
         )
         pf.set_params(
             "admin expense",
-            self.plant_config["finance_parameters"]["administrative_expense_percent_of_sales"],
+            finance_parameters["administrative_expense_percent_of_sales"],
         )
         pf.set_params(
             "total income tax rate",
-            self.plant_config["finance_parameters"]["total_income_tax_rate"],
+            finance_parameters["total_income_tax_rate"],
         )
         pf.set_params(
             "capital gains tax rate",
-            self.plant_config["finance_parameters"]["capital_gains_tax_rate"],
+            finance_parameters["capital_gains_tax_rate"],
         )
         pf.set_params("sell undepreciated cap", True)
         pf.set_params("tax losses monetized", True)
         pf.set_params("general inflation rate", gen_inflation)
         pf.set_params(
             "leverage after tax nominal discount rate",
-            self.plant_config["finance_parameters"]["discount_rate"],
+            finance_parameters["discount_rate"],
         )
-        if self.plant_config["finance_parameters"]["debt_equity_split"]:
+        if finance_parameters["debt_equity_split"]:
             pf.set_params(
                 "debt equity ratio of initial financing",
                 (
-                    self.plant_config["finance_parameters"]["debt_equity_split"]
-                    / (100 - self.plant_config["finance_parameters"]["debt_equity_split"])
+                    finance_parameters["debt_equity_split"]
+                    / (100 - finance_parameters["debt_equity_split"])
                 ),
             )  # TODO this may not be put in right
-        elif self.plant_config["finance_parameters"]["debt_equity_ratio"]:
+        elif finance_parameters["debt_equity_ratio"]:
             pf.set_params(
                 "debt equity ratio of initial financing",
-                (self.plant_config["finance_parameters"]["debt_equity_ratio"]),
+                (finance_parameters["debt_equity_ratio"]),
             )  # TODO this may not be put in right
-        pf.set_params("debt type", self.plant_config["finance_parameters"]["debt_type"])
-        pf.set_params("loan period if used", self.plant_config["finance_parameters"]["loan_period"])
+        pf.set_params("debt type", finance_parameters["debt_type"])
+        pf.set_params("loan period if used", finance_parameters["loan_period"])
         pf.set_params(
             "debt interest rate",
-            self.plant_config["finance_parameters"]["debt_interest_rate"],
+            finance_parameters["debt_interest_rate"],
         )
-        pf.set_params("cash onhand", self.plant_config["finance_parameters"]["cash_onhand_months"])
-
-        last_tech_that_produces_electricity = None
-        for tech in self.tech_config:
-            if tech in electricity_producing_techs:
-                last_tech_that_produces_electricity = tech
+        pf.set_params("cash onhand", finance_parameters["cash_onhand_months"])
 
         # --------------------------------- Add capital and fixed items to ProFAST --------------
         for tech in self.tech_config:
+            # Only add if tech is included in the user's desired stackup for that metric
+            if tech not in self.included_techs:
+                continue
             if "electrolyzer" in tech:
                 electrolyzer_refurbishment_schedule = np.zeros(
                     self.plant_config["plant"]["plant_life"]
@@ -229,10 +253,8 @@ class ProFastComp(om.ExplicitComponent):
                 pf.add_capital_item(
                     name="Electrolysis System",
                     cost=float(inputs[f"capex_adjusted_{tech}"]),
-                    depr_type=self.plant_config["finance_parameters"]["depreciation_method"],
-                    depr_period=int(
-                        self.plant_config["finance_parameters"]["depreciation_period_electrolyzer"]
-                    ),
+                    depr_type=finance_parameters["depreciation_method"],
+                    depr_period=int(finance_parameters["depreciation_period_electrolyzer"]),
                     refurb=electrolyzer_refurbishment_schedule,
                 )
                 pf.add_fixed_cost(
@@ -246,8 +268,8 @@ class ProFastComp(om.ExplicitComponent):
                 pf.add_capital_item(
                     name=f"{tech} System",
                     cost=float(inputs[f"capex_adjusted_{tech}"]),
-                    depr_type=self.plant_config["finance_parameters"]["depreciation_method"],
-                    depr_period=self.plant_config["finance_parameters"]["depreciation_period"],
+                    depr_type=finance_parameters["depreciation_method"],
+                    depr_period=finance_parameters["depreciation_period"],
                     refurb=[0],
                 )
                 pf.add_fixed_cost(
@@ -257,11 +279,6 @@ class ProFastComp(om.ExplicitComponent):
                     cost=float(inputs[f"opex_adjusted_{tech}"]),
                     escalation=gen_inflation,
                 )
-
-                # If we're calculating LCOE, we should only include technologies upstream of the
-                # last technology that produces electricity.
-                if commodity_type == "electricity" and tech == last_tech_that_produces_electricity:
-                    break
 
         # ------------------------------------ solve and post-process -----------------------------
 
