@@ -77,7 +77,12 @@ class ProFastComp(om.ExplicitComponent):
             self.add_input("time_until_replacement", units="h")
 
     def compute(self, inputs, outputs):
-        gen_inflation = self.plant_config["finance_parameters"]["profast_general_inflation"]
+        if "pf_params" in self.plant_config["finance_parameters"]:
+            gen_inflation = self.plant_config["finance_parameters"]["pf_params"]["params"][
+                "general inflation rate"
+            ]
+        else:
+            gen_inflation = self.plant_config["finance_parameters"]["profast_general_inflation"]
 
         land_cost = 0.0
 
@@ -127,7 +132,7 @@ class ProFastComp(om.ExplicitComponent):
 
         if "pf_params" in self.plant_config["finance_parameters"]:
             params = self.plant_config["finance_parameters"]["pf_params"]["params"]
-            avoided_params = ["capacity", "commodity"]
+            avoided_params = ["capacity", "commodity", "long term utilization"]
             params = {k: v for k, v in params.items() if k not in avoided_params}
             for i in params:
                 pf.set_params(i, params[i])
