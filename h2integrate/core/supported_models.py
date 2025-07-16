@@ -13,7 +13,7 @@ from h2integrate.storage.hydrogen.tank_baseclass import (
 )
 from h2integrate.converters.hydrogen.wombat_model import WOMBATElectrolyzerModel
 from h2integrate.converters.wind.wind_plant_pysam import PYSAMWindPlantPerformanceModel
-from h2integrate.converters.desalination.desalination import (
+from h2integrate.converters.water.desal.desalination import (
     ReverseOsmosisCostModel,
     ReverseOsmosisPerformanceModel,
 )
@@ -32,12 +32,13 @@ from h2integrate.converters.ammonia.simple_ammonia_model import (
     SimpleAmmoniaPerformanceModel,
 )
 from h2integrate.converters.hydrogen.singlitico_cost_model import SingliticoCostModel
-from h2integrate.converters.water.hydro_plant_run_of_river import (
-    RunOfRiverHydroCostModel,
-    RunOfRiverHydroPerformanceModel,
-)
+from h2integrate.converters.co2.marine.direct_ocean_capture import DOCCostModel, DOCPerformanceModel
 from h2integrate.converters.hydrogen.eco_tools_pem_electrolyzer import (
     ECOElectrolyzerPerformanceModel,
+)
+from h2integrate.converters.water_power.hydro_plant_run_of_river import (
+    RunOfRiverHydroCostModel,
+    RunOfRiverHydroPerformanceModel,
 )
 from h2integrate.converters.hydrogen.geologic.natural_geoh2_plant import (
     NaturalGeoH2CostModel,
@@ -78,6 +79,8 @@ supported_models = {
     "smr_methanol_plant_performance": SMRMethanolPlantPerformanceModel,
     "smr_methanol_plant_cost": SMRMethanolPlantCostModel,
     "methanol_plant_financial": SMRMethanolPlantFinanceModel,
+    "direct_ocean_capture_performance": DOCPerformanceModel,
+    "direct_ocean_capture_cost": DOCCostModel,
     "natural_geoh2_performance": NaturalGeoH2PerformanceModel,
     "natural_geoh2_cost": NaturalGeoH2CostModel,
     "natural_geoh2": NaturalGeoH2FinanceModel,

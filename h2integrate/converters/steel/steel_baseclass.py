@@ -3,6 +3,7 @@ import openmdao.api as om
 
 class SteelPerformanceBaseClass(om.ExplicitComponent):
     def initialize(self):
+        self.options.declare("driver_config", types=dict)
         self.options.declare("plant_config", types=dict)
         self.options.declare("tech_config", types=dict)
 
@@ -27,6 +28,7 @@ class SteelPerformanceBaseClass(om.ExplicitComponent):
 
 class SteelCostBaseClass(om.ExplicitComponent):
     def initialize(self):
+        self.options.declare("driver_config", types=dict)
         self.options.declare("plant_config", types=dict)
         self.options.declare("tech_config", types=dict)
 
@@ -50,6 +52,7 @@ class SteelCostBaseClass(om.ExplicitComponent):
 
 class SteelFinanceBaseClass(om.ExplicitComponent):
     def initialize(self):
+        self.options.declare("driver_config", types=dict)
         self.options.declare("plant_config", types=dict)
         self.options.declare("tech_config", types=dict)
 

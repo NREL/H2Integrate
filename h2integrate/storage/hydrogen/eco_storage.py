@@ -25,6 +25,7 @@ class H2StorageModelConfig(BaseConfig):
 
 class H2Storage(om.ExplicitComponent):
     def initialize(self):
+        self.options.declare("driver_config", types=dict)
         self.options.declare("tech_config", types=dict)
         self.options.declare("plant_config", types=dict)
         self.options.declare("verbose", types=bool, default=False)
