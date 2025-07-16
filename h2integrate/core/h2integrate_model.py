@@ -350,6 +350,7 @@ class H2IntegrateModel:
         technology_interconnections = self.plant_config.get("technology_interconnections", [])
 
         combiner_counts = {}
+        splitter_counts = {}
 
         # loop through each linkage and instantiate an OpenMDAO object (assume it exists) for
         # the connection type (e.g. cable, pipeline, etc)
@@ -366,7 +367,22 @@ class H2IntegrateModel:
                 # Add the connection component to the model
                 self.plant.add_subsystem(connection_name, connection_component)
 
-                if "storage" in source_tech:
+                # Check if the source technology is a splitter
+                if "splitter" in source_tech:
+                    # Connect the source technology to the connection component
+                    # with specific output names
+                    if source_tech not in splitter_counts:
+                        splitter_counts[source_tech] = 1
+                    else:
+                        splitter_counts[source_tech] += 1
+
+                    # Connect the splitter output to the connection component
+                    self.plant.connect(
+                        f"{source_tech}.electricity_out{splitter_counts[source_tech]}",
+                        f"{connection_name}.{transport_item}_in",
+                    )
+
+                elif "storage" in source_tech:
                     # Connect the source technology to the connection component
                     self.plant.connect(
                         f"{source_tech}.{transport_item}_out",
@@ -379,9 +395,9 @@ class H2IntegrateModel:
                         f"{connection_name}.{transport_item}_in",
                     )
 
-                # Check if the transport type is a combiner
+                # Check if the destination technology is a combiner
                 if "combiner" in dest_tech:
-                    # Connect the source technology to the connection component
+                    # Connect the connection component to the destination technology
                     # with specific input names
                     if dest_tech not in combiner_counts:
                         combiner_counts[dest_tech] = 1
@@ -391,7 +407,7 @@ class H2IntegrateModel:
                     # Connect the connection component to the destination technology
                     self.plant.connect(
                         f"{connection_name}.{transport_item}_out",
-                        f"{dest_tech}.electricity_in{combiner_counts[dest_tech]}",
+                        f"{dest_tech}.electricity_input{combiner_counts[dest_tech]}",
                     )
 
                 elif "storage" in dest_tech:
@@ -460,6 +476,9 @@ class H2IntegrateModel:
                     )
 
                 for tech_name in tech_configs.keys():
+                    if "splitter" in tech_name or "combiner" in tech_name:
+                        continue
+
                     self.plant.connect(
                         f"{tech_name}.CapEx", f"financials_group_{group_id}.capex_{tech_name}"
                     )

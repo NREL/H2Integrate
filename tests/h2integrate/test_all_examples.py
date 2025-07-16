@@ -190,6 +190,34 @@ def test_wind_wave_doc_example(subtests):
         assert pytest.approx(model.prob.get_val("financials_group_1.LCOE"), rel=1e-3) == 1.05281478
 
 
+@unittest.skipUnless(importlib.util.find_spec("mcm") is not None, "mcm is not installed")
+def test_wind_wave_splitter_doc_h2_example(subtests):
+    # Change the current working directory to the example's directory
+    os.chdir(examples_dir / "12_wind_wave_splitter_doc_h2")
+
+    # Create a H2Integrate model
+    model = H2IntegrateModel(Path.cwd() / "offshore_plant_splitter_doc_h2.yaml")
+
+    # Run the model
+    model.run()
+
+    model.post_process()
+
+    # Subtests for checking specific values - verify that the power splitter is working
+    # and both doc and electrolyzer receive power
+    with subtests.test("Check power splitter electricity to doc"):
+        electricity_to_doc = model.prob.get_val("power_splitter.electricity_out_1")
+        assert electricity_to_doc.max() > 0  # Should receive some electricity
+
+    with subtests.test("Check power splitter electricity to electrolyzer"):
+        electricity_to_electrolyzer = model.prob.get_val("power_splitter.electricity_out_2")
+        assert electricity_to_electrolyzer.max() > 0  # Should receive some electricity
+
+    with subtests.test("Check electrolyzer hydrogen production"):
+        hydrogen_produced = model.prob.get_val("electrolyzer.hydrogen_out")
+        assert hydrogen_produced.max() > 0  # Should produce some hydrogen
+
+
 def test_hydro_example(subtests):
     # Change the current working directory to the example's directory
     os.chdir(examples_dir / "07_run_of_river_plant")

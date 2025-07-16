@@ -67,7 +67,7 @@ class BasicElectrolyzerCostModel(ElectrolyzerCostBaseClass):
             electrolyzer_size_mw,
             useful_life,
             atb_year,
-            inputs["electricity"],
+            inputs["electricity_in"],
             total_hydrogen_produced,
             0.0,
             0.0,
