@@ -1,6 +1,6 @@
 import openmdao.api as om
 from attrs import field, define
-from numpy import ones
+from numpy import ones, arange
 
 from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
 
@@ -120,11 +120,12 @@ class PassThroughOpenLoopController(ControllerBaseClass):
         # Get the size of the input/output array
         size = self._get_var_meta(f"{self.config.resource_name}_in", "size")
 
-        # Declare partials sparsely for all elements based on the eigenvector
+        # Declare partials sparsely for all elements as an identity matrix
+        # (diagonal elements are 1.0, others are 0.0)
         self.declare_partials(
             of=f"{self.config.resource_name}_out",
             wrt=f"{self.config.resource_name}_in",
-            rows=range(size),
-            cols=range(size),
-            val=ones(size),
+            rows=arange(size),
+            cols=arange(size),
+            val=ones(size),  # Diagonal elements are 1.0
         )

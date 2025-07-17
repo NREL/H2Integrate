@@ -234,7 +234,7 @@ class H2IntegrateModel:
                         )
                         getattr(self, model_type + "s").append(model_object)
                     elif model_type == "performance_model":
-                        raise Exception("Model definition requires 'performance_model'.")
+                        raise KeyError("Model definition requires 'performance_model'.")
 
                 # Process the financial models
                 if "financial_model" in individual_tech_config:
