@@ -173,6 +173,12 @@ class PYSAMSolarPlantPerformanceModel(SolarPerformanceBaseClass):
         self.system_model.value("solar_resource_data", solar_resource.data)
 
     def calc_tilt_angle(self):
+        """Calculates the tilt angle of the PV panel based on the tilt
+            option described by design_config.tilt_angle_func
+
+        Returns:
+            float: tilt angle of the PV panel in degrees.
+        """
         if self.design_config.tilt_angle_func == "none":
             return self.system_model.value("tilt")
         if self.design_config.tilt_angle_func == "lat":
