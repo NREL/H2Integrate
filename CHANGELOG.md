@@ -23,6 +23,8 @@
 - Added more available constraints from the HOPP wrapper useful for design optimizations
 - Added geologic hydrogen (geoh2) converter and examples [PR 135](https://github.com/NREL/H2Integrate/pull/135)
 - Added WOMBAT electrolyzer O&M model
+- Added marine carbon capture base class
+- Added direct ocean capture technology
 
 ## 0.3.0 [May 2 2025]
 
