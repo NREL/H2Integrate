@@ -167,6 +167,10 @@ config:
   - `electricity_out2 = electricity_in - electricity_out1`
 - **Smart limiting**: If you request more power than available, the first output gets all available power and the second output gets zero
 
+```{note}
+The `prescribed_electricity_to_first_tech` parameter can be provided as either a scalar value (constant for all time steps) or as a time-series array that varies throughout the simulation. This allows for sophisticated control strategies where you're meeting a desired load profile, or when the power split changes over time based on operational requirements, market conditions.
+```
+
 ### Inputs and outputs
 
 - **Input**:
