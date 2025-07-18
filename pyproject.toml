@@ -56,7 +56,6 @@ dependencies = [
     "ruamel.yaml",
     "scipy==1.15.3",
     "wombat>=0.11",
-    "timezonefinder<6.6.0",
 ]
 keywords = [
     "python3",
