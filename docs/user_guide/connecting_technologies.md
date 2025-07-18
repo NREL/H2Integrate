@@ -60,20 +60,20 @@ For a simple splitter configuration:
 technology_interconnections: [
   ["wind_farm", "power_splitter", "electricity", "cable"],
   ["power_splitter", "electrolyzer", "electricity", "cable"],
-  ["power_splitter", "doc_system", "electricity", "cable"],
+  ["power_splitter", "doc", "electricity", "cable"],
 ]
 ```
 
 This creates:
 1. `wind_farm_to_power_splitter_cable` component
 2. `power_splitter_to_electrolyzer_cable` component
-3. `power_splitter_to_doc_system_cable` component
+3. `power_splitter_to_doc_cable` component
 
 And automatically connects:
 - `wind_farm.electricity_out` → `wind_farm_to_power_splitter_cable.electricity_in`
 - `wind_farm_to_power_splitter_cable.electricity_out` → `power_splitter.electricity_in`
 - `power_splitter.electricity_out1` → `power_splitter_to_electrolyzer_cable.electricity_in`
-- `power_splitter.electricity_out2` → `power_splitter_to_doc_system_cable.electricity_in`
+- `power_splitter.electricity_out2` → `power_splitter_to_doc_cable.electricity_in`
 
 ## Power combiner
 
@@ -181,7 +181,7 @@ config:
 ```yaml
 technology_interconnections: [
   ["offshore_wind", "power_splitter", "electricity", "cable"],
-  ["power_splitter", "doc_system", "electricity", "cable"],      # first output
+  ["power_splitter", "doc", "electricity", "cable"],      # first output
   ["power_splitter", "electrolyzer", "electricity", "cable"],    # second output
 ]
 ```
