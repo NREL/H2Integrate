@@ -8,8 +8,31 @@ from h2integrate.core.utilities import BaseConfig
 @define
 class SplitterPerformanceConfig(BaseConfig):
     split_mode: str = field()
-    split_ratio: float = field()
-    prescribed_electricity: float = field()
+    split_ratio: float = field(default=None)
+    prescribed_electricity: float = field(default=None)
+
+    def __attrs_post_init__(self):
+        """Validate that the required fields are present based on split_mode."""
+        if self.split_mode == "ratio":
+            if self.split_ratio is None:
+                raise ValueError("split_ratio is required when split_mode is 'ratio'")
+        elif self.split_mode == "prescribed_electricity":
+            if self.prescribed_electricity is None:
+                raise ValueError(
+                    "prescribed_electricity is required"
+                    " when split_mode is 'prescribed_electricity'"
+                )
+        else:
+            raise ValueError(
+                f"Invalid split_mode: {self.split_mode}."
+                " Must be 'ratio' or 'prescribed_electricity'"
+            )
+
+        # Set default values for unused fields
+        if self.split_mode == "ratio" and self.prescribed_electricity is None:
+            self.prescribed_electricity = 0.0
+        elif self.split_mode == "prescribed_electricity" and self.split_ratio is None:
+            self.split_ratio = 0.0
 
 
 class SplitterPerformanceModel(om.ExplicitComponent):

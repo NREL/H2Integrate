@@ -15,7 +15,6 @@ technologies:
       config:
         split_mode: "ratio"
         split_ratio: 0.5
-        prescribed_electricity: 0.
 
   doc:
     performance_model:
@@ -24,8 +23,8 @@ technologies:
       model: "direct_ocean_capture_cost"
     model_inputs:
       shared_parameters:
-        power_single_ed_w: 24000000. # W
-        flow_rate_single_ed_m3s: 0.6 # m^3/s
+        power_single_ed_w: 240000. # W
+        flow_rate_single_ed_m3s: 0.4 # m^3/s
         number_ed_min: 1
         number_ed_max: 10
         E_HCl: 0.05 # kWh/mol
@@ -52,9 +51,9 @@ technologies:
       model: "basic_electrolyzer_cost"
     model_inputs:
       shared_parameters:
-        rating: 20. # MW
+        rating: 80. # MW
         location: "onshore"
-        electrolyzer_capex: 500
+        electrolyzer_capex: 250
 
       performance_parameters:
         sizing:
