@@ -191,9 +191,9 @@ def test_wind_wave_doc_example(subtests):
 
 
 @unittest.skipUnless(importlib.util.find_spec("mcm") is not None, "mcm is not installed")
-def test_wind_wave_splitter_doc_h2_example(subtests):
+def test_splitter_wind_doc_h2_example(subtests):
     # Change the current working directory to the example's directory
-    os.chdir(examples_dir / "12_wind_wave_splitter_doc_h2")
+    os.chdir(examples_dir / "12_splitter_wind_doc_h2")
 
     # Create a H2Integrate model
     model = H2IntegrateModel(Path.cwd() / "offshore_plant_splitter_doc_h2.yaml")
