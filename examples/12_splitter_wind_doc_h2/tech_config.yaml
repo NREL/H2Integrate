@@ -14,7 +14,7 @@ technologies:
       model: "splitter_performance"
       config:
         split_mode: "fraction"
-        fraction_of_electricity_to_first_tech: 0.5
+        fraction_of_electricity_to_first_tech: 0.25
 
   doc:
     performance_model:

@@ -203,19 +203,15 @@ def test_splitter_wind_doc_h2_example(subtests):
 
     model.post_process()
 
-    # Subtests for checking specific values - verify that the power splitter is working
-    # and both doc and electrolyzer receive power
-    with subtests.test("Check power splitter electricity to doc"):
-        electricity_to_doc = model.prob.get_val("power_splitter.electricity_out_1")
-        assert electricity_to_doc.max() > 0  # Should receive some electricity
+    # Subtests for checking specific values
+    with subtests.test("Check LCOH"):
+        assert pytest.approx(model.prob.get_val("financials_group_1.LCOH"), rel=1e-3) == 15.36040206
 
-    with subtests.test("Check power splitter electricity to electrolyzer"):
-        electricity_to_electrolyzer = model.prob.get_val("power_splitter.electricity_out_2")
-        assert electricity_to_electrolyzer.max() > 0  # Should receive some electricity
+    with subtests.test("Check LCOC"):
+        assert pytest.approx(model.prob.get_val("financials_group_1.LCOC"), rel=1e-3) == 17.30108848
 
-    with subtests.test("Check electrolyzer hydrogen production"):
-        hydrogen_produced = model.prob.get_val("electrolyzer.hydrogen_out")
-        assert hydrogen_produced.max() > 0  # Should produce some hydrogen
+    with subtests.test("Check LCOE"):
+        assert pytest.approx(model.prob.get_val("financials_group_1.LCOE"), rel=1e-3) == 0.21504145
 
 
 def test_hydro_example(subtests):

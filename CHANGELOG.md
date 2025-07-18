@@ -25,6 +25,7 @@
 - Added WOMBAT electrolyzer O&M model
 - Added marine carbon capture base class
 - Added direct ocean capture technology
+- Added a power splitter technology, allowing for flexible power distribution between multiple technologies
 
 ## 0.3.0 [May 2 2025]
 
