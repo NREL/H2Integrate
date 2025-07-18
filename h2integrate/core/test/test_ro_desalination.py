@@ -1,7 +1,7 @@
 import openmdao.api as om
 from pytest import approx
 
-from h2integrate.converters.desalination.desalination import (
+from h2integrate.converters.water.desal.desalination import (
     ReverseOsmosisCostModel,
     ReverseOsmosisPerformanceModel,
 )
