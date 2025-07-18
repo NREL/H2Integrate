@@ -3,6 +3,7 @@ import openmdao.api as om
 
 class DesalinationPerformanceBaseClass(om.ExplicitComponent):
     def initialize(self):
+        self.options.declare("driver_config", types=dict)
         self.options.declare("plant_config", types=dict)
         self.options.declare("tech_config", types=dict)
 
@@ -23,6 +24,7 @@ class DesalinationPerformanceBaseClass(om.ExplicitComponent):
 
 class DesalinationCostBaseClass(om.ExplicitComponent):
     def initialize(self):
+        self.options.declare("driver_config", types=dict)
         self.options.declare("plant_config", types=dict)
         self.options.declare("tech_config", types=dict)
 
@@ -46,6 +48,7 @@ class DesalinationCostBaseClass(om.ExplicitComponent):
 
 class DesalinationFinanceBaseClass(om.ExplicitComponent):
     def initialize(self):
+        self.options.declare("driver_config", types=dict)
         self.options.declare("plant_config", types=dict)
         self.options.declare("tech_config", types=dict)
 

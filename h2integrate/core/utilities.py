@@ -72,7 +72,7 @@ def merge_shared_inputs(config, input_type):
         config (dict): A dictionary containing configuration data. It must include keys
                        like `shared_parameters` and `{input_type}_parameters`.
         input_type (str): The type of input parameters to merge. Valid values are
-                          'performance', 'cost', or 'finance'.
+                          'performance', 'control', 'cost', or 'finance'.
 
     Returns:
         dict: A merged dictionary containing parameters from both `shared_parameters`
