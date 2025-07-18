@@ -13,29 +13,33 @@ rng = np.random.default_rng(seed=0)
 
 
 def test_splitter_ratio_mode():
-    """Test the splitter in ratio mode with various split ratios."""
+    """Test the splitter in fraction mode with various split fractions."""
     prob = om.Problem()
 
-    tech_config = {"performance_model": {"config": {"split_mode": "ratio", "split_ratio": 0.3}}}
+    tech_config = {
+        "performance_model": {
+            "config": {"split_mode": "fraction", "fraction_of_electricity_to_first_tech": 0.3}
+        }
+    }
 
     comp = SplitterPerformanceModel(tech_config=tech_config)
     prob.model.add_subsystem("comp", comp, promotes=["*"])
     ivc = om.IndepVarComp()
     ivc.add_output("electricity_in", val=np.zeros(8760), units="kW")
-    ivc.add_output("split_ratio", val=0.3)
+    ivc.add_output("fraction_of_electricity_to_first_tech", val=0.3)
     prob.model.add_subsystem("ivc", ivc, promotes=["*"])
 
     prob.setup()
 
     electricity_input = rng.random(8760) * 1000
-    split_ratio = 0.3
+    fraction_to_first = 0.3
 
     prob.set_val("electricity_in", electricity_input, units="kW")
-    prob.set_val("split_ratio", split_ratio)
+    prob.set_val("fraction_of_electricity_to_first_tech", fraction_to_first)
     prob.run_model()
 
-    expected_output1 = electricity_input * split_ratio
-    expected_output2 = electricity_input * (1.0 - split_ratio)
+    expected_output1 = electricity_input * fraction_to_first
+    expected_output2 = electricity_input * (1.0 - fraction_to_first)
 
     assert prob.get_val("electricity_out1", units="kW") == approx(expected_output1, rel=1e-5)
     assert prob.get_val("electricity_out2", units="kW") == approx(expected_output2, rel=1e-5)
@@ -47,15 +51,19 @@ def test_splitter_ratio_mode():
 
 
 def test_splitter_ratio_mode_edge_cases():
-    """Test the splitter in ratio mode with edge case ratios."""
-    tech_config = {"performance_model": {"config": {"split_mode": "ratio", "split_ratio": 0.0}}}
+    """Test the splitter in fraction mode with edge case fractions."""
+    tech_config = {
+        "performance_model": {
+            "config": {"split_mode": "fraction", "fraction_of_electricity_to_first_tech": 0.0}
+        }
+    }
 
     prob = om.Problem()
     comp = SplitterPerformanceModel(tech_config=tech_config)
     prob.model.add_subsystem("comp", comp, promotes=["*"])
     ivc = om.IndepVarComp()
     ivc.add_output("electricity_in", val=100.0, units="kW")
-    ivc.add_output("split_ratio", val=0.0)
+    ivc.add_output("fraction_of_electricity_to_first_tech", val=0.0)
     prob.model.add_subsystem("ivc", ivc, promotes=["*"])
 
     prob.setup()
@@ -63,25 +71,25 @@ def test_splitter_ratio_mode_edge_cases():
     electricity_input = 100.0
 
     prob.set_val("electricity_in", electricity_input, units="kW")
-    prob.set_val("split_ratio", 0.0)
+    prob.set_val("fraction_of_electricity_to_first_tech", 0.0)
     prob.run_model()
 
     assert prob.get_val("electricity_out1", units="kW") == approx(0.0, abs=1e-10)
     assert prob.get_val("electricity_out2", units="kW") == approx(electricity_input, rel=1e-5)
 
-    prob.set_val("split_ratio", 1.0)
+    prob.set_val("fraction_of_electricity_to_first_tech", 1.0)
     prob.run_model()
 
     assert prob.get_val("electricity_out1", units="kW") == approx(electricity_input, rel=1e-5)
     assert prob.get_val("electricity_out2", units="kW") == approx(0.0, abs=1e-10)
 
-    prob.set_val("split_ratio", 1.5)
+    prob.set_val("fraction_of_electricity_to_first_tech", 1.5)
     prob.run_model()
 
     assert prob.get_val("electricity_out1", units="kW") == approx(electricity_input, rel=1e-5)
     assert prob.get_val("electricity_out2", units="kW") == approx(0.0, abs=1e-10)
 
-    prob.set_val("split_ratio", -0.5)
+    prob.set_val("fraction_of_electricity_to_first_tech", -0.5)
     prob.run_model()
 
     assert prob.get_val("electricity_out1", units="kW") == approx(0.0, abs=1e-10)
@@ -89,12 +97,12 @@ def test_splitter_ratio_mode_edge_cases():
 
 
 def test_splitter_prescribed_electricity_mode():
-    """Test the splitter in prescribed electricity mode."""
+    """Test the splitter in prescribed_electricity mode."""
     tech_config = {
         "performance_model": {
             "config": {
                 "split_mode": "prescribed_electricity",
-                "prescribed_electricity": 200.0,
+                "prescribed_electricity_to_first_tech": 200.0,
             }
         }
     }
@@ -104,7 +112,7 @@ def test_splitter_prescribed_electricity_mode():
     prob.model.add_subsystem("comp", comp, promotes=["*"])
     ivc = om.IndepVarComp()
     ivc.add_output("electricity_in", val=np.zeros(8760), units="kW")
-    ivc.add_output("prescribed_electricity", val=np.zeros(8760), units="kW")
+    ivc.add_output("prescribed_electricity_to_first_tech", val=np.zeros(8760), units="kW")
     prob.model.add_subsystem("ivc", ivc, promotes=["*"])
 
     prob.setup()
@@ -113,7 +121,7 @@ def test_splitter_prescribed_electricity_mode():
     prescribed_electricity = np.full(8760, 200.0)
 
     prob.set_val("electricity_in", electricity_input, units="kW")
-    prob.set_val("prescribed_electricity", prescribed_electricity, units="kW")
+    prob.set_val("prescribed_electricity_to_first_tech", prescribed_electricity, units="kW")
     prob.run_model()
 
     expected_output1 = prescribed_electricity
@@ -130,14 +138,14 @@ def test_splitter_prescribed_electricity_mode():
 
 def test_splitter_prescribed_electricity_mode_limited_input():
     """
-    Test the splitter in prescribed electricity mode
+    Test the splitter in prescribed_electricity mode
     when input is less than prescribed electricity.
     """
     tech_config = {
         "performance_model": {
             "config": {
                 "split_mode": "prescribed_electricity",
-                "prescribed_electricity": 150.0,
+                "prescribed_electricity_to_first_tech": 150.0,
             }
         }
     }
@@ -147,7 +155,7 @@ def test_splitter_prescribed_electricity_mode_limited_input():
     prob.model.add_subsystem("comp", comp, promotes=["*"])
     ivc = om.IndepVarComp()
     ivc.add_output("electricity_in", val=np.zeros(8760), units="kW")
-    ivc.add_output("prescribed_electricity", val=np.zeros(8760), units="kW")
+    ivc.add_output("prescribed_electricity_to_first_tech", val=np.zeros(8760), units="kW")
     prob.model.add_subsystem("ivc", ivc, promotes=["*"])
 
     prob.setup()
@@ -156,7 +164,7 @@ def test_splitter_prescribed_electricity_mode_limited_input():
     prescribed_electricity = np.full(8760, 150.0)
 
     prob.set_val("electricity_in", electricity_input, units="kW")
-    prob.set_val("prescribed_electricity", prescribed_electricity, units="kW")
+    prob.set_val("prescribed_electricity_to_first_tech", prescribed_electricity, units="kW")
     prob.run_model()
 
     expected_output1 = electricity_input
@@ -167,12 +175,12 @@ def test_splitter_prescribed_electricity_mode_limited_input():
 
 
 def test_splitter_prescribed_electricity_mode_zero_input():
-    """Test the splitter in prescribed electricity mode with zero input."""
+    """Test the splitter in prescribed_electricity mode with zero input."""
     tech_config = {
         "performance_model": {
             "config": {
                 "split_mode": "prescribed_electricity",
-                "prescribed_electricity": 50.0,
+                "prescribed_electricity_to_first_tech": 50.0,
             }
         }
     }
@@ -182,13 +190,13 @@ def test_splitter_prescribed_electricity_mode_zero_input():
     prob.model.add_subsystem("comp", comp, promotes=["*"])
     ivc = om.IndepVarComp()
     ivc.add_output("electricity_in", val=0.0, units="kW")
-    ivc.add_output("prescribed_electricity", val=50.0, units="kW")
+    ivc.add_output("prescribed_electricity_to_first_tech", val=50.0, units="kW")
     prob.model.add_subsystem("ivc", ivc, promotes=["*"])
 
     prob.setup()
 
     prob.set_val("electricity_in", 0.0, units="kW")
-    prob.set_val("prescribed_electricity", 50.0, units="kW")
+    prob.set_val("prescribed_electricity_to_first_tech", 50.0, units="kW")
     prob.run_model()
 
     assert prob.get_val("electricity_out1", units="kW") == approx(0.0, abs=1e-10)
@@ -196,12 +204,12 @@ def test_splitter_prescribed_electricity_mode_zero_input():
 
 
 def test_splitter_prescribed_electricity_mode_negative_prescribed_electricity():
-    """Test the splitter in prescribed electricity mode with negative prescribed electricity."""
+    """Test the splitter in prescribed_electricity mode with negative prescribed electricity."""
     tech_config = {
         "performance_model": {
             "config": {
                 "split_mode": "prescribed_electricity",
-                "prescribed_electricity": -50.0,
+                "prescribed_electricity_to_first_tech": -50.0,
             }
         }
     }
@@ -211,14 +219,14 @@ def test_splitter_prescribed_electricity_mode_negative_prescribed_electricity():
     prob.model.add_subsystem("comp", comp, promotes=["*"])
     ivc = om.IndepVarComp()
     ivc.add_output("electricity_in", val=100.0, units="kW")
-    ivc.add_output("prescribed_electricity", val=-50.0, units="kW")
+    ivc.add_output("prescribed_electricity_to_first_tech", val=-50.0, units="kW")
     prob.model.add_subsystem("ivc", ivc, promotes=["*"])
 
     prob.setup()
 
     electricity_input = 100.0
     prob.set_val("electricity_in", electricity_input, units="kW")
-    prob.set_val("prescribed_electricity", -50.0, units="kW")
+    prob.set_val("prescribed_electricity_to_first_tech", -50.0, units="kW")
     prob.run_model()
 
     assert prob.get_val("electricity_out1", units="kW") == approx(0.0, abs=1e-10)
@@ -237,7 +245,7 @@ def test_splitter_invalid_mode():
 
     with pytest.raises(
         ValueError,
-        match="Invalid split_mode: invalid_mode. Must be 'ratio' or 'prescribed_electricity'",
+        match="Invalid split_mode: invalid_mode. Must be 'fraction' or 'prescribed_electricity'",
     ):
         prob = om.Problem()
         comp = SplitterPerformanceModel(tech_config=tech_config)
@@ -248,7 +256,9 @@ def test_splitter_invalid_mode():
 def test_splitter_scalar_inputs():
     """Test the splitter with scalar inputs instead of arrays."""
     tech_config_ratio = {
-        "performance_model": {"config": {"split_mode": "ratio", "split_ratio": 0.4}}
+        "performance_model": {
+            "config": {"split_mode": "fraction", "fraction_of_electricity_to_first_tech": 0.4}
+        }
     }
 
     prob = om.Problem()
@@ -256,7 +266,7 @@ def test_splitter_scalar_inputs():
     prob.model.add_subsystem("comp", comp, promotes=["*"])
     ivc = om.IndepVarComp()
     ivc.add_output("electricity_in", val=100.0, units="kW")
-    ivc.add_output("split_ratio", val=0.4)
+    ivc.add_output("fraction_of_electricity_to_first_tech", val=0.4)
     prob.model.add_subsystem("ivc", ivc, promotes=["*"])
 
     prob.setup()
@@ -269,7 +279,7 @@ def test_splitter_scalar_inputs():
         "performance_model": {
             "config": {
                 "split_mode": "prescribed_electricity",
-                "prescribed_electricity": 30.0,
+                "prescribed_electricity_to_first_tech": 30.0,
             }
         }
     }
@@ -279,7 +289,7 @@ def test_splitter_scalar_inputs():
     prob2.model.add_subsystem("comp", comp2, promotes=["*"])
     ivc2 = om.IndepVarComp()
     ivc2.add_output("electricity_in", val=100.0, units="kW")
-    ivc2.add_output("prescribed_electricity", val=30.0, units="kW")
+    ivc2.add_output("prescribed_electricity_to_first_tech", val=30.0, units="kW")
     prob2.model.add_subsystem("ivc", ivc2, promotes=["*"])
 
     prob2.setup()
@@ -291,14 +301,18 @@ def test_splitter_scalar_inputs():
 
 def test_splitter_with_explicit_config():
     """Test the splitter with explicit configuration."""
-    tech_config = {"performance_model": {"config": {"split_mode": "ratio", "split_ratio": 0.5}}}
+    tech_config = {
+        "performance_model": {
+            "config": {"split_mode": "fraction", "fraction_of_electricity_to_first_tech": 0.5}
+        }
+    }
 
     prob = om.Problem()
     comp = SplitterPerformanceModel(tech_config=tech_config)
     prob.model.add_subsystem("comp", comp, promotes=["*"])
     ivc = om.IndepVarComp()
     ivc.add_output("electricity_in", val=100.0, units="kW")
-    ivc.add_output("split_ratio", val=0.5)
+    ivc.add_output("fraction_of_electricity_to_first_tech", val=0.5)
     prob.model.add_subsystem("ivc", ivc, promotes=["*"])
 
     prob.setup()
@@ -313,24 +327,27 @@ def test_splitter_config_object():
 
     config_dict = {
         "split_mode": "prescribed_electricity",
-        "prescribed_electricity": 100.0,
+        "prescribed_electricity_to_first_tech": 100.0,
     }
     config = SplitterPerformanceConfig.from_dict(config_dict)
     assert config.split_mode == "prescribed_electricity"
-    assert config.prescribed_electricity == 100.0
+    assert config.prescribed_electricity_to_first_tech == 100.0
 
-    config_dict_ratio = {"split_mode": "ratio", "split_ratio": 0.3}
+    config_dict_ratio = {"split_mode": "fraction", "fraction_of_electricity_to_first_tech": 0.3}
     config = SplitterPerformanceConfig.from_dict(config_dict_ratio)
-    assert config.split_mode == "ratio"
-    assert config.split_ratio == 0.3
+    assert config.split_mode == "fraction"
+    assert config.fraction_of_electricity_to_first_tech == 0.3
 
 
 def test_splitter_missing_config():
     """Test that missing required config fields cause an error."""
 
-    incomplete_config_dict = {"split_mode": "ratio"}
+    incomplete_config_dict = {"split_mode": "fraction"}
 
-    with pytest.raises(ValueError, match="split_ratio is required when split_mode is 'ratio'"):
+    with pytest.raises(
+        ValueError,
+        match="fraction_of_electricity_to_first_tech is required when split_mode is 'fraction'",
+    ):
         SplitterPerformanceConfig.from_dict(incomplete_config_dict)
 
 
@@ -340,7 +357,7 @@ def test_splitter_prescribed_electricity_default_value():
         "performance_model": {
             "config": {
                 "split_mode": "prescribed_electricity",
-                "prescribed_electricity": 75.0,
+                "prescribed_electricity_to_first_tech": 75.0,
             }
         }
     }
@@ -350,7 +367,7 @@ def test_splitter_prescribed_electricity_default_value():
     prob.model.add_subsystem("comp", comp, promotes=["*"])
     ivc = om.IndepVarComp()
     ivc.add_output("electricity_in", val=100.0, units="kW")
-    ivc.add_output("prescribed_electricity", val=75.0, units="kW")
+    ivc.add_output("prescribed_electricity_to_first_tech", val=75.0, units="kW")
     prob.model.add_subsystem("ivc", ivc, promotes=["*"])
 
     prob.setup()

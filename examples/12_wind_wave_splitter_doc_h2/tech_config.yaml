@@ -13,8 +13,8 @@ technologies:
     performance_model:
       model: "splitter_performance"
       config:
-        split_mode: "ratio"
-        split_ratio: 0.5
+        split_mode: "fraction"
+        fraction_of_electricity_to_first_tech: 0.5
 
   doc:
     performance_model:
