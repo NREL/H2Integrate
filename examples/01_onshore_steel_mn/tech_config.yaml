@@ -41,12 +41,17 @@ technologies:
   h2_storage:
     performance_model:
       model: "h2_storage"
+    control_model:
+      model: "pass_through_controller"
     cost_model:
       model: "h2_storage"
     financial_model:
       group: 1
     model_inputs:
       shared_parameters:
+        resource_name: "hydrogen"
+        resource_units: "kg/h"
+      performance_parameters:
         rating: 720.
         size_capacity_from_demand:
           flag: True # If True, then storage is sized to provide steady-state storage

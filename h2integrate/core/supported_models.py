@@ -11,6 +11,7 @@ from h2integrate.storage.hydrogen.tank_baseclass import (
     HydrogenTankCostModel,
     HydrogenTankPerformanceModel,
 )
+from h2integrate.controllers.openloop_controllers import PassThroughOpenLoopController
 from h2integrate.converters.hydrogen.wombat_model import WOMBATElectrolyzerModel
 from h2integrate.converters.wind.wind_plant_pysam import PYSAMWindPlantPerformanceModel
 from h2integrate.converters.water.desal.desalination import (
@@ -91,6 +92,8 @@ supported_models = {
     "cable": CablePerformanceModel,
     "pipe": PipePerformanceModel,
     "combiner_performance": CombinerPerformanceModel,
+    # Control
+    "pass_through_controller": PassThroughOpenLoopController,
     # Storage
     "hydrogen_tank_performance": HydrogenTankPerformanceModel,
     "hydrogen_tank_cost": HydrogenTankCostModel,
