@@ -39,10 +39,32 @@ class PYSAMSolarPlantPerformanceModelDesignConfig(BaseConfig):
     rotlim: float = field(default=45.0, validator=range_val(0.0, 270.0))
     tilt: float = field(default=0.0, validator=range_val(0.0, 90.0))
     use_wf_albedo: bool = field(default=False)
+    config_name: str = field(
+        default="PVWattsSingleOwner",
+        validator=contains(
+            [
+                "PVWattsCommercial",
+                "PVWattsCommunitySolar",
+                "PVWattsHostDeveloper",
+                "PVWattsMerchantPlant",
+                "PVWattsNone",
+                "PVWattsResidential",
+                "PVWattsSaleLeaseback",
+                "PVWattsSingleOwner",
+                "PVWattsThirdParty",
+                "PVWattsAllEquityPartnershipFlip",
+            ]
+        ),
+    )
+    tilt_angle_func: str = field(
+        default="none",
+        validator=contains(["none", "lat-func", "lat"]),
+        converter=(str.strip, str.lower),
+    )
 
     def create_input_dict(self):
         full_dict = self.as_dict()
-        non_design_cols = ["pv_capacity_kWdc", "use_wf_albedo"]
+        non_design_cols = ["pv_capacity_kWdc", "use_wf_albedo", "tilt_angle_func", "config_name"]
         design_dict = {k: v for k, v in full_dict.items() if k not in non_design_cols}
         return {"SystemDesign": design_dict, "SolarResource": {"use_wf_albedo": self.use_wf_albedo}}
 
@@ -76,8 +98,7 @@ class PYSAMSolarPlantPerformanceModel(SolarPerformanceBaseClass):
             desc="Annual energy production from PVPlant in kWac",
         )
 
-        self.config_name = "PVWattsSingleOwner"
-        self.system_model = Pvwatts.default(self.config_name)
+        self.system_model = Pvwatts.default(self.design_config.config_name)
 
         design_dict = self.design_config.create_input_dict()
 
@@ -89,7 +110,21 @@ class PYSAMSolarPlantPerformanceModel(SolarPerformanceBaseClass):
         )
 
         self.system_model.assign(design_dict)
+        tilt = self.calc_tilt_angle()
+        self.system_model.value("tilt", tilt)
         self.system_model.value("solar_resource_data", solar_resource.data)
+
+    def calc_tilt_angle(self):
+        if self.design_config.tilt_angle_func == "none":
+            return self.system_model.value("tilt")
+        if self.design_config.tilt_angle_func == "lat":
+            return self.config.latitude
+        if self.design_config.tilt_angle_func == "lat-func":
+            if self.config.latitude <= 25:
+                return self.config.latitude * 0.87
+            if self.config.latitude > 25 and self.config.latitude <= 50:
+                return (self.config.latitude * 0.76) + 3.1
+            return self.config.latitude
 
     def compute(self, inputs, outputs):
         self.system_model.value("system_capacity", inputs["capacity_kWdc"][0])
@@ -98,6 +133,5 @@ class PYSAMSolarPlantPerformanceModel(SolarPerformanceBaseClass):
         outputs["electricity_out"] = self.system_model.Outputs.gen  # kW-dc
         pv_capacity_kWdc = self.system_model.value("system_capacity")
         dc_ac_ratio = self.system_model.value("dc_ac_ratio")
-        # outputs["capacity_kWdc"] = pv_capacity_kWdc
         outputs["capacity_kWac"] = pv_capacity_kWdc / dc_ac_ratio
         outputs["annual_energy"] = self.system_model.value("ac_annual")
