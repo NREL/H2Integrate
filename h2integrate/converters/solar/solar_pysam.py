@@ -3,7 +3,7 @@ from attrs import field, define
 from hopp.simulation.technologies.resource import SolarResource
 
 from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
-from h2integrate.core.validators import contains, range_val
+from h2integrate.core.validators import contains, range_val, range_val_or_none
 from h2integrate.converters.solar.solar_baseclass import SolarPerformanceBaseClass
 
 
@@ -27,18 +27,69 @@ class PYSAMSolarPlantPerformanceModelSiteConfig(BaseConfig):
 
 @define
 class PYSAMSolarPlantPerformanceModelDesignConfig(BaseConfig):
+    """Configuration class for design parameters of the solar pv plant
+        PYSAMSolarPlantPerformanceModel. Default values are based on the default
+        PVWattsSingleOwner.SystemDesign configuration. PySAM documentation can be found here:
+        https://nrel-pysam.readthedocs.io/en/main/modules/Pvwattsv8.html#systemdesign-group
+
+
+    Args:
+        pv_capacity_kWdc (float): Required, DC system capacity in kW-dc.
+        dc_ac_ratio (float | None): Also known as inverter loading ratio, ratio of max DC
+            output of PV to max AC output of inverter. If None, then uses the default
+            value associated with config_name.
+        array_type (int | None):
+            - None: use default value associated with config_name.
+            - 0: fixed open rack
+            - 1: fixed roof mount
+            - 2: 1-axis tracking
+            - 3: 1-axis backtracking
+            - 4: 2-axis tracking
+        azimuth (float): Angle that the bottom of the panels (parallel to the ground) are tilted at.
+            E=90,S=180,W=270,N=360 or 0. Defaults to 180 (south facing).
+        bifaciality (float): bifaciliaty factor of the panel in the range (0, 0.85).
+            Defaults to 0.0.
+        gcr (float): ground coverage ratio in the range (0.01, 0.99). Defaults to 0.0
+        inv_eff (float): Inverter efficiency in percent in the range (90, 99.5).
+            Linear power conversion loss from DC to AC. Defaults to 96.
+        losses (float): DC power losses as a percent. Defaults to 14.0757.
+        module_type (int):
+            - 0: standard, approximate efficiency of 19%
+            - 1: premium, approximate efficiency of 21%
+            - 2: thin film, approximate efficiency of 18%
+        rotlim (float): rotational limit of panel in degrees (if tracking array type)
+            in the range (0.0, 270.0). Defaults to 45.
+        tilt (float | None): Panel tilt angle in the range (0.0, 90.0).
+            If None, then uses the default value associated with config_name
+            unless tilt_angle_func is either set to 'lat' or 'lat-func'.
+        use_wf_albedo (bool): if True, use albedo from weather file (if valid).
+            If False, use albedo input. Defaults to True.
+        config_name (str): PySAM.Pvwattsv8 configuration name for non-hybrid PV systems.
+            Defaults to 'PVWattsSingleOwner'.
+        tilt_angle_func (str):
+            - 'none': use value specific in 'tilt'.
+            - 'lat-func': optimal tilt angle based on the latitude.
+            - 'lat': tilt angle equal to the latitude of the solar resource.
+    """
+
     pv_capacity_kWdc: float = field()
-    dc_ac_ratio: float = field(default=1.3)
-    array_type: int = field(default=2, validator=contains([0, 1, 2, 3, 4]), converter=int)
+    dc_ac_ratio: float = field(
+        default=None, validator=range_val_or_none(0.0, 2.0)
+    )  # default value depends on config
+    array_type: int = field(
+        default=None, validator=contains([None, 0, 1, 2, 3, 4])
+    )  # default value depends on config
     azimuth: float = field(default=180, validator=range_val(0, 360))
-    bifaciality: float = field(default=0, validator=range_val(0, 1.0))
+    bifaciality: float = field(default=0, validator=range_val(0, 0.85))
     gcr: float = field(default=0.3, validator=range_val(0.01, 0.99))
     inv_eff: float = field(default=96, validator=range_val(90, 99.5))
     losses: float = field(default=14.0757, validator=range_val(-5.0, 99.0))
     module_type: int = field(default=0, validator=contains([0, 1, 2]), converter=int)
     rotlim: float = field(default=45.0, validator=range_val(0.0, 270.0))
-    tilt: float = field(default=0.0, validator=range_val(0.0, 90.0))
-    use_wf_albedo: bool = field(default=False)
+    tilt: float = field(
+        default=None, validator=range_val_or_none(0.0, 90.0)
+    )  # default value depends on config
+    use_wf_albedo: bool = field(default=True)
     config_name: str = field(
         default="PVWattsSingleOwner",
         validator=contains(
@@ -63,6 +114,13 @@ class PYSAMSolarPlantPerformanceModelDesignConfig(BaseConfig):
     )
 
     def create_input_dict(self):
+        """Create dictionary of inputs to over-write the default values
+            associated with the specified PVWatts configuration.
+
+        Returns:
+           dict: dictionary of SystemDesign and SolarResource pararamters from user-input.
+        """
+
         full_dict = self.as_dict()
         non_design_cols = ["pv_capacity_kWdc", "use_wf_albedo", "tilt_angle_func", "config_name"]
         design_dict = {k: v for k, v in full_dict.items() if k not in non_design_cols}
