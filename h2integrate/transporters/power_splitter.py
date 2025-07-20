@@ -3,12 +3,11 @@ import openmdao.api as om
 from attrs import field, define
 
 from h2integrate.core.utilities import BaseConfig
-from h2integrate.core.validators import contains
 
 
 @define
 class SplitterPerformanceConfig(BaseConfig):
-    split_mode: str = field(validator=contains(["fraction", "prescribed_electricity"]))
+    split_mode: str = field()
     fraction_of_electricity_to_first_tech: float = field(default=None)
     prescribed_electricity_to_first_tech: float = field(default=None)
 
