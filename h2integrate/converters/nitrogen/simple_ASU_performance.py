@@ -8,10 +8,13 @@ from h2integrate.core.validators import range_val
 
 @define
 class SimpleASUPerformanceConfig(BaseConfig):
-    # energy_demand: float = field()
+    """Configuration for ASU model. To represent a cryogenic ASU, it is
+    recommended to set the parameter `efficiency_kWh_pr_kg_N2` to 0.119.
+    To represent a pressure swing absorption ASU, it is
+    recommended to set the parameter `efficiency_kWh_pr_kg_N2` to 0.29.
+    """
 
     size_from_N2_demand: bool = field()
-    # turndown_ratio: float = field(default = 0.3, validator=range_val(0,0.9))
     rated_N2_kg_pr_hr: float | None = field(default=None)
     ASU_rated_power_kW: float | None = field(default=None)
 
@@ -36,6 +39,10 @@ class SimpleASUPerformanceConfig(BaseConfig):
 
 
 class SimpleASUPerformanceModel(om.ExplicitComponent):
+    """Simple linear converter to model nitrogen production from an
+    Air Separation Unit.
+    """
+
     def initialize(self):
         self.options.declare("plant_config", types=dict)
         self.options.declare("tech_config", types=dict)

@@ -23,6 +23,7 @@
 - Added more available constraints from the HOPP wrapper useful for design optimizations
 - Added geologic hydrogen (geoh2) converter and examples [PR 135](https://github.com/NREL/H2Integrate/pull/135)
 - Added WOMBAT electrolyzer O&M model
+- Added simple air separation unit (ASU) converter to model nitrogen production.
 
 ## 0.3.0 [May 2 2025]
 
