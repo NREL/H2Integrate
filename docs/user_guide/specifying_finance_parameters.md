@@ -32,7 +32,7 @@ finance_parameters:
   sales_tax_rate: 0.07375
   debt_interest_rate: 0.07
   debt_type: "Revolving debt"
-  load_period: 0
+  loan_period: 0
   cash_onhand_months: 1
   administrative_expense_percent_of_sales: 0.00
   # Capital item depreciation parameters
@@ -58,7 +58,7 @@ This method also relies on data from `plant_config`:
 
 **Debt Equity Ratio vs Debt Equity Split**
 
-If `debt_equity_split` is True, then the value for `debt_equity_ratio` is assumed to be the `debt_equity_split` value. If `debt_equity_split` is False, the value for `debt_equity_ratio` is assumed to be the `debt_equity_ratio`. The relationship bewteen debt equity ratio and debt equity split is given below:
+If `debt_equity_split` is False, the debt equity ratio is set as the value specified by `debt_equity_ratio`. If `debt_equity_ratio` is False, the debt equity ratio is calculated based on the value specified by `debt_equity_split`. The relationship bewteen debt equity ratio and debt equity split is given below:
 
 $\text{debt equity ratio} = \frac{\text{debt equity split}}{100 - \text{debt equity split}}$
 
@@ -70,7 +70,13 @@ $\text{equity fraction} = 1 - \text{debt fraction}$
 ## Providing Finance Parameters: ProFAST params config file
 
 ```{note}
-ensure that ProFAST entries for `operating life` and `installation months` are the same as `plant_life` and `installation_time` specified in the `plant` section of the `plant_config` to avoid errors.
+To avoid errors, please check that `plant_config['plant']['plant_life']` has the same value as `plant_config['finance_parameters']['pf_params']['params']['operating life']` and that `plant_config['plant']['installation_time']` has the same value as `plant_config['finance_parameters']['pf_params']['params']['installation months']`
+
+
+| `plant` parameter | equivalent `pf_params` parameter |
+| -------- | ------- |
+| `plant_life` | `operating life` |
+| `installation_time` | `installation months` |
 ```
 
 Below is an example of the `finance_parameters` section of `plant_config` if using `pf_params` format to specify financial paramters:
