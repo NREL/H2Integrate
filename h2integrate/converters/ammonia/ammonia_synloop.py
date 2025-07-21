@@ -68,6 +68,7 @@ class AmmoniaSynLoopPerformanceModel(om.ExplicitComponent):
     def initialize(self):
         self.options.declare("plant_config", types=dict)
         self.options.declare("tech_config", types=dict)
+        self.options.declare("driver_config", types=dict)
 
     def setup(self):
         self.config = AmmoniaSynLoopPerformanceConfig.from_dict(
@@ -128,56 +129,59 @@ class AmmoniaSynLoopPerformanceModel(om.ExplicitComponent):
         outputs["heat_out"] = elec_in - used_elec
         outputs["total_ammonia_produced"] = nh3_prod.sum()
 
-        @define
-        class AmmoniaSynLoopCostConfig(BaseConfig):
-            """
-            Configuration inputs for the ammonia synthesis loop cost model.
 
-            Attributes:
-                capex (float): Capital expenditure for the synthesis loop [$].
-                rebuild_cost (float): Annualized catalyst replacement or rebuild cost [$ per year].
-            """
+@define
+class AmmoniaSynLoopCostConfig(BaseConfig):
+    """
+    Configuration inputs for the ammonia synthesis loop cost model.
 
-            capex: float = field()
-            rebuild_cost: float = field()
+    Attributes:
+        capex (float): Capital expenditure for the synthesis loop [$].
+        rebuild_cost (float): Annualized catalyst replacement or rebuild cost [$ per year].
+    """
 
-        class AmmoniaSynLoopCostModel(om.ExplicitComponent):
-            """
-            OpenMDAO component modeling the cost of an ammonia synthesis loop.
+    capex: float = field()
+    rebuild_cost: float = field()
 
-            This component outputs the capital expenditure (CapEx) and annual operating
-            expenditure (OpEx) associated with the synthesis loop, based on provided
-            configuration values.
 
-            Attributes
-            ----------
-            config : AmmoniaSynLoopCostConfig
-                Configuration object containing CapEx and annual rebuild cost.
+class AmmoniaSynLoopCostModel(om.ExplicitComponent):
+    """
+    OpenMDAO component modeling the cost of an ammonia synthesis loop.
 
-            Outputs
-            -------
-            CapEx : float [$]
-                Capital expenditure for the synthesis loop.
-            OpEx : float [$ per year]
-                Annual operating expenditure (catalyst replacement/rebuild).
-            Notes
-            -----
-            This model assumes all OpEx is due to annualized catalyst replacement/rebuild.
-            """
+    This component outputs the capital expenditure (CapEx) and annual operating
+    expenditure (OpEx) associated with the synthesis loop, based on provided
+    configuration values.
 
-            def initialize(self):
-                self.options.declare("plant_config", types=dict)
-                self.options.declare("tech_config", types=dict)
+    Attributes
+    ----------
+    config : AmmoniaSynLoopCostConfig
+        Configuration object containing CapEx and annual rebuild cost.
 
-            def setup(self):
-                self.config = AmmoniaSynLoopCostConfig.from_dict(
-                    merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost")
-                )
+    Outputs
+    -------
+    CapEx : float [$]
+        Capital expenditure for the synthesis loop.
+    OpEx : float [$ per year]
+        Annual operating expenditure (catalyst replacement/rebuild).
+    Notes
+    -----
+    This model assumes all OpEx is due to annualized catalyst replacement/rebuild.
+    """
 
-                self.add_output("CapEx", val=0.0, units="USD")
-                self.add_output("OpEx", val=0.0, units="USD/year")
+    def initialize(self):
+        self.options.declare("plant_config", types=dict)
+        self.options.declare("tech_config", types=dict)
+        self.options.declare("driver_config", types=dict)
 
-            def compute(self, inputs, outputs):
-                # Get config values
-                outputs["CapEx"] = self.config.capex
-                outputs["OpEx"] = self.config.rebuild_cost
+    def setup(self):
+        self.config = AmmoniaSynLoopCostConfig.from_dict(
+            merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost")
+        )
+
+        self.add_output("CapEx", val=0.0, units="USD")
+        self.add_output("OpEx", val=0.0, units="USD/year")
+
+    def compute(self, inputs, outputs):
+        # Get config values
+        outputs["CapEx"] = self.config.capex
+        outputs["OpEx"] = self.config.rebuild_cost
