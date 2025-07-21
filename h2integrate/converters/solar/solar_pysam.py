@@ -7,6 +7,21 @@ from h2integrate.core.validators import contains, range_val, range_val_or_none
 from h2integrate.converters.solar.solar_baseclass import SolarPerformanceBaseClass
 
 
+def check_pysam_params(user_dict, pysam_options):
+    for group, group_params in user_dict.items():
+        if group in pysam_options:
+            for key in group_params.keys():
+                if key in pysam_options:
+                    if pysam_options[group][key] != user_dict[group][key]:
+                        msg = (
+                            f"Inconsistent values provided for parameter {key} in {group} Group."
+                            f"pysam_options has value of {pysam_options[group][key]} "
+                            f"but user also specified value of {user_dict[group][key]}. "
+                        )
+                        raise ValueError(msg)
+    return True
+
+
 @define
 class PYSAMSolarPlantPerformanceModelSiteConfig(BaseConfig):
     """Configuration class for the location of the solar pv plant
@@ -86,17 +101,21 @@ class PYSAMSolarPlantPerformanceModelDesignConfig(BaseConfig):
     )  # default value depends on config
     array_type: int = field(
         default=None, validator=contains([None, 0, 1, 2, 3, 4])
-    )  # default value depends on config
-    azimuth: float = field(default=180, validator=range_val(0, 360))
+    )  # default value depends on config, required by pysam
+    azimuth: float = field(
+        default=180, validator=range_val(0, 360)
+    )  # required by pysam if array_type<4 and using new(), default configs have value of 180
     bifaciality: float = field(default=0, validator=range_val(0, 0.85))
     gcr: float = field(default=0.3, validator=range_val(0.01, 0.99))
     inv_eff: float = field(default=96, validator=range_val(90, 99.5))
-    losses: float = field(default=14.0757, validator=range_val(-5.0, 99.0))
+    losses: float = field(
+        default=14.0757, validator=range_val(-5.0, 99.0)
+    )  # required by pysam if using new(), default configs have value of 14.0757
     module_type: int = field(default=0, validator=contains([0, 1, 2]), converter=int)
     rotlim: float = field(default=45.0, validator=range_val(0.0, 270.0))
     tilt: float = field(
         default=None, validator=range_val_or_none(0.0, 90.0)
-    )  # default value depends on config
+    )  # default value depends on config, required if array_type<4 and using new()
     use_wf_albedo: bool = field(default=True)
     config_name: str = field(
         default="PVWattsSingleOwner",
@@ -183,7 +202,10 @@ class PYSAMSolarPlantPerformanceModel(SolarPerformanceBaseClass):
             desc="Annual energy production from PVPlant in kWac",
         )
 
-        self.system_model = Pvwatts.default(self.design_config.config_name)
+        if self.design_config.create_model_from == "default":
+            self.system_model = Pvwatts.default(self.design_config.config_name)
+        elif self.design_config.create_model_from == "new":
+            self.system_model = Pvwatts.new(self.design_config.config_name)
 
         design_dict = self.design_config.create_input_dict()
         tilt = self.calc_tilt_angle()
@@ -191,6 +213,7 @@ class PYSAMSolarPlantPerformanceModel(SolarPerformanceBaseClass):
 
         # update design_dict if user provides non-empty design information
         if bool(self.design_config.pysam_options):
+            check_pysam_params(design_dict, self.design_config.pysam_options)
             design_dict.update(self.design_config.pysam_options)
 
         self.system_model.assign(design_dict)
