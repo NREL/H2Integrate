@@ -122,7 +122,6 @@ def test_profast_config_provided():
     }
     plant_config = {
         "finance_parameters": {
-            "profast_general_inflation": 0.02,
             "costing_general_inflation": 0.0,
             "pf_params": {"params": pf_params},
             "depreciation_method": "Straight line",
