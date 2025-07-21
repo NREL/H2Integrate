@@ -3,6 +3,7 @@ import openmdao.api as om
 
 class ElectrolyzerPerformanceBaseClass(om.ExplicitComponent):
     def initialize(self):
+        self.options.declare("driver_config", types=dict)
         self.options.declare("plant_config", types=dict)
         self.options.declare("tech_config", types=dict)
 
@@ -32,6 +33,7 @@ class ElectrolyzerPerformanceBaseClass(om.ExplicitComponent):
 
 class ElectrolyzerCostBaseClass(om.ExplicitComponent):
     def initialize(self):
+        self.options.declare("driver_config", types=dict)
         self.options.declare("plant_config", types=dict)
         self.options.declare("tech_config", types=dict)
 
@@ -54,6 +56,7 @@ class ElectrolyzerCostBaseClass(om.ExplicitComponent):
 
 class ElectrolyzerFinanceBaseClass(om.ExplicitComponent):
     def initialize(self):
+        self.options.declare("driver_config", types=dict)
         self.options.declare("plant_config", types=dict)
         self.options.declare("tech_config", types=dict)
 
