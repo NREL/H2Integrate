@@ -53,7 +53,6 @@ class ProFastComp(om.ExplicitComponent):
     def setup(self):
         tech_config = self.tech_config = self.options["tech_config"]
         plant_config = self.plant_config = self.options["plant_config"]
-        # self.discount_rate = plant_config["finance_parameters"]["discount_rate"]
         self.inflation_rate = plant_config["finance_parameters"]["costing_general_inflation"]
         self.cost_year = plant_config["plant"]["cost_year"]
 
@@ -130,6 +129,8 @@ class ProFastComp(om.ExplicitComponent):
                 float(inputs["total_electricity_produced"]) / 365.0,
             )
 
+        pf.set_params("long term utilization", 1)  # TODO should use utilization
+
         if "pf_params" in self.plant_config["finance_parameters"]:
             params = self.plant_config["finance_parameters"]["pf_params"]["params"]
             avoided_params = ["capacity", "commodity", "long term utilization"]
@@ -165,7 +166,6 @@ class ProFastComp(om.ExplicitComponent):
                     land_cost * (1 + gen_inflation) ** self.plant_config["plant"]["plant_life"],
                 )
             pf.set_params("demand rampup", 0)
-            pf.set_params("long term utilization", 1)  # TODO should use utilization
             pf.set_params("credit card fees", 0)
             pf.set_params("sales tax", self.plant_config["finance_parameters"]["sales_tax_rate"])
             pf.set_params("license and permit", {"value": 00, "escalation": gen_inflation})
