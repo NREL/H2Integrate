@@ -70,6 +70,11 @@ def test_electrolyzer_refurb_results():
 
 
 def test_profast_config_provided():
+    """Test that inputting ProFAST parameters gives same LCOH as specifying finance
+    parameters directly (as is done in `test_electrolyzer_refurb_results`). Output
+    based on output from `test_electrolyzer_refurb_results()` at time of writing.
+    """
+
     pf_params = {
         "demand rampup": 0,
         "analysis start year": 2024,
