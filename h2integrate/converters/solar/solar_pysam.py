@@ -70,6 +70,14 @@ class PYSAMSolarPlantPerformanceModelDesignConfig(BaseConfig):
             - 'none': use value specific in 'tilt'.
             - 'lat-func': optimal tilt angle based on the latitude.
             - 'lat': tilt angle equal to the latitude of the solar resource.
+        create_model_from (str):
+            - 'default': instatiate Pvwattsv8 model from the default config 'config_name'
+            - 'new': instatiate new Pvwattsv8 model.
+        pysam_options (dict, optional): dictionary of Pvwatts input parameters with
+            top-level keys corresponding to the different Pvwattsv8 variable groups.
+            (please refer to Pvwattsv8 documentation here:
+            https://nrel-pysam.readthedocs.io/en/main/modules/Pvwattsv8.html)
+
     """
 
     pv_capacity_kWdc: float = field()
@@ -112,6 +120,18 @@ class PYSAMSolarPlantPerformanceModelDesignConfig(BaseConfig):
         validator=contains(["none", "lat-func", "lat"]),
         converter=(str.strip, str.lower),
     )
+    create_model_from: str = field(
+        default="default", validator=contains(["default", "new"]), converter=(str.strip, str.lower)
+    )
+    pysam_options: dict = field(default={})
+
+    def __attrs_post_init__(self):
+        if self.create_model_from == "new" and not bool(self.pysam_options):
+            msg = (
+                "To create a new PvWattsv8 object, please provide a dictionary "
+                "of Pvwattsv8 design variables for the 'pysam_options' key."
+            )
+            raise ValueError(msg)
 
     def create_input_dict(self):
         """Create dictionary of inputs to over-write the default values
@@ -122,7 +142,14 @@ class PYSAMSolarPlantPerformanceModelDesignConfig(BaseConfig):
         """
 
         full_dict = self.as_dict()
-        non_design_cols = ["pv_capacity_kWdc", "use_wf_albedo", "tilt_angle_func", "config_name"]
+        non_design_cols = [
+            "pv_capacity_kWdc",
+            "use_wf_albedo",
+            "tilt_angle_func",
+            "config_name",
+            "pysam_options",
+            "create_model_from",
+        ]
         design_dict = {k: v for k, v in full_dict.items() if k not in non_design_cols}
         return {"SystemDesign": design_dict, "SolarResource": {"use_wf_albedo": self.use_wf_albedo}}
 
@@ -159,6 +186,14 @@ class PYSAMSolarPlantPerformanceModel(SolarPerformanceBaseClass):
         self.system_model = Pvwatts.default(self.design_config.config_name)
 
         design_dict = self.design_config.create_input_dict()
+        tilt = self.calc_tilt_angle()
+        design_dict["SystemDesign"].update({"tilt": tilt})
+
+        # update design_dict if user provides non-empty design information
+        if bool(self.design_config.pysam_options):
+            design_dict.update(self.design_config.pysam_options)
+
+        self.system_model.assign(design_dict)
 
         solar_resource = SolarResource(
             lat=self.config.latitude,
@@ -167,9 +202,6 @@ class PYSAMSolarPlantPerformanceModel(SolarPerformanceBaseClass):
             filepath=self.config.solar_resource_filepath,
         )
 
-        self.system_model.assign(design_dict)
-        tilt = self.calc_tilt_angle()
-        self.system_model.value("tilt", tilt)
         self.system_model.value("solar_resource_data", solar_resource.data)
 
     def calc_tilt_angle(self):
