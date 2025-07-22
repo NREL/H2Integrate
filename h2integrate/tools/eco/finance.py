@@ -873,7 +873,7 @@ def run_profast_lcoe(
     # adjust from 1992 dollars to start year
     wind_ptc_in_dollars_per_kw = -npf.fv(
         h2integrate_config["finance_parameters"]["costing_general_inflation"],
-        h2integrate_config["project_parameters"]["atb_year"]
+        h2integrate_config["project_parameters"]["analysis_start_year"]
         + round(wind_cost_results.installation_time / 12)
         - 1992,
         0,
@@ -1678,7 +1678,7 @@ def run_profast_full_plant_model(
     # adjust from 1992 dollars to start year
     electricity_ptc_in_dollars_per_kw = -npf.fv(
         h2integrate_config["finance_parameters"]["costing_general_inflation"],
-        h2integrate_config["project_parameters"]["atb_year"]
+        h2integrate_config["project_parameters"]["analysis_start_year"]
         + round(wind_cost_results.installation_time / 12)
         - 1992,
         0,
@@ -1701,7 +1701,7 @@ def run_profast_full_plant_model(
         h2integrate_config["finance_parameters"][
             "costing_general_inflation"
         ],  # use ATB year (cost inflation 2.5%) costing_general_inflation
-        h2integrate_config["project_parameters"]["atb_year"]
+        h2integrate_config["project_parameters"]["analysis_start_year"]
         + round(wind_cost_results.installation_time / 12)
         - 2022,
         0,
