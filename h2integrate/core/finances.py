@@ -125,7 +125,9 @@ class ProFastComp(om.ExplicitComponent):
             params.setdefault("maintenance", {"value": 0, "escalation": gen_inflation})
             params.setdefault(
                 "analysis start year",
-                self.plant_config["plant"]["atb_year"] + 2,  # Add financial analysis start year
+                self.plant_config["plant"][
+                    "analysis_start_year"
+                ],  # Add financial analysis start year
             )
             params.setdefault(
                 "installation cost",
