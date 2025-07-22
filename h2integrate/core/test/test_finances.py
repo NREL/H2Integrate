@@ -27,7 +27,7 @@ def test_electrolyzer_refurb_results():
             "depreciation_period_electrolyzer": 10,
         },
         "plant": {
-            "atb_year": 2022,
+            "analysis_start_year": 2024,
             "plant_life": 30,
             "installation_time": 24,
             "cost_year": 2022,
@@ -134,7 +134,7 @@ def test_profast_config_provided():
             "depreciation_period_electrolyzer": 10,
         },
         "plant": {
-            "atb_year": 2022,
+            "analysis_start_year": 2024,
             "plant_life": 30,
             "installation_time": 24,
             "cost_year": 2022,
