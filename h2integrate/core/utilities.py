@@ -173,3 +173,21 @@ def attr_hopp_filter(inst: Attribute, value: Any) -> bool:
         if value.size == 0:
             return False
     return True
+
+
+def compare_plant_config_to_profast_params(
+    plant_config_dict: dict, pf_param_dict: dict, plant_config_key: str, pf_config_key: str
+):
+    if (
+        pf_param_dict.get(pf_config_key, plant_config_dict[plant_config_key])
+        != plant_config_dict[plant_config_key]
+    ):
+        msg = (
+            f"Inconsistent values provided for {pf_config_key} and {plant_config_key}, "
+            f"{pf_config_key} is {pf_param_dict.get(pf_config_key)} but "
+            f"{plant_config_key} is {plant_config_dict[plant_config_key]}."
+            f"Please check that {pf_config_key} is the same as {plant_config_key} or remove "
+            f"{pf_config_key} from pf_params input."
+        )
+        raise ValueError(msg)
+    return True

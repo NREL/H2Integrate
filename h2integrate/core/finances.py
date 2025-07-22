@@ -3,6 +3,8 @@ import ProFAST  # system financial model
 import openmdao.api as om
 import numpy_financial as npf
 
+from h2integrate.core.utilities import compare_plant_config_to_profast_params
+
 
 class AdjustedCapexOpexComp(om.ExplicitComponent):
     def initialize(self):
@@ -124,12 +126,6 @@ class ProFastComp(om.ExplicitComponent):
         else:
             params.setdefault("maintenance", {"value": 0, "escalation": gen_inflation})
             params.setdefault(
-                "analysis start year",
-                self.plant_config["plant"][
-                    "analysis_start_year"
-                ],  # Add financial analysis start year
-            )
-            params.setdefault(
                 "installation cost",
                 {
                     "value": 0,
@@ -201,30 +197,15 @@ class ProFastComp(om.ExplicitComponent):
                 "cash onhand", self.plant_config["finance_parameters"]["cash_onhand_months"]
             )
 
-        if (
-            params.get("installation months", self.plant_config["plant"]["installation_time"])
-            != self.plant_config["plant"]["installation_time"]
-        ):
-            msg = (
-                f"Inconsistent values provided for installation months and installation_time, "
-                f"installation months is {params.get('installation months')} months but "
-                f"installation_time is {self.plant_config['plant']['installation_time']} months."
-                "Please check that installation months is the same as installation_time or remove "
-                "installation months from pf_params input."
-            )
-            raise ValueError(msg)
-        if (
-            params.get("operating life", self.plant_config["plant"]["plant_life"])
-            != self.plant_config["plant"]["plant_life"]
-        ):
-            msg = (
-                f"Inconsistent values provided for operating life and plant_life, "
-                f"operating life is {params.get('operating life')} years but "
-                f"plant_life is {self.plant_config['plant']['plant_life']} years."
-                "Please check that operating life is the same as plant_life or remove "
-                "operating life from pf_params input."
-            )
-            raise ValueError(msg)
+        compare_plant_config_to_profast_params(
+            self.plant_config["plant"], params, "installation_time", "installation months"
+        )
+        compare_plant_config_to_profast_params(
+            self.plant_config["plant"], params, "plant_life", "operating life"
+        )
+        compare_plant_config_to_profast_params(
+            self.plant_config["plant"], params, "analysis_start_year", "analysis start year"
+        )
 
         params.setdefault(
             "installation months",
@@ -233,6 +214,7 @@ class ProFastComp(om.ExplicitComponent):
             ],  # Add installation time to yaml default=0
         )
         params.setdefault("operating life", self.plant_config["plant"]["plant_life"])
+        params.setdefault("analysis start year", self.plant_config["plant"]["analysis_start_year"])
 
         pf = ProFAST.ProFAST()
         for i in params:
