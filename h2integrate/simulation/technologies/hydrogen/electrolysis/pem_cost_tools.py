@@ -174,7 +174,7 @@ def calc_electrolyzer_variable_om(electrolyzer_physics_results, h2integrate_conf
         )
 
         if "analysis_start_year" not in h2integrate_config["finance_parameters"]:
-            analysis_start_year = h2integrate_config["project_parameters"]["atb_year"] + 2
+            analysis_start_year = h2integrate_config["project_parameters"]["analysis_start_year"]
         else:
             analysis_start_year = h2integrate_config["finance_parameters"]["analysis_start_year"]
         if "installation_time" not in h2integrate_config["project_parameters"]:

@@ -1267,7 +1267,7 @@ def run_profast_full_plant_model(
     gen_inflation = h2integrate_config["finance_parameters"]["profast_general_inflation"]
 
     if "analysis_start_year" not in h2integrate_config["finance_parameters"]:
-        analysis_start_year = h2integrate_config["project_parameters"]["atb_year"] + 2
+        analysis_start_year = h2integrate_config["project_parameters"]["analysis_start_year"]
     else:
         analysis_start_year = h2integrate_config["finance_parameters"]["analysis_start_year"]
 
