@@ -716,7 +716,9 @@ def run_profast_lcoe(
         np.sum(hopp_results["combined_hybrid_power_production_hopp"]) / 365.0,
     )  # kWh/day
     pf.set_params("maintenance", {"value": 0, "escalation": gen_inflation})
-    pf.set_params("analysis start year", h2integrate_config["project_parameters"]["atb_year"] + 1)
+    pf.set_params(
+        "analysis start year", h2integrate_config["project_parameters"]["analysis_start_year"]
+    )
     pf.set_params("operating life", h2integrate_config["project_parameters"]["project_lifetime"])
     pf.set_params(
         "installation months", h2integrate_config["project_parameters"]["installation_time"]
@@ -1032,7 +1034,9 @@ def run_profast_grid_only(
     )  # kg/day
     pf.set_params("maintenance", {"value": 0, "escalation": gen_inflation})
     # TODO: update analysis start year below (ESG)
-    pf.set_params("analysis start year", h2integrate_config["project_parameters"]["atb_year"] + 1)
+    pf.set_params(
+        "analysis start year", h2integrate_config["project_parameters"]["analysis_start_year"]
+    )
     pf.set_params("operating life", h2integrate_config["project_parameters"]["project_lifetime"])
     pf.set_params(
         "installation cost",
