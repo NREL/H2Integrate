@@ -2126,7 +2126,7 @@ def calculate_lca(
     ## Cambium
     # Define cambium_year
     # NOTE: at time of dev hopp logic for LCOH = atb_year + 2yr + install_period(3yrs) = 5 years
-    cambium_year = h2integrate_config["project_parameters"]["atb_year"] + 5
+    cambium_year = h2integrate_config["project_parameters"]["analysis_start_year"] + 3
     # Pull / download cambium data files
     cambium_data = CambiumData(
         lat=site_latitude,
