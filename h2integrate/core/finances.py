@@ -244,7 +244,7 @@ class ProFastComp(om.ExplicitComponent):
                 electrolyzer_refurbishment_schedule = np.zeros(
                     self.plant_config["plant"]["plant_life"]
                 )
-                refurb_period = round(float(inputs["time_until_replacement"]) / (24 * 365))
+                refurb_period = round(float(inputs["time_until_replacement"][0]) / (24 * 365))
                 electrolyzer_refurbishment_schedule[
                     refurb_period : self.plant_config["plant"]["plant_life"] : refurb_period
                 ] = self.tech_config["electrolyzer"]["model_inputs"]["financial_parameters"][
@@ -260,7 +260,7 @@ class ProFastComp(om.ExplicitComponent):
 
             pf.add_capital_item(
                 name=f"{tech} System",
-                cost=float(inputs[f"capex_adjusted_{tech}"]),
+                cost=float(inputs[f"capex_adjusted_{tech}"][0]),
                 depr_type=self.plant_config["finance_parameters"]["depreciation_method"],
                 depr_period=depreciation_period,
                 refurb=refurbishment_schedule,
@@ -269,7 +269,7 @@ class ProFastComp(om.ExplicitComponent):
                 name=f"{tech} O&M Cost",
                 usage=1.0,
                 unit="$/year",
-                cost=float(inputs[f"opex_adjusted_{tech}"]),
+                cost=float(inputs[f"opex_adjusted_{tech}"][0]),
                 escalation=gen_inflation,
             )
 
