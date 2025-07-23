@@ -130,7 +130,7 @@ class ECOElectrolyzerPerformanceModel(ElectrolyzerPerformanceBaseClass):
 ### Models where the performance and cost are tightly coupled
 
 In some cases, the performance and cost models are tightly coupled, and it might make sense to combine them into a single model.
-This is currently the case for the HOPP and h2_storage wrappers, where the performance and cost models are combined into a single component.
+This is currently the case for the `HOPP` and `h2_storage` wrappers, where the performance and cost models are combined into a single component.
 If you're adding a technology where this makes sense, you can follow the same steps as above but you also need to modify the `h2integrate_model.py` file for this special logic.
 For now, modify a single  the `create_technology_models.py` file to include your new technology as such:
 
@@ -149,6 +149,14 @@ for tech_name, individual_tech_config in self.technology_config['technologies'].
         # Special HOPP handling for short-term
         if tech_name in combined_performance_and_cost_model_technologies:
 ```
+
+There are also situations where the models are still related but can be treated separately.
+In these cases, you can create separate performance and cost models, but you might benefit from sharing some of the logic between them.
+For example, you might have a performance model that instantiates a data class that is also used in the cost model.
+If the computational burden is low, you can simply instantiate the data class in both models using a single function that returns the data class as done in the `direct_ocean_capture.py` file.
+In the middle-ground case where the models might use a shared object that is computationally expensive to create, you can create and cache the object in a pickle file and load it in both models.
+This would require additional logic to first check if the cached object exists and is valid before attempting to load it, otherwise it would create the object from scratch.
+There is an example of this in the `hopp_wrapper.py` file.
 
 
 ### Other cases

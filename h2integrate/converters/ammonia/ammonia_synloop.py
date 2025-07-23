@@ -120,6 +120,7 @@ class AmmoniaSynLoopPerformanceModel(om.ExplicitComponent):
     def initialize(self):
         self.options.declare("plant_config", types=dict)
         self.options.declare("tech_config", types=dict)
+        self.options.declare("driver_config", types=dict)
 
     def setup(self):
         self.config = AmmoniaSynLoopPerformanceConfig.from_dict(
@@ -323,7 +324,14 @@ class AmmoniaSynLoopCostModel(om.ExplicitComponent):
     This component outputs the capital expenditure (CapEx) and annual operating
     expenditure (OpEx) associated with the synthesis loop, based on provided
     configuration values.
+    This component outputs the capital expenditure (CapEx) and annual operating
+    expenditure (OpEx) associated with the synthesis loop, based on provided
+    configuration values.
 
+    Attributes
+    ----------
+    config : AmmoniaSynLoopCostConfig
+        Configuration object containing CapEx and annual rebuild cost.
     Attributes
     ----------
     config : AmmoniaSynLoopCostConfig
