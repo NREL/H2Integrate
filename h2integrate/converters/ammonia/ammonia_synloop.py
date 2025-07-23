@@ -3,6 +3,7 @@ import openmdao.api as om
 from attrs import field, define
 
 from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
+from h2integrate.core.validators import gt_zero, range_val
 from h2integrate.tools.inflation.inflate import inflate_cpi, inflate_cepci
 
 
@@ -46,24 +47,24 @@ class AmmoniaSynLoopPerformanceConfig(BaseConfig):
             decimal)
     """
 
-    production_capacity: float = field()
-    catalyst_consumption_rate: float = field()
-    catalyst_replacement_interval: float = field()
-    capacity_factor: float = field()
-    energy_demand: float = field()
-    heat_output: float = field()
-    feed_gas_t: float = field()
-    feed_gas_p: float = field()
-    feed_gas_x_n2: float = field()
-    feed_gas_x_h2: float = field()
-    feed_gas_mass_ratio: float = field()
-    purge_gas_t: float = field()
-    purge_gas_p: float = field()
-    purge_gas_x_n2: float = field()
-    purge_gas_x_h2: float = field()
-    purge_gas_x_ar: float = field()
-    purge_gas_x_nh3: float = field()
-    purge_gas_mass_ratio: float = field()
+    production_capacity: float = field(validator=gt_zero)
+    catalyst_consumption_rate: float = field(validator=gt_zero)
+    catalyst_replacement_interval: float = field(validator=gt_zero)
+    capacity_factor: float = field(validator=range_val(0, 1))
+    energy_demand: float = field(validator=gt_zero)
+    heat_output: float = field(validator=gt_zero)
+    feed_gas_t: float = field(validator=gt_zero)
+    feed_gas_p: float = field(validator=gt_zero)
+    feed_gas_x_n2: float = field(validator=range_val(0, 1))
+    feed_gas_x_h2: float = field(validator=range_val(0, 1))
+    feed_gas_mass_ratio: float = field(validator=gt_zero)
+    purge_gas_t: float = field(validator=gt_zero)
+    purge_gas_p: float = field(validator=gt_zero)
+    purge_gas_x_n2: float = field(validator=range_val(0, 1))
+    purge_gas_x_h2: float = field(validator=range_val(0, 1))
+    purge_gas_x_ar: float = field(validator=range_val(0, 1))
+    purge_gas_x_nh3: float = field(validator=range_val(0, 1))
+    purge_gas_mass_ratio: float = field(validator=gt_zero)
 
 
 class AmmoniaSynLoopPerformanceModel(om.ExplicitComponent):
@@ -106,10 +107,12 @@ class AmmoniaSynLoopPerformanceModel(om.ExplicitComponent):
         Total ammonia produced over the modeled period.
     total_hydrogen_consumed : float [kg/year]
         Total hydrogen consumed over the modeled period.
+    total_nitrogen_consumed : float [kg/year]
+        Total nitrogen consumed over the modeled period.
     total_electricity_consumed : float [kWh/year]
         Total electricity consumed over the modeled period.
     limiting_output: array of ints [-]
-        0: nitrogen-limited, 1: hydrogen-limited, 2: electricity-limited 3
+        0: nitrogen-limited, 1: hydrogen-limited, 2: electricity-limited 3: capacity-limited
     Notes
     -----
     The ammonia production is limited by the most constraining input (hydrogen,
@@ -155,6 +158,7 @@ class AmmoniaSynLoopPerformanceModel(om.ExplicitComponent):
         self.add_output("catalyst_mass", val=0.0, units="kg")
         self.add_output("total_ammonia_produced", val=0.0, units="kg/year")
         self.add_output("total_hydrogen_consumed", val=0.0, units="kg/year")
+        self.add_output("total_nitrogen_consumed", val=0.0, units="kg/year")
         self.add_output("total_electricity_consumed", val=0.0, units="kW*h/year")
         self.add_output(
             "limiting_input", val=0, shape_by_conn=True, copy_shape="hydrogen_in", units=None
@@ -240,6 +244,7 @@ class AmmoniaSynLoopPerformanceModel(om.ExplicitComponent):
         outputs["catalyst_mass"] = cat_mass
         outputs["total_ammonia_produced"] = nh3_prod.sum()
         outputs["total_hydrogen_consumed"] = h2_in.sum()
+        outputs["total_nitrogen_consumed"] = n2_in.sum()
         outputs["total_electricity_consumed"] = elec_in.sum()
 
 
@@ -343,6 +348,8 @@ class AmmoniaSynLoopCostModel(om.ExplicitComponent):
         Total ammonia produced over the modeled period.
     total_hydrogen_consumed : float [kg/year]
         Total hydrogen consumed over the modeled period.
+    total_nitrogen_consumed : float [kg/year]
+        Total nitrogen consumed over the modeled period.
     total_electricity_consumed : float [kg/year]
         Total electricity consumed over the modeled period.
     Outputs
@@ -378,6 +385,7 @@ class AmmoniaSynLoopCostModel(om.ExplicitComponent):
     def initialize(self):
         self.options.declare("plant_config", types=dict)
         self.options.declare("tech_config", types=dict)
+        self.options.declare("driver_config", types=dict)
 
     def setup(self):
         self.config = AmmoniaSynLoopCostConfig.from_dict(
@@ -386,6 +394,7 @@ class AmmoniaSynLoopCostModel(om.ExplicitComponent):
 
         self.add_input("total_ammonia_produced", val=0.0, units="kg/year")
         self.add_input("total_hydrogen_consumed", val=0.0, units="kg/year")
+        self.add_input("total_nitrogen_consumed", val=0.0, units="kg/year")
         self.add_input("total_electricity_consumed", val=0.0, units="kW*h/year")
         self.add_output("CapEx", val=0.0, units="USD")
         self.add_output("OpEx", val=0.0, units="USD/year")
