@@ -46,6 +46,7 @@ class SimpleASUPerformanceModel(om.ExplicitComponent):
     def initialize(self):
         self.options.declare("plant_config", types=dict)
         self.options.declare("tech_config", types=dict)
+        self.options.declare("driver_config", types=dict)
         self.N2_molar_mass = 28.0134  # grams/mol
         self.O2_molar_mass = 15.999  # grams/mol
         self.Ar_molar_mass = 39.948  # grams/mol
