@@ -28,9 +28,9 @@ class PYSAMSolarPlantPerformanceModelSiteConfig(BaseConfig):
 @define
 class PYSAMSolarPlantPerformanceModelDesignConfig(BaseConfig):
     """Configuration class for design parameters of the solar pv plant
-        PYSAMSolarPlantPerformanceModel. Default values are based on the default
-        PVWattsSingleOwner.SystemDesign configuration. PySAM documentation can be found here:
-        https://nrel-pysam.readthedocs.io/en/main/modules/Pvwattsv8.html#systemdesign-group
+        PYSAMSolarPlantPerformanceModel which uses the Pvwattsv8 module
+        available in PySAM. PySAM documentation can be found
+        `here <https://nrel-pysam.readthedocs.io/en/main/modules/Pvwattsv8.html#pvwattsv8>`__
 
 
     Args:
@@ -52,8 +52,9 @@ class PYSAMSolarPlantPerformanceModelDesignConfig(BaseConfig):
             - 'lat': tilt angle equal to the latitude of the solar resource.
         pysam_options (dict, optional): dictionary of Pvwatts input parameters with
             top-level keys corresponding to the different Pvwattsv8 variable groups.
-            (please refer to Pvwattsv8 documentation here:
-            https://nrel-pysam.readthedocs.io/en/main/modules/Pvwattsv8.html)
+            (please refer to Pvwattsv8 documentation
+            `here <https://nrel-pysam.readthedocs.io/en/main/modules/Pvwattsv8.html>`__
+            )
 
     """
 
@@ -113,6 +114,7 @@ class PYSAMSolarPlantPerformanceModelDesignConfig(BaseConfig):
            ValueError: if top-level keys of pysam_options are not valid.
            ValueError: if system_capacity is provided in pysam_options["SystemDesign"]
         """
+
         valid_groups = [
             "SolarResource",
             "Lifetime",

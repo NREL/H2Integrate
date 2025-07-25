@@ -37,6 +37,15 @@ def basic_pysam_options():
 
 
 def test_pvwatts_singleowner_notilt(basic_pysam_options, solar_resource_dict, subtests):
+    """Test `PYSAMSolarPlantPerformanceModel` with a basic input scenario:
+
+    - `pysam_options` is provided
+    - `create_model_from` is set to 'default'
+    - `config_name` is 'PVWattsSingleOwner', this is used to create the starting system model
+        because `create_model_from` is default.
+    - `tilt_angle_func` is "none" and tilt is provided (in two separate places) as zero.
+    """
+
     basic_pysam_options["SystemDesign"].update({"tilt": 0.0})
     pv_design_dict = {
         "pv_capacity_kWdc": 250000.0,
@@ -80,6 +89,10 @@ def test_pvwatts_singleowner_notilt(basic_pysam_options, solar_resource_dict, su
 
 
 def test_pvwatts_singleowner_withtilt(basic_pysam_options, solar_resource_dict, subtests):
+    """Test PYSAMSolarPlantPerformanceModel with tilt angle calculated using 'lat-func' option.
+    The AEP of this test should be higher than the AEP in `test_pvwatts_singleowner_notilt`.
+    """
+
     pv_design_dict = {
         "pv_capacity_kWdc": 250000.0,
         "dc_ac_ratio": 1.23,
