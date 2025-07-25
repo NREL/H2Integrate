@@ -173,3 +173,18 @@ def attr_hopp_filter(inst: Attribute, value: Any) -> bool:
         if value.size == 0:
             return False
     return True
+
+
+def check_pysam_input_params(user_dict, pysam_options):
+    for group, group_params in user_dict.items():
+        if group in pysam_options:
+            for key in group_params.keys():
+                if key in pysam_options:
+                    if pysam_options[group][key] != user_dict[group][key]:
+                        msg = (
+                            f"Inconsistent values provided for parameter {key} in {group} Group."
+                            f"pysam_options has value of {pysam_options[group][key]} "
+                            f"but user also specified value of {user_dict[group][key]}. "
+                        )
+                        raise ValueError(msg)
+    return True
