@@ -31,17 +31,22 @@ class CO2HMethanolPlantPerformanceModel(MethanolPerformanceBaseClass):
     Inputs:
         - meoh_syn_cat_consume_ratio: ratio of ft^3 methanol synthesis catalyst consumed to
             kg methanol produced
-        - meoh_atr_cat_consume_ratio: ratio of ft^3 methanol autothermal reforming (ATR) catalyst
-            consumed to kg methanol produced
         - ng_consume_ratio: ratio of kg natural gas (NG) consumed to kg methanol produced
         - co2_consume_ratio: ratio of kg co2 consumed to kg methanol produced
+        - h2_consume_ratio: ratio of kg h2 consumed to kg methanol produced
         - elec_consume_ratio: ratio of kWh electricity consumed to kg methanol produced
+        - meoh_syn_cat_in: scalar ft^3/yr of catalyst supplied to the methanol plant
+        - ng_in: array of kg/h natural gas (NG) supplied to methanol plant
+        - co2_in: array of kg/h carbon dioxide (CO2) supplied to methanol plant
+        - hydrogen_in: array of kg/s hydrogen supplied to methanol plant
+        - electricity_in: array of kW electricity supplied to methanol plant
     Outputs:
-        - meoh_syn_cat_required: annual consumption of methanol synthesis catalyst (ft**3/yr)
-        - ng_required: hourly consumption of NG (kg/h)
-        - carbon dioxide_required: co2 consumption in kg/h
-        - hydrogen_required: h2 consumption in kg/h
-        - electricity_required: electricity consumption in kWh/h
+        - meoh_syn_cat_consume: annual consumption of methanol synthesis catalyst (ft**3/yr)
+        - ng_consume: hourly consumption of NG (kg/h)
+        - carbon dioxide_consume: co2 consumption in kg/h
+        - hydrogen_consume: h2 consumption in kg/h
+        - electricity_consume: electricity consumption in kWh/h
+        - methanol_out: methanol produced in kg/h
     """
 
     def setup(self):
@@ -50,58 +55,66 @@ class CO2HMethanolPlantPerformanceModel(MethanolPerformanceBaseClass):
         )
         super().setup()
 
-        # Add in tech-specific variables and values
-        self.add_input(
-            "meoh_syn_cat_consume_ratio",
-            units="ft**3/kg",
-            val=self.config.meoh_syn_cat_consume_ratio,
-        )
-        self.add_input("ng_consume_ratio", units="kg/kg", val=self.config.ng_consume_ratio)
-        self.add_input("co2_consume_ratio", units="kg/kg", val=self.config.co2_consume_ratio)
-        self.add_input("h2_consume_ratio", units="kg/kg", val=self.config.h2_consume_ratio)
-        self.add_input("elec_consume_ratio", units="kg/kW/h", val=self.config.elec_consume_ratio)
+        # Add in tech-specific feedstock consumption ratios
+        syn_ratio = self.config.meoh_syn_cat_consume_ratio
+        ng_ratio = self.config.ng_consume_ratio
+        co2_ratio = self.config.co2_consume_ratio
+        h2_ratio = self.config.h2_consume_ratio
+        elec_ratio = self.config.elec_consume_ratio
+        self.add_input("meoh_syn_cat_consume_ratio", units="ft**3/kg", val=syn_ratio)
+        self.add_input("ng_consume_ratio", units="kg/kg", val=ng_ratio)
+        self.add_input("co2_consume_ratio", units="kg/kg", val=co2_ratio)
+        self.add_input("h2_consume_ratio", units="kg/kg", val=h2_ratio)
+        self.add_input("elec_consume_ratio", units="kg/kW/h", val=elec_ratio)
 
-        # Hydrogen input comes from another converter, and is in kg/s
-        self.add_input("hydrogen_in", shape=8760, units="kg/s")
-        self.add_output("hydrogen_required", units="kg/yr")
-        self.add_output("hydrogen_capacity", units="kg/yr")
-        self.add_output("methanol_capacity", units="kg/yr")
+        # Set up feedstock supply inputs - can be replaced by connections
+        meoh_cap = self.config.plant_capacity_kgpy
+        meoh_max_out = np.ones(8760) * meoh_cap / 8760
+        self.add_input("meoh_syn_cat_in", units="ft**3/yr", val=syn_ratio * np.sum(meoh_max_out))
+        self.add_input("ng_in", shape=8760, units="kg/h", val=ng_ratio * meoh_max_out)
+        self.add_input("co2_in", shape=8760, units="kg/h", val=co2_ratio * meoh_max_out)
+        self.add_input("hydrogen_in", shape=8760, units="kg/s", val=h2_ratio * meoh_max_out)
+        self.add_input("electricity_in", shape=8760, units="kW*h/h", val=elec_ratio * meoh_max_out)
 
-        self.add_output("meoh_syn_cat_in", units="ft**3/yr")
-        self.add_output("ng_in", shape=8760, units="kg/h")
-        self.add_output("carbon_dioxide_in", shape=8760, units="kg/h")
-        self.add_output("electricity_in", shape=8760, units="kW*h/h")
-
-    def size_upstream(self):
-        self.config = CO2HPerformanceConfig.from_dict(
-            merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance")
-        )
-
-        # Figure out size of plant needed for certain h2 consumption/meoh flow
-        cap_factor = self.config.capacity_factor
-        h2_meoh_ratio = self.config.h2_consume_ratio
-        if self.config.plant_capacity_flow == "hydrogen":
-            h2_kgpy = self.config.plant_capacity_kgpy
-            hydrogen_kgpy_required = h2_kgpy / h2_meoh_ratio
-        elif self.config.plant_capacity_flow == "methanol":
-            meoh_kgpy = self.config.plant_capacity_kgpy
-            hydrogen_kgpy_required = meoh_kgpy * h2_meoh_ratio * cap_factor
-
-        return hydrogen_kgpy_required
+        # Set up feedstock consumption outputs
+        self.add_output("meoh_syn_cat_consume", units="ft**3/yr")
+        self.add_output("ng_consume", shape=8760, units="kg/h")
+        self.add_output("co2_consume", shape=8760, units="kg/h")
+        self.add_output("hydrogen_consume", shape=8760, units="kg/s")
+        self.add_output("electricity_consume", shape=8760, units="kW*h/h")
 
     def compute(self, inputs, outputs):
-        # Calculate methanol production from hydrogen in
-        h2_kgph = inputs["hydrogen_in"] * 3600
-        meoh_kgph = h2_kgph / inputs["h2_consume_ratio"]
+        # Calculate max methanol production from each input
+        syn_in = inputs["meoh_syn_cat_in"]
+        ng_in = inputs["ng_in"]
+        co2_in = inputs["co2_in"]
+        h2_in = inputs["hydrogen_in"]
+        elec_in = inputs["electricity_in"]
+        syn_ratio = inputs["meoh_syn_cat_consume_ratio"]
+        ng_ratio = inputs["ng_consume_ratio"]
+        co2_ratio = inputs["co2_consume_ratio"]
+        h2_ratio = inputs["h2_consume_ratio"]
+        elec_ratio = inputs["elec_consume_ratio"]
+        meoh_from_syn = np.ones(8760) * syn_in / syn_ratio / 8760
+        meoh_from_ng = ng_in / ng_ratio
+        meoh_from_co2 = co2_in / co2_ratio
+        meoh_from_h2 = h2_in * 3600 / h2_ratio  # h2_in is in kg/s - convert to kg/h
+        meoh_from_elec = elec_in / elec_ratio
+
+        # Limiting methanol production per hour
+        meoh_prod = np.minimum.reduce(
+            [meoh_from_syn, meoh_from_ng, meoh_from_co2, meoh_from_h2, meoh_from_elec]
+        )
+        meoh_cap = np.ones(8760) * inputs["plant_capacity_kgpy"] / 8760
+        meoh_prod = np.minimum.reduce([meoh_prod, meoh_cap])
 
         # Parse outputs
-        outputs["methanol_out"] = meoh_kgph
-        outputs["co2e_emissions"] = meoh_kgph * inputs["co2e_emit_ratio"]
-        outputs["h2o_consumption"] = meoh_kgph * inputs["h2o_consume_ratio"]
-        outputs["meoh_syn_cat_in"] = np.sum(meoh_kgph) * inputs["meoh_syn_cat_consume_ratio"]
-        outputs["ng_in"] = meoh_kgph * inputs["ng_consume_ratio"]
-        outputs["carbon_dioxide_in"] = meoh_kgph * inputs["co2_consume_ratio"]
-        outputs["electricity_in"] = meoh_kgph * inputs["elec_consume_ratio"]
+        outputs["methanol_out"] = meoh_prod
+        outputs["meoh_syn_cat_consume"] = np.sum(meoh_prod) * syn_ratio
+        outputs["ng_consume"] = meoh_prod * ng_ratio
+        outputs["co2_consume"] = meoh_prod * co2_ratio
+        outputs["hydrogen_consume"] = meoh_prod * h2_ratio
+        outputs["electricity_consume"] = meoh_prod * elec_ratio
 
 
 @define
@@ -118,14 +131,17 @@ class CO2HMethanolPlantCostModel(MethanolCostBaseClass):
 
     Inputs:
         ng_lhv: natural gas lower heating value in MJ/kg
-        meoh_syn_cat_consumption: annual consumption of methanol synthesis catalyst (ft**3/yr)
-        ng_consumption: hourly consumption of NG (kg/h)
-        carbon_dioxide: hourly consumption of CO2 (kg/h)
-        electricity: hourly electricity consumption (kW*h/h)
+        meoh_syn_cat_consume: annual consumption of methanol synthesis catalyst (ft**3/yr)
+        ng_consume: hourly consumption of NG (kg/h)
+        carbon_dioxide_consume: hourly consumption of CO2 (kg/h)
         meoh_syn_cat_price: price of methanol synthesis catalyst (USD/ft**3)
         ng_price: price of NG (USD/MBtu)
         co2_price: price of CO2 (USD/kg)
     Outputs:
+        CapEx: all methanol plant capital expenses in the form of total overnight cost (TOC)
+        OpEx: all methanol plant operating expenses (fixed and variable)
+        Fixed_OpEx: all methanol plant fixed operating expenses (do NOT vary with production rate)
+        Variable_OpEx: all methanol plant variable operating expenses (vary with production rate)
         meoh_syn_cat_cost: annual cost of methanol synthesis catalyst (USD/year)
         ng_cost: annual cost of NG (USD/year)
         co2_cost: annual cost of CO2 (USD/year)
@@ -138,10 +154,9 @@ class CO2HMethanolPlantCostModel(MethanolCostBaseClass):
         super().setup()
 
         self.add_input("ng_lhv", units="MJ/kg", val=self.config.ng_lhv)
-        self.add_input("meoh_syn_cat_in", units="ft**3/yr")
-        self.add_input("ng_in", shape=8760, units="kg/h")
-        self.add_input("carbon_dioxide_in", shape=8760, units="kg/h")
-        self.add_input("electricity_in", shape=8760, units="kW*h/h")
+        self.add_input("meoh_syn_cat_consume", units="ft**3/yr")
+        self.add_input("ng_consume", shape=8760, units="kg/h")
+        self.add_input("carbon_dioxide_consume", shape=8760, units="kg/h")
         self.add_input("meoh_syn_cat_price", units="USD/ft**3", val=self.config.meoh_syn_cat_price)
         self.add_input(
             "ng_price", units="USD/MBtu", val=self.config.ng_price
@@ -164,9 +179,9 @@ class CO2HMethanolPlantCostModel(MethanolCostBaseClass):
         outputs["OpEx"] = foc_usd_y + voc_usd_y
         outputs["Fixed_OpEx"] = foc_usd_y
         outputs["Variable_OpEx"] = voc_usd_y
-        outputs["meoh_syn_cat_cost"] = inputs["meoh_syn_cat_in"] * inputs["meoh_syn_cat_price"]
-        outputs["ng_cost"] = np.sum(inputs["ng_in"]) * lhv_mmbtu * inputs["ng_price"]
-        outputs["co2_cost"] = np.sum(inputs["carbon_dioxide_in"]) * inputs["co2_price"]
+        outputs["meoh_syn_cat_cost"] = inputs["meoh_syn_cat_consume"] * inputs["meoh_syn_cat_price"]
+        outputs["ng_cost"] = np.sum(inputs["ng_consume"]) * lhv_mmbtu * inputs["ng_price"]
+        outputs["co2_cost"] = np.sum(inputs["carbon_dioxide_consume"]) * inputs["co2_price"]
 
 
 class CO2HMethanolPlantFinanceModel(MethanolFinanceBaseClass):
@@ -208,14 +223,14 @@ class CO2HMethanolPlantFinanceModel(MethanolFinanceBaseClass):
             desc="Annual cost of carbon dioxide in USD/year",
         )
         self.add_input(
-            "electricity_in",
+            "electricity_consume",
             units="kW*h/h",
             desc="Electricity consumption in kWh/h",
             shape_by_conn=True,
         )
         self.add_input(
-            "hydrogen_in",
-            units="kg/h",
+            "hydrogen_consume",
+            units="kg/s",
             desc="Hydrogen consumption in kg/h",
             shape_by_conn=True,
         )
@@ -259,13 +274,13 @@ class CO2HMethanolPlantFinanceModel(MethanolFinanceBaseClass):
         kgph = inputs["methanol_out"]
 
         lcoe = inputs["LCOE"]
-        elec = inputs["electricity_in"]
+        elec = inputs["electricity_consume"]
         elec_cost = lcoe * np.sum(elec)
         lcom_elec = elec_cost / np.sum(kgph)
         outputs["LCOM_elec"] = lcom_elec
 
         lcoh = inputs["LCOH"]
-        h2 = inputs["hydrogen_in"]
+        h2 = inputs["hydrogen_consume"]
         h2_cost = lcoh * np.sum(h2)
         lcom_h2 = h2_cost / np.sum(kgph)
         outputs["LCOM_h2"] = lcom_h2
