@@ -131,3 +131,5 @@ tests/h2integrate/test_hydrogen/output/
 output*
 snopt_history.txt
 reports/*
+examples/**/reports
+examples/**/.openmdao_out
