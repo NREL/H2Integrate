@@ -84,7 +84,7 @@ class H2IntegrateModel:
             for model_type in ["performance_model", "cost_model", "financial_model"]:
                 if model_type in tech_config:
                     model_name = tech_config[model_type].get("model")
-                    if model_name not in self.supported_models and model_name is not None:
+                    if (model_name not in self.supported_models) and (model_name is not None):
                         model_class_name = tech_config[model_type].get("model_class_name")
                         model_location = tech_config[model_type].get("model_location")
 
@@ -110,6 +110,21 @@ class H2IntegrateModel:
 
                         # Add the custom model to the supported models dictionary
                         self.supported_models[model_name] = custom_model_class
+
+                    else:
+                        if (
+                            tech_config[model_type].get("model_class_name") is not None
+                            or tech_config[model_type].get("model_location") is not None
+                        ):
+                            msg = (
+                                f"Custom model_class_name or model_location "
+                                f"specified for '{model_name}', "
+                                f"but '{model_name}' is a built-in H2Integrate "
+                                "model. Using built-in model instead is not allowed. "
+                                f"If you want to use a custom model, please rename it "
+                                "in your configuration."
+                            )
+                            raise ValueError(msg)
 
     def create_site_model(self):
         site_group = om.Group()
@@ -267,6 +282,8 @@ class H2IntegrateModel:
                 commodity_types.append("methanol")
             if "ammonia" in tech_configs:
                 commodity_types.append("ammonia")
+            if "geoh2" in tech_configs:
+                commodity_types.append("hydrogen")
             for tech in electricity_producing_techs:
                 if tech in tech_configs:
                     commodity_types.append("electricity")
@@ -274,6 +291,10 @@ class H2IntegrateModel:
 
             # Steel, methanol provides their own financials
             if any(c in commodity_types for c in ("steel", "methanol")):
+                continue
+
+            # GeoH2 provides own financials
+            if "geoh2" in tech_configs:
                 continue
 
             if commodity_types == []:
@@ -399,7 +420,7 @@ class H2IntegrateModel:
             # Connect the outputs of the technology models to the appropriate financial groups
             for group_id, tech_configs in self.financial_groups.items():
                 # Skip steel financials; it provides its own financials
-                if any(c in tech_configs for c in ("steel", "methanol")):
+                if any(c in tech_configs for c in ("steel", "methanol", "geoh2")):
                     continue
 
                 plant_producing_electricity = False
