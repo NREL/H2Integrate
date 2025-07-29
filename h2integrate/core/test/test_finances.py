@@ -28,7 +28,7 @@ def test_electrolyzer_refurb_results():
             "depreciation_period_electrolyzer": 10,
         },
         "plant": {
-            "analysis_start_year": 2024,
+            "financial_analysis_start_year": 2024,
             "plant_life": 30,
             "installation_time": 24,
             "cost_year": 2022,
@@ -135,7 +135,7 @@ def test_profast_config_provided():
             "depreciation_period_electrolyzer": 10,
         },
         "plant": {
-            "analysis_start_year": 2024,
+            "financial_analysis_start_year": 2024,
             "plant_life": 30,
             "installation_time": 24,
             "cost_year": 2022,
@@ -198,7 +198,7 @@ def test_parameter_validation_clashing_values():
             "depreciation_period_electrolyzer": 10,
         },
         "plant": {
-            "analysis_start_year": 2024,  # Different from pf_params
+            "financial_analysis_start_year": 2024,  # Different from pf_params
             "plant_life": 30,  # Different from pf_params
             "installation_time": 24,  # Different from pf_params
             "cost_year": 2022,

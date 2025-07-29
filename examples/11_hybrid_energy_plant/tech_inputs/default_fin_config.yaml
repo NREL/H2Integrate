@@ -30,7 +30,7 @@ financial_parameters:
   debt_percent: 68.5
   term_int_rate: 6.0
   months_working_reserve: 1
-  analysis_start_year: 2025
+  financial_analysis_start_year: 2025
   installation_months: 12 # None
   sales_tax_rate_state: 4.5 # none
   admin_expense_percent_of_sales: 1.0 #none

@@ -94,7 +94,10 @@ class ProFastComp(om.ExplicitComponent):
             self.plant_config["plant"], params, "plant_life", "operating life"
         )
         check_plant_config_and_profast_params(
-            self.plant_config["plant"], params, "analysis_start_year", "analysis start year"
+            self.plant_config["plant"],
+            params,
+            "financial_analysis_start_year",
+            "analysis start year",
         )
 
     def compute(self, inputs, outputs):
@@ -220,7 +223,9 @@ class ProFastComp(om.ExplicitComponent):
             ],  # Add installation time to yaml default=0
         )
         params.setdefault("operating life", self.plant_config["plant"]["plant_life"])
-        params.setdefault("analysis start year", self.plant_config["plant"]["analysis_start_year"])
+        params.setdefault(
+            "analysis start year", self.plant_config["plant"]["financial_analysis_start_year"]
+        )
 
         pf = ProFAST.ProFAST()
         for i in params:

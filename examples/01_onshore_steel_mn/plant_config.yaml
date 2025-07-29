@@ -37,7 +37,7 @@ plant:
   grid_connection: False # option, can be turned on or off
   ppa_price: 0.025 # $/kWh based on 2022 land based wind market report (ERCOT area ppa prices) https://www.energy.gov/sites/default/files/2022-08/land_based_wind_market_report_2202.pdf
   hybrid_electricity_estimated_cf: 0.492 #should equal 1 if grid_connection = True
-  analysis_start_year: 2032
+  financial_analysis_start_year: 2032
   cost_year: 2022
   installation_time: 36 # months
 

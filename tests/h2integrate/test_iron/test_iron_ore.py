@@ -14,7 +14,7 @@ def iron_ore():
             "grid_connection": False,
             "ppa_price": 0.025,
             "hybrid_electricity_estimated_cf": 0.492,
-            "analysis_start_year": 2032,
+            "financial_analysis_start_year": 2032,
             "installation_time": 36,
         },
         "iron": {

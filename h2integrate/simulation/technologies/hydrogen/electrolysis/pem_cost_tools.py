@@ -12,13 +12,13 @@ class ElectrolyzerLCOHInputConfig:
     Args:
         electrolyzer_physics_results (dict): results from run_electrolyzer_physics()
         electrolyzer_config (dict): sub-dictionary of h2integrate_config
-        analysis_start_year (int): analysis start year
+        financial_analysis_start_year (int): analysis start year
         installation_period_months (int|float|None): installation period in months. defaults to 36.
     """
 
     electrolyzer_physics_results: dict
     electrolyzer_config: dict
-    analysis_start_year: int
+    financial_analysis_start_year: int
     installation_period_months: int | float | None = field(default=36)
 
     electrolyzer_capacity_kW: int | float = field(init=False)
@@ -144,7 +144,7 @@ class ElectrolyzerLCOHInputConfig:
 
         years_of_operation = create_years_of_operation(
             self.project_lifetime_years,
-            self.analysis_start_year,
+            self.financial_analysis_start_year,
             self.installation_period_months,
         )
 
@@ -173,10 +173,14 @@ def calc_electrolyzer_variable_om(electrolyzer_physics_results, h2integrate_conf
             * annual_performance["Annual Average Efficiency [kWh/kg]"].values
         )
 
-        if "analysis_start_year" not in h2integrate_config["finance_parameters"]:
-            analysis_start_year = h2integrate_config["project_parameters"]["analysis_start_year"]
+        if "financial_analysis_start_year" not in h2integrate_config["finance_parameters"]:
+            financial_analysis_start_year = h2integrate_config["project_parameters"][
+                "financial_analysis_start_year"
+            ]
         else:
-            analysis_start_year = h2integrate_config["finance_parameters"]["analysis_start_year"]
+            financial_analysis_start_year = h2integrate_config["finance_parameters"][
+                "financial_analysis_start_year"
+            ]
         if "installation_time" not in h2integrate_config["project_parameters"]:
             installation_period_months = 36
         else:
@@ -186,7 +190,7 @@ def calc_electrolyzer_variable_om(electrolyzer_physics_results, h2integrate_conf
 
         years_of_operation = create_years_of_operation(
             h2integrate_config["project_parameters"]["project_lifetime"],
-            analysis_start_year,
+            financial_analysis_start_year,
             installation_period_months,
         )
         # $/kg-year

@@ -26,7 +26,7 @@ financial_parameters:
   debt_percent: 72.4 # based on 2024 ATB for land-based wind
   term_int_rate: 7.0 # based on 2024 ATB land-based wind nominal interest rate
   months_working_reserve: 1
-  analysis_start_year: 2030
+  financial_analysis_start_year: 2030
   installation_months: 36
   sales_tax_rate_state: 7.375 # total state and local sales tax in St. Louis County https://taxmaps.state.mn.us/salestax/
   admin_expense_percent_of_sales: 0.0 # H2FAST default
