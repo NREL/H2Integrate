@@ -31,9 +31,9 @@ technologies:
   wind:
     num_turbines: 216
     turbine_rating_kw: 6000.0
-    model_name: pysam #floris
+    model_name: floris
     timestep: [0, 8760]
-    # floris_config: !include floris_input_lbw_6MW.yaml
+    floris_config: !include floris_input_lbw_6MW.yaml
     fin_model: !include default_fin_config.yaml
   pv:
     system_capacity_kw: 1500000
