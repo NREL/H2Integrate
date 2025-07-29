@@ -1,6 +1,7 @@
 # Finance Parameters
 
-Finance parameters are primarily specified in the `plant_config` under the `finance_parameters` section. Some parameters from the `plant` section of the `plant_config` may also be used in finance calculations, these parameters are `plant_life`, `installation_time`, `analysis_start_year`, and `cost_year`.
+Finance parameters are primarily specified in the `plant_config` under the `finance_parameters` section.
+Some parameters from the `plant` section of the `plant_config` may also be used in finance calculations, these parameters are `plant_life`, `installation_time`, `analysis_start_year`, and `cost_year`.
 
 There are two methods for specifying other finance parameters:
 - [Directly in finance parameters](finance:direct_opt)
