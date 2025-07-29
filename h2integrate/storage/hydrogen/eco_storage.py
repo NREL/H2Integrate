@@ -16,6 +16,8 @@ from h2integrate.simulation.technologies.hydrogen.h2_storage.lined_rock_cavern.l
 
 @define
 class H2StorageModelConfig(BaseConfig):
+    resource_name: str = field(default="hydrogen")
+    resource_units: str = field(default="kg/h")
     rating: float = field(default=640)
     size_capacity_from_demand: dict = field(default={"flag": True})
     capacity_from_max_on_turbine_storage: bool = field(default=False)
@@ -25,6 +27,7 @@ class H2StorageModelConfig(BaseConfig):
 
 class H2Storage(om.ExplicitComponent):
     def initialize(self):
+        self.options.declare("driver_config", types=dict)
         self.options.declare("tech_config", types=dict)
         self.options.declare("plant_config", types=dict)
         self.options.declare("verbose", types=bool, default=False)
@@ -37,7 +40,6 @@ class H2Storage(om.ExplicitComponent):
             "hydrogen_in",
             val=0.0,
             shape_by_conn=True,
-            copy_shape="hydrogen_out",
             units="kg/h",
         )
 
@@ -49,13 +51,6 @@ class H2Storage(om.ExplicitComponent):
         )
         self.add_input("efficiency", val=0.0, desc="Average efficiency of the electrolyzer")
 
-        self.add_output(
-            "hydrogen_out",
-            val=0.0,
-            shape_by_conn=True,
-            copy_shape="hydrogen_in",
-            units="kg/h",
-        )
         self.add_output("CapEx", val=0.0, units="USD", desc="Capital expenditure")
         self.add_output("OpEx", val=0.0, units="USD/year", desc="Operational expenditure")
 
@@ -207,6 +202,3 @@ class H2Storage(om.ExplicitComponent):
 
         outputs["CapEx"] = h2_storage_results["storage_capex"]
         outputs["OpEx"] = h2_storage_results["storage_opex"]
-
-        # For now, pass through hydrogen
-        outputs["hydrogen_out"] = inputs["hydrogen_in"]

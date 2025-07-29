@@ -1,0 +1,129 @@
+name: Single Turbine Plant with Electrolyzer (Poly Efficiency)
+weather: test_weather_one_year.csv
+service_equipment:
+  - ofs
+layout: layout_electrolyzer_poly.csv
+port_distance: 20
+inflation_rate: 0
+workday_start: 6
+workday_end: 22
+start_year: 2002
+end_year: 2020
+project_capacity: 3
+substations:
+  offshore_substation:
+    capacity_kw: 0
+    capex_kw: 3000
+    transformer:
+      name: transformer
+      maintenance:
+        -
+          description: n/a
+          time: 0
+          materials: 0
+          service_equipment: CTV
+          frequency: 0
+      failures:
+        - scale: 0
+          shape: 0
+          time: 0
+          materials: 0
+          service_equipment: [CTV]
+          operation_reduction: 0
+          level: 1
+          description: n/a
+turbines:
+  vestas_v90:
+    capacity_kw: 3000
+    capex_kw: 1300  # need an updated value
+    power_curve:
+      file: vestas_v90_power_curve.csv
+      bin_width: 0.5
+    electrical_system:
+      name: electrical_system
+      maintenance:
+      - description: n/a
+        time: 0
+        materials: 0
+        service_equipment: CTV
+        frequency: 0
+      failures:
+        - scale: 0
+          shape: 0
+          time: 0
+          materials: 0
+          service_equipment: CTV
+          operation_reduction: 0
+          level: 1
+          description: n/a
+cables:
+  export:
+    name: export
+    maintenance:
+    - description: na
+      time: 0
+      materials: 0
+      service_equipment: CTV
+      frequency: 0
+    failures:
+      - scale: 0
+        shape: 0
+        time: 0
+        materials: 0
+        service_equipment: CTV
+        operation_reduction: 0.0
+        level: 1
+        description: na
+vessels:
+  ofs:
+    name: Onsite Truck
+    equipment_rate: 50
+    capability: OFS
+    speed: 37.04  # 20 knots
+    strategy: requests
+    strategy_threshold: 1
+    max_windspeed_transport: 50
+    max_windspeed_repair: 50
+    max_waveheight_transport: 99
+    max_waveheight_repair: 99
+    onsite: false
+    mobilization_cost: 1500
+    mobilization_days: 1
+    charter_days: 20
+    port_distance: 30
+    crew_transfer_time: 0.1
+    n_crews: 1
+    crew:
+      day_rate: 219.18  # 80K/yr / 365 days
+      n_day_rate: 2
+      hourly_rate: 0
+      n_hourly_rate: 0
+electrolyzers:
+  central_electrolyzer:
+    stack_capacity_kw: 1000
+    capex_kw: 800
+    n_stacks: 40
+    power_curve:
+      efficiency_rate: 39.44
+      FE: 0.9999999
+      n_cells: 135
+      turndown_ratio: 0.1
+    power_system:
+      name: Power System
+      maintenance:
+      - description: DC current transducer
+        time: 40
+        materials: 1200
+        service_equipment: OFS
+        frequency: 5
+        frequency_basis: months
+      failures:
+      -
+        scale: 0
+        shape: 0
+        time: 0
+        materials: 0
+        service_equipment: [OFS]
+        operation_reduction: 0
+        level: 1
+        description: n/a

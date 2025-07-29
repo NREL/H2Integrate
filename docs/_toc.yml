@@ -15,10 +15,13 @@ parts:
   - file: user_guide/design_optimization_in_h2i
   - file: user_guide/postprocessing_results
   - file: user_guide/how_to_interface_with_user_defined_model
+  - file: user_guide/specifying_finance_parameters
 
 - caption: Technology Models
   chapters:
   - file: technology_models/run_of_river
+  - file: technology_models/direct_ocean_capture
+  - file: technology_models/wombat_electrolyzer_om
 
 - caption: Examples
   chapters:

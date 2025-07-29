@@ -3,6 +3,7 @@ import openmdao.api as om
 
 class HydrogenTankPerformanceModel(om.ExplicitComponent):
     def initialize(self):
+        self.options.declare("driver_config", types=dict)
         self.options.declare("plant_config", types=dict)
         self.options.declare("tech_config", types=dict)
 
@@ -52,6 +53,7 @@ class HydrogenTankPerformanceModel(om.ExplicitComponent):
 
 class HydrogenTankCostModel(om.ExplicitComponent):
     def initialize(self):
+        self.options.declare("driver_config", types=dict)
         self.options.declare("plant_config", types=dict)
         self.options.declare("tech_config", types=dict)
 

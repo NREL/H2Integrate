@@ -16,6 +16,7 @@ class PaperMillConfig(BaseConfig):
 
 class PaperMillPerformance(om.ExplicitComponent):
     def initialize(self):
+        self.options.declare("driver_config", types=dict)
         self.options.declare("plant_config", types=dict)
         self.options.declare("tech_config", types=dict)
 
@@ -52,6 +53,7 @@ class PaperMillCostConfig(BaseConfig):
 
 class PaperMillCost(om.ExplicitComponent):
     def initialize(self):
+        self.options.declare("driver_config", types=dict)
         self.options.declare("plant_config", types=dict)
         self.options.declare("tech_config", types=dict)
 
@@ -71,6 +73,7 @@ class PaperMillCost(om.ExplicitComponent):
 
 class PaperMillFinance(om.ExplicitComponent):
     def initialize(self):
+        self.options.declare("driver_config", types=dict)
         self.options.declare("plant_config", types=dict)
         self.options.declare("tech_config", types=dict)
 
