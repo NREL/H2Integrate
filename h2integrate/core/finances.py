@@ -3,7 +3,7 @@ import ProFAST  # system financial model
 import openmdao.api as om
 import numpy_financial as npf
 
-from h2integrate.core.utilities import compare_plant_config_to_profast_params
+from h2integrate.core.utilities import check_plant_config_and_profast_params
 
 
 class AdjustedCapexOpexComp(om.ExplicitComponent):
@@ -115,7 +115,7 @@ class ProFastComp(om.ExplicitComponent):
                 float(inputs["co2_capture_kgpy"]) / 365.0,
             )
 
-        params.setdefault("long term utilization", 1)  # TODO consdering using utilization
+        params.setdefault("long term utilization", 1)  # TODO considering using utilization
 
         if "pf_params" in self.plant_config["finance_parameters"]:
             pf_params = self.plant_config["finance_parameters"]["pf_params"]["params"]
@@ -197,13 +197,13 @@ class ProFastComp(om.ExplicitComponent):
                 "cash onhand", self.plant_config["finance_parameters"]["cash_onhand_months"]
             )
 
-        compare_plant_config_to_profast_params(
+        check_plant_config_and_profast_params(
             self.plant_config["plant"], params, "installation_time", "installation months"
         )
-        compare_plant_config_to_profast_params(
+        check_plant_config_and_profast_params(
             self.plant_config["plant"], params, "plant_life", "operating life"
         )
-        compare_plant_config_to_profast_params(
+        check_plant_config_and_profast_params(
             self.plant_config["plant"], params, "analysis_start_year", "analysis start year"
         )
 

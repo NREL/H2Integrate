@@ -1,13 +1,14 @@
 # Finance Parameters
 
 Finance parameters are primarily specified in the `plant_config` under the `finance_parameters` section.
-Some parameters from the `plant` section of the `plant_config` may also be used in finance calculations, these parameters are `plant_life`, `installation_time`, `analysis_start_year`, and `cost_year`.
+Some parameters from the `plant` section of the `plant_config` may also be used in finance calculations.
+These parameters are `plant_life`, `installation_time`, `analysis_start_year`, and `cost_year`.
 
-There are two methods for specifying other finance parameters:
+There are two approaches for specifying other finance parameters:
 - [Directly in finance parameters](finance:direct_opt)
 - [ProFAST parameters config](finance:pf_params_opt)
 
-Both methods require the following additional finance parameters to be specified:
+Both approaches require the following additional finance parameters to be specified:
 - `costing_generation_inflation` is used to adjust costs for each technology from the year provided under `discount_years` to the `cost_year` specified in the `plant_config` under the `plant` section.
 - `depreciation_method`: depreciation method to apply to capital items
 - `depreciation_period`: depreciation period (in years) for capital items (except electrolyzer, if used)
@@ -15,7 +16,7 @@ Both methods require the following additional finance parameters to be specified
 
 (finance:direct_opt)=
 ## Providing Finance Parameters: Direct Method
-Below is an example of the `finance_parameters` section of `plant_config` if financial parameters are input directly under the `finance_parameters` section.
+Below is an example inputting financial parameters directly in the `finance_parameters` section of `plant_config`:
 
 ```yaml
 finance_parameters:
@@ -46,19 +47,19 @@ finance_parameters:
     electrolyzer: 2022
 ```
 
-This method also relies on data from `plant_config`:
+This approach also relies on data from `plant_config`:
 - `plant_life`: used as the `operating life` ProFAST parameter
 - `installation_time`: used as the `installation months` ProFAST parameter
 
 
 ```{note}
-`profast_general_inflation` is used to populate the escalation and inflation rates in ProFAST entries, a value of 0 correspondings to a *nominal analysis*
+`profast_general_inflation` is used to populate the escalation and inflation rates in ProFAST entries with a value of 0 corresponding to a *nominal analysis*.
 ```
 
 
 **Debt Equity Ratio vs Debt Equity Split**
 
-If `debt_equity_split` is False, the debt equity ratio is set as the value specified by `debt_equity_ratio`. If `debt_equity_ratio` is False, the debt equity ratio is calculated based on the value specified by `debt_equity_split`. The relationship bewteen debt equity ratio and debt equity split is given below:
+If `debt_equity_split` is False, the debt equity ratio is set as the value specified by `debt_equity_ratio`. If `debt_equity_ratio` is False, the debt equity ratio is calculated based on the value specified by `debt_equity_split`. The relationship between debt equity ratio and debt equity split is given below:
 
 $\text{debt equity ratio} = \frac{\text{debt equity split}}{100 - \text{debt equity split}}$
 
@@ -70,7 +71,7 @@ $\text{equity fraction} = 1 - \text{debt fraction}$
 ## Providing Finance Parameters: ProFAST params config file
 
 ```{note}
-To avoid errors, please check that `plant_config['plant']['plant_life']` has the same value as `plant_config['finance_parameters']['pf_params']['params']['operating life']` and that `plant_config['plant']['installation_time']` has the same value as `plant_config['finance_parameters']['pf_params']['params']['installation months']`
+To avoid errors, please check that `plant_config['plant']['plant_life']` is equal to `plant_config['finance_parameters']['pf_params']['params']['operating life']` and that `plant_config['plant']['installation_time']` is equal to `plant_config['finance_parameters']['pf_params']['params']['installation months']`
 
 
 | `plant` parameter | equivalent `pf_params` parameter |
@@ -79,7 +80,7 @@ To avoid errors, please check that `plant_config['plant']['plant_life']` has the
 | `installation_time` | `installation months` |
 ```
 
-Below is an example of the `finance_parameters` section of `plant_config` if using `pf_params` format to specify financial paramters:
+Below is an example of the `finance_parameters` section of `plant_config` if using `pf_params` format to specify financial parameters:
 
 ```yaml
 finance_parameters:
