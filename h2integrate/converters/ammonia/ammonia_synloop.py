@@ -4,12 +4,8 @@ from attrs import field, define
 
 from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
 from h2integrate.core.validators import gt_zero, range_val
+from h2integrate.tools.constants import H_MW, N_MW
 from h2integrate.tools.inflation.inflate import inflate_cpi, inflate_cepci
-
-
-h_mw = 1.008
-n_mw = 14.007
-ar_mw = 39.948
 
 
 @define
@@ -182,7 +178,7 @@ class AmmoniaSynLoopPerformanceModel(om.ExplicitComponent):
         h2_in = inputs["hydrogen_in"]
         n2_in = inputs["nitrogen_in"]
         if np.max(n2_in) == 0:  # Temporary until ASU is added
-            n2_in = h2_in / h_mw * 3 * n_mw  # TODO: Replace with connected input
+            n2_in = h2_in / H_MW * 3 * N_MW  # TODO: Replace with connected input
         elec_in = inputs["electricity_in"]  # Temporary until HOPP is connected
         if np.max(elec_in) == 0:
             elec_in = (
@@ -194,13 +190,13 @@ class AmmoniaSynLoopPerformanceModel(om.ExplicitComponent):
             )  # TODO: replace with connected input
 
         # Calculate max NH3 production for each input
-        feed_mw = x_h2_feed * h_mw * 2 + x_n2_feed * n_mw * 2  # g / mol
+        feed_mw = x_h2_feed * H_MW * 2 + x_n2_feed * N_MW * 2  # g / mol
 
-        w_h2_feed = x_h2_feed * h_mw / feed_mw  # kg H2 / kg feed gas
+        w_h2_feed = x_h2_feed * H_MW / feed_mw  # kg H2 / kg feed gas
         h2_rate = w_h2_feed * ratio_feed  # kg H2 / kg NH3
         nh3_from_h2 = h2_in / h2_rate  # kg nh3 / hr
 
-        w_n2_feed = x_n2_feed * n_mw / feed_mw  # kg N2 / kg feed gas
+        w_n2_feed = x_n2_feed * N_MW / feed_mw  # kg N2 / kg feed gas
         n2_rate = w_n2_feed * ratio_feed  # kg N2 / kg NH3
         nh3_from_n2 = n2_in / n2_rate  # kg nh3 / hr
 
@@ -224,12 +220,12 @@ class AmmoniaSynLoopPerformanceModel(om.ExplicitComponent):
         used_elec = nh3_prod * energy_demand
 
         # Calculate output in purge gas
-        purge_mw = x_h2_purge * h_mw * 2 + x_n2_purge * n_mw * 2  # g / mol
+        purge_mw = x_h2_purge * H_MW * 2 + x_n2_purge * N_MW * 2  # g / mol
 
-        w_h2_purge = x_h2_purge * h_mw / purge_mw  # kg H2 / kg purge gas
+        w_h2_purge = x_h2_purge * H_MW / purge_mw  # kg H2 / kg purge gas
         h2_purge = w_h2_purge * ratio_purge * nh3_prod  # kg H2 / hr
 
-        w_n2_purge = x_n2_purge * h_mw / purge_mw  # kg N2 / kg purge gas
+        w_n2_purge = x_n2_purge * H_MW / purge_mw  # kg N2 / kg purge gas
         n2_purge = w_n2_purge * ratio_purge * nh3_prod  # kg N2 / hr
 
         # Calculate catalyst mass
