@@ -81,6 +81,22 @@ class ProFastComp(om.ExplicitComponent):
         if "electrolyzer" in tech_config:
             self.add_input("time_until_replacement", units="h")
 
+        # Parameter validation checks
+        params = {}
+        if "pf_params" in self.plant_config["finance_parameters"]:
+            pf_params = self.plant_config["finance_parameters"]["pf_params"]["params"]
+            params.update(pf_params)
+
+        check_plant_config_and_profast_params(
+            self.plant_config["plant"], params, "installation_time", "installation months"
+        )
+        check_plant_config_and_profast_params(
+            self.plant_config["plant"], params, "plant_life", "operating life"
+        )
+        check_plant_config_and_profast_params(
+            self.plant_config["plant"], params, "analysis_start_year", "analysis start year"
+        )
+
     def compute(self, inputs, outputs):
         mass_commodities = ["hydrogen", "ammonia", "co2"]
 
@@ -196,16 +212,6 @@ class ProFastComp(om.ExplicitComponent):
             params.setdefault(
                 "cash onhand", self.plant_config["finance_parameters"]["cash_onhand_months"]
             )
-
-        check_plant_config_and_profast_params(
-            self.plant_config["plant"], params, "installation_time", "installation months"
-        )
-        check_plant_config_and_profast_params(
-            self.plant_config["plant"], params, "plant_life", "operating life"
-        )
-        check_plant_config_and_profast_params(
-            self.plant_config["plant"], params, "analysis_start_year", "analysis start year"
-        )
 
         params.setdefault(
             "installation months",
