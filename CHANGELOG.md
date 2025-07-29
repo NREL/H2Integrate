@@ -1,11 +1,5 @@
 # CHANGELOG
 
-## 0.3.X, Unreleased, TBD
-
-- Added ammonia synloop, partially addressing https://github.com/NREL/H2Integrate/issues/169
-- Added geologic hydrogen (geoh2) converter and examples [PR 135](https://github.com/NREL/H2Integrate/pull/135)
-
-
 ## 0.3.1, Unreleased, TBD
 
 - Added methanol production base class
@@ -32,6 +26,8 @@
 - Added marine carbon capture base class
 - Added direct ocean capture technology
 - Added option for user to provide ProFAST parameters in finance parameters
+- Added ammonia synloop, partially addressing https://github.com/NREL/H2Integrate/issues/169
+- Added geologic hydrogen (geoh2) converter and examples [PR 135](https://github.com/NREL/H2Integrate/pull/135)
 
 ## 0.3.0 [May 2 2025]
 
