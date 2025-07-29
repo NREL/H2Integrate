@@ -116,31 +116,31 @@ def test_methanol_example(subtests):
     os.chdir(examples_dir / "03_methanol" / "smr")
 
     # Create a H2Integrate model
-    model = H2IntegrateModel(Path.cwd() / "03_smr_methanol.yaml")
+    model1 = H2IntegrateModel(Path.cwd() / "03_smr_methanol.yaml")
 
     # Run the model
-    model.run()
+    model1.run()
 
-    model.post_process()
+    model1.post_process()
 
     # Check levelized cost of methanol (LCOM)
     with subtests.test("Check SMR LCOM"):
-        assert pytest.approx(model.prob.get_val("methanol.LCOM"), rel=1e-6) == 0.22116813
+        assert pytest.approx(model1.prob.get_val("methanol.LCOM"), rel=1e-6) == 0.22116813
 
     # Change the current working directory to the CO2 Hydrogenation example's directory
     os.chdir(examples_dir / "03_methanol" / "co2_hydrogenation")
 
     # Create a H2Integrate model
-    model = H2IntegrateModel(Path.cwd() / "03_co2h_methanol.yaml")
+    model2 = H2IntegrateModel(Path.cwd() / "03_co2h_methanol.yaml")
 
     # Run the model
-    model.run()
+    model2.run()
 
-    model.post_process()
+    model2.post_process()
 
     # Check levelized cost of methanol (LCOM)
     with subtests.test("Check CO2 Hydrogenation LCOM"):
-        assert pytest.approx(model.prob.get_val("methanol.LCOM"), rel=1e-6) == 1.4735779
+        assert pytest.approx(model2.prob.get_val("methanol.LCOM"), rel=1e-6) == 1.4735779
 
 
 def test_wind_h2_opt_example(subtests):
