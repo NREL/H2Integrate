@@ -519,8 +519,8 @@ class AmmoniaSynLoopCostModel(om.ExplicitComponent):
         rebuild_opex = rebuild_cost * cat_int
         cat_opex = cat_cost * cat_rate * nh3_prod
         h2o_opex = h2o_cost * h2o_rate * nh3_prod
-        o2_opex = -1 * o2_price * o2_rate * nh3_prod
-        variable_opex = rebuild_opex + cat_opex + h2o_opex + o2_opex
+        o2_sales = o2_price * o2_rate * nh3_prod
+        variable_opex = rebuild_opex + cat_opex + h2o_opex - o2_sales
 
         ##---Final Outputs---
         outputs["CapEx"] = total_capex
