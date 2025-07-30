@@ -21,7 +21,6 @@ class TestBasicH2Costs:
     elec_capex = 600  # $/kW
     time_between_replacement = 80000  # hours
     useful_life = 30  # years
-    atb_year = 2022
 
     def test_on_turbine_capex(self):
         (
@@ -36,7 +35,6 @@ class TestBasicH2Costs:
             self.time_between_replacement,
             self.per_turb_electrolyzer_size_mw,
             self.useful_life,
-            self.atb_year,
             self.per_turb_electrical_generation_timeseries,
             self.per_turb_h2_annual_output,
             0.0,
@@ -63,7 +61,6 @@ class TestBasicH2Costs:
             self.time_between_replacement,
             self.electrolyzer_size_mw,
             self.useful_life,
-            self.atb_year,
             self.electrical_generation_timeseries,
             self.h2_annual_output,
             0.0,
@@ -87,7 +84,6 @@ class TestBasicH2Costs:
             self.time_between_replacement,
             self.per_turb_electrolyzer_size_mw,
             self.useful_life,
-            self.atb_year,
             self.per_turb_electrical_generation_timeseries,
             self.per_turb_h2_annual_output,
             0.0,
@@ -114,7 +110,6 @@ class TestBasicH2Costs:
             self.time_between_replacement,
             self.per_turb_electrolyzer_size_mw,
             self.useful_life,
-            self.atb_year,
             self.per_turb_electrical_generation_timeseries,
             self.per_turb_h2_annual_output,
             0.0,
@@ -141,7 +136,6 @@ class TestBasicH2Costs:
             self.time_between_replacement,
             self.electrolyzer_size_mw,
             self.useful_life,
-            self.atb_year,
             self.electrical_generation_timeseries,
             self.h2_annual_output,
             0.0,
@@ -165,7 +159,6 @@ class TestBasicH2Costs:
             self.time_between_replacement,
             self.per_turb_electrolyzer_size_mw,
             self.useful_life,
-            self.atb_year,
             self.per_turb_electrical_generation_timeseries,
             self.per_turb_h2_annual_output,
             0.0,

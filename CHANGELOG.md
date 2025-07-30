@@ -25,6 +25,8 @@
 - Added WOMBAT electrolyzer O&M model
 - Added marine carbon capture base class
 - Added direct ocean capture technology
+- Added option for user to provide ProFAST parameters in finance parameters
+- Changed plant_config `atb_year` entry to `financial_analysis_start_year`
 - Allow users to specify the technologies to include in the metrics calculations in the plant configuration file
 
 ## 0.3.0 [May 2 2025]
