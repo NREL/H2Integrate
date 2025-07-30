@@ -26,6 +26,7 @@
 - Added marine carbon capture base class
 - Added direct ocean capture technology
 - Added option for user to provide ProFAST parameters in finance parameters
+- Changed plant_config `atb_year` entry to `financial_analysis_start_year`
 
 ## 0.3.0 [May 2 2025]
 
