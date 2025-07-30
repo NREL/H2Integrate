@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 import openmdao.api as om
 from attrs import field, define
 from numpy import ones, arange
@@ -129,3 +131,104 @@ class PassThroughOpenLoopController(ControllerBaseClass):
             cols=arange(size),
             val=ones(size),  # Diagonal elements are 1.0
         )
+
+
+@define
+class DemandOpenLoopControllerConfig(BaseConfig):
+    resource_name: str = field()
+    resource_units: str = field()
+    time_units: str = field()
+    max_charge: float = field()  # percent
+    min_charge: float = field()  # percent
+    init_charge: float = field()  # percent
+    max_charge_rate: float = field()
+    max_discharge_rate: float = field()
+    charge_efficiency: float = field()
+    discharge_efficiency: float = field()
+    demand_profile: list = field()  # TODO does this need to be an input?
+
+
+class OpenLoopController(ControllerBaseClass):
+    def setup(self):
+        self.config = DemandOpenLoopControllerConfig.from_dict(
+            merge_shared_inputs(self.options["tech_config"]["model_inputs"], "control")
+        )
+
+        self.add_input(
+            f"{self.config.resource_name}_in",
+            shape_by_conn=True,
+            units=self.config.resource_units,
+            desc=f"{self.config.resource_name} input timeseries from production to storage",
+        )
+
+        self.add_output(
+            f"{self.config.resource_name}_out",
+            copy_shape=f"{self.config.resource_name}_in",
+            units=self.config.resource_units,
+            desc=f"{self.config.resource_name} output timeseries from plant after storage",
+        )
+
+        self.add_discrete_output(  # TODO should this be discrete or will it be included in optimization?
+            f"{self.config.resource_name}_soc",
+            copy_shape=f"{self.config.resource_name}_in",
+            units="percent",
+            desc=f"{self.config.resource_name} state of charge timeseries for storage",
+        )
+
+        self.add_discrete_output(  # TODO should this be discrete or will it be included in optimization?
+            f"{self.config.resource_name}_curtailed",
+            copy_shape=f"{self.config.resource_name}_in",
+            units=self.config.resource_units,
+            desc=f"{self.config.resource_name} curtailment timeseries for inflow resource at \
+                storage point",
+        )
+
+    def compute(self, inputs, outputs, discrete_outputs):
+        """
+        Compute the state of charge (SOC) and output flow based on demand and storage constraints.
+
+        """
+        resource_name = self.config.resource_name
+        max_charge = self.config.max_charge
+        min_charge = self.config.min_charge
+        init_charge = self.config.init_charge
+        max_charge_rate = self.config.max_charge_rate
+        max_discharge_rate = self.config.max_discharge_rate
+        charge_efficiency = self.config.charge_efficiency
+        discharge_efficiency = self.config.discharge_efficiency
+        demand_profile = self.config.demand_profile
+        # solve_approach: optimized vs heuristic
+        # objective:
+
+        # Initialize state of charge
+        soc = deepcopy(init_charge)
+
+        # Loop through each time step
+        for t in range(len(demand_profile)):
+            # Get the input flow and demand at the current time step
+            input_flow = inputs[f"{resource_name}_in"][t]
+            demand = demand_profile[t]
+
+            # Calculate the available charge/discharge capacity
+            available_charge = max_charge - soc
+            available_discharge = soc - min_charge
+
+            # Determine the output flow based on demand and SOC
+            if demand > input_flow:
+                # Discharge storage to meet demand
+                discharge_needed = (demand - input_flow) / discharge_efficiency
+                discharge = min(discharge_needed, available_discharge, max_discharge_rate)
+                soc -= discharge
+                outputs[f"{resource_name}_out"][t] = input_flow + discharge * discharge_efficiency
+            else:
+                # Charge storage with excess input
+                excess_input = input_flow - demand
+                charge = min(excess_input * charge_efficiency, available_charge, max_charge_rate)
+                soc += charge
+                outputs[f"{resource_name}_out"][t] = demand
+
+            # Ensure SOC stays within bounds
+            soc = max(min_charge, min(max_charge, soc))
+
+            # Record the SOC for the current time step
+            discrete_outputs[f"{resource_name}_soc"][t] = soc
