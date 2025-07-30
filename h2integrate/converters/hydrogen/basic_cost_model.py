@@ -46,7 +46,6 @@ class BasicElectrolyzerCostModel(ElectrolyzerCostBaseClass):
         total_hydrogen_produced = float(inputs["total_hydrogen_produced"])
         electrolyzer_size_mw = self.config.rating
         useful_life = plant_config["plant"]["plant_life"]
-        atb_year = plant_config["plant"]["atb_year"]
 
         # run hydrogen production cost model - from hopp examples
         if self.config.location == "onshore":
@@ -66,7 +65,6 @@ class BasicElectrolyzerCostModel(ElectrolyzerCostBaseClass):
             self.config.time_between_replacement,
             electrolyzer_size_mw,
             useful_life,
-            atb_year,
             inputs["electricity"],
             total_hydrogen_produced,
             0.0,

@@ -3,6 +3,8 @@ import ProFAST  # system financial model
 import openmdao.api as om
 import numpy_financial as npf
 
+from h2integrate.core.utilities import check_plant_config_and_profast_params
+
 
 class AdjustedCapexOpexComp(om.ExplicitComponent):
     def initialize(self):
@@ -54,10 +56,7 @@ class ProFastComp(om.ExplicitComponent):
 
     def setup(self):
         tech_config = self.tech_config = self.options["tech_config"]
-        plant_config = self.plant_config = self.options["plant_config"]
-        self.discount_rate = plant_config["finance_parameters"]["discount_rate"]
-        self.inflation_rate = plant_config["finance_parameters"]["costing_general_inflation"]
-        self.cost_year = plant_config["plant"]["cost_year"]
+        self.plant_config = self.options["plant_config"]
 
         for tech in tech_config:
             self.add_input(f"capex_adjusted_{tech}", val=0.0, units="USD")
@@ -82,147 +81,155 @@ class ProFastComp(om.ExplicitComponent):
         if "electrolyzer" in tech_config:
             self.add_input("time_until_replacement", units="h")
 
+        # Parameter validation checks
+        params = {}
+        if "pf_params" in self.plant_config["finance_parameters"]:
+            pf_params = self.plant_config["finance_parameters"]["pf_params"]["params"]
+            params.update(pf_params)
+
+        check_plant_config_and_profast_params(
+            self.plant_config["plant"], params, "installation_time", "installation months"
+        )
+        check_plant_config_and_profast_params(
+            self.plant_config["plant"], params, "plant_life", "operating life"
+        )
+        check_plant_config_and_profast_params(
+            self.plant_config["plant"],
+            params,
+            "financial_analysis_start_year",
+            "analysis start year",
+        )
+
     def compute(self, inputs, outputs):
-        gen_inflation = self.plant_config["finance_parameters"]["profast_general_inflation"]
+        mass_commodities = ["hydrogen", "ammonia", "co2"]
+
+        if "pf_params" in self.plant_config["finance_parameters"]:
+            gen_inflation = self.plant_config["finance_parameters"]["pf_params"]["params"][
+                "general inflation rate"
+            ]
+        else:
+            gen_inflation = self.plant_config["finance_parameters"]["profast_general_inflation"]
 
         land_cost = 0.0
 
-        pf = ProFAST.ProFAST()
-        if self.options["commodity_type"] == "hydrogen":
-            pf.set_params(
-                "commodity",
-                {
-                    "name": "Hydrogen",
-                    "unit": "kg",
-                    "initial price": 100,
-                    "escalation": gen_inflation,
-                },
-            )
-            pf.set_params(
+        params = {}
+        params.setdefault(
+            "commodity",
+            {
+                "name": self.options["commodity_type"].capitalize(),
+                "unit": "kg" if self.options["commodity_type"] in mass_commodities else "kWh",
+                "initial price": 100,
+                "escalation": gen_inflation,
+            },
+        )
+
+        if self.options["commodity_type"] != "co2":
+            params.setdefault(
                 "capacity",
-                float(inputs["total_hydrogen_produced"]) / 365.0,
-            )  # kg/day
-        elif self.options["commodity_type"] == "ammonia":
-            pf.set_params(
-                "commodity",
-                {
-                    "name": "Ammonia",
-                    "unit": "kg",
-                    "initial price": 100,
-                    "escalation": gen_inflation,
-                },
+                float(inputs[f"total_{self.options['commodity_type']}_produced"][0]) / 365.0,
             )
-            pf.set_params(
-                "capacity",
-                float(inputs["total_ammonia_produced"]) / 365.0,
-            )
-        elif self.options["commodity_type"] == "electricity":
-            pf.set_params(
-                "commodity",
-                {
-                    "name": "Electricity",
-                    "unit": "kWh",
-                    "initial price": 100,
-                    "escalation": gen_inflation,
-                },
-            )
-            pf.set_params(
-                "capacity",
-                float(inputs["total_electricity_produced"]) / 365.0,
-            )
-        elif self.options["commodity_type"] == "co2":
-            pf.set_params(
-                "commodity",
-                {
-                    "name": "CO2",
-                    "unit": "kg",
-                    "initial price": 100,
-                    "escalation": gen_inflation,
-                },
-            )
-            pf.set_params(
+        else:
+            params.setdefault(
                 "capacity",
                 float(inputs["co2_capture_kgpy"]) / 365.0,
             )
 
-        pf.set_params("maintenance", {"value": 0, "escalation": gen_inflation})
-        pf.set_params(
-            "analysis start year",
-            self.plant_config["plant"]["atb_year"] + 2,  # Add financial analysis start year
-        )
-        pf.set_params("operating life", self.plant_config["plant"]["plant_life"])
-        pf.set_params(
+        params.setdefault("long term utilization", 1)  # TODO considering using utilization
+
+        if "pf_params" in self.plant_config["finance_parameters"]:
+            pf_params = self.plant_config["finance_parameters"]["pf_params"]["params"]
+            avoided_params = ["capacity", "commodity", "long term utilization"]
+            pf_params = {k: v for k, v in pf_params.items() if k not in avoided_params}
+            params.update(pf_params)
+
+        else:
+            params.setdefault("maintenance", {"value": 0, "escalation": gen_inflation})
+            params.setdefault(
+                "installation cost",
+                {
+                    "value": 0,
+                    "depr type": "Straight line",
+                    "depr period": 4,
+                    "depreciable": False,
+                },
+            )
+            if land_cost > 0:
+                params.setdefault("non depr assets", land_cost)
+                params.setdefault(
+                    "end of proj sale non depr assets",
+                    land_cost * (1 + gen_inflation) ** self.plant_config["plant"]["plant_life"],
+                )
+            params.setdefault("demand rampup", 0)
+            params.setdefault("credit card fees", 0)
+            params.setdefault(
+                "sales tax", self.plant_config["finance_parameters"]["sales_tax_rate"]
+            )
+            params.setdefault("license and permit", {"value": 00, "escalation": gen_inflation})
+            params.setdefault("rent", {"value": 0, "escalation": gen_inflation})
+            # TODO how to handle property tax and insurance for fully offshore?
+            params.setdefault(
+                "property tax and insurance",
+                self.plant_config["finance_parameters"]["property_tax"]
+                + self.plant_config["finance_parameters"]["property_insurance"],
+            )
+            params.setdefault(
+                "admin expense",
+                self.plant_config["finance_parameters"]["administrative_expense_percent_of_sales"],
+            )
+            params.setdefault(
+                "total income tax rate",
+                self.plant_config["finance_parameters"]["total_income_tax_rate"],
+            )
+            params.setdefault(
+                "capital gains tax rate",
+                self.plant_config["finance_parameters"]["capital_gains_tax_rate"],
+            )
+            params.setdefault("sell undepreciated cap", True)
+            params.setdefault("tax losses monetized", True)
+            params.setdefault("general inflation rate", gen_inflation)
+            params.setdefault(
+                "leverage after tax nominal discount rate",
+                self.plant_config["finance_parameters"]["discount_rate"],
+            )
+            if self.plant_config["finance_parameters"]["debt_equity_split"]:
+                params.setdefault(
+                    "debt equity ratio of initial financing",
+                    (
+                        self.plant_config["finance_parameters"]["debt_equity_split"]
+                        / (100 - self.plant_config["finance_parameters"]["debt_equity_split"])
+                    ),
+                )  # TODO this may not be put in right
+            elif self.plant_config["finance_parameters"]["debt_equity_ratio"]:
+                params.setdefault(
+                    "debt equity ratio of initial financing",
+                    (self.plant_config["finance_parameters"]["debt_equity_ratio"]),
+                )  # TODO this may not be put in right
+            params.setdefault("debt type", self.plant_config["finance_parameters"]["debt_type"])
+            params.setdefault(
+                "loan period if used", self.plant_config["finance_parameters"]["loan_period"]
+            )
+            params.setdefault(
+                "debt interest rate",
+                self.plant_config["finance_parameters"]["debt_interest_rate"],
+            )
+            params.setdefault(
+                "cash onhand", self.plant_config["finance_parameters"]["cash_onhand_months"]
+            )
+
+        params.setdefault(
             "installation months",
             self.plant_config["plant"][
                 "installation_time"
             ],  # Add installation time to yaml default=0
         )
-        pf.set_params(
-            "installation cost",
-            {
-                "value": 0,
-                "depr type": "Straight line",
-                "depr period": 4,
-                "depreciable": False,
-            },
+        params.setdefault("operating life", self.plant_config["plant"]["plant_life"])
+        params.setdefault(
+            "analysis start year", self.plant_config["plant"]["financial_analysis_start_year"]
         )
-        if land_cost > 0:
-            pf.set_params("non depr assets", land_cost)
-            pf.set_params(
-                "end of proj sale non depr assets",
-                land_cost * (1 + gen_inflation) ** self.plant_config["plant"]["plant_life"],
-            )
-        pf.set_params("demand rampup", 0)
-        pf.set_params("long term utilization", 1)  # TODO should use utilization
-        pf.set_params("credit card fees", 0)
-        pf.set_params("sales tax", self.plant_config["finance_parameters"]["sales_tax_rate"])
-        pf.set_params("license and permit", {"value": 00, "escalation": gen_inflation})
-        pf.set_params("rent", {"value": 0, "escalation": gen_inflation})
-        # TODO how to handle property tax and insurance for fully offshore?
-        pf.set_params(
-            "property tax and insurance",
-            self.plant_config["finance_parameters"]["property_tax"]
-            + self.plant_config["finance_parameters"]["property_insurance"],
-        )
-        pf.set_params(
-            "admin expense",
-            self.plant_config["finance_parameters"]["administrative_expense_percent_of_sales"],
-        )
-        pf.set_params(
-            "total income tax rate",
-            self.plant_config["finance_parameters"]["total_income_tax_rate"],
-        )
-        pf.set_params(
-            "capital gains tax rate",
-            self.plant_config["finance_parameters"]["capital_gains_tax_rate"],
-        )
-        pf.set_params("sell undepreciated cap", True)
-        pf.set_params("tax losses monetized", True)
-        pf.set_params("general inflation rate", gen_inflation)
-        pf.set_params(
-            "leverage after tax nominal discount rate",
-            self.plant_config["finance_parameters"]["discount_rate"],
-        )
-        if self.plant_config["finance_parameters"]["debt_equity_split"]:
-            pf.set_params(
-                "debt equity ratio of initial financing",
-                (
-                    self.plant_config["finance_parameters"]["debt_equity_split"]
-                    / (100 - self.plant_config["finance_parameters"]["debt_equity_split"])
-                ),
-            )  # TODO this may not be put in right
-        elif self.plant_config["finance_parameters"]["debt_equity_ratio"]:
-            pf.set_params(
-                "debt equity ratio of initial financing",
-                (self.plant_config["finance_parameters"]["debt_equity_ratio"]),
-            )  # TODO this may not be put in right
-        pf.set_params("debt type", self.plant_config["finance_parameters"]["debt_type"])
-        pf.set_params("loan period if used", self.plant_config["finance_parameters"]["loan_period"])
-        pf.set_params(
-            "debt interest rate",
-            self.plant_config["finance_parameters"]["debt_interest_rate"],
-        )
-        pf.set_params("cash onhand", self.plant_config["finance_parameters"]["cash_onhand_months"])
+
+        pf = ProFAST.ProFAST()
+        for i in params:
+            pf.set_params(i, params[i])
 
         # --------------------------------- Add capital and fixed items to ProFAST --------------
         for tech in self.tech_config:
@@ -230,45 +237,34 @@ class ProFastComp(om.ExplicitComponent):
                 electrolyzer_refurbishment_schedule = np.zeros(
                     self.plant_config["plant"]["plant_life"]
                 )
-                refurb_period = round(float(inputs["time_until_replacement"]) / (24 * 365))
+                refurb_period = round(float(inputs["time_until_replacement"][0]) / (24 * 365))
                 electrolyzer_refurbishment_schedule[
                     refurb_period : self.plant_config["plant"]["plant_life"] : refurb_period
                 ] = self.tech_config["electrolyzer"]["model_inputs"]["financial_parameters"][
                     "replacement_cost_percent"
                 ]
-                electrolyzer_refurbishment_schedule = list(electrolyzer_refurbishment_schedule)
-
-                pf.add_capital_item(
-                    name="Electrolysis System",
-                    cost=float(inputs[f"capex_adjusted_{tech}"]),
-                    depr_type=self.plant_config["finance_parameters"]["depreciation_method"],
-                    depr_period=int(
-                        self.plant_config["finance_parameters"]["depreciation_period_electrolyzer"]
-                    ),
-                    refurb=electrolyzer_refurbishment_schedule,
-                )
-                pf.add_fixed_cost(
-                    name="Electrolysis System Fixed O&M Cost",
-                    usage=1.0,
-                    unit="$/year",
-                    cost=float(inputs[f"opex_adjusted_{tech}"]),
-                    escalation=gen_inflation,
-                )
+                refurbishment_schedule = list(electrolyzer_refurbishment_schedule)
+                depreciation_period = self.plant_config["finance_parameters"][
+                    "depreciation_period_electrolyzer"
+                ]
             else:
-                pf.add_capital_item(
-                    name=f"{tech} System",
-                    cost=float(inputs[f"capex_adjusted_{tech}"]),
-                    depr_type=self.plant_config["finance_parameters"]["depreciation_method"],
-                    depr_period=self.plant_config["finance_parameters"]["depreciation_period"],
-                    refurb=[0],
-                )
-                pf.add_fixed_cost(
-                    name=f"{tech} O&M Cost",
-                    usage=1.0,
-                    unit="$/year",
-                    cost=float(inputs[f"opex_adjusted_{tech}"]),
-                    escalation=gen_inflation,
-                )
+                refurbishment_schedule = [0]
+                depreciation_period = self.plant_config["finance_parameters"]["depreciation_period"]
+
+            pf.add_capital_item(
+                name=f"{tech} System",
+                cost=float(inputs[f"capex_adjusted_{tech}"][0]),
+                depr_type=self.plant_config["finance_parameters"]["depreciation_method"],
+                depr_period=depreciation_period,
+                refurb=refurbishment_schedule,
+            )
+            pf.add_fixed_cost(
+                name=f"{tech} O&M Cost",
+                usage=1.0,
+                unit="$/year",
+                cost=float(inputs[f"opex_adjusted_{tech}"][0]),
+                escalation=gen_inflation,
+            )
 
         # ------------------------------------ solve and post-process -----------------------------
 

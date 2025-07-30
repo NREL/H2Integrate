@@ -25,7 +25,10 @@
 - Added WOMBAT electrolyzer O&M model
 - Added marine carbon capture base class
 - Added direct ocean capture technology
+- Added option for user to provide ProFAST parameters in finance parameters
+- Changed plant_config `atb_year` entry to `financial_analysis_start_year`
 - Added simple air separation unit (ASU) converter to model nitrogen production.
+
 ## 0.3.0 [May 2 2025]
 
 - Introduced a fully new underlying framework for H2Integrate which uses [OpenMDAO](https://openmdao.org/), allowing for more flexibility and extensibility in the future
