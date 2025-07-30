@@ -61,7 +61,7 @@ technologies:
         debt_percent: 72.4 # based on 2024 ATB for land-based wind
         term_int_rate: 4.4 # based on 2024 ATB real interest rate for land-based onshore wind
         months_working_reserve: 1
-        financial_analysis_start_year: 2030
+        analysis_start_year: 2030
         installation_months: 36
         sales_tax_rate_state: 0.0 # 8.20 # average combined state and local sales tax in TX https://taxfoundation.org/location/texas/
         admin_expense_percent_of_sales: 0.0 # H2FAST default
@@ -104,7 +104,7 @@ technologies:
         debt_percent: 75.3 # based on 2024 ATB for utility-scale pv solar
         term_int_rate: 4.4 # based on 2024 ATB real interest rate for utility-scale pv solar
         months_working_reserve: 1
-        financial_analysis_start_year: 2030
+        analysis_start_year: 2030
         installation_months: 36
         sales_tax_rate_state: 0.0 # 8.20 # average combined state and local sales tax in TX https://taxfoundation.org/location/texas/
         admin_expense_percent_of_sales: 0.0 # H2FAST default
@@ -150,7 +150,7 @@ technologies:
         debt_percent: 75.4 # based on 2024 ATB for utility-scale pv plus battery
         term_int_rate: 4.4 # based on 2024 ATB real interest rate for utility-scale battery
         months_working_reserve: 1
-        financial_analysis_start_year: 2030
+        analysis_start_year: 2030
         installation_months: 36
         sales_tax_rate_state: 0.0 # 8.20 # average combined state and local sales tax in TX https://taxfoundation.org/location/texas/
         admin_expense_percent_of_sales: 0.0 # H2FAST default
@@ -192,7 +192,7 @@ technologies:
         debt_percent: 72.4 # based on 2024 ATB for land-based wind
         term_int_rate: 4.4 # based on 2024 ATB real interest rate for land-based onshore wind
         months_working_reserve: 1
-        financial_analysis_start_year: 2030
+        analysis_start_year: 2030
         installation_months: 36
         sales_tax_rate_state: 0.0 # 8.20 # average combined state and local sales tax in TX https://taxfoundation.org/location/texas/
         admin_expense_percent_of_sales: 0.0 # H2FAST default
