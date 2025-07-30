@@ -68,7 +68,7 @@ class ProFastComp(om.ExplicitComponent):
         }
         metric_key = metrics_map.get(self.options["commodity_type"])
         self.included_techs = (
-            plant_config["finance_parameters"]
+            self.plant_config["finance_parameters"]
             .get("technologies_included_in_metrics", {})
             .get(metric_key, None)
         )

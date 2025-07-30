@@ -3,6 +3,7 @@ from pathlib import Path
 
 import pytest
 import openmdao.api as om
+from pytest import approx
 
 from h2integrate.core.finances import ProFastComp
 from h2integrate.core.inputs.validation import load_tech_yaml, load_plant_yaml
@@ -35,7 +36,7 @@ class TestProFastComp(unittest.TestCase):
                 "depreciation_period_electrolyzer": 10,
             },
             "plant": {
-                "atb_year": 2022,
+                "financial_analysis_start_year": 2022,
                 "plant_life": 30,
                 "installation_time": 24,
                 "cost_year": 2022,
@@ -173,6 +174,7 @@ class TestProFastComp(unittest.TestCase):
         with pytest.raises(ValueError, match=error_msg):
             prob.setup()
 
+
 def test_profast_config_provided():
     """Test that inputting ProFAST parameters gives same LCOH as specifying finance
     parameters directly (as is done in `test_electrolyzer_refurb_results`). Output
@@ -264,7 +266,9 @@ def test_profast_config_provided():
     }
 
     prob = om.Problem()
-    comp = ProFastComp(plant_config=plant_config, tech_config=tech_config)
+    comp = ProFastComp(
+        plant_config=plant_config, tech_config=tech_config, commodity_type="hydrogen"
+    )
     prob.model.add_subsystem("comp", comp, promotes=["*"])
 
     prob.setup()
@@ -319,10 +323,11 @@ def test_parameter_validation_clashing_values():
     }
 
     prob = om.Problem()
-    comp = ProFastComp(plant_config=plant_config, tech_config=tech_config)
+    comp = ProFastComp(
+        plant_config=plant_config, tech_config=tech_config, commodity_type="hydrogen"
+    )
     prob.model.add_subsystem("comp", comp, promotes=["*"])
 
     # Should raise ValueError during setup due to clashing values
     with pytest.raises(ValueError, match="Inconsistent values provided"):
         prob.setup()
-        
