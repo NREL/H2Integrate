@@ -24,7 +24,7 @@ class AmmoniaSynLoopPerformanceConfig(BaseConfig):
         capacity_factor (float): The ratio of ammonia produced over a year to maximum production
             capacity (as a decimal)
         energy_demand (float): The total energy demand of the ammonia synthesis loop
-            (in MWh electricity per kg ammonia).
+            (in kWh electricity per kg ammonia).
         heat_output (float): The total heat output of the ammonia synthesis loop
             (in kWh thermal per kg ammonia)
         feed_gas_t (float): The synloop makeup feed gas temperature (in Kelvin)
@@ -72,11 +72,13 @@ class AmmoniaSynLoopPerformanceModel(om.ExplicitComponent):
     energetic requirements of the synthesis process. It also computes the unused
     hydrogen, nitrogen, and electricity (as heat), as well as the total ammonia
     produced over the modeled period.
+
     Attributes
     ----------
     config : AmmoniaSynLoopPerformanceConfig
         Configuration object containing model parameters such as energy demand,
         nitrogen conversion rate, and hydrogen conversion rate.
+
     Inputs
     ------
     hydrogen_in : array [kg/h]
@@ -85,6 +87,7 @@ class AmmoniaSynLoopPerformanceModel(om.ExplicitComponent):
         Hourly nitrogen feed to the synthesis loop.
     electricity_in : array [MW]
         Hourly electricity supplied to the synthesis loop.
+
     Outputs
     -------
     ammonia_out : array [kg/h]
@@ -109,6 +112,7 @@ class AmmoniaSynLoopPerformanceModel(om.ExplicitComponent):
         Total electricity consumed over the modeled period.
     limiting_output: array of ints [-]
         0: nitrogen-limited, 1: hydrogen-limited, 2: electricity-limited 3: capacity-limited
+
     Notes
     -----
     The ammonia production is limited by the most constraining input (hydrogen,
@@ -200,7 +204,7 @@ class AmmoniaSynLoopPerformanceModel(om.ExplicitComponent):
         n2_rate = w_n2_feed * ratio_feed  # kg N2 / kg NH3
         nh3_from_n2 = n2_in / n2_rate  # kg nh3 / hr
 
-        nh3_from_elec = elec_in / energy_demand * 1000  # kg nh3 / hr
+        nh3_from_elec = elec_in / energy_demand * 1000  # kg nh3 / hr, converting MW elec_in to kW
 
         # Limiting NH3 production per hour by each input
         nh3_prod = np.minimum.reduce([nh3_from_n2, nh3_from_h2, nh3_from_elec])
@@ -259,10 +263,11 @@ class AmmoniaSynLoopCostConfig(BaseConfig):
             (in kg ammonia per hour)
         base_cost_year (int): Year in which base USD costs are derived - to be adjusted using
             CEPCI for capex and CPI for opex.
-        capex_scaling_exponent (float): Power applied to ratio of capacities when calculating CAPEX
+        capex_scaling_exponent (float): Power applied to ratio of capacities when calculating capex
             from a baseline value at a different capacity.
         labor_scaling_exponent (float): Power applied to ratio of capacities when calculating labor
             cost from a baseline value at a different capacity.
+
         ---CAPEX---
         asu_capex_base (float): Baseline capital expenditure for the air separation unit [$].
         synloop_capex_base (float): Baseline capital expenditure for the synthesis loop [$].
@@ -270,7 +275,8 @@ class AmmoniaSynLoopCostConfig(BaseConfig):
         cool_capex_base (float) : Baseline capital expenditure for the cooling tower [$].
         other_eqpt_capex_base (float): Other baseline direct capital expenditures [$].
         land_capex_base (float): Baseline capital expenditure for land to construct the plant [$].
-        deprec_noneq_capex_rate (float): Fraction of eqpt capex for depreciable nonequipment [$].
+        deprec_noneq_capex_rate (float): Fract of equipment capex for depreciable nonequipment [$].
+
         ---OPEX---
         labor_rate_base (float) : Baseline all-in labor rate [$/hr].
         num_workers_base (float) : Baseline number of workers for the entire ammonia plant [-].
@@ -284,6 +290,7 @@ class AmmoniaSynLoopCostConfig(BaseConfig):
             its lifetime to ammonia produced
         *catalyst_replacement_interval (float): The interval in years when the catalyst is replaced
         rebuild_cost_base (float): Cost to rebuild baseline reactor for catalyst replacement [USD].
+
         ---Feedstock Costs---
         cooling_water_cost_base (float): Cost of cooling water [$/gal H2O]
         catalyst_cost_base (float): Cost of iron-based catalyst [$/kg cat]
@@ -325,14 +332,7 @@ class AmmoniaSynLoopCostModel(om.ExplicitComponent):
     This component outputs the capital expenditure (CapEx) and annual operating
     expenditure (OpEx) associated with the synthesis loop, based on provided
     configuration values.
-    This component outputs the capital expenditure (CapEx) and annual operating
-    expenditure (OpEx) associated with the synthesis loop, based on provided
-    configuration values.
 
-    Attributes
-    ----------
-    config : AmmoniaSynLoopCostConfig
-        Configuration object containing CapEx and annual rebuild cost.
     Attributes
     ----------
     config : AmmoniaSynLoopCostConfig
@@ -348,6 +348,7 @@ class AmmoniaSynLoopCostModel(om.ExplicitComponent):
         Total nitrogen consumed over the modeled period.
     total_electricity_consumed : float [kg/year]
         Total electricity consumed over the modeled period.
+
     Outputs
     -------
     CapEx : float [$]
