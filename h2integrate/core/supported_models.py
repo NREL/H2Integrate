@@ -14,6 +14,10 @@ from h2integrate.storage.hydrogen.tank_baseclass import (
 from h2integrate.controllers.openloop_controllers import PassThroughOpenLoopController
 from h2integrate.converters.hydrogen.wombat_model import WOMBATElectrolyzerModel
 from h2integrate.converters.wind.wind_plant_pysam import PYSAMWindPlantPerformanceModel
+from h2integrate.converters.ammonia.ammonia_synloop import (
+    AmmoniaSynLoopCostModel,
+    AmmoniaSynLoopPerformanceModel,
+)
 from h2integrate.converters.water.desal.desalination import (
     ReverseOsmosisCostModel,
     ReverseOsmosisPerformanceModel,
@@ -75,6 +79,8 @@ supported_models = {
     "reverse_osmosis_desalination_cost": ReverseOsmosisCostModel,
     "simple_ammonia_performance": SimpleAmmoniaPerformanceModel,
     "simple_ammonia_cost": SimpleAmmoniaCostModel,
+    "synloop_ammonia_performance": AmmoniaSynLoopPerformanceModel,
+    "synloop_ammonia_cost": AmmoniaSynLoopCostModel,
     "steel_performance": SteelPerformanceModel,
     "steel_cost": SteelCostAndFinancialModel,
     "smr_methanol_plant_performance": SMRMethanolPlantPerformanceModel,
