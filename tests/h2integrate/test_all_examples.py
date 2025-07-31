@@ -24,20 +24,27 @@ def test_steel_example(subtests):
     model.post_process()
     # Subtests for checking specific values
     with subtests.test("Check LCOH"):
-        assert pytest.approx(model.prob.get_val("financials_group_1.LCOH"), rel=1e-3) == 7.47944016
+        assert (
+            pytest.approx(model.prob.get_val("financials_group_default.LCOH"), rel=1e-3)
+            == 7.47944016
+        )
 
     with subtests.test("Check LCOS"):
         assert pytest.approx(model.prob.get_val("steel.LCOS"), rel=1e-3) == 1213.87728644
 
     with subtests.test("Check total adjusted CapEx"):
         assert (
-            pytest.approx(model.prob.get_val("financials_group_1.total_capex_adjusted"), rel=1e-3)
+            pytest.approx(
+                model.prob.get_val("financials_group_default.total_capex_adjusted"), rel=1e-3
+            )
             == 5.10869916e09
         )
 
     with subtests.test("Check total adjusted OpEx"):
         assert (
-            pytest.approx(model.prob.get_val("financials_group_1.total_opex_adjusted"), rel=1e-3)
+            pytest.approx(
+                model.prob.get_val("financials_group_default.total_opex_adjusted"), rel=1e-3
+            )
             == 96349901.77625626
         )
 
@@ -93,22 +100,32 @@ def test_ammonia_example(subtests):
 
     with subtests.test("Check total adjusted CapEx"):
         assert (
-            pytest.approx(model.prob.get_val("financials_group_1.total_capex_adjusted"), rel=1e-3)
+            pytest.approx(
+                model.prob.get_val("financials_group_default.total_capex_adjusted"), rel=1e-3
+            )
             == 2.76180599e09
         )
 
     with subtests.test("Check total adjusted OpEx"):
         assert (
-            pytest.approx(model.prob.get_val("financials_group_1.total_opex_adjusted"), rel=1e-3)
+            pytest.approx(
+                model.prob.get_val("financials_group_default.total_opex_adjusted"), rel=1e-3
+            )
             == 66599592.71371833
         )
 
     # Currently underestimated compared to the Reference Design Doc
     with subtests.test("Check LCOH"):
-        assert pytest.approx(model.prob.get_val("financials_group_1.LCOH"), rel=1e-3) == 4.39187968
+        assert (
+            pytest.approx(model.prob.get_val("financials_group_default.LCOH"), rel=1e-3)
+            == 4.39187968
+        )
     # Currently underestimated compared to the Reference Design Doc
     with subtests.test("Check LCOA"):
-        assert pytest.approx(model.prob.get_val("financials_group_1.LCOA"), rel=1e-3) == 1.06313924
+        assert (
+            pytest.approx(model.prob.get_val("financials_group_default.LCOA"), rel=1e-3)
+            == 1.06313924
+        )
 
 
 def test_wind_h2_opt_example(subtests):
@@ -124,17 +141,21 @@ def test_wind_h2_opt_example(subtests):
     model.post_process()
 
     with subtests.test("Check LCOH"):
-        assert model.prob.get_val("financials_group_1.LCOH")[0] < 4.64
+        assert model.prob.get_val("financials_group_default.LCOH")[0] < 4.64
 
     with subtests.test("Check total adjusted CapEx"):
         assert (
-            pytest.approx(model.prob.get_val("financials_group_1.total_capex_adjusted"), rel=1e-3)
+            pytest.approx(
+                model.prob.get_val("financials_group_default.total_capex_adjusted"), rel=1e-3
+            )
             == 1.82152792e09
         )
 
     with subtests.test("Check total adjusted OpEx"):
         assert (
-            pytest.approx(model.prob.get_val("financials_group_1.total_opex_adjusted"), rel=1e-3)
+            pytest.approx(
+                model.prob.get_val("financials_group_default.total_opex_adjusted"), rel=1e-3
+            )
             == 51995875.99756081
         )
 
@@ -181,10 +202,16 @@ def test_wind_wave_doc_example(subtests):
 
     # Subtests for checking specific values
     with subtests.test("Check LCOC"):
-        assert pytest.approx(model.prob.get_val("financials_group_1.LCOC"), rel=1e-3) == 2.26955589
+        assert (
+            pytest.approx(model.prob.get_val("financials_group_default.LCOC"), rel=1e-3)
+            == 2.26955589
+        )
 
     with subtests.test("Check LCOE"):
-        assert pytest.approx(model.prob.get_val("financials_group_1.LCOE"), rel=1e-3) == 1.05281478
+        assert (
+            pytest.approx(model.prob.get_val("financials_group_default.LCOE"), rel=1e-3)
+            == 1.05281478
+        )
 
 
 def test_hydro_example(subtests):
@@ -199,11 +226,14 @@ def test_hydro_example(subtests):
 
     model.post_process()
 
-    print(model.prob.get_val("financials_group_1.LCOE"))
+    print(model.prob.get_val("financials_group_default.LCOE"))
 
     # Subtests for checking specific values
     with subtests.test("Check LCOE"):
-        assert pytest.approx(model.prob.get_val("financials_group_1.LCOE"), rel=1e-3) == 0.17653979
+        assert (
+            pytest.approx(model.prob.get_val("financials_group_default.LCOE"), rel=1e-3)
+            == 0.17653979
+        )
 
 
 def test_hybrid_energy_plant_example(subtests):
@@ -222,7 +252,7 @@ def test_hybrid_energy_plant_example(subtests):
     with subtests.test("Check LCOE"):
         assert (
             pytest.approx(
-                model.prob.get_val("financials_group_1.LCOE", units="USD/MW/h")[0],
+                model.prob.get_val("financials_group_default.LCOE", units="USD/MW/h")[0],
                 rel=1e-5,
             )
             == 83.2123

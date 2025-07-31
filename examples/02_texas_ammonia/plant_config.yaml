@@ -28,7 +28,7 @@ technology_interconnections: [
   ["electrolyzer", "h2_storage", "efficiency"],
   ["electrolyzer", "h2_storage", "hydrogen", "pipe"],
   ["h2_storage", "ammonia", "hydrogen", "pipe"],
-  ["financials_group_1", "ammonia", "LCOH"],
+  ["financials_group_default", "ammonia", "LCOH"],
   # etc
 ]
 

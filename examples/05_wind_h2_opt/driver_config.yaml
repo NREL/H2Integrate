@@ -29,4 +29,4 @@ constraints:
       units: kg/year
 
 objective:
-  name: financials_group_1.LCOH
+  name: financials_group_default.LCOH
