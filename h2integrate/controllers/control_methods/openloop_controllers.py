@@ -61,6 +61,7 @@ class ControllerBaseClass(om.ExplicitComponent):
 class PassThroughOpenLoopControllerConfig(BaseConfig):
     resource_name: str = field()
     resource_units: str = field()
+    time_steps: int = field()
 
 
 class PassThroughOpenLoopController(ControllerBaseClass):
@@ -137,18 +138,19 @@ class PassThroughOpenLoopController(ControllerBaseClass):
 class DemandOpenLoopControllerConfig(BaseConfig):
     resource_name: str = field()
     resource_units: str = field()
-    time_units: str = field()
-    max_charge: float = field()  # percent
-    min_charge: float = field()  # percent
-    init_charge: float = field()  # percent
-    max_charge_rate: float = field()
-    max_discharge_rate: float = field()
-    charge_efficiency: float = field()
-    discharge_efficiency: float = field()
-    demand_profile: list = field()  # TODO does this need to be an input?
+    time_steps: int = field()
+    max_capacity: float = field()  # unit
+    max_charge_percent: float = field()  # percent as decimal
+    min_charge_percent: float = field()  # percent as decimal
+    init_charge_percent: float = field()  # percent as decimal
+    max_charge_rate: float = field()  # unit/time
+    max_discharge_rate: float = field()  # unit/time
+    charge_efficiency: float = field()  # percent as decimal
+    discharge_efficiency: float = field()  # percent as decimal
+    demand_profile: list = field()  # unit at each time step TODO does this need to be an input?
 
 
-class OpenLoopController(ControllerBaseClass):
+class DemandOpenLoopController(ControllerBaseClass):
     def setup(self):
         self.config = DemandOpenLoopControllerConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "control")
@@ -170,28 +172,27 @@ class OpenLoopController(ControllerBaseClass):
 
         self.add_discrete_output(  # TODO should this be discrete or will it be included in optimization?
             f"{self.config.resource_name}_soc",
-            copy_shape=f"{self.config.resource_name}_in",
-            units="percent",
+            val=[0.0] * self.config.time_steps,
             desc=f"{self.config.resource_name} state of charge timeseries for storage",
         )
 
         self.add_discrete_output(  # TODO should this be discrete or will it be included in optimization?
             f"{self.config.resource_name}_curtailed",
-            copy_shape=f"{self.config.resource_name}_in",
-            units=self.config.resource_units,
+            val=[0.0] * self.config.time_steps,
             desc=f"{self.config.resource_name} curtailment timeseries for inflow resource at \
                 storage point",
         )
 
-    def compute(self, inputs, outputs, discrete_outputs):
+    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         """
         Compute the state of charge (SOC) and output flow based on demand and storage constraints.
 
         """
         resource_name = self.config.resource_name
-        max_charge = self.config.max_charge
-        min_charge = self.config.min_charge
-        init_charge = self.config.init_charge
+        max_capacity = self.config.max_capacity
+        max_charge_percent = self.config.max_charge_percent
+        min_charge_percent = self.config.min_charge_percent
+        init_charge_percent = self.config.init_charge_percent
         max_charge_rate = self.config.max_charge_rate
         max_discharge_rate = self.config.max_discharge_rate
         charge_efficiency = self.config.charge_efficiency
@@ -201,34 +202,41 @@ class OpenLoopController(ControllerBaseClass):
         # objective:
 
         # Initialize state of charge
-        soc = deepcopy(init_charge)
+        soc = deepcopy(init_charge_percent)
 
         # Loop through each time step
         for t in range(len(demand_profile)):
             # Get the input flow and demand at the current time step
             input_flow = inputs[f"{resource_name}_in"][t]
-            demand = demand_profile[t]
+            demand_t = demand_profile[t]
 
             # Calculate the available charge/discharge capacity
-            available_charge = max_charge - soc
-            available_discharge = soc - min_charge
+            available_charge = (max_charge_percent - soc) * max_capacity
+            available_discharge = (soc - min_charge_percent) * max_capacity
 
-            # Determine the output flow based on demand and SOC
-            if demand > input_flow:
+            # Initialize persistent variables
+            charge = 0
+            excess_input = 0
+
+            # Determine the output flow based on demand_t and SOC
+            if demand_t > input_flow:
                 # Discharge storage to meet demand
-                discharge_needed = (demand - input_flow) / discharge_efficiency
+                discharge_needed = (demand_t - input_flow) / discharge_efficiency
                 discharge = min(discharge_needed, available_discharge, max_discharge_rate)
-                soc -= discharge
+                soc -= discharge / max_capacity
                 outputs[f"{resource_name}_out"][t] = input_flow + discharge * discharge_efficiency
             else:
                 # Charge storage with excess input
-                excess_input = input_flow - demand
+                excess_input = input_flow - demand_t
                 charge = min(excess_input * charge_efficiency, available_charge, max_charge_rate)
-                soc += charge
-                outputs[f"{resource_name}_out"][t] = demand
+                soc += charge / max_capacity
+                outputs[f"{resource_name}_out"][t] = demand_t
 
             # Ensure SOC stays within bounds
-            soc = max(min_charge, min(max_charge, soc))
+            soc = max(min_charge_percent, min(max_charge_percent, soc))
 
             # Record the SOC for the current time step
             discrete_outputs[f"{resource_name}_soc"][t] = soc
+
+            # Record the curtailment at the current time step
+            discrete_outputs[f"{resource_name}_curtailed"][t] = excess_input - charge

@@ -13,7 +13,7 @@ technologies:
       shared_parameters:
         resource_name: "hydrogen"
         resource_units: "kg/h"
-
+        time_steps: 10
       performance_parameters:
         rating: 720.
         size_capacity_from_demand:
