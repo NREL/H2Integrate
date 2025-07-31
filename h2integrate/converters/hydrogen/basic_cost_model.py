@@ -38,13 +38,19 @@ class BasicElectrolyzerCostModel(ElectrolyzerCostBaseClass):
         self.config = BasicElectrolyzerCostModelConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost")
         )
+        self.add_input(
+            "electrolyzer_size_mw",
+            val=self.config.rating,
+            units="MW",
+            desc="Size of the electrolyzer in MW",
+        )
 
     def compute(self, inputs, outputs):
         # unpack inputs
         plant_config = self.options["plant_config"]
 
         total_hydrogen_produced = float(inputs["total_hydrogen_produced"])
-        electrolyzer_size_mw = self.config.rating
+        electrolyzer_size_mw = inputs["electrolyzer_rating_mw"]
         useful_life = plant_config["plant"]["plant_life"]
 
         # run hydrogen production cost model - from hopp examples
