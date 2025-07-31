@@ -30,3 +30,8 @@ constraints:
 
 objective:
   name: financials_group_default.LCOH
+
+recorder:
+  flag: True
+  file: "wind_h2_opt.sql"
+  includes: ["LCOH"]

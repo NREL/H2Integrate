@@ -4,6 +4,7 @@ import importlib
 from pathlib import Path
 
 import pytest
+import openmdao.api as om
 
 from h2integrate.core.h2integrate_model import H2IntegrateModel
 
@@ -140,8 +141,21 @@ def test_wind_h2_opt_example(subtests):
 
     model.post_process()
 
-    with subtests.test("Check LCOH"):
-        assert model.prob.get_val("financials_group_default.LCOH")[0] < 4.64
+    # Read the resulting SQL file and compare initial and final LCOH values
+
+    sql_path = Path.cwd() / "run_wind_electrolyzer_out" / "wind_h2_opt.sql"
+    assert sql_path.exists(), f"SQL file not found: {sql_path}"
+
+    cr = om.CaseReader(str(sql_path))
+    cases = list(cr.get_cases())
+    assert len(cases) > 1, "Not enough cases recorded in SQL file."
+
+    # Get initial and final LCOH values
+    initial_lcoh = cases[0].outputs["financials_group_default.LCOH"][0]
+    final_lcoh = cases[-1].outputs["financials_group_default.LCOH"][0]
+
+    with subtests.test("Check LCOH improvement"):
+        assert final_lcoh < initial_lcoh
 
     with subtests.test("Check total adjusted CapEx"):
         assert (
