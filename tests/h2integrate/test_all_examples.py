@@ -174,21 +174,31 @@ def test_ammonia_synloop_example(subtests):
 
     with subtests.test("Check total adjusted CapEx"):
         assert (
-            pytest.approx(model.prob.get_val("financials_group_1.total_capex_adjusted"), rel=1e-6)
+            pytest.approx(
+                model.prob.get_val("financials_group_default.total_capex_adjusted"), rel=1e-6
+            )
             == 3.83856529e09
         )
 
     with subtests.test("Check total adjusted OpEx"):
         assert (
-            pytest.approx(model.prob.get_val("financials_group_1.total_opex_adjusted"), rel=1e-6)
+            pytest.approx(
+                model.prob.get_val("financials_group_default.total_opex_adjusted"), rel=1e-6
+            )
             == 81093533.8566508
         )
 
     with subtests.test("Check LCOH"):
-        assert pytest.approx(model.prob.get_val("financials_group_1.LCOH"), rel=1e-6) == 5.85374921
+        assert (
+            pytest.approx(model.prob.get_val("financials_group_default.LCOH"), rel=1e-6)
+            == 5.85374921
+        )
 
     with subtests.test("Check LCOA"):
-        assert pytest.approx(model.prob.get_val("financials_group_1.LCOA"), rel=1e-6) == 1.10368921
+        assert (
+            pytest.approx(model.prob.get_val("financials_group_default.LCOA"), rel=1e-6)
+            == 1.10368921
+        )
 
 
 def test_wind_h2_opt_example(subtests):
@@ -205,8 +215,17 @@ def test_wind_h2_opt_example(subtests):
 
     # Read the resulting SQL file and compare initial and final LCOH values
 
-    sql_path = Path.cwd() / "run_wind_electrolyzer_out" / "wind_h2_opt.sql"
-    assert sql_path.exists(), f"SQL file not found: {sql_path}"
+    sql_path = None
+    for root, _dirs, files in os.walk(Path.cwd()):
+        for file in files:
+            if file == "wind_h2_opt.sql":
+                sql_path = Path(root) / file
+                break
+        if sql_path:
+            break
+    assert (
+        sql_path is not None
+    ), "wind_h2_opt.sql file not found in current working directory or subdirectories."
 
     cr = om.CaseReader(str(sql_path))
     cases = list(cr.get_cases())
