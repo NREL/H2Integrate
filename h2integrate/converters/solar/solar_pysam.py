@@ -180,7 +180,7 @@ class PYSAMSolarPlantPerformanceModel(SolarPerformanceBaseClass):
             "annual_energy",
             val=0.0,
             units="kW*h/year",
-            desc="Annual energy production from PVPlant in kWac",
+            desc="Annual energy production in kWac",
         )
 
         if self.design_config.create_model_from == "default":
