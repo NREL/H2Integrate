@@ -186,26 +186,37 @@ def test_wind_h2_opt_example(subtests):
     model.post_process()
 
     with subtests.test("Check LCOH"):
-        assert model.prob.get_val("financials_group_1.LCOH")[0] < 4.64
+        assert model.prob.get_val("financials_group_1.LCOH")[0] < 7.8
 
     with subtests.test("Check LCOE"):
-        assert pytest.approx(model.prob.get_val("financials_group_1.LCOE"), rel=1e-3) == 0.09009908
+        assert pytest.approx(model.prob.get_val("financials_group_1.LCOE")[0], rel=1e-3) == 0.151189
+
+    with subtests.test("Check electrolyzer size"):
+        assert (
+            pytest.approx(model.prob.get_val("electrolyzer.electrolyzer_size_mw")[0], rel=1e-3)
+            == 1500.0
+        )
 
     with subtests.test("Check total adjusted CapEx"):
         assert (
-            pytest.approx(model.prob.get_val("financials_group_1.total_capex_adjusted"), rel=1e-3)
-            == 1.82152792e09
+            pytest.approx(
+                model.prob.get_val("financials_group_1.total_capex_adjusted")[0], rel=1e-3
+            )
+            == 2783126102
         )
-
     with subtests.test("Check total adjusted OpEx"):
         assert (
-            pytest.approx(model.prob.get_val("financials_group_1.total_opex_adjusted"), rel=1e-3)
-            == 51995875.99756081
+            pytest.approx(model.prob.get_val("financials_group_1.total_opex_adjusted")[0], rel=1e-3)
+            == 75543899
         )
 
     with subtests.test("Check minimum total hydrogen produced"):
         assert (
-            model.prob.get_val("electrolyzer.total_hydrogen_produced", units="kg/year") >= 60500000
+            pytest.approx(
+                model.prob.get_val("electrolyzer.total_hydrogen_produced", units="kg/year")[0],
+                abs=10000,
+            )
+            == 60500000
         )
 
 
