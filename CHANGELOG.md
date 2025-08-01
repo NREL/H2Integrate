@@ -26,6 +26,7 @@
 - Added marine carbon capture base class
 - Added direct ocean capture technology
 - Update PySAM solar performance model to allow for more user-configurability.
+- Added two ATB-compatible solar-PV cost models.
 
 ## 0.3.0 [May 2 2025]
 
