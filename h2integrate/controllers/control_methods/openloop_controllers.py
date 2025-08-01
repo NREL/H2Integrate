@@ -1,8 +1,8 @@
 from copy import deepcopy
 
+import numpy as np
 import openmdao.api as om
 from attrs import field, define
-from numpy import ones, arange
 
 from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
 
@@ -128,9 +128,9 @@ class PassThroughOpenLoopController(ControllerBaseClass):
         self.declare_partials(
             of=f"{self.config.resource_name}_out",
             wrt=f"{self.config.resource_name}_in",
-            rows=arange(size),
-            cols=arange(size),
-            val=ones(size),  # Diagonal elements are 1.0
+            rows=np.arange(size),
+            cols=np.arange(size),
+            val=np.ones(size),  # Diagonal elements are 1.0
         )
 
 
@@ -170,20 +170,29 @@ class DemandOpenLoopController(ControllerBaseClass):
             desc=f"{self.config.resource_name} output timeseries from plant after storage",
         )
 
-        self.add_discrete_output(  # TODO should this be discrete or will it be included in optimization?
+        self.add_output(  # TODO should this be discrete or will it be included in optimization?
             f"{self.config.resource_name}_soc",
-            val=[0.0] * self.config.time_steps,
+            copy_shape=f"{self.config.resource_name}_in",
+            units="unitless",
             desc=f"{self.config.resource_name} state of charge timeseries for storage",
         )
 
-        self.add_discrete_output(  # TODO should this be discrete or will it be included in optimization?
+        self.add_output(  # TODO should this be discrete or will it be included in optimization?
             f"{self.config.resource_name}_curtailed",
-            val=[0.0] * self.config.time_steps,
+            copy_shape=f"{self.config.resource_name}_in",
+            units=self.config.resource_units,
             desc=f"{self.config.resource_name} curtailment timeseries for inflow resource at \
                 storage point",
         )
 
-    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
+        self.add_output(  # TODO should this be discrete or will it be included in optimization?
+            f"{self.config.resource_name}_missed_load",
+            copy_shape=f"{self.config.resource_name}_in",
+            units=self.config.resource_units,
+            desc=f"{self.config.resource_name} missed load timeseries",
+        )
+
+    def compute(self, inputs, outputs):
         """
         Compute the state of charge (SOC) and output flow based on demand and storage constraints.
 
@@ -198,7 +207,7 @@ class DemandOpenLoopController(ControllerBaseClass):
         charge_efficiency = self.config.charge_efficiency
         discharge_efficiency = self.config.discharge_efficiency
         demand_profile = self.config.demand_profile
-        if len(demand_profile) == 1:
+        if isinstance(demand_profile, (int, float)):
             demand_profile = [demand_profile] * self.config.time_steps
 
         # solve_approach: optimized vs heuristic
@@ -206,6 +215,12 @@ class DemandOpenLoopController(ControllerBaseClass):
 
         # Initialize state of charge
         soc = deepcopy(init_charge_percent)
+
+        # initialize outputs
+        soc_array = np.zeros(self.config.time_steps)
+        curtailment_array = np.zeros(self.config.time_steps)
+        output_array = np.zeros(self.config.time_steps)
+        missed_load_array = np.zeros(self.config.time_steps)
 
         # Loop through each time step
         for t in range(len(demand_profile)):
@@ -227,19 +242,33 @@ class DemandOpenLoopController(ControllerBaseClass):
                 discharge_needed = (demand_t - input_flow) / discharge_efficiency
                 discharge = min(discharge_needed, available_discharge, max_discharge_rate)
                 soc -= discharge / max_capacity
-                outputs[f"{resource_name}_out"][t] = input_flow + discharge * discharge_efficiency
+                output_array[t] = input_flow + discharge * discharge_efficiency
             else:
                 # Charge storage with excess input
                 excess_input = input_flow - demand_t
                 charge = min(excess_input * charge_efficiency, available_charge, max_charge_rate)
                 soc += charge / max_capacity
-                outputs[f"{resource_name}_out"][t] = demand_t
+                output_array[t] = demand_t
 
             # Ensure SOC stays within bounds
             soc = max(min_charge_percent, min(max_charge_percent, soc))
 
             # Record the SOC for the current time step
-            discrete_outputs[f"{resource_name}_soc"][t] = soc
+            soc_array[t] = deepcopy(soc)
 
             # Record the curtailment at the current time step
-            discrete_outputs[f"{resource_name}_curtailed"][t] = excess_input - charge
+            curtailment_array[t] = float(excess_input - charge)
+
+            # Record the missed load the the current time step
+            missed_load_array[t] = max(0, (demand_t - output_array[t]))
+
+        outputs[f"{resource_name}_out"] = output_array
+
+        # Return the SOC
+        outputs[f"{resource_name}_soc"] = soc_array
+
+        # Return the curtailment
+        outputs[f"{resource_name}_curtailed"] = curtailment_array
+
+        # Return the missed load
+        outputs[f"{resource_name}_missed_load"] = missed_load_array

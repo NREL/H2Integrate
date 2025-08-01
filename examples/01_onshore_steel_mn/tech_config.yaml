@@ -48,9 +48,6 @@ technologies:
     financial_model:
       group: 1
     model_inputs:
-      shared_parameters:
-        resource_name: "hydrogen"
-        resource_units: "kg/h"
       performance_parameters:
         rating: 720.
         size_capacity_from_demand:
@@ -58,6 +55,10 @@ technologies:
         capacity_from_max_on_turbine_storage: False # if True, then days of storage is ignored and storage capacity is based on how much h2 storage fits on the turbines in the plant using Kottenstete 2003.
         type: "lined_rock_cavern" # can be one of ["none", "pipe", "turbine", "pressure_vessel", "salt_cavern", "lined_rock_cavern"]
         days: 0 #how many days worth of production we should be able to store (this is ignored if `capacity_from_max_on_turbine_storage` is set to True)
+      control_parameters:
+        resource_name: "hydrogen"
+        resource_units: "kg/h"
+        time_steps: 8760
   steel:
     performance_model:
       model: "steel_performance"

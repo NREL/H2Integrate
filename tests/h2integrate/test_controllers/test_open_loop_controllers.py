@@ -82,6 +82,9 @@ def test_demand_controller(subtests):
         "demand_openloop_controller"
     )
     tech_config["technologies"]["h2_storage"]["model_inputs"]["control_parameters"] = {
+        "resource_name": "hydrogen",
+        "resource_units": "kg/h",
+        "time_steps": 10,
         "max_capacity": 10.0,  # kg
         "max_charge_percent": 1.0,  # percent as decimal
         "min_charge_percent": 0.0,  # percent as decimal
@@ -128,4 +131,9 @@ def test_demand_controller(subtests):
     with subtests.test("Check soc"):
         assert pytest.approx([0.95, 0.95, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]) == prob.get_val(
             "hydrogen_soc"
+        )
+
+    with subtests.test("Check missed load"):
+        assert pytest.approx([0.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]) == prob.get_val(
+            "hydrogen_missed_load"
         )

@@ -230,3 +230,35 @@ def test_hybrid_energy_plant_example(subtests):
             )
             == 83.2123
         )
+
+
+def test_hydrogen_dispatch_example(subtests):
+    # Change the current working directory to the example's directory
+    os.chdir(examples_dir / "12_wind_hydrogen_dispatch")
+
+    # Create a H2Integrate model
+    model = H2IntegrateModel(Path.cwd() / "inputs" / "h2i_wind_to_h2_storage.yaml")
+
+    # Run the model
+    model.run()
+
+    model.post_process()
+
+    # Subtests for checking specific values
+    with subtests.test("Check LCOE"):
+        assert (
+            pytest.approx(
+                model.prob.get_val("financials_group_1.LCOE", units="USD/MW/h")[0],
+                rel=1e-5,
+            )
+            == 106.13987
+        )
+
+    with subtests.test("Check LCOH"):
+        assert (
+            pytest.approx(
+                model.prob.get_val("financials_group_1.LCOH", units="USD/kg")[0],
+                rel=1e-5,
+            )
+            == 5.68452215
+        )
