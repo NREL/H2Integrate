@@ -24,9 +24,6 @@ plant:
   grid_connection: False # option, can be turned on or off
   ppa_price: 0.025 # $/kWh based on 2022 land based wind market report (ERCOT area ppa prices) https://www.energy.gov/sites/default/files/2022-08/land_based_wind_market_report_2202.pdf
   hybrid_electricity_estimated_cf: 0.492 #should equal 1 if grid_connection = True
-  financial_analysis_start_year: 2032
-  cost_year: 2022
-  installation_time: 36 # months
 
 # array of arrays containing left-to-right technology
 # interconnections; can support bidirectional connections
@@ -38,7 +35,8 @@ technology_interconnections: [
 ]
 
 finance_parameters:
-  costing_general_inflation: 0.025 # used to adjust modeled costs to cost_year
+  analysis_start_year: 2032
+  installation_time: 36 # months
   profast_general_inflation: 0.0 # 0 for nominal analysis
   discount_rate: 0.09 # nominal return based on 2024 ATB baseline workbook for land-based wind
   debt_equity_split: False
@@ -64,3 +62,6 @@ finance_parameters:
     h2_storage: 2018 # based on Papadias 2021 and HD SAM
   wind:
     expected_plant_cost: 'none'
+  cost_adjustment_parameters:
+    inflation_rate: 0.025 # used to adjust modeled costs to target_dollar_year
+    target_dollar_year: 2022

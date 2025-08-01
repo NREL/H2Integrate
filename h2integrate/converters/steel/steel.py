@@ -86,7 +86,9 @@ class SteelCostAndFinancialModel(SteelCostBaseClass):
         # TODO Review whether to split plant and finance_parameters configs or combine somehow
         self.plant_config = SteelCostAndFinancialPlantConfig(
             plant_life=self.options["plant_config"]["plant"]["plant_life"],
-            installation_time=self.options["plant_config"]["plant"]["installation_time"],
+            installation_time=self.options["plant_config"]["finance_parameters"][
+                "installation_time"
+            ],
             gen_inflation=self.options["plant_config"]["finance_parameters"][
                 "profast_general_inflation"
             ],

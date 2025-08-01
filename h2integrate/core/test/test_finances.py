@@ -16,8 +16,9 @@ class TestProFastComp(unittest.TestCase):
     def setUp(self):
         self.plant_config = {
             "finance_parameters": {
+                "analysis_start_year": 2022,
+                "installation_time": 24,
                 "profast_general_inflation": 0.02,
-                "costing_general_inflation": 0.0,
                 "sales_tax_rate": 0.07,
                 "property_tax": 0.01,
                 "property_insurance": 0.005,
@@ -34,12 +35,10 @@ class TestProFastComp(unittest.TestCase):
                 "depreciation_method": "Straight line",
                 "depreciation_period": 20,
                 "depreciation_period_electrolyzer": 10,
+                "cost_adjustment_parameters": {"target_dollar_year": 2022, "inflation_rate": 0.0},
             },
             "plant": {
-                "financial_analysis_start_year": 2022,
                 "plant_life": 30,
-                "installation_time": 24,
-                "cost_year": 2022,
                 "grid_connection": True,
                 "ppa_price": 0.05,
             },
@@ -210,16 +209,19 @@ def test_profast_config_provided():
     }
     plant_config = {
         "finance_parameters": {
-            "costing_general_inflation": 0.0,
+            "installation_time": 24,
+            "analysis_start_year": 2024,
             "pf_params": {"params": pf_params},
             "depreciation_method": "Straight line",
             "depreciation_period": 20,
             "depreciation_period_electrolyzer": 10,
+            "cost_adjustment_parameters": {
+                "target_dollar_year": 2022,
+                "inflation_rate": 0.0,
+            },
         },
         "plant": {
-            "financial_analysis_start_year": 2024,
             "plant_life": 30,
-            "installation_time": 24,
             "cost_year": 2022,
             "grid_connection": True,
             "ppa_price": 0.05,
@@ -276,16 +278,20 @@ def test_parameter_validation_clashing_values():
 
     plant_config = {
         "finance_parameters": {
+            "analysis_start_year": 2024,  # Different from pf_params
+            "installation_time": 24,  # Different from pf_params
             "pf_params": {"params": pf_params},
             "depreciation_method": "Straight line",
             "depreciation_period": 20,
             "depreciation_period_electrolyzer": 10,
+            "cost_adjustment_parameters": {
+                "target_dollar_year": 2022,
+                "inflation_rate": 0.0,
+            },
         },
         "plant": {
             "financial_analysis_start_year": 2024,  # Different from pf_params
             "plant_life": 30,  # Different from pf_params
-            "installation_time": 24,  # Different from pf_params
-            "cost_year": 2022,
         },
     }
 
