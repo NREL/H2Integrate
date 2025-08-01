@@ -78,7 +78,7 @@ technologies:
         type: "lined_rock_cavern" # can be one of ["none", "pipe", "turbine", "pressure_vessel", "salt_cavern", "lined_rock_cavern"]
         days: 10 #how many days worth of production we should be able to store (this is ignored if `capacity_from_max_on_turbine_storage` is set to True)
       control_parameters:
-        - resource_units: "kg/h"
+        resource_units: "kg/h"
         # time_steps: 8760
         # max_capacity: 10.0  # kg
         # max_charge_percent: 1.0  # percent as decimal
