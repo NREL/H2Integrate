@@ -290,9 +290,16 @@ class H2IntegrateModel:
                     financial_groups[financial_group_id] = {}
                 financial_groups[financial_group_id][tech_name] = individual_tech_config
 
-        # If no financial groups are defined, add all technologies to a single group
-        if not financial_groups:
-            financial_groups["1"] = self.technology_config["technologies"]
+        # Find technologies not assigned to any financial group and add them to group "default"
+        all_grouped_techs = set()
+        for group in financial_groups.values():
+            all_grouped_techs.update(group.keys())
+
+        for tech_name, tech_config in self.technology_config["technologies"].items():
+            if tech_name not in all_grouped_techs:
+                if "default" not in financial_groups:
+                    financial_groups["default"] = {}
+                financial_groups["default"][tech_name] = tech_config
 
         # Add each financial group to the plant
         for group_id, tech_configs in financial_groups.items():
@@ -327,14 +334,31 @@ class H2IntegrateModel:
 
             financial_group = om.Group()
 
+            # Determine all technologies that should be included across all
+            # commodity types for this group
+            all_included_techs = set()
+            for commodity_type in commodity_types:
+                if commodity_type not in ["steel", "methanol"]:  # These handle their own financials
+                    included_techs = self.get_included_technologies(
+                        tech_configs, commodity_type, self.plant_config
+                    )
+                    all_included_techs.update(included_techs)
+
+            # Filter tech_configs to only include technologies that are in at least one stackup
+            filtered_tech_configs_for_capex = {
+                tech: config for tech, config in tech_configs.items() if tech in all_included_techs
+            }
+
             # Add the ExecComp to the plant model
             financial_group.add_subsystem(
-                "electricity_sum", ElectricitySumComp(tech_configs=tech_configs)
+                "electricity_sum", ElectricitySumComp(tech_configs=filtered_tech_configs_for_capex)
             )
 
             # Add adjusted capex component
             adjusted_capex_opex_comp = AdjustedCapexOpexComp(
-                tech_config=tech_configs, plant_config=self.plant_config
+                driver_config=self.driver_config,
+                tech_config=filtered_tech_configs_for_capex,
+                plant_config=self.plant_config,
             )
             financial_group.add_subsystem(
                 "adjusted_capex_opex_comp", adjusted_capex_opex_comp, promotes=["*"]
@@ -342,8 +366,19 @@ class H2IntegrateModel:
 
             # Add profast components
             for idx, commodity_type in enumerate(commodity_types):
+                # Get included technologies for this commodity type
+                included_techs = self.get_included_technologies(
+                    tech_configs, commodity_type, self.plant_config
+                )
+
+                # Filter tech_configs to only include the technologies in the stackup
+                filtered_tech_configs = {
+                    tech: config for tech, config in tech_configs.items() if tech in included_techs
+                }
+
                 profast_comp = ProFastComp(
-                    tech_config=tech_configs,
+                    driver_config=self.driver_config,
+                    tech_config=filtered_tech_configs,
                     plant_config=self.plant_config,
                     commodity_type=commodity_type,
                 )
@@ -352,6 +387,48 @@ class H2IntegrateModel:
             self.plant.add_subsystem(f"financials_group_{group_id}", financial_group)
 
         self.financial_groups = financial_groups
+
+    def get_included_technologies(self, tech_config, commodity_type, plant_config):
+        """
+        Determine which technologies should be included in the financial metrics.
+
+        Args:
+            tech_config: Dictionary of technology configurations
+            commodity_type: Type of commodity (e.g., 'hydrogen', 'electricity', 'ammonia')
+            plant_config: Plant configuration dictionary
+
+        Returns:
+            List of technology names to include in the financial stackup
+        """
+        # Check if the user defined specific technologies to include in the metrics.
+        # If provided, only include those technologies in the stackup.
+        # If not provided, include all technologies in the financial group in the stackup.
+        metrics_map = {
+            "hydrogen": "LCOH",
+            "electricity": "LCOE",
+            "ammonia": "LCOA",
+        }
+        metric_key = metrics_map.get(commodity_type)
+        included_techs = (
+            plant_config["finance_parameters"]
+            .get("technologies_included_in_metrics", {})
+            .get(metric_key, None)
+        )
+
+        # Check if the included technologies are valid
+        if included_techs is not None:
+            missing_techs = [tech for tech in included_techs if tech not in tech_config]
+            if missing_techs:
+                raise ValueError(
+                    f"Included technology(ies) {missing_techs} not found in tech_config. "
+                    f"Available techs: {list(tech_config.keys())}"
+                )
+
+        # If no specific technologies are included, default to all technologies in tech_config
+        if included_techs is None:
+            included_techs = list(tech_config.keys())
+
+        return included_techs
 
     def connect_technologies(self):
         technology_interconnections = self.plant_config.get("technology_interconnections", [])
@@ -450,9 +527,42 @@ class H2IntegrateModel:
 
                 plant_producing_electricity = False
 
+                # Determine which commodity types this financial group handles
+                commodity_types = []
+                if "steel" in tech_configs:
+                    commodity_types.append("steel")
+                if "electrolyzer" in tech_configs:
+                    commodity_types.append("hydrogen")
+                if "methanol" in tech_configs:
+                    commodity_types.append("methanol")
+                if "ammonia" in tech_configs:
+                    commodity_types.append("ammonia")
+                if "geoh2" in tech_configs:
+                    commodity_types.append("hydrogen")
+                if "doc" in tech_configs:
+                    commodity_types.append("co2")
+                for tech in electricity_producing_techs:
+                    if tech in tech_configs:
+                        commodity_types.append("electricity")
+                        break
+
+                # Get all included technologies for all commodity types in this group
+                all_included_techs = set()
+                for commodity_type in commodity_types:
+                    if commodity_type not in [
+                        "steel",
+                        "methanol",
+                    ]:  # These handle their own financials
+                        included_techs = self.get_included_technologies(
+                            tech_configs, commodity_type, self.plant_config
+                        )
+                        all_included_techs.update(included_techs)
+
                 # Loop through technologies and connect electricity outputs to the ExecComp
-                for tech_name in self.tech_names:
-                    if tech_name in electricity_producing_techs:
+                # Only connect if the technology is included in at least one commodity's stackup
+                # and in this financial group
+                for tech_name in tech_configs.keys():
+                    if tech_name in electricity_producing_techs and tech_name in all_included_techs:
                         self.plant.connect(
                             f"{tech_name}.electricity_out",
                             f"financials_group_{group_id}.electricity_sum.electricity_{tech_name}",
@@ -466,35 +576,37 @@ class H2IntegrateModel:
                         f"financials_group_{group_id}.total_electricity_produced",
                     )
 
+                # Only connect technologies that are included in the financial stackup
                 for tech_name in tech_configs.keys():
-                    self.plant.connect(
-                        f"{tech_name}.CapEx", f"financials_group_{group_id}.capex_{tech_name}"
-                    )
-                    self.plant.connect(
-                        f"{tech_name}.OpEx", f"financials_group_{group_id}.opex_{tech_name}"
-                    )
-
-                    if "electrolyzer" in tech_name:
+                    if tech_name in all_included_techs:
                         self.plant.connect(
-                            f"{tech_name}.total_hydrogen_produced",
-                            f"financials_group_{group_id}.total_hydrogen_produced",
+                            f"{tech_name}.CapEx", f"financials_group_{group_id}.capex_{tech_name}"
                         )
                         self.plant.connect(
-                            f"{tech_name}.time_until_replacement",
-                            f"financials_group_{group_id}.time_until_replacement",
+                            f"{tech_name}.OpEx", f"financials_group_{group_id}.opex_{tech_name}"
                         )
 
-                    if "ammonia" in tech_name:
-                        self.plant.connect(
-                            f"{tech_name}.total_ammonia_produced",
-                            f"financials_group_{group_id}.total_ammonia_produced",
-                        )
+                        if "electrolyzer" in tech_name:
+                            self.plant.connect(
+                                f"{tech_name}.total_hydrogen_produced",
+                                f"financials_group_{group_id}.total_hydrogen_produced",
+                            )
+                            self.plant.connect(
+                                f"{tech_name}.time_until_replacement",
+                                f"financials_group_{group_id}.time_until_replacement",
+                            )
 
-                    if "doc" in tech_name:
-                        self.plant.connect(
-                            f"{tech_name}.co2_capture_mtpy",
-                            f"financials_group_{group_id}.co2_capture_kgpy",
-                        )
+                        if "ammonia" in tech_name:
+                            self.plant.connect(
+                                f"{tech_name}.total_ammonia_produced",
+                                f"financials_group_{group_id}.total_ammonia_produced",
+                            )
+
+                        if "doc" in tech_name:
+                            self.plant.connect(
+                                f"{tech_name}.co2_capture_mtpy",
+                                f"financials_group_{group_id}.co2_capture_kgpy",
+                            )
 
         self.plant.options["auto_order"] = True
 
