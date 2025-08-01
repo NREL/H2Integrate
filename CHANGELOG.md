@@ -29,6 +29,8 @@
 - Added ammonia synloop, partially addressing https://github.com/NREL/H2Integrate/issues/169
 - Added geologic hydrogen (geoh2) converter and examples [PR 135](https://github.com/NREL/H2Integrate/pull/135)
 - Changed plant_config `atb_year` entry to `financial_analysis_start_year`
+- Changed electrolyzer capacity to be specified as `n_clusters` rather than `rating` in electrolyzer performance model config
+- Changed electrolyzer capacity to be an input to the electrolyzer cost models rather than pulled from the cost model config.
 
 ## 0.3.0 [May 2 2025]
 
