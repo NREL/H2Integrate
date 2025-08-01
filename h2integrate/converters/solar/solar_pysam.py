@@ -12,7 +12,7 @@ class PYSAMSolarPlantPerformanceModelSiteConfig(BaseConfig):
     """Configuration class for the location of the solar pv plant
         PYSAMSolarPlantPerformanceComponentSite.
 
-    Args:
+    Attributes:
         latitude (float): Latitude of wind plant location.
         longitude (float): Longitude of wind plant location.
         year (float): Year for resource.
@@ -33,7 +33,7 @@ class PYSAMSolarPlantPerformanceModelDesignConfig(BaseConfig):
         `here <https://nrel-pysam.readthedocs.io/en/main/modules/Pvwattsv8.html#pvwattsv8>`__
 
 
-    Args:
+    Attributes:
         pv_capacity_kWdc (float): Required, DC system capacity in kW-dc.
         dc_ac_ratio (float | None): Also known as inverter loading ratio, ratio of max DC
             output of PV to max AC output of inverter. If None, then uses the default
