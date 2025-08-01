@@ -4,6 +4,7 @@ from pathlib import Path
 import dill
 import numpy as np
 import openmdao.api as om
+from hopp.tools.dispatch.plot_tools import plot_battery_output, plot_generation_profile
 
 from h2integrate.converters.hopp.hopp_mgmt import run_hopp, setup_hopp
 
@@ -29,9 +30,9 @@ class HOPPComponent(om.ExplicitComponent):
     def setup(self):
         self.hopp_config = self.options["tech_config"]["performance_model"]["config"]
 
-        if "simulation_options" in self.hopp_config:
-            if "cache" in self.hopp_config["simulation_options"]:
-                self.cache = self.hopp_config["simulation_options"]["cache"]
+        if "simulation_options" in self.hopp_config["config"]:
+            if "cache" in self.hopp_config["config"]["simulation_options"]:
+                self.cache = self.hopp_config["config"]["simulation_options"]["cache"]
             else:
                 self.cache = True
         else:
@@ -155,6 +156,15 @@ class HOPPComponent(om.ExplicitComponent):
                 cache_path = Path(cache_file)
                 with cache_path.open("wb") as f:
                     dill.dump(subset_of_hopp_results, f)
+
+            try:
+                system = self.hybrid_interface.system
+                plot_battery_output(system, start_day=180, plot_filename="battery_output.png")
+                plot_generation_profile(
+                    system, start_day=180, plot_filename="generation_profile.png"
+                )
+            except AttributeError:
+                pass
 
         # Set the outputs from the cached or newly computed results
         outputs["percent_load_missed"] = subset_of_hopp_results["percent_load_missed"]
