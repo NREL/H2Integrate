@@ -127,6 +127,7 @@ examples/h2integrate/*/figures
 tests/h2integrate/reports/
 tests/h2integrate/test_hydrogen/output/
 **/run_*_out/
+*_out/
 **/test_*_out/
 
 output*
