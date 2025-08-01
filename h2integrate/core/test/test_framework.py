@@ -107,3 +107,57 @@ def test_custom_financial_model_grouping(subtests):
     # Clean up temporary YAML files
     temp_tech_config.unlink(missing_ok=True)
     temp_highlevel_yaml.unlink(missing_ok=True)
+
+
+def test_get_included_technologies():
+    # Create a mock model instance
+    model = H2IntegrateModel.__new__(H2IntegrateModel)
+
+    # Test case 1: No specific technologies defined (should include all)
+    tech_config = {
+        "wind": {"performance_model": {"model": "test"}},
+        "electrolyzer": {"performance_model": {"model": "test"}},
+        "storage": {"performance_model": {"model": "test"}},
+    }
+    plant_config = {"finance_parameters": {}}
+
+    included_techs = model.get_included_technologies(tech_config, "hydrogen", plant_config)
+    expected = ["wind", "electrolyzer", "storage"]
+    assert set(included_techs) == set(expected), f"Expected {expected}, got {included_techs}"
+
+    # Test case 2: Specific technologies defined for LCOH
+    plant_config_with_specific = {
+        "finance_parameters": {
+            "technologies_included_in_metrics": {"LCOH": ["electrolyzer", "wind"]}
+        }
+    }
+
+    included_techs = model.get_included_technologies(
+        tech_config, "hydrogen", plant_config_with_specific
+    )
+    expected = ["electrolyzer", "wind"]
+    assert set(included_techs) == set(expected), f"Expected {expected}, got {included_techs}"
+
+    # Test case 3: Test different commodity type (electricity)
+    plant_config_with_lcoe = {
+        "finance_parameters": {"technologies_included_in_metrics": {"LCOE": ["wind"]}}
+    }
+
+    included_techs = model.get_included_technologies(
+        tech_config, "electricity", plant_config_with_lcoe
+    )
+    expected = ["wind"]
+    assert set(included_techs) == set(expected), f"Expected {expected}, got {included_techs}"
+
+    # Test case 4: Invalid technology should raise error
+    plant_config_invalid = {
+        "finance_parameters": {
+            "technologies_included_in_metrics": {"LCOH": ["electrolyzer", "invalid_tech"]}
+        }
+    }
+
+    try:
+        model.get_included_technologies(tech_config, "hydrogen", plant_config_invalid)
+        raise AssertionError("Should have raised ValueError for invalid technology")
+    except ValueError as e:
+        assert "invalid_tech" in str(e), f"Error message should mention invalid_tech: {e}"

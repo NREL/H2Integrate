@@ -48,6 +48,55 @@ class AdjustedCapexOpexComp(om.ExplicitComponent):
 
 
 class ProFastComp(om.ExplicitComponent):
+    """
+    This component calculates the Levelized Cost of Commodity (LCO) for a user-defined set
+    of technologies and commodities, including hydrogen (LCOH), electricity (LCOE),
+    ammonia (LCOA), and CO2 (LCOC). Only the user-defined technologies specified in the
+    `tech_config` are included in the LCO stackup (or all if no specific technologies are defined).
+
+    Attributes:
+        tech_config (dict): Dictionary specifying the technologies to include in the
+            LCO calculation. Only these technologies are considered in the stackup.
+        plant_config (dict): Plant configuration parameters, including financial and
+            operational settings.
+        driver_config (dict): Driver configuration parameters (not directly used in calculations).
+        commodity_type (str): The type of commodity for which the LCO is calculated.
+            Supported values are "hydrogen", "electricity", "ammonia", and "co2".
+
+    Inputs:
+        capex_adjusted_{tech} (float): Adjusted capital expenditure for each
+            user-defined technology, in USD.
+        opex_adjusted_{tech} (float): Adjusted operational expenditure for each
+            user-defined technology, in USD/year.
+        total_{commodity}_produced (float): Total annual production of the selected commodity
+            (units depend on commodity type).
+        time_until_replacement (float): Time until electrolyzer replacement, in hours
+            (only if "electrolyzer" is in tech_config).
+        co2_capture_kgpy (float): Total annual CO2 captured, in kg/year
+            (only for commodity_type "co2").
+
+    Outputs:
+        LCOH (float): Levelized Cost of Hydrogen, in USD/kg (if commodity_type is "hydrogen").
+        LCOE (float): Levelized Cost of Electricity, in USD/kWh
+            (if commodity_type is "electricity").
+        LCOA (float): Levelized Cost of Ammonia, in USD/kg (if commodity_type is "ammonia").
+        LCOC (float): Levelized Cost of CO2, in USD/kg (if commodity_type is "co2").
+
+    Methods:
+        initialize(): Declares component options.
+        setup(): Defines inputs and outputs based on user configuration and validates
+            required parameters.
+        compute(inputs, outputs): Assembles financial parameters, adds capital and fixed cost
+            items for user-defined technologies, runs the ProFAST financial model,
+            and sets the appropriate LCO output.
+
+    Notes:
+        - Only technologies specified by the user in `tech_config` are included in the LCO stackup.
+        - The component supports flexible configuration for different commodities
+            and technology mixes.
+        - Financial and operational parameters are primarily sourced from `plant_config`.
+    """
+
     def initialize(self):
         self.options.declare("driver_config", types=dict)
         self.options.declare("tech_config", types=dict)
@@ -57,34 +106,6 @@ class ProFastComp(om.ExplicitComponent):
     def setup(self):
         tech_config = self.tech_config = self.options["tech_config"]
         self.plant_config = self.options["plant_config"]
-
-        # Check if the user defined specific technologies to include in the metrics.
-        # If provided, only include those technologies in the stackup.
-        # If not provided, include all technologies in the financial group in the stackup.
-        metrics_map = {
-            "hydrogen": "LCOH",
-            "electricity": "LCOE",
-            "ammonia": "LCOA",
-        }
-        metric_key = metrics_map.get(self.options["commodity_type"])
-        self.included_techs = (
-            self.plant_config["finance_parameters"]
-            .get("technologies_included_in_metrics", {})
-            .get(metric_key, None)
-        )
-
-        # Check if the included technologies are valid
-        if self.included_techs is not None:
-            missing_techs = [tech for tech in self.included_techs if tech not in tech_config]
-            if missing_techs:
-                raise ValueError(
-                    f"Included technology(ies) {missing_techs} not found in tech_config. "
-                    f"Available techs: {list(tech_config.keys())}"
-                )
-
-        # If no specific technologies are included, default to all technologies in tech_config
-        if self.included_techs is None:
-            self.included_techs = list(tech_config.keys())
 
         for tech in tech_config:
             self.add_input(f"capex_adjusted_{tech}", val=0.0, units="USD")
@@ -261,9 +282,7 @@ class ProFastComp(om.ExplicitComponent):
 
         # --------------------------------- Add capital and fixed items to ProFAST --------------
         for tech in self.tech_config:
-            # Only add if tech is included in the user's desired stackup for that metric
-            if tech not in self.included_techs:
-                continue
+            # tech_config is already filtered to include only relevant technologies
             if "electrolyzer" in tech:
                 electrolyzer_refurbishment_schedule = np.zeros(
                     self.plant_config["plant"]["plant_life"]
