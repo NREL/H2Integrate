@@ -38,6 +38,10 @@ from h2integrate.converters.ammonia.simple_ammonia_model import (
 )
 from h2integrate.converters.hydrogen.singlitico_cost_model import SingliticoCostModel
 from h2integrate.converters.co2.marine.direct_ocean_capture import DOCCostModel, DOCPerformanceModel
+from h2integrate.converters.feedstock_profile.simple_feedstock import (
+    BasicFeedstockCostModel,
+    BasicFeedstockPerformanceModel,
+)
 from h2integrate.converters.hydrogen.eco_tools_pem_electrolyzer import (
     ECOElectrolyzerPerformanceModel,
 )
@@ -103,6 +107,8 @@ supported_models = {
     # Storage
     "hydrogen_tank_performance": HydrogenTankPerformanceModel,
     "hydrogen_tank_cost": HydrogenTankCostModel,
+    "feedstock_performance": BasicFeedstockPerformanceModel,
+    "feedstock_cost": BasicFeedstockCostModel,
 }
 
 electricity_producing_techs = ["wind", "solar", "river", "hopp"]

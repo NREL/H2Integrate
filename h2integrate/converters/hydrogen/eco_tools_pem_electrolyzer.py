@@ -1,9 +1,14 @@
+import numpy as np
 from attrs import field, define
 
 from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
 from h2integrate.core.validators import gt_zero, contains
 from h2integrate.tools.eco.utilities import ceildiv
 from h2integrate.converters.hydrogen.electrolyzer_baseclass import ElectrolyzerPerformanceBaseClass
+from h2integrate.simulation.technologies.hydrogen.electrolysis.PEM_tools import (
+    get_electrolyzer_BOL_efficiency,
+    size_electrolyzer_for_hydrogen_demand,
+)
 from h2integrate.simulation.technologies.hydrogen.electrolysis.run_h2_PEM import run_h2_PEM
 
 
@@ -13,6 +18,11 @@ class ECOElectrolyzerPerformanceModelConfig(BaseConfig):
     Configuration class for the ECOElectrolyzerPerformanceModel.
 
     Args:
+        compute_mode (str): The mode in which the performance model runs. Options:
+            - "normal": The electrolyzer size is taken from the config.
+            - "feedstock_size": The electrolyzer size is calculated within the compute function
+                to handle the maximum available amount of a certain feedstock or feedstocks
+        size_by_feedstock (list of str): The feedstock(s) used to determine the plant size
         sizing (dict): A dictionary containing the following model sizing parameters:
             - resize_for_enduse (bool): Flag to adjust the electrolyzer based on the enduse.
             - size_for (str): Determines the sizing strategy, either "BOL" (generous), or
@@ -35,6 +45,16 @@ class ECOElectrolyzerPerformanceModelConfig(BaseConfig):
             (https://www.hydrogen.energy.gov/docs/hydrogenprogramlibraries/pdfs/24005-clean-hydrogen-production-cost-pem-electrolyzer.pdf?sfvrsn=8cb10889_1)
     """
 
+    compute_mode: str = field(validator=contains(["normal", "feedstock_size", "product_size"]))
+    size_by: str = field(
+        validator=contains(
+            [
+                "none",
+                "electricity",
+                "hydrogen",
+            ]
+        )
+    )
     sizing: dict = field()
     rating: float = field(validator=gt_zero)
     location: str = field(validator=contains(["onshore", "offshore"]))
@@ -73,10 +93,23 @@ class ECOElectrolyzerPerformanceModel(ElectrolyzerPerformanceBaseClass):
             units="MW",
             desc="Size of the electrolyzer in MW",
         )
+        if self.config.compute_mode in ["normal", "feedstock_size"]:
+            shape_var = "electricity_in"
+        elif self.config.compute_mode == "product_size":
+            shape_var = "hydrogen_demand"
+        self.add_output(
+            "electricity_consume",
+            units="kW",
+            copy_shape=shape_var,
+            desc="Electricity consumption in kW",
+        )
+        self.add_output(
+            "water_consume", units="kg/h", copy_shape=shape_var, desc="Water consumption in kg/hr"
+        )
+        self.add_output("electrolyzer_size_mw_cost", units="MW", desc="Size of electrolyzer in MW")
 
     def compute(self, inputs, outputs):
         plant_life = self.options["plant_config"]["plant"]["plant_life"]
-        electrolyzer_size_mw = inputs["electrolyzer_size_mw"]
         electrolyzer_capex_kw = self.config.electrolyzer_capex
 
         # # IF GRID CONNECTED
@@ -101,6 +134,26 @@ class ECOElectrolyzerPerformanceModel(ElectrolyzerPerformanceBaseClass):
         grid_connection_scenario = "off-grid"
         energy_to_electrolyzer_kw = inputs["electricity_in"]
 
+        # Make changes to computation based on compute_mode:
+        if self.config.compute_mode == "normal":
+            # In "normal" compute mode, electrolyzer size comes from config
+            electrolyzer_size_mw = inputs["electrolyzer_size_mw"]
+        elif self.config.compute_mode == "feedstock_size":
+            # In "feedstock_size" compute mode, electrolyzer size comes from feedstock
+            if self.config.size_by == "electricity":
+                electrolyzer_size_mw = np.max(energy_to_electrolyzer_kw) / 1000
+            else:
+                raise ValueError("Cannot size by %s feed".format())
+        elif self.config.compute_mode == "product_size":
+            # In "product_size" compute mode, electrolyzer size comes from product demand
+            if self.config.size_by == "hydrogen":
+                h2_kgphr = np.max(inputs["hydrogen_demand"])
+                electrolyzer_size_mw = size_electrolyzer_for_hydrogen_demand(h2_kgphr)
+            else:
+                raise ValueError("Cannot size by %s demand".format())
+        else:
+            raise ValueError("Compute mode '%s' not found".format())
+
         n_pem_clusters = int(ceildiv(electrolyzer_size_mw, self.config.cluster_rating_MW))
 
         ## run using greensteel model
@@ -111,19 +164,56 @@ class ECOElectrolyzerPerformanceModel(ElectrolyzerPerformanceBaseClass):
             "turndown_ratio": self.config.turndown_ratio,
         }
 
-        H2_Results, h2_ts, h2_tot, power_to_electrolyzer_kw = run_h2_PEM(
-            electrical_generation_timeseries=energy_to_electrolyzer_kw,
-            electrolyzer_size=electrolyzer_size_mw,
-            useful_life=plant_life,
-            n_pem_clusters=n_pem_clusters,
-            pem_control_type=self.config.pem_control_type,
-            electrolyzer_direct_cost_kw=electrolyzer_capex_kw,
-            user_defined_pem_param_dictionary=pem_param_dict,
-            grid_connection_scenario=grid_connection_scenario,  # if not offgrid, assumes steady h2 demand in kgphr for full year  # noqa: E501
-            hydrogen_production_capacity_required_kgphr=hydrogen_production_capacity_required_kgphr,
-            debug_mode=False,
-            verbose=False,
-        )
+        # In normal and feedstock_size compute modes, calculate hydrogen_out from electricity_in
+        if self.config.compute_mode in ["normal", "feedstock_size"]:
+            H2_Results, h2_ts, h2_tot, power_to_electrolyzer_kw = run_h2_PEM(
+                electrical_generation_timeseries=energy_to_electrolyzer_kw,
+                electrolyzer_size=electrolyzer_size_mw,
+                useful_life=plant_life,
+                n_pem_clusters=n_pem_clusters,
+                pem_control_type=self.config.pem_control_type,
+                electrolyzer_direct_cost_kw=electrolyzer_capex_kw,
+                user_defined_pem_param_dictionary=pem_param_dict,
+                grid_connection_scenario=grid_connection_scenario,  # if not offgrid, assumes steady h2 demand in kgphr for full year  # noqa: E501
+                hydrogen_production_capacity_required_kgphr=hydrogen_production_capacity_required_kgphr,
+                debug_mode=False,
+                verbose=False,
+            )
+
+        # In product_size compute mode, calculate electricity_consume from hydrogen_demand
+        elif self.config.compute_mode == "product_size":
+            kwh_kg = get_electrolyzer_BOL_efficiency()
+            h2_kg = inputs["hydrogen_demand"]
+            elec_kw = h2_kg / kwh_kg
+
+            iterations = 0
+            max_it = 10
+
+            while iterations < max_it:
+                iterations += 1
+
+                H2_Results, h2_ts, h2_tot, power_to_electrolyzer_kw = run_h2_PEM(
+                    electrical_generation_timeseries=elec_kw,
+                    electrolyzer_size=electrolyzer_size_mw,
+                    useful_life=plant_life,
+                    n_pem_clusters=n_pem_clusters,
+                    pem_control_type=self.config.pem_control_type,
+                    electrolyzer_direct_cost_kw=electrolyzer_capex_kw,
+                    user_defined_pem_param_dictionary=pem_param_dict,
+                    grid_connection_scenario=grid_connection_scenario,  # if not offgrid, assumes steady h2 demand in kgphr for full year  # noqa: E501
+                    hydrogen_production_capacity_required_kgphr=hydrogen_production_capacity_required_kgphr,
+                    debug_mode=False,
+                    verbose=False,
+                )
+
+                h2_kg_result = H2_Results["Hydrogen Hourly Production [kg/hr]"]
+                h2_residuals = h2_kg_result - h2_kg
+                elec_kw -= h2_residuals / kwh_kg
+
+                print(np.mean(h2_residuals))
+                print(np.max(h2_residuals))
+
+            outputs["electricity_consume"] = elec_kw
 
         # Assuming `h2_results` includes hydrogen and oxygen rates per timestep
         outputs["hydrogen_out"] = H2_Results["Hydrogen Hourly Production [kg/hr]"]
@@ -131,3 +221,5 @@ class ECOElectrolyzerPerformanceModel(ElectrolyzerPerformanceBaseClass):
         outputs["efficiency"] = H2_Results["Sim: Average Efficiency [%-HHV]"]
         outputs["time_until_replacement"] = H2_Results["Time Until Replacement [hrs]"]
         outputs["rated_h2_production_kg_pr_hr"] = H2_Results["Rated BOL: H2 Production [kg/hr]"]
+        outputs["water_consume"] = H2_Results["Water Hourly Consumption [kg/hr]"]
+        outputs["electrolyzer_size_mw_cost"] = electrolyzer_size_mw
