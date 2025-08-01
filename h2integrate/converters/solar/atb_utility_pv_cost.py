@@ -7,6 +7,19 @@ from h2integrate.converters.solar.solar_baseclass import SolarCostBaseClass
 
 @define
 class ATBUtilityPVCostModelConfig(BaseConfig):
+    """Configuration class for the ATBUtilityPVCostModel with costs based on AC capacity.
+    Recommended to use with utility-scale PV models. More information on
+    ATB methodology and representative utility-scale PV technologies can be found
+    `here <https://atb.nrel.gov/electricity/2024/utility-scale_pv>`_
+    Reference cost values can be found on the `Solar - Utility PV` sheet of the
+    `NREL ATB workbook <https://atb.nrel.gov/electricity/2024/data>`_.
+
+    Attributes:
+        capex_per_kWac (float|int): capital cost of solar-PV system in $/kW-AC
+        opex_per_kWac_per_year (float|int): annual operating cost of solar-PV
+            system in $/kW-AC/year
+    """
+
     capex_per_kWac: float | int = field(validator=gt_zero)
     opex_per_kWac_per_year: float | int = field(validator=gt_zero)
 
