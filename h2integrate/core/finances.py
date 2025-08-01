@@ -287,6 +287,7 @@ class ProFastComp(om.ExplicitComponent):
                 electrolyzer_refurbishment_schedule = np.zeros(
                     self.plant_config["plant"]["plant_life"]
                 )
+
                 refurb_period = round(float(inputs["time_until_replacement"][0]) / (24 * 365))
                 electrolyzer_refurbishment_schedule[
                     refurb_period : self.plant_config["plant"]["plant_life"] : refurb_period

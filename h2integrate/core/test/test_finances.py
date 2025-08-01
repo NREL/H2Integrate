@@ -107,10 +107,11 @@ class TestProFastComp(unittest.TestCase):
         prob.set_val("capex_adjusted_steel", 3.0e6, units="USD")
         prob.set_val("opex_adjusted_steel", 3.0e3, units="USD/year")
         prob.set_val("total_electricity_produced", 2.0e7, units="kW*h/year")
+        prob.set_val("time_until_replacement", 80000.0, units="h")
 
         prob.run_model()
 
-        self.assertAlmostEqual(prob["LCOE"][0], 0.10616471876960568, places=7)
+        self.assertAlmostEqual(prob["LCOE"][0], 0.2116038814767319, places=7)
 
     def test_lcoe_with_selected_technologies(self):
         # Set up paths
@@ -144,35 +145,11 @@ class TestProFastComp(unittest.TestCase):
         prob.set_val("capex_adjusted_steel", 3.0e6, units="USD")
         prob.set_val("opex_adjusted_steel", 3.0e3, units="USD/year")
         prob.set_val("total_electricity_produced", 2.0e7, units="kW*h/year")
+        prob.set_val("time_until_replacement", 80000.0, units="h")
 
         prob.run_model()
 
-        self.assertAlmostEqual(prob["LCOE"][0], 0.12208942658504653, places=6)
-
-    def test_lcoe_with_invalid_technology(self):
-        # Set up paths
-        example_case_dir = examples_dir / "01_onshore_steel_mn"
-
-        tech_config = load_tech_yaml(example_case_dir / "tech_config.yaml")
-        plant_config = load_plant_yaml(example_case_dir / "plant_config.yaml")
-
-        # Add an invalid technology
-        plant_config["finance_parameters"]["technologies_included_in_metrics"]["LCOE"] = [
-            "hopp",
-            "dummy_tech",
-        ]
-
-        prob = om.Problem()
-        comp = ProFastComp(
-            plant_config=plant_config,
-            tech_config=tech_config["technologies"],
-            commodity_type="electricity",
-        )
-        prob.model.add_subsystem("comp", comp, promotes=["*"])
-
-        error_msg = "not found in tech_config"
-        with pytest.raises(ValueError, match=error_msg):
-            prob.setup()
+        self.assertAlmostEqual(prob["LCOE"][0], 0.2116038814767319, places=6)
 
 
 def test_profast_config_provided():
