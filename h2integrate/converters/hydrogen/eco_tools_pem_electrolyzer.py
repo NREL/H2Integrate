@@ -100,11 +100,16 @@ class ECOElectrolyzerPerformanceModel(ElectrolyzerPerformanceBaseClass):
         self.add_output(
             "electricity_consume",
             units="kW",
+            shape_by_conn=True,
             copy_shape=shape_var,
             desc="Electricity consumption in kW",
         )
         self.add_output(
-            "water_consume", units="kg/h", copy_shape=shape_var, desc="Water consumption in kg/hr"
+            "water_consume",
+            units="kg/h",
+            shape_by_conn=True,
+            copy_shape=shape_var,
+            desc="Water consumption in kg/hr",
         )
         self.add_output("electrolyzer_size_mw_cost", units="MW", desc="Size of electrolyzer in MW")
 

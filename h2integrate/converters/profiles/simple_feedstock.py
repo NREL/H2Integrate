@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 import openmdao.api as om
 from attrs import field, define
@@ -40,17 +41,26 @@ class BasicFeedstockPerformanceModel(om.ExplicitComponent):
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance")
         )
         if self.config.compute_mode == "product_size":
-            self.add_input(
-                self.config.commodity + "_demand", units=self.config.unit, shape_by_conn=True
-            )
-        self.add_output(self.config.commodity + "_out", units=self.config.unit, shape_by_conn=True)
-
-    def compute(self, inputs, outputs):
-        if self.config.compute_mode != "product_size":
+            profile_name = self.config.commodity + "_demand"
+            self.add_input(profile_name, units=self.config.unit, shape_by_conn=True)
+        else:
+            profile_name = self.config.commodity + "_profile"
             path = self.config.profile
             profile = pd.read_csv(path, header=None).values[:, 0]
+            self.add_input(profile_name, units=self.config.unit, val=profile)
+        self.add_output(
+            self.config.commodity + "_out",
+            units=self.config.unit,
+            shape_by_conn=True,
+            copy_shape=profile_name,
+        )
+
+    def compute(self, inputs, outputs):
+        if self.config.compute_mode == "product_size":
+            profile_name = self.config.commodity + "_demand"
         else:
-            profile = inputs[self.config.commodity + "_demand"]
+            profile_name = self.config.commodity + "_profile"
+        profile = inputs[profile_name]
         outputs[self.config.commodity + "_out"] = profile
 
 
@@ -89,4 +99,4 @@ class BasicFeedstockCostModel(om.ExplicitComponent):
 
     def compute(self, inputs, outputs):
         outputs["CapEx"] = 0
-        outputs["OpEx"] = inputs[self.config.commodity + "_out"] * self.config.buy_price
+        outputs["OpEx"] = np.sum(inputs[self.config.commodity + "_out"]) * self.config.buy_price

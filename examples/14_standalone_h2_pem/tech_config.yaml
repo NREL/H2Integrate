@@ -2,20 +2,6 @@ name: "technology_config"
 description: "This hybrid plant produces ammonia"
 
 technologies:
-  feedstock_profile:
-    performance_model:
-      model: "feedstock_performance"
-    cost_model:
-      model: "feedstock_cost"
-    model_inputs:
-      shared_parameters:
-        commodity: "electricity"
-      performance_parameters:
-        compute_mode: "feedstock_size"
-        profile: "elec_profile.csv"
-        unit: "kW"
-      cost_parameters:
-        buy_price: 0.07
   electrolyzer:
     performance_model:
       model: "eco_pem_electrolyzer_performance"
@@ -43,3 +29,32 @@ technologies:
 
       financial_parameters:
         replacement_cost_percent: 0.15 # percent of capex - H2A default case
+  feedstock_profile:
+    performance_model:
+      model: "feedstock_performance"
+    cost_model:
+      model: "feedstock_cost"
+    model_inputs:
+      shared_parameters:
+        commodity: "electricity"
+      performance_parameters:
+        compute_mode: "feedstock_size"
+        profile: "elec_profile.csv"
+        unit: "kW"
+      cost_parameters:
+        buy_price: 0.07
+  product_profile:
+    performance_model:
+      model: "product_performance"
+    cost_model:
+      model: "product_cost"
+    model_inputs:
+      shared_parameters:
+        commodity: "hydrogen"
+      performance_parameters:
+        compute_mode: "feedstock_size"
+        profile: "h2_profile.csv"
+        unit: "kg/h"
+      cost_parameters:
+        sell_price: 0.07
+        is_coproduct: False

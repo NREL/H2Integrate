@@ -18,6 +18,10 @@ from h2integrate.converters.ammonia.ammonia_synloop import (
     AmmoniaSynLoopCostModel,
     AmmoniaSynLoopPerformanceModel,
 )
+from h2integrate.converters.profiles.simple_product import (
+    BasicProductCostModel,
+    BasicProductPerformanceModel,
+)
 from h2integrate.converters.water.desal.desalination import (
     ReverseOsmosisCostModel,
     ReverseOsmosisPerformanceModel,
@@ -26,6 +30,10 @@ from h2integrate.converters.hydrogen.basic_cost_model import BasicElectrolyzerCo
 from h2integrate.converters.hydrogen.pem_electrolyzer import (
     ElectrolyzerCostModel,
     ElectrolyzerPerformanceModel,
+)
+from h2integrate.converters.profiles.simple_feedstock import (
+    BasicFeedstockCostModel,
+    BasicFeedstockPerformanceModel,
 )
 from h2integrate.converters.methanol.smr_methanol_plant import (
     SMRMethanolPlantCostModel,
@@ -38,10 +46,6 @@ from h2integrate.converters.ammonia.simple_ammonia_model import (
 )
 from h2integrate.converters.hydrogen.singlitico_cost_model import SingliticoCostModel
 from h2integrate.converters.co2.marine.direct_ocean_capture import DOCCostModel, DOCPerformanceModel
-from h2integrate.converters.feedstock_profile.simple_feedstock import (
-    BasicFeedstockCostModel,
-    BasicFeedstockPerformanceModel,
-)
 from h2integrate.converters.hydrogen.eco_tools_pem_electrolyzer import (
     ECOElectrolyzerPerformanceModel,
 )
@@ -109,6 +113,8 @@ supported_models = {
     "hydrogen_tank_cost": HydrogenTankCostModel,
     "feedstock_performance": BasicFeedstockPerformanceModel,
     "feedstock_cost": BasicFeedstockCostModel,
+    "product_performance": BasicProductPerformanceModel,
+    "product_cost": BasicProductCostModel,
 }
 
 electricity_producing_techs = ["wind", "solar", "river", "hopp"]
