@@ -198,6 +198,9 @@ class DemandOpenLoopController(ControllerBaseClass):
         charge_efficiency = self.config.charge_efficiency
         discharge_efficiency = self.config.discharge_efficiency
         demand_profile = self.config.demand_profile
+        if len(demand_profile) == 1:
+            demand_profile = [demand_profile] * self.config.time_steps
+
         # solve_approach: optimized vs heuristic
         # objective:
 

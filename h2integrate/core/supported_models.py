@@ -41,6 +41,7 @@ from h2integrate.converters.water_power.hydro_plant_run_of_river import (
     RunOfRiverHydroPerformanceModel,
 )
 from h2integrate.controllers.control_methods.openloop_controllers import (
+    DemandOpenLoopController,
     PassThroughOpenLoopController,
 )
 from h2integrate.converters.hydrogen.geologic.natural_geoh2_plant import (
@@ -96,6 +97,7 @@ supported_models = {
     "combiner_performance": CombinerPerformanceModel,
     # Control
     "pass_through_controller": PassThroughOpenLoopController,
+    "demand_open_loop_controller": DemandOpenLoopController,
     # Storage
     "hydrogen_tank_performance": HydrogenTankPerformanceModel,
     "hydrogen_tank_cost": HydrogenTankCostModel,
