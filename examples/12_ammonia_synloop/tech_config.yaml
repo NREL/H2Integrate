@@ -55,22 +55,51 @@ technologies:
         days: 0 #how many days worth of production we should be able to store (this is ignored if `capacity_from_max_on_turbine_storage` is set to True)
   ammonia:
     performance_model:
-      model: "simple_ammonia_performance"
+      model: "synloop_ammonia_performance"
     cost_model:
-      model: "simple_ammonia_cost"
-    model_inputs:
+      model: "synloop_ammonia_cost"
+    model_inputs: # See converters/ammonia/Ammonia cost breakdown-ANL source.xlsx
       shared_parameters:
-        plant_capacity_factor: 0.9
-        plant_capacity_kgpy: 362560000.
+        production_capacity: 52777.6
+        catalyst_consumption_rate: 0.000091295354067341
+        catalyst_replacement_interval: 3
+      performance_parameters:
+        capacity_factor: 0.9
+        energy_demand: 0.530645243
+        heat_output: 0.8299956
+        feed_gas_t: 25.8
+        feed_gas_p: 20
+        feed_gas_x_n2: 0.25
+        feed_gas_x_h2: 0.75
+        feed_gas_mass_ratio: 1.13
+        purge_gas_t: 7.5
+        purge_gas_p: 275
+        purge_gas_x_n2: 0.26
+        purge_gas_x_h2: 0.68
+        purge_gas_x_ar: 0.02
+        purge_gas_x_nh3: 0.04
+        purge_gas_mass_ratio: 0.07
       cost_parameters:
-        electricity_cost: 91 # 2022 USD - not actually used in cost/finance model
-        # hydrogen_cost: 4.023963541079105
-        cooling_water_cost: 0.00516275276753 # # 2022 USD/gal
-        iron_based_catalyst_cost: 25 #2022 USD/kg
-        oxygen_cost: 0
-        electricity_consumption: 0.0001207
-        hydrogen_consumption: 0.197284403
-        cooling_water_consumption: 0.049236824
-        iron_based_catalyst_consumption: 0.000091295354067341
-        oxygen_byproduct: 0.29405077250145
+        baseline_capacity: 52777.6
+        base_cost_year: 2016
         capex_scaling_exponent: 0.6
+        labor_scaling_exponent: 0.25
+        asu_capex_base: 236920646 # See ASU + HB capex-NETL source.xlsx
+        synloop_capex_base: 302460908 # See ASU + HB capex-NETL source.xlsx
+        heat_capex_base: 7069100
+        cool_capex_base: 4799200
+        other_eqpt_capex_base: 0
+        land_capex_base: 4112701.84103543
+        deprec_noneq_capex_rate: 0.42
+        labor_rate_base: 57
+        num_workers_base: 50
+        hours_yr: 2080
+        gen_admin: 0.2
+        prop_tax_ins: 0.02
+        maint_rep: 0.005
+        oxygen_byproduct_rate: 0.29405077250145
+        water_consumption_rate: 0.049236824
+        rebuild_cost_base: 0
+        cooling_water_cost_base: 0.000113349938601175
+        catalyst_cost_base: 23.19977341
+        oxygen_price_base: 0.0285210891617726

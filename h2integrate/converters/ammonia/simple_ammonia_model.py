@@ -73,6 +73,8 @@ class AmmoniaCostModelConfig(BaseConfig):
         iron_based_catalyst_consumption (float): Iron-based catalyst consumption in kg
             per kg of ammonia production.
         oxygen_byproduct (float): Oxygen byproduct in kg per kg of ammonia production.
+        capex_scaling_exponent (float): Power applied to ratio of capacities when calculating CAPEX
+            from a baseline value at a different capacity.
     """
 
     plant_capacity_kgpy: float = field()
@@ -86,6 +88,7 @@ class AmmoniaCostModelConfig(BaseConfig):
     cooling_water_consumption: float = field()
     iron_based_catalyst_consumption: float = field()
     oxygen_byproduct: float = field()
+    capex_scaling_exponent: float = field()
 
 
 class SimpleAmmoniaCostModel(om.ExplicitComponent):
@@ -110,6 +113,9 @@ class SimpleAmmoniaCostModel(om.ExplicitComponent):
         )
         self.add_input("plant_capacity_factor", val=0.0, units=None, desc="Capacity factor")
         self.add_input("LCOH", val=0.0, units="USD/kg", desc="Cost per kg of hydrogen")
+        self.add_input(
+            "capex_scaling_exponent", val=0.6, units=None, desc="Exponent of CAPEX corr."
+        )
 
         # Outputs for all cost model outputs
         self.add_output(
@@ -191,7 +197,7 @@ class SimpleAmmoniaCostModel(om.ExplicitComponent):
         scaling_ratio = config.plant_capacity_kgpy / (365.0 * 1266638.4)
 
         # -------------------------------CapEx Costs------------------------------
-        scaling_factor_equipment = 0.6
+        scaling_factor_equipment = inputs["capex_scaling_exponent"]
         capex_scale_factor = scaling_ratio**scaling_factor_equipment
 
         capex_air_separation_cryogenic = (
