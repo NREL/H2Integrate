@@ -93,10 +93,25 @@ class ECOElectrolyzerPerformanceModel(ElectrolyzerPerformanceBaseClass):
             units="MW",
             desc="Size of the electrolyzer in MW",
         )
+
+        # Some inputs are only connected depending on compute_mode
         if self.config.compute_mode in ["normal", "feedstock_size"]:
             shape_var = "electricity_in"
+            self.add_input(
+                "electricity_in", val=0.0, shape_by_conn=True, copy_shape="hydrogen_out", units="kW"
+            )
+            self.add_output(
+                "hydrogen_out",
+                val=0.0,
+                shape_by_conn=True,
+                copy_shape="electricity_in",
+                units="kg/h",
+            )
+
         elif self.config.compute_mode == "product_size":
+            self.add_input("hydrogen_demand", shape_by_conn=True, units="kg/h")
             shape_var = "hydrogen_demand"
+
         self.add_output(
             "electricity_consume",
             units="kW",
@@ -137,25 +152,26 @@ class ECOElectrolyzerPerformanceModel(ElectrolyzerPerformanceBaseClass):
         # else:
         hydrogen_production_capacity_required_kgphr = []
         grid_connection_scenario = "off-grid"
-        energy_to_electrolyzer_kw = inputs["electricity_in"]
 
         # Make changes to computation based on compute_mode:
         if self.config.compute_mode == "normal":
             # In "normal" compute mode, electrolyzer size comes from config
+            energy_to_electrolyzer_kw = inputs["electricity_in"]
             electrolyzer_size_mw = inputs["electrolyzer_size_mw"]
         elif self.config.compute_mode == "feedstock_size":
             # In "feedstock_size" compute mode, electrolyzer size comes from feedstock
+            energy_to_electrolyzer_kw = inputs["electricity_in"]
             if self.config.size_by == "electricity":
                 electrolyzer_size_mw = np.max(energy_to_electrolyzer_kw) / 1000
             else:
-                raise ValueError("Cannot size by %s feed".format())
+                raise ValueError(f"Cannot size by {self.config.size_by} feed")
         elif self.config.compute_mode == "product_size":
             # In "product_size" compute mode, electrolyzer size comes from product demand
             if self.config.size_by == "hydrogen":
                 h2_kgphr = np.max(inputs["hydrogen_demand"])
                 electrolyzer_size_mw = size_electrolyzer_for_hydrogen_demand(h2_kgphr)
             else:
-                raise ValueError("Cannot size by %s demand".format())
+                raise ValueError(f"Cannot size by {self.config.size_by} demand")
         else:
             raise ValueError("Compute mode '%s' not found".format())
 
@@ -185,16 +201,21 @@ class ECOElectrolyzerPerformanceModel(ElectrolyzerPerformanceBaseClass):
                 verbose=False,
             )
 
+            outputs["hydrogen_out"] = H2_Results["Hydrogen Hourly Production [kg/hr]"]
+
         # In product_size compute mode, calculate electricity_consume from hydrogen_demand
         elif self.config.compute_mode == "product_size":
             kwh_kg = get_electrolyzer_BOL_efficiency()
             h2_kg = inputs["hydrogen_demand"]
-            elec_kw = h2_kg / kwh_kg
+            elec_kw = h2_kg * kwh_kg
 
             iterations = 0
             max_it = 10
 
-            while iterations < max_it:
+            residual_ratio = 1
+            min_residual_ratio = 1e-6
+
+            while iterations < max_it and residual_ratio > min_residual_ratio:
                 iterations += 1
 
                 H2_Results, h2_ts, h2_tot, power_to_electrolyzer_kw = run_h2_PEM(
@@ -213,15 +234,14 @@ class ECOElectrolyzerPerformanceModel(ElectrolyzerPerformanceBaseClass):
 
                 h2_kg_result = H2_Results["Hydrogen Hourly Production [kg/hr]"]
                 h2_residuals = h2_kg_result - h2_kg
-                elec_kw -= h2_residuals / kwh_kg
+                residual_ratio = np.max(h2_residuals) / np.mean(h2_kg_result)
 
-                print(np.mean(h2_residuals))
-                print(np.max(h2_residuals))
+                if residual_ratio > min_residual_ratio:
+                    elec_kw -= h2_residuals * kwh_kg
 
             outputs["electricity_consume"] = elec_kw
 
         # Assuming `h2_results` includes hydrogen and oxygen rates per timestep
-        outputs["hydrogen_out"] = H2_Results["Hydrogen Hourly Production [kg/hr]"]
         outputs["total_hydrogen_produced"] = H2_Results["Life: Annual H2 production [kg/year]"]
         outputs["efficiency"] = H2_Results["Sim: Average Efficiency [%-HHV]"]
         outputs["time_until_replacement"] = H2_Results["Time Until Replacement [hrs]"]
