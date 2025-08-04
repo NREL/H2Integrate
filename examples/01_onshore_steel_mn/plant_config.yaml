@@ -27,7 +27,7 @@ technology_interconnections: [
   ["hopp", "electrolyzer", "electricity", "cable"],
   ["electrolyzer", "h2_storage", "efficiency"],
   ["electrolyzer", "h2_storage", "hydrogen", "pipe"],
-  ["financials_group_1", "steel", "LCOH"],
+  ["financials_group_default", "steel", "LCOH"],
   ["hopp", "steel", "electricity", "cable"],
   # etc
 ]
@@ -68,6 +68,9 @@ finance_parameters:
     h2_storage: 2018 # based on Papadias 2021 and HD SAM
   wind:
     expected_plant_cost: 'none'
+  technologies_included_in_metrics:
+    LCOE: ["hopp"]
+    LCOH: ["hopp", "electrolyzer", "h2_storage"]
 
 policy_parameters: # these should be adjusted for inflation prior to application - order of operations: rate in 1992 $, then prevailing wage multiplier if applicable, then inflation
   electricity_itc: 0

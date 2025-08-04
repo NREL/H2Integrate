@@ -7,7 +7,7 @@ general:
 driver:
   optimization:
     flag: True
-    tol: 0.1
+    tol: 0.0001
     max_iter: 100
     solver: COBYLA
     rhobeg: 500.
@@ -29,4 +29,9 @@ constraints:
       units: kg/year
 
 objective:
-  name: financials_group_1.LCOH
+  name: financials_group_default.LCOH
+
+recorder:
+  flag: True
+  file: "wind_h2_opt.sql"
+  includes: ["LCOH"]
