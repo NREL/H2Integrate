@@ -109,7 +109,7 @@ class SimpleASUPerformanceModel(om.ExplicitComponent):
             desc="ASU annual electricity consumption in kWh/year",
         )
         self.add_output(
-            "annual_nitrogen_production",
+            "total_nitrogen_produced",
             val=0.0,
             units="kg/year",
             desc="ASU annual nitrogen production in kg-N2/year",

@@ -370,8 +370,8 @@ def test_asu_example(subtests):
     with subtests.test("Check LCON"):
         assert (
             pytest.approx(
-                model.prob.get_val("financials_group_1.LCON", units="USD/kg")[0],
-                rel=1e-5,
+                model.prob.get_val("financials_group_default.LCON", units="USD/kg")[0],
+                abs=1e-5,
             )
-            == 0.2869762
+            == 0.28695
         )

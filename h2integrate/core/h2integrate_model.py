@@ -409,6 +409,7 @@ class H2IntegrateModel:
             "hydrogen": "LCOH",
             "electricity": "LCOE",
             "ammonia": "LCOA",
+            "nitrogen": "LCON",
         }
         metric_key = metrics_map.get(commodity_type)
         included_techs = (
@@ -543,6 +544,8 @@ class H2IntegrateModel:
                     commodity_types.append("hydrogen")
                 if "doc" in tech_configs:
                     commodity_types.append("co2")
+                if "nitrogen" in tech_configs:
+                    commodity_types.append("nitrogen")
                 for tech in electricity_producing_techs:
                     if tech in tech_configs:
                         commodity_types.append("electricity")
