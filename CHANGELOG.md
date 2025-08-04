@@ -1,7 +1,7 @@
 # CHANGELOG
 
 ## 0.3.1, Unreleased, TBD
-
+- Added *_out/ to .gitignore to avoid clutter
 - Added methanol production base class
 - Added steam methane reforming methanol production technology
 - Added a new optimization example with a wind plant and electrolyzer to showcase how to define design variables, constraints, and objective functions
@@ -26,6 +26,12 @@
 - Added marine carbon capture base class
 - Added direct ocean capture technology
 - Added simple air separation unit (ASU) converter to model nitrogen production.
+- Added option for user to provide ProFAST parameters in finance parameters
+- Added ammonia synloop, partially addressing https://github.com/NREL/H2Integrate/issues/169
+- Added geologic hydrogen (geoh2) converter and examples [PR 135](https://github.com/NREL/H2Integrate/pull/135)
+- Changed plant_config `atb_year` entry to `financial_analysis_start_year`
+- Allow users to specify the technologies to include in the metrics calculations in the plant configuration file
+
 ## 0.3.0 [May 2 2025]
 
 - Introduced a fully new underlying framework for H2Integrate which uses [OpenMDAO](https://openmdao.org/), allowing for more flexibility and extensibility in the future
