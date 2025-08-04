@@ -72,10 +72,12 @@ class BasicFeedstockCostModelConfig(BaseConfig):
     Args:
         commodity (str): The name of the commodity
         buy_price (float): The buying price of the commodity
+        unit (str): The units that the supply profile is in
     """
 
     commodity: str = field()
     buy_price: float = field()
+    unit: str = field()
 
 
 class BasicFeedstockCostModel(om.ExplicitComponent):
@@ -93,7 +95,7 @@ class BasicFeedstockCostModel(om.ExplicitComponent):
         self.config = BasicFeedstockCostModelConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost")
         )
-        self.add_input(self.config.commodity + "_out", shape_by_conn=True)
+        self.add_input(self.config.commodity + "_out", shape_by_conn=True, units=self.config.unit)
         self.add_output("CapEx", units="USD")
         self.add_output("OpEx", units="USD/year")
 

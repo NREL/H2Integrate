@@ -73,11 +73,13 @@ class BasicProductCostModelConfig(BaseConfig):
         commodity (str): The name of the commodity
         sell_price (float): The selling price of the commodity
         is_coproduct (bool): Whether or not the commodity is a co-product that can be sold
+        unit (str): The units that the demand profile is in
     """
 
     commodity: str = field()
     sell_price: float = field()
     is_coproduct: bool = field()
+    unit: str = field()
 
 
 class BasicProductCostModel(om.ExplicitComponent):
@@ -95,7 +97,9 @@ class BasicProductCostModel(om.ExplicitComponent):
         self.config = BasicProductCostModelConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost")
         )
-        self.add_input(self.config.commodity + "_consume", shape_by_conn=True)
+        self.add_input(
+            self.config.commodity + "_consume", shape_by_conn=True, units=self.config.unit
+        )
         self.add_output("CapEx", units="USD")
         self.add_output("OpEx", units="USD/year")
 
