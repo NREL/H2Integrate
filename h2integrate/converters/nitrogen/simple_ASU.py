@@ -24,21 +24,21 @@ class SimpleASUPerformanceConfig(BaseConfig):
             Should be between 0.1 and 0.5. Some reference efficiencies are::
                 - 0.29 for pressure swing absorption
                 - 0.119 for cryogenic
-        N2_fraction_in_air (float, optional): nitrogen content of input air stream as mole percent.
-            Defaults to 78.11.
-        O2_fraction_in_air (float, optional): oxygen content of input air stream as mole percent.
-            Defaults to 20.96.
-        Ar_fraction_in_air (float, optional): argon content of input air stream as mole percent.
-            Defaults to 0.93.
+        N2_fraction_in_air (float, optional): nitrogen content of input air stream as mole fraction.
+            Defaults to 0.7811.
+        O2_fraction_in_air (float, optional): oxygen content of input air stream as mole fraction.
+            Defaults to 0.2096.
+        Ar_fraction_in_air (float, optional): argon content of input air stream as mole fraction.
+            Defaults to 0.0093.
     """
 
     size_from_N2_demand: bool = field()
     rated_N2_kg_pr_hr: float | None = field(default=None)
     ASU_rated_power_kW: float | None = field(default=None)
 
-    N2_fraction_in_air: float = field(default=78.11)
-    O2_fraction_in_air: float = field(default=20.96)
-    Ar_fraction_in_air: float = field(default=0.93)
+    N2_fraction_in_air: float = field(default=0.7811, validator=range_val(0, 1))
+    O2_fraction_in_air: float = field(default=0.2096, validator=range_val(0, 1))
+    Ar_fraction_in_air: float = field(default=0.0093, validator=range_val(0, 1))
     efficiency_kWh_pr_kg_N2: float = field(default=0.29, validator=range_val(0.10, 0.50))
     # 0.29 is efficiency of pressure swing absorption
     # 0.119 is efficiency of cryogenic
@@ -193,9 +193,9 @@ class SimpleASUPerformanceModel(om.ExplicitComponent):
 
         # calculate the molar mass of air
         air_molar_mass = (
-            (self.N2_molar_mass * self.config.N2_fraction_in_air / 100)
-            + (self.O2_molar_mass * self.config.O2_fraction_in_air / 100)
-            + (self.Ar_molar_mass * self.config.Ar_fraction_in_air / 100)
+            (self.N2_molar_mass * self.config.N2_fraction_in_air)
+            + (self.O2_molar_mass * self.config.O2_fraction_in_air)
+            + (self.Ar_molar_mass * self.config.Ar_fraction_in_air)
         )
 
         # NOTE: here is where any operational constraints would be applied to limit the N2 output
@@ -207,11 +207,11 @@ class SimpleASUPerformanceModel(om.ExplicitComponent):
 
         # calculate air feedstock required to produce nitrogen
         n2_profile_out_mol = n2_profile_out_kg * 1e3 / self.N2_molar_mass
-        air_profile_mol = n2_profile_out_mol / (self.config.N2_fraction_in_air / 100)
+        air_profile_mol = n2_profile_out_mol / (self.config.N2_fraction_in_air)
 
         # calculate the secondary outputs of the ASU (O2 and Ar)
-        o2_profile_mol = air_profile_mol * (self.config.O2_fraction_in_air / 100)
-        ar_profile_mol = air_profile_mol * (self.config.Ar_fraction_in_air / 100)
+        o2_profile_mol = air_profile_mol * (self.config.O2_fraction_in_air)
+        ar_profile_mol = air_profile_mol * (self.config.Ar_fraction_in_air)
 
         # convert air, O2, and Ar from moles into kg
         air_profile_kg = air_profile_mol * air_molar_mass / 1e3
