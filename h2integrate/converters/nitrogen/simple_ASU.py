@@ -233,7 +233,7 @@ class SimpleASUPerformanceModel(om.ExplicitComponent):
         # capacity factor of ASU
         outputs["nitrogen_production_capacity_factor"] = sum(n2_profile_out_kg) / max_annual_N2
         # annual N2 production in kg-N2/year
-        outputs["annual_nitrogen_production"] = sum(n2_profile_out_kg)
+        outputs["total_nitrogen_produced"] = sum(n2_profile_out_kg)
         # maximum annual N2 production in kg-N2/year
         outputs["annual_max_nitrogen_production"] = max_annual_N2
         # annual electricity consumption in kWh/year
