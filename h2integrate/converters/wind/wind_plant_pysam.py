@@ -3,12 +3,108 @@ from attrs import field, define
 from hopp.simulation.technologies.resource import WindResource
 
 from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
+from h2integrate.core.validators import gt_zero, contains
 from h2integrate.converters.wind.wind_plant_baseclass import WindPerformanceBaseClass
 
 
 @define
 class PYSAMWindPlantPerformanceModelConfig(BaseConfig):
-    hub_height: float = field()
+    """_summary_
+
+    Attributes:
+        num_turbines (int): number of turbines in farm
+        hub_height (float): wind turbine hub-height in meters
+        create_model_from (str):
+            - 'default': instatiate Windpower model from the default config 'config_name'
+            - 'new': instatiate new Windpower model (default). Requires pysam_options.
+        config_name (str,optional): PySAM.Windpower configuration name for non-hybrid wind systems.
+            Defaults to 'WindPowerSingleOwner'. Only used if create_model_from='default'.
+        pysam_options (dict, optional): dictionary of Windpower input parameters with
+            top-level keys corresponding to the different Windpower variable groups.
+            (please refer to Windpower documentation
+            `here <https://nrel-pysam.readthedocs.io/en/main/modules/Windpower.html>`__
+            )
+    """
+
+    hub_height: float = field(validator=gt_zero)
+    num_turbines: float = field(validator=gt_zero)
+
+    create_model_from: str = field(
+        default="new", validator=contains(["default", "new"]), converter=(str.strip, str.lower)
+    )
+
+    create_model_from: str = field(
+        default="new", validator=contains(["default", "new"]), converter=(str.strip, str.lower)
+    )
+    config_name: str = field(
+        default="WindPowerSingleOwner",
+        validator=contains(
+            [
+                "WindPowerAllEquityPartnershipFlip",
+                "WindPowerCommercial",
+                "WindPowerLeveragedPartnershipFlip",
+                "WindPowerMerchantPlant",
+                "WindPowerNone",
+                "WindPowerResidential",
+                "WindPowerSaleLeaseback",
+                "WindPowerSingleOwner",
+            ]
+        ),
+    )
+    pysam_options: dict = field(default={})
+
+    def __attrs_post_init__(self):
+        if self.create_model_from == "new" and not bool(self.pysam_options):
+            msg = (
+                "To create a new Windpower object, please provide a dictionary "
+                "of Windpower design variables for the 'pysam_options' key."
+            )
+            raise ValueError(msg)
+
+        self.check_pysam_options()
+
+    def check_pysam_options(self):
+        """Checks that top-level keys of pysam_options dictionary are valid and that
+        system capacity is not given in pysam_options.
+
+        Raises:
+           ValueError: if top-level keys of pysam_options are not valid.
+           ValueError: if wind_turbine_hub_ht is provided in pysam_options["Turbine"]
+        """
+        valid_groups = [
+            "Turbine",
+            "Farm",
+            "Resource",
+            "Losses",
+            "AdjustmentFactors",
+            "HybridCosts",
+        ]
+        if bool(self.pysam_options):
+            invalid_groups = [k for k, v in self.pysam_options.items() if k not in valid_groups]
+            if len(invalid_groups) > 0:
+                msg = (
+                    f"Invalid group(s) found in pysam_options: {invalid_groups}. "
+                    f"Valid groups are: {valid_groups}."
+                )
+                raise ValueError(msg)
+            if self.pysam_options.get("Turbine", {}).get("hub_height", None) is not None:
+                msg = (
+                    "Please do not specify wind_turbine_hub_ht in the pysam_options dictionary. "
+                    "The wind turbine hub height should be set with the 'hub_height' "
+                    "performance parameter."
+                )
+                raise ValueError(msg)
+        return
+
+    def create_input_dict(self):
+        """Create dictionary of inputs to over-write the default values
+            associated with the specified Windpower configuration.
+
+        Returns:
+           dict: dictionary of Turbine group pararamters from user-input.
+        """
+
+        return {"Turbine": {"wind_turbine_hub_ht": self.hub_height}}
 
 
 @define
@@ -16,7 +112,7 @@ class PYSAMWindPlantPerformanceModelSiteConfig(BaseConfig):
     """Configuration class for the location of the wind plant
         PYSAMWindPlantPerformanceComponentSite.
 
-    Args:
+    Attributes:
         latitude (float): Latitude of wind plant location.
         longitude (float): Longitude of wind plant location.
         year (float): Year for resource.
@@ -26,6 +122,7 @@ class PYSAMWindPlantPerformanceModelSiteConfig(BaseConfig):
     latitude: float = field()
     longitude: float = field()
     year: float = field()
+    elevation: float = field(default=0.0)
     wind_resource_filepath: str = field(default="")
 
 
@@ -43,8 +140,42 @@ class PYSAMWindPlantPerformanceModel(WindPerformanceBaseClass):
         self.site_config = PYSAMWindPlantPerformanceModelSiteConfig.from_dict(
             self.options["plant_config"]["site"], strict=False
         )
-        self.config_name = "WindPowerSingleOwner"
-        self.system_model = Windpower.default(self.config_name)
+
+        self.add_input(
+            "num_turbines",
+            val=self.config.num_turbines,
+            units="unitless",
+            desc="number of turbines in farm",
+        )
+
+        self.add_output(
+            "wind_turbine_rating",
+            val=0.0,
+            units="kW",
+            desc="rating of an individual turbine in kW",
+        )
+
+        self.add_output(
+            "annual_energy",
+            val=0.0,
+            units="kW*h/year",
+            desc="Annual energy production from WindPlant in kW",
+        )
+        self.add_output("capacity_kW", val=0.0, units="kW", desc="Wind farm rated capacity in kW")
+
+        if self.config.create_model_from == "default":
+            self.system_model = Windpower.default(self.config.config_name)
+        elif self.config.create_model_from == "new":
+            self.system_model = Windpower.new(self.config.config_name)
+
+        design_dict = self.config.create_input_dict()
+        if bool(self.config.pysam_options):
+            for group, group_parameters in self.config.pysam_options.items():
+                if group in design_dict:
+                    design_dict[group].update(group_parameters)
+                else:
+                    design_dict.update({group: group_parameters})
+        self.system_model.assign(design_dict)
 
         lat = self.site_config.latitude
         lon = self.site_config.longitude
@@ -58,4 +189,6 @@ class PYSAMWindPlantPerformanceModel(WindPerformanceBaseClass):
 
     def compute(self, inputs, outputs):
         self.system_model.execute(0)
+
         outputs["electricity_out"] = self.system_model.Outputs.gen
+        outputs["capacity_kW"] = self.system_model.Farm.system_capacity

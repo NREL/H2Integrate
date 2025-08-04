@@ -9,6 +9,12 @@ def gt_zero(instance, attribute, value):
         raise ValueError(f"{attribute} must be greater than zero")
 
 
+def gte_zero(instance, attribute, value):
+    """Validates that an attribute's value is greater than or equal to zero."""
+    if value < 0:
+        raise ValueError(f"{attribute} must be greater than or equal to zero")
+
+
 def range_val(min_val, max_val):
     """Validates that an attribute's value is between two values, inclusive ([min_val, max_val])."""
 
