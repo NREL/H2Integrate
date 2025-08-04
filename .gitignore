@@ -131,3 +131,6 @@ tests/h2integrate/test_hydrogen/output/
 output*
 snopt_history.txt
 reports/*
+
+# Don't ignore source data files
+!*source.xlsx
