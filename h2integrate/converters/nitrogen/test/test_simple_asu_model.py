@@ -2,8 +2,7 @@ import numpy as np
 import pytest
 import openmdao.api as om
 
-from h2integrate.converters.nitrogen.simple_ASU_performance import SimpleASUPerformanceModel
-from h2integrate.converters.nitrogen.simple_air_separation_cost import SimpleASUCostModel
+from h2integrate.converters.nitrogen.simple_ASU import SimpleASUCostModel, SimpleASUPerformanceModel
 
 
 def test_simple_ASU_performance_model_set_capacity_kW(subtests):
