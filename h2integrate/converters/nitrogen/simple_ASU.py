@@ -64,6 +64,7 @@ class SimpleASUPerformanceModel(om.ExplicitComponent):
     def initialize(self):
         self.options.declare("plant_config", types=dict)
         self.options.declare("tech_config", types=dict)
+        self.options.declare("driver_config", types=dict)
         self.N2_molar_mass = 28.0134  # grams/mol
         self.O2_molar_mass = 15.999  # grams/mol
         self.Ar_molar_mass = 39.948  # grams/mol
@@ -148,8 +149,7 @@ class SimpleASUPerformanceModel(om.ExplicitComponent):
         """
 
         if self.config.size_from_N2_demand:
-            """Size the ASU to based on the maximum hourly nitrogen demand.
-            """
+            # Size the ASU to based on the maximum hourly nitrogen demand.
             rated_N2_kg_pr_hr = np.max(inputs["nitrogen_in"])
             n2_profile_in_kg = inputs["nitrogen_in"]
             ASU_rated_power_kW = rated_N2_kg_pr_hr * self.config.efficiency_kWh_pr_kg_N2
@@ -166,16 +166,20 @@ class SimpleASUPerformanceModel(om.ExplicitComponent):
                 and self.config.rated_N2_kg_pr_hr is not None
             )
             if provided_kW_not_kg:
+                # calculate capacity in kg-N2/hour based on user-provided capacity in kW
                 rated_N2_kg_pr_hr = (
                     self.config.ASU_rated_power_kW / self.config.efficiency_kWh_pr_kg_N2
                 )
                 ASU_rated_power_kW = self.config.ASU_rated_power_kW
             if provided_kg_not_kW:
+                # calculate capacity in kW based on user-provided capacity in kg-N2/hour
                 rated_N2_kg_pr_hr = self.config.rated_N2_kg_pr_hr
                 ASU_rated_power_kW = (
                     self.config.rated_N2_kg_pr_hr * self.config.efficiency_kWh_pr_kg_N2
                 )
             if provided_both:
+                # check that user-provided capacities in kg-N2/hour and kW result
+                # in the same efficiency
                 rated_N2_kg_pr_hr = self.config.rated_N2_kg_pr_hr
                 ASU_rated_power_kW = self.config.ASU_rated_power_kW
                 if ASU_rated_power_kW / rated_N2_kg_pr_hr != self.config.efficiency_kWh_pr_kg_N2:
@@ -187,6 +191,7 @@ class SimpleASUPerformanceModel(om.ExplicitComponent):
                     )
                     raise ValueError(msg)
 
+        # calculate the molar mass of air
         air_molar_mass = (
             (self.N2_molar_mass * self.config.N2_fraction_in_air / 100)
             + (self.O2_molar_mass * self.config.O2_fraction_in_air / 100)
@@ -194,33 +199,48 @@ class SimpleASUPerformanceModel(om.ExplicitComponent):
         )
 
         # NOTE: here is where any operational constraints would be applied to limit the N2 output
+
+        # saturate N2 production at rated flow rate
         n2_profile_out_kg = np.where(
             n2_profile_in_kg > rated_N2_kg_pr_hr, rated_N2_kg_pr_hr, n2_profile_in_kg
         )
 
+        # calculate air feedstock required to produce nitrogen
         n2_profile_out_mol = n2_profile_out_kg * 1e3 / self.N2_molar_mass
         air_profile_mol = n2_profile_out_mol / (self.config.N2_fraction_in_air / 100)
+
+        # calculate the secondary outputs of the ASU (O2 and Ar)
         o2_profile_mol = air_profile_mol * (self.config.O2_fraction_in_air / 100)
         ar_profile_mol = air_profile_mol * (self.config.Ar_fraction_in_air / 100)
 
+        # convert air, O2, and Ar from moles into kg
         air_profile_kg = air_profile_mol * air_molar_mass / 1e3
         o2_profile_kg = o2_profile_mol * self.O2_molar_mass / 1e3
         ar_profile_kg = ar_profile_mol * self.Ar_molar_mass / 1e3
 
+        # calculate the electricity feedstock required to produce nitrogen
         electricity_kWh = n2_profile_out_kg * self.config.efficiency_kWh_pr_kg_N2
+
+        # calculate the annual rated production of nitrogen in kg-N2/year
         max_annual_N2 = rated_N2_kg_pr_hr * len(n2_profile_out_kg)
-        outputs["rated_N2_kg_pr_hr"] = rated_N2_kg_pr_hr
-        outputs["ASU_capacity_kW"] = ASU_rated_power_kW
-        outputs["air_in"] = air_profile_kg
-        outputs["oxygen_out"] = o2_profile_kg
-        outputs["argon_out"] = ar_profile_kg
-        outputs["nitrogen_out"] = n2_profile_out_kg
+        outputs["rated_N2_kg_pr_hr"] = rated_N2_kg_pr_hr  # rated ASU capacity in kg-N2/hour
+        outputs["ASU_capacity_kW"] = ASU_rated_power_kW  # rated ASU capacity in kW
+        outputs["air_in"] = air_profile_kg  # air feedstock profile in kg/hour
+        outputs["oxygen_out"] = o2_profile_kg  # O2 secondary output profile in kg/hour
+        outputs["argon_out"] = ar_profile_kg  # Ar secondary output profile in kg/hour
+        outputs["nitrogen_out"] = n2_profile_out_kg  # N2 primary output profile in kg/hour
+
+        # capacity factor of ASU
         outputs["nitrogen_production_capacity_factor"] = sum(n2_profile_out_kg) / max_annual_N2
+        # annual N2 production in kg-N2/year
         outputs["annual_nitrogen_production"] = sum(n2_profile_out_kg)
+        # maximum annual N2 production in kg-N2/year
         outputs["annual_max_nitrogen_production"] = max_annual_N2
+        # annual electricity consumption in kWh/year
         outputs["annual_electricity_consumption"] = sum(electricity_kWh)
 
         if self.config.size_from_N2_demand:
+            # electricity feedstock profile required to produce N2
             outputs["electricity_in"] = electricity_kWh
 
 
@@ -275,6 +295,7 @@ class SimpleASUCostModel(om.ExplicitComponent):
     def initialize(self):
         self.options.declare("plant_config", types=dict)
         self.options.declare("tech_config", types=dict)
+        self.options.declare("driver_config", types=dict)
 
     def setup(self):
         self.config = SimpleASUCostConfig.from_dict(
