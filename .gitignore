@@ -127,9 +127,12 @@ examples/h2integrate/*/figures
 tests/h2integrate/reports/
 tests/h2integrate/test_hydrogen/output/
 **/run_*_out/
+*_out/
+**/test_*_out/
 
 output*
 snopt_history.txt
 reports/*
-examples/**/reports
-examples/**/.openmdao_out
+
+# Don't ignore source data files
+!*source.xlsx

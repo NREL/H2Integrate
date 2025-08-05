@@ -1,3 +1,4 @@
+import pytest
 import openmdao.api as om
 from pytest import approx
 
@@ -27,7 +28,7 @@ def test_electrolyzer_refurb_results():
             "depreciation_period_electrolyzer": 10,
         },
         "plant": {
-            "atb_year": 2022,
+            "financial_analysis_start_year": 2024,
             "plant_life": 30,
             "installation_time": 24,
             "cost_year": 2022,
@@ -134,7 +135,7 @@ def test_profast_config_provided():
             "depreciation_period_electrolyzer": 10,
         },
         "plant": {
-            "atb_year": 2022,
+            "financial_analysis_start_year": 2024,
             "plant_life": 30,
             "installation_time": 24,
             "cost_year": 2022,
@@ -174,3 +175,50 @@ def test_profast_config_provided():
     prob.run_model()
 
     assert prob["LCOH"] == approx(4.27529137)
+
+
+def test_parameter_validation_clashing_values():
+    """Test that parameter validation raises an error when plant config and pf_params
+    have different values for the same parameter."""
+
+    # Create plant config with clashing values
+    pf_params = {
+        "analysis start year": 2023,  # Different from plant config (2024)
+        "operating life": 25,  # Different from plant config (30)
+        "installation months": 12,  # Different from plant config (24)
+        "commodity": {"name": "Hydrogen", "unit": "kg", "initial price": 100, "escalation": 0.02},
+        "general inflation rate": 0.02,
+    }
+
+    plant_config = {
+        "finance_parameters": {
+            "pf_params": {"params": pf_params},
+            "depreciation_method": "Straight line",
+            "depreciation_period": 20,
+            "depreciation_period_electrolyzer": 10,
+        },
+        "plant": {
+            "financial_analysis_start_year": 2024,  # Different from pf_params
+            "plant_life": 30,  # Different from pf_params
+            "installation_time": 24,  # Different from pf_params
+            "cost_year": 2022,
+        },
+    }
+
+    tech_config = {
+        "electrolyzer": {
+            "model_inputs": {
+                "financial_parameters": {
+                    "replacement_cost_percent": 0.1,
+                }
+            }
+        },
+    }
+
+    prob = om.Problem()
+    comp = ProFastComp(plant_config=plant_config, tech_config=tech_config)
+    prob.model.add_subsystem("comp", comp, promotes=["*"])
+
+    # Should raise ValueError during setup due to clashing values
+    with pytest.raises(ValueError, match="Inconsistent values provided"):
+        prob.setup()
