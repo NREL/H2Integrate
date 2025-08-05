@@ -45,6 +45,10 @@ from h2integrate.converters.hydrogen.geologic.natural_geoh2_plant import (
     NaturalGeoH2FinanceModel,
     NaturalGeoH2PerformanceModel,
 )
+from h2integrate.converters.co2.marine.ocean_alkalinity_enhancement import (
+    OAECostModel,
+    OAEPerformanceModel,
+)
 from h2integrate.converters.hydrogen.geologic.stimulated_geoh2_plant import (
     StimulatedGeoH2CostModel,
     StimulatedGeoH2FinanceModel,
@@ -81,6 +85,8 @@ supported_models = {
     "methanol_plant_financial": SMRMethanolPlantFinanceModel,
     "direct_ocean_capture_performance": DOCPerformanceModel,
     "direct_ocean_capture_cost": DOCCostModel,
+    "ocean_alkalinity_enhancement_performance": OAEPerformanceModel,
+    "ocean_alkalinity_enhancement_cost": OAECostModel,
     "natural_geoh2_performance": NaturalGeoH2PerformanceModel,
     "natural_geoh2_cost": NaturalGeoH2CostModel,
     "natural_geoh2": NaturalGeoH2FinanceModel,

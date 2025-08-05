@@ -9,7 +9,7 @@ from h2integrate.converters.co2.marine.marine_carbon_capture_baseclass import (
 
 
 try:
-    from mcm import echem_mcc
+    from mcm.capture import echem_mcc
 except ImportError:
     echem_mcc = None
 
@@ -37,6 +37,8 @@ class DOCPerformanceConfig(MarineCarbonCapturePerformanceConfig):
     """Extended configuration for Direct Ocean Capture (DOC) performance model.
 
     Attributes:
+        power_single_ed_w (float): Power requirement of a single electrodialysis (ED) unit (watts).
+        flow_rate_single_ed_m3s (float): Flow rate of a single ED unit (cubic meters per second).
         E_HCl (float): Energy required per mole of HCl produced (kWh/mol).
         E_NaOH (float): Energy required per mole of NaOH produced (kWh/mol).
         y_ext (float): CO2 extraction efficiency (unitless fraction).
@@ -50,6 +52,8 @@ class DOCPerformanceConfig(MarineCarbonCapturePerformanceConfig):
         initial_tank_volume_m3 (float): Initial volume of the tank (m³).
     """
 
+    power_single_ed_w: float = field()
+    flow_rate_single_ed_m3s: float = field()
     E_HCl: float = field()
     E_NaOH: float = field()
     y_ext: float = field()

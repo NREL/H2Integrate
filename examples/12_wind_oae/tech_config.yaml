@@ -1,0 +1,32 @@
+name: "technology_config"
+description: "This plant has offshore wind and battery connected to a ocean alkalinity enhancement device"
+
+technologies:
+  hopp:
+    performance_model:
+      model: "hopp"
+      config: !include tech_inputs/hopp_config.yaml
+    cost_model:
+      model: "hopp"
+  oae:
+    performance_model:
+      model: "ocean_alkalinity_enhancement_performance"
+    cost_model:
+      model: "ocean_alkalinity_enhancement_cost"
+    model_inputs:
+      shared_parameters:
+        number_ed_min: 1
+        number_ed_max: 10
+        max_ed_system_flow_rate_m3s: 0.01925 # m^3/s
+        frac_base_flow: 0.5714285714285714
+        use_storage_tanks: True
+        initial_tank_volume_m3: 0. #m^3
+        store_hours: 12. # hours
+        acid_disposal_method: "sell rca"
+        sal: 68. # ppt
+        temp_C: 23.0 # degrees Celsius
+        dic_i: 0.0044 # mol/L
+        pH_i: 8.1 # initial pH
+
+      cost_parameters:
+        mass_product_tonne_yr: 100000.0
