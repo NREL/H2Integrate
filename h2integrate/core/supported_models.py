@@ -7,6 +7,7 @@ from h2integrate.transporters.power_combiner import CombinerPerformanceModel
 from h2integrate.converters.hopp.hopp_wrapper import HOPPComponent
 from h2integrate.converters.solar.solar_pysam import PYSAMSolarPlantPerformanceModel
 from h2integrate.storage.hydrogen.eco_storage import H2Storage
+from h2integrate.converters.wind.wind_plant_ard import ArdWindPlantModel
 from h2integrate.storage.hydrogen.tank_baseclass import (
     HydrogenTankCostModel,
     HydrogenTankPerformanceModel,
@@ -65,6 +66,7 @@ supported_models = {
     "wind_plant_cost": WindPlantCostModel,
     "pysam_wind_plant_performance": PYSAMWindPlantPerformanceModel,
     "pysam_solar_plant_performance": PYSAMSolarPlantPerformanceModel,
+    "wind_plant_ard": ArdWindPlantModel,
     "run_of_river_hydro_performance": RunOfRiverHydroPerformanceModel,
     "run_of_river_hydro_cost": RunOfRiverHydroCostModel,
     "pem_electrolyzer_performance": ElectrolyzerPerformanceModel,

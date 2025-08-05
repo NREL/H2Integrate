@@ -185,7 +185,7 @@ class H2IntegrateModel:
         self.cost_models = []
         self.financial_models = []
 
-        combined_performance_and_cost_models = ["hopp", "h2_storage", "wombat"]
+        combined_performance_and_cost_models = ["hopp", "h2_storage", "wombat", "ard_wind"]
 
         # Create a technology group for each technology
         for tech_name, individual_tech_config in self.technology_config["technologies"].items():
