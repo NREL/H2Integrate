@@ -8,7 +8,7 @@ technologies:
       config: !include tech_inputs/hopp_config_tx.yaml
     cost_model:
       model: "hopp"
-  nitrogen:
+  air_separator:
     performance_model:
       model: "simple_ASU_performance"
     cost_model:

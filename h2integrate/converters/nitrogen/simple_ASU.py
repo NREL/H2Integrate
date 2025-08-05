@@ -4,6 +4,7 @@ from attrs import field, define
 
 from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
 from h2integrate.core.validators import contains, range_val
+from h2integrate.tools.constants import AR_MW, N2_MW, O2_MW
 
 
 @define
@@ -65,9 +66,6 @@ class SimpleASUPerformanceModel(om.ExplicitComponent):
         self.options.declare("plant_config", types=dict)
         self.options.declare("tech_config", types=dict)
         self.options.declare("driver_config", types=dict)
-        self.N2_molar_mass = 28.0134  # grams/mol
-        self.O2_molar_mass = 15.999  # grams/mol
-        self.Ar_molar_mass = 39.948  # grams/mol
 
     def setup(self):
         self.config = SimpleASUPerformanceConfig.from_dict(
@@ -193,9 +191,9 @@ class SimpleASUPerformanceModel(om.ExplicitComponent):
 
         # calculate the molar mass of air
         air_molar_mass = (
-            (self.N2_molar_mass * self.config.N2_fraction_in_air)
-            + (self.O2_molar_mass * self.config.O2_fraction_in_air)
-            + (self.Ar_molar_mass * self.config.Ar_fraction_in_air)
+            (N2_MW * self.config.N2_fraction_in_air)
+            + (O2_MW * self.config.O2_fraction_in_air)
+            + (AR_MW * self.config.Ar_fraction_in_air)
         )
 
         # NOTE: here is where any operational constraints would be applied to limit the N2 output
@@ -206,7 +204,7 @@ class SimpleASUPerformanceModel(om.ExplicitComponent):
         )
 
         # calculate air feedstock required to produce nitrogen
-        n2_profile_out_mol = n2_profile_out_kg * 1e3 / self.N2_molar_mass
+        n2_profile_out_mol = n2_profile_out_kg * 1e3 / N2_MW
         air_profile_mol = n2_profile_out_mol / (self.config.N2_fraction_in_air)
 
         # calculate the secondary outputs of the ASU (O2 and Ar)
@@ -215,8 +213,8 @@ class SimpleASUPerformanceModel(om.ExplicitComponent):
 
         # convert air, O2, and Ar from moles into kg
         air_profile_kg = air_profile_mol * air_molar_mass / 1e3
-        o2_profile_kg = o2_profile_mol * self.O2_molar_mass / 1e3
-        ar_profile_kg = ar_profile_mol * self.Ar_molar_mass / 1e3
+        o2_profile_kg = o2_profile_mol * O2_MW / 1e3
+        ar_profile_kg = ar_profile_mol * AR_MW / 1e3
 
         # calculate the electricity feedstock required to produce nitrogen
         electricity_kWh = n2_profile_out_kg * self.config.efficiency_kWh_pr_kg_N2
@@ -254,7 +252,7 @@ def make_cost_unit_multiplier(unit_str):
 
     if power_based_value:
         if unit_str == "mw":
-            k = 1 / 1e3  # use as mupltiplier to convert from MW -> kW
+            k = 1 / 1e3  # use as multiplier to convert from MW -> kW
         return k, "power"
 
     # convert from units to kg/hour
