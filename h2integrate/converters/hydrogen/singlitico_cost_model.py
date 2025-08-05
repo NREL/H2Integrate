@@ -20,6 +20,7 @@ class SingliticoCostModelConfig(BaseConfig):
             2022 USD/kW (DOE hydrogen program record 24005 Clean Hydrogen Production Cost Scenarios
             with PEM Electrolyzer Technology 05/20/24) #TODO: convert to refs
             (https://www.hydrogen.energy.gov/docs/hydrogenprogramlibraries/pdfs/24005-clean-hydrogen-production-cost-pem-electrolyzer.pdf?sfvrsn=8cb10889_1)
+        cost_year (int): dollar year corresponding to `electrolyzer_capex`
     """
 
     rating: float = field(validator=gt_zero)

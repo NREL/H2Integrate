@@ -75,6 +75,7 @@ class AmmoniaCostModelConfig(BaseConfig):
         oxygen_byproduct (float): Oxygen byproduct in kg per kg of ammonia production.
         capex_scaling_exponent (float): Power applied to ratio of capacities when calculating CAPEX
             from a baseline value at a different capacity.
+        cost_year (int): dollar year for costs.
     """
 
     plant_capacity_kgpy: float = field()

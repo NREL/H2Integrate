@@ -128,7 +128,9 @@ class StimulatedGeoH2CostConfig(GeoH2CostConfig):
         technologies/geoh2/model_inputs/shared_parameters for parameters marked with *asterisks*
         technologies/geoh2/model_inputs/cost_parameters all other parameters
 
-    Currently no parameters other than those in geoh2_baseclass.GeoH2CostConfig
+    Args:
+        cost_year (int): dollar year corresponding to costs provided in
+            geoh2_baseclass.GeoH2CostConfig
     """
 
     cost_year: int = field(converter=int)

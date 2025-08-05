@@ -295,6 +295,7 @@ class AmmoniaSynLoopCostConfig(BaseConfig):
         cooling_water_cost_base (float): Cost of cooling water [$/gal H2O]
         catalyst_cost_base (float): Cost of iron-based catalyst [$/kg cat]
         oxygen_price_base (float): Sales price of oxygen co-product [$/kg O2]
+        cost_year (int): dollar year for costs.
     """
 
     production_capacity: float = field()

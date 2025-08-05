@@ -132,6 +132,7 @@ class DOCCostModelConfig(DOCPerformanceConfig):
 
     Attributes:
         infrastructure_type (str): Type of infrastructure (e.g., "desal", "swCool", "new"").
+        cost_year (int): dollar year corresponding to cost values
     """
 
     infrastructure_type: str = field()

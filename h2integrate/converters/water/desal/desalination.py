@@ -109,6 +109,7 @@ class ReverseOsmosisCostModelConfig(BaseConfig):
             maximum freshwater requirements of system [kg/hr]
         freshwater_density (float): Density of the output freshwater [kg/m**3].
             Default = 997.
+        cost_year (int): dollar year for costs.
     """
 
     freshwater_kg_per_hour: float = field(validator=gt_zero)
