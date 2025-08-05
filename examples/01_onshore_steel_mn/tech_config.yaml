@@ -11,6 +11,9 @@ technologies:
     financial_model:
       group: default
     electrolyzer_rating: 720. # MW
+    model_inputs:
+      cost_parameters:
+        cost_year: 2019
   electrolyzer:
     performance_model:
       model: "eco_pem_electrolyzer_performance"
@@ -35,7 +38,8 @@ technologies:
         uptime_hours_until_eol: 80000. #number of 'on' hours until electrolyzer reaches eol
         include_degradation_penalty: True #include degradation
         turndown_ratio: 0.1 #turndown_ratio = minimum_cluster_power/cluster_rating_MW
-
+      cost_parameters:
+        cost_year: 2021 # 2020 for singlitico2021, 2016 # for simple h2 cost model in hopp (see https://www.hydrogen.energy.gov/pdfs/19009_h2_production_cost_pem_electrolysis_2019.pdf) ## 2020 # based on IRENA report https://www.irena.org/-/media/Files/IRENA/Agency/Publication/2020/Dec/IRENA_Green_hydrogen_cost_2020.pdf
       financial_parameters:
         replacement_cost_percent: 0.15 # percent of capex - H2A default case
   h2_storage:
@@ -58,6 +62,8 @@ technologies:
         capacity_from_max_on_turbine_storage: False # if True, then days of storage is ignored and storage capacity is based on how much h2 storage fits on the turbines in the plant using Kottenstete 2003.
         type: "lined_rock_cavern" # can be one of ["none", "pipe", "turbine", "pressure_vessel", "salt_cavern", "lined_rock_cavern"]
         days: 0 #how many days worth of production we should be able to store (this is ignored if `capacity_from_max_on_turbine_storage` is set to True)
+      cost_parameters:
+        cost_year: 2018 # based on Papadias 2021 and HD SAM
   steel:
     performance_model:
       model: "steel_performance"
@@ -74,6 +80,7 @@ technologies:
         operational_year: 2035
         o2_heat_integration: false
         lcoh: 7.37
+        cost_year: 2020
         feedstocks:
           oxygen_market_price: 0.0 # 0.03 $/kgO2 if `o2_heat_integration` == 1
           excess_oxygen: 395

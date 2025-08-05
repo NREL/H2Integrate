@@ -53,6 +53,7 @@ class SteelCostAndFinancialModelConfig(BaseConfig):
     lcoh: float = field()
     feedstocks: dict = field()  # TODO: build validator for this large dictionary
     finances: dict = field()  # TODO: build validator for this large dictionary
+    cost_year: int = field(converter=int)
 
 
 @define

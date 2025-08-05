@@ -8,6 +8,9 @@ technologies:
       config: !include tech_inputs/hopp_config_tx.yaml
     cost_model:
       model: "hopp"
+    model_inputs:
+      cost_parameters:
+        cost_year: 2019
     electrolyzer_rating: 640. # MW
   electrolyzer:
     performance_model:
@@ -32,6 +35,8 @@ technologies:
         include_degradation_penalty: True #include degradation
         turndown_ratio: 0.1 #turndown_ratio = minimum_cluster_power/cluster_rating_MW
 
+      cost_parameters:
+        cost_year: 2016 # based on IRENA report https://www.irena.org/-/media/Files/IRENA/Agency/Publication/2020/Dec/IRENA_Green_hydrogen_cost_2020.pdf
       financial_parameters:
         replacement_cost_percent: 0.15 # percent of capex - H2A default case
 
@@ -53,6 +58,8 @@ technologies:
         capacity_from_max_on_turbine_storage: False # if True, then days of storage is ignored and storage capacity is based on how much h2 storage fits on the turbines in the plant using Kottenstete 2003.
         type: "salt_cavern" # can be one of ["none", "pipe", "turbine", "pressure_vessel", "salt_cavern", "lined_rock_cavern"]
         days: 0 #how many days worth of production we should be able to store (this is ignored if `capacity_from_max_on_turbine_storage` is set to True)
+      cost_parameters:
+        cost_year: 2018 # based on Papadias 2021 and HD SAM
   ammonia:
     performance_model:
       model: "simple_ammonia_performance"
@@ -74,3 +81,4 @@ technologies:
         iron_based_catalyst_consumption: 0.000091295354067341
         oxygen_byproduct: 0.29405077250145
         capex_scaling_exponent: 0.6
+        cost_year: 2021
