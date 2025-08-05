@@ -30,7 +30,9 @@
 - Added geologic hydrogen (geoh2) converter and examples [PR 135](https://github.com/NREL/H2Integrate/pull/135)
 - Changed plant_config `atb_year` entry to `financial_analysis_start_year`
 - Allow users to specify the technologies to include in the metrics calculations in the plant configuration file
+- Update PySAM solar performance model to allow for more user-configurability.
 - Added simple air separation unit (ASU) converter to model nitrogen production.
+
 
 ## 0.3.0 [May 2 2025]
 
