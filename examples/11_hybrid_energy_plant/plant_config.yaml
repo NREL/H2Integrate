@@ -45,5 +45,3 @@ finance_parameters:
   administrative_expense_percent_of_sales: 0.01
   depreciation_method: "MACRS" # can be "MACRS" or "Straight line" - MACRS may be better and can reduce LCOH by more than $1/kg and is spec'd in the IRS MACRS schedule https://www.irs.gov/publications/p946#en_US_2020_publink1000107507
   depreciation_period: 5 # years - for clean energy facilities as specified by the IRS MACRS schedule https://www.irs.gov/publications/p946#en_US_2020_publink1000107507
-  discount_years:
-    hopp: 2024

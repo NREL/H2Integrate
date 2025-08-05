@@ -49,6 +49,7 @@ class PaperMillCostConfig(BaseConfig):
     cost_per_tonne: float = field()
     opex_rate: float = field()
     plant_capacity: float = field()
+    cost_year: int = field(converter=int)
 
 
 class PaperMillCost(om.ExplicitComponent):

@@ -54,8 +54,6 @@ finance_parameters:
   depreciation_method: "MACRS" # can be "MACRS" or "Straight line" - MACRS may be better and can reduce LCOH by more than $1/kg and is spec'd in the IRS MACRS schedule https://www.irs.gov/publications/p946#en_US_2020_publink1000107507
   depreciation_period: 5 # years - for clean energy facilities as specified by the IRS MACRS schedule https://www.irs.gov/publications/p946#en_US_2020_publink1000107507
   depreciation_period_electrolyzer: 7 # based on PEM Electrolysis H2A Production Case Study Documentation estimate of 7 years. also see https://www.irs.gov/publications/p946#en_US_2020_publink1000107507
-  discount_years:
-    methanol: 2020
   options:
     commodity_type: "methanol"
 

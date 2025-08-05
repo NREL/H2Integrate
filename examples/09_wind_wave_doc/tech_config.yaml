@@ -8,6 +8,9 @@ technologies:
       config: !include tech_inputs/hopp_config.yaml
     cost_model:
       model: "hopp"
+    model_inputs:
+      cost_parameters:
+        cost_year: 2022
   doc:
     performance_model:
       model: "direct_ocean_capture_performance"
@@ -35,3 +38,4 @@ technologies:
 
       cost_parameters:
         infrastructure_type: "new"
+        cost_year: 2023
