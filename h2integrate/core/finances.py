@@ -15,16 +15,20 @@ class AdjustedCapexOpexComp(om.ExplicitComponent):
     def setup(self):
         tech_config = self.options["tech_config"]
         plant_config = self.options["plant_config"]
-        self.discount_years = plant_config["finance_parameters"]["discount_years"]
         self.inflation_rate = plant_config["finance_parameters"]["costing_general_inflation"]
         self.cost_year = plant_config["plant"]["cost_year"]
 
+        discount_years = {}
         for tech in tech_config:
+            discount_years.update(
+                {tech: tech_config[tech]["model_inputs"]["cost_parameters"]["cost_year"]}
+            )
             self.add_input(f"capex_{tech}", val=0.0, units="USD")
             self.add_input(f"opex_{tech}", val=0.0, units="USD/year")
             self.add_output(f"capex_adjusted_{tech}", val=0.0, units="USD")
             self.add_output(f"opex_adjusted_{tech}", val=0.0, units="USD/year")
 
+        self.discount_years = discount_years
         self.add_output("total_capex_adjusted", val=0.0, units="USD")
         self.add_output("total_opex_adjusted", val=0.0, units="USD/year")
 

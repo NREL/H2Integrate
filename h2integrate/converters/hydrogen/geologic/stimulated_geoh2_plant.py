@@ -131,7 +131,7 @@ class StimulatedGeoH2CostConfig(GeoH2CostConfig):
     Currently no parameters other than those in geoh2_baseclass.GeoH2CostConfig
     """
 
-    pass
+    cost_year: int = field(converter=int)
 
 
 class StimulatedGeoH2CostModel(GeoH2CostBaseClass):

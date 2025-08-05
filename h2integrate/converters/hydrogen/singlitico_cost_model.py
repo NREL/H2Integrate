@@ -25,6 +25,7 @@ class SingliticoCostModelConfig(BaseConfig):
     rating: float = field(validator=gt_zero)
     location: str = field(validator=contains(["onshore", "offshore"]))
     electrolyzer_capex: int = field()
+    cost_year: int = field(converter=int)
 
 
 class SingliticoCostModel(ElectrolyzerCostBaseClass):

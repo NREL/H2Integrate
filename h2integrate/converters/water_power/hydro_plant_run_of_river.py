@@ -79,6 +79,7 @@ class RunOfRiverHydroCostConfig(BaseConfig):
     plant_capacity_mw: float = field()
     capital_cost_usd_per_kw: float = field()
     operational_cost_usd_per_kw_year: float = field()
+    cost_year: int = field(converter=int)
 
 
 class RunOfRiverHydroCostModel(HydroCostBaseClass):

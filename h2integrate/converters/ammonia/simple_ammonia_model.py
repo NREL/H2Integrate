@@ -89,6 +89,7 @@ class AmmoniaCostModelConfig(BaseConfig):
     iron_based_catalyst_consumption: float = field()
     oxygen_byproduct: float = field()
     capex_scaling_exponent: float = field()
+    cost_year: int = field(converter=int)
 
 
 class SimpleAmmoniaCostModel(om.ExplicitComponent):

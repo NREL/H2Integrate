@@ -98,6 +98,7 @@ class SMRCostConfig(MethanolCostConfig):
     meoh_syn_cat_price: float = field()
     meoh_atr_cat_price: float = field()
     ng_price: float = field()
+    cost_year: int = field(converter=int)
 
 
 class SMRMethanolPlantCostModel(MethanolCostBaseClass):

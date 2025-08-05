@@ -26,6 +26,7 @@ class BasicElectrolyzerCostModelConfig(BaseConfig):
     location: str = field(validator=contains(["onshore", "offshore"]))
     electrolyzer_capex: int = field()
     time_between_replacement: int = field(validator=gt_zero)
+    cost_year: int = field(converter=int)
 
 
 class BasicElectrolyzerCostModel(ElectrolyzerCostBaseClass):

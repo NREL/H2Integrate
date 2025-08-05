@@ -323,6 +323,7 @@ class AmmoniaSynLoopCostConfig(BaseConfig):
     cooling_water_cost_base: float = field()
     catalyst_cost_base: float = field()
     oxygen_price_base: float = field()
+    cost_year: int = field(converter=int)
 
 
 class AmmoniaSynLoopCostModel(om.ExplicitComponent):

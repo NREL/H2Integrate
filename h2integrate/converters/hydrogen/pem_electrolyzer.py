@@ -58,6 +58,7 @@ class ElectrolyzerPerformanceModel(ElectrolyzerPerformanceBaseClass):
 class ElectrolyzeCostModelConfig(BaseConfig):
     cluster_size_mw: float = field()
     electrolyzer_cost: float = field()
+    cost_year: int = field(converter=int)
 
 
 class ElectrolyzerCostModel(ElectrolyzerCostBaseClass):

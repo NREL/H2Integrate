@@ -113,6 +113,7 @@ class ReverseOsmosisCostModelConfig(BaseConfig):
 
     freshwater_kg_per_hour: float = field(validator=gt_zero)
     freshwater_density: float = field(validator=gt_zero)
+    cost_year: int = field(converter=int)
 
 
 class ReverseOsmosisCostModel(DesalinationCostBaseClass):

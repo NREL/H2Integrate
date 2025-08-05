@@ -64,6 +64,7 @@ class WindPlantCostModelConfig(BaseConfig):
     num_turbines: int = field()
     turbine_rating_kw: float = field()
     cost_per_kw: float = field()
+    cost_year: int = field(converter=int)
 
 
 class WindPlantCostModel(WindCostBaseClass):

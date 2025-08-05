@@ -135,6 +135,7 @@ class DOCCostModelConfig(DOCPerformanceConfig):
     """
 
     infrastructure_type: str = field()
+    cost_year: int = field(converter=int)
 
 
 class DOCCostModel(MarineCarbonCaptureCostBaseClass):
