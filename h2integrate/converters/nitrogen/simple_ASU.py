@@ -4,7 +4,7 @@ from attrs import field, define
 
 from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
 from h2integrate.core.validators import contains, range_val
-from h2integrate.tools.constants import AR_MW, N2_MW, O2_MW
+from h2integrate.tools.constants import N_MW, AR_MW, O2_MW
 
 
 @define
@@ -45,16 +45,14 @@ class SimpleASUPerformanceConfig(BaseConfig):
     # 0.119 is efficiency of cryogenic
 
     def __attrs_post_init__(self):
-        if self.size_from_N2_demand:
-            return
-        if self.rated_N2_kg_pr_hr is None and self.ASU_rated_power_kW is None:
+        if (not self.size_from_N2_demand) and (
+            self.rated_N2_kg_pr_hr is None and self.ASU_rated_power_kW is None
+        ):
             msg = (
                 "Either rated_N2_kg_pr_hr or ASU_rated_power_kW must be input if "
                 "size_from_N2_demand is False"
             )
             raise ValueError(msg)
-        else:
-            return
 
 
 class SimpleASUPerformanceModel(om.ExplicitComponent):
@@ -142,7 +140,7 @@ class SimpleASUPerformanceModel(om.ExplicitComponent):
             outputs (dict: output variables/parameters
 
         Raises:
-            ValueError: if user provided ASU capaciies in kg-N2/hour and kW and
+            ValueError: if user provided ASU capacities in kg-N2/hour and kW and
                 these values do not result in the same efficiency as `efficiency_kWh_pr_kg_N2`.
         """
 
@@ -191,7 +189,7 @@ class SimpleASUPerformanceModel(om.ExplicitComponent):
 
         # calculate the molar mass of air
         air_molar_mass = (
-            (N2_MW * self.config.N2_fraction_in_air)
+            (2 * N_MW * self.config.N2_fraction_in_air)
             + (O2_MW * self.config.O2_fraction_in_air)
             + (AR_MW * self.config.Ar_fraction_in_air)
         )
@@ -204,7 +202,7 @@ class SimpleASUPerformanceModel(om.ExplicitComponent):
         )
 
         # calculate air feedstock required to produce nitrogen
-        n2_profile_out_mol = n2_profile_out_kg * 1e3 / N2_MW
+        n2_profile_out_mol = n2_profile_out_kg * 1e3 / N_MW
         air_profile_mol = n2_profile_out_mol / (self.config.N2_fraction_in_air)
 
         # calculate the secondary outputs of the ASU (O2 and Ar)
@@ -243,24 +241,44 @@ class SimpleASUPerformanceModel(om.ExplicitComponent):
 
 
 def make_cost_unit_multiplier(unit_str):
+    """
+    Returns a conversion multiplier and a unit type based on the provided unit string.
+    The conversion multiplier converts the given unit to the base unit used in the model
+    (kW for power, kg/hour for mass).
+
+    Args:
+        unit_str (str): The unit string, e.g., "kw", "mw", "kg/hour", "tonne/day", etc.
+
+    Returns:
+        tuple: (conversion_multiplier, unit_type)
+            conversion_multiplier (float): Multiplier to convert the input unit to
+                the model's base unit.
+            unit_type (str): "power" if the unit is power-based, "mass" if mass-based.
+
+    Notes:
+        - For "mw", the multiplier converts MW to kW.
+        - For daily units, the multiplier converts per day to per hour.
+        - For "tonne" units, the multiplier converts tonnes to kg.
+        - If unit_str is "none", returns (0.0, "power").
+    """
     if unit_str == "none":
         return 0.0, "power"
 
     power_based_value = unit_str == "mw" or unit_str == "kw"
-    # mass_based_value = unit_str != 'mw' and unit_str != 'kw'
-    k = 1.0
+    conversion_multiplier = 1.0
 
     if power_based_value:
         if unit_str == "mw":
-            k = 1 / 1e3  # use as multiplier to convert from MW -> kW
-        return k, "power"
+            conversion_multiplier = 1 / 1e3  # convert MW to kW
+        return conversion_multiplier, "power"
 
     # convert from units to kg/hour
     if "day" in unit_str:  # convert from daily units to hourly units
-        cpx_k = 24
+        conversion_multiplier *= 1 / 24
     if "tonne" in unit_str:
-        cpx_k *= 1 / 1e3
-    return k, "mass"
+        conversion_multiplier *= 1e3
+
+    return conversion_multiplier, "mass"
 
 
 @define
