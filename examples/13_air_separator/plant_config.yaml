@@ -24,11 +24,7 @@ site:
 # with the reverse definition.
 # this will naturally grow as we mature the interconnected tech
 technology_interconnections: [
-  ["hopp", "electrolyzer", "electricity", "cable"],
-  ["electrolyzer", "h2_storage", "efficiency"],
-  ["electrolyzer", "h2_storage", "hydrogen", "pipe"],
-  ["h2_storage", "ammonia", "hydrogen", "pipe"],
-  ["financials_group_default", "ammonia", "LCOH"],
+  ["hopp", "air_separator", "electricity", "cable"],
   # etc
 ]
 
@@ -37,8 +33,8 @@ plant:
   grid_connection: False # option, can be turned on or off
   ppa_price: 0.025 # $/kWh based on 2022 land based wind market report (ERCOT area ppa prices) https://www.energy.gov/sites/default/files/2022-08/land_based_wind_market_report_2202.pdf
   hybrid_electricity_estimated_cf: 0.492 #should equal 1 if grid_connection = True
-  financial_analysis_start_year: 2032
   cost_year: 2022
+  financial_analysis_start_year: 2032
   installation_time: 36 # months
 
 finance_parameters:
@@ -62,9 +58,7 @@ finance_parameters:
   depreciation_period_electrolyzer: 7 # based on PEM Electrolysis H2A Production Case Study Documentation estimate of 7 years. also see https://www.irs.gov/publications/p946#en_US_2020_publink1000107507
   discount_years:
     hopp: 2019
-    electrolyzer: 2016 # based on IRENA report https://www.irena.org/-/media/Files/IRENA/Agency/Publication/2020/Dec/IRENA_Green_hydrogen_cost_2020.pdf
-    h2_storage: 2018 # based on Papadias 2021 and HD SAM
-    ammonia: 2021
+    air_separator: 2022
   wind:
     expected_plant_cost: 'none'
 
