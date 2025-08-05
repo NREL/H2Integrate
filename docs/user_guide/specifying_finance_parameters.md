@@ -9,7 +9,7 @@ There are two approaches for specifying other finance parameters:
 - [ProFAST parameters config](finance:pf_params_opt)
 
 Both approaches require the following additional finance parameters to be specified:
-- `costing_generation_inflation` is used to adjust costs for each technology from the year provided under `discount_years` to the `cost_year` specified in the `plant_config` under the `plant` section.
+- `costing_generation_inflation` is used to adjust costs for each technology from the `cost_year` provided in the `tech_config` under `cost_parameters` to the `cost_year` specified in the `tech_config` under the corresponding `plant` section.
 - `depreciation_method`: depreciation method to apply to capital items
 - `depreciation_period`: depreciation period (in years) for capital items (except electrolyzer, if used)
 - `depreciation_period_electrolyzer`: depreciation period (in years) for electrolyzer capital item (if used)
@@ -41,10 +41,6 @@ finance_parameters:
   depreciation_method: "MACRS"
   depreciation_period: 5
   depreciation_period_electrolyzer: 7
-  # Cost year of each component
-  discount_years:
-    wind: 2022
-    electrolyzer: 2022
 ```
 
 This approach also relies on data from `plant_config`:
@@ -85,13 +81,10 @@ Below is an example of the `finance_parameters` section of `plant_config` if usi
 ```yaml
 finance_parameters:
   pf_params: !include "profast_params.yaml" #Finance information
-  costing_general_inflation: 0.025 # used to adjust costs for technologies under `discount_years` to cost_year
+  costing_general_inflation: 0.025 # used to adjust costs for technologies under `cost_params['cost_year']` in the tech_config
   depreciation_method: "MACRS" #depreciation method for capital items
   depreciation_period: 5 #depreciation period for capital items
   depreciation_period_electrolyzer: 7 #depreciation period for electrolyzer
-  discount_years:
-    wind: 2022
-    electrolyzer: 2022
 ```
 
 Below is an example of a valid `pf_params` config that may be specified in the `finance_parameters` section of `plant_config`:
