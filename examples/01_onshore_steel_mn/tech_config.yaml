@@ -41,7 +41,7 @@ technologies:
   h2_storage:
     performance_model:
       model: "h2_storage"
-    control_model:
+    control_strategy:
       model: "pass_through_controller"
     cost_model:
       model: "h2_storage"

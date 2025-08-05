@@ -78,7 +78,7 @@ def test_demand_controller(subtests):
     with tech_config_path.open() as file:
         tech_config = yaml.safe_load(file)
 
-    tech_config["technologies"]["h2_storage"]["control_model"]["model"] = (
+    tech_config["technologies"]["h2_storage"]["control_strategy"]["model"] = (
         "demand_openloop_controller"
     )
     tech_config["technologies"]["h2_storage"]["model_inputs"]["control_parameters"] = {
