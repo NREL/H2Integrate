@@ -290,6 +290,7 @@ class SimpleASUCostConfig(BaseConfig):
         converter=(str.strip, str.lower),
     )
 
+    cost_year: int = field(converter=int)
     opex_usd_per_unit_per_year: float = field(default=0.0)
     opex_unit: str = field(
         default="none",
