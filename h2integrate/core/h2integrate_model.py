@@ -312,6 +312,8 @@ class H2IntegrateModel:
                 commodity_types.append("methanol")
             if "ammonia" in tech_configs:
                 commodity_types.append("ammonia")
+            if "air_separator" in tech_configs:
+                commodity_types.append("nitrogen")
             if "geoh2" in tech_configs:
                 commodity_types.append("hydrogen")
             if "doc" in tech_configs:
@@ -407,6 +409,7 @@ class H2IntegrateModel:
             "hydrogen": "LCOH",
             "electricity": "LCOE",
             "ammonia": "LCOA",
+            "nitrogen": "LCON",
         }
         metric_key = metrics_map.get(commodity_type)
         included_techs = (
@@ -541,6 +544,8 @@ class H2IntegrateModel:
                     commodity_types.append("hydrogen")
                 if "doc" in tech_configs:
                     commodity_types.append("co2")
+                if "air_separator" in tech_configs:
+                    commodity_types.append("nitrogen")
                 for tech in electricity_producing_techs:
                     if tech in tech_configs:
                         commodity_types.append("electricity")
@@ -606,6 +611,11 @@ class H2IntegrateModel:
                             self.plant.connect(
                                 f"{tech_name}.co2_capture_mtpy",
                                 f"financials_group_{group_id}.co2_capture_kgpy",
+                            )
+                        if "air_separator" in tech_name:
+                            self.plant.connect(
+                                f"{tech_name}.total_nitrogen_produced",
+                                f"financials_group_{group_id}.total_nitrogen_produced",
                             )
 
         self.plant.options["auto_order"] = True
