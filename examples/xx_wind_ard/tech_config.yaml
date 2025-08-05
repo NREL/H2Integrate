@@ -1,0 +1,66 @@
+name: "technology_config"
+description: "This plant has wind feeding into an electrolyzer without optimization"
+
+technologies:
+  wind:
+    performance_model:
+      model: "wind_plant_ard"
+    cost_model:
+      model: "wind_plant_ard"
+    model_inputs:
+      shared_parameters:
+        ard_system:
+          system: "onshore"
+          modeling_options:
+            farm:
+              N_turbines: 100
+              N_substations: 1
+              spacing_primary: 10.0
+              spacing_secondary: 10.0
+              angle_orientation: 0.0
+              angle_skew: 0.0
+              x_substations: 0.1
+              y_substations: 0.1
+            wind_rose:
+              file: wrg_example.wrg
+              wd_step: 90.0
+              wind_speeds: [5.0, 10.0, 15.0, 20.0]
+              point: [0.0, 0.0]
+            turbine: !include turbine_spec_IEA-3p4-130-RWT.yaml
+            collection:
+              max_turbines_per_string: 8
+              solver_name: "highs"
+              solver_options:
+                time_limit: 60
+                mip_gap: 0.02
+              model_options:
+                topology: "branched"
+                feeder_route: "radial"
+                feeder_limit: "unlimited"
+            offshore: false
+            floating: false
+  electrolyzer:
+    performance_model:
+      model: "eco_pem_electrolyzer_performance"
+    cost_model:
+      model: "singlitico_electrolyzer_cost"
+    model_inputs:
+      shared_parameters:
+        rating: 500. # MW
+        location: "onshore"
+        electrolyzer_capex: 1295 # $/kW overnight installed capital costs for a 1 MW system in 2022
+
+      performance_parameters:
+        sizing:
+          resize_for_enduse: False
+          size_for: 'BOL' #'BOL' (generous) or 'EOL' (conservative)
+          hydrogen_dmd:
+        cluster_rating_MW: 40
+        pem_control_type: 'basic'
+        eol_eff_percent_loss: 13 #eol defined as x% change in efficiency from bol
+        uptime_hours_until_eol: 80000. #number of 'on' hours until electrolyzer reaches eol
+        include_degradation_penalty: True #include degradation
+        turndown_ratio: 0.1 #turndown_ratio = minimum_cluster_power/cluster_rating_MW
+
+      financial_parameters:
+        replacement_cost_percent: 0.15 # percent of capex - H2A default case

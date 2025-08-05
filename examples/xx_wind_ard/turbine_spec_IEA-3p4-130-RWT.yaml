@@ -1,0 +1,53 @@
+description:
+  name: IEA-3.4-130-RWT
+geometry:
+  height_hub: 110.0 # m
+  diameter_rotor: 130.0 # m
+  radius_hub: 4.0 # m
+  num_blades: 3 #
+  orientation_rotor: upwind  # future-proofing
+nameplate:
+  power_rated: 3.37 # MW
+  power_rated_aero: 3.62 # MW
+  windspeed_rated: 9.8 # m/s
+  turbine_class: III # future-proofing
+  turbulence_class: A # future-proofing
+  drivetrain: geared # future-proofing
+  TSR: 8.01754386 # -, tip speed ratio
+model_specifications:
+  WindSE:
+    type: power_disk # WindSE actuator model
+    thickness_actuator: 13.0 # m (typically 10% of diameter_rotor)
+    factor_axial_induction: 0.333 # -
+    force: sine # radial force distribution type
+    power_disk_control:
+      CPprime0: 1.022       # turbine power curve spec
+      CTprime0: 1.319       # turbine power curve spec
+      Prated: 2570282.74287 # turbine power curve spec
+      Trated: 368163.26530  # turbine power curve spec
+  FLORIS:
+    exponent_penalty_yaw: 1.88 # -, cosine exponent for power loss due to yaw misalignment
+    exponent_penalty_tilt: 1.88 # -, cosine exponent for power loss due to tilt misalignment
+    fraction_peak_shaving: 0.4 # -, peak thrust reduction by peak shaving
+    # fraction_peak_shaving: 0.3 # -, peak thrust reduction by peak shaving
+performance_data_ccblade:
+    density_ref_cp_ct: 1.225 # kg/m^3
+    tilt_ref_cp_ct: 5 # degrees
+    power_thrust_csv: power_thrust_table_ccblade_IEA-3p4-130-RWT.csv
+costs:
+    wind_shear_exponent: 0.2 # (-)
+    rated_thrust_N : 645645.83964671 # (N)
+    gust_velocity_m_per_s: 52.5 # (m/s)
+    blade_surface_area: 69.7974979 # (m2)
+    tower_mass: 620440.7337521 # (kg)
+    nacelle_mass: 101985.82836439 # (kg)
+    hub_mass: 8384.07517646 # (kg)
+    blade_mass: 14563.41339641 # (kg)
+    foundation_height: 0. # (m)
+    commissioning_cost_kW: 44. # ($/kW)
+    decommissioning_cost_kW: 58. # ($/kW)
+    trench_len_to_substation_km: 50. # (km)
+    distance_to_interconnect_mi: 4.97096954  # (mi)
+    interconnect_voltage_kV: 130. # (kV)
+    tcc_per_kW: 1300 # (USD/kW)
+    opex_per_kW: 44 # (USD/kWh)
