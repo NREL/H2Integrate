@@ -39,8 +39,8 @@ class PYSAMSolarPlantPerformanceModelDesignConfig(BaseConfig):
             output of PV to max AC output of inverter. If None, then uses the default
             value associated with config_name.
         create_model_from (str):
-            - 'default': instatiate Pvwattsv8 model from the default config 'config_name'
-            - 'new': instatiate new Pvwattsv8 model (default). Requires pysam_options.
+            - 'default': instantiate Pvwattsv8 model from the default config 'config_name'
+            - 'new': instantiate new Pvwattsv8 model (default). Requires pysam_options.
         config_name (str,optional): PySAM.Pvwattsv8 configuration name for non-hybrid PV systems.
             Defaults to 'PVWattsSingleOwner'. Only used if create_model_from='default'.
         tilt (float | None): Panel tilt angle in the range (0.0, 90.0).

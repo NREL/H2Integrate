@@ -68,7 +68,7 @@ supported_models = {
     "pysam_wind_plant_performance": PYSAMWindPlantPerformanceModel,
     "pysam_solar_plant_performance": PYSAMSolarPlantPerformanceModel,
     "atb_utility_pv_cost": ATBUtilityPVCostModel,
-    "atb_com_res_pv_cost": ATBResComPVCostModel,
+    "atb_comm_res_pv_cost": ATBResComPVCostModel,
     "run_of_river_hydro_performance": RunOfRiverHydroPerformanceModel,
     "run_of_river_hydro_cost": RunOfRiverHydroCostModel,
     "pem_electrolyzer_performance": ElectrolyzerPerformanceModel,

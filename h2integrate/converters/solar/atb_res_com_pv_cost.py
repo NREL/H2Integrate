@@ -8,9 +8,9 @@ from h2integrate.converters.solar.solar_baseclass import SolarCostBaseClass
 @define
 class ATBResComPVCostModelConfig(BaseConfig):
     """Configuration class for the ATBResComPVCostModel with costs based on DC capacity.
-    Recommended to use with commerical or residential PV models. More information on
+    Recommended to use with commercial or residential PV models. More information on
     ATB methodology and representative PV technologies can be found
-    `here for commerical PV <https://atb.nrel.gov/electricity/2024/commercial_pv>`_ and
+    `here for commercial PV <https://atb.nrel.gov/electricity/2024/commercial_pv>`_ and
     `here for residential PV <https://atb.nrel.gov/electricity/2024/residential_pv>`_.
     Reference cost values can be found on the `Solar - PV Dist. Comm` or
     `Solar - PV Dist. Res` sheets of the
