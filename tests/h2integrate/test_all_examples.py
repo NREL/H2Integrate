@@ -379,7 +379,7 @@ def test_asu_example(subtests):
 
 def test_hydrogen_dispatch_example(subtests):
     # Change the current working directory to the example's directory
-    os.chdir(examples_dir / "13_wind_hydrogen_dispatch")
+    os.chdir(examples_dir / "14_wind_hydrogen_dispatch")
 
     # Create a H2Integrate model
     model = H2IntegrateModel(Path.cwd() / "inputs" / "h2i_wind_to_h2_storage.yaml")
