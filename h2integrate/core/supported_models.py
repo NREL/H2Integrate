@@ -12,6 +12,10 @@ from h2integrate.storage.hydrogen.tank_baseclass import (
     HydrogenTankCostModel,
     HydrogenTankPerformanceModel,
 )
+from h2integrate.controllers.openloop_controllers import (
+    DemandOpenLoopController,
+    PassThroughOpenLoopController,
+)
 from h2integrate.converters.hydrogen.wombat_model import WOMBATElectrolyzerModel
 from h2integrate.converters.wind.wind_plant_pysam import PYSAMWindPlantPerformanceModel
 from h2integrate.converters.ammonia.ammonia_synloop import (
@@ -49,10 +53,6 @@ from h2integrate.converters.hydrogen.geologic.natural_geoh2_plant import (
     NaturalGeoH2CostModel,
     NaturalGeoH2FinanceModel,
     NaturalGeoH2PerformanceModel,
-)
-from h2integrate.controllers.control_strategies.openloop_controllers import (
-    DemandOpenLoopController,
-    PassThroughOpenLoopController,
 )
 from h2integrate.converters.hydrogen.geologic.stimulated_geoh2_plant import (
     StimulatedGeoH2CostModel,
