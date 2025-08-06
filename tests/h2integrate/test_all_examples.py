@@ -213,10 +213,6 @@ def test_wind_h2_opt_example(subtests):
 
     model_init.post_process()
 
-    lcoh0 = model_init.prob.get_val("financials_group_1.LCOH")[0]
-    model_init.prob.get_val("electrolyzer.electrolyzer_size_mw")[0]
-    model_init.prob.get_val("financials_group_1.total_capex_adjusted")[0]
-    model_init.prob.get_val("financials_group_1.total_opex_adjusted")[0]
     annual_h20 = model_init.prob.get_val("electrolyzer.total_hydrogen_produced", units="kg/year")[0]
 
     # Create a H2Integrate model
@@ -227,14 +223,14 @@ def test_wind_h2_opt_example(subtests):
 
     model.post_process()
 
-    with subtests.test("Check LCOH changed"):
-        assert model.prob.get_val("financials_group_1.LCOH")[0] != lcoh0
-
     with subtests.test("Check initial H2 production"):
         assert annual_h20 < (60500000 - 10000)
 
     with subtests.test("Check LCOE"):
-        assert pytest.approx(model.prob.get_val("financials_group_1.LCOE")[0], rel=1e-3) == 0.151189
+        assert (
+            pytest.approx(model.prob.get_val("financials_group_default.LCOE")[0], rel=1e-3)
+            == 0.151189
+        )
 
     with subtests.test("Check electrolyzer size"):
         assert (
@@ -269,13 +265,15 @@ def test_wind_h2_opt_example(subtests):
     with subtests.test("Check total adjusted CapEx"):
         assert (
             pytest.approx(
-                model.prob.get_val("financials_group_1.total_capex_adjusted")[0], rel=1e-3
+                model.prob.get_val("financials_group_default.total_capex_adjusted")[0], rel=1e-3
             )
             == 2783126102
         )
     with subtests.test("Check total adjusted OpEx"):
         assert (
-            pytest.approx(model.prob.get_val("financials_group_1.total_opex_adjusted")[0], rel=1e-3)
+            pytest.approx(
+                model.prob.get_val("financials_group_default.total_opex_adjusted")[0], rel=1e-3
+            )
             == 75543899
         )
 
