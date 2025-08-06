@@ -60,4 +60,4 @@ constraints:
       units: unitless
 
 objective:
-  name: financials_group_1.LCOE
+  name: financials_group_default.LCOE
