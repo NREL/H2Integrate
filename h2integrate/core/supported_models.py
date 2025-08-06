@@ -45,14 +45,14 @@ from h2integrate.converters.water_power.hydro_plant_run_of_river import (
     RunOfRiverHydroCostModel,
     RunOfRiverHydroPerformanceModel,
 )
-from h2integrate.controllers.control_methods.openloop_controllers import (
-    DemandOpenLoopController,
-    PassThroughOpenLoopController,
-)
 from h2integrate.converters.hydrogen.geologic.natural_geoh2_plant import (
     NaturalGeoH2CostModel,
     NaturalGeoH2FinanceModel,
     NaturalGeoH2PerformanceModel,
+)
+from h2integrate.controllers.control_strategies.openloop_controllers import (
+    DemandOpenLoopController,
+    PassThroughOpenLoopController,
 )
 from h2integrate.converters.hydrogen.geologic.stimulated_geoh2_plant import (
     StimulatedGeoH2CostModel,
