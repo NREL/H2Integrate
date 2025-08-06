@@ -2,6 +2,7 @@
 
 ## 0.3.1, Unreleased, TBD
 - Added rule-based storage system control capability
+- Bugfix: only run pyxdsm when there are connections in the system
 - Added *_out/ to .gitignore to avoid clutter
 - Added methanol production base class
 - Added steam methane reforming methanol production technology

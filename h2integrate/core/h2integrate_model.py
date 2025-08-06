@@ -630,7 +630,7 @@ class H2IntegrateModel:
                 self.plant.linear_solver = om.DirectSolver()
                 break
 
-        if pyxdsm is not None:
+        if (pyxdsm is not None) and (len(technology_interconnections) > 0):
             create_xdsm_from_config(self.plant_config)
 
     def create_driver_model(self):
