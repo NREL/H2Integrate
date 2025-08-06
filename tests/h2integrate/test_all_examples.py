@@ -352,3 +352,26 @@ def test_hybrid_energy_plant_example(subtests):
             )
             == 83.2123
         )
+
+
+def test_asu_example(subtests):
+    # Change the current working directory to the example's directory
+    os.chdir(examples_dir / "13_air_separator")
+
+    # Create a H2Integrate model
+    model = H2IntegrateModel(Path.cwd() / "13_air_separator.yaml")
+
+    # Run the model
+    model.run()
+
+    model.post_process()
+
+    # Subtests for checking specific values
+    with subtests.test("Check LCON"):
+        assert (
+            pytest.approx(
+                model.prob.get_val("financials_group_default.LCON", units="USD/kg")[0],
+                abs=1e-4,
+            )
+            == 0.28694531
+        )
