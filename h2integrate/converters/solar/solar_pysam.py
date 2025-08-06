@@ -12,7 +12,7 @@ class PYSAMSolarPlantPerformanceModelSiteConfig(BaseConfig):
     """Configuration class for the location of the solar pv plant
         PYSAMSolarPlantPerformanceComponentSite.
 
-    Args:
+    Attributes:
         latitude (float): Latitude of wind plant location.
         longitude (float): Longitude of wind plant location.
         year (float): Year for resource.
@@ -33,7 +33,7 @@ class PYSAMSolarPlantPerformanceModelDesignConfig(BaseConfig):
         `here <https://nrel-pysam.readthedocs.io/en/main/modules/Pvwattsv8.html#pvwattsv8>`__
 
 
-    Args:
+    Attributes:
         pv_capacity_kWdc (float): Required, DC system capacity in kW-dc.
         dc_ac_ratio (float | None): Also known as inverter loading ratio, ratio of max DC
             output of PV to max AC output of inverter. If None, then uses the default
@@ -145,7 +145,7 @@ class PYSAMSolarPlantPerformanceModelDesignConfig(BaseConfig):
             associated with the specified PVWatts configuration.
 
         Returns:
-           dict: dictionary of SystemDesign and SolarResource pararamters from user-input.
+           dict: dictionary of SystemDesign and SolarResource parameters from user-input.
         """
 
         full_dict = self.as_dict()
@@ -180,7 +180,7 @@ class PYSAMSolarPlantPerformanceModel(SolarPerformanceBaseClass):
             "annual_energy",
             val=0.0,
             units="kW*h/year",
-            desc="Annual energy production from PVPlant in kWac",
+            desc="Annual energy production in kWac",
         )
 
         if self.design_config.create_model_from == "default":
@@ -214,29 +214,46 @@ class PYSAMSolarPlantPerformanceModel(SolarPerformanceBaseClass):
         self.system_model.value("solar_resource_data", solar_resource.data)
 
     def calc_tilt_angle(self):
-        """Calculates the tilt angle of the PV panel based on the tilt
-            option described by design_config.tilt_angle_func
+        """
+        Calculates the tilt angle of the PV panel based on the tilt option described by
+        design_config.tilt_angle_func.
 
         Returns:
             float: tilt angle of the PV panel in degrees.
         """
+        # If tilt angle function is 'none', use the provided tilt value or default
         if self.design_config.tilt_angle_func == "none":
+            # If using a default PySAM model, get tilt from model if not specified
             if self.design_config.create_model_from == "default":
                 if self.design_config.tilt is None:
+                    # Return the default tilt from the system model
                     return self.system_model.value("tilt")
-                return self.design_config.tilt
+                else:
+                    # Return user-specified tilt
+                    return self.design_config.tilt
+
+            # If creating a new PySAM model, get tilt from pysam_options or default to 0
             if self.design_config.create_model_from == "new":
                 if self.design_config.tilt is None:
-                    return self.pysam_options.get("SystemDesign", {}).get("tilt", 0)
-                return self.design_config.tilt
+                    # Return tilt from pysam_options if provided, else 0
+                    return self.design_config.pysam_options.get("SystemDesign", {}).get("tilt", 0)
+                else:
+                    # Return user-specified tilt
+                    return self.design_config.tilt
 
+        # If tilt angle function is 'lat', use the latitude as the tilt
         if self.design_config.tilt_angle_func == "lat":
             return self.config.latitude
+
+        # If tilt angle function is 'lat-func', use empirical formulas based on latitude
         if self.design_config.tilt_angle_func == "lat-func":
             if self.config.latitude <= 25:
+                # For latitudes <= 25, use 0.87 * latitude
                 return self.config.latitude * 0.87
-            if self.config.latitude > 25 and self.config.latitude <= 50:
+            if 25 < self.config.latitude <= 50:
+                # For latitudes between 25 and 50, use 0.76 * latitude + 3.1
                 return (self.config.latitude * 0.76) + 3.1
+            # For latitudes > 50, use latitude directly
             return self.config.latitude
 
     def compute(self, inputs, outputs):

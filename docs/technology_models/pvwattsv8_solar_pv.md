@@ -30,9 +30,27 @@ technologies:
 
 ## Performance Parameters
 - `pv_capacity_kWdc` (required): capacity of the PV system in kW-DC
-- `dc_ac_ratio`: the ratio of DC capacity to AC capacity, equal to `pv_capacity_kWdc/pv_capacity_kWac`. The PV capacity in kW-AC is equivalent as the inverter rated power. An inverter is used in PV systems to convert DC power (output from panels) to AC power (input to AC microgrid). The PV capacity in kW-AC is `pv_capacity_kWdc/dc_ac_ratio`. A general default `dc_ac_ratio` is between 1.2 and 1.3. **This is required if** `dc_ac_ratio` is not either loaded from a default Pvwattsv8 config OR not included in the `pysam_options` dictionary under the `SystemDesign` group.
+- `dc_ac_ratio`: the ratio of DC capacity to AC capacity, equal to `pv_capacity_kWdc/pv_capacity_kWac` is used to calculate the PV capacity in kW-AC and is equivalent as the inverter rated power. An inverter is used in PV systems to convert DC power (output from panels) to AC power (input to AC microgrid). The PV capacity in kW-AC is `pv_capacity_kWdc/dc_ac_ratio`. A general default `dc_ac_ratio` is between 1.2 and 1.3. **This is required if** `dc_ac_ratio` is not either loaded from a default Pvwattsv8 config OR not included in the `pysam_options` dictionary under the `SystemDesign` group.
+
+$$
+\text{PV Capacity (kW-AC)} = \frac{\text{PV Capacity (kW-DC)}}{\text{dc_ac_ratio}}
+$$
+
 - `tilt` (optional): tilt angle of the PV panel (in degrees) used if `tilt_angle_func` is `"none"`. Must be between 0 and 90.
 - `tilt_angle_func` (optional): options are `"none"`, `"lat-func"` or `"lat"` and defaults to `"none"`.
+    - `"none"`: use the tilt angle value specified in `'tilt'` input (if provided). If `tilt` is not provided, use the default value from the Pvwattsv8 module or config.
+    - `"lat"`: set the panel tilt angle equal to the latitude of the site.
+    - `"lat-func"`: calculate the tilt angle based on the latitude of the site using the equation below:
+
+        $$
+        \theta =
+        \begin{cases}
+            \text{lat} \cdot 0.87 & \text{if } \text{lat} \leq 25^\circ \\
+            3.1 + \text{lat} \cdot 0.76 & \text{if } 25^\circ < \text{lat} \leq 50^\circ \\
+            \text{lat} & \text{if } 50^\circ < \text{lat} \\
+        \end{cases}
+        $$
+
 - `create_model_from`: this can either be set to `"new"` or `"default"` and defaults to `"new"`. If `create_model_from` is `"new"`, the PV model is initialized using `Pvwattsv8.new()` and *populated* with parameters specified in `pysam_options`. If `create_model_from` is `"default"`, the PV model is initialized using `Pvwattsv8.default(config_name)` (`config_name` is also an input parameter) then *updated* with parameters specified in `pysam_options`.
 - `config_name`: this is only used if `create_model_from` is `"default"`. The default value for this is `"PVWattsSingleOwner"`. The available options and their default parameters are listed below:
     - [PVWattsCommercial](https://github.com/NREL/SAM/blob/develop/api/api_autogen/library/defaults/Pvwattsv8_PVWattsCommercial.json)
@@ -45,7 +63,7 @@ technologies:
     - [PVWattsSingleOwner](https://github.com/NREL/SAM/blob/develop/api/api_autogen/library/defaults/Pvwattsv8_PVWattsSingleOwner.json)
     - [PVWattsThirdParty](https://github.com/NREL/SAM/blob/develop/api/api_autogen/library/defaults/Pvwattsv8_PVWattsThirdParty.json)
     - [PVWattsAllEquityPartnershipFlip](https://github.com/NREL/SAM/blob/develop/api/api_autogen/library/defaults/Pvwattsv8_PVWattsAllEquityPartnershipFlip.json)
-- `pysam_options` (dict): The top-level keys correspond to the Groups available in the Pvwattsv8 module. The Groups that users may want to specify specific options for are the:
+- `pysam_options` (dict): The top-level keys correspond to the Groups available in the [Pvwattsv8 module](https://nrel-pysam.readthedocs.io/en/main/modules/Pvwattsv8.html). The next level is the individual attributes a user could set and a full list is available through the PySAM documentation of Pvwattsv8 module. The Groups that users may want to specify specific options for are the:
     - [SystemDesign](#systemdesign-group)
     - [SolarResource](#solarresource-group)
     - [Lifetime](https://nrel-pysam.readthedocs.io/en/main/modules/Pvwattsv8.html#lifetime-group)
@@ -54,7 +72,7 @@ technologies:
 
 ### SystemDesign group
 ```{note}
-Do not include the `system_capacity` parameter of the SystemDesign Group. The system capacity should be set in the performance parameters with the variable `pv_capacity_kWdc`.
+Do not include the `system_capacity` parameter of the `SystemDesign` group. The system capacity should be set in the performance parameters with the variable `pv_capacity_kWdc`.
 ```
 
 Some common design parameters that a user may want to specify within the [SystemDesign Group](https://nrel-pysam.readthedocs.io/en/main/modules/Pvwattsv8.html#systemdesign-group) are:
