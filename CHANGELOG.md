@@ -33,6 +33,7 @@
 - Allow users to specify the technologies to include in the metrics calculations in the plant configuration file
 - Update PySAM solar performance model to allow for more user-configurability.
 - Added simple air separation unit (ASU) converter to model nitrogen production.
+- Added two ATB-compatible solar-PV cost models.
 - Moved `plant_config['finance_parameters']['discount_years']['tech']` from plant_config to `tech_config[tech]['model_inputs']['cost_parameters']['cost_year']`
 
 ## 0.3.0 [May 2 2025]
