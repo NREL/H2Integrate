@@ -117,6 +117,11 @@ def make_pf_config_from_profast(pf):
         "feedstocks": pf.feedstocks,
         "incentives": pf.incentives,
         "coproducts": pf.coproducts,
-        "LCO": pf.LCO,
     }
     return pf_config
+
+
+def convert_pf_to_dict(pf):
+    pf_config = make_pf_config_from_profast(pf)
+    pf_dict = convert_pf_res_to_pf_config(pf_config)
+    return pf_dict
