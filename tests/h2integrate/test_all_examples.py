@@ -234,7 +234,7 @@ def test_hybrid_energy_plant_example(subtests):
 
 def test_hydrogen_dispatch_example(subtests):
     # Change the current working directory to the example's directory
-    os.chdir(examples_dir / "12_wind_hydrogen_dispatch")
+    os.chdir(examples_dir / "13_wind_hydrogen_dispatch")
 
     # Create a H2Integrate model
     model = H2IntegrateModel(Path.cwd() / "inputs" / "h2i_wind_to_h2_storage.yaml")
