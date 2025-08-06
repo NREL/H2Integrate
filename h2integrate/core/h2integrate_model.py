@@ -181,7 +181,7 @@ class H2IntegrateModel:
 
         self.tech_names = []
         self.performance_models = []
-        self.control_strategys = []
+        self.control_strategies = []
         self.cost_models = []
         self.financial_models = []
 
@@ -221,7 +221,7 @@ class H2IntegrateModel:
                         control_object = self._process_model(
                             "control_strategy", individual_tech_config, tech_group
                         )
-                        self.control_strategys.append(control_object)
+                        self.control_strategies.append(control_object)
                     continue
 
                 # Process the models
