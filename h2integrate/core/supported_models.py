@@ -7,12 +7,17 @@ from h2integrate.transporters.power_combiner import CombinerPerformanceModel
 from h2integrate.converters.hopp.hopp_wrapper import HOPPComponent
 from h2integrate.converters.solar.solar_pysam import PYSAMSolarPlantPerformanceModel
 from h2integrate.storage.hydrogen.eco_storage import H2Storage
+from h2integrate.converters.nitrogen.simple_ASU import SimpleASUCostModel, SimpleASUPerformanceModel
 from h2integrate.storage.hydrogen.tank_baseclass import (
     HydrogenTankCostModel,
     HydrogenTankPerformanceModel,
 )
 from h2integrate.converters.hydrogen.wombat_model import WOMBATElectrolyzerModel
 from h2integrate.converters.wind.wind_plant_pysam import PYSAMWindPlantPerformanceModel
+from h2integrate.converters.ammonia.ammonia_synloop import (
+    AmmoniaSynLoopCostModel,
+    AmmoniaSynLoopPerformanceModel,
+)
 from h2integrate.converters.water.desal.desalination import (
     ReverseOsmosisCostModel,
     ReverseOsmosisPerformanceModel,
@@ -71,6 +76,8 @@ supported_models = {
     "eco_pem_electrolyzer_performance": ECOElectrolyzerPerformanceModel,
     "singlitico_electrolyzer_cost": SingliticoCostModel,
     "basic_electrolyzer_cost": BasicElectrolyzerCostModel,
+    "simple_ASU_cost": SimpleASUCostModel,
+    "simple_ASU_performance": SimpleASUPerformanceModel,
     "h2_storage": H2Storage,
     "hopp": HOPPComponent,
     "wombat": WOMBATElectrolyzerModel,
@@ -78,6 +85,8 @@ supported_models = {
     "reverse_osmosis_desalination_cost": ReverseOsmosisCostModel,
     "simple_ammonia_performance": SimpleAmmoniaPerformanceModel,
     "simple_ammonia_cost": SimpleAmmoniaCostModel,
+    "synloop_ammonia_performance": AmmoniaSynLoopPerformanceModel,
+    "synloop_ammonia_cost": AmmoniaSynLoopCostModel,
     "steel_performance": SteelPerformanceModel,
     "steel_cost": SteelCostAndFinancialModel,
     "smr_methanol_plant_performance": SMRMethanolPlantPerformanceModel,
