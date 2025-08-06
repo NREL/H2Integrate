@@ -312,6 +312,8 @@ class H2IntegrateModel:
                 commodity_types.append("methanol")
             if "ammonia" in tech_configs:
                 commodity_types.append("ammonia")
+            if "air_separator" in tech_configs:
+                commodity_types.append("nitrogen")
             if "geoh2" in tech_configs:
                 commodity_types.append("hydrogen")
             if "doc" in tech_configs:
@@ -407,6 +409,7 @@ class H2IntegrateModel:
             "hydrogen": "LCOH",
             "electricity": "LCOE",
             "ammonia": "LCOA",
+            "nitrogen": "LCON",
         }
         metric_key = metrics_map.get(commodity_type)
         included_techs = (
@@ -541,6 +544,8 @@ class H2IntegrateModel:
                     commodity_types.append("hydrogen")
                 if "doc" in tech_configs:
                     commodity_types.append("co2")
+                if "air_separator" in tech_configs:
+                    commodity_types.append("nitrogen")
                 for tech in electricity_producing_techs:
                     if tech in tech_configs:
                         commodity_types.append("electricity")
@@ -607,6 +612,11 @@ class H2IntegrateModel:
                                 f"{tech_name}.co2_capture_mtpy",
                                 f"financials_group_{group_id}.co2_capture_kgpy",
                             )
+                        if "air_separator" in tech_name:
+                            self.plant.connect(
+                                f"{tech_name}.total_nitrogen_produced",
+                                f"financials_group_{group_id}.total_nitrogen_produced",
+                            )
 
         self.plant.options["auto_order"] = True
 
@@ -620,7 +630,7 @@ class H2IntegrateModel:
                 self.plant.linear_solver = om.DirectSolver()
                 break
 
-        if pyxdsm is not None:
+        if (pyxdsm is not None) and (len(technology_interconnections) > 0):
             create_xdsm_from_config(self.plant_config)
 
     def create_driver_model(self):
