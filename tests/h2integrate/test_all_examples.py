@@ -384,10 +384,14 @@ def test_hydrogen_dispatch_example(subtests):
     # Create a H2Integrate model
     model = H2IntegrateModel(Path.cwd() / "inputs" / "h2i_wind_to_h2_storage.yaml")
 
+    model.run()
+
+    model.post_process()
+
     with subtests.test("Check LCOE"):
         assert (
             pytest.approx(
-                model.prob.get_val("financials_group_1.LCOE", units="USD/MW/h")[0],
+                model.prob.get_val("financials_group_default.LCOE", units="USD/MW/h")[0],
                 rel=1e-5,
             )
             == 106.13987
@@ -396,7 +400,7 @@ def test_hydrogen_dispatch_example(subtests):
     with subtests.test("Check LCOH"):
         assert (
             pytest.approx(
-                model.prob.get_val("financials_group_1.LCOH", units="USD/kg")[0],
+                model.prob.get_val("financials_group_default.LCOH", units="USD/kg")[0],
                 rel=1e-5,
             )
             == 5.68452215
