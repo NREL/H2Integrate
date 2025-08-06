@@ -19,7 +19,7 @@ class AdjustedCapexOpexComp(om.ExplicitComponent):
         self.inflation_rate = plant_config["finance_parameters"]["cost_adjustment_parameters"][
             "inflation_rate"
         ]
-        self.output_dollar_year = plant_config["finance_parameters"]["cost_adjustment_parameters"][
+        self.target_dollar_year = plant_config["finance_parameters"]["cost_adjustment_parameters"][
             "target_dollar_year"
         ]
 
@@ -39,7 +39,7 @@ class AdjustedCapexOpexComp(om.ExplicitComponent):
             capex = float(inputs[f"capex_{tech}"][0])
             opex = float(inputs[f"opex_{tech}"][0])
             cost_year = self.discount_years[tech]
-            periods = self.output_dollar_year - cost_year
+            periods = self.target_dollar_year - cost_year
             adjusted_capex = -npf.fv(self.inflation_rate, periods, 0.0, capex)
             adjusted_opex = -npf.fv(self.inflation_rate, periods, 0.0, opex)
             outputs[f"capex_adjusted_{tech}"] = adjusted_capex
