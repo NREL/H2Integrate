@@ -8,7 +8,7 @@ There are two approaches for specifying other finance parameters:
 - [ProFAST parameters config](finance:pf_params_opt)
 
 Both approaches require the following additional finance parameters to be specified:
-- `costing_generation_inflation` is used to adjust costs for each technology from the year provided under `discount_years` to the `cost_year` specified in the `plant_config` under the `plant` section.
+- `cost_year_adjustment_inflation` is used to adjust costs for each technology from the year provided under `discount_years` to the `target_dollar_year` specified in the `plant_config` under the `finance_parameters` section.
 - `depreciation_method`: depreciation method to apply to capital items
 - `depreciation_period`: depreciation period (in years) for capital items (except electrolyzer, if used)
 - `depreciation_period_electrolyzer`: depreciation period (in years) for electrolyzer capital item (if used)
@@ -22,7 +22,7 @@ finance_parameters:
   analysis_start_year: 2032 #year that financial analysis starts
   installation_time: 36 #installation period in months
   # Inflation parameters
-  profast_general_inflation: 0.0 # 0 for nominal analysis
+  inflation_rate: 0.0 # 0 for nominal analysis
   # Finance parameters
   discount_rate: 0.09
   debt_equity_split: False
@@ -44,7 +44,7 @@ finance_parameters:
   # To adjust costs from discount_years to target_dollar_year
   cost_adjustment_parameters:
     target_dollar_year: 2022
-    inflation_rate: 0.025
+    cost_year_adjustment_inflation: 0.025
   # Cost year of each component
   discount_years:
     wind: 2022
@@ -57,7 +57,7 @@ This approach also relies on data from `plant_config`:
 
 
 ```{note}
-`profast_general_inflation` is used to populate the escalation and inflation rates in ProFAST entries with a value of 0 corresponding to a *nominal analysis*.
+`inflation_rate` is used to populate the escalation and inflation rates in ProFAST entries with a value of 0 corresponding to a *nominal analysis*.
 ```
 
 
@@ -96,7 +96,7 @@ finance_parameters:
   depreciation_period_electrolyzer: 7 #depreciation period for electrolyzer
   cost_adjustment_parameters:
     target_dollar_year: 2022
-    inflation_rate: 0.025 # used to adjust costs for technologies under `discount_years` to target_dollar_year
+    cost_year_adjustment_inflation: 0.025 # used to adjust costs for technologies under `discount_years` to target_dollar_year
   discount_years:
     wind: 2022
     electrolyzer: 2022

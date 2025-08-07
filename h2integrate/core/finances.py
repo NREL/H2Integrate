@@ -17,7 +17,7 @@ class AdjustedCapexOpexComp(om.ExplicitComponent):
         plant_config = self.options["plant_config"]
         self.discount_years = plant_config["finance_parameters"]["discount_years"]
         self.inflation_rate = plant_config["finance_parameters"]["cost_adjustment_parameters"][
-            "inflation_rate"
+            "cost_year_adjustment_inflation"
         ]
         self.target_dollar_year = plant_config["finance_parameters"]["cost_adjustment_parameters"][
             "target_dollar_year"
@@ -168,7 +168,7 @@ class ProFastComp(om.ExplicitComponent):
                 "general inflation rate"
             ]
         else:
-            gen_inflation = self.plant_config["finance_parameters"]["profast_general_inflation"]
+            gen_inflation = self.plant_config["finance_parameters"]["inflation_rate"]
 
         land_cost = 0.0
 

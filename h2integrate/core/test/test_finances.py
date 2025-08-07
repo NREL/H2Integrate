@@ -18,7 +18,7 @@ class TestProFastComp(unittest.TestCase):
             "finance_parameters": {
                 "analysis_start_year": 2022,
                 "installation_time": 24,
-                "profast_general_inflation": 0.02,
+                "inflation_rate": 0.02,
                 "sales_tax_rate": 0.07,
                 "property_tax": 0.01,
                 "property_insurance": 0.005,
@@ -35,7 +35,10 @@ class TestProFastComp(unittest.TestCase):
                 "depreciation_method": "Straight line",
                 "depreciation_period": 20,
                 "depreciation_period_electrolyzer": 10,
-                "cost_adjustment_parameters": {"target_dollar_year": 2022, "inflation_rate": 0.0},
+                "cost_adjustment_parameters": {
+                    "target_dollar_year": 2022,
+                    "cost_year_adjustment_inflation": 0.0,
+                },
             },
             "plant": {
                 "plant_life": 30,
@@ -217,7 +220,7 @@ def test_profast_config_provided():
             "depreciation_period_electrolyzer": 10,
             "cost_adjustment_parameters": {
                 "target_dollar_year": 2022,
-                "inflation_rate": 0.0,
+                "cost_year_adjustment_inflation": 0.0,
             },
         },
         "plant": {
@@ -286,7 +289,7 @@ def test_parameter_validation_clashing_values():
             "depreciation_period_electrolyzer": 10,
             "cost_adjustment_parameters": {
                 "target_dollar_year": 2022,
-                "inflation_rate": 0.0,
+                "cost_year_adjustment_inflation": 0.0,
             },
         },
         "plant": {

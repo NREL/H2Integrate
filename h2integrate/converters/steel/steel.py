@@ -89,9 +89,7 @@ class SteelCostAndFinancialModel(SteelCostBaseClass):
             installation_time=self.options["plant_config"]["finance_parameters"][
                 "installation_time"
             ],
-            gen_inflation=self.options["plant_config"]["finance_parameters"][
-                "profast_general_inflation"
-            ],
+            gen_inflation=self.options["plant_config"]["finance_parameters"]["inflation_rate"],
         )
 
         self.add_input("steel_production_mtpy", val=0.0, units="t/year")
