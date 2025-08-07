@@ -161,6 +161,7 @@ class DemandOpenLoopControllerConfig(BaseConfig):
             decimal between 0 and 1 (e.g., 0.9 for 90% efficiency).
         demand_profile (scalar or list): The demand values for each time step (in the same units
             as `resource_units`) or a scalar for a constant demand.
+        n_time_steps (int): Number of time steps in the simulation. Defaults to 8760.
     """
 
     resource_name: str = field()
@@ -174,6 +175,7 @@ class DemandOpenLoopControllerConfig(BaseConfig):
     charge_efficiency: float = field()
     discharge_efficiency: float = field()
     demand_profile: int | float | list = field()
+    n_time_steps: int = field(default=8760)
 
 
 class DemandOpenLoopController(ControllerBaseClass):
@@ -226,11 +228,14 @@ class DemandOpenLoopController(ControllerBaseClass):
             desc=f"{resource_name} input timeseries from production to storage",
         )
 
+        if isinstance(self.config.demand_profile, int | float):
+            self.config.demand_profile = [self.config.demand_profile] * self.config.n_time_steps
+
         self.add_input(
             f"{resource_name}_demand_profile",
-            copy_shape=f"{resource_name}_in",
             units=f"{self.config.resource_units}/h",
             val=self.config.demand_profile,
+            shape=self.config.n_time_steps,
             desc=f"{resource_name} demand profile timeseries",
         )
 
@@ -301,7 +306,6 @@ class DemandOpenLoopController(ControllerBaseClass):
 
             # Initialize persistent variables for curtailment and missed load
             excess_input = 0.0
-            discharge = 0.0
             charge = 0.0
 
             # Determine the output flow based on demand_t and SOC

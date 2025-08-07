@@ -93,6 +93,7 @@ def test_demand_controller(subtests):
         "charge_efficiency": 1.0,
         "discharge_efficiency": 1.0,
         "demand_profile": [1.0] * 10,  # Example: 10 time steps with 50 kg/time step demand
+        "n_time_steps": 10,
     }
 
     # Set up the OpenMDAO problem
