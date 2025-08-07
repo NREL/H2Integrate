@@ -226,7 +226,12 @@ class H2IntegrateModel:
 
                 # Process the models
                 # TODO: integrate financial_model into the loop below
-                model_types = ["performance_model", "control_strategy", "cost_model"]
+                model_types = [
+                    "performance_model",
+                    "control_strategy",
+                    "cost_model",
+                    "dispatch_rules",
+                ]
                 for model_type in model_types:
                     if model_type in individual_tech_config:
                         model_object = self._process_model(

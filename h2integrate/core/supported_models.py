@@ -13,6 +13,7 @@ from h2integrate.storage.hydrogen.tank_baseclass import (
     HydrogenTankPerformanceModel,
 )
 from h2integrate.controllers.openloop_controllers import (
+    PyomoOpenLoopController,
     DemandOpenLoopController,
     PassThroughOpenLoopController,
 )
@@ -111,6 +112,7 @@ supported_models = {
     # Control
     "pass_through_controller": PassThroughOpenLoopController,
     "demand_open_loop_controller": DemandOpenLoopController,
+    "pyomo_open_loop_controller": PyomoOpenLoopController,
     # Storage
     "hydrogen_tank_performance": HydrogenTankPerformanceModel,
     "hydrogen_tank_cost": HydrogenTankCostModel,

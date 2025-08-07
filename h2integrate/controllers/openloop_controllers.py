@@ -336,3 +336,113 @@ class DemandOpenLoopController(ControllerBaseClass):
 
         # Return the missed load
         outputs[f"{resource_name}_missed_load"] = missed_load_array
+
+
+@define
+class PyomoOpenLoopControllerConfig(BaseConfig):
+    """
+    Configuration class for the DemandOpenLoopController.
+
+    This class defines the parameters required to configure the `DemandOpenLoopController`.
+
+    Attributes:
+        resource_name (str): Name of the resource being controlled (e.g., "hydrogen").
+        resource_units (str): Units of the resource (e.g., "kg/h").
+        time_steps (int): Number of time steps in the simulation.
+        max_capacity (float): Maximum storage capacity of the resource (in non-rate units,
+            e.g., "kg" if `resource_units` is "kg/h").
+        max_charge_percent (float): Maximum allowable state of charge (SOC) as a percentage
+            of `max_capacity`, represented as a decimal between 0 and 1.
+        min_charge_percent (float): Minimum allowable SOC as a percentage of `max_capacity`,
+            represented as a decimal between 0 and 1.
+        init_charge_percent (float): Initial SOC as a percentage of `max_capacity`, represented
+            as a decimal between 0 and 1.
+        max_charge_rate (float): Maximum rate at which the resource can be charged (in units
+            per time step, e.g., "kg/time step").
+        max_discharge_rate (float): Maximum rate at which the resource can be discharged (in
+            units per time step, e.g., "kg/time step").
+        charge_efficiency (float): Efficiency of charging the storage, represented as a decimal
+            between 0 and 1 (e.g., 0.9 for 90% efficiency).
+        discharge_efficiency (float): Efficiency of discharging the storage, represented as a
+            decimal between 0 and 1 (e.g., 0.9 for 90% efficiency).
+        demand_profile (scalar or list): The demand values for each time step (in the same units
+            as `resource_units`) or a scalar for a constant demand.
+    """
+
+    resource_name: str = field()
+    resource_units: str = field()
+    time_steps: int = field()
+    max_capacity: float = field()
+    max_charge_percent: float = field()
+    min_charge_percent: float = field()
+    init_charge_percent: float = field()
+    max_charge_rate: float = field()
+    max_discharge_rate: float = field()
+    charge_efficiency: float = field()
+    discharge_efficiency: float = field()
+    demand_profile: int | float | list = field()
+
+
+class PyomoOpenLoopController(ControllerBaseClass):
+    def setup(self):
+        self.config = DemandOpenLoopControllerConfig.from_dict(
+            merge_shared_inputs(self.options["tech_config"]["model_inputs"], "control")
+        )
+
+        self.add_input(
+            f"{self.config.resource_name}_in",
+            shape_by_conn=True,
+            units=self.config.resource_units,
+            desc=f"{self.config.resource_name} input timeseries from production to storage",
+        )
+
+        self.add_output(
+            f"{self.config.resource_name}_out",
+            copy_shape=f"{self.config.resource_name}_in",
+            units=self.config.resource_units,
+            desc=f"{self.config.resource_name} output timeseries from plant after storage",
+        )
+
+        self.add_output(  # using non-discrete outputs so shape and units can be specified
+            f"{self.config.resource_name}_soc",
+            copy_shape=f"{self.config.resource_name}_in",
+            units="unitless",
+            desc=f"{self.config.resource_name} state of charge timeseries for storage",
+        )
+
+        self.add_output(  # using non-discrete outputs so shape and units can be specified
+            f"{self.config.resource_name}_curtailed",
+            copy_shape=f"{self.config.resource_name}_in",
+            units=self.config.resource_units,
+            desc=f"{self.config.resource_name} curtailment timeseries for inflow resource at \
+                storage point",
+        )
+
+        self.add_output(  # using non-discrete outputs so shape and units can be specified
+            f"{self.config.resource_name}_missed_load",
+            copy_shape=f"{self.config.resource_name}_in",
+            units=self.config.resource_units,
+            desc=f"{self.config.resource_name} missed load timeseries",
+        )
+
+    def compute(self, inputs, outputs):
+        """
+        Compute the state of charge (SOC) and output flow based on demand and storage constraints.
+
+        """
+        demand_profile = self.config.demand_profile
+
+        # if demand_profile is a scalar, then use it to create a constant timeseries
+        if isinstance(demand_profile, (int, float)):
+            demand_profile = [demand_profile] * self.config.time_steps
+
+        import pdb
+
+        pdb.set_trace()
+        # outputs[f"{resource_name}_out"] = output_array
+        # # Return the SOC
+        # outputs[f"{resource_name}_soc"] = soc_array
+        # # Return the curtailment
+        # outputs[f"{resource_name}_curtailed"] = curtailment_array
+        # # Return the missed load
+        # outputs[f"{resource_name}_missed_load"] = missed_load_array
