@@ -321,7 +321,7 @@ class DemandOpenLoopController(ControllerBaseClass):
             soc_array[t] = deepcopy(soc)
 
             # Record the curtailment at the current time step
-            curtailment_array[t] = float(excess_input - charge)
+            curtailment_array[t] = max(0, float(excess_input - charge))
 
             # Record the missed load the the current time step
             missed_load_array[t] = max(0, (demand_t - output_array[t]))

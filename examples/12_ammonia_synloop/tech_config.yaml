@@ -54,7 +54,6 @@ technologies:
         resource_name: "hydrogen"
         resource_units: "kg/h"
         time_steps: 8760
-
   ammonia:
     performance_model:
       model: "synloop_ammonia_performance"
