@@ -69,25 +69,3 @@ class WindFinanceBaseClass(om.ExplicitComponent):
         """
 
         raise NotImplementedError("This method should be implemented in a subclass.")
-
-
-class WindDispatchBaseClass(om.ExplicitComponent):
-    def initialize(self):
-        self.options.declare("driver_config", types=dict)
-        self.options.declare("plant_config", types=dict)
-        self.options.declare("tech_config", types=dict)
-
-    def setup(self):
-        self.add_discrete_output("_create_port", val=0.0, units="USD", desc="Net present value")
-        self.add_discrete_output(
-            "_create_variables", val=0.0, units="USD", desc="Net present value"
-        )
-
-    def compute(self, inputs, outputs):
-        """
-        Computation for the OM component.
-
-        For a template class this is not implement and raises an error.
-        """
-
-        raise NotImplementedError("This method should be implemented in a subclass.")
