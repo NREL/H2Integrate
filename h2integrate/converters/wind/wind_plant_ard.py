@@ -29,7 +29,8 @@ class ArdWindPlantModel(om.Group):
             "wind_plant_ard",
             ard_prob.model,
             promotes=[
-                "(layout2aep.aepFLORIS.power_farm, electricity_out)" "(tcc.tcc, CapEx)",
+                "(layout2aep.aepFLORIS.power_farm, electricity_out)",
+                "(tcc.tcc, CapEx)",
                 "(opex.opex, OpEx)",
             ],
         )
