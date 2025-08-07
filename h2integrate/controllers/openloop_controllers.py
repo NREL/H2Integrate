@@ -299,6 +299,11 @@ class DemandOpenLoopController(ControllerBaseClass):
             available_charge = (max_charge_percent - soc) * max_capacity
             available_discharge = (soc - min_charge_percent) * max_capacity
 
+            # Initialize persistent variables for curtailment and missed load
+            excess_input = 0.0
+            discharge = 0.0
+            charge = 0.0
+
             # Determine the output flow based on demand_t and SOC
             if demand_t > input_flow:
                 # Discharge storage to meet demand
