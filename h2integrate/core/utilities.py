@@ -237,3 +237,46 @@ def check_plant_config_and_profast_params(
             f"{pf_config_key} from pf_params input."
         )
         raise ValueError(msg)
+
+
+def check_output_formatting(orig_dict):
+    """Recursive method to convert arrays to lists and numerical entries to floats.
+    This is primarily used before writing a dictionary to a YAML file to ensure
+    proper output formatting.
+
+    Args:
+        orig_dict (dict): input dictionary
+
+    Returns:
+        dict: input dictionary with reformatted values.
+    """
+    for key, val in orig_dict.items():
+        if isinstance(val, dict):
+            tmp = check_output_formatting(orig_dict.get(key, {}))
+            orig_dict[key] = tmp
+        else:
+            if isinstance(key, list):
+                for i, k in enumerate(key):
+                    if isinstance(orig_dict[k], (str, bool, int)):
+                        orig_dict[k] = orig_dict.get(k, []) + val[i]
+                    elif isinstance(orig_dict[k], (list, np.ndarray)):
+                        orig_dict[k] = np.array(val, dtype=float).tolist()
+                    else:
+                        orig_dict[k] = float(val[i])
+            elif isinstance(key, str):
+                if isinstance(orig_dict[key], (str, bool, int)):
+                    continue
+                if isinstance(orig_dict[key], (list, np.ndarray)):
+                    if any(isinstance(v, dict) for v in val):
+                        for vii, v in enumerate(val):
+                            if isinstance(v, dict):
+                                new_val = check_output_formatting(v)
+                            else:
+                                new_val = v if isinstance(v, (str, bool, int)) else float(v)
+                            orig_dict[key][vii] = new_val
+                    else:
+                        new_val = [v if isinstance(v, (str, bool, int)) else float(v) for v in val]
+                        orig_dict[key] = new_val
+                else:
+                    orig_dict[key] = float(val)
+    return orig_dict
