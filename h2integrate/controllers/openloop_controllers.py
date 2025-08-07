@@ -285,18 +285,13 @@ class DemandOpenLoopController(ControllerBaseClass):
         missed_load_array = np.zeros(num_timesteps)
 
         # Loop through each time step
-        for t in range(len(demand_profile)):
-            # Get the input flow and demand at the current time step
+        for t, demand_t in enumerate(demand_profile):
+            # Get the input flow at the current time step
             input_flow = inputs[f"{resource_name}_in"][t]
-            demand_t = demand_profile[t]
 
             # Calculate the available charge/discharge capacity
             available_charge = (max_charge_percent - soc) * max_capacity
             available_discharge = (soc - min_charge_percent) * max_capacity
-
-            # Initialize persistent variables
-            charge = 0
-            excess_input = 0
 
             # Determine the output flow based on demand_t and SOC
             if demand_t > input_flow:
