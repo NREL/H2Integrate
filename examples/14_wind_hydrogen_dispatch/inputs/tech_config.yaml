@@ -79,7 +79,6 @@ technologies:
         days: 10 #how many days worth of production we should be able to store (this is ignored if `capacity_from_max_on_turbine_storage` is set to True)
       control_parameters:
         resource_units: "kg/h"
-        time_steps: 8760
         max_capacity: 60000.0  # kg
         max_charge_percent: 1.0  # percent as decimal
         min_charge_percent: 0.1  # percent as decimal

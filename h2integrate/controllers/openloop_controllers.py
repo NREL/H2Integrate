@@ -61,7 +61,6 @@ class ControllerBaseClass(om.ExplicitComponent):
 class PassThroughOpenLoopControllerConfig(BaseConfig):
     resource_name: str = field()
     resource_units: str = field()
-    time_steps: int = field()
 
 
 class PassThroughOpenLoopController(ControllerBaseClass):
@@ -144,7 +143,6 @@ class DemandOpenLoopControllerConfig(BaseConfig):
     Attributes:
         resource_name (str): Name of the resource being controlled (e.g., "hydrogen").
         resource_units (str): Units of the resource (e.g., "kg/h").
-        time_steps (int): Number of time steps in the simulation.
         max_capacity (float): Maximum storage capacity of the resource (in non-rate units,
             e.g., "kg" if `resource_units` is "kg/h").
         max_charge_percent (float): Maximum allowable state of charge (SOC) as a percentage
@@ -167,7 +165,6 @@ class DemandOpenLoopControllerConfig(BaseConfig):
 
     resource_name: str = field()
     resource_units: str = field()
-    time_steps: int = field()
     max_capacity: float = field()
     max_charge_percent: float = field()
     min_charge_percent: float = field()
@@ -271,20 +268,21 @@ class DemandOpenLoopController(ControllerBaseClass):
         charge_efficiency = self.config.charge_efficiency
         discharge_efficiency = self.config.discharge_efficiency
         demand_profile = self.config.demand_profile
+        num_timesteps = len(inputs[f"{resource_name}_in"])
 
         # if demand_profile is a scalar, then use it to create a constant timeseries
         if isinstance(demand_profile, (int, float)):
-            demand_profile = [demand_profile] * self.config.time_steps
+            demand_profile = [demand_profile] * num_timesteps
 
         # Initialize time-step state of charge prior to loop so the loop starts with
         # the previous time step's value
         soc = deepcopy(init_charge_percent)
 
         # initialize outputs
-        soc_array = np.zeros(self.config.time_steps)
-        curtailment_array = np.zeros(self.config.time_steps)
-        output_array = np.zeros(self.config.time_steps)
-        missed_load_array = np.zeros(self.config.time_steps)
+        soc_array = np.zeros(num_timesteps)
+        curtailment_array = np.zeros(num_timesteps)
+        output_array = np.zeros(num_timesteps)
+        missed_load_array = np.zeros(num_timesteps)
 
         # Loop through each time step
         for t in range(len(demand_profile)):

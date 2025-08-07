@@ -84,7 +84,6 @@ def test_demand_controller(subtests):
     tech_config["technologies"]["h2_storage"]["model_inputs"]["control_parameters"] = {
         "resource_name": "hydrogen",
         "resource_units": "kg/h",
-        "time_steps": 10,
         "max_capacity": 10.0,  # kg
         "max_charge_percent": 1.0,  # percent as decimal
         "min_charge_percent": 0.0,  # percent as decimal

@@ -58,7 +58,6 @@ technologies:
       control_parameters:
         resource_name: "hydrogen"
         resource_units: "kg/h"
-        time_steps: 8760
   steel:
     performance_model:
       model: "steel_performance"
