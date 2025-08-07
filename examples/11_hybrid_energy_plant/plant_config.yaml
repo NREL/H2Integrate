@@ -23,7 +23,7 @@ plant:
   plant_life: 30
   grid_connection: False # option, can be turned on or off
   ppa_price: 0.025 # $/kWh based on 2022 land based wind market report (ERCOT area ppa prices) https://www.energy.gov/sites/default/files/2022-08/land_based_wind_market_report_2202.pdf
-  atb_year: 2030
+  financial_analysis_start_year: 2032
   cost_year: 2025
   installation_time: 12 # months
 

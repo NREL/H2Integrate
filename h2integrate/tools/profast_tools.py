@@ -244,18 +244,20 @@ def make_price_breakdown(price_breakdown, pf_config):
     return full_price_breakdown, lco_check
 
 
-def create_years_of_operation(plant_life_years, analysis_start_year, installation_period_months):
+def create_years_of_operation(
+    plant_life_years, financial_analysis_start_year, installation_period_months
+):
     """Create list of years of operation.
 
     Args:
         plant_life_years (int): plant life duration in years
-        analysis_start_year (int): year to start analysis.
+        financial_analysis_start_year (int): year to start analysis.
         installation_period_months (float | int): installation period in months
 
     Returns:
         list[str]: list of years of operation.
     """
-    operation_start_year = analysis_start_year + (installation_period_months / 12)
+    operation_start_year = financial_analysis_start_year + (installation_period_months / 12)
     years_of_operation = np.arange(
         int(operation_start_year), int(operation_start_year + plant_life_years), 1
     )
