@@ -7,6 +7,7 @@ from h2integrate.transporters.power_combiner import CombinerPerformanceModel
 from h2integrate.converters.hopp.hopp_wrapper import HOPPComponent
 from h2integrate.converters.solar.solar_pysam import PYSAMSolarPlantPerformanceModel
 from h2integrate.storage.hydrogen.eco_storage import H2Storage
+from h2integrate.converters.nitrogen.simple_ASU import SimpleASUCostModel, SimpleASUPerformanceModel
 from h2integrate.converters.wind.wind_plant_ard import ArdWindPlantModel
 from h2integrate.storage.hydrogen.tank_baseclass import (
     HydrogenTankCostModel,
@@ -28,6 +29,8 @@ from h2integrate.converters.hydrogen.pem_electrolyzer import (
     ElectrolyzerCostModel,
     ElectrolyzerPerformanceModel,
 )
+from h2integrate.converters.solar.atb_res_com_pv_cost import ATBResComPVCostModel
+from h2integrate.converters.solar.atb_utility_pv_cost import ATBUtilityPVCostModel
 from h2integrate.converters.methanol.smr_methanol_plant import (
     SMRMethanolPlantCostModel,
     SMRMethanolPlantFinanceModel,
@@ -67,6 +70,8 @@ supported_models = {
     "pysam_wind_plant_performance": PYSAMWindPlantPerformanceModel,
     "pysam_solar_plant_performance": PYSAMSolarPlantPerformanceModel,
     "wind_plant_ard": ArdWindPlantModel,
+    "atb_utility_pv_cost": ATBUtilityPVCostModel,
+    "atb_comm_res_pv_cost": ATBResComPVCostModel,
     "run_of_river_hydro_performance": RunOfRiverHydroPerformanceModel,
     "run_of_river_hydro_cost": RunOfRiverHydroCostModel,
     "pem_electrolyzer_performance": ElectrolyzerPerformanceModel,
@@ -74,6 +79,8 @@ supported_models = {
     "eco_pem_electrolyzer_performance": ECOElectrolyzerPerformanceModel,
     "singlitico_electrolyzer_cost": SingliticoCostModel,
     "basic_electrolyzer_cost": BasicElectrolyzerCostModel,
+    "simple_ASU_cost": SimpleASUCostModel,
+    "simple_ASU_performance": SimpleASUPerformanceModel,
     "h2_storage": H2Storage,
     "hopp": HOPPComponent,
     "wombat": WOMBATElectrolyzerModel,
@@ -107,4 +114,4 @@ supported_models = {
     "hydrogen_tank_cost": HydrogenTankCostModel,
 }
 
-electricity_producing_techs = ["wind", "solar", "river", "hopp"]
+electricity_producing_techs = ["wind", "solar", "pv", "river", "hopp"]
