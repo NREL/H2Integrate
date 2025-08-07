@@ -85,7 +85,6 @@ def test_demand_controller(subtests):
     tech_config["technologies"]["h2_storage"]["model_inputs"]["control_parameters"] = {
         "resource_name": "hydrogen",
         "resource_units": "kg/h",
-        "time_steps": 10,
         "max_capacity": 10.0,  # kg
         "max_charge_percent": 1.0,  # percent as decimal
         "min_charge_percent": 0.0,  # percent as decimal
@@ -95,6 +94,7 @@ def test_demand_controller(subtests):
         "charge_efficiency": 1.0,
         "discharge_efficiency": 1.0,
         "demand_profile": [1.0] * 10,  # Example: 10 time steps with 50 kg/time step demand
+        "n_time_steps": 10,
     }
 
     # Set up the OpenMDAO problem

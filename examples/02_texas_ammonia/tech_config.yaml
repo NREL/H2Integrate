@@ -53,7 +53,6 @@ technologies:
       control_parameters:
         resource_name: "hydrogen"
         resource_units: "kg/h"
-        time_steps: 8760
   ammonia:
     performance_model:
       model: "simple_ammonia_performance"

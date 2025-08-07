@@ -61,7 +61,6 @@ class ControllerBaseClass(om.ExplicitComponent):
 class PassThroughOpenLoopControllerConfig(BaseConfig):
     resource_name: str = field()
     resource_units: str = field()
-    time_steps: int = field()
 
 
 class PassThroughOpenLoopController(ControllerBaseClass):
@@ -144,7 +143,6 @@ class DemandOpenLoopControllerConfig(BaseConfig):
     Attributes:
         resource_name (str): Name of the resource being controlled (e.g., "hydrogen").
         resource_units (str): Units of the resource (e.g., "kg/h").
-        time_steps (int): Number of time steps in the simulation.
         max_capacity (float): Maximum storage capacity of the resource (in non-rate units,
             e.g., "kg" if `resource_units` is "kg/h").
         max_charge_percent (float): Maximum allowable state of charge (SOC) as a percentage
@@ -163,11 +161,11 @@ class DemandOpenLoopControllerConfig(BaseConfig):
             decimal between 0 and 1 (e.g., 0.9 for 90% efficiency).
         demand_profile (scalar or list): The demand values for each time step (in the same units
             as `resource_units`) or a scalar for a constant demand.
+        n_time_steps (int): Number of time steps in the simulation. Defaults to 8760.
     """
 
     resource_name: str = field()
     resource_units: str = field()
-    time_steps: int = field()
     max_capacity: float = field()
     max_charge_percent: float = field()
     min_charge_percent: float = field()
@@ -177,6 +175,7 @@ class DemandOpenLoopControllerConfig(BaseConfig):
     charge_efficiency: float = field()
     discharge_efficiency: float = field()
     demand_profile: int | float | list = field()
+    n_time_steps: int = field(default=8760)
 
 
 class DemandOpenLoopController(ControllerBaseClass):
@@ -220,40 +219,53 @@ class DemandOpenLoopController(ControllerBaseClass):
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "control")
         )
 
+        resource_name = self.config.resource_name
+
         self.add_input(
-            f"{self.config.resource_name}_in",
+            f"{resource_name}_in",
             shape_by_conn=True,
             units=self.config.resource_units,
-            desc=f"{self.config.resource_name} input timeseries from production to storage",
+            desc=f"{resource_name} input timeseries from production to storage",
+        )
+
+        if isinstance(self.config.demand_profile, int | float):
+            self.config.demand_profile = [self.config.demand_profile] * self.config.n_time_steps
+
+        self.add_input(
+            f"{resource_name}_demand_profile",
+            units=f"{self.config.resource_units}/h",
+            val=self.config.demand_profile,
+            shape=self.config.n_time_steps,
+            desc=f"{resource_name} demand profile timeseries",
         )
 
         self.add_output(
-            f"{self.config.resource_name}_out",
-            copy_shape=f"{self.config.resource_name}_in",
+            f"{resource_name}_out",
+            copy_shape=f"{resource_name}_in",
             units=self.config.resource_units,
-            desc=f"{self.config.resource_name} output timeseries from plant after storage",
+            desc=f"{resource_name} output timeseries from plant after storage",
         )
 
-        self.add_output(  # using non-discrete outputs so shape and units can be specified
-            f"{self.config.resource_name}_soc",
-            copy_shape=f"{self.config.resource_name}_in",
+        self.add_output(
+            f"{resource_name}_soc",
+            copy_shape=f"{resource_name}_in",
             units="unitless",
-            desc=f"{self.config.resource_name} state of charge timeseries for storage",
+            desc=f"{resource_name} state of charge timeseries for storage",
         )
 
-        self.add_output(  # using non-discrete outputs so shape and units can be specified
-            f"{self.config.resource_name}_curtailed",
-            copy_shape=f"{self.config.resource_name}_in",
+        self.add_output(
+            f"{resource_name}_curtailed",
+            copy_shape=f"{resource_name}_in",
             units=self.config.resource_units,
-            desc=f"{self.config.resource_name} curtailment timeseries for inflow resource at \
+            desc=f"{resource_name} curtailment timeseries for inflow resource at \
                 storage point",
         )
 
-        self.add_output(  # using non-discrete outputs so shape and units can be specified
-            f"{self.config.resource_name}_missed_load",
-            copy_shape=f"{self.config.resource_name}_in",
+        self.add_output(
+            f"{resource_name}_missed_load",
+            copy_shape=f"{resource_name}_in",
             units=self.config.resource_units,
-            desc=f"{self.config.resource_name} missed load timeseries",
+            desc=f"{resource_name} missed load timeseries",
         )
 
     def compute(self, inputs, outputs):
@@ -270,35 +282,31 @@ class DemandOpenLoopController(ControllerBaseClass):
         max_discharge_rate = self.config.max_discharge_rate
         charge_efficiency = self.config.charge_efficiency
         discharge_efficiency = self.config.discharge_efficiency
-        demand_profile = self.config.demand_profile
-
-        # if demand_profile is a scalar, then use it to create a constant timeseries
-        if isinstance(demand_profile, (int, float)):
-            demand_profile = [demand_profile] * self.config.time_steps
 
         # Initialize time-step state of charge prior to loop so the loop starts with
         # the previous time step's value
         soc = deepcopy(init_charge_percent)
 
+        demand_profile = inputs[f"{resource_name}_demand_profile"]
+
         # initialize outputs
-        soc_array = np.zeros(self.config.time_steps)
-        curtailment_array = np.zeros(self.config.time_steps)
-        output_array = np.zeros(self.config.time_steps)
-        missed_load_array = np.zeros(self.config.time_steps)
+        soc_array = outputs[f"{resource_name}_soc"]
+        curtailment_array = outputs[f"{resource_name}_curtailed"]
+        output_array = outputs[f"{resource_name}_out"]
+        missed_load_array = outputs[f"{resource_name}_missed_load"]
 
         # Loop through each time step
-        for t in range(len(demand_profile)):
-            # Get the input flow and demand at the current time step
+        for t, demand_t in enumerate(demand_profile):
+            # Get the input flow at the current time step
             input_flow = inputs[f"{resource_name}_in"][t]
-            demand_t = demand_profile[t]
 
             # Calculate the available charge/discharge capacity
             available_charge = (max_charge_percent - soc) * max_capacity
             available_discharge = (soc - min_charge_percent) * max_capacity
 
-            # Initialize persistent variables
-            charge = 0
-            excess_input = 0
+            # Initialize persistent variables for curtailment and missed load
+            excess_input = 0.0
+            charge = 0.0
 
             # Determine the output flow based on demand_t and SOC
             if demand_t > input_flow:

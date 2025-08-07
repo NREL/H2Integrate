@@ -20,4 +20,3 @@ technologies:
       control_parameters:
         resource_name: "hydrogen"
         resource_units: "kg/h"
-        time_steps: 10
