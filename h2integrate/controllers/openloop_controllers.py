@@ -217,40 +217,50 @@ class DemandOpenLoopController(ControllerBaseClass):
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "control")
         )
 
+        resource_name = self.config.resource_name
+
         self.add_input(
-            f"{self.config.resource_name}_in",
+            f"{resource_name}_in",
             shape_by_conn=True,
             units=self.config.resource_units,
-            desc=f"{self.config.resource_name} input timeseries from production to storage",
+            desc=f"{resource_name} input timeseries from production to storage",
+        )
+
+        self.add_input(
+            f"{resource_name}_demand_profile",
+            copy_shape=f"{resource_name}_in",
+            units=f"{self.config.resource_units}/h",
+            val=self.config.demand_profile,
+            desc=f"{resource_name} demand profile timeseries",
         )
 
         self.add_output(
-            f"{self.config.resource_name}_out",
-            copy_shape=f"{self.config.resource_name}_in",
+            f"{resource_name}_out",
+            copy_shape=f"{resource_name}_in",
             units=self.config.resource_units,
-            desc=f"{self.config.resource_name} output timeseries from plant after storage",
+            desc=f"{resource_name} output timeseries from plant after storage",
         )
 
-        self.add_output(  # using non-discrete outputs so shape and units can be specified
-            f"{self.config.resource_name}_soc",
-            copy_shape=f"{self.config.resource_name}_in",
+        self.add_output(
+            f"{resource_name}_soc",
+            copy_shape=f"{resource_name}_in",
             units="unitless",
-            desc=f"{self.config.resource_name} state of charge timeseries for storage",
+            desc=f"{resource_name} state of charge timeseries for storage",
         )
 
-        self.add_output(  # using non-discrete outputs so shape and units can be specified
-            f"{self.config.resource_name}_curtailed",
-            copy_shape=f"{self.config.resource_name}_in",
+        self.add_output(
+            f"{resource_name}_curtailed",
+            copy_shape=f"{resource_name}_in",
             units=self.config.resource_units,
-            desc=f"{self.config.resource_name} curtailment timeseries for inflow resource at \
+            desc=f"{resource_name} curtailment timeseries for inflow resource at \
                 storage point",
         )
 
-        self.add_output(  # using non-discrete outputs so shape and units can be specified
-            f"{self.config.resource_name}_missed_load",
-            copy_shape=f"{self.config.resource_name}_in",
+        self.add_output(
+            f"{resource_name}_missed_load",
+            copy_shape=f"{resource_name}_in",
             units=self.config.resource_units,
-            desc=f"{self.config.resource_name} missed load timeseries",
+            desc=f"{resource_name} missed load timeseries",
         )
 
     def compute(self, inputs, outputs):
@@ -267,22 +277,18 @@ class DemandOpenLoopController(ControllerBaseClass):
         max_discharge_rate = self.config.max_discharge_rate
         charge_efficiency = self.config.charge_efficiency
         discharge_efficiency = self.config.discharge_efficiency
-        demand_profile = self.config.demand_profile
-        num_timesteps = len(inputs[f"{resource_name}_in"])
-
-        # if demand_profile is a scalar, then use it to create a constant timeseries
-        if isinstance(demand_profile, (int, float)):
-            demand_profile = [demand_profile] * num_timesteps
 
         # Initialize time-step state of charge prior to loop so the loop starts with
         # the previous time step's value
         soc = deepcopy(init_charge_percent)
 
+        demand_profile = inputs[f"{resource_name}_demand_profile"]
+
         # initialize outputs
-        soc_array = np.zeros(num_timesteps)
-        curtailment_array = np.zeros(num_timesteps)
-        output_array = np.zeros(num_timesteps)
-        missed_load_array = np.zeros(num_timesteps)
+        soc_array = outputs[f"{resource_name}_soc"]
+        curtailment_array = outputs[f"{resource_name}_curtailed"]
+        output_array = outputs[f"{resource_name}_out"]
+        missed_load_array = outputs[f"{resource_name}_missed_load"]
 
         # Loop through each time step
         for t, demand_t in enumerate(demand_profile):
@@ -318,14 +324,3 @@ class DemandOpenLoopController(ControllerBaseClass):
 
             # Record the missed load the the current time step
             missed_load_array[t] = max(0, (demand_t - output_array[t]))
-
-        outputs[f"{resource_name}_out"] = output_array
-
-        # Return the SOC
-        outputs[f"{resource_name}_soc"] = soc_array
-
-        # Return the curtailment
-        outputs[f"{resource_name}_curtailed"] = curtailment_array
-
-        # Return the missed load
-        outputs[f"{resource_name}_missed_load"] = missed_load_array
