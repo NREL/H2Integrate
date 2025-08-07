@@ -1,6 +1,10 @@
 # Solar-PV Cost Models based on ATB-Formatted Cost Data
 
-NREL's [Annual Technology Baseline (ATB)](https://atb.nrel.gov/electricity/2024/data) is commonly referenced for technology costs such as overnight capital cost, fixed operations and maintenance costs, and capital expenditures. Two solar-PV cost models are available in H2I that are intended to be easily used with cost values pulled from [NREL's ATB Excel workbook](https://atb.nrel.gov/electricity/2024/data).
+NREL's [Annual Technology Baseline (ATB)](https://atb.nrel.gov) is commonly referenced for technology costs such as overnight capital cost, fixed operations and maintenance costs, and capital expenditures. Two solar-PV cost models are available in H2I that are intended to be easily used with cost values pulled from [NREL's ATB Excel workbook](https://atb.nrel.gov/electricity/2024/data).
+
+```{note}
+The Annual Technology Baseline (ATB) is updated annually. While we do our best to update our documentation regularly, be sure that you're using the most recent version of the ATB in case our links are pointing to an older version.
+```
 
 As mentioned on the [Utility-Scale PV ATB page](https://atb.nrel.gov/electricity/2024/utility-scale_pv), the costs for utility-scale PV have been published in `$/kW-AC` since 2020. The costs for [Commercial PV](https://atb.nrel.gov/electricity/2024/commercial_pv) and [Residential PV](https://atb.nrel.gov/electricity/2024/residential_pv) are published in `$/kW-DC`. The only difference between the two cost models in H2I are whether costs are input in `$/kW-AC` or `$/kW-DC`.
 
@@ -33,6 +37,10 @@ technologies:
 ## Commercial and Residential PV Cost Model
 
 The inputs for `cost_parameters` are `capex_per_kWdc` and `opex_per_kWdc_per_year`. From the ATB workbook, a value for `capex_per_kWdc` can be found on the `Solar - PV Dist. Comm` or `Solar - PV Dist. Res` sheet under the "Overnight Capital Cost" section or the "CAPEX" section. The values in the "CAPEX" section include overnight capital costs, construction finance factor, and grid connection costs. A value for `opex_per_kWdc_per_year` can be found on the `Solar - PV Dist. Comm` or `Solar - PV Dist. Res` sheet under the "Fixed Operation and Maintenance Expenses" section.
+
+```{note}
+Since the commercial and residential PV values in the ATB are in kW-DC the parameter `pv_capacity_kWdc` should be included in the `shared_parameters` when using the `pysam_solar_plant_performance` and `atb_comm_res_pv_cost` models.
+```
 
 Here is an example of how to use the `atb_comm_res_pv_cost` model in the `tech_config.yaml` file:
 
