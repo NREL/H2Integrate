@@ -347,7 +347,9 @@ class DemandOpenLoopController(ControllerBaseClass):
             if demand_t > input_flow:
                 # Discharge storage to meet demand
                 discharge_needed = (demand_t - input_flow) / discharge_efficiency
-                discharge = min(discharge_needed, available_discharge, max_discharge_rate)
+                discharge = min(
+                    discharge_needed, available_discharge, max_discharge_rate / discharge_efficiency
+                )
                 soc -= discharge / max_capacity  # soc is a ratio with value between 0 and 1
                 output_array[t] = input_flow + discharge * discharge_efficiency
             else:
