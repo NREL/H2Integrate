@@ -317,8 +317,8 @@ class DemandOpenLoopController(ControllerBaseClass):
                 output_array[t] = input_flow + discharge * discharge_efficiency
             else:
                 # Charge storage with excess input
-                excess_input = input_flow - demand_t
-                charge = min(excess_input * charge_efficiency, available_charge, max_charge_rate)
+                excess_input = (input_flow - demand_t) * charge_efficiency
+                charge = min(excess_input, available_charge, max_charge_rate)
                 soc += charge / max_capacity  # soc is a ratio with value between 0 and 1
                 output_array[t] = demand_t
 
