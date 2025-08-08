@@ -345,16 +345,25 @@ class DemandOpenLoopController(ControllerBaseClass):
 
             # Determine the output flow based on demand_t and SOC
             if demand_t > input_flow:
-                # Discharge storage to meet demand
+                # Discharge storage to meet demand.
+                # `discharge_needed` is as seen by the storage
                 discharge_needed = (demand_t - input_flow) / discharge_efficiency
+                # `discharge` is as seen by the storage, but `max_discharge_rate` is as observed
+                # outside the storage
                 discharge = min(
                     discharge_needed, available_discharge, max_discharge_rate / discharge_efficiency
                 )
                 soc -= discharge / max_capacity  # soc is a ratio with value between 0 and 1
+                # output is as observed outside the storage, so we need to adjust `discharge` by
+                # applying `discharge_efficiency
                 output_array[t] = input_flow + discharge * discharge_efficiency
             else:
                 # Charge storage with excess input
+                # `excess_input` is as seen outside the storage
                 excess_input = input_flow - demand_t
+                # `charge` is as seen by the storage, but the things being compared should all be as
+                # seen outside the storage so we need to adjust `available_charge` outside the
+                # storage view and the final result back into the storage view.
                 charge = (
                     min(excess_input, available_charge / charge_efficiency, max_charge_rate)
                     * charge_efficiency
@@ -368,7 +377,8 @@ class DemandOpenLoopController(ControllerBaseClass):
             # Record the SOC for the current time step
             soc_array[t] = deepcopy(soc)
 
-            # Record the curtailment at the current time step
+            # Record the curtailment at the current time step. Adjust `charge` from storage view to
+            # outside view for curtailment
             curtailment_array[t] = max(0, float(excess_input - charge / charge_efficiency))
 
             # Record the missed load at the current time step
