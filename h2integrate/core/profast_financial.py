@@ -43,26 +43,43 @@ class BasicProFASTParameterConfig(BaseConfig):
     """_summary_
 
     Attributes:
-        plant_life (int): _description_
-        analysis_start_year (int): _description_
+        plant_life (int): operating life of plant in years
+        analysis_start_year (int): calendar year to start financial analysis
         installation_months (int): time between `analysis_start_year` and operation start in months
         discount_rate (float): leverage after tax nominal discount rate
         debt_equity_ratio (float): debt to equity ratio of initial financing.
         property_tax_and_insurance (float): property tax and insurance
-        total_income_tax_rate (float):
-        capital_gains_tax_rate (float):
-        sales_tax_rate (float):
-        debt_interest_rate (float):
+        total_income_tax_rate (float): income tax rate
+        capital_gains_tax_rate (float): tax rate fraction on capital gains
+        sales_tax_rate (float): sales tax fraction
+        debt_interest_rate (float): interest rate on debt
         general_inflation_rate (float): TODO: check name
-        cash_onhand_months (int):
-        admin_expense (float):
-        non_depr_assets (float):
-        end_of_proj_sale_non_depr_assets (float):
+        cash_onhand_months (int): number of months with cash onhand.
+        admin_expense (float): adminstrative expense as a fraction of sales
 
+        non_depr_assets (float): cost (in `$`) of nondepreciable assets, such as land.
+        end_of_proj_sale_non_depr_assets (float): cost (in `$`) of nondepreciable assets
+            that are sold at the end of the project.
 
-
-
-
+        Optional:
+        tax_loss_carry_forward_years (int, optional):
+        tax_losses_monetized (bool, optional):
+        sell_undepreciated_cap (bool, optional):
+        credit_card_fees (float, optional):
+        demand_rampup (float, optional):
+        debt_type (str, optional):
+        loan_period_if_used (int, optional)
+        commodity (dict, optional):
+        installation_cost  (dict, optional):
+        topc (dict, optional):
+        annual_operating_incentive (dict, optional):
+        incidental_revenue (dict, optional):
+        road_tax (dict, optional):
+        labor (dict, optional):
+        maintenance (dict, optional):
+        rent (dict, optional):
+        license_and_permit (dict, optional):
+        one_time_cap_inct (dict, optional):
 
     Returns:
         _type_: _description_
@@ -190,7 +207,7 @@ class ProFASTDefaultCapitalItem(BaseConfig):
     replacement_period_years: int | float = field(default=0.0)
 
     def create_dict(self):
-        non_profast_attrs = ["replacement_cost_percent"]
+        non_profast_attrs = ["replacement_cost_percent", "replacement_period_years"]
         full_dict = self.as_dict()
         d = {k: v for k, v in full_dict.items() if k not in non_profast_attrs}
         return d
@@ -332,11 +349,13 @@ class ProFastComp(om.ExplicitComponent):
     def compute(self, inputs, outputs):
         mass_commodities = ["hydrogen", "ammonia", "co2", "nitrogen"]
 
-        profast_params = self.config.as_dict()
+        profast_params = self.params.as_dict()
         profast_params["commodity"].update({"name": self.options["commodity"]})
         profast_params["commodity"].update(
             {"unit": "kg" if self.options["commodity_type"] in mass_commodities else "kWh"}
         )
+        profast_params["capacity"] = inputs["capacity_todo"]
+        profast_params["long term utilization"] = inputs["utilization_todo"]
 
         pf_params = self.params.as_dict()
         pf_dict = {"params": pf_params, "capital_items": {}, "fixed_costs": {}}
