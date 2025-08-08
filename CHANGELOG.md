@@ -34,6 +34,8 @@
 - Update PySAM solar performance model to allow for more user-configurability.
 - Added simple air separation unit (ASU) converter to model nitrogen production.
 - Added two ATB-compatible solar-PV cost models.
+- Changed electrolyzer capacity to be specified as `n_clusters` rather than `rating` in electrolyzer performance model config
+- Changed electrolyzer capacity to be an input to the electrolyzer cost models rather than pulled from the cost model config.
 
 ## 0.3.0 [May 2 2025]
 
