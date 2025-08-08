@@ -9,7 +9,7 @@ technologies:
     cost_model:
       model: "hopp"
     financial_model:
-      group: 1
+      group: default
     electrolyzer_rating: 720. # MW
   electrolyzer:
     performance_model:
@@ -17,7 +17,7 @@ technologies:
     cost_model:
       model: "singlitico_electrolyzer_cost"
     financial_model:
-      group: 1
+      group: default
     model_inputs:
       shared_parameters:
         rating: 720. # MW
@@ -41,12 +41,17 @@ technologies:
   h2_storage:
     performance_model:
       model: "h2_storage"
+    control_model:
+      model: "pass_through_controller"
     cost_model:
       model: "h2_storage"
     financial_model:
-      group: 1
+      group: default
     model_inputs:
       shared_parameters:
+        resource_name: "hydrogen"
+        resource_units: "kg/h"
+      performance_parameters:
         rating: 720.
         size_capacity_from_demand:
           flag: True # If True, then storage is sized to provide steady-state storage
@@ -59,7 +64,7 @@ technologies:
     cost_model:
       model: "steel_cost"
     financial_model:
-      group: 2
+      group: steel
     model_inputs:
       shared_parameters:
         capacity_factor: 0.9

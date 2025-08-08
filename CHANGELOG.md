@@ -1,7 +1,8 @@
 # CHANGELOG
 
 ## 0.3.1, Unreleased, TBD
-
+- Bugfix: only run pyxdsm when there are connections in the system
+- Added *_out/ to .gitignore to avoid clutter
 - Added methanol production base class
 - Added steam methane reforming methanol production technology
 - Added a new optimization example with a wind plant and electrolyzer to showcase how to define design variables, constraints, and objective functions
@@ -25,6 +26,14 @@
 - Added WOMBAT electrolyzer O&M model
 - Added marine carbon capture base class
 - Added direct ocean capture technology
+- Added option for user to provide ProFAST parameters in finance parameters
+- Added ammonia synloop, partially addressing https://github.com/NREL/H2Integrate/issues/169
+- Added geologic hydrogen (geoh2) converter and examples [PR 135](https://github.com/NREL/H2Integrate/pull/135)
+- Changed plant_config `atb_year` entry to `financial_analysis_start_year`
+- Allow users to specify the technologies to include in the metrics calculations in the plant configuration file
+- Update PySAM solar performance model to allow for more user-configurability.
+- Added simple air separation unit (ASU) converter to model nitrogen production.
+- Added two ATB-compatible solar-PV cost models.
 
 ## 0.3.0 [May 2 2025]
 

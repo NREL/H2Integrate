@@ -38,10 +38,15 @@ technologies:
   h2_storage:
     performance_model:
       model: "h2_storage"
+    control_model:
+      model: "pass_through_controller"
     cost_model:
       model: "h2_storage"
     model_inputs:
       shared_parameters:
+        resource_name: "hydrogen"
+        resource_units: "kg/h"
+      performance_parameters:
         rating: 640
         size_capacity_from_demand:
           flag: True # If True, then storage is sized to provide steady-state storage
@@ -68,3 +73,4 @@ technologies:
         cooling_water_consumption: 0.049236824
         iron_based_catalyst_consumption: 0.000091295354067341
         oxygen_byproduct: 0.29405077250145
+        capex_scaling_exponent: 0.6
