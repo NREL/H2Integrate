@@ -402,3 +402,33 @@ def test_asu_example(subtests):
             )
             == 0.28694531
         )
+
+
+def test_hydrogen_dispatch_example(subtests):
+    # Change the current working directory to the example's directory
+    os.chdir(examples_dir / "14_wind_hydrogen_dispatch")
+
+    # Create a H2Integrate model
+    model = H2IntegrateModel(Path.cwd() / "inputs" / "h2i_wind_to_h2_storage.yaml")
+
+    model.run()
+
+    model.post_process()
+
+    with subtests.test("Check LCOE"):
+        assert (
+            pytest.approx(
+                model.prob.get_val("financials_group_default.LCOE", units="USD/MW/h")[0],
+                rel=1e-5,
+            )
+            == 106.13987
+        )
+
+    with subtests.test("Check LCOH"):
+        assert (
+            pytest.approx(
+                model.prob.get_val("financials_group_default.LCOH", units="USD/kg")[0],
+                rel=1e-5,
+            )
+            == 5.68452215
+        )

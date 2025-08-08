@@ -181,7 +181,7 @@ class H2IntegrateModel:
 
         self.tech_names = []
         self.performance_models = []
-        self.control_models = []
+        self.control_strategies = []
         self.cost_models = []
         self.financial_models = []
 
@@ -217,16 +217,16 @@ class H2IntegrateModel:
                     self.financial_models.append(comp)
 
                     # Catch control models for systems that have the same performance & cost models
-                    if "control_model" in individual_tech_config:
+                    if "control_strategy" in individual_tech_config:
                         control_object = self._process_model(
-                            "control_model", individual_tech_config, tech_group
+                            "control_strategy", individual_tech_config, tech_group
                         )
-                        self.control_models.append(control_object)
+                        self.control_strategies.append(control_object)
                     continue
 
                 # Process the models
                 # TODO: integrate financial_model into the loop below
-                model_types = ["performance_model", "control_model", "cost_model"]
+                model_types = ["performance_model", "control_strategy", "cost_model"]
                 for model_type in model_types:
                     if model_type in individual_tech_config:
                         model_object = self._process_model(
