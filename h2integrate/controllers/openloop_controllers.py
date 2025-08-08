@@ -5,7 +5,7 @@ import openmdao.api as om
 from attrs import field, define
 
 from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
-from h2integrate.core.validators import range_val
+from h2integrate.core.validators import range_val, range_val_or_none
 
 
 class ControllerBaseClass(om.ExplicitComponent):
@@ -156,10 +156,15 @@ class DemandOpenLoopControllerConfig(BaseConfig):
             per time step, e.g., "kg/time step").
         max_discharge_rate (float): Maximum rate at which the resource can be discharged (in
             units per time step, e.g., "kg/time step").
-        charge_efficiency (float): Efficiency of charging the storage, represented as a decimal
-            between 0 and 1 (e.g., 0.9 for 90% efficiency).
-        discharge_efficiency (float): Efficiency of discharging the storage, represented as a
-            decimal between 0 and 1 (e.g., 0.9 for 90% efficiency).
+        charge_efficiency (float | None): Efficiency of charging the storage, represented as a
+            decimal between 0 and 1 (e.g., 0.9 for 90% efficiency). Optional if
+            `round_trip_efficiency` is provided.
+        discharge_efficiency (float | None): Efficiency of discharging the storage, represented
+            as a decimal between 0 and 1 (e.g., 0.9 for 90% efficiency). Optional if
+            `round_trip_efficiency` is provided.
+        round_trip_efficiency (float | None): Combined efficiency of charging and discharging
+            the storage, represented as a decimal between 0 and 1 (e.g., 0.81 for 81% efficiency).
+            Optional if `charge_efficiency` and `discharge_efficiency` are provided.
         demand_profile (scalar or list): The demand values for each time step (in the same units
             as `resource_rate_units`) or a scalar for a constant demand.
         n_time_steps (int): Number of time steps in the simulation. Defaults to 8760.
@@ -173,10 +178,38 @@ class DemandOpenLoopControllerConfig(BaseConfig):
     init_charge_percent: float = field(validator=range_val(0, 1))
     max_charge_rate: float = field()
     max_discharge_rate: float = field()
-    charge_efficiency: float = field(validator=range_val(0, 1))
-    discharge_efficiency: float = field(validator=range_val(0, 1))
     demand_profile: int | float | list = field()
     n_time_steps: int = field(default=8760)
+    charge_efficiency: float | None = field(default=None, validator=range_val_or_none(0, 1))
+    discharge_efficiency: float | None = field(default=None, validator=range_val_or_none(0, 1))
+    round_trip_efficiency: float | None = field(default=None, validator=range_val_or_none(0, 1))
+
+    def __attrs_post_init__(self):
+        """
+        Post-initialization logic to validate and calculate efficiencies.
+
+        Ensures that either `charge_efficiency` and `discharge_efficiency` are provided,
+        or `round_trip_efficiency` is provided. If `round_trip_efficiency` is provided,
+        it calculates `charge_efficiency` and `discharge_efficiency` as the square root
+        of `round_trip_efficiency`.
+        """
+        if self.round_trip_efficiency is not None:
+            if self.charge_efficiency is not None or self.discharge_efficiency is not None:
+                raise ValueError(
+                    "Provide either `round_trip_efficiency` or both `charge_efficiency` "
+                    "and `discharge_efficiency`, but not both."
+                )
+            # Calculate charge and discharge efficiencies from round-trip efficiency
+            self.charge_efficiency = np.sqrt(self.round_trip_efficiency)
+            self.discharge_efficiency = np.sqrt(self.round_trip_efficiency)
+        elif self.charge_efficiency is not None and self.discharge_efficiency is not None:
+            # Ensure both charge and discharge efficiencies are provided
+            pass
+        else:
+            raise ValueError(
+                "You must provide either `round_trip_efficiency` or both "
+                "`charge_efficiency` and `discharge_efficiency`."
+            )
 
 
 class DemandOpenLoopController(ControllerBaseClass):
