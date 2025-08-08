@@ -28,7 +28,6 @@ class PYSAMSolarPlantPerformanceModelSiteConfig(BaseConfig):
 @define
 class PYSAMSolarPlantPerformanceModelDesignConfig(BaseConfig):
     """Configuration class for design parameters of the solar pv plant.
-
         PYSAMSolarPlantPerformanceModel which uses the Pvwattsv8 module
         available in PySAM. PySAM documentation can be found
         `here <https://nrel-pysam.readthedocs.io/en/main/modules/Pvwattsv8.html#pvwattsv8>`__

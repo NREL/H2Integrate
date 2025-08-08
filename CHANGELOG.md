@@ -1,6 +1,7 @@
 # CHANGELOG
 
 ## 0.3.1, Unreleased, TBD
+- Bugfix: only run pyxdsm when there are connections in the system
 - Added *_out/ to .gitignore to avoid clutter
 - Added methanol production base class
 - Added steam methane reforming methanol production technology
@@ -32,6 +33,7 @@
 - Allow users to specify the technologies to include in the metrics calculations in the plant configuration file
 - Update PySAM solar performance model to allow for more user-configurability.
 - Added simple air separation unit (ASU) converter to model nitrogen production.
+- Added two ATB-compatible solar-PV cost models.
 - Changed electrolyzer capacity to be specified as `n_clusters` rather than `rating` in electrolyzer performance model config
 - Changed electrolyzer capacity to be an input to the electrolyzer cost models rather than pulled from the cost model config.
 
