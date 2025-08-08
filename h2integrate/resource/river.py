@@ -32,7 +32,7 @@ class RiverResource(om.ExplicitComponent):
     """
 
     def initialize(self):
-        self.options.declare("resource_config", types=str)
+        self.options.declare("resource_config", types=dict)
 
     def setup(self):
         # Define inputs and outputs
