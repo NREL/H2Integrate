@@ -153,9 +153,10 @@ class DemandOpenLoopControllerConfig(BaseConfig):
         init_charge_percent (float): Initial SOC as a percentage of `max_capacity`, represented
             as a decimal between 0 and 1.
         max_charge_rate (float): Maximum rate at which the resource can be charged (in units
-            per time step, e.g., "kg/time step").
+            per time step, e.g., "kg/time step"). This rate does not include the charge_efficiency.
         max_discharge_rate (float): Maximum rate at which the resource can be discharged (in
-            units per time step, e.g., "kg/time step").
+            units per time step, e.g., "kg/time step"). This rate does not include the
+            discharge_efficiency.
         charge_efficiency (float | None): Efficiency of charging the storage, represented as a
             decimal between 0 and 1 (e.g., 0.9 for 90% efficiency). Optional if
             `round_trip_efficiency` is provided.
@@ -351,8 +352,11 @@ class DemandOpenLoopController(ControllerBaseClass):
                 output_array[t] = input_flow + discharge * discharge_efficiency
             else:
                 # Charge storage with excess input
-                excess_input = (input_flow - demand_t) * charge_efficiency
-                charge = min(excess_input, available_charge, max_charge_rate)
+                excess_input = input_flow - demand_t
+                charge = (
+                    min(excess_input, available_charge / charge_efficiency, max_charge_rate)
+                    * charge_efficiency
+                )
                 soc += charge / max_capacity  # soc is a ratio with value between 0 and 1
                 output_array[t] = demand_t
 
@@ -363,7 +367,7 @@ class DemandOpenLoopController(ControllerBaseClass):
             soc_array[t] = deepcopy(soc)
 
             # Record the curtailment at the current time step
-            curtailment_array[t] = max(0, float(excess_input - charge))
+            curtailment_array[t] = max(0, float(excess_input - charge / charge_efficiency))
 
             # Record the missed load the the current time step
             missed_load_array[t] = max(0, (demand_t - output_array[t]))
