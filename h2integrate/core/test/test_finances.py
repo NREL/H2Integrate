@@ -6,7 +6,7 @@ import openmdao.api as om
 from pytest import approx
 
 from h2integrate.core.finances import ProFastComp
-from h2integrate.core.inputs.validation import load_tech_yaml, load_plant_yaml
+from h2integrate.core.inputs.validation import load_tech_yaml, load_plant_yaml, load_driver_yaml
 
 
 examples_dir = Path(__file__).resolve().parent.parent.parent.parent / "examples/."
@@ -61,10 +61,15 @@ class TestProFastComp(unittest.TestCase):
             },
         }
 
+        self.driver_config = {"general": {}}
+
     def test_electrolyzer_refurb_results(self):
         prob = om.Problem()
         comp = ProFastComp(
-            plant_config=self.plant_config, tech_config=self.tech_config, commodity_type="hydrogen"
+            plant_config=self.plant_config,
+            tech_config=self.tech_config,
+            driver_config=self.driver_config,
+            commodity_type="hydrogen",
         )
         prob.model.add_subsystem("comp", comp, promotes=["*"])
 
@@ -86,12 +91,13 @@ class TestProFastComp(unittest.TestCase):
 
         tech_config = load_tech_yaml(example_case_dir / "tech_config.yaml")
         plant_config = load_plant_yaml(example_case_dir / "plant_config.yaml")
-
+        driver_config = load_driver_yaml(example_case_dir / "driver_config.yaml")
         # Run ProFastComp with loaded configs
         prob = om.Problem()
         comp = ProFastComp(
             plant_config=plant_config,
             tech_config=tech_config["technologies"],
+            driver_config=driver_config,
             commodity_type="electricity",
         )
         prob.model.add_subsystem("comp", comp, promotes=["*"])
@@ -119,6 +125,7 @@ class TestProFastComp(unittest.TestCase):
 
         tech_config = load_tech_yaml(example_case_dir / "tech_config.yaml")
         plant_config = load_plant_yaml(example_case_dir / "plant_config.yaml")
+        driver_config = load_driver_yaml(example_case_dir / "driver_config.yaml")
 
         # Only include HOPP and electrolyzer in metrics
         plant_config["finance_parameters"]["technologies_included_in_metrics"]["LCOE"] = [
@@ -130,6 +137,7 @@ class TestProFastComp(unittest.TestCase):
         comp = ProFastComp(
             plant_config=plant_config,
             tech_config=tech_config["technologies"],
+            driver_config=driver_config,
             commodity_type="electricity",
         )
         prob.model.add_subsystem("comp", comp, promotes=["*"])
@@ -242,9 +250,14 @@ def test_profast_config_provided():
         },
     }
 
+    driver_config = {"general": {}}
+
     prob = om.Problem()
     comp = ProFastComp(
-        plant_config=plant_config, tech_config=tech_config, commodity_type="hydrogen"
+        plant_config=plant_config,
+        tech_config=tech_config,
+        driver_config=driver_config,
+        commodity_type="hydrogen",
     )
     prob.model.add_subsystem("comp", comp, promotes=["*"])
 
@@ -299,9 +312,14 @@ def test_parameter_validation_clashing_values():
         },
     }
 
+    driver_config = {"general": {}}
+
     prob = om.Problem()
     comp = ProFastComp(
-        plant_config=plant_config, tech_config=tech_config, commodity_type="hydrogen"
+        plant_config=plant_config,
+        tech_config=tech_config,
+        driver_config=driver_config,
+        commodity_type="hydrogen",
     )
     prob.model.add_subsystem("comp", comp, promotes=["*"])
 
