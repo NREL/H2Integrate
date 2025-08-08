@@ -5,6 +5,7 @@ import openmdao.api as om
 from attrs import field, define
 
 from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
+from h2integrate.core.validators import range_val
 
 
 class ControllerBaseClass(om.ExplicitComponent):
@@ -60,7 +61,7 @@ class ControllerBaseClass(om.ExplicitComponent):
 @define
 class PassThroughOpenLoopControllerConfig(BaseConfig):
     resource_name: str = field()
-    resource_units: str = field()
+    resource_rate_units: str = field()
 
 
 class PassThroughOpenLoopController(ControllerBaseClass):
@@ -81,14 +82,14 @@ class PassThroughOpenLoopController(ControllerBaseClass):
         self.add_input(
             f"{self.config.resource_name}_in",
             shape_by_conn=True,
-            units=self.config.resource_units,
+            units=self.config.resource_rate_units,
             desc=f"{self.config.resource_name} input timeseries from production to storage",
         )
 
         self.add_output(
             f"{self.config.resource_name}_out",
             copy_shape=f"{self.config.resource_name}_in",
-            units=self.config.resource_units,
+            units=self.config.resource_rate_units,
             desc=f"{self.config.resource_name} output timeseries from plant after storage",
         )
 
@@ -142,9 +143,9 @@ class DemandOpenLoopControllerConfig(BaseConfig):
 
     Attributes:
         resource_name (str): Name of the resource being controlled (e.g., "hydrogen").
-        resource_units (str): Units of the resource (e.g., "kg/h").
+        resource_rate_units (str): Units of the resource (e.g., "kg/h").
         max_capacity (float): Maximum storage capacity of the resource (in non-rate units,
-            e.g., "kg" if `resource_units` is "kg/h").
+            e.g., "kg" if `resource_rate_units` is "kg/h").
         max_charge_percent (float): Maximum allowable state of charge (SOC) as a percentage
             of `max_capacity`, represented as a decimal between 0 and 1.
         min_charge_percent (float): Minimum allowable SOC as a percentage of `max_capacity`,
@@ -160,20 +161,20 @@ class DemandOpenLoopControllerConfig(BaseConfig):
         discharge_efficiency (float): Efficiency of discharging the storage, represented as a
             decimal between 0 and 1 (e.g., 0.9 for 90% efficiency).
         demand_profile (scalar or list): The demand values for each time step (in the same units
-            as `resource_units`) or a scalar for a constant demand.
+            as `resource_rate_units`) or a scalar for a constant demand.
         n_time_steps (int): Number of time steps in the simulation. Defaults to 8760.
     """
 
     resource_name: str = field()
-    resource_units: str = field()
+    resource_rate_units: str = field()
     max_capacity: float = field()
-    max_charge_percent: float = field()
-    min_charge_percent: float = field()
-    init_charge_percent: float = field()
+    max_charge_percent: float = field(validator=range_val(0, 1))
+    min_charge_percent: float = field(validator=range_val(0, 1))
+    init_charge_percent: float = field(validator=range_val(0, 1))
     max_charge_rate: float = field()
     max_discharge_rate: float = field()
-    charge_efficiency: float = field()
-    discharge_efficiency: float = field()
+    charge_efficiency: float = field(validator=range_val(0, 1))
+    discharge_efficiency: float = field(validator=range_val(0, 1))
     demand_profile: int | float | list = field()
     n_time_steps: int = field(default=8760)
 
@@ -196,21 +197,21 @@ class DemandOpenLoopController(ControllerBaseClass):
 
     Inputs:
         {resource_name}_in (float): Input resource flow timeseries (e.g., hydrogen production).
-            - Units: Defined in `resource_units` (e.g., "kg/h").
+            - Units: Defined in `resource_rate_units` (e.g., "kg/h").
 
     Outputs:
         {resource_name}_out (float): Output resource flow timeseries after storage.
-            - Units: Defined in `resource_units` (e.g., "kg/h").
+            - Units: Defined in `resource_rate_units` (e.g., "kg/h").
         {resource_name}_soc (float): State of charge (SOC) timeseries for the storage system.
             - Units: "unitless" (percentage of maximum capacity given as a ratio between 0 and 1).
         {resource_name}_curtailed (float): Curtailment timeseries for unused input resource.
-            - Units: Defined in `resource_units` (e.g., "kg/h").
+            - Units: Defined in `resource_rate_units` (e.g., "kg/h").
             - Note: curtailment in this case does not reduce what the converter produces, but
                 rather the system just does not use it (throws it away) because this controller is
                 specific to the storage technology and has no influence on other technologies in
                 the system.
         {resource_name}_missed_load (float): Missed load timeseries when demand exceeds supply.
-            - Units: Defined in `resource_units` (e.g., "kg/h").
+            - Units: Defined in `resource_rate_units` (e.g., "kg/h").
 
     """
 
@@ -224,7 +225,7 @@ class DemandOpenLoopController(ControllerBaseClass):
         self.add_input(
             f"{resource_name}_in",
             shape_by_conn=True,
-            units=self.config.resource_units,
+            units=self.config.resource_rate_units,
             desc=f"{resource_name} input timeseries from production to storage",
         )
 
@@ -233,7 +234,7 @@ class DemandOpenLoopController(ControllerBaseClass):
 
         self.add_input(
             f"{resource_name}_demand_profile",
-            units=f"{self.config.resource_units}/h",
+            units=f"{self.config.resource_rate_units}/h",
             val=self.config.demand_profile,
             shape=self.config.n_time_steps,
             desc=f"{resource_name} demand profile timeseries",
@@ -242,7 +243,7 @@ class DemandOpenLoopController(ControllerBaseClass):
         self.add_output(
             f"{resource_name}_out",
             copy_shape=f"{resource_name}_in",
-            units=self.config.resource_units,
+            units=self.config.resource_rate_units,
             desc=f"{resource_name} output timeseries from plant after storage",
         )
 
@@ -256,7 +257,7 @@ class DemandOpenLoopController(ControllerBaseClass):
         self.add_output(
             f"{resource_name}_curtailed",
             copy_shape=f"{resource_name}_in",
-            units=self.config.resource_units,
+            units=self.config.resource_rate_units,
             desc=f"{resource_name} curtailment timeseries for inflow resource at \
                 storage point",
         )
@@ -264,7 +265,7 @@ class DemandOpenLoopController(ControllerBaseClass):
         self.add_output(
             f"{resource_name}_missed_load",
             copy_shape=f"{resource_name}_in",
-            units=self.config.resource_units,
+            units=self.config.resource_rate_units,
             desc=f"{resource_name} missed load timeseries",
         )
 

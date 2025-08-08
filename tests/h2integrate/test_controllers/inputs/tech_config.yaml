@@ -19,4 +19,4 @@ technologies:
         days: 10 #how many days worth of production we should be able to store (this is ignored if `capacity_from_max_on_turbine_storage` is set to True)
       control_parameters:
         resource_name: "hydrogen"
-        resource_units: "kg/h"
+        resource_rate_units: "kg/h"
