@@ -72,9 +72,11 @@ class WOMBATElectrolyzerModel(ECOElectrolyzerPerformanceModel):
             wombat_config["electrolyzers"]["central_electrolyzer"]["stack_capacity_kw"] * 1e-3
         )
         n_stacks = wombat_config["electrolyzers"]["central_electrolyzer"]["n_stacks"]
-        if self.config.rating != stack_capacity_mw * n_stacks:
+
+        rating_from_config = self.config.n_clusters * self.config.cluster_rating_MW
+        if rating_from_config != stack_capacity_mw * n_stacks:
             raise ValueError(
-                f"Electrolyzer rating {self.config.rating} does not match the product of "
+                f"Electrolyzer rating {rating_from_config} does not match the product of "
                 f"stack capacity {stack_capacity_mw} and number of stacks "
                 f"{n_stacks} in the WOMBAT config. "
                 "Ensure that the rating is equal to stack_capacity_kw * n_stacks."
@@ -89,7 +91,7 @@ class WOMBATElectrolyzerModel(ECOElectrolyzerPerformanceModel):
         # The "until" parameter is set to 8760 to simulate one year of operation.
         sim.run(delete_logs=True, save_metrics_inputs=False, until=8760)
 
-        scaling_factor = self.config.rating  # The baseline electrolyzer in WOMBAT is 1MW
+        scaling_factor = rating_from_config  # The baseline electrolyzer in WOMBAT is 1MW
 
         # TODO: handle cases where the project is longer than one year.
         # Do the project and divide by the project lifetime using sim.env.simulation_years
@@ -121,7 +123,7 @@ class WOMBATElectrolyzerModel(ECOElectrolyzerPerformanceModel):
         # We're currently grabbing the annual measure and since we're enforcing a single year,
         # that's fine. In the future we may need to adjust this to handle multiple years and
         # output OpEx as an array.
-        outputs["CapEx"] = self.config.electrolyzer_capex * self.config.rating * 1e3
+        outputs["CapEx"] = self.config.electrolyzer_capex * rating_from_config * 1e3
         outputs["OpEx"] = sim.metrics.opex("annual").squeeze() * scaling_factor
         outputs["electrolyzer_availability"] = sim.metrics.time_based_availability(
             "annual", "electrolyzer"

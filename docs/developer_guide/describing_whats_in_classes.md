@@ -24,11 +24,10 @@ Each technology class can define `get_financial_model()`, which returns an OpenM
 This would override any plant level financial model, and is useful for technologies that have unique financial considerations.
 This will also be more relevant as we develop non-single-owner capabilities.
 
-## Control model (optional, unused)
+## Control model (optional)
 
-Each technology class can define `get_control_strategy()`.
-We do not currently use this method and instead use a top-level control strategy.
-In the future, individual technologies may have unique control strategies.
+Each technology class can define a control strategy. The control strategies can currently only be applied to
+individual storage technologies. In the future, other technologies and systems may have unique control strategies.
 
 ```{note}
 It is possible to have a combined performance, cost, and financial model within a single OpenMDAO system, provided that it returns all the necessary values.
