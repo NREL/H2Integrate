@@ -32,7 +32,7 @@ class RiverResource(om.ExplicitComponent):
     """
 
     def initialize(self):
-        self.options.declare("filename", types=str)
+        self.options.declare("resource_config", types=str)
 
     def setup(self):
         # Define inputs and outputs
@@ -40,7 +40,7 @@ class RiverResource(om.ExplicitComponent):
 
     def compute(self, inputs, outputs):
         # Read the CSV file
-        filename = self.options["filename"]
+        filename = self.options["resource_config"]["filename"]
 
         # Check if the file exists
         if not Path(filename).is_file():

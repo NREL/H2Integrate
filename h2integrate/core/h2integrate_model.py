@@ -153,7 +153,7 @@ class H2IntegrateModel:
                 resource_class = self.supported_models.get(resource_name)
                 if resource_class:
                     resource_component = resource_class(
-                        filename=resource_config.get("filename"),
+                        resource_config=resource_config,
                     )
                     site_group.add_subsystem(resource_name, resource_component)
 

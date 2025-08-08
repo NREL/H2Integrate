@@ -8,7 +8,7 @@ from h2integrate.core.h2integrate_model import H2IntegrateModel
 def test_onshore_default_system_aep(subtests):
     input_path = str(Path(__file__).parent.absolute() / "inputs" / "h2i_ard.yaml")
 
-    # Create a GreenHEART model
+    # Create an H2Integrate model
     h2i_model = H2IntegrateModel(input_path)
 
     # Run the model
