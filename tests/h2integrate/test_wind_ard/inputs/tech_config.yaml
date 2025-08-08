@@ -1,0 +1,13 @@
+name: "technology_config"
+description: "This plant has wind feeding into an electrolyzer without optimization"
+
+technologies:
+  wind:
+    performance_model:
+      model: "wind_plant_ard"
+    cost_model:
+      model: "wind_plant_ard"
+    model_inputs:
+      shared_parameters:
+        ard_system: !include ard_system.yaml
+        ard_data_path: ./tests/h2integrate/test_wind_ard/inputs/

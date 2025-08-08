@@ -1,0 +1,32 @@
+system: "onshore"
+analysis_options:
+modeling_options:
+  farm:
+    N_turbines: 25
+    N_substations: 1
+    spacing_primary: 7
+    spacing_secondary: 7
+    angle_orientation: 0.0
+    angle_skew: 0.0
+    x_substations: 100.0
+    y_substations: 100.0
+  wind_rose:
+    file: wrg_example.wrg
+    wd_step: 90.0
+    wind_speeds: [5.0, 10.0, 15.0, 20.0]
+    point: [0.0, 0.0]
+  turbine: !include turbine_spec_IEA-3p4-130-RWT.yaml
+  collection:
+    substation_x: 100.0
+    substation_y: 100.0
+    max_turbines_per_string: 8
+    solver_name: "highs"
+    solver_options:
+      time_limit: 60
+      mip_gap: 0.005
+    model_options:
+      topology: "branched"
+      feeder_route: "segmented"
+      feeder_limit: "unlimited"
+  offshore: false
+  floating: false
