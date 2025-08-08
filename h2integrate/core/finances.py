@@ -1,9 +1,16 @@
+from pathlib import Path
+
 import numpy as np
 import ProFAST  # system financial model
 import openmdao.api as om
 import numpy_financial as npf
 
-from h2integrate.core.utilities import check_plant_config_and_profast_params
+from h2integrate.core.utilities import (
+    dict_to_yaml_formatting,
+    check_plant_config_and_profast_params,
+)
+from h2integrate.core.inputs.validation import write_yaml
+from h2integrate.tools.profast_reverse_tools import convert_pf_to_dict
 
 
 class AdjustedCapexOpexComp(om.ExplicitComponent):
@@ -324,6 +331,20 @@ class ProFastComp(om.ExplicitComponent):
         # ------------------------------------ solve and post-process -----------------------------
 
         sol = pf.solve_price()
+
+        # Check whether to export profast object to .yaml file
+        if self.options["driver_config"]["general"].get("save_profast_to_file", False):
+            if self.options["driver_config"].get("driver", None) is None:
+                profast_dir = self.options["driver_config"]["general"].get(
+                    "profast_output_folder",
+                    self.options["driver_config"]["general"]["folder_output"],
+                )
+                fdesc = self.options["driver_config"]["general"]["profast_output_description"]
+                fname = f"{fdesc}_{self.options['commodity_type']}.yaml"
+                fpath = Path(profast_dir) / fname
+                d = convert_pf_to_dict(pf)
+                d = dict_to_yaml_formatting(d)
+                write_yaml(d, fpath)
 
         # Only hydrogen supported in the very short term
         if self.options["commodity_type"] == "hydrogen":
