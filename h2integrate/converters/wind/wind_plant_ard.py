@@ -1,6 +1,6 @@
-import ard
 import openmdao.api as om
 from attrs import field, define
+from ard.api import set_up_ard_model
 
 from h2integrate.core.utilities import BaseConfig
 
@@ -28,11 +28,8 @@ class ArdWindPlantModel(om.Group):
             "ard_data_path"
         ]
 
-        ard_prob = ard.api.set_up_ard_model(input_dict=ard_input_dict, root_data_path=ard_data_path)
+        ard_prob = set_up_ard_model(input_dict=ard_input_dict, root_data_path=ard_data_path)
 
-        import pdb
-
-        pdb.set_trace()
         # add ard to the h2i model as a sub-problem
         subprob_ard = om.SubmodelComp(
             problem=ard_prob,

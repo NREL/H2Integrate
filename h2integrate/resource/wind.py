@@ -26,20 +26,6 @@ class WindResource(om.ExplicitComponent):
         self.options.declare("resource_config", types=str)
 
     def setup(self):
-        # Define inputs and outputs
-        self.add_output("wind_speed", shape=8760, val=0.0, units="m/s")
-        self.add_output(
-            "wind_direction",
-            shape=8760,
-            val=0.0,
-            units="deg",
-            desc="zero degrees from the north increasing clock-wise",
-        )
-        self.add_output("turbulence_intensity", shape=1, val=0.0, units="unitless")
-        self.add_output("elevation", shape=1, val=0.0, units="m", desc="elevation above sea level")
-        self.add_output("height", shape=1, val=0.0, units="m", desc="height from ground level")
-
-    def compute(self, inputs, outputs):
         # Get the resource configuration
         resource_config = self.options["resource_config"]
         file_path = Path(resource_config)
@@ -66,12 +52,25 @@ class WindResource(om.ExplicitComponent):
         reference_height = wind_data["height"].iloc[0]
         wind_data["wind_speed"] = wind_data["wind_speed"] * (desired_height / reference_height)
 
-        # Assign outputs
-        outputs["wind_speed"] = wind_data["wind_speed"].values
-        outputs["wind_direction"] = wind_data["wind_direction"].values
-        outputs["turbulence_intensity"] = turbulence_intensity
-        outputs["elevation"] = elevation
-        outputs["height"] = desired_height
+        # Define inputs and outputs
+        self.add_output("wind_speed", val=wind_data["wind_speed"].values, units="m/s")
+        self.add_output(
+            "wind_direction",
+            val=wind_data["wind_direction"].values,
+            units="deg",
+            desc="zero degrees from the north increasing clock-wise",
+        )
+        self.add_output("turbulence_intensity", shape=1, val=turbulence_intensity, units="unitless")
+        self.add_output(
+            "elevation", shape=1, val=elevation, units="m", desc="elevation above sea level"
+        )
+        self.add_output(
+            "height", shape=1, val=desired_height, units="m", desc="height from ground level"
+        )
+
+    def compute(self, inputs, outputs):
+        """All the work is done in setup because the outputs are static."""
+        pass
 
 
 @define

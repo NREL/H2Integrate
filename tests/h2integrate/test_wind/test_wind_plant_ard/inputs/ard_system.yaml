@@ -10,11 +10,7 @@ modeling_options:
     angle_skew: 0.0
     x_substations: 100.0
     y_substations: 100.0
-  wind_rose:
-    file: wrg_example.wrg
-    wd_step: 90.0
-    wind_speeds: [5.0, 10.0, 15.0, 20.0]
-    point: [0.0, 0.0]
+  wind_rose: openmdao_connections
   turbine: !include turbine_spec_IEA-3p4-130-RWT.yaml
   collection:
     substation_x: 100.0

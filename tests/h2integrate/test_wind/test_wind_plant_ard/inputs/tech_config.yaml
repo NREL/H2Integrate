@@ -10,4 +10,4 @@ technologies:
     model_inputs:
       shared_parameters:
         ard_system: !include ard_system.yaml
-        ard_data_path: ./tests/h2integrate/test_wind_ard/inputs/
+        ard_data_path: ./tests/h2integrate/test_wind/test_wind_plant_ard/inputs/
