@@ -6,15 +6,13 @@ from pathlib import Path
 import pytest
 import openmdao.api as om
 
+from h2integrate import EXAMPLE_DIR
 from h2integrate.core.h2integrate_model import H2IntegrateModel
-
-
-examples_dir = Path(__file__).resolve().parent.parent.parent / "examples/."
 
 
 def test_steel_example(subtests):
     # Change the current working directory to the example's directory
-    os.chdir(examples_dir / "01_onshore_steel_mn")
+    os.chdir(EXAMPLE_DIR / "01_onshore_steel_mn")
 
     # Create a H2Integrate model
     model = H2IntegrateModel(Path.cwd() / "01_onshore_steel_mn.yaml")
@@ -58,7 +56,7 @@ def test_steel_example(subtests):
 
 def test_simple_ammonia_example(subtests):
     # Change the current working directory to the example's directory
-    os.chdir(examples_dir / "02_texas_ammonia")
+    os.chdir(EXAMPLE_DIR / "02_texas_ammonia")
 
     # Create a H2Integrate model
     model = H2IntegrateModel(Path.cwd() / "02_texas_ammonia.yaml")
@@ -131,7 +129,7 @@ def test_simple_ammonia_example(subtests):
 
 def test_ammonia_synloop_example(subtests):
     # Change the current working directory to the example's directory
-    os.chdir(examples_dir / "12_ammonia_synloop")
+    os.chdir(EXAMPLE_DIR / "12_ammonia_synloop")
 
     # Create a H2Integrate model
     model = H2IntegrateModel(Path.cwd() / "12_ammonia_synloop.yaml")
@@ -203,7 +201,7 @@ def test_ammonia_synloop_example(subtests):
 
 def test_wind_h2_opt_example(subtests):
     # Change the current working directory to the example's directory
-    os.chdir(examples_dir / "05_wind_h2_opt")
+    os.chdir(EXAMPLE_DIR / "05_wind_h2_opt")
 
     # Run without optimization
     model_init = H2IntegrateModel(Path.cwd() / "wind_plant_electrolyzer0.yaml")
@@ -289,7 +287,7 @@ def test_wind_h2_opt_example(subtests):
 
 def test_paper_example(subtests):
     # Change the current working directory to the example's directory
-    os.chdir(examples_dir / "06_custom_tech")
+    os.chdir(EXAMPLE_DIR / "06_custom_tech")
 
     # Create a H2Integrate model
     model = H2IntegrateModel(Path.cwd() / "wind_plant_paper.yaml")
@@ -312,7 +310,7 @@ def test_paper_example(subtests):
 @unittest.skipUnless(importlib.util.find_spec("mcm") is not None, "mcm is not installed")
 def test_wind_wave_doc_example(subtests):
     # Change the current working directory to the example's directory
-    os.chdir(examples_dir / "09_wind_wave_doc")
+    os.chdir(EXAMPLE_DIR / "09_wind_wave_doc")
 
     # Create a H2Integrate model
     model = H2IntegrateModel(Path.cwd() / "offshore_plant_doc.yaml")
@@ -338,7 +336,7 @@ def test_wind_wave_doc_example(subtests):
 
 def test_hydro_example(subtests):
     # Change the current working directory to the example's directory
-    os.chdir(examples_dir / "07_run_of_river_plant")
+    os.chdir(EXAMPLE_DIR / "07_run_of_river_plant")
 
     # Create a H2Integrate model
     model = H2IntegrateModel(Path.cwd() / "07_run_of_river.yaml")
@@ -360,7 +358,7 @@ def test_hydro_example(subtests):
 
 def test_hybrid_energy_plant_example(subtests):
     # Change the current working directory to the example's directory
-    os.chdir(examples_dir / "11_hybrid_energy_plant")
+    os.chdir(EXAMPLE_DIR / "11_hybrid_energy_plant")
 
     # Create a H2Integrate model
     model = H2IntegrateModel(Path.cwd() / "wind_pv_battery.yaml")
@@ -383,7 +381,7 @@ def test_hybrid_energy_plant_example(subtests):
 
 def test_asu_example(subtests):
     # Change the current working directory to the example's directory
-    os.chdir(examples_dir / "13_air_separator")
+    os.chdir(EXAMPLE_DIR / "13_air_separator")
 
     # Create a H2Integrate model
     model = H2IntegrateModel(Path.cwd() / "13_air_separator.yaml")
@@ -406,7 +404,7 @@ def test_asu_example(subtests):
 
 def test_hydrogen_dispatch_example(subtests):
     # Change the current working directory to the example's directory
-    os.chdir(examples_dir / "14_wind_hydrogen_dispatch")
+    os.chdir(EXAMPLE_DIR / "14_wind_hydrogen_dispatch")
 
     # Create a H2Integrate model
     model = H2IntegrateModel(Path.cwd() / "inputs" / "h2i_wind_to_h2_storage.yaml")
@@ -431,4 +429,44 @@ def test_hydrogen_dispatch_example(subtests):
                 rel=1e-5,
             )
             == 5.68452215
+        )
+
+
+def test_pv_example(subtests):
+    """Test LCOE for utility-scale solar-PV model using ATB Costs:
+
+    - Resource categorization (based on GHI) for this site is Resource Class 2
+    - ATB values are for Utility-PV - Class 2 for Moderate, 2030
+    """
+    os.chdir(EXAMPLE_DIR / "15_solar_pv")
+
+    # Create a H2Integrate model
+    model = H2IntegrateModel(Path.cwd() / "15_solar_pv.yaml")
+
+    model.run()
+
+    model.post_process()
+    lcoe = model.prob.get_val("financials_group_default.LCOE")[0]
+    aep_kWh_per_year = model.prob.get_val("solar.annual_energy")[0]  # kWh/year
+    capacity_kWac = model.prob.get_val("solar.capacity_kWac")[0]  # kW-AC
+    capacity_factor_AC = aep_kWh_per_year / (capacity_kWac * 8760)
+    lcoe_usd_per_mwh = lcoe * 1e3
+
+    with subtests.test("Solar-PV Capacity Factor"):
+        assert (
+            pytest.approx(
+                capacity_factor_AC,
+                abs=0.0005,
+            )
+            == 0.31821  # From ATB workbook
+        )
+
+    # +/- $1/MWh due to LCOE variation between resource classes in ATB
+    with subtests.test("Solar-PV LCOE"):
+        assert (
+            pytest.approx(
+                lcoe_usd_per_mwh,
+                abs=1.0,
+            )
+            == 31  # From ATB workbook
         )

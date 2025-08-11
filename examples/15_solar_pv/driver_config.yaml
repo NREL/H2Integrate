@@ -1,0 +1,5 @@
+name: "driver_config"
+description: "This analysis runs a solar-PV plant"
+
+general:
+  folder_output: "15_solar_pv_outputs"

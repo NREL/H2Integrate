@@ -1,0 +1,71 @@
+
+params:
+  # commodity:
+  #   initial price: 100.0
+  #   name: 'Hydrogen'
+  #   unit: 'kg'
+  #   escalation: 0.0
+  # capacity: 1 #units/day - nameplate capacity
+  # long term utilization: 1 #capacity factor
+  analysis start year: 2030
+  operating life: 30 #30 year capital recovery period
+  installation months: 12 #1-year construction period
+  demand rampup: 0 #atb unsure
+  capital gains tax rate: 0.15 #unsure ATB
+  total income tax rate: 0.2574 #same in ATB
+  leverage after tax nominal discount rate: 0.0615 #real return on equity real is 5.9% (real), 8.5% (nominal)
+  debt equity ratio of initial financing: 2.82 #from ned-toolbox
+  #3.048582 #debt fraction is 75.3%
+  debt interest rate: 0.0439 #4.39% from NED-toolbox
+  debt type: "Revolving debt"
+  property tax and insurance: 0.015 #unsure for ATB
+  general inflation rate: 0.0  #7% nominal inflation rate
+  cash onhand: 0
+  TOPC:
+    unit price: 0.0
+    decay: 0.0
+    support utilization: 0.0
+    sunset years: 0
+  annual operating incentive:
+    value: 0.0
+    decay: 0.0
+    sunset years: 0
+    taxable: true
+  incidental revenue:
+    value: 0.0
+    escalation: 0.0
+  credit card fees: 0.0
+  sales tax: 0.0
+  road tax:
+    value: 0.0
+    escalation: 0.0
+  labor:
+    value: 0.0
+    rate: 0.0
+    escalation: 0.0
+  maintenance:
+    value: 0.0
+    escalation: 0.0
+  rent:
+    value: 0.0
+    escalation: 0.0
+  license and permit:
+    value: 0.0
+    escalation: 0.0
+  non depr assets: 0 #depends on land cost
+  end of proj sale non depr assets: 0 #depends on land cost
+  installation cost:
+    value: 0.0
+    depr type: "Straight line"
+    depr period: 4
+    depreciable: False
+  # one time cap inct: #like an ITC
+  #   # value: 0.0
+  #   depr type: "MACRS"
+  #   depr period: 3
+  #   depreciable: False
+  admin expense: 0.0
+  tax loss carry forward years: 0
+  tax losses monetized: True
+  sell undepreciated cap: True
+  loan period if used: 0
