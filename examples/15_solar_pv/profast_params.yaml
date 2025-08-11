@@ -7,7 +7,7 @@ params:
   #   escalation: 0.0
   # capacity: 1 #units/day - nameplate capacity
   # long term utilization: 1 #capacity factor
-  analysis start year: 2030
+  analysis start year: 2029
   operating life: 30 #30 year capital recovery period
   installation months: 12 #1-year construction period
   demand rampup: 0 #atb unsure
