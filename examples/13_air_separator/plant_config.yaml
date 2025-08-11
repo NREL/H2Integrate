@@ -37,7 +37,6 @@ plant:
 finance_parameters:
   analysis_start_year: 2032
   installation_time: 36 # months
-  costing_general_inflation: 0.025 # used to adjust modeled costs to cost_year
   inflation_rate: 0.0 # 0 for real analysis
   discount_rate: 0.06 # nominal return based on 2024 ATB baseline workbook for land-based wind
   debt_equity_split: False
