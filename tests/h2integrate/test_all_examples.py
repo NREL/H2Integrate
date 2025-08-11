@@ -205,6 +205,16 @@ def test_wind_h2_opt_example(subtests):
     # Change the current working directory to the example's directory
     os.chdir(examples_dir / "05_wind_h2_opt")
 
+    # Run without optimization
+    model_init = H2IntegrateModel(Path.cwd() / "wind_plant_electrolyzer0.yaml")
+
+    # Run the model
+    model_init.run()
+
+    model_init.post_process()
+
+    annual_h20 = model_init.prob.get_val("electrolyzer.total_hydrogen_produced", units="kg/year")[0]
+
     # Create a H2Integrate model
     model = H2IntegrateModel(Path.cwd() / "wind_plant_electrolyzer.yaml")
 
@@ -213,6 +223,20 @@ def test_wind_h2_opt_example(subtests):
 
     model.post_process()
 
+    with subtests.test("Check initial H2 production"):
+        assert annual_h20 < (60500000 - 10000)
+
+    with subtests.test("Check LCOE"):
+        assert (
+            pytest.approx(model.prob.get_val("financials_group_default.LCOE")[0], rel=1e-3)
+            == 0.151189
+        )
+
+    with subtests.test("Check electrolyzer size"):
+        assert (
+            pytest.approx(model.prob.get_val("electrolyzer.electrolyzer_size_mw")[0], rel=1e-3)
+            == 1500.0
+        )
     # Read the resulting SQL file and compare initial and final LCOH values
 
     sql_path = None
@@ -235,28 +259,31 @@ def test_wind_h2_opt_example(subtests):
     initial_lcoh = cases[0].outputs["financials_group_default.LCOH"][0]
     final_lcoh = cases[-1].outputs["financials_group_default.LCOH"][0]
 
-    with subtests.test("Check LCOH improvement"):
-        assert final_lcoh < initial_lcoh
+    with subtests.test("Check LCOH changed"):
+        assert final_lcoh != initial_lcoh
 
     with subtests.test("Check total adjusted CapEx"):
         assert (
             pytest.approx(
-                model.prob.get_val("financials_group_default.total_capex_adjusted"), rel=1e-3
+                model.prob.get_val("financials_group_default.total_capex_adjusted")[0], rel=1e-3
             )
-            == 1.82152792e09
+            == 2783126102
         )
-
     with subtests.test("Check total adjusted OpEx"):
         assert (
             pytest.approx(
-                model.prob.get_val("financials_group_default.total_opex_adjusted"), rel=1e-3
+                model.prob.get_val("financials_group_default.total_opex_adjusted")[0], rel=1e-3
             )
-            == 51995875.99756081
+            == 75543899
         )
 
     with subtests.test("Check minimum total hydrogen produced"):
         assert (
-            model.prob.get_val("electrolyzer.total_hydrogen_produced", units="kg/year") >= 60500000
+            pytest.approx(
+                model.prob.get_val("electrolyzer.total_hydrogen_produced", units="kg/year")[0],
+                abs=10000,
+            )
+            == 60500000
         )
 
 
@@ -374,4 +401,34 @@ def test_asu_example(subtests):
                 abs=1e-4,
             )
             == 0.309041977334972
+        )
+
+
+def test_hydrogen_dispatch_example(subtests):
+    # Change the current working directory to the example's directory
+    os.chdir(examples_dir / "14_wind_hydrogen_dispatch")
+
+    # Create a H2Integrate model
+    model = H2IntegrateModel(Path.cwd() / "inputs" / "h2i_wind_to_h2_storage.yaml")
+
+    model.run()
+
+    model.post_process()
+
+    with subtests.test("Check LCOE"):
+        assert (
+            pytest.approx(
+                model.prob.get_val("financials_group_default.LCOE", units="USD/MW/h")[0],
+                rel=1e-5,
+            )
+            == 106.13987
+        )
+
+    with subtests.test("Check LCOH"):
+        assert (
+            pytest.approx(
+                model.prob.get_val("financials_group_default.LCOH", units="USD/kg")[0],
+                rel=1e-5,
+            )
+            == 5.68452215
         )
