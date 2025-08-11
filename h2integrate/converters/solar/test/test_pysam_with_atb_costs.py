@@ -99,6 +99,7 @@ def test_utility_pv_cost(utility_scale_pv_performance_params, solar_resource_dic
     cost_dict = {
         "capex_per_kWac": 764,  # overnight capital cost
         "opex_per_kWac_per_year": 15,  # fixed operations and maintenance expenses
+        "cost_year": 2022,
     }
     tech_config_dict = {
         "model_inputs": {
@@ -143,6 +144,7 @@ def test_commercial_pv_cost(commercial_pv_performance_params, solar_resource_dic
     cost_dict = {
         "capex_per_kWdc": 1439,  # overnight capital cost
         "opex_per_kWdc_per_year": 16,  # fixed operations and maintenance expenses
+        "cost_year": 2022,
     }
     shared_value = commercial_pv_performance_params.pop("pv_capacity_kWdc")
     shared_params = {"pv_capacity_kWdc": shared_value}
@@ -187,6 +189,7 @@ def test_residential_pv_cost(residential_pv_performance_params, solar_resource_d
     cost_dict = {
         "capex_per_kWdc": 2111,  # overnight capital cost
         "opex_per_kWdc_per_year": 25,  # fixed operations and maintenance expenses
+        "cost_year": 2022,
     }
     shared_value = residential_pv_performance_params.pop("pv_capacity_kWdc")
     shared_params = {"pv_capacity_kWdc": shared_value}
