@@ -5,6 +5,7 @@ import openmdao.api as om
 from attrs import field, define
 
 from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
+from h2integrate.core.validators import range_val, range_val_or_none
 
 
 class ControllerBaseClass(om.ExplicitComponent):
@@ -60,7 +61,7 @@ class ControllerBaseClass(om.ExplicitComponent):
 @define
 class PassThroughOpenLoopControllerConfig(BaseConfig):
     resource_name: str = field()
-    resource_units: str = field()
+    resource_rate_units: str = field()
 
 
 class PassThroughOpenLoopController(ControllerBaseClass):
@@ -81,14 +82,14 @@ class PassThroughOpenLoopController(ControllerBaseClass):
         self.add_input(
             f"{self.config.resource_name}_in",
             shape_by_conn=True,
-            units=self.config.resource_units,
+            units=self.config.resource_rate_units,
             desc=f"{self.config.resource_name} input timeseries from production to storage",
         )
 
         self.add_output(
             f"{self.config.resource_name}_out",
             copy_shape=f"{self.config.resource_name}_in",
-            units=self.config.resource_units,
+            units=self.config.resource_rate_units,
             desc=f"{self.config.resource_name} output timeseries from plant after storage",
         )
 
@@ -142,9 +143,9 @@ class DemandOpenLoopControllerConfig(BaseConfig):
 
     Attributes:
         resource_name (str): Name of the resource being controlled (e.g., "hydrogen").
-        resource_units (str): Units of the resource (e.g., "kg/h").
+        resource_rate_units (str): Units of the resource (e.g., "kg/h").
         max_capacity (float): Maximum storage capacity of the resource (in non-rate units,
-            e.g., "kg" if `resource_units` is "kg/h").
+            e.g., "kg" if `resource_rate_units` is "kg/h").
         max_charge_percent (float): Maximum allowable state of charge (SOC) as a percentage
             of `max_capacity`, represented as a decimal between 0 and 1.
         min_charge_percent (float): Minimum allowable SOC as a percentage of `max_capacity`,
@@ -152,30 +153,64 @@ class DemandOpenLoopControllerConfig(BaseConfig):
         init_charge_percent (float): Initial SOC as a percentage of `max_capacity`, represented
             as a decimal between 0 and 1.
         max_charge_rate (float): Maximum rate at which the resource can be charged (in units
-            per time step, e.g., "kg/time step").
+            per time step, e.g., "kg/time step"). This rate does not include the charge_efficiency.
         max_discharge_rate (float): Maximum rate at which the resource can be discharged (in
-            units per time step, e.g., "kg/time step").
-        charge_efficiency (float): Efficiency of charging the storage, represented as a decimal
-            between 0 and 1 (e.g., 0.9 for 90% efficiency).
-        discharge_efficiency (float): Efficiency of discharging the storage, represented as a
-            decimal between 0 and 1 (e.g., 0.9 for 90% efficiency).
+            units per time step, e.g., "kg/time step"). This rate does not include the
+            discharge_efficiency.
+        charge_efficiency (float | None): Efficiency of charging the storage, represented as a
+            decimal between 0 and 1 (e.g., 0.9 for 90% efficiency). Optional if
+            `round_trip_efficiency` is provided.
+        discharge_efficiency (float | None): Efficiency of discharging the storage, represented
+            as a decimal between 0 and 1 (e.g., 0.9 for 90% efficiency). Optional if
+            `round_trip_efficiency` is provided.
+        round_trip_efficiency (float | None): Combined efficiency of charging and discharging
+            the storage, represented as a decimal between 0 and 1 (e.g., 0.81 for 81% efficiency).
+            Optional if `charge_efficiency` and `discharge_efficiency` are provided.
         demand_profile (scalar or list): The demand values for each time step (in the same units
-            as `resource_units`) or a scalar for a constant demand.
+            as `resource_rate_units`) or a scalar for a constant demand.
         n_time_steps (int): Number of time steps in the simulation. Defaults to 8760.
     """
 
     resource_name: str = field()
-    resource_units: str = field()
+    resource_rate_units: str = field()
     max_capacity: float = field()
-    max_charge_percent: float = field()
-    min_charge_percent: float = field()
-    init_charge_percent: float = field()
+    max_charge_percent: float = field(validator=range_val(0, 1))
+    min_charge_percent: float = field(validator=range_val(0, 1))
+    init_charge_percent: float = field(validator=range_val(0, 1))
     max_charge_rate: float = field()
     max_discharge_rate: float = field()
-    charge_efficiency: float = field()
-    discharge_efficiency: float = field()
     demand_profile: int | float | list = field()
     n_time_steps: int = field(default=8760)
+    charge_efficiency: float | None = field(default=None, validator=range_val_or_none(0, 1))
+    discharge_efficiency: float | None = field(default=None, validator=range_val_or_none(0, 1))
+    round_trip_efficiency: float | None = field(default=None, validator=range_val_or_none(0, 1))
+
+    def __attrs_post_init__(self):
+        """
+        Post-initialization logic to validate and calculate efficiencies.
+
+        Ensures that either `charge_efficiency` and `discharge_efficiency` are provided,
+        or `round_trip_efficiency` is provided. If `round_trip_efficiency` is provided,
+        it calculates `charge_efficiency` and `discharge_efficiency` as the square root
+        of `round_trip_efficiency`.
+        """
+        if self.round_trip_efficiency is not None:
+            if self.charge_efficiency is not None or self.discharge_efficiency is not None:
+                raise ValueError(
+                    "Provide either `round_trip_efficiency` or both `charge_efficiency` "
+                    "and `discharge_efficiency`, but not both."
+                )
+            # Calculate charge and discharge efficiencies from round-trip efficiency
+            self.charge_efficiency = np.sqrt(self.round_trip_efficiency)
+            self.discharge_efficiency = np.sqrt(self.round_trip_efficiency)
+        elif self.charge_efficiency is not None and self.discharge_efficiency is not None:
+            # Ensure both charge and discharge efficiencies are provided
+            pass
+        else:
+            raise ValueError(
+                "You must provide either `round_trip_efficiency` or both "
+                "`charge_efficiency` and `discharge_efficiency`."
+            )
 
 
 class DemandOpenLoopController(ControllerBaseClass):
@@ -196,21 +231,21 @@ class DemandOpenLoopController(ControllerBaseClass):
 
     Inputs:
         {resource_name}_in (float): Input resource flow timeseries (e.g., hydrogen production).
-            - Units: Defined in `resource_units` (e.g., "kg/h").
+            - Units: Defined in `resource_rate_units` (e.g., "kg/h").
 
     Outputs:
         {resource_name}_out (float): Output resource flow timeseries after storage.
-            - Units: Defined in `resource_units` (e.g., "kg/h").
+            - Units: Defined in `resource_rate_units` (e.g., "kg/h").
         {resource_name}_soc (float): State of charge (SOC) timeseries for the storage system.
             - Units: "unitless" (percentage of maximum capacity given as a ratio between 0 and 1).
         {resource_name}_curtailed (float): Curtailment timeseries for unused input resource.
-            - Units: Defined in `resource_units` (e.g., "kg/h").
+            - Units: Defined in `resource_rate_units` (e.g., "kg/h").
             - Note: curtailment in this case does not reduce what the converter produces, but
                 rather the system just does not use it (throws it away) because this controller is
                 specific to the storage technology and has no influence on other technologies in
                 the system.
         {resource_name}_missed_load (float): Missed load timeseries when demand exceeds supply.
-            - Units: Defined in `resource_units` (e.g., "kg/h").
+            - Units: Defined in `resource_rate_units` (e.g., "kg/h").
 
     """
 
@@ -224,7 +259,7 @@ class DemandOpenLoopController(ControllerBaseClass):
         self.add_input(
             f"{resource_name}_in",
             shape_by_conn=True,
-            units=self.config.resource_units,
+            units=self.config.resource_rate_units,
             desc=f"{resource_name} input timeseries from production to storage",
         )
 
@@ -233,7 +268,7 @@ class DemandOpenLoopController(ControllerBaseClass):
 
         self.add_input(
             f"{resource_name}_demand_profile",
-            units=f"{self.config.resource_units}/h",
+            units=f"{self.config.resource_rate_units}/h",
             val=self.config.demand_profile,
             shape=self.config.n_time_steps,
             desc=f"{resource_name} demand profile timeseries",
@@ -242,7 +277,7 @@ class DemandOpenLoopController(ControllerBaseClass):
         self.add_output(
             f"{resource_name}_out",
             copy_shape=f"{resource_name}_in",
-            units=self.config.resource_units,
+            units=self.config.resource_rate_units,
             desc=f"{resource_name} output timeseries from plant after storage",
         )
 
@@ -256,7 +291,7 @@ class DemandOpenLoopController(ControllerBaseClass):
         self.add_output(
             f"{resource_name}_curtailed",
             copy_shape=f"{resource_name}_in",
-            units=self.config.resource_units,
+            units=self.config.resource_rate_units,
             desc=f"{resource_name} curtailment timeseries for inflow resource at \
                 storage point",
         )
@@ -264,7 +299,7 @@ class DemandOpenLoopController(ControllerBaseClass):
         self.add_output(
             f"{resource_name}_missed_load",
             copy_shape=f"{resource_name}_in",
-            units=self.config.resource_units,
+            units=self.config.resource_rate_units,
             desc=f"{resource_name} missed load timeseries",
         )
 
@@ -310,15 +345,29 @@ class DemandOpenLoopController(ControllerBaseClass):
 
             # Determine the output flow based on demand_t and SOC
             if demand_t > input_flow:
-                # Discharge storage to meet demand
+                # Discharge storage to meet demand.
+                # `discharge_needed` is as seen by the storage
                 discharge_needed = (demand_t - input_flow) / discharge_efficiency
-                discharge = min(discharge_needed, available_discharge, max_discharge_rate)
+                # `discharge` is as seen by the storage, but `max_discharge_rate` is as observed
+                # outside the storage
+                discharge = min(
+                    discharge_needed, available_discharge, max_discharge_rate / discharge_efficiency
+                )
                 soc -= discharge / max_capacity  # soc is a ratio with value between 0 and 1
+                # output is as observed outside the storage, so we need to adjust `discharge` by
+                # applying `discharge_efficiency
                 output_array[t] = input_flow + discharge * discharge_efficiency
             else:
                 # Charge storage with excess input
+                # `excess_input` is as seen outside the storage
                 excess_input = input_flow - demand_t
-                charge = min(excess_input * charge_efficiency, available_charge, max_charge_rate)
+                # `charge` is as seen by the storage, but the things being compared should all be as
+                # seen outside the storage so we need to adjust `available_charge` outside the
+                # storage view and the final result back into the storage view.
+                charge = (
+                    min(excess_input, available_charge / charge_efficiency, max_charge_rate)
+                    * charge_efficiency
+                )
                 soc += charge / max_capacity  # soc is a ratio with value between 0 and 1
                 output_array[t] = demand_t
 
@@ -328,10 +377,11 @@ class DemandOpenLoopController(ControllerBaseClass):
             # Record the SOC for the current time step
             soc_array[t] = deepcopy(soc)
 
-            # Record the curtailment at the current time step
-            curtailment_array[t] = max(0, float(excess_input - charge))
+            # Record the curtailment at the current time step. Adjust `charge` from storage view to
+            # outside view for curtailment
+            curtailment_array[t] = max(0, float(excess_input - charge / charge_efficiency))
 
-            # Record the missed load the the current time step
+            # Record the missed load at the current time step
             missed_load_array[t] = max(0, (demand_t - output_array[t]))
 
         outputs[f"{resource_name}_out"] = output_array
