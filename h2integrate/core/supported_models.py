@@ -2,7 +2,9 @@ from h2integrate.resource.river import RiverResource
 from h2integrate.transporters.pipe import PipePerformanceModel
 from h2integrate.transporters.cable import CablePerformanceModel
 from h2integrate.converters.steel.steel import SteelPerformanceModel, SteelCostAndFinancialModel
+from h2integrate.dispatch.converters.wind import PyomoDispatchWind
 from h2integrate.converters.wind.wind_plant import WindPlantCostModel, WindPlantPerformanceModel
+from h2integrate.dispatch.storage.h2_storage import PyomoDispatchH2Storage
 from h2integrate.transporters.power_combiner import CombinerPerformanceModel
 from h2integrate.converters.hopp.hopp_wrapper import HOPPComponent
 from h2integrate.converters.solar.solar_pysam import PYSAMSolarPlantPerformanceModel
@@ -19,6 +21,7 @@ from h2integrate.controllers.openloop_controllers import (
 )
 from h2integrate.converters.hydrogen.wombat_model import WOMBATElectrolyzerModel
 from h2integrate.converters.wind.wind_plant_pysam import PYSAMWindPlantPerformanceModel
+from h2integrate.dispatch.converters.electrolyzer import PyomoDispatchElectrolyzer
 from h2integrate.converters.ammonia.ammonia_synloop import (
     AmmoniaSynLoopCostModel,
     AmmoniaSynLoopPerformanceModel,
@@ -83,7 +86,6 @@ supported_models = {
     "basic_electrolyzer_cost": BasicElectrolyzerCostModel,
     "simple_ASU_cost": SimpleASUCostModel,
     "simple_ASU_performance": SimpleASUPerformanceModel,
-    "h2_storage": H2Storage,
     "hopp": HOPPComponent,
     "wombat": WOMBATElectrolyzerModel,
     "reverse_osmosis_desalination_performance": ReverseOsmosisPerformanceModel,
@@ -109,13 +111,18 @@ supported_models = {
     "cable": CablePerformanceModel,
     "pipe": PipePerformanceModel,
     "combiner_performance": CombinerPerformanceModel,
+    # Storage
+    "h2_storage": H2Storage,
+    "hydrogen_tank_performance": HydrogenTankPerformanceModel,
+    "hydrogen_tank_cost": HydrogenTankCostModel,
     # Control
     "pass_through_controller": PassThroughOpenLoopController,
     "demand_open_loop_controller": DemandOpenLoopController,
     "pyomo_open_loop_controller": PyomoOpenLoopController,
-    # Storage
-    "hydrogen_tank_performance": HydrogenTankPerformanceModel,
-    "hydrogen_tank_cost": HydrogenTankCostModel,
+    # Dispatch
+    "pyomo_dispatch_wind": PyomoDispatchWind,
+    "pyomo_dispatch_electrolyzer": PyomoDispatchElectrolyzer,
+    "pyomo_dispatch_h2_storage": PyomoDispatchH2Storage,
 }
 
 electricity_producing_techs = ["wind", "solar", "pv", "river", "hopp"]

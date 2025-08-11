@@ -8,8 +8,10 @@ class PyomoDispatchBaseClass(om.ExplicitComponent):
         self.options.declare("tech_config", types=dict)
 
     def setup(self):
-        self.add_discrete_output("_create_port", desc="Net present value")
-        self.add_discrete_output("_create_variables", desc="Net present value")
+        self.add_discrete_output("_create_port", val=None, desc="pyomo port creation function")
+        self.add_discrete_output(
+            "_create_variables", val=None, desc="pyomo variable creation function"
+        )
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         """

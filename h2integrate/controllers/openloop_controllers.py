@@ -443,7 +443,7 @@ class PyomoOpenLoopControllerConfig(BaseConfig):
 
 class PyomoOpenLoopController(ControllerBaseClass):
     def setup(self):
-        self.config = DemandOpenLoopControllerConfig.from_dict(
+        self.config = PyomoOpenLoopControllerConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "control")
         )
 
@@ -483,7 +483,19 @@ class PyomoOpenLoopController(ControllerBaseClass):
             desc=f"{self.config.resource_name} missed load timeseries",
         )
 
-    def compute(self, inputs, outputs):
+        # get technology group name
+        tech_group_name = self.pathname.split(".")[-2]
+        dispatch_connections = self.options["plant_config"]["tech_to_dispatch_connections"]
+        for connection in dispatch_connections:
+            source_tech, intended_dispatch_tech, object_name = connection
+            if intended_dispatch_tech == tech_group_name:
+                self.add_discrete_input(f"{object_name}_{source_tech}", val=None)
+            else:
+                continue
+
+    def compute(
+        self, inputs, outputs, discrete_inputs, discrete_outputs
+    ):  # , discrete_inputs, discrete_outputs):
         """
         Compute the state of charge (SOC) and output flow based on demand and storage constraints.
 

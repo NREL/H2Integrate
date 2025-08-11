@@ -29,6 +29,12 @@ technology_interconnections: [
   ["electrolyzer", "h2_storage", "hydrogen", "pipe"],
 ]
 
+# array of arrays containing left-to-right source technology, dispatching technology, object_name
+tech_to_dispatch_connections: [
+  ["electrolyzer", "h2_storage", "_create_port"],
+  ["electrolyzer", "h2_storage", "_create_variables"]
+]
+
 plant:
   plant_life: 30
   grid_connection: False # option, can be turned on or off

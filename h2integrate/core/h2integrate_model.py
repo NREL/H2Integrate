@@ -182,6 +182,7 @@ class H2IntegrateModel:
         self.tech_names = []
         self.performance_models = []
         self.control_strategies = []
+        self.dispatch_rule_sets = []
         self.cost_models = []
         self.financial_models = []
 
@@ -231,7 +232,7 @@ class H2IntegrateModel:
                     "performance_model",
                     "control_strategy",
                     "cost_model",
-                    "dispatch_rules",
+                    "dispatch_rule_set",
                 ]
 
                 for model_type in model_types:
@@ -636,6 +637,21 @@ class H2IntegrateModel:
                 self.plant.nonlinear_solver = om.NonlinearBlockGS()
                 self.plant.linear_solver = om.DirectSolver()
                 break
+
+        # initialize dispatch rules connection list
+        tech_to_dispatch_connections = self.plant_config.get("tech_to_dispatch_connections", [])
+
+        for connection in tech_to_dispatch_connections:
+            if len(connection) != 3:
+                err_msg = f"Invalid tech to dispatching_tech_name connection: {connection}"
+                raise ValueError(err_msg)
+
+            tech_name, dispatching_tech_name, object_name = connection
+
+            # Connect the dispatch rules output to the dispatching_tech_name input
+            self.model.connect(
+                f"{tech_name}.{object_name}", f"{dispatching_tech_name}.{object_name}_{tech_name}"
+            )
 
         if (pyxdsm is not None) and (len(technology_interconnections) > 0):
             create_xdsm_from_config(self.plant_config)

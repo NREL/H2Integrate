@@ -7,8 +7,8 @@ technologies:
       model: "wind_plant_performance"
     cost_model:
       model: "wind_plant_cost"
-    dispatch_rules:
-      model: "pyomo"
+    dispatch_rule_set:
+      model: "pyomo_dispatch_wind"
     resource:
       type: "pysam_wind"
       wind_speed: 9.
@@ -42,17 +42,18 @@ technologies:
       model: "eco_pem_electrolyzer_performance"
     cost_model:
       model: "singlitico_electrolyzer_cost"
+    dispatch_rule_set:
+      model: pyomo_dispatch_electrolyzer
     model_inputs:
       shared_parameters:
-        rating: 720. # MW
         location: "onshore"
         electrolyzer_capex: 1295 # $/kW overnight installed capital costs for a 1 MW system in 2022 USD/kW (DOE hydrogen program record 24005 Clean Hydrogen Production Cost Scenarios with PEM Electrolyzer Technology 05/20/24) (https://www.hydrogen.energy.gov/docs/hydrogenprogramlibraries/pdfs/24005-clean-hydrogen-production-cost-pem-electrolyzer.pdf?sfvrsn=8cb10889_1)
-
       performance_parameters:
         sizing:
           resize_for_enduse: False
           size_for: 'BOL' #'BOL' (generous) or 'EOL' (conservative)
           hydrogen_dmd:
+        n_clusters: 18
         cluster_rating_MW: 40
         pem_control_type: 'basic'
         eol_eff_percent_loss: 13 #eol defined as x% change in efficiency from bol
@@ -68,7 +69,9 @@ technologies:
     cost_model:
       model: "h2_storage"
     control_strategy:
-      model: "demand_open_loop_controller"
+      model: "pyomo_open_loop_controller"
+    dispatch_rule_set:
+      model: "pyomo_dispatch_h2_storage"
     model_inputs:
       shared_parameters:
         resource_name: "hydrogen"
