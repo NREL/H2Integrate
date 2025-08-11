@@ -7,19 +7,20 @@ general:
 driver:
   optimization:
     flag: True
-    tol: 0.0001
+    tol: 0.1
+    catol: 10000
     max_iter: 100
     solver: COBYLA
-    rhobeg: 500.
+    rhobeg: 30
     debug_print: True
 
 design_variables:
   electrolyzer:
-    electrolyzer_size_mw:
+    n_clusters:
       flag: True
-      lower: 200
-      upper: 1800.
-      units: MW
+      lower: 2.
+      upper: 100.
+      units: unitless
 
 constraints:
   electrolyzer:

@@ -14,7 +14,6 @@ class BasicElectrolyzerCostModelConfig(BaseConfig):
     Configuration class for the ECOElectrolyzerPerformanceModel.
 
     Args:
-        rating (float): The rating of the electrolyzer in MW.
         location (str): The location of the electrolyzer; options include "onshore" or "offshore".
         electrolyzer_capex (int): $/kW overnight installed capital costs for a 1 MW system in
             2022 USD/kW (DOE hydrogen program record 24005 Clean Hydrogen Production Cost Scenarios
@@ -23,7 +22,6 @@ class BasicElectrolyzerCostModelConfig(BaseConfig):
         cost_year (int): dollar year corresponding to `electrolyzer_capex`. 2022 is suggested value.
     """
 
-    rating: float = field(validator=gt_zero)
     location: str = field(validator=contains(["onshore", "offshore"]))
     electrolyzer_capex: int = field()
     time_between_replacement: int = field(validator=gt_zero)
@@ -40,13 +38,19 @@ class BasicElectrolyzerCostModel(ElectrolyzerCostBaseClass):
         self.config = BasicElectrolyzerCostModelConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost")
         )
+        self.add_input(
+            "electrolyzer_size_mw",
+            val=0.0,
+            units="MW",
+            desc="Size of the electrolyzer in MW",
+        )
 
     def compute(self, inputs, outputs):
         # unpack inputs
         plant_config = self.options["plant_config"]
 
         total_hydrogen_produced = float(inputs["total_hydrogen_produced"])
-        electrolyzer_size_mw = self.config.rating
+        electrolyzer_size_mw = inputs["electrolyzer_rating_mw"][0]
         useful_life = plant_config["plant"]["plant_life"]
 
         # run hydrogen production cost model - from hopp examples
