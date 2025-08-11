@@ -18,9 +18,6 @@ jobs:
         include:
           - python-version: "3.11"
             optional: true
-    permissions:
-      pages: write
-      id-token: write
 
     steps:
       - uses: actions/checkout@v3
