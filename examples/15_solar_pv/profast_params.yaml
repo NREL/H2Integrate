@@ -11,12 +11,11 @@ params:
   operating life: 30 #30 year capital recovery period
   installation months: 12 #1-year construction period
   demand rampup: 0 #atb unsure
-  capital gains tax rate: 0.15 #unsure ATB
-  total income tax rate: 0.2574 #same in ATB
+  capital gains tax rate: 0.15
+  total income tax rate: 0.2574
   leverage after tax nominal discount rate: 0.0615 #real return on equity real is 5.9% (real), 8.5% (nominal)
-  debt equity ratio of initial financing: 2.82 #from ned-toolbox
-  #3.048582 #debt fraction is 75.3%
-  debt interest rate: 0.0439 #4.39% from NED-toolbox
+  debt equity ratio of initial financing: 2.82 #debt fraction is 75.3%
+  debt interest rate: 0.0439
   debt type: "Revolving debt"
   property tax and insurance: 0.015 #unsure for ATB
   general inflation rate: 0.0  #7% nominal inflation rate
