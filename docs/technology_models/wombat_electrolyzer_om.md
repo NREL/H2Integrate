@@ -49,11 +49,13 @@ technologies:
       model: "wombat"
     model_inputs:
       shared_parameters:
-        rating: 10.0  # MW
         location: "onshore"
         electrolyzer_capex: 1295
         # ...other parameters...
         library_path: "resource_files/wombat_library"
+      performance_parameters:
+        n_clusters: 1
+        cluster_rating_MW: 10 #MW
 ```
 
 For a full example, see the `10_electrolyzer_om` example in the `examples/` directory.

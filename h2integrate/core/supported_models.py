@@ -12,7 +12,10 @@ from h2integrate.storage.hydrogen.tank_baseclass import (
     HydrogenTankCostModel,
     HydrogenTankPerformanceModel,
 )
-from h2integrate.controllers.openloop_controllers import PassThroughOpenLoopController
+from h2integrate.controllers.openloop_controllers import (
+    DemandOpenLoopController,
+    PassThroughOpenLoopController,
+)
 from h2integrate.converters.hydrogen.wombat_model import WOMBATElectrolyzerModel
 from h2integrate.converters.wind.wind_plant_pysam import PYSAMWindPlantPerformanceModel
 from h2integrate.converters.ammonia.ammonia_synloop import (
@@ -115,6 +118,7 @@ supported_models = {
     "combiner_performance": CombinerPerformanceModel,
     # Control
     "pass_through_controller": PassThroughOpenLoopController,
+    "demand_open_loop_controller": DemandOpenLoopController,
     # Storage
     "hydrogen_tank_performance": HydrogenTankPerformanceModel,
     "hydrogen_tank_cost": HydrogenTankCostModel,

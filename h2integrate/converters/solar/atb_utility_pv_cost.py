@@ -34,7 +34,8 @@ class ATBUtilityPVCostModel(SolarCostBaseClass):
         self.add_input("capacity_kWac", val=0.0, units="kW", desc="PV rated capacity in AC")
 
     def compute(self, inputs, outputs):
-        capex = self.config.capex_per_kWac * inputs["capacity_kWac"][0]
-        opex = self.config.opex_per_kWac_per_year * inputs["capacity_kWac"][0]
+        capacity = inputs["capacity_kWac"][0]
+        capex = self.config.capex_per_kWac * capacity
+        opex = self.config.opex_per_kWac_per_year * capacity
         outputs["CapEx"] = capex
         outputs["OpEx"] = opex
