@@ -33,7 +33,12 @@ class ArdWindPlantModel(om.Group):
         # add ard to the h2i model as a sub-problem
         subprob_ard = om.SubmodelComp(
             problem=ard_prob,
-            inputs=[],
+            inputs=[
+                "spacing_primary",
+                "spacing_secondary",
+                "angle_orientation",
+                "angle_skew",
+            ],
             outputs=[
                 ("aepFLORIS.power_farm", "electricity_out"),
                 ("tcc.tcc", "CapEx"),

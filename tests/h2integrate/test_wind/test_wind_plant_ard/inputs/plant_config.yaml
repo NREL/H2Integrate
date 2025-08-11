@@ -45,11 +45,11 @@ technology_interconnections: []
 
 resource_to_tech_connections: [
   # connect the river resource to the run-of-river hydro technology
-  ['wind_resource', 'wind', 'wind_speed'],
-  ['wind_resource', 'wind', 'wind_direction'],
-  ['wind_resource', 'wind', 'turbulence_intensity'],
-  ['wind_resource', 'wind', 'elevation'],
-  ['wind_resource', 'wind', 'height'],
+  # ['wind_resource', 'wind', 'wind_speeds'],
+  # ['wind_resource', 'wind', 'wind_directions'],
+  # ['wind_resource', 'wind', 'wind_turbulence_intensities'],
+  # ['wind_resource', 'wind', 'site_elevation'],
+  # ['wind_resource', 'wind', 'wind_height'],
 ]
 
 finance_parameters:

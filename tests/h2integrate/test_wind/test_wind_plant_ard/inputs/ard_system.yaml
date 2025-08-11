@@ -1,4 +1,4 @@
-system: "onshore"
+system: "onshore_batch"
 analysis_options:
 modeling_options:
   farm:
@@ -10,7 +10,7 @@ modeling_options:
     angle_skew: 0.0
     x_substations: 100.0
     y_substations: 100.0
-  wind_rose: openmdao_connections
+  wind_rose: !include open-meteo-56.20N8.54E86m.yaml
   turbine: !include turbine_spec_IEA-3p4-130-RWT.yaml
   collection:
     substation_x: 100.0
