@@ -66,6 +66,7 @@ class MethanolCostConfig(BaseConfig):
     toc_kg_y: float = field()
     foc_kg_y2: float = field()
     voc_kg: float = field()
+    cost_year: int = field(converter=int)
 
 
 class MethanolCostBaseClass(om.ExplicitComponent):
@@ -107,6 +108,7 @@ class MethanolCostBaseClass(om.ExplicitComponent):
         self.add_output("OpEx", units="USD/year")
         self.add_output("Fixed_OpEx", units="USD/year")
         self.add_output("Variable_OpEx", units="USD/year")
+        self.add_discrete_output("cost_year", val=0, desc="Dollar year for costs")
 
 
 @define
