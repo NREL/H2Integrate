@@ -2,10 +2,8 @@ import numpy as np
 from attrs import field, define
 
 from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
-from h2integrate.converters.water_power.hydro_plant_baseclass import (
-    HydroCostBaseClass,
-    HydroPerformanceBaseClass,
-)
+from h2integrate.core.model_base import CostModelBaseClass
+from h2integrate.converters.water_power.hydro_plant_baseclass import HydroPerformanceBaseClass
 
 
 @define
@@ -74,6 +72,7 @@ class RunOfRiverHydroCostConfig(BaseConfig):
         capital_cost_usd_per_kw (float): Capital cost of the run-of-river plant in USD/kW.
         operational_cost_usd_per_kw_year (float): Operational cost as a percentage of total
             capacity, expressed in USD/kW/year.
+        cost_year (int): dollar-year for input costs
     """
 
     plant_capacity_mw: float = field()
@@ -82,7 +81,7 @@ class RunOfRiverHydroCostConfig(BaseConfig):
     cost_year: int = field(converter=int)
 
 
-class RunOfRiverHydroCostModel(HydroCostBaseClass):
+class RunOfRiverHydroCostModel(CostModelBaseClass):
     """
     An OpenMDAO component that calculates the capital expenditure (CapEx) for a run-of-river
         hydropower plant.
@@ -99,9 +98,10 @@ class RunOfRiverHydroCostModel(HydroCostBaseClass):
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost")
         )
 
-    def compute(self, inputs, outputs):
+    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         capex_kw = self.config.capital_cost_usd_per_kw
         total_capacity_kw = self.config.plant_capacity_mw * 1e3
 
         outputs["CapEx"] = capex_kw * total_capacity_kw
         outputs["OpEx"] = self.config.operational_cost_usd_per_kw_year * total_capacity_kw
+        discrete_outputs["cost_year"] = self.config.cost_year
