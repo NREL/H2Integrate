@@ -23,27 +23,12 @@ class DesalinationPerformanceBaseClass(om.ExplicitComponent):
 
 
 class DesalinationCostBaseClass(om.ExplicitComponent):
-    def initialize(self):
-        self.options.declare("driver_config", types=dict)
-        self.options.declare("plant_config", types=dict)
-        self.options.declare("tech_config", types=dict)
-
     def setup(self):
+        super().setup()
         # Inputs for cost model configuration
         self.add_input(
             "plant_capacity_kgph", val=0.0, units="kg/h", desc="Desired freshwater flow rate"
         )
-        self.add_output("CapEx", val=0.0, units="USD", desc="Total capital expenditures")
-        self.add_output("OpEx", val=0.0, units="USD/year", desc="Total fixed operating costs")
-
-    def compute(self, inputs, outputs):
-        """
-        Computation for the OM component.
-
-        For a template class this is not implement and raises an error.
-        """
-
-        raise NotImplementedError("This method should be implemented in a subclass.")
 
 
 class DesalinationFinanceBaseClass(om.ExplicitComponent):

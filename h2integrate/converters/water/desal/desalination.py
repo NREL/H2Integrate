@@ -109,12 +109,10 @@ class ReverseOsmosisCostModelConfig(BaseConfig):
             maximum freshwater requirements of system [kg/hr]
         freshwater_density (float): Density of the output freshwater [kg/m**3].
             Default = 997.
-        cost_year (int): dollar year for costs.
     """
 
     freshwater_kg_per_hour: float = field(validator=gt_zero)
     freshwater_density: float = field(validator=gt_zero)
-    cost_year: int = field(converter=int)
 
 
 class ReverseOsmosisCostModel(DesalinationCostBaseClass):
@@ -128,11 +126,17 @@ class ReverseOsmosisCostModel(DesalinationCostBaseClass):
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost")
         )
 
-    def compute(self, inputs, outputs):
-        """Cost reference: https://www.nrel.gov/docs/fy16osti/66073.pdf"""
+    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
+        """Cost reference: Table 3 of https://www.nrel.gov/docs/fy16osti/66073.pdf.
+        CapEx includes 2.55% financing factor, numbers based on INL report
+        https://doi.org/10.2172/1236837 (in Table 10) which came from this report
+        https://www-pub.iaea.org/MTCD/Publications/PDF/te_1561_web.pdf
+        (Table 6 says 2006 is the currency reference year)
+        """
         desal_capex = 32894 * (self.config.freshwater_kg_per_hour / 3600)  # [USD]
 
         desal_opex = 4841 * (self.config.freshwater_kg_per_hour / 3600)  # [USD/yr]
 
         outputs["CapEx"] = desal_capex
         outputs["OpEx"] = desal_opex
+        discrete_outputs["cost_year"] = 2013  # TODO: check this value
