@@ -95,7 +95,7 @@ class ECOElectrolyzerPerformanceModel(ElectrolyzerPerformanceBaseClass):
         )
 
         self.add_output(
-            "electrolyzer_size_mw",
+            "electrolyzer_size_mw_cost",
             val=0.0,
             units="MW",
             desc="Size of the electrolyzer in MW",
@@ -165,7 +165,7 @@ class ECOElectrolyzerPerformanceModel(ElectrolyzerPerformanceBaseClass):
         if self.config.compute_mode == "normal":
             # In "normal" compute mode, electrolyzer size comes from config
             energy_to_electrolyzer_kw = inputs["electricity_in"]
-            electrolyzer_size_mw = inputs["electrolyzer_size_mw"]
+            electrolyzer_size_mw = inputs["electrolyzer_size_mw_cost"]
         elif self.config.compute_mode == "feedstock_size":
             # In "feedstock_size" compute mode, electrolyzer size comes from feedstock
             energy_to_electrolyzer_kw = inputs["electricity_in"]
@@ -256,4 +256,4 @@ class ECOElectrolyzerPerformanceModel(ElectrolyzerPerformanceBaseClass):
         outputs["time_until_replacement"] = H2_Results["Time Until Replacement [hrs]"]
         outputs["rated_h2_production_kg_pr_hr"] = H2_Results["Rated BOL: H2 Production [kg/hr]"]
         outputs["water_consume"] = H2_Results["Water Hourly Consumption [kg/hr]"]
-        outputs["electrolyzer_size_mw"] = electrolyzer_actual_capacity_MW
+        outputs["electrolyzer_size_mw_cost"] = electrolyzer_actual_capacity_MW
