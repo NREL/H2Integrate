@@ -21,9 +21,7 @@ site:
   hub_height: 150.0
   solar: false
   wind: true
-  wave: true
   wind_resource_file: "./weather_data/43.807_-124.816_windtoolkit_2010_60min_140m_160m.srw"
-  wave_resource_file: "./weather_data/wave_lat43.81_lon-124.82__2010.csv"
   grid_resource_file: ""
 
 # Technologies

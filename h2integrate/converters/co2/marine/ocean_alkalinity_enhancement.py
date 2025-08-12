@@ -36,10 +36,10 @@ class OAEPerformanceConfig(MarineCarbonCapturePerformanceConfig):
         assumed_CDR_rate (float): Mole of CO2 per mole of NaOH (unitless).
         frac_base_flow (float): Fraction of base flow in the system (unitless).
         max_ed_system_flow_rate_m3s (float): Maximum flow rate through the ED system (m³/s).
-        temp_C (float): Temperature of input seawater (°C).
-        sal (float): Salinity of seawater (ppt).
-        dic_i (float): Initial dissolved inorganic carbon (mol/L).
-        pH_i (float): Initial pH of seawater.
+        initial_temp_C (float): Temperature of input seawater (°C).
+        initial_salinity_ppt (float): Initial salinity of seawater (ppt).
+        initial_dic_mol_per_L (float): Initial dissolved inorganic carbon (mol/L).
+        initial_pH (float): Initial pH of seawater.
         initial_tank_volume_m3 (float): Initial volume of the tank (m³).
         acid_disposal_method (str): Method for acid disposal.
     """
@@ -47,10 +47,10 @@ class OAEPerformanceConfig(MarineCarbonCapturePerformanceConfig):
     assumed_CDR_rate: float = field()
     frac_base_flow: float = field()
     max_ed_system_flow_rate_m3s: float = field()
-    temp_C: float = field()
-    sal: float = field()
-    dic_i: float = field()
-    pH_i: float = field()
+    initial_temp_C: float = field()
+    initial_salinity_ppt: float = field()
+    initial_dic_mol_per_L: float = field()
+    initial_pH: float = field()
     initial_tank_volume_m3: float = field()
     acid_disposal_method: str = field()
 
@@ -90,36 +90,49 @@ class OAEPerformanceModel(MarineCarbonCapturePerformanceBaseClass):
         )
         self.add_output(
             "alkaline_seawater_flow_rate",
+            shape=8760,
             val=0.0,
             units="m**3/s",
             desc="Alkaline seawater flow rate (m³/s)",
         )
-        self.add_output("alkaline_seawater_pH", val=0.0, desc="pH of the alkaline seawater")
+        self.add_output(
+            "alkaline_seawater_pH", val=0.0, shape=8760, desc="pH of the alkaline seawater"
+        )
         self.add_output(
             "alkaline_seawater_dic",
             val=0.0,
+            shape=8760,
             units="mol/L",
             desc="Dissolved inorganic carbon concentration in the alkaline seawater",
         )
         self.add_output(
             "alkaline_seawater_ta",
             val=0.0,
+            shape=8760,
             units="mol/L",
             desc="Total alkalinity of the alkaline seawater",
         )
         self.add_output(
             "alkaline_seawater_salinity",
             val=0.0,
+            shape=8760,
             units="ppt",
             desc="Salinity of the alkaline seawater",
         )
         self.add_output(
             "alkaline_seawater_temp",
             val=0.0,
+            shape=8760,
             units="C",
             desc="Temperature of the alkaline seawater (°C)",
         )
-        self.add_output("")
+        self.add_output(
+            "excess_acid",
+            val=0.0,
+            shape=8760,
+            units="m**3",
+            desc="Excess acid produced (m³)",
+        )
 
     def compute(self, inputs, outputs):
         OAE_inputs = setup_ocean_alkalinity_enhancement_inputs(self.config)
@@ -128,13 +141,22 @@ class OAEPerformanceModel(MarineCarbonCapturePerformanceBaseClass):
         range_outputs, oae_outputs = echem_oae.run_ocean_alkalinity_enhancement_physics_model(
             power_profile_w=inputs["electricity_in"],
             initial_tank_volume_m3=self.config.initial_tank_volume_m3,
-            OAE_inputs=OAE_inputs,
+            oae_config=OAE_inputs,
             pump_config=echem_oae.PumpInputs(),
             seawater_config=echem_oae.SeaWaterInputs(
-                sal=self.config.sal,
-                tempC=self.config.temp_C,
-                dic_i=self.config.dic_i,
-                pH_i=self.config.pH_i,
+                sal_ppt_i=self.config.initial_salinity_ppt,
+                tempC=self.config.initial_temp_C,
+                dic_i=self.config.initial_dic_mol_per_L,
+                pH_i=self.config.initial_pH,
+            ),
+            rca=echem_oae.RCALoadingCalculator(
+                oae=OAE_inputs,
+                seawater=echem_oae.SeaWaterInputs(
+                    sal_ppt_i=self.config.initial_salinity_ppt,
+                    tempC=self.config.initial_temp_C,
+                    dic_i=self.config.initial_dic_mol_per_L,
+                    pH_i=self.config.initial_pH,
+                ),
             ),
             save_outputs=True,
             save_plots=True,
@@ -143,16 +165,17 @@ class OAEPerformanceModel(MarineCarbonCapturePerformanceBaseClass):
         )
 
         outputs["co2_capture_rate_mt"] = (
-            oae_outputs.OAEOutputs["mass_CO2_absorbed"] / 1000
+            oae_outputs.OAE_outputs["mass_CO2_absorbed"] / 1000
         )  # Convert from kg to metric tons
         outputs["co2_capture_mtpy"] = oae_outputs.M_co2est
         outputs["plant_mCC_capacity_mtph"] = max(range_outputs.S1["mass_CO2_absorbed"] / 1000)
-        outputs["alkaline_seawater_flow_rate"] = oae_outputs.OAEOutputs["Qout"]
-        outputs["alkaline_seawater_pH"] = oae_outputs.OAEOutputs["pH_f"]
-        outputs["alkaline_seawater_dic"] = oae_outputs.OAEOutputs["dic_f"]
-        outputs["alkaline_seawater_ta"] = oae_outputs.OAEOutputs["ta_f"]
-        outputs["alkaline_seawater_salinity"] = oae_outputs.OAEOutputs["sal_f"]
-        outputs["alkaline_seawater_temp"] = oae_outputs.OAEOutputs["temp_f"]
+        outputs["alkaline_seawater_flow_rate"] = oae_outputs.OAE_outputs["Qout"]
+        outputs["alkaline_seawater_pH"] = oae_outputs.OAE_outputs["pH_f"]
+        outputs["alkaline_seawater_dic"] = oae_outputs.OAE_outputs["dic_f"]
+        outputs["alkaline_seawater_ta"] = oae_outputs.OAE_outputs["ta_f"]
+        outputs["alkaline_seawater_salinity"] = oae_outputs.OAE_outputs["sal_f"]
+        outputs["alkaline_seawater_temp"] = oae_outputs.OAE_outputs["temp_f"]
+        outputs["excess_acid"] = oae_outputs.OAE_outputs["volExcessAcid"]
 
 
 @define
