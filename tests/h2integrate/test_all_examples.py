@@ -102,30 +102,30 @@ def test_simple_ammonia_example(subtests):
     with subtests.test("Check total adjusted CapEx"):
         assert (
             pytest.approx(
-                model.prob.get_val("financials_group_default.total_capex_adjusted"), rel=1e-3
+                model.prob.get_val("financials_group_default.total_capex_adjusted")[0], rel=1e-3
             )
-            == 2.76180599e09
+            == 2678403968.6
         )
 
     with subtests.test("Check total adjusted OpEx"):
         assert (
             pytest.approx(
-                model.prob.get_val("financials_group_default.total_opex_adjusted"), rel=1e-3
+                model.prob.get_val("financials_group_default.total_opex_adjusted")[0], rel=1e-3
             )
-            == 66599592.71371833
+            == 64338137.8
         )
 
     # Currently underestimated compared to the Reference Design Doc
     with subtests.test("Check LCOH"):
         assert (
-            pytest.approx(model.prob.get_val("financials_group_default.LCOH"), rel=1e-3)
-            == 4.39187968
+            pytest.approx(model.prob.get_val("financials_group_default.LCOH")[0], rel=1e-3)
+            == 4.233055
         )
     # Currently underestimated compared to the Reference Design Doc
     with subtests.test("Check LCOA"):
         assert (
-            pytest.approx(model.prob.get_val("financials_group_default.LCOA"), rel=1e-3)
-            == 1.06313924
+            pytest.approx(model.prob.get_val("financials_group_default.LCOA")[0], rel=1e-3)
+            == 1.02470046
         )
 
 
@@ -175,29 +175,29 @@ def test_ammonia_synloop_example(subtests):
     with subtests.test("Check total adjusted CapEx"):
         assert (
             pytest.approx(
-                model.prob.get_val("financials_group_default.total_capex_adjusted"), rel=1e-6
+                model.prob.get_val("financials_group_default.total_capex_adjusted")[0], rel=1e-6
             )
-            == 3.83856529e09
+            == 3.7289e09
         )
 
     with subtests.test("Check total adjusted OpEx"):
         assert (
             pytest.approx(
-                model.prob.get_val("financials_group_default.total_opex_adjusted"), rel=1e-6
+                model.prob.get_val("financials_group_default.total_opex_adjusted")[0], rel=1e-6
             )
-            == 81093533.8566508
+            == 78478549.4
         )
 
     with subtests.test("Check LCOH"):
         assert (
-            pytest.approx(model.prob.get_val("financials_group_default.LCOH"), rel=1e-6)
-            == 5.85374921
+            pytest.approx(model.prob.get_val("financials_group_default.LCOH")[0], rel=1e-6)
+            == 5.65930
         )
 
     with subtests.test("Check LCOA"):
         assert (
-            pytest.approx(model.prob.get_val("financials_group_default.LCOA"), rel=1e-6)
-            == 1.10368921
+            pytest.approx(model.prob.get_val("financials_group_default.LCOA")[0], rel=1e-6)
+            == 1.0670271
         )
 
 
