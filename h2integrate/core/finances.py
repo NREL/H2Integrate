@@ -22,11 +22,7 @@ class AdjustedCapexOpexComp(om.ExplicitComponent):
             "target_dollar_year"
         ]
 
-        discount_years = {}
         for tech in tech_config:
-            discount_years.update(
-                {tech: tech_config[tech]["model_inputs"]["cost_parameters"]["cost_year"]}
-            )
             self.add_input(f"capex_{tech}", val=0.0, units="USD")
             self.add_input(f"opex_{tech}", val=0.0, units="USD/year")
             self.add_discrete_input(f"cost_year_{tech}", val=0, desc="Dollar year for costs")
@@ -34,7 +30,6 @@ class AdjustedCapexOpexComp(om.ExplicitComponent):
             self.add_output(f"capex_adjusted_{tech}", val=0.0, units="USD")
             self.add_output(f"opex_adjusted_{tech}", val=0.0, units="USD/year")
 
-        self.discount_years = discount_years
         self.add_output("total_capex_adjusted", val=0.0, units="USD")
         self.add_output("total_opex_adjusted", val=0.0, units="USD/year")
 
