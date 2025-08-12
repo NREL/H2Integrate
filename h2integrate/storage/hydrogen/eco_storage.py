@@ -53,9 +53,9 @@ class H2Storage(om.ExplicitComponent):
 
         self.add_output("CapEx", val=0.0, units="USD", desc="Capital expenditure")
         self.add_output("OpEx", val=0.0, units="USD/year", desc="Operational expenditure")
+        self.add_discrete_output("cost_year", val=0, desc="Dollar year for costs")
 
-    def compute(self, inputs, outputs):
-        self.options["tech_config"]
+    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         ########### initialize output dictionary ###########
         h2_storage_results = {}
 
@@ -103,6 +103,7 @@ class H2Storage(om.ExplicitComponent):
             h2_storage_results["storage_capex"] = 0.0
             h2_storage_results["storage_opex"] = 0.0
             h2_storage_results["storage_energy"] = 0.0
+            h2_storage_results["cost_year"] = 2018
 
             h2_storage = None
 
@@ -126,6 +127,7 @@ class H2Storage(om.ExplicitComponent):
             ]
             h2_storage_results["storage_opex"] = h2_storage.output_dict["salt_cavern_storage_opex"]
             h2_storage_results["storage_energy"] = 0.0
+            h2_storage_results["cost_year"] = 2018
 
         elif self.config.type == "lined_rock_cavern":
             # initialize dictionary for salt cavern storage parameters
@@ -149,6 +151,7 @@ class H2Storage(om.ExplicitComponent):
                 "lined_rock_cavern_storage_opex"
             ]
             h2_storage_results["storage_energy"] = 0.0
+            h2_storage_results["cost_year"] = 2018  # TODO: check
 
         elif self.config.type == "mch":
             if not self.config.size_capacity_from_demand["flag"]:
@@ -177,6 +180,7 @@ class H2Storage(om.ExplicitComponent):
                 h2_storage_costs["mch_variable_om"] + h2_storage_costs["mch_opex"]
             )
             h2_storage_results["storage_energy"] = 0.0
+            h2_storage_results["cost_year"] = 2024
 
         else:
             msg = (
@@ -202,3 +206,4 @@ class H2Storage(om.ExplicitComponent):
 
         outputs["CapEx"] = h2_storage_results["storage_capex"]
         outputs["OpEx"] = h2_storage_results["storage_opex"]
+        discrete_outputs["cost_year"] = h2_storage_results["cost_year"]
