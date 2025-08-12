@@ -312,7 +312,7 @@ def test_paper_example(subtests):
 @unittest.skipUnless(importlib.util.find_spec("mcm") is not None, "mcm is not installed")
 def test_wind_wave_doc_example(subtests):
     # Change the current working directory to the example's directory
-    os.chdir(examples_dir / "09_wind_wave_doc")
+    os.chdir(examples_dir / "09_co2/direct_ocean_capture")
 
     # Create a H2Integrate model
     model = H2IntegrateModel(Path.cwd() / "offshore_plant_doc.yaml")
@@ -437,7 +437,7 @@ def test_hydrogen_dispatch_example(subtests):
 @unittest.skipUnless(importlib.util.find_spec("mcm") is not None, "mcm is not installed")
 def test_wind_wave_oae_example(subtests):
     # Change the current working directory to the example's directory
-    os.chdir(examples_dir / "15_wind_oae")
+    os.chdir(examples_dir / "09_co2/ocean_alkalinity_enhancement")
 
     # Create a H2Integrate model
     model = H2IntegrateModel(Path.cwd() / "offshore_plant_oae.yaml")
