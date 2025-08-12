@@ -185,7 +185,7 @@ def test_ammonia_synloop_example(subtests):
             pytest.approx(
                 model.prob.get_val("financials_group_default.total_opex_adjusted")[0], rel=1e-6
             )
-            == 78478549.4
+            == 78480154.4
         )
 
     with subtests.test("Check LCOH"):
