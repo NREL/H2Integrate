@@ -133,7 +133,6 @@ class ECOElectrolyzerPerformanceModel(ElectrolyzerPerformanceBaseClass):
             copy_shape=shape_var,
             desc="Water consumption in kg/hr",
         )
-        self.add_output("electrolyzer_size_mw_cost", units="MW", desc="Size of electrolyzer in MW")
 
     def compute(self, inputs, outputs):
         plant_life = self.options["plant_config"]["plant"]["plant_life"]
@@ -165,7 +164,7 @@ class ECOElectrolyzerPerformanceModel(ElectrolyzerPerformanceBaseClass):
         if self.config.compute_mode == "normal":
             # In "normal" compute mode, electrolyzer size comes from config
             energy_to_electrolyzer_kw = inputs["electricity_in"]
-            electrolyzer_size_mw = inputs["electrolyzer_size_mw_cost"]
+            electrolyzer_size_mw = inputs["n_clusters"][0] * self.config.cluster_rating_MW
         elif self.config.compute_mode == "feedstock_size":
             # In "feedstock_size" compute mode, electrolyzer size comes from feedstock
             energy_to_electrolyzer_kw = inputs["electricity_in"]
