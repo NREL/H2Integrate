@@ -1,6 +1,6 @@
 from attrs import field, define
 
-from h2integrate.core.utilities import merge_shared_inputs
+from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
 from h2integrate.converters.co2.marine.marine_carbon_capture_baseclass import (
     MarineCarbonCaptureCostBaseClass,
     MarineCarbonCapturePerformanceConfig,
@@ -223,24 +223,6 @@ class OAEPerformanceModel(MarineCarbonCapturePerformanceBaseClass):
         outputs["mass_rca"] = oae_outputs.slurry_mass_max
 
 
-@define
-class OAECostModelConfig(OAEPerformanceConfig):
-    """Configuration for the DOC cost model.
-
-    Attributes:
-        mass_product_tonne_yr (float): Mass of product produced per year (tonnes).
-        value_product (float): Value of the product (USD/yr).
-        waste_mass_tonne_yr (float): Mass of waste produced per year (tonnes).
-        waste_disposal_cost (float): Cost of waste disposal (USD/yr).
-        avg_base_added_seawater_mol_yr (float): Average moles of base added to seawater per year.
-        base_added_seawater_max_power_mol_yr (float): Maximum power for base added
-            seawater per year.
-        mass_rca_g (float): Mass of RCA tumbler slurry in grams.
-    """
-
-    mass_product_tonne_yr: float = field()
-
-
 class OAECostModel(MarineCarbonCaptureCostBaseClass):
     """OpenMDAO component for computing capital (CapEx) and operational (OpEx) costs of a
         ocean alkalinity enhancement (OAE) system.
@@ -260,10 +242,6 @@ class OAECostModel(MarineCarbonCaptureCostBaseClass):
 
     def setup(self):
         super().setup()
-        self.config = OAECostModelConfig.from_dict(
-            merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost")
-        )
-
         self.add_input(
             "mass_sellable_product",
             val=0.0,
@@ -318,3 +296,127 @@ class OAECostModel(MarineCarbonCaptureCostBaseClass):
         # Calculate CapEx
         outputs["CapEx"] = results["Capital Cost (CAPEX) ($)"]
         outputs["OpEx"] = results["Annual Operating Cost ($/yr)"]
+
+
+@define
+class OAECostAndFinancialConfig(BaseConfig):
+    """Configuration for the Ocean Alkalinity Enhancement (OAE) cost and financial model.
+
+    Attributes:
+        lcoe (float): Levelized cost of electricity (USD/kWh).
+        annual_energy (float): Annual energy consumed by OAE system (kWh/year).
+    """
+
+    lcoe: float = field()
+    annual_energy: float = field()
+
+
+class OAECostAndFinancialModel(MarineCarbonCaptureCostBaseClass):
+    """OpenMDAO component for calculating costs and financial metrics of an
+        Ocean Alkalinity Enhancement (OAE) system.
+    The financial model calculates the carbon credit value that would be required to achieve a
+        net present value (NPV) of zero for the overall system costs.
+
+    Computes:
+        - CapEx (USD)
+        - OpEx (USD/year)
+        - NPV ($)
+        - Carbon Credit Value (USD/tCO2)
+    """
+
+    def initialize(self):
+        super().initialize()
+        if echem_oae is None:
+            raise ImportError(
+                "The `mcm` package is required. Install it via:\n"
+                "pip install git+https://github.com/NREL/MarineCarbonManagement.git"
+            )
+
+    def setup(self):
+        super().setup()
+        self.config = OAECostAndFinancialConfig.from_dict(
+            merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost")
+        )
+        self.add_input(
+            "LCOE",
+            val=0.0,
+            units="USD/kWh",
+            desc="Levelized cost of electricity (USD/kWh)",
+        )
+        self.add_input(
+            "annual_energy",
+            val=0.0,
+            units="kWh/year",
+            desc="Annual energy consumed by OAE system (kWh/year)",
+        )
+
+        self.add_input(
+            "mass_sellable_product",
+            val=0.0,
+            units="t/year",
+            desc="Mass of sellable product (acid or RCA) produced per year (tonnes)",
+        )
+        self.add_input(
+            "value_products",
+            val=0.0,
+            units="USD/year",
+            desc="Value of products (acid or RCA) (USD/year)",
+        )
+        self.add_input(
+            "mass_acid_disposed",
+            val=0.0,
+            units="t/year",
+            desc="Mass of acid disposed per year (tonnes)",
+        )
+        self.add_input(
+            "cost_acid_disposal",
+            val=0.0,
+            units="USD/year",
+            desc="Cost of acid disposal (USD/year)",
+        )
+        self.add_input(
+            "based_added_seawater_max_power",
+            val=0.0,
+            units="mol/year",
+            desc="Maximum power for base added seawater per year (mol/year)",
+        )
+        self.add_input(
+            "mass_rca",
+            val=0.0,
+            units="g",
+            desc="Mass of RCA tumbler slurry produced (grams)",
+        )
+
+        self.add_output(
+            "NPV",
+            val=0.0,
+            units="USD",
+            desc="Net Present Value of the OAE system (USD)",
+        )
+        self.add_output(
+            "carbon_credit_value",
+            val=0.0,
+            units="USD/t",
+            desc="Carbon credit value required to achieve NPV of zero (USD/tCO2)",
+        )
+
+    def compute(self, inputs, outputs):
+        annual_energy_cost_usd_yr = inputs["LCOE"] * inputs["annual_energy"]
+        costs = echem_oae.OAECosts(
+            mass_product=inputs["mass_sellable_product"],
+            value_product=inputs["value_products"],
+            waste_mass=inputs["mass_acid_disposed"],
+            waste_disposal_cost=inputs["cost_acid_disposal"],
+            estimated_cdr=inputs["co2_capture_mtpy"],
+            base_added_seawater_max_power=inputs["based_added_seawater_max_power"],
+            mass_rca=inputs["mass_rca"],
+            annual_energy_cost=annual_energy_cost_usd_yr,
+        )
+
+        results = costs.run()
+
+        # Calculate CapEx
+        outputs["CapEx"] = results["Capital Cost (CAPEX) ($)"]
+        outputs["OpEx"] = results["Annual Operating Cost ($/yr)"]
+        outputs["NPV"] = results["NPV ($)"]
+        outputs["carbon_credit_value"] = results["Carbon Credit Value ($/tCO2)"]
