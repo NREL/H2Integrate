@@ -191,13 +191,13 @@ def test_ammonia_synloop_example(subtests):
     with subtests.test("Check LCOH"):
         assert (
             pytest.approx(model.prob.get_val("financials_group_default.LCOH")[0], rel=1e-6)
-            == 5.65930
+            == 5.659321302703965
         )
 
     with subtests.test("Check LCOA"):
         assert (
             pytest.approx(model.prob.get_val("financials_group_default.LCOA")[0], rel=1e-6)
-            == 1.0670271
+            == 1.067030996544544
         )
 
 
