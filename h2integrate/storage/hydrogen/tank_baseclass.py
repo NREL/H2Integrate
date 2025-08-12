@@ -1,5 +1,7 @@
 import openmdao.api as om
 
+from h2integrate.core.model_base import CostModelBaseClass
+
 
 class HydrogenTankPerformanceModel(om.ExplicitComponent):
     def initialize(self):
@@ -51,13 +53,9 @@ class HydrogenTankPerformanceModel(om.ExplicitComponent):
         outputs["stored_hydrogen"] = initial_hydrogen + hydrogen_in - hydrogen_out
 
 
-class HydrogenTankCostModel(om.ExplicitComponent):
-    def initialize(self):
-        self.options.declare("driver_config", types=dict)
-        self.options.declare("plant_config", types=dict)
-        self.options.declare("tech_config", types=dict)
-
+class HydrogenTankCostModel(CostModelBaseClass):
     def setup(self):
+        super().setup()
         config_details = self.options["tech_config"]["details"]
         self.add_input(
             "total_capacity",
@@ -65,9 +63,9 @@ class HydrogenTankCostModel(om.ExplicitComponent):
             units="kg",
             desc="Total storage capacity",
         )
-        self.add_output("CapEx", val=0.0, units="MUSD", desc="Capital expenditure")
-        self.add_output("OpEx", val=0.0, units="MUSD", desc="Operational expenditure")
+        self.cost_year = int(config_details["cost_year"])
 
-    def compute(self, inputs, outputs):
+    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         outputs["CapEx"] = inputs["total_capacity"] * 0.1
         outputs["OpEx"] = inputs["total_capacity"] * 0.01
+        discrete_outputs["cost_year"] = self.cost_year
