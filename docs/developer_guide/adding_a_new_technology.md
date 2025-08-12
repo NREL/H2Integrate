@@ -72,7 +72,12 @@ We call the baseclass's `setup` method using the `super()` function, then added 
 For this simplistic case, we will skip the cost model.
 The process for writing a cost model is similar to the performance model, with the required inputs and outputs defined in the baseclass.
 
-4. **Next, add the new technology to the `supported_models.py` file.**
+4. **Write the control model for your technology.**
+For this simplistic case, we will skip the control model because controls models can currently only be added to
+storage technologies. The process for writing a control model is similar to the performance model, with the
+required inputs and outputs defined in the baseclass.
+
+5. **Next, add the new technology to the `supported_models.py` file.**
 This file contains a dictionary of all the available technologies in H2Integrate.
 Add your new technology to the dictionary with the appropriate keys depending on if it a performance, cost, or financial model.
 Here's what the updated `supported_models.py` file looks like with our new solar technology added as the first entry:
@@ -93,7 +98,7 @@ supported_models = {
 }
 ```
 
-5. **Finally, you can now use your new technology in H2Integrate.**
+6. **Finally, you can now use your new technology in H2Integrate.**
 You can create a new case that uses this technology in the `tech_config.yaml` level or add it to an existing scenario and run the model to see the results.
 
 
