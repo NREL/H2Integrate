@@ -53,7 +53,6 @@ class SteelCostAndFinancialModelConfig(BaseConfig):
     lcoh: float = field()
     feedstocks: dict = field()  # TODO: build validator for this large dictionary
     finances: dict = field()  # TODO: build validator for this large dictionary
-    cost_year: int = field(converter=int)
 
 
 @define
@@ -97,7 +96,7 @@ class SteelCostAndFinancialModel(SteelCostBaseClass):
 
         self.add_output("LCOS", val=0.0, units="USD/t")
 
-    def compute(self, inputs, outputs):
+    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         config = self.cost_config
         config.lcoh = inputs["LCOH"]
         cost_model_outputs = run_steel_cost_model(config)
@@ -127,3 +126,4 @@ class SteelCostAndFinancialModel(SteelCostBaseClass):
 
         finance_model_outputs = run_steel_finance_model(finance_config)
         outputs["LCOS"] = finance_model_outputs.sol.get("price")
+        discrete_outputs["cost_year"] = 2022

@@ -1,5 +1,7 @@
 import openmdao.api as om
 
+from h2integrate.core.model_base import CostModelBaseClass
+
 
 class SteelPerformanceBaseClass(om.ExplicitComponent):
     def initialize(self):
@@ -26,28 +28,13 @@ class SteelPerformanceBaseClass(om.ExplicitComponent):
         raise NotImplementedError("This method should be implemented in a subclass.")
 
 
-class SteelCostBaseClass(om.ExplicitComponent):
-    def initialize(self):
-        self.options.declare("driver_config", types=dict)
-        self.options.declare("plant_config", types=dict)
-        self.options.declare("tech_config", types=dict)
-
+class SteelCostBaseClass(CostModelBaseClass):
     def setup(self):
         # Inputs for cost model configuration
+        super().setup()
         self.add_input("plant_capacity_mtpy", val=0.0, units="t/year", desc="Annual plant capacity")
         self.add_input("plant_capacity_factor", val=0.0, units=None, desc="Capacity factor")
         self.add_input("LCOH", val=0.0, units="USD/kg", desc="Levelized cost of hydrogen")
-        self.add_output("CapEx", val=0.0, units="USD", desc="Total capital expenditures")
-        self.add_output("OpEx", val=0.0, units="USD/year", desc="Total fixed operating costs")
-
-    def compute(self, inputs, outputs):
-        """
-        Computation for the OM component.
-
-        For a template class this is not implement and raises an error.
-        """
-
-        raise NotImplementedError("This method should be implemented in a subclass.")
 
 
 class SteelFinanceBaseClass(om.ExplicitComponent):
