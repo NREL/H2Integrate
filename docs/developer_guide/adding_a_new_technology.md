@@ -20,6 +20,7 @@ class SolarPerformanceBaseClass(om.ExplicitComponent):
     def initialize(self):
         self.options.declare('plant_config', types=dict)
         self.options.declare('tech_config', types=dict)
+        self.options.declare('driver_config', types=dict)
 
     def setup(self):
         self.add_output('electricity', val=0.0, shape=n_timesteps, units='kW', desc='Power output from SolarPlant')
@@ -70,7 +71,84 @@ We call the baseclass's `setup` method using the `super()` function, then added 
 
 3. **Write the cost model for your technology.**
 For this simplistic case, we will skip the cost model.
-The process for writing a cost model is similar to the performance model, with the required inputs and outputs defined in the baseclass.
+The process for writing a cost model is similar to the performance model, with the required inputs and outputs defined in the technology cost model baseclass. The technology cost model baseclass should inherit the main cost model baseclass (`CostModelBaseClass`) with additional inputs, outputs, setup added as necessary. The `CostModelBaseClass` has no predefined inputs, but all cost models must output `CapEx`, `OpEx`, and `cost_year`.
+
+If the dollar-year for the costs (capex and opex) are **inherent to the cost model**, a cost model may look like below:
+```python
+from attrs import field, define
+from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
+from h2integrate.core.validators import gt_zero, contains
+from h2integrate.core.model_base import CostModelBaseClass
+
+# make a cost config input to get user-provided inputs that won't be passed from other models
+@define
+class ReverseOsmosisCostModelConfig(BaseConfig):
+    # the config variables for the cost model would be provided in the tech_config[tech]['model_inputs']['cost_parameters'] or tech_config[tech]['model_inputs']['shared_parameters']
+    freshwater_kg_per_hour: float = field(validator=gt_zero)
+    freshwater_density: float = field(validator=gt_zero)
+
+# make the cost model
+class ReverseOsmosisCostModel(CostModelBaseClass):
+    def setup(self):
+        super().setup()
+        self.config = ReverseOsmosisCostModelConfig.from_dict(
+            merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost")
+        )
+
+        # add extra inputs or outputs for the cost model
+        self.add_input(
+            "plant_capacity_kgph", val=0.0, units="kg/h", desc="Desired freshwater flow rate"
+        )
+
+    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
+        # calculate CapEx and OpEx in USD
+        desal_capex = 32894 * (self.config.freshwater_kg_per_hour / 3600)  # [USD]
+
+        desal_opex = 4841 * (self.config.freshwater_kg_per_hour / 3600)  # [USD/yr]
+
+        outputs["CapEx"] = capex
+        outputs["OpEx"] = opex
+        # if the dollar-year for the costs are inherent to the model, output the cost year for the model like below
+        discrete_outputs["cost_year"] = 2013
+
+```
+
+If the dollar-year for the costs (capex and opex) are **inherent to the user cost inputs**, a cost model may look like below:
+```python
+from attrs import field, define
+from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
+from h2integrate.core.validators import gt_zero, contains
+from h2integrate.core.model_base import CostModelBaseClass
+
+@define
+class ATBUtilityPVCostModelConfig(BaseConfig):
+    capex_per_kWac: float | int = field(validator=gt_zero)
+    opex_per_kWac_per_year: float | int = field(validator=gt_zero)
+    cost_year: int = field(converter=int) #user inputs cost year
+
+class ATBUtilityPVCostModel(CostModelBaseClass):
+    def setup(self):
+        super().setup()
+        self.config = ATBUtilityPVCostModelConfig.from_dict(
+            merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost")
+        )
+
+        # add extra inputs or outputs for the cost model
+        self.add_input("capacity_kWac", val=0.0, units="kW", desc="PV rated capacity in AC")
+
+    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
+        # calculate CapEx and OpEx in USD
+        capacity = inputs["capacity_kWac"][0]
+        capex = self.config.capex_per_kWac * capacity
+        opex = self.config.opex_per_kWac_per_year * capacity
+        outputs["CapEx"] = capex
+        outputs["OpEx"] = opex
+        discrete_outputs["cost_year"] = self.config.cost_year
+
+        # if the dollar-year for the costs are based on the user input costs, output the cost year from the user-input value
+        discrete_outputs["cost_year"] = self.config.cost_year
+
+```
 
 4. **Write the control model for your technology.**
 For this simplistic case, we will skip the control model because controls models can currently only be added to
