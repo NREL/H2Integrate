@@ -236,10 +236,6 @@ class OAECostModelConfig(OAEPerformanceConfig):
         base_added_seawater_max_power_mol_yr (float): Maximum power for base added
             seawater per year.
         mass_rca_g (float): Mass of RCA tumbler slurry in grams.
-        acid_disposal_method (str): Method for acid disposal. Options:
-            - "sell rca"
-            - "sell acid"
-            - "acid disposal"
     """
 
     mass_product_tonne_yr: float = field()
@@ -247,7 +243,7 @@ class OAECostModelConfig(OAEPerformanceConfig):
 
 class OAECostModel(MarineCarbonCaptureCostBaseClass):
     """OpenMDAO component for computing capital (CapEx) and operational (OpEx) costs of a
-        direct ocean capture (DOC) system.
+        ocean alkalinity enhancement (OAE) system.
 
     Computes:
         - CapEx (USD)
@@ -314,6 +310,7 @@ class OAECostModel(MarineCarbonCaptureCostBaseClass):
             estimated_cdr=inputs["co2_capture_mtpy"],
             base_added_seawater_max_power=inputs["based_added_seawater_max_power"],
             mass_rca=inputs["mass_rca"],
+            annual_energy_cost=0,  # Energy costs are calculated within H2I and added to LCOC calc
         )
 
         results = costs.run()
