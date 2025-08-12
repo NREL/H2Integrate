@@ -17,9 +17,11 @@ class WOMBATModelConfig(ECOElectrolyzerPerformanceModelConfig):
     """
     library_path: Path to the WOMBAT library directory, relative from this file
     if not an absolute path.
+    cost_year: dollar-year corresponding to capex value.
     """
 
     library_path: Path = field()
+    cost_year: int = field(converter=int)
 
 
 class WOMBATElectrolyzerModel(ECOElectrolyzerPerformanceModel):
@@ -42,6 +44,7 @@ class WOMBATElectrolyzerModel(ECOElectrolyzerPerformanceModel):
         self.add_output("capacity_factor", val=0.0, units=None)
         self.add_output("CapEx", val=0.0, units="USD", desc="Capital expenditure")
         self.add_output("OpEx", val=0.0, units="USD/year", desc="Operational expenditure")
+        self.add_discrete_output("cost_year", val=0, desc="Dollar year for costs")
         self.add_output(
             "percent_hydrogen_lost",
             val=0.0,
@@ -52,7 +55,7 @@ class WOMBATElectrolyzerModel(ECOElectrolyzerPerformanceModel):
             "electrolyzer_availability", val=0.0, units=None, desc="Electrolyzer availability"
         )
 
-    def compute(self, inputs, outputs):
+    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         super().compute(inputs, outputs)
 
         # Ensure library_path is a Path object
@@ -138,3 +141,5 @@ class WOMBATElectrolyzerModel(ECOElectrolyzerPerformanceModel):
         outputs["capacity_factor"] = sim.metrics.capacity_factor(
             which="net", frequency="project", by="electrolyzer"
         ).squeeze()
+
+        discrete_outputs["cost_year"] = self.config.cost_year  # TODO
