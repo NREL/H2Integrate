@@ -1,5 +1,7 @@
 import openmdao.api as om
 
+from h2integrate.core.model_base import CostModelBaseClass
+
 
 class DesalinationPerformanceBaseClass(om.ExplicitComponent):
     def initialize(self):
@@ -22,7 +24,7 @@ class DesalinationPerformanceBaseClass(om.ExplicitComponent):
         raise NotImplementedError("This method should be implemented in a subclass.")
 
 
-class DesalinationCostBaseClass(om.ExplicitComponent):
+class DesalinationCostBaseClass(CostModelBaseClass):
     def setup(self):
         super().setup()
         # Inputs for cost model configuration

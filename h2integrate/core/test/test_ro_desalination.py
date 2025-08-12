@@ -73,7 +73,6 @@ def test_ro_desalination_cost(subtests):
             "cost_parameters": {
                 "freshwater_kg_per_hour": 10000,
                 "freshwater_density": 997,
-                "cost_year": 2022,
             },
         }
     }
