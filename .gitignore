@@ -136,3 +136,9 @@ reports/*
 
 # Don't ignore source data files
 !*source.xlsx
+
+# PyXDSM/Tex
+*.tex
+*.tikz
+*.aux
+*.bbl
