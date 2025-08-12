@@ -175,7 +175,7 @@ class DOCCostModel(MarineCarbonCaptureCostBaseClass):
             desc="Theoretical plant maximum CO₂ capture (t/h)",
         )
 
-    def compute(self, inputs, outputs):
+    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         # Set up electrodialysis inputs
         ED_inputs = setup_electrodialysis_inputs(self.config)
 
@@ -192,3 +192,4 @@ class DOCCostModel(MarineCarbonCaptureCostBaseClass):
         # Calculate CapEx
         outputs["CapEx"] = res.initial_capital_cost
         outputs["OpEx"] = res.yearly_operational_cost
+        discrete_outputs["cost_year"] = 2023  # TODO
