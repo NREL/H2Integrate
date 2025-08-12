@@ -29,7 +29,7 @@ class HOPPComponent(om.ExplicitComponent):
 
     def setup(self):
         self.hopp_config = self.options["tech_config"]["performance_model"]["config"]
-
+        self.cost_year = self.options["tech_config"]["model_inputs"]["cost_parameters"]["cost_year"]
         if "simulation_options" in self.hopp_config["config"]:
             if "cache" in self.hopp_config["config"]["simulation_options"]:
                 self.cache = self.hopp_config["config"]["simulation_options"]["cache"]
@@ -83,8 +83,9 @@ class HOPPComponent(om.ExplicitComponent):
         )
         self.add_output("CapEx", val=0.0, units="USD", desc="Total capital expenditures")
         self.add_output("OpEx", val=0.0, units="USD/year", desc="Total fixed operating costs")
+        self.add_discrete_output("cost_year", val=0, desc="Dollar year for costs")
 
-    def compute(self, inputs, outputs):
+    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         # Define the keys of interest from the HOPP results that we want to cache
         keys_of_interest = [
             "percent_load_missed",
@@ -197,3 +198,4 @@ class HOPPComponent(om.ExplicitComponent):
                 total_power_capacity += tech_conf.get("system_capacity_kw", 0.0)
 
         outputs["power_capacity_to_interconnect_ratio"] = total_power_capacity / interconnect_kw
+        discrete_outputs["cost_year"] = int(self.cost_year)
