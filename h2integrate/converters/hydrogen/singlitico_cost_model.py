@@ -11,7 +11,7 @@ from h2integrate.simulation.technologies.hydrogen.electrolysis.PEM_costs_Singlit
 @define
 class SingliticoCostModelConfig(BaseConfig):
     """
-    Configuration class for the ECOElectrolyzerPerformanceModel.
+    Configuration class for the ECOElectrolyzerPerformanceModel, outputs costs in 2021 USD.
 
     Args:
         location (str): The location of the electrolyzer; options include "onshore" or "offshore".
@@ -19,12 +19,10 @@ class SingliticoCostModelConfig(BaseConfig):
             2022 USD/kW (DOE hydrogen program record 24005 Clean Hydrogen Production Cost Scenarios
             with PEM Electrolyzer Technology 05/20/24) #TODO: convert to refs
             (https://www.hydrogen.energy.gov/docs/hydrogenprogramlibraries/pdfs/24005-clean-hydrogen-production-cost-pem-electrolyzer.pdf?sfvrsn=8cb10889_1)
-        cost_year (int): dollar year corresponding to `electrolyzer_capex`
     """
 
     location: str = field(validator=contains(["onshore", "offshore"]))
     electrolyzer_capex: int = field()
-    cost_year: int = field(converter=int)
 
 
 class SingliticoCostModel(ElectrolyzerCostBaseClass):
@@ -44,7 +42,7 @@ class SingliticoCostModel(ElectrolyzerCostBaseClass):
             desc="Size of the electrolyzer in MW",
         )
 
-    def compute(self, inputs, outputs):
+    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         electrolyzer_size_mw = inputs["electrolyzer_size_mw"][0]
 
         # run hydrogen production cost model - from hopp examples
@@ -70,3 +68,4 @@ class SingliticoCostModel(ElectrolyzerCostBaseClass):
 
         outputs["CapEx"] = electrolyzer_total_capital_cost
         outputs["OpEx"] = electrolyzer_OM_cost
+        discrete_outputs["cost_year"] = 2021

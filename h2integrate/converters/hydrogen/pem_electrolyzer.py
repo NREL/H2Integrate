@@ -58,12 +58,12 @@ class ElectrolyzerPerformanceModel(ElectrolyzerPerformanceBaseClass):
 class ElectrolyzeCostModelConfig(BaseConfig):
     cluster_size_mw: float = field()
     electrolyzer_cost: float = field()
-    cost_year: int = field(converter=int)
 
 
 class ElectrolyzerCostModel(ElectrolyzerCostBaseClass):
     """
-    An OpenMDAO component that computes the cost of a PEM electrolyzer.
+    An OpenMDAO component that computes the cost of a PEM electrolyzer cluster
+    using PEMCostsSinglicitoModel which outputs costs in 2021 USD.
     """
 
     def setup(self):
@@ -86,7 +86,7 @@ class ElectrolyzerCostModel(ElectrolyzerCostBaseClass):
             desc="Reference cost of the electrolyzer",
         )
 
-    def compute(self, inputs, outputs):
+    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         # Call the cost model to compute costs
         P_elec = inputs["P_elec"] * 1.0e-3  # Convert MW to GW
         RC_elec = inputs["RC_elec"]
@@ -96,3 +96,4 @@ class ElectrolyzerCostModel(ElectrolyzerCostBaseClass):
 
         outputs["CapEx"] = capex * 1.0e-6  # Convert to MUSD
         outputs["OpEx"] = opex * 1.0e-6  # Convert to MUSD
+        discrete_outputs["cost_year"] = 2021
