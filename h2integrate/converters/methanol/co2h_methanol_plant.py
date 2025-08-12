@@ -38,7 +38,7 @@ class CO2HMethanolPlantPerformanceModel(MethanolPerformanceBaseClass):
         - meoh_syn_cat_in: scalar ft^3/yr of catalyst supplied to the methanol plant
         - ng_in: array of kg/h natural gas (NG) supplied to methanol plant
         - co2_in: array of kg/h carbon dioxide (CO2) supplied to methanol plant
-        - hydrogen_in: array of kg/s hydrogen supplied to methanol plant
+        - hydrogen_in: array of kg/h hydrogen supplied to methanol plant
         - electricity_in: array of kW electricity supplied to methanol plant
     Outputs:
         - meoh_syn_cat_consume: annual consumption of methanol synthesis catalyst (ft**3/yr)
@@ -73,7 +73,7 @@ class CO2HMethanolPlantPerformanceModel(MethanolPerformanceBaseClass):
         self.add_input("meoh_syn_cat_in", units="ft**3/yr", val=syn_ratio * np.sum(meoh_max_out))
         self.add_input("ng_in", shape=8760, units="kg/h", val=ng_ratio * meoh_max_out)
         self.add_input("co2_in", shape=8760, units="kg/h", val=co2_ratio * meoh_max_out)
-        self.add_input("hydrogen_in", shape=8760, units="kg/s", val=h2_ratio * meoh_max_out)
+        self.add_input("hydrogen_in", shape=8760, units="kg/h", val=h2_ratio * meoh_max_out)
         self.add_input("electricity_in", shape=8760, units="kW*h/h", val=elec_ratio * meoh_max_out)
 
         # Set up feedstock consumption outputs
@@ -98,7 +98,7 @@ class CO2HMethanolPlantPerformanceModel(MethanolPerformanceBaseClass):
         meoh_from_syn = np.ones(8760) * syn_in / syn_ratio / 8760
         meoh_from_ng = ng_in / ng_ratio
         meoh_from_co2 = co2_in / co2_ratio
-        meoh_from_h2 = h2_in * 3600 / h2_ratio  # h2_in is in kg/s - convert to kg/h
+        meoh_from_h2 = h2_in / h2_ratio
         meoh_from_elec = elec_in / elec_ratio
 
         # Limiting methanol production per hour
