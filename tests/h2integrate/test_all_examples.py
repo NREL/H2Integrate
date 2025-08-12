@@ -432,3 +432,26 @@ def test_hydrogen_dispatch_example(subtests):
             )
             == 5.68452215
         )
+
+
+@unittest.skipUnless(importlib.util.find_spec("mcm") is not None, "mcm is not installed")
+def test_wind_wave_oae_example(subtests):
+    # Change the current working directory to the example's directory
+    os.chdir(examples_dir / "15_wind_oae")
+
+    # Create a H2Integrate model
+    model = H2IntegrateModel(Path.cwd() / "offshore_plant_oae.yaml")
+
+    # Run the model
+    model.run()
+
+    model.post_process()
+
+    # Subtests for checking specific values
+    # Note: These are placeholder values. Update with actual values after running the test
+    # when MCM package is properly installed and configured
+    with subtests.test("Check LCOC"):
+        assert pytest.approx(model.prob.get_val("financials_group_default.LCOC"), rel=1e-3) == 37.82
+
+    with subtests.test("Check LCOE"):
+        assert pytest.approx(model.prob.get_val("financials_group_default.LCOE"), rel=1e-2) == 0.369
