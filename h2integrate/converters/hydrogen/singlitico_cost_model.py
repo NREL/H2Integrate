@@ -1,7 +1,7 @@
 from attrs import field, define
 
 from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
-from h2integrate.core.validators import gt_zero, contains
+from h2integrate.core.validators import contains
 from h2integrate.converters.hydrogen.electrolyzer_baseclass import ElectrolyzerCostBaseClass
 from h2integrate.simulation.technologies.hydrogen.electrolysis.PEM_costs_Singlitico_model import (
     PEMCostsSingliticoModel,
@@ -14,7 +14,6 @@ class SingliticoCostModelConfig(BaseConfig):
     Configuration class for the ECOElectrolyzerPerformanceModel.
 
     Args:
-        rating (float): The rating of the electrolyzer in MW.
         location (str): The location of the electrolyzer; options include "onshore" or "offshore".
         electrolyzer_capex (int): $/kW overnight installed capital costs for a 1 MW system in
             2022 USD/kW (DOE hydrogen program record 24005 Clean Hydrogen Production Cost Scenarios
@@ -22,7 +21,6 @@ class SingliticoCostModelConfig(BaseConfig):
             (https://www.hydrogen.energy.gov/docs/hydrogenprogramlibraries/pdfs/24005-clean-hydrogen-production-cost-pem-electrolyzer.pdf?sfvrsn=8cb10889_1)
     """
 
-    rating: float = field(validator=gt_zero)
     location: str = field(validator=contains(["onshore", "offshore"]))
     electrolyzer_capex: int = field()
 
@@ -37,10 +35,15 @@ class SingliticoCostModel(ElectrolyzerCostBaseClass):
         self.config = SingliticoCostModelConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost")
         )
-        self.add_input("electrolyzer_size_mw_cost", units="MW", desc="Size of electrolyzer in MW")
+        self.add_input(
+            "electrolyzer_size_mw",
+            val=0,
+            units="MW",
+            desc="Size of the electrolyzer in MW",
+        )
 
     def compute(self, inputs, outputs):
-        electrolyzer_size_mw = inputs["electrolyzer_size_mw_cost"]
+        electrolyzer_size_mw = inputs["electrolyzer_size_mw"][0]
 
         # run hydrogen production cost model - from hopp examples
         if self.config.location == "onshore":

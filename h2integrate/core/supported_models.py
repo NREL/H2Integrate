@@ -7,11 +7,15 @@ from h2integrate.transporters.power_combiner import CombinerPerformanceModel
 from h2integrate.converters.hopp.hopp_wrapper import HOPPComponent
 from h2integrate.converters.solar.solar_pysam import PYSAMSolarPlantPerformanceModel
 from h2integrate.storage.hydrogen.eco_storage import H2Storage
+from h2integrate.converters.nitrogen.simple_ASU import SimpleASUCostModel, SimpleASUPerformanceModel
 from h2integrate.storage.hydrogen.tank_baseclass import (
     HydrogenTankCostModel,
     HydrogenTankPerformanceModel,
 )
-from h2integrate.controllers.openloop_controllers import PassThroughOpenLoopController
+from h2integrate.controllers.openloop_controllers import (
+    DemandOpenLoopController,
+    PassThroughOpenLoopController,
+)
 from h2integrate.converters.hydrogen.wombat_model import WOMBATElectrolyzerModel
 from h2integrate.converters.wind.wind_plant_pysam import PYSAMWindPlantPerformanceModel
 from h2integrate.converters.ammonia.ammonia_synloop import (
@@ -35,6 +39,8 @@ from h2integrate.converters.profiles.simple_feedstock import (
     BasicFeedstockCostModel,
     BasicFeedstockPerformanceModel,
 )
+from h2integrate.converters.solar.atb_res_com_pv_cost import ATBResComPVCostModel
+from h2integrate.converters.solar.atb_utility_pv_cost import ATBUtilityPVCostModel
 from h2integrate.converters.methanol.smr_methanol_plant import (
     SMRMethanolPlantCostModel,
     SMRMethanolPlantFinanceModel,
@@ -73,6 +79,8 @@ supported_models = {
     "wind_plant_cost": WindPlantCostModel,
     "pysam_wind_plant_performance": PYSAMWindPlantPerformanceModel,
     "pysam_solar_plant_performance": PYSAMSolarPlantPerformanceModel,
+    "atb_utility_pv_cost": ATBUtilityPVCostModel,
+    "atb_comm_res_pv_cost": ATBResComPVCostModel,
     "run_of_river_hydro_performance": RunOfRiverHydroPerformanceModel,
     "run_of_river_hydro_cost": RunOfRiverHydroCostModel,
     "pem_electrolyzer_performance": ElectrolyzerPerformanceModel,
@@ -80,6 +88,8 @@ supported_models = {
     "eco_pem_electrolyzer_performance": ECOElectrolyzerPerformanceModel,
     "singlitico_electrolyzer_cost": SingliticoCostModel,
     "basic_electrolyzer_cost": BasicElectrolyzerCostModel,
+    "simple_ASU_cost": SimpleASUCostModel,
+    "simple_ASU_performance": SimpleASUPerformanceModel,
     "h2_storage": H2Storage,
     "hopp": HOPPComponent,
     "wombat": WOMBATElectrolyzerModel,
@@ -108,6 +118,7 @@ supported_models = {
     "combiner_performance": CombinerPerformanceModel,
     # Control
     "pass_through_controller": PassThroughOpenLoopController,
+    "demand_open_loop_controller": DemandOpenLoopController,
     # Storage
     "hydrogen_tank_performance": HydrogenTankPerformanceModel,
     "hydrogen_tank_cost": HydrogenTankCostModel,
@@ -117,4 +128,4 @@ supported_models = {
     "product_cost": BasicProductCostModel,
 }
 
-electricity_producing_techs = ["wind", "solar", "river", "hopp"]
+electricity_producing_techs = ["wind", "solar", "pv", "river", "hopp"]

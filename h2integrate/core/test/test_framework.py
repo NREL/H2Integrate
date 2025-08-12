@@ -62,3 +62,102 @@ def test_custom_model_name_clash(subtests):
     # Clean up temporary YAML files
     temp_tech_config.unlink(missing_ok=True)
     temp_highlevel_yaml.unlink(missing_ok=True)
+
+
+def test_custom_financial_model_grouping(subtests):
+    # Change the current working directory to the example's directory
+    os.chdir(examples_dir / "01_onshore_steel_mn")
+
+    # Path to the original tech_config.yaml and high-level yaml in the example directory
+    orig_tech_config = Path.cwd() / "tech_config.yaml"
+    temp_tech_config = Path.cwd() / "temp_tech_config.yaml"
+    orig_highlevel_yaml = Path.cwd() / "01_onshore_steel_mn.yaml"
+    temp_highlevel_yaml = Path.cwd() / "temp_01_onshore_steel_mn.yaml"
+
+    # Copy the original tech_config.yaml and high-level yaml to temp files
+    shutil.copy(orig_tech_config, temp_tech_config)
+    shutil.copy(orig_highlevel_yaml, temp_highlevel_yaml)
+
+    # Load the tech_config YAML content
+    tech_config_data = load_tech_yaml(temp_tech_config)
+
+    # Modify the financial_model entry for one of the technologies
+    tech_config_data["technologies"]["steel"]["financial_model"]["group"] = "test_financial_group"
+    tech_config_data["technologies"]["electrolyzer"].pop("financial_model", None)
+
+    # Save the modified tech_config YAML back
+    with temp_tech_config.open("w") as f:
+        yaml.safe_dump(tech_config_data, f)
+
+    # Load the high-level YAML content
+    with temp_highlevel_yaml.open() as f:
+        highlevel_data = yaml.safe_load(f)
+
+    # Modify the high-level YAML to point to the temp tech_config file
+    highlevel_data["technology_config"] = str(temp_tech_config.name)
+
+    # Save the modified high-level YAML back
+    with temp_highlevel_yaml.open("w") as f:
+        yaml.safe_dump(highlevel_data, f)
+
+    # Run the model and check that it does not raise an error
+    # (assuming custom financial_model is allowed)
+    H2IntegrateModel(temp_highlevel_yaml)
+
+    # Clean up temporary YAML files
+    temp_tech_config.unlink(missing_ok=True)
+    temp_highlevel_yaml.unlink(missing_ok=True)
+
+
+def test_get_included_technologies():
+    # Create a mock model instance
+    model = H2IntegrateModel.__new__(H2IntegrateModel)
+
+    # Test case 1: No specific technologies defined (should include all)
+    tech_config = {
+        "wind": {"performance_model": {"model": "test"}},
+        "electrolyzer": {"performance_model": {"model": "test"}},
+        "storage": {"performance_model": {"model": "test"}},
+    }
+    plant_config = {"finance_parameters": {}}
+
+    included_techs = model.get_included_technologies(tech_config, "hydrogen", plant_config)
+    expected = ["wind", "electrolyzer", "storage"]
+    assert set(included_techs) == set(expected), f"Expected {expected}, got {included_techs}"
+
+    # Test case 2: Specific technologies defined for LCOH
+    plant_config_with_specific = {
+        "finance_parameters": {
+            "technologies_included_in_metrics": {"LCOH": ["electrolyzer", "wind"]}
+        }
+    }
+
+    included_techs = model.get_included_technologies(
+        tech_config, "hydrogen", plant_config_with_specific
+    )
+    expected = ["electrolyzer", "wind"]
+    assert set(included_techs) == set(expected), f"Expected {expected}, got {included_techs}"
+
+    # Test case 3: Test different commodity type (electricity)
+    plant_config_with_lcoe = {
+        "finance_parameters": {"technologies_included_in_metrics": {"LCOE": ["wind"]}}
+    }
+
+    included_techs = model.get_included_technologies(
+        tech_config, "electricity", plant_config_with_lcoe
+    )
+    expected = ["wind"]
+    assert set(included_techs) == set(expected), f"Expected {expected}, got {included_techs}"
+
+    # Test case 4: Invalid technology should raise error
+    plant_config_invalid = {
+        "finance_parameters": {
+            "technologies_included_in_metrics": {"LCOH": ["electrolyzer", "invalid_tech"]}
+        }
+    }
+
+    try:
+        model.get_included_technologies(tech_config, "hydrogen", plant_config_invalid)
+        raise AssertionError("Should have raised ValueError for invalid technology")
+    except ValueError as e:
+        assert "invalid_tech" in str(e), f"Error message should mention invalid_tech: {e}"

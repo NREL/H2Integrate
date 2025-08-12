@@ -28,7 +28,7 @@ class ECOElectrolyzerPerformanceModelConfig(BaseConfig):
             - size_for (str): Determines the sizing strategy, either "BOL" (generous), or
                 "EOL" (conservative).
             - hydrogen_dmd (#TODO): #TODO
-        rating (float): The rating of the electrolyzer in MW.
+        n_clusters (int): number of electrolyzer clusters within the system.
         location (str): The location of the electrolyzer; options include "onshore" or "offshore".
         cluster_rating_MW (float): The rating of the clusters that the electrolyzer is grouped
             into, in MW.
@@ -56,7 +56,7 @@ class ECOElectrolyzerPerformanceModelConfig(BaseConfig):
         )
     )
     sizing: dict = field()
-    rating: float = field(validator=gt_zero)
+    n_clusters: int = field(validator=gt_zero)
     location: str = field(validator=contains(["onshore", "offshore"]))
     cluster_rating_MW: float = field(validator=gt_zero)
     pem_control_type: str = field(validator=contains(["basic"]))
@@ -88,8 +88,15 @@ class ECOElectrolyzerPerformanceModel(ElectrolyzerPerformanceBaseClass):
         )
 
         self.add_input(
+            "n_clusters",
+            val=self.config.n_clusters,
+            units="unitless",
+            desc="number of electrolyzer clusters in the system",
+        )
+
+        self.add_output(
             "electrolyzer_size_mw",
-            val=self.config.rating,
+            val=0.0,
             units="MW",
             desc="Size of the electrolyzer in MW",
         )
@@ -130,6 +137,7 @@ class ECOElectrolyzerPerformanceModel(ElectrolyzerPerformanceBaseClass):
 
     def compute(self, inputs, outputs):
         plant_life = self.options["plant_config"]["plant"]["plant_life"]
+        electrolyzer_size_mw = inputs["n_clusters"][0] * self.config.cluster_rating_MW
         electrolyzer_capex_kw = self.config.electrolyzer_capex
 
         # # IF GRID CONNECTED
@@ -177,6 +185,7 @@ class ECOElectrolyzerPerformanceModel(ElectrolyzerPerformanceBaseClass):
 
         n_pem_clusters = int(ceildiv(electrolyzer_size_mw, self.config.cluster_rating_MW))
 
+        electrolyzer_actual_capacity_MW = n_pem_clusters * self.config.cluster_rating_MW
         ## run using greensteel model
         pem_param_dict = {
             "eol_eff_percent_loss": self.config.eol_eff_percent_loss,
@@ -247,4 +256,4 @@ class ECOElectrolyzerPerformanceModel(ElectrolyzerPerformanceBaseClass):
         outputs["time_until_replacement"] = H2_Results["Time Until Replacement [hrs]"]
         outputs["rated_h2_production_kg_pr_hr"] = H2_Results["Rated BOL: H2 Production [kg/hr]"]
         outputs["water_consume"] = H2_Results["Water Hourly Consumption [kg/hr]"]
-        outputs["electrolyzer_size_mw_cost"] = electrolyzer_size_mw
+        outputs["electrolyzer_size_mw"] = electrolyzer_actual_capacity_MW
