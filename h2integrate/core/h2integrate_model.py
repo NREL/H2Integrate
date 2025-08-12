@@ -618,12 +618,6 @@ class H2IntegrateModel:
                                 f"financials_group_{group_id}.total_nitrogen_produced",
                             )
 
-                    if "doc" in tech_name:
-                        self.plant.connect(
-                            f"{tech_name}.co2_capture_mtpy",
-                            f"financials_group_{group_id}.co2_capture_kgpy",
-                        )
-
         self.plant.options["auto_order"] = True
 
         # Check if there are any connections FROM a financial group to ammonia
