@@ -133,6 +133,42 @@ class OAEPerformanceModel(MarineCarbonCapturePerformanceBaseClass):
             units="m**3",
             desc="Excess acid produced (m³)",
         )
+        self.add_output(
+            "mass_sellable_product",
+            val=0.0,
+            units="t/year",
+            desc="Mass of sellable product (acid or RCA) produced per year (tonnes)",
+        )
+        self.add_output(
+            "value_products",
+            val=0.0,
+            units="USD/year",
+            desc="Value of products (acid or RCA) (USD/year)",
+        )
+        self.add_output(
+            "mass_acid_disposed",
+            val=0.0,
+            units="t/year",
+            desc="Mass of acid disposed per year (tonnes)",
+        )
+        self.add_output(
+            "cost_acid_disposal",
+            val=0.0,
+            units="USD/year",
+            desc="Cost of acid disposal (USD/year)",
+        )
+        self.add_output(
+            "based_added_seawater_max_power",
+            val=0.0,
+            units="mol/year",
+            desc="Maximum power for base added seawater per year (mol/year)",
+        )
+        self.add_output(
+            "mass_rca",
+            val=0.0,
+            units="g",
+            desc="Mass of RCA tumbler slurry produced (grams)",
+        )
 
     def compute(self, inputs, outputs):
         OAE_inputs = setup_ocean_alkalinity_enhancement_inputs(self.config)
@@ -140,6 +176,9 @@ class OAEPerformanceModel(MarineCarbonCapturePerformanceBaseClass):
         # Call the OAE calculation method from the echem_oae module
         range_outputs, oae_outputs = echem_oae.run_ocean_alkalinity_enhancement_physics_model(
             power_profile_w=inputs["electricity_in"],
+            power_capacity_w=max(
+                inputs["electricity_in"]
+            ),  # TODO: get an electricity capacity from H2I to input
             initial_tank_volume_m3=self.config.initial_tank_volume_m3,
             oae_config=OAE_inputs,
             pump_config=echem_oae.PumpInputs(),
@@ -176,6 +215,12 @@ class OAEPerformanceModel(MarineCarbonCapturePerformanceBaseClass):
         outputs["alkaline_seawater_salinity"] = oae_outputs.OAE_outputs["sal_f"]
         outputs["alkaline_seawater_temp"] = oae_outputs.OAE_outputs["temp_f"]
         outputs["excess_acid"] = oae_outputs.OAE_outputs["volExcessAcid"]
+        outputs["mass_sellable_product"] = oae_outputs.M_rev_yr
+        outputs["value_products"] = oae_outputs.X_rev_yr
+        outputs["mass_acid_disposed"] = oae_outputs.M_disposed_yr
+        outputs["cost_acid_disposal"] = oae_outputs.X_disp
+        outputs["based_added_seawater_max_power"] = oae_outputs.mol_OH_yr_MaxPwr
+        outputs["mass_rca"] = oae_outputs.slurry_mass_max
 
 
 @define
@@ -224,26 +269,55 @@ class OAECostModel(MarineCarbonCaptureCostBaseClass):
         )
 
         self.add_input(
-            "plant_mCC_capacity_mtph",
+            "mass_sellable_product",
             val=0.0,
-            units="t/h",
-            desc="Theoretical plant maximum CO₂ capture (t/h)",
+            units="t/year",
+            desc="Mass of sellable product (acid or RCA) produced per year (tonnes)",
+        )
+        self.add_input(
+            "value_products",
+            val=0.0,
+            units="USD/year",
+            desc="Value of products (acid or RCA) (USD/year)",
+        )
+        self.add_input(
+            "mass_acid_disposed",
+            val=0.0,
+            units="t/year",
+            desc="Mass of acid disposed per year (tonnes)",
+        )
+        self.add_input(
+            "cost_acid_disposal",
+            val=0.0,
+            units="USD/year",
+            desc="Cost of acid disposal (USD/year)",
+        )
+        self.add_input(
+            "based_added_seawater_max_power",
+            val=0.0,
+            units="mol/year",
+            desc="Maximum power for base added seawater per year (mol/year)",
+        )
+        self.add_input(
+            "mass_rca",
+            val=0.0,
+            units="g",
+            desc="Mass of RCA tumbler slurry produced (grams)",
         )
 
     def compute(self, inputs, outputs):
-        # Set up electrodialysis inputs
-        setup_ocean_alkalinity_enhancement_inputs(self.config)
+        costs = echem_oae.OAECosts(
+            mass_product=inputs["mass_sellable_product"],
+            value_product=inputs["value_products"],
+            waste_mass=inputs["mass_acid_disposed"],
+            waste_disposal_cost=inputs["cost_acid_disposal"],
+            estimated_cdr=inputs["co2_capture_mtpy"],
+            base_added_seawater_max_power=inputs["based_added_seawater_max_power"],
+            mass_rca=inputs["mass_rca"],
+        )
 
-        # res = echem_oae.oae_cost_model(
-        #     echem_mcc.ElectrodialysisCostInputs(
-        #         electrodialysis_inputs=ED_inputs,
-        #         mCC_yr=inputs["co2_capture_mtpy"],
-        #         total_tank_volume=inputs["total_tank_volume_m3"],
-        #         infrastructure_type=self.config.infrastructure_type,
-        #         max_theoretical_mCC=inputs["plant_mCC_capacity_mtph"],
-        #     )
-        # )
+        results = costs.run()
 
         # Calculate CapEx
-        outputs["CapEx"] = 10
-        outputs["OpEx"] = 10
+        outputs["CapEx"] = results["Capital Cost (CAPEX) ($)"]
+        outputs["OpEx"] = results["Annual Operating Cost ($/yr)"]
