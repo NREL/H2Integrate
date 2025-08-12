@@ -4,6 +4,7 @@ import numpy_financial as npf
 from attrs import field, define
 
 from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
+from h2integrate.core.model_base import CostModelBaseClass
 
 
 n_timesteps = 8760
@@ -52,24 +53,19 @@ class PaperMillCostConfig(BaseConfig):
     cost_year: int = field(converter=int)
 
 
-class PaperMillCost(om.ExplicitComponent):
-    def initialize(self):
-        self.options.declare("driver_config", types=dict)
-        self.options.declare("plant_config", types=dict)
-        self.options.declare("tech_config", types=dict)
-
+class PaperMillCost(CostModelBaseClass):
     def setup(self):
+        super().setup()
         self.config = PaperMillCostConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost")
         )
-        self.add_output("CapEx", val=0.0, units="USD", desc="Capital expenditure")
-        self.add_output("OpEx", val=0.0, units="USD/year", desc="Operational expenditure")
 
-    def compute(self, inputs, outputs):
+    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         # Calculate the cost of the paper mill
         print(self.config.cost_per_tonne, self.config.plant_capacity)
         outputs["CapEx"] = self.config.cost_per_tonne * self.config.plant_capacity
         outputs["OpEx"] = self.config.opex_rate * self.config.plant_capacity
+        discrete_outputs["cost_year"] = self.config.cost_year
 
 
 class PaperMillFinance(om.ExplicitComponent):

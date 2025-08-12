@@ -32,7 +32,6 @@ technologies:
         contingency_pct: 50
         preprod_time: 6
         as_spent_ratio: 1.10
-        cost_year: 2020
       finance_parameters:
         eff_tax_rate: 25.74
         atwacc: 4.73
