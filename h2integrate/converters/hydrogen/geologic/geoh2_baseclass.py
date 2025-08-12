@@ -158,6 +158,9 @@ class GeoH2CostBaseClass(om.ExplicitComponent):
         self.add_output("OpEx", units="USD/year")
         self.add_output("Fixed_OpEx", units="USD/year")
         self.add_output("Variable_OpEx", units="USD/kg")
+        self.add_discrete_output(
+            "cost_year", val=self.config.cost_year, desc="Dollar year for costs"
+        )
 
 
 @define
