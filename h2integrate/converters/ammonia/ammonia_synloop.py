@@ -3,6 +3,7 @@ import openmdao.api as om
 from attrs import field, define
 
 from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
+from h2integrate.core.model_base import CostModelBaseClass
 from h2integrate.core.validators import gt_zero, range_val
 from h2integrate.tools.constants import H_MW, N_MW
 from h2integrate.tools.inflation.inflate import inflate_cpi, inflate_cepci
@@ -295,12 +296,11 @@ class AmmoniaSynLoopCostConfig(BaseConfig):
         cooling_water_cost_base (float): Cost of cooling water [$/gal H2O]
         catalyst_cost_base (float): Cost of iron-based catalyst [$/kg cat]
         oxygen_price_base (float): Sales price of oxygen co-product [$/kg O2]
-        cost_year (int): dollar year for costs.
     """
 
     production_capacity: float = field()
     baseline_capacity: float = field()
-    base_cost_year: int = field()
+    base_cost_year: int = field(converter=int)
     capex_scaling_exponent: float = field()
     labor_scaling_exponent: float = field()
     asu_capex_base: float = field()
@@ -324,10 +324,9 @@ class AmmoniaSynLoopCostConfig(BaseConfig):
     cooling_water_cost_base: float = field()
     catalyst_cost_base: float = field()
     oxygen_price_base: float = field()
-    cost_year: int = field(converter=int)
 
 
-class AmmoniaSynLoopCostModel(om.ExplicitComponent):
+class AmmoniaSynLoopCostModel(CostModelBaseClass):
     """
     OpenMDAO component modeling the cost of an ammonia synthesis loop.
 
@@ -381,12 +380,8 @@ class AmmoniaSynLoopCostModel(om.ExplicitComponent):
         Annual maintenance cost
     """
 
-    def initialize(self):
-        self.options.declare("plant_config", types=dict)
-        self.options.declare("tech_config", types=dict)
-        self.options.declare("driver_config", types=dict)
-
     def setup(self):
+        super().setup()
         self.config = AmmoniaSynLoopCostConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost")
         )
@@ -395,8 +390,7 @@ class AmmoniaSynLoopCostModel(om.ExplicitComponent):
         self.add_input("total_hydrogen_consumed", val=0.0, units="kg/year")
         self.add_input("total_nitrogen_consumed", val=0.0, units="kg/year")
         self.add_input("total_electricity_consumed", val=0.0, units="kW*h/year")
-        self.add_output("CapEx", val=0.0, units="USD")
-        self.add_output("OpEx", val=0.0, units="USD/year")
+
         self.add_output(
             "capex_asu", val=0.0, units="USD", desc="Capital cost for air separation unit"
         )
@@ -433,7 +427,7 @@ class AmmoniaSynLoopCostModel(om.ExplicitComponent):
             "maintenance_cost", val=0.0, units="USD/year", desc="Annual maintenance cost"
         )
 
-    def compute(self, inputs, outputs):
+    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         ##---Scaling Ratios---
 
         # Get config values
@@ -540,3 +534,4 @@ class AmmoniaSynLoopCostModel(om.ExplicitComponent):
         outputs["general_administration_cost"] = gen_admin_opex
         outputs["property_tax_insurance"] = prop_tax_ins_opex
         outputs["maintenance_cost"] = maint_rep_opex
+        discrete_outputs["cost_year"] = int(year)  # costs are adjusted

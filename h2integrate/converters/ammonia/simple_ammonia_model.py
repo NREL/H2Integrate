@@ -2,6 +2,7 @@ import openmdao.api as om
 from attrs import field, define
 
 from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
+from h2integrate.core.model_base import CostModelBaseClass
 
 
 @define
@@ -93,16 +94,11 @@ class AmmoniaCostModelConfig(BaseConfig):
     cost_year: int = field(converter=int)
 
 
-class SimpleAmmoniaCostModel(om.ExplicitComponent):
+class SimpleAmmoniaCostModel(CostModelBaseClass):
     """
     An OpenMDAO component for calculating the costs associated with ammonia production.
     Includes CapEx, OpEx, and byproduct credits, and exposes all detailed cost outputs.
     """
-
-    def initialize(self):
-        self.options.declare("plant_config", types=dict)
-        self.options.declare("tech_config", types=dict)
-        self.options.declare("driver_config", types=dict)
 
     def setup(self):
         super().setup()
@@ -140,7 +136,6 @@ class SimpleAmmoniaCostModel(om.ExplicitComponent):
             units="USD",
             desc="Depreciable non-equipment capital costs",
         )
-        self.add_output("CapEx", val=0.0, units="USD", desc="Total capital expenditures")
         self.add_output("land_cost", val=0.0, units="USD", desc="Cost of land")
 
         self.add_output("labor_cost", val=0.0, units="USD/year", desc="Annual labor cost")
@@ -159,7 +154,6 @@ class SimpleAmmoniaCostModel(om.ExplicitComponent):
         self.add_output(
             "maintenance_cost", val=0.0, units="USD/year", desc="Annual maintenance cost"
         )
-        self.add_output("OpEx", val=0.0, units="USD/year", desc="Total annual fixed operating cost")
 
         self.add_output(
             "H2_cost_in_startup_year",
@@ -187,7 +181,7 @@ class SimpleAmmoniaCostModel(om.ExplicitComponent):
         )
         self.add_output("credits_byproduct", val=0.0, units="USD", desc="Credits from byproducts")
 
-    def compute(self, inputs, outputs):
+    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         # Prepare config object
         config = self.config
 
@@ -284,3 +278,4 @@ class SimpleAmmoniaCostModel(om.ExplicitComponent):
 
         outputs["CapEx"] = capex_total
         outputs["OpEx"] = total_fixed_operating_cost
+        discrete_outputs["cost_year"] = 2022
