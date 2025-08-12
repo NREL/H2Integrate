@@ -685,7 +685,7 @@ def run_profast_lcoe(
 ):
     if isinstance(output_dir, str):
         output_dir = Path(output_dir).resolve()
-    gen_inflation = h2integrate_config["finance_parameters"]["profast_general_inflation"]
+    gen_inflation = h2integrate_config["finance_parameters"]["inflation_rate"]
 
     # initialize dictionary of weights for averaging financial parameters
     finance_param_weights = {}
@@ -1003,7 +1003,7 @@ def run_profast_grid_only(
 
     if isinstance(output_dir, str):
         output_dir = Path(output_dir).resolve()
-    gen_inflation = h2integrate_config["finance_parameters"]["profast_general_inflation"]
+    gen_inflation = h2integrate_config["finance_parameters"]["inflation_rate"]
 
     # initialize dictionary of weights for averaging financial parameters
     finance_param_weights = {}
@@ -1270,7 +1270,7 @@ def run_profast_full_plant_model(
 
     if isinstance(output_dir, str):
         output_dir = Path(output_dir).resolve()
-    gen_inflation = h2integrate_config["finance_parameters"]["profast_general_inflation"]
+    gen_inflation = h2integrate_config["finance_parameters"]["inflation_rate"]
 
     if "financial_analysis_start_year" not in h2integrate_config["finance_parameters"]:
         financial_analysis_start_year = h2integrate_config["project_parameters"][
@@ -1792,7 +1792,7 @@ def run_profast_full_plant_model(
             equity_discount_rate,
         )  # TODO probably ignore MIRR
         NPV = npf.npv(
-            h2integrate_config["finance_parameters"]["profast_general_inflation"],
+            h2integrate_config["finance_parameters"]["inflation_rate"],
             df["Investor cash flow"],
         )
         ROI = np.sum(df["Investor cash flow"]) / abs(
