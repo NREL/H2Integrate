@@ -107,7 +107,7 @@ ENV/
 # Images, datafiles
 *.png
 *.xlsx
-
+*.pdf
 *.pkl
 .DS_Store
 *.val
@@ -115,6 +115,7 @@ ENV/
 *.db-shm
 *.gz
 *.db-wal
+*n2.html
 
 # H2Integrate structure specific
 tests/h2integrate/data/*
@@ -136,3 +137,9 @@ reports/*
 
 # Don't ignore source data files
 !*source.xlsx
+
+# PyXDSM/Tex
+*.tex
+*.tikz
+*.aux
+*.bbl
