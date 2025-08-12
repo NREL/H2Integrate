@@ -8,7 +8,7 @@ There are two approaches for specifying other finance parameters:
 - [ProFAST parameters config](finance:pf_params_opt)
 
 Both approaches require the following additional finance parameters to be specified:
-- `cost_year_adjustment_inflation` is used to adjust costs for each technology from the year provided under `discount_years` to the `target_dollar_year` specified in the `plant_config` under the `finance_parameters` section.
+- `cost_year_adjustment_inflation` is used to adjust costs for each technology from the cost year of the technology model (see [details on cost years and cost models here](#cost-year-of-cost-models)) to the `target_dollar_year` specified in the `plant_config` under the `finance_parameters` section.
 - `depreciation_method`: depreciation method to apply to capital items
 - `depreciation_period`: depreciation period (in years) for capital items (except electrolyzer, if used)
 - `depreciation_period_electrolyzer`: depreciation period (in years) for electrolyzer capital item (if used)
