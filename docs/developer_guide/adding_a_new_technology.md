@@ -70,10 +70,9 @@ We call the baseclass's `setup` method using the `super()` function, then added 
 ```
 
 3. **Write the cost model for your technology.**
-For this simplistic case, we will skip the cost model.
-The process for writing a cost model is similar to the performance model, with the required inputs and outputs defined in the technology cost model baseclass. The technology cost model baseclass should inherit the main cost model baseclass (`CostModelBaseClass`) with additional inputs, outputs, setup added as necessary. The `CostModelBaseClass` has no predefined inputs, but all cost models must output `CapEx`, `OpEx`, and `cost_year`.
+The process for writing a cost model is similar to the performance model, with the required inputs and outputs defined in the technology cost model baseclass. The technology cost model baseclass should inherit the main cost model baseclass (`CostModelBaseClass`) with additional inputs, outputs, and setup added as necessary. The `CostModelBaseClass` has no predefined inputs, but all cost models must output `CapEx`, `OpEx`, and `cost_year`.
 
-If the dollar-year for the costs (capex and opex) are **inherent to the cost model**, a cost model may look like below:
+If the dollar-year for the costs (capex and opex) are **inherent to the cost model**, e.g. costs are always output with a certain associated dollar-year, a cost model may look like this:
 ```python
 from attrs import field, define
 from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
@@ -113,7 +112,7 @@ class ReverseOsmosisCostModel(CostModelBaseClass):
 
 ```
 
-If the dollar-year for the costs (capex and opex) are **inherent to the user cost inputs**, a cost model may look like below:
+If the dollar-year for the costs (capex and opex) **depend on the user cost inputs within the `tech_config` file**, a cost model may look like below:
 ```python
 from attrs import field, define
 from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
@@ -143,7 +142,6 @@ class ATBUtilityPVCostModel(CostModelBaseClass):
         opex = self.config.opex_per_kWac_per_year * capacity
         outputs["CapEx"] = capex
         outputs["OpEx"] = opex
-        discrete_outputs["cost_year"] = self.config.cost_year
 
         # if the dollar-year for the costs are based on the user input costs, output the cost year from the user-input value
         discrete_outputs["cost_year"] = self.config.cost_year

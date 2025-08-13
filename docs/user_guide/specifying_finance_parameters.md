@@ -180,30 +180,30 @@ Some cost models are derived from literature and output costs (CapEx and OpEx) i
 | `pem_electrolyzer_cost`|  2021    |
 | `singlitico_electrolyzer_cost`|  2021    |
 | `h2_storage`  with `'mch'` storage type  |  2024    |
-| `h2_storage` for geologic storage or buried pipe | ? 2018 ? |
+| `h2_storage` for geologic storage or buried pipe | 2018 |
 | `simple_ammonia_cost`   |  2022    |
 | `direct_ocean_capture_cost` | 2023 |
 | `steel_cost`            |  2022    |
-| `reverse_osmosis_desalination_cost` | ? 2013 ? |
+| `reverse_osmosis_desalination_cost` | 2013 |
 | `synloop_ammonia_cost`  |  N/A (adjusts costs to `target_dollar_year` within cost model)  |
 
 
 ## Cost models with user input cost year
 
 ### Summary of cost models that have user-input cost year
-| Cost Model              | Cost Year  |
-| :---------------------- | :---------------: |
-| `wind_plant_cost` |  user-input    |
-| `atb_utility_pv_cost` |  user-input    |
-| `atb_comm_res_pv_cost` |  user-input    |
-| `simple_ASU_cost` |  user-input |
-| `hopp`            | user-input  |
-| `run_of_river_hydro_cost` | user-input  |
-| `smr_methanol_plant_cost` | user-input  |
-| `stimulated_geoh2_cost` | user-input  |
-| `natural_geoh2_cost`    | user-input  |
-| `wombat`                | user-input  |
-| `hydrogen_tank_cost`    | user-input  |
+| Cost Model              |
+| :---------------------- |
+| `wind_plant_cost` |
+| `atb_utility_pv_cost` |
+| `atb_comm_res_pv_cost` |
+| `simple_ASU_cost` |
+| `hopp`            |
+| `run_of_river_hydro_cost` |
+| `smr_methanol_plant_cost` |
+| `stimulated_geoh2_cost` |
+| `natural_geoh2_cost`    |
+| `wombat`                |
+| `hydrogen_tank_cost`    |
 
 ### Example tech_config input for user-input cost year
 ```yaml
