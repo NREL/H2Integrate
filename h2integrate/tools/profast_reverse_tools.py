@@ -135,10 +135,10 @@ def make_pf_config_from_profast(pf):
 
 
 def convert_pf_to_dict(pf):
-    """Convert dictionary of profast objects to dictionary with embedded dictionaries.
+    """Convert dictionary of ProFAST objects to dictionary with embedded dictionaries.
 
     Args:
-        pf_config (ProFAST object): values are profast objects.
+        pf_config (ProFAST object): values are ProFAST objects.
 
     Returns:
         dict: dictionary representation of ProFAST inputs.
