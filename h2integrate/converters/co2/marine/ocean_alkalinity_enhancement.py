@@ -1,6 +1,6 @@
 from attrs import field, define
 
-from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
+from h2integrate.core.utilities import merge_shared_inputs
 from h2integrate.converters.co2.marine.marine_carbon_capture_baseclass import (
     MarineCarbonCaptureCostBaseClass,
     MarineCarbonCapturePerformanceConfig,
@@ -298,19 +298,6 @@ class OAECostModel(MarineCarbonCaptureCostBaseClass):
         outputs["OpEx"] = results["Annual Operating Cost ($/yr)"]
 
 
-@define
-class OAECostAndFinancialConfig(BaseConfig):
-    """Configuration for the Ocean Alkalinity Enhancement (OAE) cost and financial model.
-
-    Attributes:
-        lcoe (float): Levelized cost of electricity (USD/kWh).
-        annual_energy (float): Annual energy consumed by OAE system (kWh/year).
-    """
-
-    lcoe: float = field()
-    annual_energy: float = field()
-
-
 class OAECostAndFinancialModel(MarineCarbonCaptureCostBaseClass):
     """OpenMDAO component for calculating costs and financial metrics of an
         Ocean Alkalinity Enhancement (OAE) system.
@@ -334,22 +321,19 @@ class OAECostAndFinancialModel(MarineCarbonCaptureCostBaseClass):
 
     def setup(self):
         super().setup()
-        self.config = OAECostAndFinancialConfig.from_dict(
-            merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost")
-        )
+
         self.add_input(
             "LCOE",
             val=0.0,
-            units="USD/kWh",
+            units="USD/kW/h",
             desc="Levelized cost of electricity (USD/kWh)",
         )
         self.add_input(
             "annual_energy",
             val=0.0,
-            units="kWh/year",
-            desc="Annual energy consumed by OAE system (kWh/year)",
+            units="kW*h/year",
+            desc="Annual energy production in kWac",
         )
-
         self.add_input(
             "mass_sellable_product",
             val=0.0,

@@ -8,11 +8,14 @@ technologies:
       config: !include tech_inputs/hopp_config.yaml
     cost_model:
       model: "hopp"
+    financial_model:
+      group: "default"
   oae:
     performance_model:
       model: "ocean_alkalinity_enhancement_performance"
-    cost_model:
-      model: "ocean_alkalinity_enhancement_cost"
+    financial_model:
+      model: "ocean_alkalinity_enhancement_cost_financial"
+      group: "oae"
     model_inputs:
       performance_parameters:
         number_ed_min: 1
@@ -28,6 +31,3 @@ technologies:
         initial_temp_C: 10.0 # degrees Celsius
         initial_dic_mol_per_L: 0.0044 # mol/L
         initial_pH: 8.1 # initial pH
-
-      cost_parameters:
-        mass_product_tonne_yr: 100000.0
