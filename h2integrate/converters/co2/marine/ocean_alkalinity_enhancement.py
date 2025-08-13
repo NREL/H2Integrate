@@ -169,6 +169,13 @@ class OAEPerformanceModel(MarineCarbonCapturePerformanceBaseClass):
             units="g",
             desc="Mass of RCA tumbler slurry produced (grams)",
         )
+        self.add_output(
+            "excess_energy",
+            val=0.0,
+            shape=8760,
+            units="W",
+            desc="Excess energy unused by OAE system (W)",
+        )
 
     def compute(self, inputs, outputs):
         OAE_inputs = setup_ocean_alkalinity_enhancement_inputs(self.config)
@@ -221,8 +228,7 @@ class OAEPerformanceModel(MarineCarbonCapturePerformanceBaseClass):
         outputs["cost_acid_disposal"] = oae_outputs.X_disp
         outputs["based_added_seawater_max_power"] = oae_outputs.mol_OH_yr_MaxPwr
         outputs["mass_rca"] = oae_outputs.slurry_mass_max
-
-        # TODO: could output excess power OAE_outputs["P_xs"]
+        outputs["excess_energy"] = oae_outputs.OAE_outputs["P_xs"]
 
 
 class OAECostModel(MarineCarbonCaptureCostBaseClass):
@@ -337,6 +343,13 @@ class OAECostAndFinancialModel(MarineCarbonCaptureCostBaseClass):
             desc="Annual energy production in kWac",
         )
         self.add_input(
+            "excess_energy",
+            val=0.0,
+            shape=8760,
+            units="W",
+            desc="Excess energy unused by OAE system (W)",
+        )
+        self.add_input(
             "mass_sellable_product",
             val=0.0,
             units="t/year",
@@ -388,8 +401,13 @@ class OAECostAndFinancialModel(MarineCarbonCaptureCostBaseClass):
 
     def compute(self, inputs, outputs):
         annual_energy_cost_usd_yr = (
-            inputs["LCOE"] * inputs["annual_energy"]
-        )  # TODO: consider removing excess power (not all electricity produced is used)
+            inputs["LCOE"]
+            * (
+                inputs[
+                    "annual_energy"
+                ]  # - (sum(inputs["excess_energy"]) / 1000)  # Convert W to kW
+            )
+        )  # remove excess power from the annual energy cost only used power considered
         costs = echem_oae.OAECosts(
             mass_product=inputs["mass_sellable_product"],
             value_product=inputs["value_products"],
