@@ -28,8 +28,16 @@ IMPORTANT NOTES
 
 <!-- Describe your feature here. Please include any code snippets or examples in this section. -->
 
+## Type of Contribution
+<!-- Check all that apply to help reviewers understand your contribution -->
+- [ ] New Technology Model
+- [ ] Bug Fix
+- [ ] Feature Enhancement
+- [ ] Documentation Update
+- [ ] Infrastructure/CI Changes
+- [ ] Other (please describe):
 
-## PR Checklist
+## General PR Checklist
 
 <!--Tick these boxes if they are complete, or format them as "[x]" for the markdown to render. -->
 - [ ] `CHANGELOG.md` has been updated to describe the changes made in this PR
@@ -37,9 +45,28 @@ IMPORTANT NOTES
   - [ ] Docstrings are up-to-date
   - [ ] Related `docs/` files are up-to-date, or added when necessary
   - [ ] Documentation has been rebuilt successfully
-  - [ ] Examples have been updated
+  - [ ] Examples have been updated (if applicable)
 - [ ] Tests pass (If not, and this is expected, please elaborate in the tests section)
+- [ ] Added tests for new functionality or bug fixes
 - [ ] PR description thoroughly describes the new feature, bug fix, etc.
+
+## New Technology Checklist
+<!-- Complete this section only if you checked "New Technology Model" above -->
+- [ ] **Performance Model**: Technology performance model has been implemented and follows H2Integrate patterns
+- [ ] **Cost Model**: Technology cost model has been implemented (if applicable)
+- [ ] **Tests**: Unit tests have been added for the new technology
+  - [ ] Performance model tests
+  - [ ] Cost model tests (if applicable)
+  - [ ] Integration tests with H2Integrate system
+- [ ] **Example**: A working example demonstrating the new technology has been created
+  - [ ] Example has been tested and runs successfully
+  - [ ] Example is documented with clear explanations
+- [ ] **Documentation**:
+  - [ ] Technology documentation page added to `docs/technology_models/`
+  - [ ] Technology added to the main technology models list in documentation
+- [ ] **Integration**: Technology has been properly integrated into H2Integrate
+  - [ ] Added to `supported_models.py`
+  - [ ] Follows established naming conventions, e.g. input/output names
 
 ## Related issues
 
