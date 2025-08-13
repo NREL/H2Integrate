@@ -142,4 +142,4 @@ class WOMBATElectrolyzerModel(ECOElectrolyzerPerformanceModel):
             which="net", frequency="project", by="electrolyzer"
         ).squeeze()
 
-        discrete_outputs["cost_year"] = self.config.cost_year  # TODO
+        discrete_outputs["cost_year"] = self.config.cost_year

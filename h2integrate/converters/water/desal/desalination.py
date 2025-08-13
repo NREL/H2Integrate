@@ -139,4 +139,4 @@ class ReverseOsmosisCostModel(DesalinationCostBaseClass):
 
         outputs["CapEx"] = desal_capex
         outputs["OpEx"] = desal_opex
-        discrete_outputs["cost_year"] = 2013  # TODO: check this value
+        discrete_outputs["cost_year"] = 2013
