@@ -107,6 +107,23 @@ class SolarResourceConfig(BaseConfig):
 
 
 class SolarResource(om.ExplicitComponent):
+    """_summary_
+
+    Returns:
+        Required data containing
+
+        - **year**
+        - **month**
+        - **hour**
+        - **day**
+        - **minute**
+        - **dn**
+        - **df**
+        - **tdry**
+        - **wspd**
+
+    """
+
     def initialize(self):
         self.options.declare("plant_config", types=dict)
         self.options.declare("tech_config", types=dict)
