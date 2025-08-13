@@ -222,6 +222,8 @@ class OAEPerformanceModel(MarineCarbonCapturePerformanceBaseClass):
         outputs["based_added_seawater_max_power"] = oae_outputs.mol_OH_yr_MaxPwr
         outputs["mass_rca"] = oae_outputs.slurry_mass_max
 
+        # TODO: could output excess power OAE_outputs["P_xs"]
+
 
 class OAECostModel(MarineCarbonCaptureCostBaseClass):
     """OpenMDAO component for computing capital (CapEx) and operational (OpEx) costs of a
@@ -385,7 +387,9 @@ class OAECostAndFinancialModel(MarineCarbonCaptureCostBaseClass):
         )
 
     def compute(self, inputs, outputs):
-        annual_energy_cost_usd_yr = inputs["LCOE"] * inputs["annual_energy"]
+        annual_energy_cost_usd_yr = (
+            inputs["LCOE"] * inputs["annual_energy"]
+        )  # TODO: consider removing excess power (not all electricity produced is used)
         costs = echem_oae.OAECosts(
             mass_product=inputs["mass_sellable_product"],
             value_product=inputs["value_products"],
@@ -402,5 +406,5 @@ class OAECostAndFinancialModel(MarineCarbonCaptureCostBaseClass):
         # Calculate CapEx
         outputs["CapEx"] = results["Capital Cost (CAPEX) ($)"]
         outputs["OpEx"] = results["Annual Operating Cost ($/yr)"]
-        outputs["NPV"] = results["NPV ($)"]
+        outputs["NPV"] = results["Net Present Value (NPV) ($)"]
         outputs["carbon_credit_value"] = results["Carbon Credit Value ($/tCO2)"]

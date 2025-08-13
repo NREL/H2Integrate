@@ -1,5 +1,5 @@
 name: "technology_config"
-description: "This plant has offshore wind and battery connected to a ocean alkalinity enhancement device"
+description: "This plant has wind connected to a ocean alkalinity enhancement device"
 
 technologies:
   hopp:
