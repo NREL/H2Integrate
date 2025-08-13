@@ -1,4 +1,6 @@
 import copy
+import shutil
+from pathlib import Path
 
 from pytest import approx, fixture
 
@@ -161,6 +163,28 @@ def test_rosner_override(iron_post, subtests):
 
 
 def test_refit_coefficients(iron_post, subtests):
+    # Determine the model directory based on the model name
+    iron_tech_dir = (
+        Path(__file__).parent.parent.parent.parent
+        / "h2integrate"
+        / "simulation"
+        / "technologies"
+        / "iron"
+    )
+    model_name = iron_post["iron"]["cost_model"]["name"]
+    model_dir = iron_tech_dir / model_name
+
+    # Backup both performance and cost coefficient files
+    cost_coeffs_file = model_dir / "cost_coeffs.csv"
+    cost_backup_file = model_dir / "cost_coeffs_backup.csv"
+    perf_coeffs_file = model_dir / "perf_coeffs.csv"
+    perf_backup_file = model_dir / "perf_coeffs_backup.csv"
+
+    if cost_coeffs_file.exists():
+        shutil.copy2(cost_coeffs_file, cost_backup_file)
+    if perf_coeffs_file.exists():
+        shutil.copy2(perf_coeffs_file, perf_backup_file)
+
     # Non-refit coefficients
     performance, cost, finance = iron.run_iron_full_model(iron_post)
     perf_df = performance.performances_df
@@ -207,3 +231,9 @@ def test_refit_coefficients(iron_post, subtests):
         )
     with subtests.test("finance model"):
         assert finance.sol["lco"] == approx(finance.sol["lco"], 1e-3)
+
+    # Restore the original coefficient files
+    if cost_backup_file.exists():
+        shutil.move(cost_backup_file, cost_coeffs_file)
+    if perf_backup_file.exists():
+        shutil.move(perf_backup_file, perf_coeffs_file)

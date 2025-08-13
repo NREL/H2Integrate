@@ -355,7 +355,7 @@ class DemandOpenLoopController(ControllerBaseClass):
                 )
                 soc -= discharge / max_capacity  # soc is a ratio with value between 0 and 1
                 # output is as observed outside the storage, so we need to adjust `discharge` by
-                # applying `discharge_efficiency
+                # applying `discharge_efficiency`.
                 output_array[t] = input_flow + discharge * discharge_efficiency
             else:
                 # Charge storage with excess input

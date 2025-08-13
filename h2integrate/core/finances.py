@@ -23,8 +23,12 @@ class AdjustedCapexOpexComp(om.ExplicitComponent):
         tech_config = self.options["tech_config"]
         plant_config = self.options["plant_config"]
         self.discount_years = plant_config["finance_parameters"]["discount_years"]
-        self.inflation_rate = plant_config["finance_parameters"]["costing_general_inflation"]
-        self.cost_year = plant_config["plant"]["cost_year"]
+        self.inflation_rate = plant_config["finance_parameters"]["cost_adjustment_parameters"][
+            "cost_year_adjustment_inflation"
+        ]
+        self.target_dollar_year = plant_config["finance_parameters"]["cost_adjustment_parameters"][
+            "target_dollar_year"
+        ]
 
         for tech in tech_config:
             self.add_input(f"capex_{tech}", val=0.0, units="USD")
@@ -42,7 +46,7 @@ class AdjustedCapexOpexComp(om.ExplicitComponent):
             capex = float(inputs[f"capex_{tech}"][0])
             opex = float(inputs[f"opex_{tech}"][0])
             cost_year = self.discount_years[tech]
-            periods = self.cost_year - cost_year
+            periods = self.target_dollar_year - cost_year
             adjusted_capex = -npf.fv(self.inflation_rate, periods, 0.0, capex)
             adjusted_opex = -npf.fv(self.inflation_rate, periods, 0.0, opex)
             outputs[f"capex_adjusted_{tech}"] = adjusted_capex
@@ -148,15 +152,18 @@ class ProFastComp(om.ExplicitComponent):
             params.update(pf_params)
 
         check_plant_config_and_profast_params(
-            self.plant_config["plant"], params, "installation_time", "installation months"
+            self.plant_config["finance_parameters"],
+            params,
+            "installation_time",
+            "installation months",
         )
         check_plant_config_and_profast_params(
             self.plant_config["plant"], params, "plant_life", "operating life"
         )
         check_plant_config_and_profast_params(
-            self.plant_config["plant"],
+            self.plant_config["finance_parameters"],
             params,
-            "financial_analysis_start_year",
+            "analysis_start_year",
             "analysis start year",
         )
 
@@ -168,7 +175,7 @@ class ProFastComp(om.ExplicitComponent):
                 "general inflation rate"
             ]
         else:
-            gen_inflation = self.plant_config["finance_parameters"]["profast_general_inflation"]
+            gen_inflation = self.plant_config["finance_parameters"]["inflation_rate"]
 
         land_cost = 0.0
 
@@ -278,13 +285,13 @@ class ProFastComp(om.ExplicitComponent):
 
         params.setdefault(
             "installation months",
-            self.plant_config["plant"][
+            self.plant_config["finance_parameters"][
                 "installation_time"
             ],  # Add installation time to yaml default=0
         )
         params.setdefault("operating life", self.plant_config["plant"]["plant_life"])
         params.setdefault(
-            "analysis start year", self.plant_config["plant"]["financial_analysis_start_year"]
+            "analysis start year", self.plant_config["finance_parameters"]["analysis_start_year"]
         )
 
         pf = ProFAST.ProFAST()
