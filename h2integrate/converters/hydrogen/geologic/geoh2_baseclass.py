@@ -2,6 +2,7 @@ import openmdao.api as om
 from attrs import field, define
 
 from h2integrate.core.utilities import BaseConfig
+from h2integrate.core.model_base import CostModelBaseClass
 from h2integrate.core.validators import contains
 
 
@@ -94,7 +95,7 @@ class GeoH2CostConfig(BaseConfig):
     as_spent_ratio: float = field()
 
 
-class GeoH2CostBaseClass(om.ExplicitComponent):
+class GeoH2CostBaseClass(CostModelBaseClass):
     """
     An OpenMDAO component for modeling the cost of a geologic hydrogen plant.
 
@@ -127,12 +128,8 @@ class GeoH2CostBaseClass(om.ExplicitComponent):
         Variable_OpEx      float [USD/kg] - The OPEX cost that scales with H2 production
     """
 
-    def initialize(self):
-        self.options.declare("plant_config", types=dict)
-        self.options.declare("tech_config", types=dict)
-        self.options.declare("driver_config", types=dict)
-
     def setup(self):
+        super().setup()
         self.add_input("well_lifetime", units="year", val=self.config.well_lifetime)
         self.add_input("test_drill_cost", units="USD", val=self.config.test_drill_cost)
         self.add_input("permit_fees", units="USD", val=self.config.permit_fees)
@@ -154,13 +151,8 @@ class GeoH2CostBaseClass(om.ExplicitComponent):
         )
 
         self.add_output("bare_capital_cost", units="USD")
-        self.add_output("CapEx", units="USD")
-        self.add_output("OpEx", units="USD/year")
         self.add_output("Fixed_OpEx", units="USD/year")
         self.add_output("Variable_OpEx", units="USD/kg")
-        self.add_discrete_output(
-            "cost_year", val=self.config.cost_year, desc="Dollar year for costs"
-        )
 
 
 @define

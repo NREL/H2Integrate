@@ -1,8 +1,8 @@
 import numpy as np
-import openmdao.api as om
 from attrs import field, define
 
 from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
+from h2integrate.core.model_base import CostModelBaseClass
 from h2integrate.simulation.technologies.hydrogen.h2_storage.mch.mch_cost import MCHStorage
 
 
@@ -25,14 +25,13 @@ class H2StorageModelConfig(BaseConfig):
     days: int = field(default=0)
 
 
-class H2Storage(om.ExplicitComponent):
+class H2Storage(CostModelBaseClass):
     def initialize(self):
-        self.options.declare("driver_config", types=dict)
-        self.options.declare("tech_config", types=dict)
-        self.options.declare("plant_config", types=dict)
+        super().initialize()
         self.options.declare("verbose", types=bool, default=False)
 
     def setup(self):
+        super().setup()
         self.config = H2StorageModelConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance")
         )
@@ -50,10 +49,6 @@ class H2Storage(om.ExplicitComponent):
             desc="Rated hydrogen production of electrolyzer",
         )
         self.add_input("efficiency", val=0.0, desc="Average efficiency of the electrolyzer")
-
-        self.add_output("CapEx", val=0.0, units="USD", desc="Capital expenditure")
-        self.add_output("OpEx", val=0.0, units="USD/year", desc="Operational expenditure")
-        self.add_discrete_output("cost_year", val=0, desc="Dollar year for costs")
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         ########### initialize output dictionary ###########
