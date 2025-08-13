@@ -31,13 +31,11 @@ plant:
   grid_connection: False # option, can be turned on or off
   ppa_price: 0.025 # $/kWh based on 2022 land based wind market report (ERCOT area ppa prices) https://www.energy.gov/sites/default/files/2022-08/land_based_wind_market_report_2202.pdf
   hybrid_electricity_estimated_cf: 0.492 #should equal 1 if grid_connection = True
-  financial_analysis_start_year: 2032
-  cost_year: 2022
-  installation_time: 36 # months
 
 finance_parameters:
-  costing_general_inflation: 0.025 # used to adjust modeled costs to cost_year
-  profast_general_inflation: 0.0 # 0 for nominal analysis
+  analysis_start_year: 2032
+  installation_time: 36 # months
+  inflation_rate: 0.0 # 0 for nominal analysis
   discount_rate: 0.09 # nominal return based on 2024 ATB basline workbook for land-based wind
   debt_equity_split: False
   debt_equity_ratio: 2.62 # 2024 ATB uses 72.4% debt for land-based wind
@@ -56,6 +54,9 @@ finance_parameters:
   depreciation_period_electrolyzer: 7 # based on PEM Electrolysis H2A Production Case Study Documentation estimate of 7 years. also see https://www.irs.gov/publications/p946#en_US_2020_publink1000107507
   discount_years:
     geoh2: 2020
+  cost_adjustment_parameters:
+    cost_year_adjustment_inflation: 0.025 # used to adjust modeled costs to target_dollar_year
+    target_dollar_year: 2022
 
 policy_parameters: # these should be adjusted for inflation prior to application - order of operations: rate in 1992 $, then prevailing wage multiplier if applicable, then inflation
   electricity_itc: 0

@@ -437,7 +437,9 @@ class AmmoniaSynLoopCostModel(om.ExplicitComponent):
         # Get config values
         capacity = self.config.production_capacity  # kg NH3 / hr
         base_cap = self.config.baseline_capacity  # kg NH3 / hr
-        year = self.options["plant_config"]["plant"]["cost_year"]  # dollar year
+        year = self.options["plant_config"]["finance_parameters"]["cost_adjustment_parameters"][
+            "target_dollar_year"
+        ]  # dollar year
         base_year = self.config.base_cost_year  # dollar year
         capex_exp = self.config.capex_scaling_exponent  # unitless
         labor_exp = self.config.labor_scaling_exponent  # unitless
