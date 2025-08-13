@@ -37,7 +37,8 @@
 - Added two ATB-compatible solar-PV cost models.
 - Changed electrolyzer capacity to be specified as `n_clusters` rather than `rating` in electrolyzer performance model config
 - Changed electrolyzer capacity to be an input to the electrolyzer cost models rather than pulled from the cost model config.
-- Added Example 15 to test LCOE and capacity factor for a utility-scale solar-PV system
+- Updated finance parameter organization naming in `plant_config`.
+- Added an example to test LCOE and capacity factor for a utility-scale solar-PV system
 
 ## 0.3.0 [May 2 2025]
 
