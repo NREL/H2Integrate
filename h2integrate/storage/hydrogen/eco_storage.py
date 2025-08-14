@@ -17,7 +17,7 @@ from h2integrate.simulation.technologies.hydrogen.h2_storage.lined_rock_cavern.l
 @define
 class H2StorageModelConfig(BaseConfig):
     resource_name: str = field(default="hydrogen")
-    resource_units: str = field(default="kg/h")
+    resource_rate_units: str = field(default="kg/h")
     rating: float = field(default=640)
     size_capacity_from_demand: dict = field(default={"flag": True})
     capacity_from_max_on_turbine_storage: bool = field(default=False)

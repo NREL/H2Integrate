@@ -1,15 +1,14 @@
 # Finance Parameters
 
 Finance parameters are primarily specified in the `plant_config` under the `finance_parameters` section.
-Some parameters from the `plant` section of the `plant_config` may also be used in finance calculations.
-These parameters are `plant_life`, `installation_time`, `financial_analysis_start_year`, and `cost_year`.
+The `plant_life` parameter from the `plant` section of the `plant_config` is also used in finance calculations.
 
 There are two approaches for specifying other finance parameters:
 - [Directly in finance parameters](finance:direct_opt)
 - [ProFAST parameters config](finance:pf_params_opt)
 
 Both approaches require the following additional finance parameters to be specified:
-- `costing_generation_inflation` is used to adjust costs for each technology from the year provided under `discount_years` to the `cost_year` specified in the `plant_config` under the `plant` section.
+- `cost_year_adjustment_inflation` is used to adjust costs for each technology from the year provided under `discount_years` to the `target_dollar_year` specified in the `plant_config` under the `finance_parameters` section.
 - `depreciation_method`: depreciation method to apply to capital items
 - `depreciation_period`: depreciation period (in years) for capital items (except electrolyzer, if used)
 - `depreciation_period_electrolyzer`: depreciation period (in years) for electrolyzer capital item (if used)
@@ -20,9 +19,10 @@ Below is an example inputting financial parameters directly in the `finance_para
 
 ```yaml
 finance_parameters:
+  analysis_start_year: 2032 #year that financial analysis starts
+  installation_time: 36 #installation period in months
   # Inflation parameters
-  profast_general_inflation: 0.0 # 0 for nominal analysis
-  costing_general_inflation: 0.025
+  inflation_rate: 0.0 # 0 for nominal analysis
   # Finance parameters
   discount_rate: 0.09
   debt_equity_split: False
@@ -41,6 +41,10 @@ finance_parameters:
   depreciation_method: "MACRS"
   depreciation_period: 5
   depreciation_period_electrolyzer: 7
+  # To adjust costs from discount_years to target_dollar_year
+  cost_adjustment_parameters:
+    target_dollar_year: 2022
+    cost_year_adjustment_inflation: 0.025
   # Cost year of each component
   discount_years:
     wind: 2022
@@ -53,7 +57,7 @@ This approach also relies on data from `plant_config`:
 
 
 ```{note}
-`profast_general_inflation` is used to populate the escalation and inflation rates in ProFAST entries with a value of 0 corresponding to a *nominal analysis*.
+`inflation_rate` is used to populate the escalation and inflation rates in ProFAST entries with a value of 0 corresponding to a *nominal analysis*.
 ```
 
 
@@ -71,24 +75,28 @@ $\text{equity fraction} = 1 - \text{debt fraction}$
 ## Providing Finance Parameters: ProFAST params config file
 
 ```{note}
-To avoid errors, please check that `plant_config['plant']['plant_life']` is equal to `plant_config['finance_parameters']['pf_params']['params']['operating life']` and that `plant_config['plant']['installation_time']` is equal to `plant_config['finance_parameters']['pf_params']['params']['installation months']`
+To avoid errors, please check that `plant_config['plant']['plant_life']` is equal to `plant_config['finance_parameters']['pf_params']['params']['operating life']` and that `plant_config['finance_parameters']['installation_time']` is equal to `plant_config['finance_parameters']['pf_params']['params']['installation months']`
 
 
-| `plant` parameter | equivalent `pf_params` parameter |
+| plant config parameter | equivalent `pf_params` parameter |
 | -------- | ------- |
-| `plant_life` | `operating life` |
-| `installation_time` | `installation months` |
+| `plant['plant']['plant_life']` | `operating life` |
+| `plant['finance_parameters'][installation_time]` | `installation months` |
 ```
 
 Below is an example of the `finance_parameters` section of `plant_config` if using `pf_params` format to specify financial parameters:
 
 ```yaml
 finance_parameters:
+  analysis_start_year: 2032
+  installation_time: 36
   pf_params: !include "profast_params.yaml" #Finance information
-  costing_general_inflation: 0.025 # used to adjust costs for technologies under `discount_years` to cost_year
   depreciation_method: "MACRS" #depreciation method for capital items
   depreciation_period: 5 #depreciation period for capital items
   depreciation_period_electrolyzer: 7 #depreciation period for electrolyzer
+  cost_adjustment_parameters:
+    target_dollar_year: 2022
+    cost_year_adjustment_inflation: 0.025 # used to adjust costs for technologies under `discount_years` to target_dollar_year
   discount_years:
     wind: 2022
     electrolyzer: 2022
