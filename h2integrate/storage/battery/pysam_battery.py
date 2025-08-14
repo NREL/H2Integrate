@@ -197,7 +197,7 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass):
 
     # battery.py --------------------------------------------------------------#
     def battery_simulate_with_dispatch(self, n_periods: int, sim_start_time: Optional[int] = None):
-        control = [pow_MW*1e3 for pow_MW in self.dispatch.power] # MW -> kW
+        control = self.dispatch.storage_amount
 
         time_step_duration = self.dispatch.time_duration
         for t in range(n_periods):
@@ -260,7 +260,6 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass):
 
                 transmission_limit = (
                     self.power_sources["grid"].value("grid_interconnection_limit_kwac")
-                    / 1e3
                 )
                 for count, value in enumerate(system_limit):
                     if value > transmission_limit:

@@ -15,6 +15,7 @@ technologies:
       control_parameters:
         resource_name: "power"
         resource_units: "kW"
+        resource_rate_units: "kWh"
       performance_parameters:
         system_capacity_kwh: 200000
         minimum_SOC: 10.0

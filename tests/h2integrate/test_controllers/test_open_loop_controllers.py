@@ -270,7 +270,6 @@ def test_demand_controller_round_trip_efficiency(subtests):
         )
 
 
-
 def test_heuristic_load_following_dispatch():
     dispatch_n_look_ahead = 48 # note this must be an even number for this test
 
@@ -331,10 +330,10 @@ def test_heuristic_load_following_dispatch():
 
     # Generate test data for n horizon, charging for first half of the horizon,
     # then discharging for the latter half.
-    tot_gen = np.ones(dispatch_n_look_ahead)
+    tot_gen = np.ones(dispatch_n_look_ahead) * 1000
     n_look_ahead_half = int(dispatch_n_look_ahead / 2)
     grid_limit = np.concatenate(
-        (np.ones(n_look_ahead_half) * 0.9, np.ones(n_look_ahead_half) * 1.1)
+        (np.ones(n_look_ahead_half) * 900, np.ones(n_look_ahead_half) * 1100)
     )
 
     # Set the dispatch pyomo variables
@@ -346,17 +345,17 @@ def test_heuristic_load_following_dispatch():
     # Check that the power is being assigned correctly to the battery outputs
     dispatch_power = np.empty(dispatch_n_look_ahead)
     for i in range(dispatch_n_look_ahead):
-        dispatch_power[i] = battery.dispatch.power[i] * 1e3
+        dispatch_power[i] = battery.dispatch.storage_amount[i]
         assert battery.outputs.P[i] == pytest.approx(
-            dispatch_power[i], 1e-3 * abs(dispatch_power[i])
+            dispatch_power[i], 1E-3 * abs(dispatch_power[i])
         )
 
     # Check that the has non-zero charge and discharge power, and that the sum of charge
     # and discharge power are equal.
-    assert sum(battery.dispatch.charge_power) > 0.0
-    assert sum(battery.dispatch.discharge_power) > 0.0
-    assert (sum(battery.dispatch.charge_power) #* battery.dispatch.round_trip_efficiency / 100.0
-            == pytest.approx(sum(battery.dispatch.discharge_power)))
+    assert sum(battery.dispatch.charge_resource) > 0.0
+    assert sum(battery.dispatch.discharge_resource) > 0.0
+    assert (sum(battery.dispatch.charge_resource) #* battery.dispatch.round_trip_efficiency / 100.0
+            == pytest.approx(sum(battery.dispatch.discharge_resource)))
 
     # Check that the dispatch values have not changed
     expected_dispatch_power = np.concatenate(

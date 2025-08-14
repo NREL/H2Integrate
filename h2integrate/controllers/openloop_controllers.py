@@ -119,6 +119,15 @@ class PyomoControllerBaseClass(ControllerBaseClass):
         return self._model
 
 
+@define
+class SimpleLoadFollowingDispatchConfig(BaseConfig):
+    resource_name: str = field()
+    resource_units: str = field()
+    resource_rate_units: str = field()
+    system_capacity_kw: int = field()
+    include_lifecycle_count: bool = field(default=False)
+
+
 class SimpleBatteryDispatchHeuristic(PyomoControllerBaseClass):
     """Fixes battery dispatch operations based on user input.
 
@@ -141,13 +150,18 @@ class SimpleBatteryDispatchHeuristic(PyomoControllerBaseClass):
             pyomo_model (pyomo.ConcreteModel): Pyomo concrete model.
             index_set (pyomo.Set): Indexed set.
             system_model (PySAMBatteryModel.BatteryStateful): Battery system model.
-            fixed_dispatch (Optional[List], optional): List of normalized values [-1, 1] (Charging (-), Discharging (+)). Defaults to None.
+            fixed_dispatch (Optional[List], optional): List of normalized values [-1, 1]
+                (Charging (-), Discharging (+)). Defaults to None.
             block_set_name (str, optional): Name of block set. Defaults to 'heuristic_battery'.
             dispatch_options (dict, optional): Dispatch options. Defaults to None.
 
         """
         if dispatch_options is None:
             dispatch_options = {}
+        self.config = SimpleLoadFollowingDispatchConfig.from_dict(
+            merge_shared_inputs(self.options["tech_config"]["model_inputs"], "control")
+        )
+
         super().setup(
             pyomo_model,
             index_set,
@@ -157,18 +171,19 @@ class SimpleBatteryDispatchHeuristic(PyomoControllerBaseClass):
 
         self._create_soc_linking_constraint()
 
+        # TODO: implement and test lifecycle counting
         # TODO: we could remove this option and just have lifecycle count default
-        self.dispatch_options = dispatch_options
-        if self.dispatch_options.include_lifecycle_count:
-            self._create_lifecycle_model()
-            if self.dispatch_options.max_lifecycle_per_day < np.inf:
-                self._create_lifecycle_count_constraint()
+        # self.dispatch_options = dispatch_options
+        # if self.dispatch_options.include_lifecycle_count:
+        #     self._create_lifecycle_model()
+        #     if self.dispatch_options.max_lifecycle_per_day < np.inf:
+        #         self._create_lifecycle_count_constraint()
 
         self.max_charge_fraction = list([0.0] * len(self.blocks.index_set()))
         self.max_discharge_fraction = list([0.0] * len(self.blocks.index_set()))
         self.user_fixed_dispatch = list([0.0] * len(self.blocks.index_set()))
-        # TODO: should I enforce either a day schedule or a year schedule year and save it as user input.
-        #  Additionally, Should I drop it as input in the init function?
+        # TODO: should I enforce either a day schedule or a year schedule year and save it as
+        # user input? Additionally, Should I drop it as input in the init function?
         if fixed_dispatch is not None:
             self.user_fixed_dispatch = fixed_dispatch
 
@@ -176,11 +191,12 @@ class SimpleBatteryDispatchHeuristic(PyomoControllerBaseClass):
 
     def initialize_parameters(self):
         """Initializes parameters."""
-        if self.config.include_lifecycle_count:
-            self.lifecycle_cost = (
-                self.options.lifecycle_cost_per_kWh_cycle
-                * self._system_model.value("nominal_energy")
-            )
+        # TODO: implement and test lifecycle counting
+        # if self.config.include_lifecycle_count:
+        #     self.lifecycle_cost = (
+        #         self.options.lifecycle_cost_per_kWh_cycle
+        #         * self._system_model.value("nominal_energy")
+        #     )
 
         # self.cost_per_charge = self._financial_model.value("om_batt_variable_cost")[
         #     0
@@ -188,11 +204,9 @@ class SimpleBatteryDispatchHeuristic(PyomoControllerBaseClass):
         # self.cost_per_discharge = self._financial_model.value("om_batt_variable_cost")[
         #     0
         # ]  # [$/MWh]
-        self.minimum_power = 0.0
-        # FIXME: Change C_rate call to user set system_capacity_kw
-        # self.maximum_power = self._system_model.value('nominal_energy') * self._system_model.value('C_rate') / 1e3
-        print(dir(self._system_model))
-        self.maximum_power = self.config.system_capacity_kw
+        self.minimum_storage = 0.0
+        self.maximum_storage = self.config.system_capacity_kw
+        # NOTE: `_system_model` format copied from HOPP, largely influenced by PySAM
         self.minimum_soc = self._system_model.value("minimum_SOC")
         self.maximum_soc = self._system_model.value("maximum_SOC")
         self.initial_soc = self._system_model.value("initial_SOC")
@@ -251,18 +265,18 @@ class SimpleBatteryDispatchHeuristic(PyomoControllerBaseClass):
         #     mutable=True,
         #     units=u.USD / u.MWh,
         # )
-        storage.minimum_power = pyomo.Param(
-            doc=self.block_set_name + " minimum power rating [MW]",
+        storage.minimum_storage = pyomo.Param(
+            doc=self.block_set_name + " minimum storage rating [" + self.config.resource_units + "]",
             default=0.0,
             within=pyomo.NonNegativeReals,
             mutable=True,
-            units=u.MW,
+            units=eval("u." + self.config.resource_units),
         )
-        storage.maximum_power = pyomo.Param(
-            doc=self.block_set_name + " maximum power rating [MW]",
+        storage.maximum_storage = pyomo.Param(
+            doc=self.block_set_name + " maximum storage rating [" + self.config.resource_units + "]",
             within=pyomo.NonNegativeReals,
             mutable=True,
-            units=u.MW,
+            units=eval("u." + self.config.resource_units),
         )
         storage.minimum_soc = pyomo.Param(
             doc=self.block_set_name + " minimum state-of-charge [-]",
@@ -309,10 +323,10 @@ class SimpleBatteryDispatchHeuristic(PyomoControllerBaseClass):
 
         """
         storage.capacity = pyomo.Param(
-            doc=self.block_set_name + " capacity [MWh]",
+            doc=self.block_set_name + " capacity [" + self.config.resource_rate_units + "]",
             within=pyomo.NonNegativeReals,
             mutable=True,
-            units=u.MWh,
+            units=eval("u." + self.config.resource_rate_units),
         )
 
     def _create_storage_variables(self, storage):
@@ -348,15 +362,15 @@ class SimpleBatteryDispatchHeuristic(PyomoControllerBaseClass):
             bounds=(storage.minimum_soc, storage.maximum_soc),
             units=u.dimensionless,
         )
-        storage.charge_power = pyomo.Var(
-            doc="Power into " + self.block_set_name + " [MW]",
+        storage.charge_resource = pyomo.Var(
+            doc=self.config.resource_name + " into " + self.block_set_name + " [" + self.config.resource_units + "]",
             domain=pyomo.NonNegativeReals,
-            units=u.MW,
+            units=eval("u." + self.config.resource_units),
         )
-        storage.discharge_power = pyomo.Var(
-            doc="Power out of " + self.block_set_name + " [MW]",
+        storage.discharge_resource = pyomo.Var(
+            doc=self.config.resource_name + " out of " + self.block_set_name + " [" + self.config.resource_units + "]",
             domain=pyomo.NonNegativeReals,
-            units=u.MW,
+            units=eval("u." + self.config.resource_units),
         )
 
     def _create_storage_constraints(self, storage):
@@ -364,24 +378,24 @@ class SimpleBatteryDispatchHeuristic(PyomoControllerBaseClass):
         # Constraints                    #
         ##################################
         # Charge power bounds
-        storage.charge_power_ub = pyomo.Constraint(
-            doc=self.block_set_name + " charging power upper bound",
-            expr=storage.charge_power <= storage.maximum_power * storage.is_charging,
+        storage.charge_resource_ub = pyomo.Constraint(
+            doc=self.block_set_name + " charging storage upper bound",
+            expr=storage.charge_resource <= storage.maximum_storage * storage.is_charging,
         )
-        storage.charge_power_lb = pyomo.Constraint(
-            doc=self.block_set_name + " charging power lower bound",
-            expr=storage.charge_power >= storage.minimum_power * storage.is_charging,
+        storage.charge_resource_lb = pyomo.Constraint(
+            doc=self.block_set_name + " charging storage lower bound",
+            expr=storage.charge_resource >= storage.minimum_storage * storage.is_charging,
         )
         # Discharge power bounds
-        storage.discharge_power_lb = pyomo.Constraint(
-            doc=self.block_set_name + " Discharging power lower bound",
-            expr=storage.discharge_power
-            >= storage.minimum_power * storage.is_discharging,
+        storage.discharge_resource_lb = pyomo.Constraint(
+            doc=self.block_set_name + " Discharging storage lower bound",
+            expr=storage.discharge_resource
+            >= storage.minimum_storage * storage.is_discharging,
         )
-        storage.discharge_power_ub = pyomo.Constraint(
-            doc=self.block_set_name + " Discharging power upper bound",
-            expr=storage.discharge_power
-            <= storage.maximum_power * storage.is_discharging,
+        storage.discharge_resource_ub = pyomo.Constraint(
+            doc=self.block_set_name + " Discharging storage upper bound",
+            expr=storage.discharge_resource
+            <= storage.maximum_storage * storage.is_discharging,
         )
         # Storage packing constraint
         storage.charge_discharge_packing = pyomo.Constraint(
@@ -403,8 +417,8 @@ class SimpleBatteryDispatchHeuristic(PyomoControllerBaseClass):
                 m.soc0
                 + m.time_duration
                 * (
-                    m.charge_efficiency * m.charge_power
-                    - (1 / m.discharge_efficiency) * m.discharge_power
+                    m.charge_efficiency * m.charge_resource
+                    - (1 / m.discharge_efficiency) * m.discharge_resource
                 )
                 / m.capacity
             )
@@ -427,11 +441,12 @@ class SimpleBatteryDispatchHeuristic(PyomoControllerBaseClass):
         # Ports                          #
         ##################################
         storage.port = Port()
-        storage.port.add(storage.charge_power)
-        storage.port.add(storage.discharge_power)
+        storage.port.add(storage.charge_resource)
+        storage.port.add(storage.discharge_resource)
 
     def _set_control_mode(self):
         """Sets control mode."""
+        # NOTE: storage specific code here
         if isinstance(self._system_model, BatteryStateful.BatteryStateful):
             self._system_model.value("control_mode", 1.0)  # Power control
             self._system_model.value("input_power", 0.0)
@@ -441,14 +456,15 @@ class SimpleBatteryDispatchHeuristic(PyomoControllerBaseClass):
         """Sets model-specific parameters.
 
         Args:
-            round_trip_efficiency (float, optional): The round-trip efficiency including converter efficiency.
-                Defaults to 88.0, which includes converter efficiency.
+            round_trip_efficiency (float, optional): The round-trip efficiency including
+                converter efficiency. Defaults to 88.0, which includes converter efficiency.
 
         """
+        # NOTE: storage specific code here
         self.round_trip_efficiency = (
             round_trip_efficiency  # Including converter efficiency
         )
-        self.capacity = self._system_model.value("nominal_energy") / 1e3  # [MWh]
+        self.capacity = self._system_model.value("nominal_energy") # / 1e3  # [MWh]
 
     def _create_soc_linking_constraint(self):
         """Creates state-of-charge linking constraint."""
@@ -486,7 +502,7 @@ class SimpleBatteryDispatchHeuristic(PyomoControllerBaseClass):
             start_time (int): The start time.
 
         """
-        # TODO: provide more control
+        # TODO: provide more control; currently don't use `start_time`
         self.time_duration = [1.0] * len(self.blocks.index_set())
 
     def update_dispatch_initial_soc(self, initial_soc: float = None):
@@ -502,8 +518,8 @@ class SimpleBatteryDispatchHeuristic(PyomoControllerBaseClass):
         self.initial_soc = self._system_model.value("SOC")
 
     def set_fixed_dispatch(self, gen: list, grid_limit: list):
-        """Sets charge and discharge power of battery dispatch using fixed_dispatch attribute and enforces available
-        generation and grid limits.
+        """Sets charge and discharge amount of storage dispatch using fixed_dispatch attribute
+            and enforces available generation and grid limits.
 
         Args:
             gen (list): Generation blocks.
@@ -535,46 +551,46 @@ class SimpleBatteryDispatchHeuristic(PyomoControllerBaseClass):
             raise ValueError("grid_limit must be the same length as fixed_dispatch.")
 
     def _set_power_fraction_limits(self, gen: list, grid_limit: list):
-        """Set battery charge and discharge power fraction limits based on
+        """Set storage charge and discharge fraction limits based on
         available generation and grid capacity, respectively.
 
         Args:
             gen (list): Generation blocks.
             grid_limit (list): Grid capacity.
 
-        NOTE: This method assumes that battery cannot be charged by the grid.
+        NOTE: This method assumes that storage cannot be charged by the grid.
 
         """
         for t in self.blocks.index_set():
             self.max_charge_fraction[t] = self.enforce_power_fraction_simple_bounds(
-                gen[t] / self.maximum_power
+                gen[t] / self.maximum_storage
             )
             self.max_discharge_fraction[t] = self.enforce_power_fraction_simple_bounds(
-                (grid_limit[t] - gen[t]) / self.maximum_power
+                (grid_limit[t] - gen[t]) / self.maximum_storage
             )
 
     @staticmethod
-    def enforce_power_fraction_simple_bounds(power_fraction: float) -> float:
+    def enforce_power_fraction_simple_bounds(storage_fraction: float) -> float:
         """Enforces simple bounds (0, .9) for battery power fractions.
 
         Args:
-            power_fraction (float): Power fraction from heuristic method.
+            storage_fraction (float): Storage fraction from heuristic method.
 
         Returns:
-            power_fraction (float): Bounded power fraction.
+            storage_fraction (float): Bounded storage fraction.
 
         """
-        if power_fraction > 0.9:
-            power_fraction = 0.9
-        elif power_fraction < 0.0:
-            power_fraction = 0.0
-        return power_fraction
+        if storage_fraction > 0.9:
+            storage_fraction = 0.9
+        elif storage_fraction < 0.0:
+            storage_fraction = 0.0
+        return storage_fraction
 
-    def update_soc(self, power_fraction: float, soc0: float) -> float:
-        """Updates SOC based on power fraction threshold (0.1).
+    def update_soc(self, storage_fraction: float, soc0: float) -> float:
+        """Updates SOC based on storage fraction threshold (0.1).
 
         Args:
-            power_fraction (float): Power fraction from heuristic method. Below threshold
+            storage_fraction (float): Storage fraction from heuristic method. Below threshold
                 is charging, above is discharging.
             soc0 (float): Initial SOC.
 
@@ -582,20 +598,20 @@ class SimpleBatteryDispatchHeuristic(PyomoControllerBaseClass):
             soc (float): Updated SOC.
             
         """
-        if power_fraction > 0.0:
-            discharge_power = power_fraction * self.maximum_power
+        if storage_fraction > 0.0:
+            discharge_resource = storage_fraction * self.maximum_storage
             soc = (
                 soc0
                 - self.time_duration[0]
-                * (1 / (self.discharge_efficiency / 100.0) * discharge_power)
+                * (1 / (self.discharge_efficiency / 100.0) * discharge_resource)
                 / self.capacity
             )
-        elif power_fraction < 0.0:
-            charge_power = -power_fraction * self.maximum_power
+        elif storage_fraction < 0.0:
+            charge_resource = -storage_fraction * self.maximum_storage
             soc = (
                 soc0
                 + self.time_duration[0]
-                * (self.charge_efficiency / 100.0 * charge_power)
+                * (self.charge_efficiency / 100.0 * charge_resource)
                 / self.capacity
             )
         else:
@@ -609,11 +625,11 @@ class SimpleBatteryDispatchHeuristic(PyomoControllerBaseClass):
         return soc
 
     def _heuristic_method(self, _):
-        """Executes specific heuristic method to fix battery dispatch."""
+        """Executes specific heuristic method to fix storage dispatch."""
         self._enforce_power_fraction_limits()
 
     def _enforce_power_fraction_limits(self):
-        """Enforces battery power fraction limits and sets _fixed_dispatch attribute."""
+        """Enforces storage fraction limits and sets _fixed_dispatch attribute."""
         for t in self.blocks.index_set():
             fd = self.user_fixed_dispatch[t]
             if fd > 0.0:  # Discharging
@@ -634,16 +650,16 @@ class SimpleBatteryDispatchHeuristic(PyomoControllerBaseClass):
 
             if dispatch_factor == 0.0:
                 # Do nothing
-                self.blocks[t].charge_power.fix(0.0)
-                self.blocks[t].discharge_power.fix(0.0)
+                self.blocks[t].charge_resource.fix(0.0)
+                self.blocks[t].discharge_resource.fix(0.0)
             elif dispatch_factor > 0.0:
                 # Discharging
-                self.blocks[t].charge_power.fix(0.0)
-                self.blocks[t].discharge_power.fix(dispatch_factor * self.maximum_power)
+                self.blocks[t].charge_resource.fix(0.0)
+                self.blocks[t].discharge_resource.fix(dispatch_factor * self.maximum_storage)
             elif dispatch_factor < 0.0:
                 # Charging
-                self.blocks[t].discharge_power.fix(0.0)
-                self.blocks[t].charge_power.fix(-dispatch_factor * self.maximum_power)
+                self.blocks[t].discharge_resource.fix(0.0)
+                self.blocks[t].charge_resource.fix(-dispatch_factor * self.maximum_storage)
 
     def _check_initial_soc(self, initial_soc):
         """Checks initial state-of-charge.
@@ -701,22 +717,22 @@ class SimpleBatteryDispatchHeuristic(PyomoControllerBaseClass):
             self._user_fixed_dispatch = fixed_dispatch
 
     @property
-    def power(self) -> list:
-        """Power."""
+    def storage_amount(self) -> list:
+        """Storage amount."""
         return [
-            self.blocks[t].discharge_power.value - self.blocks[t].charge_power.value
+            (self.blocks[t].discharge_resource.value - self.blocks[t].charge_resource.value)
             for t in self.blocks.index_set()
         ]
 
-    @property
-    def current(self) -> list:
-        """Current."""
-        return [0.0 for t in self.blocks.index_set()]
+    # @property
+    # def current(self) -> list:
+    #     """Current."""
+    #     return [0.0 for t in self.blocks.index_set()]
 
-    @property
-    def generation(self) -> list:
-        """Generation."""
-        return self.power
+    # @property
+    # def generation(self) -> list:
+    #     """Generation."""
+    #     return self.storage_amount
 
     @property
     def soc(self) -> list:
@@ -724,14 +740,14 @@ class SimpleBatteryDispatchHeuristic(PyomoControllerBaseClass):
         return [self.blocks[t].soc.value * 100.0 for t in self.blocks.index_set()]
 
     @property
-    def charge_power(self) -> list:
-        """Charge power."""
-        return [self.blocks[t].charge_power.value for t in self.blocks.index_set()]
+    def charge_resource(self) -> list:
+        """Charge resource."""
+        return [self.blocks[t].charge_resource.value for t in self.blocks.index_set()]
 
     @property
-    def discharge_power(self) -> list:
-        """Discharge power."""
-        return [self.blocks[t].discharge_power.value for t in self.blocks.index_set()]
+    def discharge_resource(self) -> list:
+        """Discharge resource."""
+        return [self.blocks[t].discharge_resource.value for t in self.blocks.index_set()]
 
     @property
     def initial_soc(self) -> float:
@@ -793,20 +809,34 @@ class SimpleBatteryDispatchHeuristic(PyomoControllerBaseClass):
         for t in self.blocks.index_set():
             self.blocks[t].discharge_efficiency = round(efficiency, self.round_digits)
 
+    @property
+    def round_trip_efficiency(self) -> float:
+        """Round trip efficiency."""
+        return self.charge_efficiency * self.discharge_efficiency / 100.0
+
+    @round_trip_efficiency.setter
+    def round_trip_efficiency(self, round_trip_efficiency: float):
+        round_trip_efficiency = self._check_efficiency_value(round_trip_efficiency)
+        # Assumes equal charge and discharge efficiencies
+        efficiency = round_trip_efficiency ** (1 / 2)
+        self.charge_efficiency = efficiency
+        self.discharge_efficiency = efficiency
+
 
 @define
 class HeuristicLoadFollowingDispatchConfig(BaseConfig):
     resource_name: str = field()
     resource_units: str = field()
+    resource_rate_units: str = field()
     system_capacity_kw: int = field()
     include_lifecycle_count: bool = field(default=False)
 
 
 class HeuristicLoadFollowingDispatch(SimpleBatteryDispatchHeuristic):
-    """Operates the battery based on heuristic rules to meet the demand profile based power available from power generation profiles and
-        power demand profile.
+    """Operates the battery based on heuristic rules to meet the demand profile based power
+        available from power generation profiles and power demand profile.
 
-    Currently, enforces available generation and grid limit assuming no battery charging from grid
+    Currently, enforces available generation and grid limit assuming no battery charging from grid.
 
     """
 
@@ -825,11 +855,17 @@ class HeuristicLoadFollowingDispatch(SimpleBatteryDispatchHeuristic):
             pyomo_model (pyomo.ConcreteModel): Pyomo concrete model.
             index_set (pyomo.Set): Indexed set.
             system_model (PySAMBatteryModel.BatteryStateful): System model.
-            fixed_dispatch (Optional[List], optional): List of normalized values [-1, 1] (Charging (-), Discharging (+)). Defaults to None.
-            block_set_name (str, optional): Name of the block set. Defaults to 'heuristic_load_following_battery'.
+            fixed_dispatch (Optional[List], optional): List of normalized values [-1, 1]
+                (Charging (-), Discharging (+)). Defaults to None.
+            block_set_name (str, optional): Name of the block set. Defaults to
+                'heuristic_load_following_battery'.
             dispatch_options (Optional[dict], optional): Dispatch options. Defaults to None.
 
         """
+        self.config = HeuristicLoadFollowingDispatchConfig.from_dict(
+            merge_shared_inputs(self.options["tech_config"]["model_inputs"], "control")
+        )
+
         super().setup(
             pyomo_model,
             index_set,
@@ -837,10 +873,6 @@ class HeuristicLoadFollowingDispatch(SimpleBatteryDispatchHeuristic):
             fixed_dispatch,
             block_set_name,
             dispatch_options,
-        )
-
-        self.config = HeuristicLoadFollowingDispatchConfig.from_dict(
-            merge_shared_inputs(self.options["tech_config"]["model_inputs"], "control")
         )
 
     def set_fixed_dispatch(self, gen: list, grid_limit: list, goal_power: list):
@@ -859,17 +891,17 @@ class HeuristicLoadFollowingDispatch(SimpleBatteryDispatchHeuristic):
         self._heuristic_method(gen, goal_power)
         self._fix_dispatch_model_variables()
 
-    def _heuristic_method(self, gen, goal_power):
-        """Enforces battery power fraction limits and sets _fixed_dispatch attribute.
-        Sets the _fixed_dispatch based on goal_power and gen (power generation profile).
+    def _heuristic_method(self, gen, goal_resource):
+        """Enforces storage fraction limits and sets _fixed_dispatch attribute.
+        Sets the _fixed_dispatch based on goal_resource and gen.
 
         Args:
-            gen: Power generation profile.
-            goal_power: Goal power.
+            gen: Resource generation profile.
+            goal_resource: Goal amount of resource.
 
         """
         for t in self.blocks.index_set():
-            fd = (goal_power[t] - gen[t]) / self.maximum_power
+            fd = (goal_resource[t] - gen[t]) / self.maximum_storage
             if fd > 0.0:  # Discharging
                 if fd > self.max_discharge_fraction[t]:
                     fd = self.max_discharge_fraction[t]
