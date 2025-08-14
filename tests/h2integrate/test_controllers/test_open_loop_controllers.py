@@ -7,6 +7,7 @@ import pytest
 import openmdao.api as om
 from openmdao.utils.assert_utils import assert_check_totals
 
+from h2integrate.core.h2integrate_model import H2IntegrateModel
 from h2integrate.controllers.openloop_controllers import (
     DemandOpenLoopController,
     PassThroughOpenLoopController,
@@ -137,6 +138,41 @@ def test_demand_controller(subtests):
     with subtests.test("Check missed load"):
         assert pytest.approx([0.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]) == prob.get_val(
             "hydrogen_missed_load"
+        )
+
+
+def test_pyomo_controller(subtests):
+    # Get the directory of the current script
+    current_dir = Path(__file__).parent
+
+    # Resolve the paths to the input files
+    input_path = current_dir / "inputs" / "pyomo_controller" / "h2i_wind_to_h2_storage.yaml"
+
+    model = H2IntegrateModel(input_path)
+
+    model.run()
+
+    prob = model.prob
+
+    # Run the test
+    with subtests.test("Check output"):
+        assert pytest.approx([0.5, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]) == prob.get_val(
+            "h2_storage.hydrogen_out"
+        )
+
+    with subtests.test("Check curtailment"):
+        assert pytest.approx([0.0, 0.0, 0.5, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]) == prob.get_val(
+            "h2_storage.hydrogen_curtailed"
+        )
+
+    with subtests.test("Check soc"):
+        assert pytest.approx([0.95, 0.95, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]) == prob.get_val(
+            "h2_storage.hydrogen_soc"
+        )
+
+    with subtests.test("Check missed load"):
+        assert pytest.approx([0.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]) == prob.get_val(
+            "h2_storage.hydrogen_missed_load"
         )
 
 
