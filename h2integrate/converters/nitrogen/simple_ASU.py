@@ -3,7 +3,7 @@ import openmdao.api as om
 from attrs import field, define
 
 from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
-from h2integrate.core.model_base import CostModelBaseClass
+from h2integrate.core.model_base import CostModelBaseClass, CostModelBaseConfig
 from h2integrate.core.validators import contains, range_val
 from h2integrate.tools.constants import N_MW, AR_MW, O2_MW
 
@@ -283,7 +283,7 @@ def make_cost_unit_multiplier(unit_str):
 
 
 @define
-class SimpleASUCostConfig(BaseConfig):
+class SimpleASUCostConfig(CostModelBaseConfig):
     capex_usd_per_unit: float = field()
 
     capex_unit: str = field(
@@ -291,7 +291,6 @@ class SimpleASUCostConfig(BaseConfig):
         converter=(str.strip, str.lower),
     )
 
-    cost_year: int = field(converter=int)
     opex_usd_per_unit_per_year: float = field(default=0.0)
     opex_unit: str = field(
         default="none",
@@ -316,10 +315,10 @@ class SimpleASUCostModel(CostModelBaseClass):
         self.options.declare("driver_config", types=dict)
 
     def setup(self):
-        super().setup()
         self.config = SimpleASUCostConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost")
         )
+        super().setup()
 
         self.add_input("ASU_capacity_kW", val=0.0, units="kW")
         self.add_input("rated_N2_kg_pr_hr", val=0.0, units="kg/h")
@@ -342,4 +341,3 @@ class SimpleASUCostModel(CostModelBaseClass):
 
         outputs["CapEx"] = capex_usd
         outputs["OpEx"] = opex_usd_per_year
-        discrete_outputs["cost_year"] = self.config.cost_year

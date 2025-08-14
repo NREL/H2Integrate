@@ -1,6 +1,7 @@
 from attrs import field, define
 
 from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
+from h2integrate.core.validators import must_equal
 from h2integrate.converters.steel.steel_baseclass import (
     SteelCostBaseClass,
     SteelPerformanceBaseClass,
@@ -53,7 +54,7 @@ class SteelCostAndFinancialModelConfig(BaseConfig):
     lcoh: float = field()
     feedstocks: dict = field()  # TODO: build validator for this large dictionary
     finances: dict = field()  # TODO: build validator for this large dictionary
-    cost_year: int = field(converter=int)
+    cost_year: int = field(default=2022, converter=int, validator=must_equal(2022))
 
 
 @define
@@ -73,10 +74,10 @@ class SteelCostAndFinancialModel(SteelCostBaseClass):
         super().initialize()
 
     def setup(self):
-        super().setup()
         self.config = SteelCostAndFinancialModelConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost")
         )
+        super().setup()
         # TODO Bring the steel cost model config and feedstock classes into new h2integrate
         self.cost_config = SteelCostModelConfig(
             operational_year=self.config.operational_year,
@@ -127,4 +128,3 @@ class SteelCostAndFinancialModel(SteelCostBaseClass):
 
         finance_model_outputs = run_steel_finance_model(finance_config)
         outputs["LCOS"] = finance_model_outputs.sol.get("price")
-        discrete_outputs["cost_year"] = 2022

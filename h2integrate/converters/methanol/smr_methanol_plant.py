@@ -164,7 +164,6 @@ class SMRMethanolPlantCostModel(MethanolCostBaseClass):
         )
         outputs["ng_cost"] = np.sum(inputs["ng_consumption"]) * lhv_mmbtu * inputs["ng_price"]
         outputs["elec_revenue"] = np.sum(inputs["electricity_in"]) * ppa_price
-        discrete_outputs["cost_year"] = self.config.cost_year
 
 
 class SMRMethanolPlantFinanceModel(MethanolFinanceBaseClass):

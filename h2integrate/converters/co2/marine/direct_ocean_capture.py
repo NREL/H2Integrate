@@ -1,6 +1,7 @@
 from attrs import field, define
 
 from h2integrate.core.utilities import merge_shared_inputs
+from h2integrate.core.validators import must_equal
 from h2integrate.converters.co2.marine.marine_carbon_capture_baseclass import (
     MarineCarbonCaptureCostBaseClass,
     MarineCarbonCapturePerformanceConfig,
@@ -136,7 +137,7 @@ class DOCCostModelConfig(DOCPerformanceConfig):
     """
 
     infrastructure_type: str = field()
-    cost_year: int = field(converter=int)
+    cost_year: int = field(default=2023, converter=int, validator=must_equal(2023))
 
 
 class DOCCostModel(MarineCarbonCaptureCostBaseClass):
@@ -157,10 +158,11 @@ class DOCCostModel(MarineCarbonCaptureCostBaseClass):
             )
 
     def setup(self):
-        super().setup()
         self.config = DOCCostModelConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost")
         )
+
+        super().setup()
 
         self.add_input(
             "total_tank_volume_m3",
@@ -192,4 +194,3 @@ class DOCCostModel(MarineCarbonCaptureCostBaseClass):
         # Calculate CapEx
         outputs["CapEx"] = res.initial_capital_cost
         outputs["OpEx"] = res.yearly_operational_cost
-        discrete_outputs["cost_year"] = 2023  # TODO

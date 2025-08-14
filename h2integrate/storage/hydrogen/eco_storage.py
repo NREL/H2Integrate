@@ -3,6 +3,7 @@ from attrs import field, define
 
 from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
 from h2integrate.core.model_base import CostModelBaseClass
+from h2integrate.core.validators import contains
 from h2integrate.simulation.technologies.hydrogen.h2_storage.mch.mch_cost import MCHStorage
 
 
@@ -21,8 +22,18 @@ class H2StorageModelConfig(BaseConfig):
     rating: float = field(default=640)
     size_capacity_from_demand: dict = field(default={"flag": True})
     capacity_from_max_on_turbine_storage: bool = field(default=False)
-    type: str = field(default="salt_cavern")
+    type: str = field(
+        default="salt_cavern",
+        validator=contains(["salt_cavern", "lined_rock_cavern", "none", "mch"]),
+    )
     days: int = field(default=0)
+    cost_year: int = field(default=2018, converter=int, validator=contains([2018, 2021]))
+
+    def __attrs_post_init__(self):
+        if self.type == "mch":
+            self.cost_year = 2024
+        else:
+            self.cost_year = 2018
 
 
 class H2Storage(CostModelBaseClass):
@@ -31,10 +42,12 @@ class H2Storage(CostModelBaseClass):
         self.options.declare("verbose", types=bool, default=False)
 
     def setup(self):
-        super().setup()
         self.config = H2StorageModelConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance")
         )
+
+        super().setup()
+
         self.add_input(
             "hydrogen_in",
             val=0.0,
@@ -201,4 +214,3 @@ class H2Storage(CostModelBaseClass):
 
         outputs["CapEx"] = h2_storage_results["storage_capex"]
         outputs["OpEx"] = h2_storage_results["storage_opex"]
-        discrete_outputs["cost_year"] = h2_storage_results["cost_year"]

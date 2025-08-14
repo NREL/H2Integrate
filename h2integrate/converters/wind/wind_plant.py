@@ -3,7 +3,7 @@ from hopp.simulation.technologies.sites import SiteInfo, flatirons_site
 from hopp.simulation.technologies.wind.wind_plant import WindPlant
 
 from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
-from h2integrate.core.model_base import CostModelBaseClass
+from h2integrate.core.model_base import CostModelBaseClass, CostModelBaseConfig
 from h2integrate.converters.wind.wind_plant_baseclass import WindPerformanceBaseClass
 
 
@@ -58,11 +58,10 @@ class WindPlantPerformanceModel(WindPerformanceBaseClass):
 
 
 @define
-class WindPlantCostModelConfig(BaseConfig):
+class WindPlantCostModelConfig(CostModelBaseConfig):
     num_turbines: int = field()
     turbine_rating_kw: float = field()
     cost_per_kw: float = field()
-    cost_year: int = field(converter=int)
 
 
 class WindPlantCostModel(CostModelBaseClass):
@@ -72,14 +71,11 @@ class WindPlantCostModel(CostModelBaseClass):
     Just a placeholder for now, but can be extended with more detailed cost models.
     """
 
-    def initialize(self):
-        super().initialize()
-
     def setup(self):
-        super().setup()
         self.config = WindPlantCostModelConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost")
         )
+        super().setup()
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         num_turbines = self.config.num_turbines
@@ -90,4 +86,3 @@ class WindPlantCostModel(CostModelBaseClass):
         total_capacity_kw = num_turbines * turbine_rating_kw
         outputs["CapEx"] = total_capacity_kw * cost_per_kw
         outputs["OpEx"] = 0.03 * total_capacity_kw * cost_per_kw  # placeholder scalar value
-        discrete_outputs["cost_year"] = self.config.cost_year

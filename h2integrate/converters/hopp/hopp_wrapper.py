@@ -5,7 +5,7 @@ import dill
 import numpy as np
 from hopp.tools.dispatch.plot_tools import plot_battery_output, plot_generation_profile
 
-from h2integrate.core.model_base import CostModelBaseClass
+from h2integrate.core.model_base import CostModelBaseClass, CostModelBaseConfig
 from h2integrate.converters.hopp.hopp_mgmt import run_hopp, setup_hopp
 
 
@@ -23,9 +23,14 @@ class HOPPComponent(CostModelBaseClass):
     """
 
     def setup(self):
+        config_dict = {
+            "cost_year": self.options["tech_config"]["model_inputs"]["cost_parameters"]["cost_year"]
+        }
+        self.config = CostModelBaseConfig.from_dict(config_dict)
         super().setup()
+
         self.hopp_config = self.options["tech_config"]["performance_model"]["config"]
-        self.cost_year = self.options["tech_config"]["model_inputs"]["cost_parameters"]["cost_year"]
+
         if "simulation_options" in self.hopp_config["config"]:
             if "cache" in self.hopp_config["config"]["simulation_options"]:
                 self.cache = self.hopp_config["config"]["simulation_options"]["cache"]
@@ -191,4 +196,3 @@ class HOPPComponent(CostModelBaseClass):
                 total_power_capacity += tech_conf.get("system_capacity_kw", 0.0)
 
         outputs["power_capacity_to_interconnect_ratio"] = total_power_capacity / interconnect_kw
-        discrete_outputs["cost_year"] = int(self.cost_year)

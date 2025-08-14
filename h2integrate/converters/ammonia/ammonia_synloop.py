@@ -3,7 +3,7 @@ import openmdao.api as om
 from attrs import field, define
 
 from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
-from h2integrate.core.model_base import CostModelBaseClass
+from h2integrate.core.model_base import CostModelBaseClass, CostModelBaseConfig
 from h2integrate.core.validators import gt_zero, range_val
 from h2integrate.tools.constants import H_MW, N_MW
 from h2integrate.tools.inflation.inflate import inflate_cpi, inflate_cepci
@@ -250,7 +250,7 @@ class AmmoniaSynLoopPerformanceModel(om.ExplicitComponent):
 
 
 @define
-class AmmoniaSynLoopCostConfig(BaseConfig):
+class AmmoniaSynLoopCostConfig(CostModelBaseConfig):
     """
     Configuration inputs for the ammonia synthesis loop cost model.
     *Starred inputs are from tech_config/ammonia/model_inputs/shared_parameters
@@ -381,10 +381,17 @@ class AmmoniaSynLoopCostModel(CostModelBaseClass):
     """
 
     def setup(self):
-        super().setup()
+        target_cost_year = self.options["plant_config"]["finance_parameters"][
+            "cost_adjustment_parameters"
+        ]["target_dollar_year"]
+        self.options["tech_config"]["model_inputs"]["cost_parameters"].update(
+            {"cost_year": target_cost_year}
+        )
+
         self.config = AmmoniaSynLoopCostConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost")
         )
+        super().setup()
 
         self.add_input("total_ammonia_produced", val=0.0, units="kg/year")
         self.add_input("total_hydrogen_consumed", val=0.0, units="kg/year")
@@ -536,4 +543,3 @@ class AmmoniaSynLoopCostModel(CostModelBaseClass):
         outputs["general_administration_cost"] = gen_admin_opex
         outputs["property_tax_insurance"] = prop_tax_ins_opex
         outputs["maintenance_cost"] = maint_rep_opex
-        discrete_outputs["cost_year"] = int(year)  # costs are adjusted

@@ -158,7 +158,6 @@ class NaturalGeoH2CostModel(GeoH2CostBaseClass):
         tasc_toc_multiplier = as_spent_ratio  # simplifying for now - TODO model on well_lifetime
         total_as_spent_cost = total_overnight_cost * tasc_toc_multiplier
         outputs["CapEx"] = total_as_spent_cost
-        discrete_outputs["cost_year"] = self.config.cost_year
 
 
 class NaturalGeoH2FinanceModel(GeoH2FinanceBaseClass):

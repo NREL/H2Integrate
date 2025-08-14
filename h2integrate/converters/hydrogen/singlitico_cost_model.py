@@ -1,7 +1,8 @@
 from attrs import field, define
 
-from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
-from h2integrate.core.validators import contains
+from h2integrate.core.utilities import merge_shared_inputs
+from h2integrate.core.model_base import CostModelBaseConfig
+from h2integrate.core.validators import contains, must_equal
 from h2integrate.converters.hydrogen.electrolyzer_baseclass import ElectrolyzerCostBaseClass
 from h2integrate.simulation.technologies.hydrogen.electrolysis.PEM_costs_Singlitico_model import (
     PEMCostsSingliticoModel,
@@ -9,7 +10,7 @@ from h2integrate.simulation.technologies.hydrogen.electrolysis.PEM_costs_Singlit
 
 
 @define
-class SingliticoCostModelConfig(BaseConfig):
+class SingliticoCostModelConfig(CostModelBaseConfig):
     """
     Configuration class for the ECOElectrolyzerPerformanceModel, outputs costs in 2021 USD.
 
@@ -23,6 +24,7 @@ class SingliticoCostModelConfig(BaseConfig):
 
     location: str = field(validator=contains(["onshore", "offshore"]))
     electrolyzer_capex: int = field()
+    cost_year: int = field(default=2021, converter=int, validator=must_equal(2021))
 
 
 class SingliticoCostModel(ElectrolyzerCostBaseClass):
@@ -31,10 +33,12 @@ class SingliticoCostModel(ElectrolyzerCostBaseClass):
     """
 
     def setup(self):
-        super().setup()
         self.config = SingliticoCostModelConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost")
         )
+
+        super().setup()
+
         self.add_input(
             "electrolyzer_size_mw",
             val=0,
@@ -68,4 +72,3 @@ class SingliticoCostModel(ElectrolyzerCostBaseClass):
 
         outputs["CapEx"] = electrolyzer_total_capital_cost
         outputs["OpEx"] = electrolyzer_OM_cost
-        discrete_outputs["cost_year"] = 2021

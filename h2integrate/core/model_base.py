@@ -1,4 +1,12 @@
 import openmdao.api as om
+from attrs import field, define
+
+from h2integrate.core.utilities import BaseConfig
+
+
+@define
+class CostModelBaseConfig(BaseConfig):
+    cost_year: int = field(converter=int)
 
 
 class CostModelBaseClass(om.ExplicitComponent):
@@ -24,7 +32,9 @@ class CostModelBaseClass(om.ExplicitComponent):
         self.add_output("CapEx", val=0.0, units="USD", desc="Capital expenditure")
         self.add_output("OpEx", val=0.0, units="USD/year", desc="Operational expenditure")
         # Define discrete outputs: cost_year
-        self.add_discrete_output("cost_year", val=0, desc="Dollar year for costs")
+        self.add_discrete_output(
+            "cost_year", val=self.config.cost_year, desc="Dollar year for costs"
+        )
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         """

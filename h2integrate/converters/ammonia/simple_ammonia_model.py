@@ -2,7 +2,8 @@ import openmdao.api as om
 from attrs import field, define
 
 from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
-from h2integrate.core.model_base import CostModelBaseClass
+from h2integrate.core.model_base import CostModelBaseClass, CostModelBaseConfig
+from h2integrate.core.validators import must_equal
 
 
 @define
@@ -52,7 +53,7 @@ class SimpleAmmoniaPerformanceModel(om.ExplicitComponent):
 
 
 @define
-class AmmoniaCostModelConfig(BaseConfig):
+class AmmoniaCostModelConfig(CostModelBaseConfig):
     """
     Configuration inputs for the ammonia cost model, including plant capacity and
     feedstock details.
@@ -91,7 +92,7 @@ class AmmoniaCostModelConfig(BaseConfig):
     iron_based_catalyst_consumption: float = field()
     oxygen_byproduct: float = field()
     capex_scaling_exponent: float = field()
-    cost_year: int = field(converter=int)
+    cost_year: int = field(default=2022, converter=int, validator=must_equal(2022))
 
 
 class SimpleAmmoniaCostModel(CostModelBaseClass):
@@ -101,10 +102,10 @@ class SimpleAmmoniaCostModel(CostModelBaseClass):
     """
 
     def setup(self):
-        super().setup()
         self.config = AmmoniaCostModelConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost")
         )
+        super().setup()
         # Inputs for cost model configuration
         self.add_input(
             "plant_capacity_kgpy", val=0.0, units="kg/year", desc="Annual plant capacity"
@@ -278,4 +279,3 @@ class SimpleAmmoniaCostModel(CostModelBaseClass):
 
         outputs["CapEx"] = capex_total
         outputs["OpEx"] = total_fixed_operating_cost
-        discrete_outputs["cost_year"] = 2022

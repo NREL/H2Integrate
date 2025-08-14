@@ -76,7 +76,6 @@ technologies:
         operational_year: 2035
         o2_heat_integration: false
         lcoh: 7.37
-        cost_year: 2020
         feedstocks:
           oxygen_market_price: 0.0 # 0.03 $/kgO2 if `o2_heat_integration` == 1
           excess_oxygen: 395

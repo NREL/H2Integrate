@@ -1,6 +1,8 @@
 from attrs import field, define
 
 from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
+from h2integrate.core.model_base import CostModelBaseConfig
+from h2integrate.core.validators import must_equal
 from h2integrate.converters.hydrogen.electrolyzer_baseclass import (
     ElectrolyzerCostBaseClass,
     ElectrolyzerPerformanceBaseClass,
@@ -55,9 +57,10 @@ class ElectrolyzerPerformanceModel(ElectrolyzerPerformanceBaseClass):
 
 
 @define
-class ElectrolyzeCostModelConfig(BaseConfig):
+class ElectrolyzeCostModelConfig(CostModelBaseConfig):
     cluster_size_mw: float = field()
     electrolyzer_cost: float = field()
+    cost_year: int = field(default=2021, converter=int, validator=must_equal(2021))
 
 
 class ElectrolyzerCostModel(ElectrolyzerCostBaseClass):
@@ -67,12 +70,13 @@ class ElectrolyzerCostModel(ElectrolyzerCostBaseClass):
     """
 
     def setup(self):
-        super().setup()
         self.cost_model = PEMCostsSingliticoModel(elec_location=1)
         # Define inputs: electrolyzer capacity and reference cost
         self.config = ElectrolyzeCostModelConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost")
         )
+        super().setup()
+
         self.add_input(
             "P_elec",
             val=self.config.cluster_size_mw,
@@ -96,4 +100,3 @@ class ElectrolyzerCostModel(ElectrolyzerCostBaseClass):
 
         outputs["CapEx"] = capex * 1.0e-6  # Convert to MUSD
         outputs["OpEx"] = opex * 1.0e-6  # Convert to MUSD
-        discrete_outputs["cost_year"] = 2021

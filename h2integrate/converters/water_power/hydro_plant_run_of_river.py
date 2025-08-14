@@ -2,7 +2,7 @@ import numpy as np
 from attrs import field, define
 
 from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
-from h2integrate.core.model_base import CostModelBaseClass
+from h2integrate.core.model_base import CostModelBaseClass, CostModelBaseConfig
 from h2integrate.converters.water_power.hydro_plant_baseclass import HydroPerformanceBaseClass
 
 
@@ -63,7 +63,7 @@ class RunOfRiverHydroPerformanceModel(HydroPerformanceBaseClass):
 
 
 @define
-class RunOfRiverHydroCostConfig(BaseConfig):
+class RunOfRiverHydroCostConfig(CostModelBaseConfig):
     """Configuration class for the RunOfRiverHydroCostComponent.
     This class defines the parameters for the run-of-river hydropower plant cost model.
 
@@ -78,7 +78,6 @@ class RunOfRiverHydroCostConfig(BaseConfig):
     plant_capacity_mw: float = field()
     capital_cost_usd_per_kw: float = field()
     operational_cost_usd_per_kw_year: float = field()
-    cost_year: int = field(converter=int)
 
 
 class RunOfRiverHydroCostModel(CostModelBaseClass):
@@ -89,14 +88,12 @@ class RunOfRiverHydroCostModel(CostModelBaseClass):
     Just a placeholder for now, but can be extended with more detailed cost models.
     """
 
-    def initialize(self):
-        super().initialize()
-
     def setup(self):
-        super().setup()
         self.config = RunOfRiverHydroCostConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost")
         )
+
+        super().setup()
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         capex_kw = self.config.capital_cost_usd_per_kw
@@ -104,4 +101,3 @@ class RunOfRiverHydroCostModel(CostModelBaseClass):
 
         outputs["CapEx"] = capex_kw * total_capacity_kw
         outputs["OpEx"] = self.config.operational_cost_usd_per_kw_year * total_capacity_kw
-        discrete_outputs["cost_year"] = self.config.cost_year

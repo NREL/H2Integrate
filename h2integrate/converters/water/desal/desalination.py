@@ -1,7 +1,8 @@
 from attrs import field, define
 
 from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
-from h2integrate.core.validators import gt_zero, contains
+from h2integrate.core.model_base import CostModelBaseConfig
+from h2integrate.core.validators import gt_zero, contains, must_equal
 from h2integrate.converters.water.desal.desalination_baseclass import (
     DesalinationCostBaseClass,
     DesalinationPerformanceBaseClass,
@@ -101,7 +102,7 @@ class ReverseOsmosisPerformanceModel(DesalinationPerformanceBaseClass):
 
 
 @define
-class ReverseOsmosisCostModelConfig(BaseConfig):
+class ReverseOsmosisCostModelConfig(CostModelBaseConfig):
     """Configuration class for the ReverseOsmosisDesalinationCostModel.
 
     Args:
@@ -113,6 +114,7 @@ class ReverseOsmosisCostModelConfig(BaseConfig):
 
     freshwater_kg_per_hour: float = field(validator=gt_zero)
     freshwater_density: float = field(validator=gt_zero)
+    cost_year: int = field(default=2013, converter=int, validator=must_equal(2013))
 
 
 class ReverseOsmosisCostModel(DesalinationCostBaseClass):
@@ -121,10 +123,10 @@ class ReverseOsmosisCostModel(DesalinationCostBaseClass):
     """
 
     def setup(self):
-        super().setup()
         self.config = ReverseOsmosisCostModelConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost")
         )
+        super().setup()
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         """Cost reference: Table 3 of https://www.nrel.gov/docs/fy16osti/66073.pdf.
@@ -139,4 +141,3 @@ class ReverseOsmosisCostModel(DesalinationCostBaseClass):
 
         outputs["CapEx"] = desal_capex
         outputs["OpEx"] = desal_opex
-        discrete_outputs["cost_year"] = 2013
