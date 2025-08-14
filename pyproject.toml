@@ -54,7 +54,7 @@ dependencies = [
     "Pyomo>=6.1.2",
     "rainflow",
     "ruamel.yaml",
-    "scipy==1.15.3",
+    "scipy",
     "wombat>=0.11",
 ]
 keywords = [
