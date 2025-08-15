@@ -300,7 +300,9 @@ def test_heuristic_load_following_dispatch():
     #     promotes=["*"],
     # )
 
-    battery = PySAMBatteryPerformanceModel(plant_config={}, tech_config=tech_config["technologies"]["battery"])
+    battery = PySAMBatteryPerformanceModel(
+        plant_config={}, tech_config=tech_config["technologies"]["battery"]
+    )
     battery.setup()
 
     # Create pyomo model
@@ -308,7 +310,9 @@ def test_heuristic_load_following_dispatch():
     model.forecast_horizon = pyomo.Set(initialize=range(dispatch_n_look_ahead))
 
     # Instantiate battery dispatch
-    battery.dispatch = HeuristicLoadFollowingDispatch(plant_config={}, tech_config=tech_config["technologies"]["battery"])
+    battery.dispatch = HeuristicLoadFollowingDispatch(
+        plant_config={}, tech_config=tech_config["technologies"]["battery"]
+    )
     battery.dispatch.setup(
         pyomo_model=model,
         index_set=model.forecast_horizon,
@@ -325,7 +329,8 @@ def test_heuristic_load_following_dispatch():
     # Setup dispatch for battery
     battery.dispatch.initialize_parameters()
     battery.dispatch.update_time_series_parameters(0)
-    battery.dispatch.update_dispatch_initial_soc(battery.dispatch.minimum_soc)   # Set initial SOC to minimum
+    # Set initial SOC to minimum
+    battery.dispatch.update_dispatch_initial_soc(battery.dispatch.minimum_soc)
     assert_units_consistent(model)
 
     # Generate test data for n horizon, charging for first half of the horizon,

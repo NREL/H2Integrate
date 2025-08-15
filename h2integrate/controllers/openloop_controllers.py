@@ -1359,9 +1359,6 @@ class PyomoOpenLoopController(ControllerBaseClass):
         if isinstance(demand_profile, (int, float)):
             demand_profile = [demand_profile] * self.config.time_steps
 
-        import pdb
-
-        pdb.set_trace()
         # outputs[f"{resource_name}_out"] = output_array
         # # Return the SOC
         # outputs[f"{resource_name}_soc"] = soc_array
