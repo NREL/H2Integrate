@@ -8,3 +8,5 @@ Methanol is an essential precursor to many chemicals, and is also used as a fuel
     - [Perez-Fortes et al.](https://doi.org/10.1016/j.apenergy.2015.07.067)
     - [Szima et al.](https://doi.org/10.1016/j.jcou.2018.02.007)
     - [Nyari et al.](https://doi.org/10.1016/j.jcou.2020.101166)
+
+This modeling is further documented in a journal publication by [Martin et al.](https://doi.org/10.1021/acs.est.4c02589)
