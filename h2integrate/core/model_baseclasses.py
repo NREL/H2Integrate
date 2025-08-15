@@ -1,17 +1,9 @@
 import openmdao.api as om
-from attrs import field, define
-
-from h2integrate.core.utilities import BaseConfig
-
-
-@define
-class CostModelBaseConfig(BaseConfig):
-    cost_year: int = field(converter=int)
 
 
 class CostModelBaseClass(om.ExplicitComponent):
     """Baseclass to be used for all cost models. The built-in outputs
-    are used by the finance model and must be
+    are used by the finance model and must be outputted by all cost models.
 
     Outputs:
         - CapEx (float): capital expenditure costs in $

@@ -1,6 +1,6 @@
 import openmdao.api as om
 
-from h2integrate.core.model_base import CostModelBaseClass
+from h2integrate.core.model_baseclasses import CostModelBaseClass
 
 
 class DesalinationPerformanceBaseClass(om.ExplicitComponent):

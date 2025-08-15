@@ -23,7 +23,7 @@ class SolarPerformanceBaseClass(om.ExplicitComponent):
         self.options.declare('driver_config', types=dict)
 
     def setup(self):
-        self.add_output('electricity', val=0.0, shape=n_timesteps, units='kW', desc='Power output from SolarPlant')
+        self.add_output('electricity_out', val=0.0, shape=n_timesteps, units='kW', desc='Power output from SolarPlant')
 
     def compute(self, inputs, outputs):
         """
@@ -61,7 +61,7 @@ class PYSAMSolarPlantPerformanceComponent(SolarPerformanceBaseClass):
 
     def compute(self, inputs, outputs):
         self.system_model.execute(0)
-        outputs['electricity'] = self.system_model.Outputs.gen
+        outputs['electricity_out'] = self.system_model.Outputs.gen
 ```
 
 ```{note}
@@ -73,6 +73,7 @@ We call the baseclass's `setup` method using the `super()` function, then added 
 The process for writing a cost model is similar to the performance model, with the required inputs and outputs defined in the technology cost model baseclass. The technology cost model baseclass should inherit the main cost model baseclass (`CostModelBaseClass`) with additional inputs, outputs, and setup added as necessary. The `CostModelBaseClass` has no predefined inputs, but all cost models must output `CapEx`, `OpEx`, and `cost_year`.
 
 If the dollar-year for the costs (capex and opex) are **inherent to the cost model**, e.g. costs are always output with a certain associated dollar-year, a cost model may look like this:
+
 ```python
 from attrs import field, define
 from h2integrate.core.utilities import merge_shared_inputs
@@ -115,9 +116,10 @@ class ReverseOsmosisCostModel(CostModelBaseClass):
 ```
 
 If the dollar-year for the costs (capex and opex) **depend on the user cost inputs within the `tech_config` file**, a cost model may look like below:
+
 ```python
 from attrs import field, define
-from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
+from h2integrate.core.utilities import BaseConfig, CostModelBaseConfig, merge_shared_inputs
 from h2integrate.core.validators import gt_zero, contains
 from h2integrate.core.model_base import CostModelBaseConfig, CostModelBaseClass
 

@@ -5,7 +5,8 @@ import dill
 import numpy as np
 from hopp.tools.dispatch.plot_tools import plot_battery_output, plot_generation_profile
 
-from h2integrate.core.model_base import CostModelBaseClass, CostModelBaseConfig
+from h2integrate.core.utilities import CostModelBaseConfig
+from h2integrate.core.model_baseclasses import CostModelBaseClass
 from h2integrate.converters.hopp.hopp_mgmt import run_hopp, setup_hopp
 
 

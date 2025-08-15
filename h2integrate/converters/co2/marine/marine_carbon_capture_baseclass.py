@@ -2,7 +2,7 @@ import openmdao.api as om
 from attrs import field, define
 
 from h2integrate.core.utilities import BaseConfig
-from h2integrate.core.model_base import CostModelBaseClass
+from h2integrate.core.model_baseclasses import CostModelBaseClass
 
 
 @define

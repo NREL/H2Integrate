@@ -1,7 +1,6 @@
 from attrs import field, define
 
-from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
-from h2integrate.core.model_base import CostModelBaseConfig
+from h2integrate.core.utilities import BaseConfig, CostModelBaseConfig, merge_shared_inputs
 from h2integrate.core.validators import must_equal
 from h2integrate.converters.hydrogen.electrolyzer_baseclass import (
     ElectrolyzerCostBaseClass,

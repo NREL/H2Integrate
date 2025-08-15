@@ -1,7 +1,8 @@
 import openmdao.api as om
 from attrs import field, define
 
-from h2integrate.core.model_base import CostModelBaseClass, CostModelBaseConfig
+from h2integrate.core.utilities import CostModelBaseConfig
+from h2integrate.core.model_baseclasses import CostModelBaseClass
 
 
 class HydrogenTankPerformanceModel(om.ExplicitComponent):
