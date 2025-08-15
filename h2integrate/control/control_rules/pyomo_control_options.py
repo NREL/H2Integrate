@@ -1,17 +1,17 @@
 import numpy as np
 
-from h2integrate.controllers.openloop_controllers import (
-    SimpleBatteryDispatchHeuristic,
-    HeuristicLoadFollowingDispatch,
+from h2integrate.control.control_strategies.pyomo_controllers import (
+    SimpleBatteryControllerHeuristic,
+    HeuristicLoadFollowingController,
 )
 
 
-class DispatchOptions:
+class PyomoControlOptions:
     """
     Class for setting dispatch options.
 
     Args:
-        dispatch_options (dict): Contains attribute key-value pairs to change default options.
+        control_options (dict): Contains attribute key-value pairs to change default options.
 
             - **solver** (str, default='cbc'): MILP solver used for dispatch optimization problem. Options are `('glpk', 'cbc', 'xpress', 'xpress_persistent', 'gurobi_ampl', 'gurobi')`.
 
@@ -55,7 +55,7 @@ class DispatchOptions:
 
     """
 
-    def __init__(self, dispatch_options: dict = None):
+    def __init__(self, control_options: dict = None):
         self.solver: str = "cbc"
         self.solver_options: dict = (
             {}
@@ -83,8 +83,8 @@ class DispatchOptions:
         self.use_higher_hours: bool = False
         self.higher_hours: dict = {}
 
-        if dispatch_options is not None:
-            for key, value in dispatch_options.items():
+        if control_options is not None:
+            for key, value in control_options.items():
                 if hasattr(self, key):
                     if type(getattr(self, key)) == type(value):
                         setattr(self, key, value)
@@ -120,8 +120,8 @@ class DispatchOptions:
             )
 
         self._battery_dispatch_model_options = {
-            "heuristic": SimpleBatteryDispatchHeuristic,
-            "load_following_heuristic": HeuristicLoadFollowingDispatch,
+            "heuristic": SimpleBatteryControllerHeuristic,
+            "load_following_heuristic": HeuristicLoadFollowingController,
         }
         if self.battery_dispatch in self._battery_dispatch_model_options:
             self.battery_dispatch_class = self._battery_dispatch_model_options[

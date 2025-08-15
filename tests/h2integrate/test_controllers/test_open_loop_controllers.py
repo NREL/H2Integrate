@@ -10,13 +10,13 @@ import pyomo.environ as pyomo
 from pyomo.util.check_units import assert_units_consistent
 
 from h2integrate.core.h2integrate_model import H2IntegrateModel
-from h2integrate.controllers.openloop_controllers import (
+from h2integrate.control.control_strategies.openloop_controllers import (
     DemandOpenLoopController,
     PassThroughOpenLoopController,
 )
 from h2integrate.storage.battery.pysam_battery import PySAMBatteryPerformanceModel
-from h2integrate.controllers.openloop_controllers import HeuristicLoadFollowingDispatch
-from h2integrate.controllers.dispatch_options import DispatchOptions
+from h2integrate.control.control_strategies.pyomo_controllers import HeuristicLoadFollowingController
+from h2integrate.control.control_rules.pyomo_control_options import PyomoControlOptions
 
 
 def test_pass_through_controller(subtests):
@@ -294,7 +294,7 @@ def test_heuristic_load_following_dispatch():
 
     # prob.model.add_subsystem(
     #     "pass_through_controller",
-    #     HeuristicLoadFollowingDispatch(
+    #     HeuristicLoadFollowingController(
     #         plant_config={}, tech_config=tech_config["technologies"]["battery"]
     #     ),
     #     promotes=["*"],
@@ -310,7 +310,7 @@ def test_heuristic_load_following_dispatch():
     model.forecast_horizon = pyomo.Set(initialize=range(dispatch_n_look_ahead))
 
     # Instantiate battery dispatch
-    battery.dispatch = HeuristicLoadFollowingDispatch(
+    battery.dispatch = HeuristicLoadFollowingController(
         plant_config={}, tech_config=tech_config["technologies"]["battery"]
     )
     battery.dispatch.setup(
@@ -318,7 +318,7 @@ def test_heuristic_load_following_dispatch():
         index_set=model.forecast_horizon,
         system_model=battery.system_model,
         block_set_name="heuristic_load_following_battery",
-        dispatch_options=DispatchOptions(
+        control_options=PyomoControlOptions(
             {
                 'include_lifecycle_count': False,
                 'battery_dispatch': 'load_following_heuristic',

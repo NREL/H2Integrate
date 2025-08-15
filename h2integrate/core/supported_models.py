@@ -2,9 +2,9 @@ from h2integrate.resource.river import RiverResource
 from h2integrate.transporters.pipe import PipePerformanceModel
 from h2integrate.transporters.cable import CablePerformanceModel
 from h2integrate.converters.steel.steel import SteelPerformanceModel, SteelCostAndFinancialModel
-from h2integrate.dispatch.converters.wind import PyomoDispatchWind
+from h2integrate.control.control_rules.converters.wind import PyomoDispatchWind
 from h2integrate.converters.wind.wind_plant import WindPlantCostModel, WindPlantPerformanceModel
-from h2integrate.dispatch.storage.h2_storage import PyomoDispatchH2Storage
+from h2integrate.control.control_rules.storage.h2_storage import PyomoDispatchH2Storage
 from h2integrate.transporters.power_combiner import CombinerPerformanceModel
 from h2integrate.converters.hopp.hopp_wrapper import HOPPComponent
 from h2integrate.converters.solar.solar_pysam import PYSAMSolarPlantPerformanceModel
@@ -14,14 +14,16 @@ from h2integrate.storage.hydrogen.tank_baseclass import (
     HydrogenTankCostModel,
     HydrogenTankPerformanceModel,
 )
-from h2integrate.controllers.openloop_controllers import (
+from h2integrate.control.control_strategies.pyomo_controllers import (
     PyomoOpenLoopController,
+)
+from h2integrate.control.control_strategies.openloop_controllers import (
     DemandOpenLoopController,
     PassThroughOpenLoopController,
 )
 from h2integrate.converters.hydrogen.wombat_model import WOMBATElectrolyzerModel
 from h2integrate.converters.wind.wind_plant_pysam import PYSAMWindPlantPerformanceModel
-from h2integrate.dispatch.converters.electrolyzer import PyomoDispatchElectrolyzer
+from h2integrate.control.control_rules.converters.electrolyzer import PyomoDispatchElectrolyzer
 from h2integrate.converters.ammonia.ammonia_synloop import (
     AmmoniaSynLoopCostModel,
     AmmoniaSynLoopPerformanceModel,
