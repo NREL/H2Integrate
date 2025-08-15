@@ -73,7 +73,8 @@ class OAEPerformanceModel(MarineCarbonCapturePerformanceBaseClass):
         super().initialize()
         if echem_oae is None:
             raise ImportError(
-                "The `mcm` package is required. Install it via:\n"
+                "The `mcm` package is required to use the Ocean Alkalinity Enhancement model. "
+                "Install it via:\n"
                 "pip install git+https://github.com/NREL/MarineCarbonManagement.git"
             )
 
@@ -244,7 +245,8 @@ class OAECostModel(MarineCarbonCaptureCostBaseClass):
         super().initialize()
         if echem_oae is None:
             raise ImportError(
-                "The `mcm` package is required. Install it via:\n"
+                "The `mcm` package is required to use the Ocean Alkalinity Enhancement model. "
+                "Install it via:\n"
                 "pip install git+https://github.com/NREL/MarineCarbonManagement.git"
             )
 
@@ -323,7 +325,8 @@ class OAECostAndFinancialModel(MarineCarbonCaptureCostBaseClass):
         super().initialize()
         if echem_oae is None:
             raise ImportError(
-                "The `mcm` package is required. Install it via:\n"
+                "The `mcm` package is required to use the Ocean Alkalinity Enhancement model. "
+                "Install it via:\n"
                 "pip install git+https://github.com/NREL/MarineCarbonManagement.git"
             )
 

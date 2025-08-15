@@ -84,6 +84,10 @@ class TestOAEPerformanceModelNoMCM(unittest.TestCase):
         try:
             self.model = OAEPerformanceModel(plant_config={}, tech_config={})
         except ImportError as e:
-            self.assertIn("The `mcm` package is required. Install it via:", str(e))
+            self.assertIn(
+                "The `mcm` package is required to use the Ocean Alkalinity Enhancement model."
+                " Install it via:",
+                str(e),
+            )
         else:
             self.fail("ImportError was not raised")

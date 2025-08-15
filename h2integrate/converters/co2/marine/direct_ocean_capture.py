@@ -83,7 +83,8 @@ class DOCPerformanceModel(MarineCarbonCapturePerformanceBaseClass):
         super().initialize()
         if echem_mcc is None:
             raise ImportError(
-                "The `mcm` package is required. Install it via:\n"
+                "The `mcm` package is required to use the Direct Ocean Capture model. "
+                "Install it via:\n"
                 "pip install git+https://github.com/NREL/MarineCarbonManagement.git"
             )
 
@@ -154,7 +155,8 @@ class DOCCostModel(MarineCarbonCaptureCostBaseClass):
         super().initialize()
         if echem_mcc is None:
             raise ImportError(
-                "The `mcm` package is required. Install it via:\n"
+                "The `mcm` package is required to use the Direct Ocean Capture model. "
+                "Install it via:\n"
                 "pip install git+https://github.com/NREL/MarineCarbonManagement.git"
             )
 
