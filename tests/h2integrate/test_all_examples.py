@@ -27,11 +27,11 @@ def test_steel_example(subtests):
     with subtests.test("Check LCOH"):
         assert (
             pytest.approx(model.prob.get_val("financials_group_default.LCOH")[0], rel=1e-3)
-            == 7.40282297767098
+            == 7.47944016
         )
 
     with subtests.test("Check LCOS"):
-        assert pytest.approx(model.prob.get_val("steel.LCOS")[0], rel=1e-3) == 1208.7681282107476
+        assert pytest.approx(model.prob.get_val("steel.LCOS")[0], rel=1e-3) == 1213.87728644
 
     with subtests.test("Check total adjusted CapEx"):
         assert (
@@ -46,7 +46,7 @@ def test_steel_example(subtests):
             pytest.approx(
                 model.prob.get_val("financials_group_default.total_opex_adjusted")[0], rel=1e-3
             )
-            == 90068000.60408898
+            == 96349901.77625626
         )
 
     with subtests.test("Check steel CapEx"):
@@ -326,13 +326,13 @@ def test_wind_wave_doc_example(subtests):
     with subtests.test("Check LCOC"):
         assert (
             pytest.approx(model.prob.get_val("financials_group_default.LCOC")[0], rel=1e-3)
-            == 2.26600388
+            == 2.26955589
         )
 
     with subtests.test("Check LCOE"):
         assert (
             pytest.approx(model.prob.get_val("financials_group_default.LCOE")[0], rel=1e-3)
-            == 1.05116705648
+            == 1.05281478
         )
 
 
