@@ -21,10 +21,11 @@ class MethanolPerformanceBaseClass(om.ExplicitComponent):
     based on plant capacity and capacity factor.
 
     Inputs:
-        - plant_capacity_kgpy: methanol production capacity in kg/year
-        - capacity_factor: fractional factor of full production capacity that is realized
-        - co2e_emit_ratio: ratio of kg co2e emitted to kg methanol produced
-        - h2o_consume_ratio: ratio of kg h2o consumed to kg methanol produced
+        - plant_capacity_kgpy: (float) plant capacity in kg/year
+        - plant_capacity_flow: (str) flow that determines capacity, options: "hydrogen", "methanol"
+        - capacity_factor: (float) fractional factor of full production capacity that is realized
+        - co2e_emit_ratio: (float) ratio of kg co2e emitted to kg methanol produced
+        - h2o_consume_ratio: (float) ratio of kg h2o consumed to kg methanol produced
     Outputs:
         - methanol_out: methanol production in kg/h
         - co2e_emissions: co2e emissions in kg/h
@@ -66,16 +67,19 @@ class MethanolCostBaseClass(om.ExplicitComponent):
     Splits OpEx into Fixed and Variable (variable scales with capacity factor, fixed does not)
 
     Inputs:
-        toc_kg_y: total overnight cost (TOC) slope - multiply by plant_capacity_kgpy to get CapEx
-        foc_kg_y^2: fixed operating cost slope - multiply by plant_capacity_kgpy to get Fixed_OpEx
-        voc_kg: variable operating cost - multiply by methanol to get Variable_OpEx
-        plant_capacity_kgpy: methanol production capacity in kg/year
-        methanol_out: promoted output from MethanolPerformanceBaseClass
+        - plant_capacity_kgpy: (float) plant capacity in kg/year
+        - plant_capacity_flow: (str) flow that determines capacity, options: "hydrogen", "methanol"
+        - toc_kg_y: (float) total overnight cost (TOC) slope - multiply by plant_capacity_kgpy to
+            get CapEx
+        - foc_kg_y^2: (float) fixed operating cost (FOC) slope - multiply by plant_capacity_kgpy to
+            get Fixed_OpEx
+        - voc_kg: (float) variable operating cost - multiply by methanol to get Variable_OpEx
+        - methanol_out: (array) promoted output from MethanolPerformanceBaseClass
     Outputs:
-        CapEx: all methanol plant capital expenses in the form of total overnight cost (TOC)
-        OpEx: all methanol plant operating expenses (fixed and variable)
-        Fixed_OpEx: all methanol plant fixed operating expenses (do NOT vary with production rate)
-        Variable_OpEx: all methanol plant variable operating expenses (vary with production rate)
+        - CapEx: all methanol plant capital expenses in the form of total overnight cost (TOC)
+        - OpEx: all methanol plant operating expenses (fixed and variable)
+        - Fixed_OpEx: all methanol plant fixed operating expenses (do NOT vary with production rate)
+        - Variable_OpEx: all methanol plant variable operating expenses (vary with production rate)
     """
 
     def initialize(self):
@@ -109,19 +113,21 @@ class MethanolFinanceBaseClass(om.ExplicitComponent):
     An OpenMDAO component for modeling the financial aspects of a methanol plant.
 
     Inputs:
-        CapEx: total capital expenditure in USD
-        OpEx: total operational expenditure in USD/year
-        Fixed_OpEx: fixed operational expenditure in USD/year
-        Variable_OpEx: variable operational expenditure in USD/year
-        tasc_toc_multiplier: multiplier for total as-spent cost to total overnight cost
-        fixed_charge_rate: fixed charge rate for financial calculations
-        methanol_out: methanol production rate in kg/h over 8760 hours
+        - plant_capacity_kgpy: (float) plant capacity in kg/year
+        - plant_capacity_flow: (str) flow that determines capacity, options: "hydrogen", "methanol"
+        - CapEx: (float) total capital expenditure in USD
+        - OpEx: (float) total operational expenditure in USD/year
+        - Fixed_OpEx: (float) fixed operational expenditure in USD/year
+        - Variable_OpEx: (float) variable operational expenditure in USD/year
+        - tasc_toc_multiplier: (float) multiplier for total as-spent cost to total overnight cost
+        - fixed_charge_rate: (float) fixed charge rate for financial calculations
+        - methanol_out: (array) methanol production rate in kg/h over 8760 hours
     Outputs:
-        LCOM: levelized cost of methanol in USD/kg
-        LCOM_meoh: levelized cost of methanol including all components in USD/kg
-        LCOM_meoh_capex: levelized cost of methanol attributed to CapEx in USD/kg
-        LCOM_meoh_fopex: levelized cost of methanol attributed to fixed OpEx in USD/kg
-        LCOM_meoh_vopex: levelized cost of methanol attributed to variable OpEx in USD/kg
+        - LCOM: levelized cost of methanol in USD/kg
+        - LCOM_meoh: levelized cost of methanol including all components in USD/kg
+        - LCOM_meoh_capex: levelized cost of methanol attributed to CapEx in USD/kg
+        - LCOM_meoh_fopex: levelized cost of methanol attributed to fixed OpEx in USD/kg
+        - LCOM_meoh_vopex: levelized cost of methanol attributed to variable OpEx in USD/kg
     """
 
     def initialize(self):
