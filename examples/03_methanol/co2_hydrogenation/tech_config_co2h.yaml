@@ -1,0 +1,71 @@
+name: "technology_config"
+description: "This hybrid plant produces methanol"
+
+technologies:
+  hopp:
+    performance_model:
+      model: "hopp"
+      config: !include tech_inputs/hopp_config.yaml
+    cost_model:
+      model: "hopp"
+    financial_model:
+      group: "1"
+    electrolyzer_rating: 156. # MW
+  electrolyzer:
+    performance_model:
+      model: "eco_pem_electrolyzer_performance"
+    cost_model:
+      model: "singlitico_electrolyzer_cost"
+    financial_model:
+      group: "1"
+    model_inputs:
+      shared_parameters:
+        location: "onshore"
+        electrolyzer_capex: 1295 # $/kW overnight installed capital costs for a 1 MW system in 2022 USD/kW (DOE hydrogen program record 24005	Clean Hydrogen Production Cost Scenarios with PEM Electrolyzer Technology 05/20/24) (https://www.hydrogen.energy.gov/docs/hydrogenprogramlibraries/pdfs/24005-clean-hydrogen-production-cost-pem-electrolyzer.pdf?sfvrsn=8cb10889_1)
+      performance_parameters:
+        sizing:
+          resize_for_enduse: False
+          size_for: 'BOL' #'BOL' (generous) or 'EOL' (conservative)
+          hydrogen_dmd:
+        n_clusters: 4
+        cluster_rating_MW: 39
+        pem_control_type: 'basic'
+        eol_eff_percent_loss: 10 #eol defined as x% change in efficiency from bol
+        uptime_hours_until_eol: 80000 #number of 'on' hours until electrolyzer reaches eol
+        include_degradation_penalty: True #include degradation
+        turndown_ratio: 0.1 #turndown_ratio = minimum_cluster_power/cluster_rating_MW
+      financial_parameters:
+        replacement_cost_percent: 0.15 # percent of capex - H2A default case
+  methanol:
+    performance_model:
+      model: "co2h_methanol_plant_performance"
+    cost_model:
+      model: "co2h_methanol_plant_cost"
+    financial_model:
+      model: "co2h_methanol_plant_financial"
+      group: "2"
+    model_inputs:
+      shared_parameters:
+        plant_capacity_kgpy: 127893196.8
+        plant_capacity_flow: "methanol"
+      performance_parameters:
+        capacity_factor: 0.9
+        co2e_emit_ratio: 0.020296
+        h2o_consume_ratio: 0.988
+        h2_consume_ratio: 0.195
+        co2_consume_ratio: 1.423
+        elec_consume_ratio: 0.09466667
+        meoh_syn_cat_consume_ratio: 0.00000128398
+        ng_consume_ratio: 0.073511601
+      cost_parameters:
+        ng_lhv: 47.1
+        toc_kg_y: 1.0633873
+        foc_kg_y2: 0.020743864
+        voc_kg: 0.00079
+        meoh_syn_cat_price: 615.274273
+        ng_price: 4.0
+        co2_price: 0.0549007
+      finance_parameters:
+        # Sources in NETL-PUB-22580: Exhibit 3-5 and Exhibit 3-7
+        tasc_toc_multiplier: 1.093
+        fixed_charge_rate: 0.0707

@@ -16,8 +16,8 @@ site: #!include flatirons_site.yaml
         - [0.0, 25000]
         - [25000, 25000]
         - [25000, 0.0]
-  solar_resource_file: "weather/solar/32.34_-98.27_psmv3_60_2013.csv"
-  wind_resource_file: "weather/wind/32.34_-98.27_windtoolkit_2013_60min_100m_120m.srw"
+  solar_resource_file: "tech_inputs/weather/solar/32.31714_-100.18_psmv3_60_2013.csv"
+  wind_resource_file: "tech_inputs/weather/wind/32.31714_-100.18_windtoolkit_2013_60min_100m_120m.srw"
   wave_resource_file: ""
   grid_resource_file: ""
   hub_height: 115.0
@@ -29,25 +29,18 @@ site: #!include flatirons_site.yaml
 
 technologies:
   wind:
-    num_turbines: 216
+    num_turbines: 29
     turbine_rating_kw: 6000.0
-    model_name: floris
+    model_name: pysam #floris
     timestep: [0, 8760]
-    floris_config: !include floris_input_lbw_6MW.yaml
+    # floris_config: !include floris_input_lbw_6MW.yaml
     fin_model: !include default_fin_config.yaml
   pv:
-    system_capacity_kw: 1500000
+    system_capacity_kw: 350000
     dc_degradation: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     fin_model: !include default_fin_config.yaml
-  battery:
-    system_capacity_kwh: 375745.2
-    system_capacity_kw: 375740.4
-    minimum_SOC: 20.0
-    maximum_SOC: 100.0
-    initial_SOC: 90.0
-    fin_model: !include default_fin_config.yaml
   grid:
-    interconnect_kw: 2000000 # Set higher than rated generation capacity
+    interconnect_kw: 200000 # Set higher than rated generation capacity
     fin_model: !include default_fin_config.yaml
 
 config:
