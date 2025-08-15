@@ -201,6 +201,40 @@ def test_ammonia_synloop_example(subtests):
         )
 
 
+def test_smr_methanol_example(subtests):
+    # Change the current working directory to the SMR example's directory
+    os.chdir(examples_dir / "03_methanol" / "smr")
+
+    # Create a H2Integrate model
+    model = H2IntegrateModel(Path.cwd() / "03_smr_methanol.yaml")
+
+    # Run the model
+    model.run()
+
+    model.post_process()
+
+    # Check levelized cost of methanol (LCOM)
+    with subtests.test("Check SMR LCOM"):
+        assert pytest.approx(model.prob.get_val("methanol.LCOM"), rel=1e-6) == 0.22116813
+
+
+def test_co2h_methanol_example(subtests):
+    # Change the current working directory to the CO2 Hydrogenation example's directory
+    os.chdir(examples_dir / "03_methanol" / "co2_hydrogenation")
+
+    # Create a H2Integrate model
+    model = H2IntegrateModel(Path.cwd() / "03_co2h_methanol.yaml")
+
+    # Run the model
+    model.run()
+
+    model.post_process()
+
+    # Check levelized cost of methanol (LCOM)
+    with subtests.test("Check CO2 Hydrogenation LCOM"):
+        assert pytest.approx(model.prob.get_val("methanol.LCOM"), rel=1e-6) == 1.38341179
+
+
 def test_wind_h2_opt_example(subtests):
     # Change the current working directory to the example's directory
     os.chdir(examples_dir / "05_wind_h2_opt")
