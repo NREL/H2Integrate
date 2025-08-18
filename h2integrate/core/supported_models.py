@@ -46,6 +46,11 @@ from h2integrate.converters.ammonia.simple_ammonia_model import (
     SimpleAmmoniaCostModel,
     SimpleAmmoniaPerformanceModel,
 )
+from h2integrate.converters.methanol.co2h_methanol_plant import (
+    CO2HMethanolPlantCostModel,
+    CO2HMethanolPlantFinanceModel,
+    CO2HMethanolPlantPerformanceModel,
+)
 from h2integrate.converters.hydrogen.singlitico_cost_model import SingliticoCostModel
 from h2integrate.converters.co2.marine.direct_ocean_capture import DOCCostModel, DOCPerformanceModel
 from h2integrate.converters.hydrogen.eco_tools_pem_electrolyzer import (
@@ -98,7 +103,10 @@ supported_models = {
     "steel_cost": SteelCostAndFinancialModel,
     "smr_methanol_plant_performance": SMRMethanolPlantPerformanceModel,
     "smr_methanol_plant_cost": SMRMethanolPlantCostModel,
-    "methanol_plant_financial": SMRMethanolPlantFinanceModel,
+    "smr_methanol_plant_financial": SMRMethanolPlantFinanceModel,
+    "co2h_methanol_plant_performance": CO2HMethanolPlantPerformanceModel,
+    "co2h_methanol_plant_cost": CO2HMethanolPlantCostModel,
+    "co2h_methanol_plant_financial": CO2HMethanolPlantFinanceModel,
     "direct_ocean_capture_performance": DOCPerformanceModel,
     "direct_ocean_capture_cost": DOCCostModel,
     "natural_geoh2_performance": NaturalGeoH2PerformanceModel,

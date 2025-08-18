@@ -2,6 +2,7 @@ import openmdao.api as om
 from attrs import field, define
 
 from h2integrate.core.utilities import BaseConfig
+from h2integrate.core.model_baseclasses import CostModelBaseClass
 
 
 @define
@@ -55,7 +56,7 @@ class MarineCarbonCapturePerformanceBaseClass(om.ExplicitComponent):
         self.add_output("co2_capture_mtpy", units="t/year", desc="Annual CO₂ captured (t/year)")
 
 
-class MarineCarbonCaptureCostBaseClass(om.ExplicitComponent):
+class MarineCarbonCaptureCostBaseClass(CostModelBaseClass):
     """Base OpenMDAO component for modeling marine carbon capture costs.
 
     This class defines the input/output structure for cost evaluation and should
@@ -66,12 +67,8 @@ class MarineCarbonCaptureCostBaseClass(om.ExplicitComponent):
         tech_config (dict): Configuration dictionary for technology-specific parameters.
     """
 
-    def initialize(self):
-        self.options.declare("driver_config", types=dict)
-        self.options.declare("plant_config", types=dict)
-        self.options.declare("tech_config", types=dict)
-
     def setup(self):
+        super().setup()
         self.add_input(
             "electricity_in", val=0.0, shape=8760, units="W", desc="Hourly input electricity (W)"
         )
@@ -81,23 +78,3 @@ class MarineCarbonCaptureCostBaseClass(om.ExplicitComponent):
             units="t/year",
             desc="Annual CO₂ captured (t/year)",
         )
-
-        self.add_output("CapEx", val=0.0, units="USD", desc="Total capital expenditure (USD)")
-        self.add_output(
-            "OpEx",
-            val=0.0,
-            units="USD/year",
-            desc="Total annual operating expenses (USD/year)",
-        )
-
-    def compute(self, inputs, outputs):
-        """Computes outputs for the marine carbon capture cost model.
-
-        Note:
-            This method must be implemented in a subclass.
-
-        Raises:
-            NotImplementedError: Always raised unless overridden.
-        """
-
-        raise NotImplementedError("This method should be implemented in a subclass.")
