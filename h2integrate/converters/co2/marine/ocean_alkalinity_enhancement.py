@@ -403,13 +403,8 @@ class OAECostAndFinancialModel(MarineCarbonCaptureCostBaseClass):
         )
 
     def compute(self, inputs, outputs):
-        annual_energy_cost_usd_yr = (
-            inputs["LCOE"]
-            * (
-                inputs[
-                    "annual_energy"
-                ]  # - (sum(inputs["excess_energy"]) / 1000)  # Convert W to kW
-            )
+        annual_energy_cost_usd_yr = inputs["LCOE"] * (
+            inputs["annual_energy"] - (sum(inputs["excess_energy"]) / 1000)  # Convert W to kW
         )  # remove excess power from the annual energy cost only used power considered
         costs = echem_oae.OAECosts(
             mass_product=inputs["mass_sellable_product"],
