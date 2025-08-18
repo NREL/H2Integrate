@@ -5,8 +5,8 @@ import pytest
 import openmdao.api as om
 from pytest import approx
 
-from h2integrate.core.finances import ProFastComp
 from h2integrate.core.inputs.validation import load_tech_yaml, load_plant_yaml
+from h2integrate.core.profast_financial import ProFastComp
 
 
 examples_dir = Path(__file__).resolve().parent.parent.parent.parent / "examples/."
@@ -19,22 +19,26 @@ class TestProFastComp(unittest.TestCase):
                 "analysis_start_year": 2022,
                 "installation_time": 24,
                 "inflation_rate": 0.02,
-                "sales_tax_rate": 0.07,
-                "property_tax": 0.01,
-                "property_insurance": 0.005,
-                "administrative_expense_percent_of_sales": 0.03,
-                "total_income_tax_rate": 0.21,
-                "capital_gains_tax_rate": 0.15,
                 "discount_rate": 0.08,
-                "debt_equity_split": 70,
-                "debt_equity_ratio": None,
-                "debt_type": "Revolving debt",
-                "loan_period": 10,
-                "debt_interest_rate": 0.05,
-                "cash_onhand_months": 6,
-                "depreciation_method": "Straight line",
-                "depreciation_period": 20,
-                "depreciation_period_electrolyzer": 10,
+                "finance_model": "ProFastComp",
+                "profast_inputs": {
+                    "params": {
+                        "debt_equity_ratio": 2.3333333333333335,
+                        "property_tax_and_insurance": 0.015,
+                        "total_income_tax_rate": 0.21,
+                        "capital_gains_tax_rate": 0.15,
+                        "sales_tax_rate": 0.07,
+                        "debt_interest_rate": 0.05,
+                        "debt_type": "Revolving debt",
+                        "loan_period_if_used": 10,
+                        "cash_onhand_months": 6,
+                        "admin_expense": 0.03,
+                    },
+                    "capital_items": {
+                        "depr_type": "Straight line",
+                        "depr_period": 20,
+                    },
+                },
                 "cost_adjustment_parameters": {
                     "target_dollar_year": 2022,
                     "cost_year_adjustment_inflation": 0.0,
@@ -57,7 +61,10 @@ class TestProFastComp(unittest.TestCase):
             "electrolyzer": {
                 "model_inputs": {
                     "financial_parameters": {
-                        "replacement_cost_percent": 0.1,
+                        "capital_items": {
+                            "depr_period": 10,
+                            "replacement_cost_percent": 0.1,
+                        }
                     }
                 }
             },
@@ -66,7 +73,10 @@ class TestProFastComp(unittest.TestCase):
     def test_electrolyzer_refurb_results(self):
         prob = om.Problem()
         comp = ProFastComp(
-            plant_config=self.plant_config, tech_config=self.tech_config, commodity_type="hydrogen"
+            plant_config=self.plant_config,
+            tech_config=self.tech_config,
+            driver_config={},
+            commodity_type="hydrogen",
         )
         prob.model.add_subsystem("comp", comp, promotes=["*"])
 
@@ -214,10 +224,15 @@ def test_profast_config_provided():
         "finance_parameters": {
             "installation_time": 24,
             "analysis_start_year": 2024,
-            "pf_params": {"params": pf_params},
-            "depreciation_method": "Straight line",
-            "depreciation_period": 20,
-            "depreciation_period_electrolyzer": 10,
+            "inflation_rate": 0.02,
+            "finance_model": "ProFastComp",
+            "profast_inputs": {
+                "params": pf_params,
+                "capital_items": {
+                    "depr_type": "Straight line",
+                    "depr_period": 20,
+                },
+            },
             "cost_adjustment_parameters": {
                 "target_dollar_year": 2022,
                 "cost_year_adjustment_inflation": 0.0,
@@ -241,7 +256,10 @@ def test_profast_config_provided():
         "electrolyzer": {
             "model_inputs": {
                 "financial_parameters": {
-                    "replacement_cost_percent": 0.1,
+                    "capital_items": {
+                        "depr_period": 10,
+                        "replacement_cost_percent": 0.1,
+                    }
                 }
             }
         },
@@ -276,24 +294,43 @@ def test_parameter_validation_clashing_values():
         "operating life": 25,  # Different from plant config (30)
         "installation months": 12,  # Different from plant config (24)
         "commodity": {"name": "Hydrogen", "unit": "kg", "initial price": 100, "escalation": 0.02},
-        "general inflation rate": 0.02,
+        "general inflation rate": 0.0,
+        "admin_expense": 0.0,
+        "capital_gains_tax_rate": 0.15,
+        "sales_tax_rate": 0.07,
+        "debt_interest_rate": 0.05,
+        "debt_type": "Revolving debt",
+        "loan_period_if_used": 10,
+        "cash_onhand_months": 6,
+        "property_tax_and_insurance": 0.03,
+        "discount_rate": 0.09,
+        "debt_equity_ratio": 1.62,
+        "total_income_tax_rate": 0.25,
     }
 
     plant_config = {
         "finance_parameters": {
             "analysis_start_year": 2024,  # Different from pf_params
             "installation_time": 24,  # Different from pf_params
-            "pf_params": {"params": pf_params},
-            "depreciation_method": "Straight line",
-            "depreciation_period": 20,
-            "depreciation_period_electrolyzer": 10,
+            "inflation_rate": 0.0,
+            "finance_model": "ProFastComp",
+            "profast_inputs": {
+                "params": pf_params,
+                "capital_items": {
+                    "depr_type": "Straight line",
+                    "depr_period": 20,
+                },
+            },
+            # "pf_params": {"params": pf_params},
+            # "depreciation_method": "Straight line",
+            # "depreciation_period": 20,
+            # "depreciation_period_electrolyzer": 10,
             "cost_adjustment_parameters": {
                 "target_dollar_year": 2022,
                 "cost_year_adjustment_inflation": 0.0,
             },
         },
         "plant": {
-            "financial_analysis_start_year": 2024,  # Different from pf_params
             "plant_life": 30,  # Different from pf_params
         },
     }
@@ -302,7 +339,10 @@ def test_parameter_validation_clashing_values():
         "electrolyzer": {
             "model_inputs": {
                 "financial_parameters": {
-                    "replacement_cost_percent": 0.1,
+                    "capital_items": {
+                        "depr_period": 10,
+                        "replacement_cost_percent": 0.1,
+                    }
                 }
             }
         },
