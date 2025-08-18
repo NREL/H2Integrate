@@ -12,7 +12,10 @@ from h2integrate.storage.hydrogen.tank_baseclass import (
     HydrogenTankCostModel,
     HydrogenTankPerformanceModel,
 )
-from h2integrate.controllers.openloop_controllers import PassThroughOpenLoopController
+from h2integrate.controllers.openloop_controllers import (
+    DemandOpenLoopController,
+    PassThroughOpenLoopController,
+)
 from h2integrate.converters.hydrogen.wombat_model import WOMBATElectrolyzerModel
 from h2integrate.converters.wind.wind_plant_pysam import PYSAMWindPlantPerformanceModel
 from h2integrate.converters.ammonia.ammonia_synloop import (
@@ -38,6 +41,11 @@ from h2integrate.converters.methanol.smr_methanol_plant import (
 from h2integrate.converters.ammonia.simple_ammonia_model import (
     SimpleAmmoniaCostModel,
     SimpleAmmoniaPerformanceModel,
+)
+from h2integrate.converters.methanol.co2h_methanol_plant import (
+    CO2HMethanolPlantCostModel,
+    CO2HMethanolPlantFinanceModel,
+    CO2HMethanolPlantPerformanceModel,
 )
 from h2integrate.converters.hydrogen.singlitico_cost_model import SingliticoCostModel
 from h2integrate.converters.co2.marine.direct_ocean_capture import DOCCostModel, DOCPerformanceModel
@@ -92,7 +100,10 @@ supported_models = {
     "steel_cost": SteelCostAndFinancialModel,
     "smr_methanol_plant_performance": SMRMethanolPlantPerformanceModel,
     "smr_methanol_plant_cost": SMRMethanolPlantCostModel,
-    "methanol_plant_financial": SMRMethanolPlantFinanceModel,
+    "smr_methanol_plant_financial": SMRMethanolPlantFinanceModel,
+    "co2h_methanol_plant_performance": CO2HMethanolPlantPerformanceModel,
+    "co2h_methanol_plant_cost": CO2HMethanolPlantCostModel,
+    "co2h_methanol_plant_financial": CO2HMethanolPlantFinanceModel,
     "direct_ocean_capture_performance": DOCPerformanceModel,
     "direct_ocean_capture_cost": DOCCostModel,
     "natural_geoh2_performance": NaturalGeoH2PerformanceModel,
@@ -107,6 +118,7 @@ supported_models = {
     "combiner_performance": CombinerPerformanceModel,
     # Control
     "pass_through_controller": PassThroughOpenLoopController,
+    "demand_open_loop_controller": DemandOpenLoopController,
     # Storage
     "hydrogen_tank_performance": HydrogenTankPerformanceModel,
     "hydrogen_tank_cost": HydrogenTankCostModel,

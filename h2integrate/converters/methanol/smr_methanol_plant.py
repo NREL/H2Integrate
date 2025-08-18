@@ -35,10 +35,11 @@ class SMRMethanolPlantPerformanceModel(MethanolPerformanceBaseClass):
         - ng_consume_ratio: ratio of kg natural gas (NG) consumed to kg methanol produced
         - elec_produce_ratio: ratio of electricity produced to kg methanol produced
     Outputs:
-        - meoh_syn_cat_consumption: annual consumption of methanol synthesis catalyst (ft**3/yr)
-        - meoh_atr_cat_consumption: annual consumption of methanol ATR catalyst (ft**3/yr)
-        - ng_consumption: hourly consumption of NG (kg/h)
-        - electricity: hourly electricity consumption (kW*h/h)
+        - meoh_syn_cat_consume: annual consumption of methanol synthesis catalyst (ft**3/yr)
+        - meoh_atr_cat_consume: annual consumption of methanol ATR catalyst (ft**3/yr)
+        - ng_consume: hourly consumption of NG (kg/h)
+        - methanol_out: hourly methanol production (kg/h)
+        - electricity_out: hourly electricity production (kW*h/h)
     """
 
     def setup(self):
@@ -47,49 +48,57 @@ class SMRMethanolPlantPerformanceModel(MethanolPerformanceBaseClass):
         )
         super().setup()
 
-        # Add in tech-specific variables and values
-        self.add_input(
-            "meoh_syn_cat_consume_ratio",
-            units="ft**3/kg",
-            val=self.config.meoh_syn_cat_consume_ratio,
-        )
-        self.add_input(
-            "meoh_atr_cat_consume_ratio",
-            units="ft**3/kg",
-            val=self.config.meoh_atr_cat_consume_ratio,
-        )
-        self.add_input("ng_consume_ratio", units="kg/kg", val=self.config.ng_consume_ratio)
-        self.add_input("elec_produce_ratio", units="kW*h/kg", val=self.config.elec_produce_ratio)
+        # Add in tech-specific feedstock consumption ratios
+        syn_ratio = self.config.meoh_syn_cat_consume_ratio
+        atr_ratio = self.config.meoh_atr_cat_consume_ratio
+        ng_ratio = self.config.ng_consume_ratio
+        elec_ratio = self.config.elec_produce_ratio
+        self.add_input("meoh_syn_cat_consume_ratio", units="ft**3/kg", val=syn_ratio)
+        self.add_input("meoh_atr_cat_consume_ratio", units="ft**3/kg", val=atr_ratio)
+        self.add_input("ng_consume_ratio", units="kg/kg", val=ng_ratio)
+        self.add_input("elec_produce_ratio", units="kW*h/kg", val=elec_ratio)
 
-        self.add_output("meoh_syn_cat_consumption", units="ft**3/yr")
-        self.add_output("meoh_atr_cat_consumption", units="ft**3/yr")
-        self.add_output("ng_consumption", shape=8760, units="kg/h")
+        # Set up feedstock supply inputs - can be replaced by connections
+        meoh_cap = self.config.plant_capacity_kgpy
+        meoh_max_out = np.ones(8760) * meoh_cap / 8760
+        self.add_input("meoh_syn_cat_in", units="ft**3/yr", val=syn_ratio * np.sum(meoh_max_out))
+        self.add_input("meoh_atr_cat_in", units="ft**3/yr", val=atr_ratio * np.sum(meoh_max_out))
+        self.add_input("ng_in", shape=8760, units="kg/h", val=ng_ratio * np.sum(meoh_max_out))
+
+        # Set up feedstock consumption outputs
+        self.add_output("meoh_syn_cat_consume", units="ft**3/yr")
+        self.add_output("meoh_atr_cat_consume", units="ft**3/yr")
+        self.add_output("ng_consume", shape=8760, units="kg/h")
+
+        # Set up electricity production output
         self.add_output("electricity_out", shape=8760, units="kW*h/h")
 
     def compute(self, inputs, outputs):
-        # Calculate methanol production #TODO get shape from output shape
-        meoh_kgph = (
-            inputs["plant_capacity_kgpy"]
-            * inputs["capacity_factor"]
-            / 8760
-            * np.ones(shape=(8760,))
-        )
+        # Calculate max methanol production from each input
+        syn_in = inputs["meoh_syn_cat_in"]
+        atr_in = inputs["meoh_atr_cat_in"]
+        ng_in = inputs["ng_in"]
+        syn_ratio = inputs["meoh_syn_cat_consume_ratio"]
+        atr_ratio = inputs["meoh_atr_cat_consume_ratio"]
+        ng_ratio = inputs["ng_consume_ratio"]
+        meoh_from_syn = np.ones(8760) * syn_in / syn_ratio / 8760
+        meoh_from_atr = np.ones(8760) * atr_in / atr_ratio / 8760
+        meoh_from_ng = ng_in / ng_ratio
+
+        # Limiting methanol production per hour
+        meoh_prod = np.minimum.reduce([meoh_from_syn, meoh_from_atr, meoh_from_ng])
+        meoh_cap = np.ones(8760) * inputs["plant_capacity_kgpy"] / 8760
+        meoh_prod = np.minimum.reduce([meoh_prod, meoh_cap])
+
+        # Get co-product ratio0
+        elec_ratio = inputs["elec_produce_ratio"]
 
         # Parse outputs
-        outputs["methanol"] = meoh_kgph
-        outputs["co2_consumption"] = meoh_kgph * inputs["co2_consume_ratio"]
-        outputs["h2o_consumption"] = meoh_kgph * inputs["h2o_consume_ratio"]
-        outputs["h2_consumption"] = meoh_kgph * inputs["h2_consume_ratio"]
-        outputs["co2e_emissions"] = meoh_kgph * inputs["co2e_emit_ratio"]
-        outputs["elec_consumption"] = meoh_kgph * inputs["elec_consume_ratio"]
-        outputs["meoh_atr_cat_consumption"] = (
-            np.sum(meoh_kgph) * inputs["meoh_atr_cat_consume_ratio"]
-        )
-        outputs["meoh_syn_cat_consumption"] = (
-            np.sum(meoh_kgph) * inputs["meoh_syn_cat_consume_ratio"]
-        )
-        outputs["ng_consumption"] = meoh_kgph * inputs["ng_consume_ratio"]
-        outputs["electricity_out"] = meoh_kgph * inputs["elec_produce_ratio"]
+        outputs["meoh_syn_cat_consume"] = np.sum(meoh_prod) * syn_ratio
+        outputs["meoh_atr_cat_consume"] = np.sum(meoh_prod) * atr_ratio
+        outputs["ng_consume"] = meoh_prod * ng_ratio
+        outputs["methanol_out"] = meoh_prod
+        outputs["electricity_out"] = meoh_prod * elec_ratio
 
 
 @define
@@ -98,6 +107,7 @@ class SMRCostConfig(MethanolCostConfig):
     meoh_syn_cat_price: float = field()
     meoh_atr_cat_price: float = field()
     ng_price: float = field()
+    cost_year: int = field(converter=int)
 
 
 class SMRMethanolPlantCostModel(MethanolCostBaseClass):
@@ -106,18 +116,19 @@ class SMRMethanolPlantCostModel(MethanolCostBaseClass):
 
     Inputs:
         ng_lhv: natural gas lower heating value in MJ/kg
-        meoh_syn_cat_consumption: annual consumption of methanol synthesis catalyst (ft**3/yr)
-        meoh_atr_cat_consumption: annual consumption of methanol ATR catalyst (ft**3/yr)
-        ng_consumption: hourly consumption of NG (kg/h)
-        electricity: hourly electricity consumption (kW*h/h)
+        meoh_syn_cat_consume: annual consumption of methanol synthesis catalyst (ft**3/yr)
+        meoh_atr_cat_consume: annual consumption of methanol ATR catalyst (ft**3/yr)
+        ng_consume: hourly consumption of NG (kg/h)
+        electricity_out: hourly electricity production (kW*h/h)
         meoh_syn_cat_price: price of methanol synthesis catalyst (USD/ft**3)
         meoh_atr_cat_price: price of methanol ATR catalyst (USD/ft**3)
-        ng_price: price of NG (USD/MMBtu)
+        ng_price: price of NG (USD/MBtu)
     Outputs:
         meoh_syn_cat_cost: annual cost of methanol synthesis catalyst (USD/year)
         meoh_atr_cat_cost: annual cost of methanol ATR catalyst (USD/year)
         ng_cost: annual cost of NG (USD/year)
         elec_revenue: annual revenue from electricity sales (USD/year)
+        cost_year: dollar year for output costs
     """
 
     def setup(self):
@@ -127,41 +138,39 @@ class SMRMethanolPlantCostModel(MethanolCostBaseClass):
         super().setup()
 
         self.add_input("ng_lhv", units="MJ/kg", val=self.config.ng_lhv)
-        self.add_input("meoh_syn_cat_consumption", units="ft**3/yr")
-        self.add_input("meoh_atr_cat_consumption", units="ft**3/yr")
-        self.add_input("ng_consumption", shape=8760, units="kg/h")
-        self.add_input("electricity_in", shape=8760, units="kW*h/h")
+        self.add_input("meoh_syn_cat_consume", units="ft**3/yr")
+        self.add_input("meoh_atr_cat_consume", units="ft**3/yr")
+        self.add_input("ng_consume", shape=8760, units="kg/h")
+        self.add_input("electricity_out", shape=8760, units="kW*h/h")
         self.add_input("meoh_syn_cat_price", units="USD/ft**3", val=self.config.meoh_syn_cat_price)
         self.add_input("meoh_atr_cat_price", units="USD/ft**3", val=self.config.meoh_atr_cat_price)
-        self.add_input("ng_price", units="USD/MMBtu", val=self.config.ng_price)
+        self.add_input(
+            "ng_price", units="USD/MBtu", val=self.config.ng_price
+        )  # TODO: get OpenMDAO to recognize 'MMBtu'
 
         self.add_output("meoh_syn_cat_cost", units="USD/year")
         self.add_output("meoh_atr_cat_cost", units="USD/year")
         self.add_output("ng_cost", units="USD/year")
         self.add_output("elec_revenue", units="USD/year")
 
-    def compute(self, inputs, outputs):
+    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         toc_usd = inputs["plant_capacity_kgpy"] * inputs["toc_kg_y"]
         foc_usd_y = inputs["plant_capacity_kgpy"] * inputs["foc_kg_y2"]
-        voc_usd_y = np.sum(inputs["methanol"]) * inputs["voc_kg"]
+        voc_usd_y = np.sum(inputs["methanol_out"]) * inputs["voc_kg"]
 
         ppa_price = self.options["plant_config"]["plant"]["ppa_price"]
 
         lhv_mj = inputs["ng_lhv"]
-        lhv_mmbtu = convert_units(lhv_mj, "MJ", "MMBtu")
+        lhv_mmbtu = convert_units(lhv_mj, "MJ", "MBtu")
 
         outputs["CapEx"] = toc_usd
         outputs["OpEx"] = foc_usd_y + voc_usd_y
         outputs["Fixed_OpEx"] = foc_usd_y
         outputs["Variable_OpEx"] = voc_usd_y
-        outputs["meoh_syn_cat_cost"] = (
-            inputs["meoh_syn_cat_consumption"] * inputs["meoh_syn_cat_price"]
-        )
-        outputs["meoh_atr_cat_cost"] = (
-            inputs["meoh_atr_cat_consumption"] * inputs["meoh_atr_cat_price"]
-        )
-        outputs["ng_cost"] = np.sum(inputs["ng_consumption"]) * lhv_mmbtu * inputs["ng_price"]
-        outputs["elec_revenue"] = np.sum(inputs["electricity_in"]) * ppa_price
+        outputs["meoh_syn_cat_cost"] = inputs["meoh_syn_cat_consume"] * inputs["meoh_syn_cat_price"]
+        outputs["meoh_atr_cat_cost"] = inputs["meoh_atr_cat_consume"] * inputs["meoh_atr_cat_price"]
+        outputs["ng_cost"] = np.sum(inputs["ng_consume"]) * lhv_mmbtu * inputs["ng_price"]
+        outputs["elec_revenue"] = np.sum(inputs["electricity_out"]) * ppa_price
 
 
 class SMRMethanolPlantFinanceModel(MethanolFinanceBaseClass):
@@ -229,7 +238,7 @@ class SMRMethanolPlantFinanceModel(MethanolFinanceBaseClass):
         )
 
     def compute(self, inputs, outputs):
-        kgph = inputs["methanol"]
+        kgph = inputs["methanol_out"]
 
         lcom_capex = (
             inputs["CapEx"]

@@ -45,3 +45,17 @@ def contains(items):
             raise ValueError(f"Item {value} not found in list for {attribute}: {items}")
 
     return validator
+
+
+def must_equal(required_value):
+    """Validates that an item equals a specific value"""
+
+    def validator(instance, attribute, value):
+        if value != required_value:
+            msg = (
+                f"{attribute} cannot be {value}, {attribute} "
+                f"must have value of {required_value}"
+            )
+            raise ValueError(msg)
+
+    return validator

@@ -1,7 +1,7 @@
 from attrs import field, define
 
-from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
-from h2integrate.core.validators import gt_zero, contains
+from h2integrate.core.utilities import CostModelBaseConfig, merge_shared_inputs
+from h2integrate.core.validators import contains, must_equal
 from h2integrate.converters.hydrogen.electrolyzer_baseclass import ElectrolyzerCostBaseClass
 from h2integrate.simulation.technologies.hydrogen.electrolysis.PEM_costs_Singlitico_model import (
     PEMCostsSingliticoModel,
@@ -9,12 +9,11 @@ from h2integrate.simulation.technologies.hydrogen.electrolysis.PEM_costs_Singlit
 
 
 @define
-class SingliticoCostModelConfig(BaseConfig):
+class SingliticoCostModelConfig(CostModelBaseConfig):
     """
-    Configuration class for the ECOElectrolyzerPerformanceModel.
+    Configuration class for the ECOElectrolyzerPerformanceModel, outputs costs in 2021 USD.
 
     Args:
-        rating (float): The rating of the electrolyzer in MW.
         location (str): The location of the electrolyzer; options include "onshore" or "offshore".
         electrolyzer_capex (int): $/kW overnight installed capital costs for a 1 MW system in
             2022 USD/kW (DOE hydrogen program record 24005 Clean Hydrogen Production Cost Scenarios
@@ -22,9 +21,9 @@ class SingliticoCostModelConfig(BaseConfig):
             (https://www.hydrogen.energy.gov/docs/hydrogenprogramlibraries/pdfs/24005-clean-hydrogen-production-cost-pem-electrolyzer.pdf?sfvrsn=8cb10889_1)
     """
 
-    rating: float = field(validator=gt_zero)
     location: str = field(validator=contains(["onshore", "offshore"]))
     electrolyzer_capex: int = field()
+    cost_year: int = field(default=2021, converter=int, validator=must_equal(2021))
 
 
 class SingliticoCostModel(ElectrolyzerCostBaseClass):
@@ -33,13 +32,21 @@ class SingliticoCostModel(ElectrolyzerCostBaseClass):
     """
 
     def setup(self):
-        super().setup()
         self.config = SingliticoCostModelConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost")
         )
 
-    def compute(self, inputs, outputs):
-        electrolyzer_size_mw = self.config.rating
+        super().setup()
+
+        self.add_input(
+            "electrolyzer_size_mw",
+            val=0,
+            units="MW",
+            desc="Size of the electrolyzer in MW",
+        )
+
+    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
+        electrolyzer_size_mw = inputs["electrolyzer_size_mw"][0]
 
         # run hydrogen production cost model - from hopp examples
         if self.config.location == "onshore":

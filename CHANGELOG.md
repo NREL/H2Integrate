@@ -1,10 +1,12 @@
 # CHANGELOG
 
 ## 0.3.1, Unreleased, TBD
+- Added rule-based storage system control capability
 - Bugfix: only run pyxdsm when there are connections in the system
 - Added *_out/ to .gitignore to avoid clutter
 - Added methanol production base class
 - Added steam methane reforming methanol production technology
+- Added CO2 hydrogenation methanol production technology
 - Added a new optimization example with a wind plant and electrolyzer to showcase how to define design variables, constraints, and objective functions
 - Added capability for user-defined technologies in the H2Integrate framework, allowing for custom models to be integrated into the system.
 - Added an example of a user-defined technology in the `examples` directory, demonstrating an extremely simple paper mill model.
@@ -34,6 +36,11 @@
 - Update PySAM solar performance model to allow for more user-configurability.
 - Added simple air separation unit (ASU) converter to model nitrogen production.
 - Added two ATB-compatible solar-PV cost models.
+- Changed electrolyzer capacity to be specified as `n_clusters` rather than `rating` in electrolyzer performance model config
+- Changed electrolyzer capacity to be an input to the electrolyzer cost models rather than pulled from the cost model config.
+- Updated finance parameter organization naming in `plant_config`.
+- Added cost model base class and removed `plant_config['finance_parameters']['discount_years']['tech']`. Some cost models require user-input cost year (`tech_config[tech]['model_inputs']['cost_parameters']['cost_year']`) others do not. Cost year is output from cost models as a discrete output.
+
 
 ## 0.3.0 [May 2 2025]
 

@@ -1,6 +1,7 @@
 from attrs import field, define
 
 from h2integrate.core.utilities import merge_shared_inputs
+from h2integrate.core.validators import must_equal
 from h2integrate.converters.co2.marine.marine_carbon_capture_baseclass import (
     MarineCarbonCaptureCostBaseClass,
     MarineCarbonCapturePerformanceConfig,
@@ -9,7 +10,7 @@ from h2integrate.converters.co2.marine.marine_carbon_capture_baseclass import (
 
 
 try:
-    from mcm import echem_mcc
+    from mcm.capture import echem_mcc
 except ImportError:
     echem_mcc = None
 
@@ -132,9 +133,11 @@ class DOCCostModelConfig(DOCPerformanceConfig):
 
     Attributes:
         infrastructure_type (str): Type of infrastructure (e.g., "desal", "swCool", "new"").
+        cost_year (int): dollar year corresponding to cost values
     """
 
     infrastructure_type: str = field()
+    cost_year: int = field(default=2023, converter=int, validator=must_equal(2023))
 
 
 class DOCCostModel(MarineCarbonCaptureCostBaseClass):
@@ -155,10 +158,11 @@ class DOCCostModel(MarineCarbonCaptureCostBaseClass):
             )
 
     def setup(self):
-        super().setup()
         self.config = DOCCostModelConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost")
         )
+
+        super().setup()
 
         self.add_input(
             "total_tank_volume_m3",
@@ -173,7 +177,7 @@ class DOCCostModel(MarineCarbonCaptureCostBaseClass):
             desc="Theoretical plant maximum CO₂ capture (t/h)",
         )
 
-    def compute(self, inputs, outputs):
+    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         # Set up electrodialysis inputs
         ED_inputs = setup_electrodialysis_inputs(self.config)
 

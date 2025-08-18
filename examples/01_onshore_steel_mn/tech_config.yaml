@@ -11,6 +11,9 @@ technologies:
     financial_model:
       group: default
     electrolyzer_rating: 720. # MW
+    model_inputs:
+      cost_parameters:
+        cost_year: 2019
   electrolyzer:
     performance_model:
       model: "eco_pem_electrolyzer_performance"
@@ -20,7 +23,6 @@ technologies:
       group: default
     model_inputs:
       shared_parameters:
-        rating: 720. # MW
         location: "onshore"
         electrolyzer_capex: 1295 # $/kW overnight installed capital costs for a 1 MW system in 2022 USD/kW (DOE hydrogen program record 24005 Clean Hydrogen Production Cost Scenarios with PEM Electrolyzer Technology 05/20/24) (https://www.hydrogen.energy.gov/docs/hydrogenprogramlibraries/pdfs/24005-clean-hydrogen-production-cost-pem-electrolyzer.pdf?sfvrsn=8cb10889_1)
 
@@ -29,28 +31,25 @@ technologies:
           resize_for_enduse: False
           size_for: 'BOL' #'BOL' (generous) or 'EOL' (conservative)
           hydrogen_dmd:
+        n_clusters: 18
         cluster_rating_MW: 40
         pem_control_type: 'basic'
         eol_eff_percent_loss: 13 #eol defined as x% change in efficiency from bol
         uptime_hours_until_eol: 80000. #number of 'on' hours until electrolyzer reaches eol
         include_degradation_penalty: True #include degradation
         turndown_ratio: 0.1 #turndown_ratio = minimum_cluster_power/cluster_rating_MW
-
       financial_parameters:
         replacement_cost_percent: 0.15 # percent of capex - H2A default case
   h2_storage:
     performance_model:
       model: "h2_storage"
-    control_model:
+    control_strategy:
       model: "pass_through_controller"
     cost_model:
       model: "h2_storage"
     financial_model:
       group: default
     model_inputs:
-      shared_parameters:
-        resource_name: "hydrogen"
-        resource_units: "kg/h"
       performance_parameters:
         rating: 720.
         size_capacity_from_demand:
@@ -58,6 +57,9 @@ technologies:
         capacity_from_max_on_turbine_storage: False # if True, then days of storage is ignored and storage capacity is based on how much h2 storage fits on the turbines in the plant using Kottenstete 2003.
         type: "lined_rock_cavern" # can be one of ["none", "pipe", "turbine", "pressure_vessel", "salt_cavern", "lined_rock_cavern"]
         days: 0 #how many days worth of production we should be able to store (this is ignored if `capacity_from_max_on_turbine_storage` is set to True)
+      control_parameters:
+        resource_name: "hydrogen"
+        resource_rate_units: "kg/h"
   steel:
     performance_model:
       model: "steel_performance"
