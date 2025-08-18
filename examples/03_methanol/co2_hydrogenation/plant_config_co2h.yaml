@@ -28,6 +28,7 @@ technology_interconnections: [
   ["electrolyzer", "methanol", "hydrogen", "pipe"],
   ["financials_group_1", "methanol", "LCOE"],
   ["financials_group_1", "methanol", "LCOH"],
+  ["doc","methanol","co2","pipe"],
 ]
 
 plant:
