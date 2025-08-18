@@ -136,9 +136,9 @@ class NaturalGasCostModel(CostModelBaseClass):
     1. Capital costs: capex * plant_capacity_kW
     2. Fixed O&M: fopex * plant_capacity_kW * project_life
     3. Variable O&M: vopex * delivered_electricity_MWh * project_life
-    4. Fuel costs: ng_price * heat_rate * delivered_electricity_MWh * project_life / 1.36
+    4. Fuel costs: ng_price * heat_rate * delivered_electricity_MWh * project_life / 1.036
 
-    The factor 1.36 converts from thousand cubic feet to MMBtu assuming
+    The factor 1.036 converts from thousand cubic feet to MMBtu assuming
     natural gas heating value of ~1036 Btu/ft³.
 
     Inputs:
@@ -196,13 +196,13 @@ class NaturalGasCostModel(CostModelBaseClass):
             fuel_cost = 0.0
         else:
             # Convert natural gas price and heat rate to fuel cost
-            # Factor 1.36 converts thousand cubic feet to MMBtu
+            # Factor 1.036 converts thousand cubic feet to MMBtu
             fuel_cost = (
                 self.config.ng_price
                 * self.config.heat_rate
                 * delivered_electricity_MWh
                 * self.config.project_life
-                / 1.36
+                / 1.036
             )
 
         # Total operating expenditure includes all O&M and fuel costs

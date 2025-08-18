@@ -172,7 +172,7 @@ def test_ngcc_cost(ngcc_cost_params, subtests):
         * ngcc_cost_params["heat_rate"]
         * annual_generation_MWh
         * ngcc_cost_params["project_life"]
-        / 1.36
+        / 1.036
     )
     expected_opex = expected_fixed_om + expected_variable_om + expected_fuel_cost
 
@@ -229,7 +229,7 @@ def test_ngct_cost(ngct_cost_params, subtests):
         * ngct_cost_params["heat_rate"]
         * annual_generation_MWh
         * ngct_cost_params["project_life"]
-        / 1.36
+        / 1.036
     )
     expected_opex = expected_fixed_om + expected_variable_om + expected_fuel_cost
 
