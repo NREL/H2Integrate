@@ -15,10 +15,10 @@ from h2integrate.core.pose_optimization import PoseOptimization
 from h2integrate.core.profast_financial import ProFastComp
 
 
-# try:
-#     import pyxdsm
-# except ImportError:
-pyxdsm = None
+try:
+    import pyxdsm
+except ImportError:
+    pyxdsm = None
 
 
 class H2IntegrateModel:
