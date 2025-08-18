@@ -1,7 +1,7 @@
 import openmdao.api as om
 
 
-class PyomoDispatchBaseClass(om.ExplicitComponent):
+class PyomoRuleBaseClass(om.ExplicitComponent):
     def initialize(self):
         self.options.declare("driver_config", types=dict)
         self.options.declare("plant_config", types=dict)

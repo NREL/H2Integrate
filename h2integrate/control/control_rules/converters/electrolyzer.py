@@ -1,9 +1,9 @@
 import pyomo.environ as pyo
 
-from h2integrate.dispatch.dispatch_baseclass import PyomoDispatchBaseClass
+from h2integrate.control.control_rules.pyomo_rule_baseclass import PyomoRuleBaseClass
 
 
-class PyomoDispatchElectrolyzer(PyomoDispatchBaseClass):
+class PyomoDispatchElectrolyzer(PyomoRuleBaseClass):
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         discrete_outputs["_create_port"] = self._create_port
         discrete_outputs["_create_variables"] = self._create_variables
