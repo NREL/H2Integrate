@@ -9,7 +9,7 @@ from h2integrate.core.utilities import (
     attr_hopp_filter,
     check_plant_config_and_profast_params,
 )
-from h2integrate.core.dict_utils import update_defaults, rename_dict_keys
+from h2integrate.core.dict_utils import update_defaults
 from h2integrate.core.validators import gt_zero, contains, gte_zero, range_val
 from h2integrate.tools.profast_tools import run_profast, create_and_populate_profast
 
@@ -23,6 +23,7 @@ finance_to_pf_param_mapper = {
     "cash onhand months": "cash onhand",
     "topc": "TOPC",
     "installation time": "installation months",
+    "inflation rate": "general inflation rate",
 }
 
 
@@ -40,12 +41,12 @@ def check_param_format(param_dict):
 
 @define
 class BasicProFASTParameterConfig(BaseConfig):
-    """_summary_
+    """Parameters for ProFAST config file
 
     Attributes:
         plant_life (int): operating life of plant in years
         analysis_start_year (int): calendar year to start financial analysis
-        installation_months (int): time between `analysis_start_year` and operation start in months
+        installation_time (int): time between `analysis_start_year` and operation start in months
         discount_rate (float): leverage after tax nominal discount rate
         debt_equity_ratio (float): debt to equity ratio of initial financing.
         property_tax_and_insurance (float): property tax and insurance
@@ -53,7 +54,7 @@ class BasicProFASTParameterConfig(BaseConfig):
         capital_gains_tax_rate (float): tax rate fraction on capital gains
         sales_tax_rate (float): sales tax fraction
         debt_interest_rate (float): interest rate on debt
-        general_inflation_rate (float): TODO: check name
+        inflation_rate (float): escalation rate. Set to zero for a nominal analysis.
         cash_onhand_months (int): number of months with cash onhand.
         admin_expense (float): adminstrative expense as a fraction of sales
 
@@ -87,7 +88,7 @@ class BasicProFASTParameterConfig(BaseConfig):
 
     plant_life: int = field(converter=int, validator=gte_zero)
     analysis_start_year: int = field(converter=int, validator=range_val(1000, 4000))
-    installation_months: int = field(converter=int, validator=gte_zero)
+    installation_time: int = field(converter=int, validator=gte_zero)
 
     discount_rate: float = field(validator=range_val(0, 1))
     debt_equity_ratio: float = field(validator=gt_zero)
@@ -99,14 +100,14 @@ class BasicProFASTParameterConfig(BaseConfig):
     debt_interest_rate: float = field(validator=range_val(0, 1))
 
     # TODO: see if folks want this to be just 'inflation rate'
-    general_inflation_rate: float = field(validator=range_val(0, 1))
+    inflation_rate: float = field(validator=range_val(0, 1))
 
     cash_onhand_months: int = field(converter=int)  # int?
 
     admin_expense: float = field(validator=range_val(0, 1))
 
-    non_depr_assets: float = field(validator=gte_zero)
-    end_of_proj_sale_non_depr_assets: float = field(validator=gte_zero)
+    non_depr_assets: float = field(default=0.0, validator=gte_zero)
+    end_of_proj_sale_non_depr_assets: float = field(default=0.0, validator=gte_zero)
 
     tax_loss_carry_forward_years: int = field(default=0, validator=gte_zero)
     tax_losses_monetized: bool = field(default=True)
@@ -124,7 +125,7 @@ class BasicProFASTParameterConfig(BaseConfig):
         default={
             "name": None,
             "unit": None,
-            "iniital price": 100,
+            "inital price": 100,
             "escalation": 0.0,
         }
     )
@@ -142,13 +143,13 @@ class BasicProFASTParameterConfig(BaseConfig):
             "unit price": 0.0,
             "decay": 0.0,
             "sunset years": 0,
-            "taxable": True,
+            "support utilization": 0.0,
         }
     )
 
     annual_operating_incentive: dict = field(
         default={
-            "unit price": 0.0,
+            "value": 0.0,
             "decay": 0.0,
             "sunset years": 0,
             "taxable": True,
@@ -179,18 +180,23 @@ class BasicProFASTParameterConfig(BaseConfig):
         pf_params = {k.replace("_", " "): v for k, v in pf_params_init.items()}
 
         # update all instances of "escalation" with the general inflation rate
-        pf_params = update_defaults(pf_params, "escalation", self.general_inflation_rate)
+        pf_params = update_defaults(pf_params, "escalation", self.inflation_rate)
 
         # rename keys
-        for keyname in pf_params.keys():
+        params = {}
+        for keyname, vals in pf_params.copy().items():
             if keyname in finance_to_pf_param_mapper:
-                pf_params = rename_dict_keys(
-                    pf_params, keyname, finance_to_pf_param_mapper[keyname]
-                )
-        return pf_params
+                params[finance_to_pf_param_mapper[keyname]] = vals
+            else:
+                params[keyname] = vals
+                # params = rename_dict_keys(
+                #     params, keyname, finance_to_pf_param_mapper[keyname]
+                # )
+
+        return params
 
     def create_years_of_operation(self):
-        operation_start_year = self.analysis_start_year + (self.installation_months / 12)
+        operation_start_year = self.analysis_start_year + (self.installation_time / 12)
         years_of_operation = np.arange(
             int(operation_start_year), int(operation_start_year + self.plant_life), 1
         )
@@ -201,13 +207,12 @@ class BasicProFASTParameterConfig(BaseConfig):
 @define
 class ProFASTDefaultCapitalItem(BaseConfig):
     depr_period: int = field(converter=int, validator=contains([3, 5, 7, 10, 15, 20]))
-    depr_method: str = field(converter=str.strip, validator=contains(["MACRS", "Straight line"]))
+    depr_type: str = field(converter=str.strip, validator=contains(["MACRS", "Straight line"]))
     refurb: int | float | list[float] = field(default=[0.0])
     replacement_cost_percent: int | float = field(default=0.0, validator=range_val(0, 1))
-    replacement_period_years: int | float = field(default=0.0)
 
     def create_dict(self):
-        non_profast_attrs = ["replacement_cost_percent", "replacement_period_years"]
+        non_profast_attrs = ["replacement_cost_percent"]
         full_dict = self.as_dict()
         d = {k: v for k, v in full_dict.items() if k not in non_profast_attrs}
         return d
@@ -221,36 +226,6 @@ class ProFASTDefaultFixedCost(BaseConfig):
 
     def create_dict(self):
         return self.as_dict()
-
-
-@define
-class ProFASTDefaultFeedstockCost(BaseConfig):
-    escalation: float | int = field()
-    unit: str = field(default="$/year")
-    usage: float | int = field(default=1.0)
-    feedstock_region: str = field(
-        default="US Average",
-        validator=contains(
-            [
-                "East North Central",
-                "East South Central",
-                "Middle Atlantic",
-                "Mountain",
-                "New England",
-                "Pacific",
-                "South Atlantic",
-                "West North Central",
-                "West South Central",
-                "US Average",
-            ]
-        ),
-    )
-
-    def create_dict(self):
-        non_profast_attrs = ["feedstock_region"]
-        full_dict = self.as_dict()
-        d = {k: v for k, v in full_dict.items() if k not in non_profast_attrs}
-        return d
 
 
 @define
@@ -300,6 +275,18 @@ class ProFastComp(om.ExplicitComponent):
         plant_config = self.options["plant_config"]
 
         fin_params = plant_config["finance_parameters"]["profast_inputs"]["params"]
+        # if profast params were already in profast format
+        if any(k in list(finance_to_pf_param_mapper.values()) for k, v in fin_params.items()):
+            pf_param_to_finance_mapper = {v: k for k, v in finance_to_pf_param_mapper.items()}
+            pf_params = {}
+            for k, v in fin_params.items():
+                if k.replace("_", " ") in pf_param_to_finance_mapper:
+                    pf_params[pf_param_to_finance_mapper[k]] = v
+                else:
+                    pf_params[k] = v
+            fin_params = dict(pf_params.items())
+
+        fin_params = check_param_format(fin_params)
 
         check_plant_config_and_profast_params(
             plant_config["plant"], fin_params, "plant_life", "operating_life"
@@ -317,15 +304,34 @@ class ProFastComp(om.ExplicitComponent):
             "analysis_start_year",
         )
 
+        if "general_inflation_rate" in fin_params:
+            check_plant_config_and_profast_params(
+                plant_config["finance_parameters"],
+                fin_params,
+                "inflation_rate",
+                "general_inflation_rate",
+            )
+
+        if "discount_rate" in plant_config["finance_parameters"]:
+            check_plant_config_and_profast_params(
+                plant_config["finance_parameters"],
+                fin_params,
+                "discount_rate",
+                "leverage_after_tax_nominal_discount_rate",
+            )
+            fin_params.update(
+                {"discount_rate": plant_config["finance_parameters"]["discount_rate"]}
+            )
+
         fin_params.update(
             {
                 "plant_life": plant_config["plant"]["plant_life"],
                 "installation_time": plant_config["finance_parameters"]["installation_time"],
                 "analysis_start_year": plant_config["finance_parameters"]["analysis_start_year"],
+                "inflation_rate": plant_config["finance_parameters"]["inflation_rate"],
             }
         )
 
-        fin_params = check_param_format(fin_params)
         self.params = BasicProFASTParameterConfig.from_dict(fin_params)
 
         capital_item_params = plant_config["finance_parameters"]["profast_inputs"].get(
@@ -336,55 +342,80 @@ class ProFastComp(om.ExplicitComponent):
         fixed_cost_params = plant_config["finance_parameters"]["profast_inputs"].get(
             "fixed_costs", {}
         )
-        fixed_cost_params.setdefault("escalation", self.params.general_inflation_rate)
+        fixed_cost_params.setdefault("escalation", self.params.inflation_rate)
         self.fixed_cost_settings = ProFASTDefaultFixedCost.from_dict(fixed_cost_params)
 
         # incentives - unused for now
-        incentive_params = plant_config["finance_parameters"]["profast_inputs"].get(
-            "incentives", {}
-        )
-        incentive_params.setdefault("decay", -1 * self.params.general_inflation_rate)
-        self.incentive_params_settings = ProFASTDefaultIncentive.from_dict(incentive_params)
+        # incentive_params = plant_config["finance_parameters"]["profast_inputs"].get(
+        #     "incentives", {}
+        # )
+        # incentive_params.setdefault("decay", -1 * self.params.inflation_rate)
+        # self.incentive_params_settings = ProFASTDefaultIncentive.from_dict(incentive_params)
 
     def compute(self, inputs, outputs):
         mass_commodities = ["hydrogen", "ammonia", "co2", "nitrogen"]
 
         profast_params = self.params.as_dict()
-        profast_params["commodity"].update({"name": self.options["commodity"]})
+        profast_params["commodity"].update({"name": self.options["commodity_type"]})
         profast_params["commodity"].update(
             {"unit": "kg" if self.options["commodity_type"] in mass_commodities else "kWh"}
         )
-        profast_params["capacity"] = inputs["capacity_todo"]
-        profast_params["long term utilization"] = inputs["utilization_todo"]
 
-        pf_params = self.params.as_dict()
-        pf_dict = {"params": pf_params, "capital_items": {}, "fixed_costs": {}}
+        if self.options["commodity_type"] != "co2":
+            capacity = float(inputs[f"total_{self.options['commodity_type']}_produced"][0]) / 365.0
+        else:
+            capacity = float(inputs["co2_capture_kgpy"]) / 365.0
+        profast_params["capacity"] = capacity
+        profast_params["long term utilization"] = 1
+
+        pf_dict = {"params": profast_params, "capital_items": {}, "fixed_costs": {}}
 
         capital_items = {}
         fixed_costs = {}
+
+        # create default capital item and fixed cost entries
         capital_item_defaults = self.capital_item_settings.create_dict()
         fixed_cost_defaults = self.fixed_cost_settings.create_dict()
         for tech in self.tech_config:
+            # get tech-specific capital item parameters
             tech_capex_info = (
                 self.tech_config[tech]["model_inputs"]
                 .get("financial_parameters", {})
                 .get("capital_items", {})
             )
             tech_capex_info.update({"cost": float(inputs[f"capex_adjusted_{tech}"][0])})
-            for cap_item_key, cap_item_val in capital_item_defaults:
+
+            if "replacement_cost_percent" in tech_capex_info:
+                refurb_schedule = np.zeros(self.params.plant_life)
+
+                if "refurbishment_period_years" in tech_capex_info:
+                    refurb_period = tech_capex_info["refurbishment_period_years"]
+                else:
+                    # TODO: make below tech specific
+                    refurb_period = round(float(inputs["time_until_replacement"][0]) / (24 * 365))
+                refurb_schedule[refurb_period : self.params.plant_life : refurb_period] = (
+                    tech_capex_info["replacement_cost_percent"]
+                )
+                tech_capex_info["refurb"] = list(refurb_schedule)
+
+            for cap_item_key, cap_item_val in capital_item_defaults.items():
                 tech_capex_info.setdefault(cap_item_key, cap_item_val)
             capital_items[tech] = tech_capex_info
 
+            # get tech-specific fixed cost parameters
             tech_opex_info = (
                 self.tech_config[tech]["model_inputs"]
                 .get("financial_parameters", {})
                 .get("fixed_costs", {})
             )
             tech_opex_info.update({"cost": float(inputs[f"opex_adjusted_{tech}"][0])})
-            for fix_cost_key, fix_cost_val in fixed_cost_defaults:
+
+            for fix_cost_key, fix_cost_val in fixed_cost_defaults.items():
                 tech_opex_info.setdefault(fix_cost_key, fix_cost_val)
             fixed_costs[tech] = tech_opex_info
 
+        pf_dict["capital_items"] = capital_items
+        pf_dict["fixed_costs"] = fixed_costs
         pf = create_and_populate_profast(pf_dict)
         sol, summary, price_breakdown = run_profast(pf)
 

@@ -58,7 +58,6 @@ def create_and_populate_profast(pf_config):
     config_keys = list(pf_config.keys())
     if "params" in config_keys:
         params = pf_config["params"]
-        params["general inflation rate"]
         for i in params:
             pf.set_params(i, params[i])
 

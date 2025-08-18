@@ -5,19 +5,20 @@ import yaml
 import numpy as np
 import openmdao.api as om
 
-from h2integrate.core.finances import ProFastComp, AdjustedCapexOpexComp
+from h2integrate.core.finances import AdjustedCapexOpexComp
 from h2integrate.core.utilities import create_xdsm_from_config
 from h2integrate.core.feedstocks import FeedstockComponent
 from h2integrate.core.resource_summer import ElectricitySumComp
 from h2integrate.core.supported_models import supported_models, electricity_producing_techs
 from h2integrate.core.inputs.validation import load_tech_yaml, load_plant_yaml, load_driver_yaml
 from h2integrate.core.pose_optimization import PoseOptimization
+from h2integrate.core.profast_financial import ProFastComp
 
 
-try:
-    import pyxdsm
-except ImportError:
-    pyxdsm = None
+# try:
+#     import pyxdsm
+# except ImportError:
+pyxdsm = None
 
 
 class H2IntegrateModel:
@@ -378,13 +379,19 @@ class H2IntegrateModel:
                     tech: config for tech, config in tech_configs.items() if tech in included_techs
                 }
 
-                profast_comp = ProFastComp(
-                    driver_config=self.driver_config,
-                    tech_config=filtered_tech_configs,
-                    plant_config=self.plant_config,
-                    commodity_type=commodity_type,
-                )
-                financial_group.add_subsystem(f"profast_comp_{idx}", profast_comp, promotes=["*"])
+                if (
+                    self.plant_config["finance_parameters"].get("finance_model", "ProFastComp")
+                    == "ProFastComp"
+                ):
+                    profast_comp = ProFastComp(
+                        driver_config=self.driver_config,
+                        tech_config=filtered_tech_configs,
+                        plant_config=self.plant_config,
+                        commodity_type=commodity_type,
+                    )
+                    financial_group.add_subsystem(
+                        f"profast_comp_{idx}", profast_comp, promotes=["*"]
+                    )
 
             self.plant.add_subsystem(f"financials_group_{group_id}", financial_group)
 
