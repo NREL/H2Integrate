@@ -107,6 +107,7 @@ class SMRCostConfig(MethanolCostConfig):
     meoh_syn_cat_price: float = field()
     meoh_atr_cat_price: float = field()
     ng_price: float = field()
+    cost_year: int = field(converter=int)
 
 
 class SMRMethanolPlantCostModel(MethanolCostBaseClass):
@@ -127,6 +128,7 @@ class SMRMethanolPlantCostModel(MethanolCostBaseClass):
         meoh_atr_cat_cost: annual cost of methanol ATR catalyst (USD/year)
         ng_cost: annual cost of NG (USD/year)
         elec_revenue: annual revenue from electricity sales (USD/year)
+        cost_year: dollar year for output costs
     """
 
     def setup(self):
@@ -151,7 +153,7 @@ class SMRMethanolPlantCostModel(MethanolCostBaseClass):
         self.add_output("ng_cost", units="USD/year")
         self.add_output("elec_revenue", units="USD/year")
 
-    def compute(self, inputs, outputs):
+    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         toc_usd = inputs["plant_capacity_kgpy"] * inputs["toc_kg_y"]
         foc_usd_y = inputs["plant_capacity_kgpy"] * inputs["foc_kg_y2"]
         voc_usd_y = np.sum(inputs["methanol_out"]) * inputs["voc_kg"]

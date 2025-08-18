@@ -11,6 +11,9 @@ technologies:
     financial_model:
       group: default
     electrolyzer_rating: 720. # MW
+    model_inputs:
+      cost_parameters:
+        cost_year: 2019
   electrolyzer:
     performance_model:
       model: "eco_pem_electrolyzer_performance"
@@ -35,7 +38,6 @@ technologies:
         uptime_hours_until_eol: 80000. #number of 'on' hours until electrolyzer reaches eol
         include_degradation_penalty: True #include degradation
         turndown_ratio: 0.1 #turndown_ratio = minimum_cluster_power/cluster_rating_MW
-
       financial_parameters:
         replacement_cost_percent: 0.15 # percent of capex - H2A default case
   h2_storage:
