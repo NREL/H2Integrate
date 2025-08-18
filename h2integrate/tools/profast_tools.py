@@ -1,48 +1,5 @@
 import numpy as np
 import ProFAST
-import numpy_financial as npf
-
-
-def adjust_dollar_year(init_cost, init_dollar_year, adj_cost_year, costing_general_inflation):
-    periods = adj_cost_year - init_dollar_year
-    adj_cost = -npf.fv(costing_general_inflation, periods, 0.0, init_cost)
-    return adj_cost
-
-
-def update_defaults(orig_dict, new_key, new_val):
-    for key, val in orig_dict.items():
-        if isinstance(val, dict):
-            # go deeper
-            tmp = update_defaults(orig_dict.get(key, {}), new_key, new_val)
-            orig_dict[key] = tmp
-        else:
-            if isinstance(key, list):
-                for i, k in enumerate(key):
-                    if k == new_key:
-                        orig_dict[k] = new_val
-                    else:
-                        orig_dict[k] = orig_dict.get(key, []) + val[i]
-            elif isinstance(key, str):
-                if key == new_key:
-                    orig_dict[key] = new_val
-    return orig_dict
-
-
-def update_params_based_on_defaults(pf_config, update_config):
-    # TODO: update this
-    if update_config["escalation"]["replace all"]:
-        escalation_val = update_config["escalation"]["escalation"]
-        pf_config = update_defaults(pf_config, "escalation", escalation_val)
-    if update_config["depreciation type"]["replace all"]:
-        depr_type = update_config["depreciation type"]["depr type"]
-        pf_config = update_defaults(pf_config, "depr_type", depr_type)
-    if update_config["depreciation period"]["replace all"]:
-        depr_prd = update_config["depreciation period"]["period"]
-        pf_config = update_defaults(pf_config, "depr_period", depr_prd)
-    if update_config["refurbishment period"]["replace all"]:
-        refurb_prd = update_config["refurbishment period"]["refurb"]
-        pf_config = update_defaults(pf_config, "refurb", refurb_prd)
-    return pf_config
 
 
 def create_and_populate_profast(pf_config):
