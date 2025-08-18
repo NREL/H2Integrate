@@ -62,6 +62,7 @@ class WindPlantCostModelConfig(CostModelBaseConfig):
     num_turbines: int = field()
     turbine_rating_kw: float = field()
     cost_per_kw: float = field()
+    cost_year: float = field()
 
 
 class WindPlantCostModel(CostModelBaseClass):
@@ -78,40 +79,6 @@ class WindPlantCostModel(CostModelBaseClass):
         super().setup()
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
-        num_turbines = self.config.num_turbines
-        turbine_rating_kw = self.config.turbine_rating_kw
-        cost_per_kw = self.config.cost_per_kw
-
-        # Calculate CapEx
-        total_capacity_kw = num_turbines * turbine_rating_kw
-        outputs["CapEx"] = total_capacity_kw * cost_per_kw
-        outputs["OpEx"] = 0.03 * total_capacity_kw * cost_per_kw  # placeholder scalar value
-
-
-@define
-class WindPlantDispatchModelConfig(BaseConfig):
-    num_turbines: int = field()
-    turbine_rating_kw: float = field()
-    cost_per_kw: float = field()
-
-
-class WindPlantDispatchModel(WindCostBaseClass):
-    """
-    An OpenMDAO component that calculates the capital expenditure (CapEx) for a wind plant.
-
-    Just a placeholder for now, but can be extended with more detailed cost models.
-    """
-
-    def initialize(self):
-        super().initialize()
-
-    def setup(self):
-        super().setup()
-        self.config = WindPlantCostModelConfig.from_dict(
-            merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost")
-        )
-
-    def compute(self, inputs, outputs):
         num_turbines = self.config.num_turbines
         turbine_rating_kw = self.config.turbine_rating_kw
         cost_per_kw = self.config.cost_per_kw
