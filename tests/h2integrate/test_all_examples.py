@@ -24,17 +24,17 @@ def test_steel_example(subtests):
     # Subtests for checking specific values
     with subtests.test("Check LCOH"):
         assert (
-            pytest.approx(model.prob.get_val("financials_group_default.LCOH"), rel=1e-3)
+            pytest.approx(model.prob.get_val("financials_group_default.LCOH")[0], rel=1e-3)
             == 7.47944016
         )
 
     with subtests.test("Check LCOS"):
-        assert pytest.approx(model.prob.get_val("steel.LCOS"), rel=1e-3) == 1213.87728644
+        assert pytest.approx(model.prob.get_val("steel.LCOS")[0], rel=1e-3) == 1213.87728644
 
     with subtests.test("Check total adjusted CapEx"):
         assert (
             pytest.approx(
-                model.prob.get_val("financials_group_default.total_capex_adjusted"), rel=1e-3
+                model.prob.get_val("financials_group_default.total_capex_adjusted")[0], rel=1e-3
             )
             == 5.10869916e09
         )
@@ -42,7 +42,7 @@ def test_steel_example(subtests):
     with subtests.test("Check total adjusted OpEx"):
         assert (
             pytest.approx(
-                model.prob.get_val("financials_group_default.total_opex_adjusted"), rel=1e-3
+                model.prob.get_val("financials_group_default.total_opex_adjusted")[0], rel=1e-3
             )
             == 96349901.77625626
         )
@@ -100,30 +100,30 @@ def test_simple_ammonia_example(subtests):
     with subtests.test("Check total adjusted CapEx"):
         assert (
             pytest.approx(
-                model.prob.get_val("financials_group_default.total_capex_adjusted"), rel=1e-3
+                model.prob.get_val("financials_group_default.total_capex_adjusted")[0], rel=1e-3
             )
-            == 2.76180599e09
+            == 2678403968.6
         )
 
     with subtests.test("Check total adjusted OpEx"):
         assert (
             pytest.approx(
-                model.prob.get_val("financials_group_default.total_opex_adjusted"), rel=1e-3
+                model.prob.get_val("financials_group_default.total_opex_adjusted")[0], rel=1e-3
             )
-            == 66599592.71371833
+            == 64338137.8
         )
 
     # Currently underestimated compared to the Reference Design Doc
     with subtests.test("Check LCOH"):
         assert (
-            pytest.approx(model.prob.get_val("financials_group_default.LCOH"), rel=1e-3)
-            == 4.39187968
+            pytest.approx(model.prob.get_val("financials_group_default.LCOH")[0], rel=1e-3)
+            == 4.233055
         )
     # Currently underestimated compared to the Reference Design Doc
     with subtests.test("Check LCOA"):
         assert (
-            pytest.approx(model.prob.get_val("financials_group_default.LCOA"), rel=1e-3)
-            == 1.06313924
+            pytest.approx(model.prob.get_val("financials_group_default.LCOA")[0], rel=1e-3)
+            == 1.02470046
         )
 
 
@@ -173,30 +173,64 @@ def test_ammonia_synloop_example(subtests):
     with subtests.test("Check total adjusted CapEx"):
         assert (
             pytest.approx(
-                model.prob.get_val("financials_group_default.total_capex_adjusted"), rel=1e-6
+                model.prob.get_val("financials_group_default.total_capex_adjusted")[0], rel=1e-6
             )
-            == 3.83856529e09
+            == 3.7289e09
         )
 
     with subtests.test("Check total adjusted OpEx"):
         assert (
             pytest.approx(
-                model.prob.get_val("financials_group_default.total_opex_adjusted"), rel=1e-6
+                model.prob.get_val("financials_group_default.total_opex_adjusted")[0], rel=1e-6
             )
-            == 81093533.8566508
+            == 78480154.4
         )
 
     with subtests.test("Check LCOH"):
         assert (
-            pytest.approx(model.prob.get_val("financials_group_default.LCOH"), rel=1e-6)
-            == 5.85374921
+            pytest.approx(model.prob.get_val("financials_group_default.LCOH")[0], rel=1e-6)
+            == 5.659321302703965
         )
 
     with subtests.test("Check LCOA"):
         assert (
-            pytest.approx(model.prob.get_val("financials_group_default.LCOA"), rel=1e-6)
-            == 1.10368921
+            pytest.approx(model.prob.get_val("financials_group_default.LCOA")[0], rel=1e-6)
+            == 1.067030996544544
         )
+
+
+def test_smr_methanol_example(subtests):
+    # Change the current working directory to the SMR example's directory
+    os.chdir(examples_dir / "03_methanol" / "smr")
+
+    # Create a H2Integrate model
+    model = H2IntegrateModel(Path.cwd() / "03_smr_methanol.yaml")
+
+    # Run the model
+    model.run()
+
+    model.post_process()
+
+    # Check levelized cost of methanol (LCOM)
+    with subtests.test("Check SMR LCOM"):
+        assert pytest.approx(model.prob.get_val("methanol.LCOM"), rel=1e-6) == 0.22116813
+
+
+def test_co2h_methanol_example(subtests):
+    # Change the current working directory to the CO2 Hydrogenation example's directory
+    os.chdir(examples_dir / "03_methanol" / "co2_hydrogenation")
+
+    # Create a H2Integrate model
+    model = H2IntegrateModel(Path.cwd() / "03_co2h_methanol.yaml")
+
+    # Run the model
+    model.run()
+
+    model.post_process()
+
+    # Check levelized cost of methanol (LCOM)
+    with subtests.test("Check CO2 Hydrogenation LCOM"):
+        assert pytest.approx(model.prob.get_val("methanol.LCOM"), rel=1e-6) == 1.38341179
 
 
 def test_wind_h2_opt_example(subtests):
@@ -323,13 +357,13 @@ def test_wind_wave_doc_example(subtests):
     # Subtests for checking specific values
     with subtests.test("Check LCOC"):
         assert (
-            pytest.approx(model.prob.get_val("financials_group_default.LCOC"), rel=1e-3)
+            pytest.approx(model.prob.get_val("financials_group_default.LCOC")[0], rel=1e-3)
             == 2.26955589
         )
 
     with subtests.test("Check LCOE"):
         assert (
-            pytest.approx(model.prob.get_val("financials_group_default.LCOE"), rel=1e-3)
+            pytest.approx(model.prob.get_val("financials_group_default.LCOE")[0], rel=1e-3)
             == 1.05281478
         )
 

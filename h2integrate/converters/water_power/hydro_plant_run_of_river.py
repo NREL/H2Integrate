@@ -1,11 +1,9 @@
 import numpy as np
 from attrs import field, define
 
-from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
-from h2integrate.converters.water_power.hydro_plant_baseclass import (
-    HydroCostBaseClass,
-    HydroPerformanceBaseClass,
-)
+from h2integrate.core.utilities import BaseConfig, CostModelBaseConfig, merge_shared_inputs
+from h2integrate.core.model_baseclasses import CostModelBaseClass
+from h2integrate.converters.water_power.hydro_plant_baseclass import HydroPerformanceBaseClass
 
 
 @define
@@ -65,7 +63,7 @@ class RunOfRiverHydroPerformanceModel(HydroPerformanceBaseClass):
 
 
 @define
-class RunOfRiverHydroCostConfig(BaseConfig):
+class RunOfRiverHydroCostConfig(CostModelBaseConfig):
     """Configuration class for the RunOfRiverHydroCostComponent.
     This class defines the parameters for the run-of-river hydropower plant cost model.
 
@@ -74,6 +72,7 @@ class RunOfRiverHydroCostConfig(BaseConfig):
         capital_cost_usd_per_kw (float): Capital cost of the run-of-river plant in USD/kW.
         operational_cost_usd_per_kw_year (float): Operational cost as a percentage of total
             capacity, expressed in USD/kW/year.
+        cost_year (int): dollar-year for input costs
     """
 
     plant_capacity_mw: float = field()
@@ -81,7 +80,7 @@ class RunOfRiverHydroCostConfig(BaseConfig):
     operational_cost_usd_per_kw_year: float = field()
 
 
-class RunOfRiverHydroCostModel(HydroCostBaseClass):
+class RunOfRiverHydroCostModel(CostModelBaseClass):
     """
     An OpenMDAO component that calculates the capital expenditure (CapEx) for a run-of-river
         hydropower plant.
@@ -89,16 +88,14 @@ class RunOfRiverHydroCostModel(HydroCostBaseClass):
     Just a placeholder for now, but can be extended with more detailed cost models.
     """
 
-    def initialize(self):
-        super().initialize()
-
     def setup(self):
-        super().setup()
         self.config = RunOfRiverHydroCostConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost")
         )
 
-    def compute(self, inputs, outputs):
+        super().setup()
+
+    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         capex_kw = self.config.capital_cost_usd_per_kw
         total_capacity_kw = self.config.plant_capacity_mw * 1e3
 

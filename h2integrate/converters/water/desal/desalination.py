@@ -1,7 +1,7 @@
 from attrs import field, define
 
-from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
-from h2integrate.core.validators import gt_zero, contains
+from h2integrate.core.utilities import BaseConfig, CostModelBaseConfig, merge_shared_inputs
+from h2integrate.core.validators import gt_zero, contains, must_equal
 from h2integrate.converters.water.desal.desalination_baseclass import (
     DesalinationCostBaseClass,
     DesalinationPerformanceBaseClass,
@@ -101,7 +101,7 @@ class ReverseOsmosisPerformanceModel(DesalinationPerformanceBaseClass):
 
 
 @define
-class ReverseOsmosisCostModelConfig(BaseConfig):
+class ReverseOsmosisCostModelConfig(CostModelBaseConfig):
     """Configuration class for the ReverseOsmosisDesalinationCostModel.
 
     Args:
@@ -113,6 +113,7 @@ class ReverseOsmosisCostModelConfig(BaseConfig):
 
     freshwater_kg_per_hour: float = field(validator=gt_zero)
     freshwater_density: float = field(validator=gt_zero)
+    cost_year: int = field(default=2013, converter=int, validator=must_equal(2013))
 
 
 class ReverseOsmosisCostModel(DesalinationCostBaseClass):
@@ -121,13 +122,18 @@ class ReverseOsmosisCostModel(DesalinationCostBaseClass):
     """
 
     def setup(self):
-        super().setup()
         self.config = ReverseOsmosisCostModelConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost")
         )
+        super().setup()
 
-    def compute(self, inputs, outputs):
-        """Cost reference: https://www.nrel.gov/docs/fy16osti/66073.pdf"""
+    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
+        """Cost reference: Table 3 of https://www.nrel.gov/docs/fy16osti/66073.pdf.
+        CapEx includes 2.55% financing factor, numbers based on INL report
+        https://doi.org/10.2172/1236837 (in Table 10) which came from this report
+        https://www-pub.iaea.org/MTCD/Publications/PDF/te_1561_web.pdf
+        (Table 6 says 2006 is the currency reference year)
+        """
         desal_capex = 32894 * (self.config.freshwater_kg_per_hour / 3600)  # [USD]
 
         desal_opex = 4841 * (self.config.freshwater_kg_per_hour / 3600)  # [USD/yr]

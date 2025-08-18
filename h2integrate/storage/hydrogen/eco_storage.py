@@ -1,8 +1,9 @@
 import numpy as np
-import openmdao.api as om
 from attrs import field, define
 
 from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
+from h2integrate.core.validators import contains
+from h2integrate.core.model_baseclasses import CostModelBaseClass
 from h2integrate.simulation.technologies.hydrogen.h2_storage.mch.mch_cost import MCHStorage
 
 
@@ -21,21 +22,32 @@ class H2StorageModelConfig(BaseConfig):
     rating: float = field(default=640)
     size_capacity_from_demand: dict = field(default={"flag": True})
     capacity_from_max_on_turbine_storage: bool = field(default=False)
-    type: str = field(default="salt_cavern")
+    type: str = field(
+        default="salt_cavern",
+        validator=contains(["salt_cavern", "lined_rock_cavern", "none", "mch"]),
+    )
     days: int = field(default=0)
+    cost_year: int = field(default=2018, converter=int, validator=contains([2018, 2021]))
+
+    def __attrs_post_init__(self):
+        if self.type == "mch":
+            self.cost_year = 2024
+        else:
+            self.cost_year = 2018
 
 
-class H2Storage(om.ExplicitComponent):
+class H2Storage(CostModelBaseClass):
     def initialize(self):
-        self.options.declare("driver_config", types=dict)
-        self.options.declare("tech_config", types=dict)
-        self.options.declare("plant_config", types=dict)
+        super().initialize()
         self.options.declare("verbose", types=bool, default=False)
 
     def setup(self):
         self.config = H2StorageModelConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance")
         )
+
+        super().setup()
+
         self.add_input(
             "hydrogen_in",
             val=0.0,
@@ -51,11 +63,7 @@ class H2Storage(om.ExplicitComponent):
         )
         self.add_input("efficiency", val=0.0, desc="Average efficiency of the electrolyzer")
 
-        self.add_output("CapEx", val=0.0, units="USD", desc="Capital expenditure")
-        self.add_output("OpEx", val=0.0, units="USD/year", desc="Operational expenditure")
-
-    def compute(self, inputs, outputs):
-        self.options["tech_config"]
+    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         ########### initialize output dictionary ###########
         h2_storage_results = {}
 
@@ -103,6 +111,7 @@ class H2Storage(om.ExplicitComponent):
             h2_storage_results["storage_capex"] = 0.0
             h2_storage_results["storage_opex"] = 0.0
             h2_storage_results["storage_energy"] = 0.0
+            h2_storage_results["cost_year"] = 2018
 
             h2_storage = None
 
@@ -126,6 +135,7 @@ class H2Storage(om.ExplicitComponent):
             ]
             h2_storage_results["storage_opex"] = h2_storage.output_dict["salt_cavern_storage_opex"]
             h2_storage_results["storage_energy"] = 0.0
+            h2_storage_results["cost_year"] = 2018
 
         elif self.config.type == "lined_rock_cavern":
             # initialize dictionary for salt cavern storage parameters
@@ -149,6 +159,7 @@ class H2Storage(om.ExplicitComponent):
                 "lined_rock_cavern_storage_opex"
             ]
             h2_storage_results["storage_energy"] = 0.0
+            h2_storage_results["cost_year"] = 2018  # TODO: check
 
         elif self.config.type == "mch":
             if not self.config.size_capacity_from_demand["flag"]:
@@ -177,6 +188,7 @@ class H2Storage(om.ExplicitComponent):
                 h2_storage_costs["mch_variable_om"] + h2_storage_costs["mch_opex"]
             )
             h2_storage_results["storage_energy"] = 0.0
+            h2_storage_results["cost_year"] = 2024
 
         else:
             msg = (
