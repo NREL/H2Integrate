@@ -11,6 +11,9 @@ technologies:
     financial_model:
       group: "1"
     electrolyzer_rating: 156. # MW
+    model_inputs:
+      cost_parameters:
+        cost_year: 2019
   electrolyzer:
     performance_model:
       model: "eco_pem_electrolyzer_performance"
@@ -65,6 +68,7 @@ technologies:
         meoh_syn_cat_price: 615.274273
         ng_price: 4.0
         co2_price: 0.0549007
+        cost_year: 2020
       finance_parameters:
         # Sources in NETL-PUB-22580: Exhibit 3-5 and Exhibit 3-7
         tasc_toc_multiplier: 1.093

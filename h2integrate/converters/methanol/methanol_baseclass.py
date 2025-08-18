@@ -3,6 +3,7 @@ from attrs import field, define
 
 from h2integrate.core.utilities import BaseConfig
 from h2integrate.core.validators import contains
+from h2integrate.core.model_baseclasses import CostModelBaseClass
 
 
 @define
@@ -55,9 +56,10 @@ class MethanolCostConfig(BaseConfig):
     toc_kg_y: float = field()
     foc_kg_y2: float = field()
     voc_kg: float = field()
+    cost_year: int = field(converter=int)
 
 
-class MethanolCostBaseClass(om.ExplicitComponent):
+class MethanolCostBaseClass(CostModelBaseClass):
     """
     An OpenMDAO component for modeling the cost of a methanol plant.
     Includes CapEx, OpEx (fixed and variable), feedstock costs, and co-product credits.
@@ -82,20 +84,14 @@ class MethanolCostBaseClass(om.ExplicitComponent):
         - Variable_OpEx: all methanol plant variable operating expenses (vary with production rate)
     """
 
-    def initialize(self):
-        self.options.declare("driver_config", types=dict)
-        self.options.declare("plant_config", types=dict)
-        self.options.declare("tech_config", types=dict)
-
     def setup(self):
+        super().setup()
         self.add_input("toc_kg_y", units="USD/kg/year", val=self.config.toc_kg_y)
         self.add_input("foc_kg_y2", units="USD/kg/year**2", val=self.config.foc_kg_y2)
         self.add_input("voc_kg", units="USD/kg", val=self.config.voc_kg)
         self.add_input("plant_capacity_kgpy", units="kg/year", val=self.config.plant_capacity_kgpy)
         self.add_input("methanol_out", shape=8760, units="kg/h")
 
-        self.add_output("CapEx", units="USD")
-        self.add_output("OpEx", units="USD/year")
         self.add_output("Fixed_OpEx", units="USD/year")
         self.add_output("Variable_OpEx", units="USD/year")
 

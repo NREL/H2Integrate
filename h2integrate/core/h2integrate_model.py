@@ -594,6 +594,10 @@ class H2IntegrateModel:
                         self.plant.connect(
                             f"{tech_name}.OpEx", f"financials_group_{group_id}.opex_{tech_name}"
                         )
+                        self.plant.connect(
+                            f"{tech_name}.cost_year",
+                            f"financials_group_{group_id}.cost_year_{tech_name}",
+                        )
 
                         if "electrolyzer" in tech_name:
                             self.plant.connect(
