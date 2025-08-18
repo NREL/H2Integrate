@@ -183,6 +183,8 @@ Some cost models are derived from literature and output costs (CapEx and OpEx) i
 | `h2_storage` for geologic storage or buried pipe | 2018 |
 | `simple_ammonia_cost`   |  2022    |
 | `direct_ocean_capture_cost` | 2023 |
+| `ocean_alkalinity_enhancement_cost` | 2024 |
+| `ocean_alkalinity_enhancement_cost_financial` | 2024 |
 | `steel_cost`            |  2022    |
 | `reverse_osmosis_desalination_cost` | 2013 |
 | `synloop_ammonia_cost`  |  N/A (adjusts costs to `target_dollar_year` within cost model)  |
