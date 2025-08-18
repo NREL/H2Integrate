@@ -201,7 +201,7 @@ def test_ammonia_synloop_example(subtests):
 
 def test_smr_methanol_example(subtests):
     # Change the current working directory to the SMR example's directory
-    os.chdir(examples_dir / "03_methanol" / "smr")
+    os.chdir(EXAMPLE_DIR / "03_methanol" / "smr")
 
     # Create a H2Integrate model
     model = H2IntegrateModel(Path.cwd() / "03_smr_methanol.yaml")
@@ -218,7 +218,7 @@ def test_smr_methanol_example(subtests):
 
 def test_co2h_methanol_example(subtests):
     # Change the current working directory to the CO2 Hydrogenation example's directory
-    os.chdir(examples_dir / "03_methanol" / "co2_hydrogenation")
+    os.chdir(EXAMPLE_DIR / "03_methanol" / "co2_hydrogenation")
 
     # Create a H2Integrate model
     model = H2IntegrateModel(Path.cwd() / "03_co2h_methanol.yaml")
