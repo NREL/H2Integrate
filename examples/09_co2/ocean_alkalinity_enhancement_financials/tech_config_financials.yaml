@@ -10,6 +10,9 @@ technologies:
       model: "hopp"
     financial_model:
       group: "default"
+    model_inputs:
+      cost_parameters:
+        cost_year: 2022
   oae:
     performance_model:
       model: "ocean_alkalinity_enhancement_performance"

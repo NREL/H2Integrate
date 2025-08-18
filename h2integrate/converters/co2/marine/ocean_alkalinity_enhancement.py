@@ -1,6 +1,7 @@
 from attrs import field, define
 
-from h2integrate.core.utilities import merge_shared_inputs
+from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
+from h2integrate.core.validators import must_equal
 from h2integrate.converters.co2.marine.marine_carbon_capture_baseclass import (
     MarineCarbonCaptureCostBaseClass,
     MarineCarbonCapturePerformanceConfig,
@@ -232,6 +233,17 @@ class OAEPerformanceModel(MarineCarbonCapturePerformanceBaseClass):
         outputs["excess_energy"] = oae_outputs.OAE_outputs["P_xs"]
 
 
+@define
+class OAECostModelConfig(BaseConfig):
+    """Configuration for the OAE cost model.
+
+    Attributes:
+        cost_year (int): dollar year corresponding to cost values
+    """
+
+    cost_year: int = field(default=2024, converter=int, validator=must_equal(2024))
+
+
 class OAECostModel(MarineCarbonCaptureCostBaseClass):
     """OpenMDAO component for computing capital (CapEx) and operational (OpEx) costs of a
         ocean alkalinity enhancement (OAE) system.
@@ -251,6 +263,12 @@ class OAECostModel(MarineCarbonCaptureCostBaseClass):
             )
 
     def setup(self):
+        if "cost" in self.options["tech_config"]["model_inputs"]:
+            self.config = OAECostModelConfig.from_dict(
+                merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost")
+            )
+        else:
+            self.config = OAECostModelConfig.from_dict(data={})
         super().setup()
         self.add_input(
             "mass_sellable_product",
@@ -289,7 +307,7 @@ class OAECostModel(MarineCarbonCaptureCostBaseClass):
             desc="Mass of RCA tumbler slurry produced (grams)",
         )
 
-    def compute(self, inputs, outputs):
+    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         costs = echem_oae.OAECosts(
             mass_product=inputs["mass_sellable_product"],
             value_product=inputs["value_products"],
@@ -331,6 +349,12 @@ class OAECostAndFinancialModel(MarineCarbonCaptureCostBaseClass):
             )
 
     def setup(self):
+        if "cost" in self.options["tech_config"]["model_inputs"]:
+            self.config = OAECostModelConfig.from_dict(
+                merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost")
+            )
+        else:
+            self.config = OAECostModelConfig.from_dict(data={})
         super().setup()
 
         self.add_input(
@@ -402,7 +426,7 @@ class OAECostAndFinancialModel(MarineCarbonCaptureCostBaseClass):
             desc="Carbon credit value required to achieve NPV of zero (USD/tCO2)",
         )
 
-    def compute(self, inputs, outputs):
+    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         annual_energy_cost_usd_yr = inputs["LCOE"] * (
             inputs["annual_energy"] - (sum(inputs["excess_energy"]) / 1000)  # Convert W to kW
         )  # remove excess power from the annual energy cost only used power considered

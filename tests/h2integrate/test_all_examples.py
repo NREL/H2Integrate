@@ -482,7 +482,9 @@ def test_wind_wave_oae_example(subtests):
         assert pytest.approx(model.prob.get_val("financials_group_default.LCOC"), rel=1e-3) == 37.82
 
     with subtests.test("Check LCOE"):
-        assert pytest.approx(model.prob.get_val("financials_group_default.LCOE"), rel=1e-3) == 0.369
+        assert (
+            pytest.approx(model.prob.get_val("financials_group_default.LCOE"), rel=1e-3) == 0.36956
+        )
 
 
 @unittest.skipUnless(importlib.util.find_spec("mcm") is not None, "mcm is not installed")
