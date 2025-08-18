@@ -332,13 +332,16 @@ class ProFastComp(om.ExplicitComponent):
             }
         )
 
+        # initialize financial parameters
         self.params = BasicProFASTParameterConfig.from_dict(fin_params)
 
+        # initialize default capital item parameters
         capital_item_params = plant_config["finance_parameters"]["profast_inputs"].get(
             "capital_items", {}
         )
         self.capital_item_settings = ProFASTDefaultCapitalItem.from_dict(capital_item_params)
 
+        # initialize default fixed cost parameters
         fixed_cost_params = plant_config["finance_parameters"]["profast_inputs"].get(
             "fixed_costs", {}
         )
@@ -355,6 +358,7 @@ class ProFastComp(om.ExplicitComponent):
     def compute(self, inputs, outputs):
         mass_commodities = ["hydrogen", "ammonia", "co2", "nitrogen"]
 
+        # update parameters with commodity, capacity, and utilization
         profast_params = self.params.as_dict()
         profast_params["commodity"].update({"name": self.options["commodity_type"]})
         profast_params["commodity"].update(
@@ -368,14 +372,18 @@ class ProFastComp(om.ExplicitComponent):
         profast_params["capacity"] = capacity
         profast_params["long term utilization"] = 1
 
+        # initialize profast dictionary
         pf_dict = {"params": profast_params, "capital_items": {}, "fixed_costs": {}}
 
+        # initialize dictionary of capital items and fixed costs
         capital_items = {}
         fixed_costs = {}
 
         # create default capital item and fixed cost entries
         capital_item_defaults = self.capital_item_settings.create_dict()
         fixed_cost_defaults = self.fixed_cost_settings.create_dict()
+
+        # loop through technologies and create cost entries
         for tech in self.tech_config:
             # get tech-specific capital item parameters
             tech_capex_info = (
@@ -383,8 +391,11 @@ class ProFastComp(om.ExplicitComponent):
                 .get("financial_parameters", {})
                 .get("capital_items", {})
             )
+
+            # add CapEx cost to tech-specific capital item entry
             tech_capex_info.update({"cost": float(inputs[f"capex_adjusted_{tech}"][0])})
 
+            # see if any refurbishment information was input
             if "replacement_cost_percent" in tech_capex_info:
                 refurb_schedule = np.zeros(self.params.plant_life)
 
@@ -393,11 +404,14 @@ class ProFastComp(om.ExplicitComponent):
                 else:
                     # TODO: make below tech specific
                     refurb_period = round(float(inputs["time_until_replacement"][0]) / (24 * 365))
+
                 refurb_schedule[refurb_period : self.params.plant_life : refurb_period] = (
                     tech_capex_info["replacement_cost_percent"]
                 )
+                # add refurbishment schedule to tech-specific capital item entry
                 tech_capex_info["refurb"] = list(refurb_schedule)
 
+            # update any unset capital item parameters with the default values
             for cap_item_key, cap_item_val in capital_item_defaults.items():
                 tech_capex_info.setdefault(cap_item_key, cap_item_val)
             capital_items[tech] = tech_capex_info
@@ -408,15 +422,25 @@ class ProFastComp(om.ExplicitComponent):
                 .get("financial_parameters", {})
                 .get("fixed_costs", {})
             )
+
+            # add CapEx cost to tech-specific fixed cost entry
             tech_opex_info.update({"cost": float(inputs[f"opex_adjusted_{tech}"][0])})
 
+            # update any unset fixed cost parameters with the default values
             for fix_cost_key, fix_cost_val in fixed_cost_defaults.items():
                 tech_opex_info.setdefault(fix_cost_key, fix_cost_val)
             fixed_costs[tech] = tech_opex_info
 
+        # add capital costs and fixed costs to pf_dict
         pf_dict["capital_items"] = capital_items
         pf_dict["fixed_costs"] = fixed_costs
+        # create ProFAST object
         pf = create_and_populate_profast(pf_dict)
+        # simulate ProFAST
         sol, summary, price_breakdown = run_profast(pf)
+
+        # Check whether to export profast object to .yaml file
+        # TODO: save profast object to dictionary if desired
+        # see PR #207 https://github.com/NREL/H2Integrate/pull/207
 
         outputs[self.LCO_str] = sol["price"]
