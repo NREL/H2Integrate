@@ -35,7 +35,7 @@ def ngcc_cost_params():
         "fopex": 10.0,  # $/kW/year
         "vopex": 2.5,  # $/MWh
         "heat_rate": 7.5,  # MMBtu/MWh
-        "ng_price": 4.0,  # $/thousand cubic feet
+        "ng_price": 4.2,  # $/MMBtu (converted from $4.0/thousand cubic feet)
         "project_life": 30,  # years
         "cost_year": 2023,
     }
@@ -50,7 +50,7 @@ def ngct_cost_params():
         "fopex": 8.0,  # $/kW/year
         "vopex": 3.0,  # $/MWh
         "heat_rate": 11.5,  # MMBtu/MWh
-        "ng_price": 4.0,  # $/thousand cubic feet
+        "ng_price": 4.2,  # $/MMBtu (converted from $4.0/thousand cubic feet)
         "project_life": 30,  # years
         "cost_year": 2023,
     }
@@ -172,7 +172,6 @@ def test_ngcc_cost(ngcc_cost_params, subtests):
         * ngcc_cost_params["heat_rate"]
         * annual_generation_MWh
         * ngcc_cost_params["project_life"]
-        / 1.036
     )
     expected_opex = expected_fixed_om + expected_variable_om + expected_fuel_cost
 
@@ -229,7 +228,6 @@ def test_ngct_cost(ngct_cost_params, subtests):
         * ngct_cost_params["heat_rate"]
         * annual_generation_MWh
         * ngct_cost_params["project_life"]
-        / 1.036
     )
     expected_opex = expected_fixed_om + expected_variable_om + expected_fuel_cost
 
