@@ -18,7 +18,7 @@ class NaturalGasPerformanceConfig(BaseConfig):
     combustion turbines (NGCT) and natural gas combined cycle (NGCC) plants.
 
     Attributes:
-        heat_rate (float): Heat rate of the natural gas plant in MMBtu/MWh.
+        heat_rate_mmbtu_per_mwh (float): Heat rate of the natural gas plant in MMBtu/MWh.
             This represents the amount of fuel energy required to produce
             one MWh of electricity. Lower values indicate higher efficiency.
             Typical values:
@@ -26,7 +26,7 @@ class NaturalGasPerformanceConfig(BaseConfig):
             - NGCC: 6-8 MMBtu/MWh
     """
 
-    heat_rate: float = field(validator=gt_zero)
+    heat_rate_mmbtu_per_mwh: float = field(validator=gt_zero)
 
 
 class NaturalGasPerformanceModel(om.ExplicitComponent):
@@ -48,7 +48,7 @@ class NaturalGasPerformanceModel(om.ExplicitComponent):
         electricity_out (array): Electricity output in MW for each timestep
 
     Parameters (from config):
-        heat_rate (float): Plant heat rate in MMBtu/MWh
+        heat_rate_mmbtu_per_mwh (float): Plant heat rate in MMBtu/MWh
     """
 
     def initialize(self):
@@ -81,8 +81,8 @@ class NaturalGasPerformanceModel(om.ExplicitComponent):
 
         # Add heat_rate as an OpenMDAO input with config value as default
         self.add_input(
-            "heat_rate",
-            val=self.config.heat_rate,
+            "heat_rate_mmbtu_per_mwh",
+            val=self.config.heat_rate_mmbtu_per_mwh,
             units="MMBtu/MW/h",
             desc="Plant heat rate in MMBtu/MWh",
         )
@@ -100,12 +100,12 @@ class NaturalGasPerformanceModel(om.ExplicitComponent):
             outputs: OpenMDAO outputs object for electricity_out
         """
         natural_gas_in = inputs["natural_gas_in"]
-        heat_rate = inputs["heat_rate"][0]
+        heat_rate_mmbtu_per_mwh = inputs["heat_rate_mmbtu_per_mwh"][0]
 
         # Convert natural gas input to electricity output using heat rate
         # electricity_out [MW] = natural_gas_in [MMBtu] / heat_rate [MMBtu/MWh]
         # Note: This assumes hourly timesteps, so MWh = MW for hourly data
-        electricity_out = natural_gas_in / heat_rate
+        electricity_out = natural_gas_in / heat_rate_mmbtu_per_mwh
 
         outputs["electricity_out"] = electricity_out
 
@@ -119,39 +119,39 @@ class NaturalGasCostModelConfig(CostModelBaseConfig):
     turbines (NGCT) and natural gas combined cycle (NGCC) plants.
 
     Attributes:
-        capex (float|int): Capital cost per unit capacity in $/kW. This includes
+        capex_per_kw (float|int): Capital cost per unit capacity in $/kW. This includes
             all equipment, installation, and construction costs.
             Typical values:
             - NGCT: 600-1000 $/kW
             - NGCC: 800-1200 $/kW
 
-        fopex (float|int): Fixed operating expenses per unit capacity in $/kW/year.
-            This includes fixed O&M costs that don't vary with generation.
+        fixed_opex_per_kw_per_year (float|int): Fixed operating expenses per unit capacity
+            in $/kW/year. This includes fixed O&M costs that don't vary with generation.
             Typical values: 5-15 $/kW/year
 
-        vopex (float|int): Variable operating expenses per unit generation in $/MWh.
+        variable_opex_per_mwh (float|int): Variable operating expenses per unit generation in $/MWh.
             This includes variable O&M costs that scale with electricity generation.
             Typical values: 1-5 $/MWh
 
-        heat_rate (float): Heat rate in MMBtu/MWh, used for fuel cost calculations.
+        heat_rate_mmbtu_per_mwh (float): Heat rate in MMBtu/MWh, used for fuel cost calculations.
             This should match the heat rate used in the performance model.
 
-        ng_price (float|str): Natural gas price in $/MMBtu.
+        ng_price_per_mmbtu (float|str): Natural gas price in $/MMBtu.
             Can be a numeric value for fixed price or "variable" string to
             indicate external price management.
 
-        project_life (int): Project lifetime in years for cost calculations.
+        project_life_years (int): Project lifetime in years for cost calculations.
             Default is 30 years, typical for power plants.
 
         cost_year (int): Dollar year corresponding to input costs.
     """
 
-    capex: float | int = field(validator=gt_zero)
-    fopex: float | int = field(validator=gt_zero)
-    vopex: float | int = field(validator=gt_zero)
-    heat_rate: float = field(validator=gt_zero)
-    ng_price: float | str = field()
-    project_life: int = field(default=30, validator=gt_zero)
+    capex_per_kw: float | int = field(validator=gt_zero)
+    fixed_opex_per_kw_per_year: float | int = field(validator=gt_zero)
+    variable_opex_per_mwh: float | int = field(validator=gt_zero)
+    heat_rate_mmbtu_per_mwh: float = field(validator=gt_zero)
+    ng_price_per_mmbtu: float | str = field()
+    project_life_years: int = field(default=30, validator=gt_zero)
 
 
 class NaturalGasCostModel(CostModelBaseClass):
@@ -166,20 +166,21 @@ class NaturalGasCostModel(CostModelBaseClass):
     - OpEx: Operating expenditure including fixed O&M, variable O&M, and fuel costs
 
     Cost components:
-    1. Capital costs: capex * plant_capacity_kW
-    2. Fixed O&M: fopex * plant_capacity_kW * project_life
-    3. Variable O&M: vopex * delivered_electricity_MWh * project_life
-    4. Fuel costs: ng_price * heat_rate * delivered_electricity_MWh * project_life
+    1. Capital costs: capex_per_kw * plant_capacity_kW
+    2. Fixed O&M: fixed_opex_per_kw_per_year * plant_capacity_kW * project_life_years
+    3. Variable O&M: variable_opex_per_mwh * delivered_electricity_MWh * project_life_years
+    4. Fuel costs: ng_price_per_mmbtu * heat_rate_mmbtu_per_mwh
+        * delivered_electricity_MWh * project_life_years
 
     Inputs:
         plant_capacity_kW (float): Plant capacity in kW
-        delivered_electricity_MWh (float): Annual electricity generation in MWh
-        capex (float): Capital cost per unit capacity in $/kW
-        fopex (float): Fixed operating expenses per unit capacity in $/kW/year
-        vopex (float): Variable operating expenses per unit generation in $/MWh
-        heat_rate (float): Heat rate in MMBtu/MWh
-        ng_price (float): Natural gas price in $/MMBtu
-        project_life (int): Project lifetime in years
+        electricity_out (array): Hourly electricity output in MW from performance model
+        capex_per_kw (float): Capital cost per unit capacity in $/kW
+        fixed_opex_per_kw_per_year (float): Fixed operating expenses per unit capacity in $/kW/year
+        variable_opex_per_mwh (float): Variable operating expenses per unit generation in $/MWh
+        heat_rate_mmbtu_per_mwh (float): Heat rate in MMBtu/MWh
+        ng_price_per_mmbtu (float): Natural gas price in $/MMBtu
+        project_life_years (int): Project lifetime in years
 
     Outputs:
         CapEx (float): Total capital expenditure in USD
@@ -197,33 +198,49 @@ class NaturalGasCostModel(CostModelBaseClass):
         # Add inputs specific to the cost model with config values as defaults
         self.add_input("plant_capacity_kW", val=0.0, units="kW", desc="Natural gas plant capacity")
         self.add_input(
-            "delivered_electricity_MWh", val=0.0, units="MW*h", desc="Annual electricity generation"
+            "electricity_out",
+            val=0.0,
+            shape=n_timesteps,
+            units="MW",
+            desc="Hourly electricity output from performance model",
         )
         self.add_input(
-            "capex", val=self.config.capex, units="USD/kW", desc="Capital cost per unit capacity"
+            "capex_per_kw",
+            val=self.config.capex_per_kw,
+            units="USD/kW",
+            desc="Capital cost per unit capacity",
         )
         self.add_input(
-            "fopex",
-            val=self.config.fopex,
+            "fixed_opex_per_kw_per_year",
+            val=self.config.fixed_opex_per_kw_per_year,
             units="USD/kW/year",
             desc="Fixed operating expenses per unit capacity per year",
         )
         self.add_input(
-            "vopex",
-            val=self.config.vopex,
+            "variable_opex_per_mwh",
+            val=self.config.variable_opex_per_mwh,
             units="USD/MW/h",
             desc="Variable operating expenses per unit generation",
         )
         self.add_input(
-            "heat_rate", val=self.config.heat_rate, units="MMBtu/MW/h", desc="Plant heat rate"
+            "heat_rate_mmbtu_per_mwh",
+            val=self.config.heat_rate_mmbtu_per_mwh,
+            units="MMBtu/MW/h",
+            desc="Plant heat rate",
         )
         # Handle ng_price - only add as input if it's not "variable"
-        if self.config.ng_price != "variable":
+        if self.config.ng_price_per_mmbtu != "variable":
             self.add_input(
-                "ng_price", val=self.config.ng_price, units="USD/MMBtu", desc="Natural gas price"
+                "ng_price_per_mmbtu",
+                val=self.config.ng_price_per_mmbtu,
+                units="USD/MMBtu",
+                desc="Natural gas price",
             )
         self.add_input(
-            "project_life", val=self.config.project_life, units="year", desc="Project lifetime"
+            "project_life_years",
+            val=self.config.project_life_years,
+            units="year",
+            desc="Project lifetime",
         )
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
@@ -232,7 +249,7 @@ class NaturalGasCostModel(CostModelBaseClass):
 
         This method implements the cost calculation logic, computing
         capital costs, fixed O&M, variable O&M, and fuel costs over the project
-        lifetime.
+        lifetime. It sums the hourly electricity output to get annual generation.
 
         Args:
             inputs: OpenMDAO inputs containing all cost parameters
@@ -241,30 +258,39 @@ class NaturalGasCostModel(CostModelBaseClass):
             discrete_outputs: OpenMDAO discrete outputs for cost_year
         """
         plant_capacity_kW = inputs["plant_capacity_kW"][0]
-        delivered_electricity_MWh = inputs["delivered_electricity_MWh"][0]
-        capex_per_kw = inputs["capex"][0]
-        fopex_per_kw_year = inputs["fopex"][0]
-        vopex_per_mwh = inputs["vopex"][0]
-        heat_rate = inputs["heat_rate"][0]
-        project_life = inputs["project_life"][0]
+        electricity_out = inputs["electricity_out"]  # MW hourly profile
+        capex_per_kw = inputs["capex_per_kw"][0]
+        fixed_opex_per_kw_per_year = inputs["fixed_opex_per_kw_per_year"][0]
+        variable_opex_per_mwh = inputs["variable_opex_per_mwh"][0]
+        heat_rate_mmbtu_per_mwh = inputs["heat_rate_mmbtu_per_mwh"][0]
+        project_life_years = inputs["project_life_years"][0]
+
+        # Sum hourly electricity output to get annual generation
+        # electricity_out is in MW, so sum gives MWh for hourly data
+        delivered_electricity_MWh = electricity_out.sum()
 
         # Calculate capital expenditure
         capex = capex_per_kw * plant_capacity_kW
 
         # Calculate fixed operating expenses over project life
-        fixed_om = fopex_per_kw_year * plant_capacity_kW * project_life
+        fixed_om = fixed_opex_per_kw_per_year * plant_capacity_kW * project_life_years
 
         # Calculate variable operating expenses over project life
-        variable_om = vopex_per_mwh * delivered_electricity_MWh * project_life
+        variable_om = variable_opex_per_mwh * delivered_electricity_MWh * project_life_years
 
         # Calculate fuel costs over project life
-        if self.config.ng_price == "variable":
+        if self.config.ng_price_per_mmbtu == "variable":
             # If price is variable, set fuel cost to 0 (handled externally)
             fuel_cost = 0.0
         else:
             # Natural gas price is now in $/MMBtu, no conversion needed
-            ng_price = inputs["ng_price"][0]
-            fuel_cost = ng_price * heat_rate * delivered_electricity_MWh * project_life
+            ng_price_per_mmbtu = inputs["ng_price_per_mmbtu"][0]
+            fuel_cost = (
+                ng_price_per_mmbtu
+                * heat_rate_mmbtu_per_mwh
+                * delivered_electricity_MWh
+                * project_life_years
+            )
 
         # Total operating expenditure includes all O&M and fuel costs
         opex = fixed_om + variable_om + fuel_cost

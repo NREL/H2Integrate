@@ -40,6 +40,7 @@
 - Changed electrolyzer capacity to be an input to the electrolyzer cost models rather than pulled from the cost model config.
 - Updated finance parameter organization naming in `plant_config`.
 - Added cost model base class and removed `plant_config['finance_parameters']['discount_years']['tech']`. Some cost models require user-input cost year (`tech_config[tech]['model_inputs']['cost_parameters']['cost_year']`) others do not. Cost year is output from cost models as a discrete output.
+- Added `natural_gas_performance` and `natural_gas_cost` models, allowing for natural gas power plant modeling.
 
 
 ## 0.3.0 [May 2 2025]
