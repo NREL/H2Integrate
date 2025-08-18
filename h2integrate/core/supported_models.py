@@ -47,6 +47,10 @@ from h2integrate.converters.methanol.co2h_methanol_plant import (
     CO2HMethanolPlantFinanceModel,
     CO2HMethanolPlantPerformanceModel,
 )
+from h2integrate.converters.natural_gas.natural_gas_cc_ct import (
+    NaturalGasCostModel,
+    NaturalGasPerformanceModel,
+)
 from h2integrate.converters.hydrogen.singlitico_cost_model import SingliticoCostModel
 from h2integrate.converters.co2.marine.direct_ocean_capture import DOCCostModel, DOCPerformanceModel
 from h2integrate.converters.hydrogen.eco_tools_pem_electrolyzer import (
@@ -112,6 +116,8 @@ supported_models = {
     "stimulated_geoh2_performance": StimulatedGeoH2PerformanceModel,
     "stimulated_geoh2_cost": StimulatedGeoH2CostModel,
     "stimulated_geoh2": StimulatedGeoH2FinanceModel,
+    "natural_gas_performance": NaturalGasPerformanceModel,
+    "natural_gas_cost": NaturalGasCostModel,
     # Transport
     "cable": CablePerformanceModel,
     "pipe": PipePerformanceModel,
@@ -124,4 +130,4 @@ supported_models = {
     "hydrogen_tank_cost": HydrogenTankCostModel,
 }
 
-electricity_producing_techs = ["wind", "solar", "pv", "river", "hopp"]
+electricity_producing_techs = ["wind", "solar", "pv", "river", "hopp", "natural_gas"]
