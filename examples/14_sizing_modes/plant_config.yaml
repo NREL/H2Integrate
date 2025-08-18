@@ -24,8 +24,8 @@ site:
 # with the reverse definition.
 # this will naturally grow as we mature the interconnected tech
 technology_interconnections: [
-  ["feedstock_profile","electrolyzer","electricity","cable"],
-  ["electrolyzer","product_profile","hydrogen","pipe"]
+  ["hopp","electrolyzer","electricity","cable"],
+  ["electrolyzer","ammonia","hydrogen","pipe"]
 ]
 
 plant:
