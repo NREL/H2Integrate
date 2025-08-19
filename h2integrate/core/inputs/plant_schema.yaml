@@ -58,25 +58,30 @@ properties:
         description: Plant lifetime in years
         minimum: 1
         default: 30
-      dt:
-        type: number
-        description: simulation time-step in seconds
-        default: 3600
-      n_timesteps:
-        type: number
-        description: number of timesteps to simulate
-        default: 8760
-        minimum: 1
-      start_time:
-        type: string
-        description: simulation start time formatted as mm/dd/yy HH:MM:SS or mm/dd HH:MM:SS
-        default: "01/01 00:30:00"
-      timezone:
-        type: number
-        description: timezone as UTC offset corresponding to start_time
-        minimum: -12
-        maximum: 14
-    required: ["plant_life","dt","n_timesteps"]
+      simulation:
+        type: object
+        default: {}
+        properties:
+          dt:
+            type: number
+            description: simulation time-step in seconds
+            default: 3600
+          n_timesteps:
+            type: number
+            description: number of timesteps to simulate
+            default: 8760
+            minimum: 1
+          start_time:
+            type: string
+            description: simulation start time formatted as mm/dd/yy HH:MM:SS or mm/dd HH:MM:SS
+            default: "01/01 00:30:00"
+          timezone:
+            type: number
+            description: timezone as UTC offset corresponding to start_time
+            minimum: -12
+            maximum: 14
+        required: ["dt","n_timesteps"]
+    required: ["plant_life","simulation"]
   technology_interconnections:
     type: array
     description: Array of arrays representing technology interconnections
