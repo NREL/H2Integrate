@@ -475,19 +475,31 @@ def test_natural_gas_example(subtests):
     model.post_process()
 
     # Subtests for checking specific values
-    with subtests.test("Check LCOE"):
-        # Test that LCOE is calculated and is a reasonable value for natural gas
-        lcoe = model.prob.get_val("financials_group_default.LCOE")[0]
-        assert lcoe > 0.02  # Should be greater than 2 cents/kWh
-        assert lcoe < 0.15  # Should be less than 15 cents/kWh
 
-    with subtests.test("Check natural gas CapEx"):
-        # Test that capital expenditure is reasonable for a 100 MW NGCC plant
+    with subtests.test("Check CapEx"):
         capex = model.prob.get_val("natural_gas_plant.CapEx")[0]
-        assert capex > 5e7  # Should be greater than $50 million
-        assert capex < 2e8  # Should be less than $200 million
+        assert pytest.approx(capex, rel=1e-6) == 1e8
 
-    with subtests.test("Check natural gas OpEx"):
-        # Test that operating expenditure is calculated
+    with subtests.test("Check OpEx"):
         opex = model.prob.get_val("natural_gas_plant.OpEx")[0]
-        assert opex > 0  # Should be positive
+        assert pytest.approx(opex, rel=1e-6) == 1292000.0
+
+    with subtests.test("Check total electricity produced"):
+        total_electricity = model.prob.get_val(
+            "financials_group_default.electricity_sum.total_electricity_produced"
+        )[0]
+        assert pytest.approx(total_electricity, rel=1e-6) == 1.168e8
+
+    with subtests.test("Check capex adjusted feedstocks"):
+        capex_feedstocks = model.prob.get_val("financials_group_default.capex_adjusted_feedstocks")[
+            0
+        ]
+        assert pytest.approx(capex_feedstocks, rel=1e-6) == 0.0
+
+    with subtests.test("Check opex adjusted feedstocks"):
+        opex_feedstocks = model.prob.get_val("financials_group_default.opex_adjusted_feedstocks")[0]
+        assert pytest.approx(opex_feedstocks, rel=1e-6) == 3589463.41463415
+
+    with subtests.test("Check LCOE"):
+        lcoe = model.prob.get_val("financials_group_default.LCOE")[0]
+        assert pytest.approx(lcoe, rel=1e-6) == 0.12950673
