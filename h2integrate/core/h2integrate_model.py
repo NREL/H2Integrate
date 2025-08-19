@@ -453,64 +453,47 @@ class H2IntegrateModel:
                 # Add the connection component to the model
                 self.plant.add_subsystem(connection_name, connection_component)
 
-                # If destination component is in product_size mode, connect demand/consumption
-                if (
-                    self.technology_config["technologies"][dest_tech]["model_inputs"][
-                        "performance_parameters"
-                    ]["compute_mode"]
-                    == "product_size"
-                ):
+                if "storage" in source_tech:
+                    # Connect the source technology to the connection component
                     self.plant.connect(
-                        f"{dest_tech}.{transport_item}_consume",
+                        f"{source_tech}.{transport_item}_out",
                         f"{connection_name}.{transport_item}_in",
                     )
+                else:
+                    # Connect the source technology to the connection component
+                    self.plant.connect(
+                        f"{source_tech}.{transport_item}_out",
+                        f"{connection_name}.{transport_item}_in",
+                    )
+
+                # Check if the transport type is a combiner
+                if "combiner" in dest_tech:
+                    # Connect the source technology to the connection component
+                    # with specific input names
+                    if dest_tech not in combiner_counts:
+                        combiner_counts[dest_tech] = 1
+                    else:
+                        combiner_counts[dest_tech] += 1
+
+                    # Connect the connection component to the destination technology
                     self.plant.connect(
                         f"{connection_name}.{transport_item}_out",
-                        f"{source_tech}.{transport_item}_demand",
+                        f"{dest_tech}.electricity_in{combiner_counts[dest_tech]}",
+                    )
+
+                elif "storage" in dest_tech:
+                    # Connect the connection component to the destination technology
+                    self.plant.connect(
+                        f"{connection_name}.{transport_item}_out",
+                        f"{dest_tech}.{transport_item}_in",
                     )
 
                 else:
-                    if "storage" in source_tech:
-                        # Connect the source technology to the connection component
-                        self.plant.connect(
-                            f"{source_tech}.{transport_item}_out",
-                            f"{connection_name}.{transport_item}_in",
-                        )
-                    else:
-                        # Connect the source technology to the connection component
-                        self.plant.connect(
-                            f"{source_tech}.{transport_item}_out",
-                            f"{connection_name}.{transport_item}_in",
-                        )
-
-                    # Check if the transport type is a combiner
-                    if "combiner" in dest_tech:
-                        # Connect the source technology to the connection component
-                        # with specific input names
-                        if dest_tech not in combiner_counts:
-                            combiner_counts[dest_tech] = 1
-                        else:
-                            combiner_counts[dest_tech] += 1
-
-                        # Connect the connection component to the destination technology
-                        self.plant.connect(
-                            f"{connection_name}.{transport_item}_out",
-                            f"{dest_tech}.electricity_in{combiner_counts[dest_tech]}",
-                        )
-
-                    elif "storage" in dest_tech:
-                        # Connect the connection component to the destination technology
-                        self.plant.connect(
-                            f"{connection_name}.{transport_item}_out",
-                            f"{dest_tech}.{transport_item}_in",
-                        )
-
-                    else:
-                        # Connect the connection component to the destination technology
-                        self.plant.connect(
-                            f"{connection_name}.{transport_item}_out",
-                            f"{dest_tech}.{transport_item}_in",
-                        )
+                    # Connect the connection component to the destination technology
+                    self.plant.connect(
+                        f"{connection_name}.{transport_item}_out",
+                        f"{dest_tech}.{transport_item}_in",
+                    )
 
             elif len(connection) == 3:
                 # connect directly from source to dest
