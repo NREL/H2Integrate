@@ -64,8 +64,10 @@ def test_pvwatts_singleowner_notilt(basic_pysam_options, solar_resource_dict, su
     }
 
     plant_info = {
-        "n_timesteps": 8760,
-        "dt": 3600,
+        "simulation": {
+            "n_timesteps": 8760,
+            "dt": 3600,
+        }
     }
 
     prob = om.Problem()
@@ -114,8 +116,10 @@ def test_pvwatts_singleowner_withtilt(basic_pysam_options, solar_resource_dict, 
     }
 
     plant_info = {
-        "n_timesteps": 8760,
-        "dt": 3600,
+        "simulation": {
+            "n_timesteps": 8760,
+            "dt": 3600,
+        }
     }
 
     prob = om.Problem()

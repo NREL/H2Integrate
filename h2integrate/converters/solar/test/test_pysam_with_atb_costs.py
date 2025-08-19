@@ -109,8 +109,10 @@ def test_utility_pv_cost(utility_scale_pv_performance_params, solar_resource_dic
     }
 
     plant_info = {
-        "n_timesteps": 8760,
-        "dt": 3600,
+        "simulation": {
+            "n_timesteps": 8760,
+            "dt": 3600,
+        }
     }
 
     prob = om.Problem()
@@ -162,8 +164,10 @@ def test_commercial_pv_cost(commercial_pv_performance_params, solar_resource_dic
     }
 
     plant_info = {
-        "n_timesteps": 8760,
-        "dt": 3600,
+        "simulation": {
+            "n_timesteps": 8760,
+            "dt": 3600,
+        }
     }
 
     prob = om.Problem()
@@ -212,8 +216,10 @@ def test_residential_pv_cost(residential_pv_performance_params, solar_resource_d
     }
 
     plant_info = {
-        "n_timesteps": 8760,
-        "dt": 3600,
+        "simulation": {
+            "n_timesteps": 8760,
+            "dt": 3600,
+        }
     }
 
     prob = om.Problem()
