@@ -460,3 +460,34 @@ def test_hydrogen_dispatch_example(subtests):
             )
             == 5.68452215
         )
+
+
+def test_natural_gas_example(subtests):
+    # Change the current working directory to the example's directory
+    os.chdir(examples_dir / "16_natural_gas")
+
+    # Create a H2Integrate model
+    model = H2IntegrateModel(Path.cwd() / "natgas.yaml")
+
+    # Run the model
+    model.run()
+
+    model.post_process()
+
+    # Subtests for checking specific values
+    with subtests.test("Check LCOE"):
+        # Test that LCOE is calculated and is a reasonable value for natural gas
+        lcoe = model.prob.get_val("financials_group_default.LCOE")[0]
+        assert lcoe > 0.02  # Should be greater than 2 cents/kWh
+        assert lcoe < 0.15  # Should be less than 15 cents/kWh
+
+    with subtests.test("Check natural gas CapEx"):
+        # Test that capital expenditure is reasonable for a 100 MW NGCC plant
+        capex = model.prob.get_val("natural_gas_plant.CapEx")[0]
+        assert capex > 5e7  # Should be greater than $50 million
+        assert capex < 2e8  # Should be less than $200 million
+
+    with subtests.test("Check natural gas OpEx"):
+        # Test that operating expenditure is calculated
+        opex = model.prob.get_val("natural_gas_plant.OpEx")[0]
+        assert opex > 0  # Should be positive

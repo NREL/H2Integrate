@@ -23,8 +23,8 @@ $$
 The cost model calculates capital and operating costs based on the following parameters:
 
 - `capex` (required): Capital cost per unit capacity in $/kW. This includes all equipment, installation, and construction costs. Typical values:
-  - **NGCT**: 600-1000 $/kW (lower capital cost)
-  - **NGCC**: 800-1200 $/kW (higher capital cost)
+  - **NGCT**: 600-2000 $/kW (lower capital cost)
+  - **NGCC**: 800-2400 $/kW (higher capital cost)
 
 - `fopex` (required): Fixed operating expenses per unit capacity in \$/kW/year. This includes fixed O&M costs that don't vary with generation. Typical values: 5-15 \$/kW/year
 

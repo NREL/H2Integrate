@@ -8,9 +8,19 @@ class FeedstockComponent(om.ExplicitComponent):
 
     def setup(self):
         self.feedstock_data = {}
-        for feedstock_name, feedstock_data in self.options["feedstocks_config"].items():
+        config = self.options["feedstocks_config"]
+
+        # Add cost year as a discrete output and pop cost_parameters from config
+        self.add_discrete_output(
+            "cost_year", config["cost_parameters"]["cost_year"], desc="Dollar year for costs"
+        )
+        config.pop("cost_parameters", None)
+
+        for feedstock_name, feedstock_data in config.items():
             self.feedstock_data[feedstock_name] = feedstock_data
-            self.add_output(feedstock_name, shape=(8760,), units=feedstock_data["capacity_units"])
+            self.add_output(
+                f"{feedstock_name}_out", shape=(8760,), units=feedstock_data["capacity_units"]
+            )
             self.add_output(f"{feedstock_name}_CapEx", val=0.0, units="USD")
             self.add_output(f"{feedstock_name}_OpEx", val=0.0, units="USD/yr")
 
@@ -18,7 +28,7 @@ class FeedstockComponent(om.ExplicitComponent):
         self.add_output("CapEx", val=0.0, units="USD")
         self.add_output("OpEx", val=0.0, units="USD/yr")
 
-    def compute(self, inputs, outputs):
+    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         total_capex = 0.0
         total_opex = 0.0
 
@@ -27,7 +37,7 @@ class FeedstockComponent(om.ExplicitComponent):
             price = feedstock_data["price"]
 
             # Generate feedstock array operating at full capacity for the full year
-            outputs[feedstock_name] = np.full(8760, rated_capacity)
+            outputs[f"{feedstock_name}_out"] = np.full(8760, rated_capacity)
 
             # Calculate capex (given as $0)
             capex = 0.0

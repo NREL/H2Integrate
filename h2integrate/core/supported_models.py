@@ -1,6 +1,7 @@
 from h2integrate.resource.river import RiverResource
 from h2integrate.transporters.pipe import PipePerformanceModel
 from h2integrate.transporters.cable import CablePerformanceModel
+from h2integrate.transporters.ng_pipe import NGPipePerformanceModel
 from h2integrate.converters.steel.steel import SteelPerformanceModel, SteelCostAndFinancialModel
 from h2integrate.converters.wind.wind_plant import WindPlantCostModel, WindPlantPerformanceModel
 from h2integrate.transporters.power_combiner import CombinerPerformanceModel
@@ -121,6 +122,7 @@ supported_models = {
     # Transport
     "cable": CablePerformanceModel,
     "pipe": PipePerformanceModel,
+    "ng_pipe": NGPipePerformanceModel,
     "combiner_performance": CombinerPerformanceModel,
     # Control
     "pass_through_controller": PassThroughOpenLoopController,
@@ -130,4 +132,4 @@ supported_models = {
     "hydrogen_tank_cost": HydrogenTankCostModel,
 }
 
-electricity_producing_techs = ["wind", "solar", "pv", "river", "hopp", "natural_gas"]
+electricity_producing_techs = ["wind", "solar", "pv", "river", "hopp", "natural_gas_plant"]
