@@ -11,9 +11,10 @@ technologies:
       shared_parameters:
         location: "onshore"
         electrolyzer_capex: 1295 # $/kW overnight installed capital costs for a 1 MW system in 2022 USD/kW (DOE hydrogen program record 24005	Clean Hydrogen Production Cost Scenarios with PEM Electrolyzer Technology 05/20/24) (https://www.hydrogen.energy.gov/docs/hydrogenprogramlibraries/pdfs/24005-clean-hydrogen-production-cost-pem-electrolyzer.pdf?sfvrsn=8cb10889_1)
+
       performance_parameters:
-        sizing_mode: "size_read_from_config" # "size_calc_for_feedstock", "size_calc_for_product"
-        size_by: "none" # "electricity", "hydrogen"
+        size_mode: "resize_for_max_feedstock"
+        size_for: "electricity"
         sizing:
           resize_for_enduse: False
           size_for: 'BOL' #'BOL' (generous) or 'EOL' (conservative)

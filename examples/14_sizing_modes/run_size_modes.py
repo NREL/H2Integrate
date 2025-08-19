@@ -2,7 +2,7 @@ from h2integrate.core.h2integrate_model import H2IntegrateModel
 
 
 # Create a H2Integrate model
-model = H2IntegrateModel("14_sizing_mode_config.yaml")
+model = H2IntegrateModel("14_size_mode_config.yaml")
 
 # Run the model
 model.run()

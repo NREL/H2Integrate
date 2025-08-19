@@ -117,8 +117,7 @@ class ECOElectrolyzerPerformanceModel(ElectrolyzerPerformanceBaseClass):
             units="kg/h",
         )
 
-        if self.config.size_mode == "resize_for_max_product":
-            self.add_input("max_hydrogen_capacity", val=0.0, units="kg/h")
+        self.add_input("max_hydrogen_capacity", val=0.0, units="kg/h")
 
     def compute(self, inputs, outputs):
         plant_life = self.options["plant_config"]["plant"]["plant_life"]

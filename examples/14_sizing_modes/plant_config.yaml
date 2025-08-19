@@ -25,7 +25,8 @@ site:
 # this will naturally grow as we mature the interconnected tech
 technology_interconnections: [
   ["hopp","electrolyzer","electricity","cable"],
-  ["electrolyzer","ammonia","hydrogen","pipe"]
+  ["electrolyzer","ammonia","hydrogen","pipe"],
+  ["ammonia","electrolyzer","max_hydrogen_capacity"]
 ]
 
 plant:
