@@ -8,7 +8,7 @@ class HydroPerformanceBaseClass(om.ExplicitComponent):
         self.options.declare("tech_config", types=dict)
 
     def setup(self):
-        n_timesteps = self.options["plant_config"]["plant"]["n_timesteps"]
+        n_timesteps = self.options["plant_config"]["plant"]["simulation"]["n_timesteps"]
         self.add_output(
             "electricity_out",
             val=0.0,

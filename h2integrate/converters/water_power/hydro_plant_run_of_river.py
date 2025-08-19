@@ -38,7 +38,7 @@ class RunOfRiverHydroPerformanceModel(HydroPerformanceBaseClass):
 
     def setup(self):
         super().setup()
-        n_timesteps = self.options["plant_config"]["plant"]["n_timesteps"]
+        n_timesteps = self.options["plant_config"]["plant"]["simulation"]["n_timesteps"]
         self.config = RunOfRiverHydroPerformanceConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance")
         )
