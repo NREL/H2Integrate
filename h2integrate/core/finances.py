@@ -341,14 +341,13 @@ class ProFastComp(om.ExplicitComponent):
         sol = pf.solve_price()
 
         # Check whether to export profast object to .yaml file
-        if self.options["driver_config"]["general"].get("save_profast_to_file", False):
-            profast_dir = self.options["driver_config"]["general"].get(
-                "profast_output_folder",
-                self.options["driver_config"]["general"]["folder_output"],
-            )
-            fdesc = self.options["driver_config"]["general"]["profast_output_description"]
+        if self.options["plant_config"]["finance_parameters"].get("save_profast_to_file", False):
+            output_dir = self.options["driver_config"]["general"]["folder_output"]
+            fdesc = self.options["plant_config"]["finance_parameters"]["profast_output_description"]
             fname = f"{fdesc}_{self.options['commodity_type']}.yaml"
-            fpath = Path(profast_dir) / fname
+            fpath = Path(output_dir) / fname
+            output_dir = Path(output_dir)
+            output_dir.mkdir(parents=True, exist_ok=True)
             d = convert_pf_to_dict(pf)
             d = dict_to_yaml_formatting(d)
             write_yaml(d, fpath)
