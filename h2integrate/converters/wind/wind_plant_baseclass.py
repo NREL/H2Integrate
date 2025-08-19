@@ -1,9 +1,6 @@
 import openmdao.api as om
 
 
-n_timesteps = 8760
-
-
 class WindPerformanceBaseClass(om.ExplicitComponent):
     def initialize(self):
         self.options.declare("driver_config", types=dict)
@@ -11,6 +8,7 @@ class WindPerformanceBaseClass(om.ExplicitComponent):
         self.options.declare("tech_config", types=dict)
 
     def setup(self):
+        n_timesteps = self.options["plant_config"]["plant"]["n_timesteps"]
         self.add_output(
             "electricity_out",
             val=0.0,

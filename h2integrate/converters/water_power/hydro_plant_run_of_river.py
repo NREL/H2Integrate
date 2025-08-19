@@ -38,11 +38,12 @@ class RunOfRiverHydroPerformanceModel(HydroPerformanceBaseClass):
 
     def setup(self):
         super().setup()
+        n_timesteps = self.options["plant_config"]["plant"]["n_timesteps"]
         self.config = RunOfRiverHydroPerformanceConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance")
         )
 
-        self.add_input("discharge", val=0.0, shape=8760, units="m**3/s")
+        self.add_input("discharge", val=0.0, shape=n_timesteps, units="m**3/s")
 
     def compute(self, inputs, outputs):
         # Calculate the power output of the run-of-river hydropower plant
