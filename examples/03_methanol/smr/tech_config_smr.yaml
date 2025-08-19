@@ -8,17 +8,15 @@ technologies:
     cost_model:
       model: "smr_methanol_plant_cost"
     financial_model:
-      model: "methanol_plant_financial"
+      model: "smr_methanol_plant_financial"
     model_inputs:
       shared_parameters:
         plant_capacity_kgpy: 127893196.8
+        plant_capacity_flow: "methanol"
       performance_parameters:
         capacity_factor: 0.9
         co2e_emit_ratio: 1.13442
         h2o_consume_ratio: 2.669877132
-        h2_consume_ratio: 0.0
-        co2_consume_ratio: 0.0
-        elec_consume_ratio: 0.1
         meoh_syn_cat_consume_ratio: 0.00000036322492251
         meoh_atr_cat_consume_ratio: 0.0000013078433938
         ng_consume_ratio: 0.7674355312

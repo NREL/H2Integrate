@@ -1,0 +1,67 @@
+name: "plant_config"
+description: "This plant is located west of the Wolf Hollow II NGCC power plant in Texas"
+
+site:
+  latitude: 32.34
+  longitude: -98.27
+  elevation_m: 440.0
+  time_zone: -6
+
+  # array of polygons defining boundaries with x/y coords
+  boundaries: [
+    {
+      x: [0.0, 1000.0, 1000.0, 0.0],
+      y: [0.0, 0.0, 100.0, 1000.0],
+    },
+    {
+      x: [2000.0, 2500.0, 2000.0],
+      y: [2000.0, 2000.0, 2500.0],
+    }
+  ]
+
+# array of arrays containing left-to-right technology
+# interconnections; can support bidirectional connections
+# with the reverse definition.
+# this will naturally grow as we mature the interconnected tech
+technology_interconnections: [
+]
+
+plant:
+  plant_life: 30
+  grid_connection: False # option, can be turned on or off
+  ppa_price: 0.027498168 # based off correlations of LBNL PPA data
+  hybrid_electricity_estimated_cf: 0.492 #should equal 1 if grid_connection = True
+
+finance_parameters:
+  analysis_start_year: 2032
+  installation_time: 36 # months
+  inflation_rate: 0.0 # 0 for nominal analysis
+  discount_rate: 0.09 # nominal return based on 2024 ATB basline workbook for land-based wind
+  debt_equity_split: False
+  debt_equity_ratio: 2.62 # 2024 ATB uses 72.4% debt for land-based wind
+  property_tax: 0.02 # https://www.house.mn.gov/hrd/issinfo/clsrates.aspx
+  property_insurance: 0.01 # percent of CAPEX estimated based on https://www.nrel.gov/docs/fy25osti/91775.pdf
+  total_income_tax_rate: 0.308 # 0.257 tax rate in 2024 atb baseline workbook, value here is based on federal (21%) and state in MN (9.8)
+  capital_gains_tax_rate: 0.15 # H2FAST default
+  sales_tax_rate: 0.07375 # total state and local sales tax in St. Louis County https://taxmaps.state.mn.us/salestax/
+  debt_interest_rate: 0.07 # based on 2024 ATB nominal interest rate for land-based wind
+  debt_type: "Revolving debt" # can be "Revolving debt" or "One time loan". Revolving debt is H2FAST default and leads to much lower LCOH
+  loan_period: 0 # H2FAST default, not used for revolving debt
+  cash_onhand_months: 1 # H2FAST default
+  administrative_expense_percent_of_sales: 0.00 # percent of sales H2FAST default
+  depreciation_method: "MACRS" # can be "MACRS" or "Straight line" - MACRS may be better and can reduce LCOH by more than $1/kg and is spec'd in the IRS MACRS schedule https://www.irs.gov/publications/p946#en_US_2020_publink1000107507
+  depreciation_period: 5 # years - for clean energy facilities as specified by the IRS MACRS schedule https://www.irs.gov/publications/p946#en_US_2020_publink1000107507
+  depreciation_period_electrolyzer: 7 # based on PEM Electrolysis H2A Production Case Study Documentation estimate of 7 years. also see https://www.irs.gov/publications/p946#en_US_2020_publink1000107507
+  discount_years:
+    methanol: 2020
+  options:
+    commodity_type: "methanol"
+  cost_adjustment_parameters:
+    cost_year_adjustment_inflation: 0.025 # used to adjust modeled costs to target_dollar_year
+    target_dollar_year: 2022
+
+policy_parameters: # these should be adjusted for inflation prior to application - order of operations: rate in 1992 $, then prevailing wage multiplier if applicable, then inflation
+  electricity_itc: 0
+  electricity_ptc: 0
+  h2_ptc: 0
+  h2_storage_itc: 0
