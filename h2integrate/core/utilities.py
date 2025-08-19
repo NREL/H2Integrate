@@ -3,7 +3,7 @@ from collections import OrderedDict
 
 import attrs
 import numpy as np
-from attrs import Attribute, define
+from attrs import Attribute, field, define
 
 
 try:
@@ -156,6 +156,11 @@ class BaseConfig:
             dict: All key, value pairs required for class re-creation.
         """
         return attrs.asdict(self, filter=attr_hopp_filter, value_serializer=attr_serializer)
+
+
+@define
+class CostModelBaseConfig(BaseConfig):
+    cost_year: int = field(converter=int)
 
 
 def attr_serializer(inst: type, field: Attribute, value: Any):

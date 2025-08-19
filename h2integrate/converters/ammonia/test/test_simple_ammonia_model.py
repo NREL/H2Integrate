@@ -25,6 +25,7 @@ tech_config_dict = {
             "iron_based_catalyst_consumption": 0.000091295354067341,
             "oxygen_byproduct": 0.29405077250145,
             "capex_scaling_exponent": 0.6,
+            "cost_year": 2022,
         },
     }
 }

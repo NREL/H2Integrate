@@ -128,10 +128,12 @@ class StimulatedGeoH2CostConfig(GeoH2CostConfig):
         technologies/geoh2/model_inputs/shared_parameters for parameters marked with *asterisks*
         technologies/geoh2/model_inputs/cost_parameters all other parameters
 
-    Currently no parameters other than those in geoh2_baseclass.GeoH2CostConfig
+    Args:
+        cost_year (int): dollar year corresponding to costs provided in
+            geoh2_baseclass.GeoH2CostConfig
     """
 
-    pass
+    cost_year: int = field(converter=int)
 
 
 class StimulatedGeoH2CostModel(GeoH2CostBaseClass):
@@ -153,7 +155,7 @@ class StimulatedGeoH2CostModel(GeoH2CostBaseClass):
         )
         super().setup()
 
-    def compute(self, inputs, outputs):
+    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         # Calculate total capital cost per well (successful or unsuccessful)
         drill = inputs["test_drill_cost"]
         permit = inputs["permit_fees"]
