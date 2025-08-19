@@ -52,6 +52,13 @@ class MarineCarbonCapturePerformanceBaseClass(om.ExplicitComponent):
             units="t",
             desc="Hourly CO₂ capture rate (t)",
         )
+        self.add_output(
+            "co2_out",
+            val=0.0,
+            shape=8760,
+            units="kg/h",
+            desc="Hourly CO₂ capture rate (kg)",
+        )
         self.add_output("co2_capture_mtpy", units="t/year", desc="Annual CO₂ captured (t/year)")
 
 

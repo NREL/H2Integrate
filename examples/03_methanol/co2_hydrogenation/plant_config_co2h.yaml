@@ -61,6 +61,7 @@ finance_parameters:
     hopp: 2019
     electrolyzer: 2021
     methanol: 2020
+    doc: 2020
   options:
     commodity_type: "methanol"
   cost_adjustment_parameters:

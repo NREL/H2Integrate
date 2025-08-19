@@ -449,6 +449,7 @@ class H2IntegrateModel:
 
                 # Create the transport object
                 connection_component = self.supported_models[transport_type]()
+                connection_component.transport_item = transport_item
 
                 # Add the connection component to the model
                 self.plant.add_subsystem(connection_name, connection_component)

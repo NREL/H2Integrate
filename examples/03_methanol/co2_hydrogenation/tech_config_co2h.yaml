@@ -42,7 +42,7 @@ technologies:
     cost_model:
       model: "direct_ocean_capture_cost"
     model_inputs:
-      performance_parameters:
+      shared_parameters:
         power_single_ed_w: 24000000.0  # W
         flow_rate_single_ed_m3s: 0.6  # m^3/s
         number_ed_min: 1
@@ -60,6 +60,8 @@ technologies:
         temp_C: 12.0  # degrees Celsius
         dic_i: 0.0022  # mol/L
         pH_i: 8.1  # initial pH
+      cost_parameters:
+        infrastructure_type: "desal"
   methanol:
     performance_model:
       model: "co2h_methanol_plant_performance"
