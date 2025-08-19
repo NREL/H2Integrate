@@ -73,7 +73,7 @@ properties:
             minimum: 1
           start_time:
             type: string
-            description: simulation start time formatted as mm/dd/yy HH:MM:SS or mm/dd HH:MM:SS
+            description: simulation start time formatted as mm/dd/yyyy HH:MM:SS or mm/dd HH:MM:SS
             default: "01/01 00:30:00"
           timezone:
             type: number

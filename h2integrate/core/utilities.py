@@ -1,4 +1,5 @@
 from typing import Any
+from datetime import datetime, timezone, timedelta
 from collections import OrderedDict
 
 import attrs
@@ -242,3 +243,48 @@ def check_plant_config_and_profast_params(
             f"{pf_config_key} from pf_params input."
         )
         raise ValueError(msg)
+
+
+def make_time_profile(
+    start_time: str,
+    dt: float | int,
+    n_timesteps: int,
+    time_zone: int | float,
+    start_year: int | None = None,
+):
+    """Generate a time-series profile for a given start time, time step interval, and
+    number of timesteps, with a timezone signature.
+
+    Args:
+        start_time (str): simulation start time formatted as 'mm/dd/yyyy HH:MM:SS' or
+            'mm/dd HH:MM:SS'
+        dt (float | int): time step interval in seconds.
+        n_timesteps (int): number of timesteps in a simulation.
+        time_zone (int | float): timezone offset from UTC in hours.
+        start_year (int | None, optional): year to use for start-time if start-time is formatted
+            as 'mm/dd HH:MM:SS'. If None, the year will default to 1900. Defaults to None.
+
+    Returns:
+        list[datetime]: list of datetime objects that represents the time profile
+    """
+
+    tz_utc_offset = timedelta(hours=time_zone)
+    tz = timezone(offset=tz_utc_offset)
+    tz_str = str(tz).replace("UTC", "").replace(":", "")
+    # timezone formatted as ±HHMM[SS[.ffffff]]
+    start_time_w_tz = f"{start_time} ({tz_str})"
+    if len(start_time.split("/")) == 3:
+        t = datetime.strptime(start_time_w_tz, "%m/%d/%Y %H:%M:%S (%z)")
+    elif len(start_time.split("/")) == 2:
+        if start_year is not None:
+            start_time_w_tz = f"{start_time}/{start_year} ({tz_str})"
+            t = datetime.strptime(start_time_w_tz, "%m/%d/%Y %H:%M:%S (%z)")
+        else:
+            # NOTE: year will default to 1900
+            t = datetime.strptime(start_time_w_tz, "%m/%d %H:%M:%S (%z)")
+    time_profile = [None] * n_timesteps
+    time_step = timedelta(seconds=dt)
+    for i in range(n_timesteps):
+        time_profile[i] = t
+        t += time_step
+    return time_profile
