@@ -49,7 +49,7 @@ properties:
                 type: number
               description: Y coordinates of the boundary polygon
           required: ["x", "y"]
-    required: ["latitude", "longitude", "elevation_m", "time_zone", "boundaries"]
+    required: ["latitude", "longitude", "boundaries"]
   plant:
     type: object
     properties:
@@ -58,7 +58,25 @@ properties:
         description: Plant lifetime in years
         minimum: 1
         default: 30
-    required: ["plant_life"]
+      dt:
+        type: number
+        description: simulation time-step in seconds
+        default: 3600
+      n_timesteps:
+        type: number
+        description: number of timesteps to simulate
+        default: 8760
+        minimum: 1
+      start_time:
+        type: string
+        description: simulation start time formatted as mm/dd/yy HH:MM:SS or mm/dd HH:MM:SS
+        default: "01/01 00:30:00"
+      timezone:
+        type: number
+        description: timezone as UTC offset corresponding to start_time
+        minimum: -12
+        maximum: 14
+    required: ["plant_life","dt","n_timesteps"]
   technology_interconnections:
     type: array
     description: Array of arrays representing technology interconnections
