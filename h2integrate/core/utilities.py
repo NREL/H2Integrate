@@ -244,7 +244,7 @@ def check_plant_config_and_profast_params(
         raise ValueError(msg)
 
 
-def check_output_formatting(orig_dict):
+def dict_to_yaml_formatting(orig_dict):
     """Recursive method to convert arrays to lists and numerical entries to floats.
     This is primarily used before writing a dictionary to a YAML file to ensure
     proper output formatting.
@@ -257,7 +257,7 @@ def check_output_formatting(orig_dict):
     """
     for key, val in orig_dict.items():
         if isinstance(val, dict):
-            tmp = check_output_formatting(orig_dict.get(key, {}))
+            tmp = dict_to_yaml_formatting(orig_dict.get(key, {}))
             orig_dict[key] = tmp
         else:
             if isinstance(key, list):
@@ -275,7 +275,7 @@ def check_output_formatting(orig_dict):
                     if any(isinstance(v, dict) for v in val):
                         for vii, v in enumerate(val):
                             if isinstance(v, dict):
-                                new_val = check_output_formatting(v)
+                                new_val = dict_to_yaml_formatting(v)
                             else:
                                 new_val = v if isinstance(v, (str, bool, int)) else float(v)
                             orig_dict[key][vii] = new_val

@@ -1,11 +1,12 @@
 def convert_pf_res_to_pf_config(pf_config):
-    """Convert dictionary of profast objects to dictionary with embedded dictionaries.
+    """Convert dictionary of ProFAST objects to dictionary with
+        embedded dictionaries.
 
     Args:
         pf_config (dict): values are profast objects.
 
     Returns:
-        dict: dictionary of ProFAST input file.
+        dict: dictionary representation of ProFAST inputs.
     """
     pf_config_new = {}
     config_keys = list(pf_config.keys())
@@ -110,6 +111,15 @@ def convert_pf_res_to_pf_config(pf_config):
 
 
 def make_pf_config_from_profast(pf):
+    """Convert ProFAST object to a dictionary of objects.
+
+    Args:
+        pf (ProFAST.ProFAST): ProFAST object.
+
+    Returns:
+        dict: keys are profast top-level inputs such as 'params', 'capital_items',
+            'fixed_costs', etc. Values are objects of each input type.
+    """
     pf_config = {
         "params": pf.vals,
         "capital_items": pf.capital_items,
@@ -118,10 +128,21 @@ def make_pf_config_from_profast(pf):
         "incentives": pf.incentives,
         "coproducts": pf.coproducts,
     }
+    if getattr(pf, "LCO", None) is not None:
+        pf_config["LCO"] = pf.LCO
+
     return pf_config
 
 
 def convert_pf_to_dict(pf):
+    """Convert dictionary of ProFAST objects to dictionary with embedded dictionaries.
+
+    Args:
+        pf_config (ProFAST object): values are ProFAST objects.
+
+    Returns:
+        dict: dictionary representation of ProFAST inputs.
+    """
     pf_config = make_pf_config_from_profast(pf)
     pf_dict = convert_pf_res_to_pf_config(pf_config)
     return pf_dict
