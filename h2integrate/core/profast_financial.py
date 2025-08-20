@@ -12,6 +12,7 @@ from h2integrate.core.utilities import (
 from h2integrate.core.dict_utils import update_defaults
 from h2integrate.core.validators import gt_zero, contains, gte_zero, range_val
 from h2integrate.tools.profast_tools import run_profast, create_and_populate_profast
+from h2integrate.core.supported_models import finance_models_outputs
 
 
 finance_to_pf_param_mapper = {
@@ -39,9 +40,20 @@ def check_param_format(param_dict):
     return param_dict_reformatted
 
 
+def check_output_contains(name, value):
+    valid_items = finance_models_outputs["ProFastComp"]
+    if isinstance(value, list):
+        for val in value:
+            if val.strip().lower().replace("_", " ") not in valid_items:
+                raise ValueError(f"Item {val} not found in list for {name}: {valid_items}")
+    if isinstance(value, str):
+        if value.strip().lower().replace("_", " ") not in valid_items:
+            raise ValueError(f"Item {value} not found in list for {name}: {valid_items}")
+
+
 @define
 class BasicProFASTParameterConfig(BaseConfig):
-    """Parameters for ProFAST config file
+    """Financing parameters for ProFAST
 
     Attributes:
         plant_life (int): operating life of plant in years
@@ -244,8 +256,12 @@ class ProFastComp(om.ExplicitComponent):
         self.options.declare("plant_config", types=dict)
         self.options.declare("tech_config", types=dict)
         self.options.declare("commodity_type", types=str)
+        self.options.declare(
+            "outputs", default="lco", types=(str, list), check_valid=check_output_contains
+        )
 
     def setup(self):
+        # TODO: update to allow for different and multiple outputs
         self.LCO_str = f"LCO{self.options['commodity_type'][0].upper()}"
         if self.options["commodity_type"] == "electricity":
             commodity_units = "kW*h/year"

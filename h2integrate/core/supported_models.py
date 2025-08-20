@@ -125,3 +125,7 @@ supported_models = {
 }
 
 electricity_producing_techs = ["wind", "solar", "pv", "river", "hopp"]
+
+finance_models_outputs = {
+    "ProFastComp": ["lco", "profit index", "payback period"],
+}
