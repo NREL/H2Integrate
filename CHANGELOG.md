@@ -41,6 +41,7 @@
 - Updated finance parameter organization naming in `plant_config`.
 - Added cost model base class and removed `plant_config['finance_parameters']['discount_years']['tech']`. Some cost models require user-input cost year (`tech_config[tech]['model_inputs']['cost_parameters']['cost_year']`) others do not. Cost year is output from cost models as a discrete output.
 - Add ocean alkalinity enhancement technology model.
+- Added ability to export ProFAST object to yaml file in `ProFastComp`
 
 ## 0.3.0 [May 2 2025]
 

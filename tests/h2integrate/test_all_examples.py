@@ -128,6 +128,18 @@ def test_simple_ammonia_example(subtests):
             == 1.02470046
         )
 
+    # Check that the expected output files exist
+    outputs_dir = Path.cwd() / "outputs"
+    assert (
+        outputs_dir / "profast_output_ammonia.yaml"
+    ).is_file(), "profast_output_ammonia.yaml not found"
+    assert (
+        outputs_dir / "profast_output_electricity.yaml"
+    ).is_file(), "profast_output_electricity.yaml not found"
+    assert (
+        outputs_dir / "profast_output_hydrogen.yaml"
+    ).is_file(), "profast_output_hydrogen.yaml not found"
+
 
 def test_ammonia_synloop_example(subtests):
     # Change the current working directory to the example's directory
