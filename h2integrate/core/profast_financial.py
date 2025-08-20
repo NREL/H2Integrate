@@ -201,10 +201,6 @@ class BasicProFASTParameterConfig(BaseConfig):
                 params[finance_to_pf_param_mapper[keyname]] = vals
             else:
                 params[keyname] = vals
-                # params = rename_dict_keys(
-                #     params, keyname, finance_to_pf_param_mapper[keyname]
-                # )
-
         return params
 
     def create_years_of_operation(self):
@@ -261,14 +257,28 @@ class ProFastComp(om.ExplicitComponent):
         )
 
     def setup(self):
-        # TODO: update to allow for different and multiple outputs
-        self.LCO_str = f"LCO{self.options['commodity_type'][0].upper()}"
         if self.options["commodity_type"] == "electricity":
             commodity_units = "kW*h/year"
             lco_units = "USD/kW/h"
         else:
             commodity_units = "kg/year"
             lco_units = "USD/kg"
+
+        if isinstance(self.options["outputs"], str):
+            self.model_outputs = [self.options["outputs"].strip().lower().replace("_", " ")]
+        else:
+            self.model_outputs = [
+                o.strip().lower().replace("_", " ") for o in self.options["outputs"]
+            ]
+        if "lco" in self.model_outputs:
+            self.LCO_str = f"LCO{self.options['commodity_type'][0].upper()}"
+            self.add_output(self.LCO_str, val=0.0, units=lco_units)
+        if "profit index" in self.model_outputs:
+            self.profit_index_str = f"profit_index_{self.options['commodity_type']}"
+            self.add_output(self.profit_index_str, val=0.0, units="USD")  # TODO: check units
+        if "payback period" in self.model_outputs:
+            self.ipp_str = f"payback_period_{self.options['commodity_type']}"
+            self.add_output(self.ipp_str, val=0.0, units="yr")  # TODO: check units
 
         if self.options["commodity_type"] == "co2":
             self.add_input("co2_capture_kgpy", val=0.0, units="kg/year")
@@ -278,7 +288,6 @@ class ProFastComp(om.ExplicitComponent):
                 val=0.0,
                 units=commodity_units,
             )
-        self.add_output(self.LCO_str, val=0.0, units=lco_units)
 
         tech_config = self.tech_config = self.options["tech_config"]
         for tech in tech_config:
@@ -347,8 +356,8 @@ class ProFastComp(om.ExplicitComponent):
             capacity = float(inputs[f"total_{self.options['commodity_type']}_produced"][0]) / 365.0
         else:
             capacity = float(inputs["co2_capture_kgpy"]) / 365.0
-        profast_params["capacity"] = capacity  # TODO: udpate to actual daily capacity
-        profast_params["long term utilization"] = 1  # TODO: updated to capacity factor
+        profast_params["capacity"] = capacity  # TODO: update to actual daily capacity
+        profast_params["long term utilization"] = 1  # TODO: update to capacity factor
 
         # initialize profast dictionary
         pf_dict = {"params": profast_params, "capital_items": {}, "fixed_costs": {}}
@@ -420,5 +429,9 @@ class ProFastComp(om.ExplicitComponent):
         # Check whether to export profast object to .yaml file
         # TODO: save profast object to dictionary if desired
         # see PR #207 https://github.com/NREL/H2Integrate/pull/207
-
-        outputs[self.LCO_str] = sol["price"]
+        if "lco" in self.model_outputs:
+            outputs[self.LCO_str] = sol["price"]  # TODO: replace with sol['lco']
+        if "profit index" in self.model_outputs:
+            outputs[self.profit_index_str] = sol["profit index"]
+        if "payback period" in self.model_outputs:
+            outputs[self.ipp_str] = sol["investor payback period"]
