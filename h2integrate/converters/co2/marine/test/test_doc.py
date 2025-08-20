@@ -80,6 +80,10 @@ class TestDOCPerformanceModelNoMCM(unittest.TestCase):
         try:
             self.model = DOCPerformanceModel(plant_config={}, tech_config={})
         except ImportError as e:
-            self.assertIn("The `mcm` package is required. Install it via:", str(e))
+            self.assertIn(
+                "The `mcm` package is required to use the Direct Ocean Capture model."
+                " Install it via:",
+                str(e),
+            )
         else:
             self.fail("ImportError was not raised")
