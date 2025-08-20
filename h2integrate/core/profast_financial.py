@@ -290,7 +290,8 @@ class ProFastComp(om.ExplicitComponent):
 
         plant_config = self.options["plant_config"]
 
-        fin_params = plant_config["finance_parameters"]["profast_inputs"]["params"]
+        fin_params = plant_config["finance_parameters"]["model_inputs"]["params"]
+
         # if profast params were already in profast format
         if any(k in list(finance_to_pf_param_mapper.values()) for k, v in fin_params.items()):
             pf_param_to_finance_mapper = {v: k for k, v in finance_to_pf_param_mapper.items()}
@@ -304,68 +305,29 @@ class ProFastComp(om.ExplicitComponent):
 
         fin_params = check_param_format(fin_params)
 
-        check_plant_config_and_profast_params(
-            plant_config["plant"], fin_params, "plant_life", "operating_life"
-        )
-        check_plant_config_and_profast_params(
-            plant_config["finance_parameters"],
-            fin_params,
-            "installation_time",
-            "installation_months",
-        )
-        check_plant_config_and_profast_params(
-            plant_config["finance_parameters"],
-            fin_params,
-            "analysis_start_year",
-            "analysis_start_year",
-        )
-
-        if "general_inflation_rate" in fin_params:
+        if "operating_life" in fin_params:
             check_plant_config_and_profast_params(
-                plant_config["finance_parameters"],
-                fin_params,
-                "inflation_rate",
-                "general_inflation_rate",
+                plant_config["plant"], fin_params, "plant_life", "operating_life"
             )
-
-        if "discount_rate" in plant_config["finance_parameters"]:
-            check_plant_config_and_profast_params(
-                plant_config["finance_parameters"],
-                fin_params,
-                "discount_rate",
-                "leverage_after_tax_nominal_discount_rate",
-            )
-            fin_params.update(
-                {"discount_rate": plant_config["finance_parameters"]["discount_rate"]}
-            )
-
-        fin_params.update(
-            {
-                "plant_life": plant_config["plant"]["plant_life"],
-                "installation_time": plant_config["finance_parameters"]["installation_time"],
-                "analysis_start_year": plant_config["finance_parameters"]["analysis_start_year"],
-                "inflation_rate": plant_config["finance_parameters"]["inflation_rate"],
-            }
-        )
 
         # initialize financial parameters
         self.params = BasicProFASTParameterConfig.from_dict(fin_params)
 
         # initialize default capital item parameters
-        capital_item_params = plant_config["finance_parameters"]["profast_inputs"].get(
+        capital_item_params = plant_config["finance_parameters"]["model_inputs"].get(
             "capital_items", {}
         )
         self.capital_item_settings = ProFASTDefaultCapitalItem.from_dict(capital_item_params)
 
         # initialize default fixed cost parameters
-        fixed_cost_params = plant_config["finance_parameters"]["profast_inputs"].get(
+        fixed_cost_params = plant_config["finance_parameters"]["model_inputs"].get(
             "fixed_costs", {}
         )
         fixed_cost_params.setdefault("escalation", self.params.inflation_rate)
         self.fixed_cost_settings = ProFASTDefaultFixedCost.from_dict(fixed_cost_params)
 
         # incentives - unused for now
-        # incentive_params = plant_config["finance_parameters"]["profast_inputs"].get(
+        # incentive_params = plant_config["finance_parameters"]["model_inputs"].get(
         #     "incentives", {}
         # )
         # incentive_params.setdefault("decay", -1 * self.params.inflation_rate)
@@ -385,8 +347,8 @@ class ProFastComp(om.ExplicitComponent):
             capacity = float(inputs[f"total_{self.options['commodity_type']}_produced"][0]) / 365.0
         else:
             capacity = float(inputs["co2_capture_kgpy"]) / 365.0
-        profast_params["capacity"] = capacity
-        profast_params["long term utilization"] = 1
+        profast_params["capacity"] = capacity  # TODO: udpate to actual daily capacity
+        profast_params["long term utilization"] = 1  # TODO: updated to capacity factor
 
         # initialize profast dictionary
         pf_dict = {"params": profast_params, "capital_items": {}, "fixed_costs": {}}
