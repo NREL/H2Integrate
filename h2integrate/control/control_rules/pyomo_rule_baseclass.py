@@ -25,7 +25,7 @@ class PyomoRuleBaseClass(om.ExplicitComponent):
 
         pass
 
-    def dispatch_block_rule_function(self, pyomo_model: pyomo.ConcreteModel):
+    def dispatch_block_rule_function(self, pyomo_model: pyomo.ConcreteModel, tech_name: str):
         """Initializes technology parameters, variables, constraints, and ports.
             Called during Dispatch's __init__.
 
@@ -34,15 +34,15 @@ class PyomoRuleBaseClass(om.ExplicitComponent):
 
         """
         # Parameters
-        self._create_parameters(pyomo_model)
+        self._create_parameters(pyomo_model, tech_name)
         # Variables
-        self._create_variables(pyomo_model)
+        self._create_variables(pyomo_model, tech_name)
         # Constraints
-        self._create_constraints(pyomo_model)
+        self._create_constraints(pyomo_model, tech_name)
         # Ports
-        self._create_ports(pyomo_model)
+        self._create_ports(pyomo_model, tech_name)
 
-    def _create_parameters(self, pyomo_model):
+    def _create_parameters(self, pyomo_model, tech_name):
         """Create technology Pyomo parameters to add to the Pyomo model instance.
 
         Args:
@@ -54,7 +54,7 @@ class PyomoRuleBaseClass(om.ExplicitComponent):
 
         raise NotImplementedError("This method should be implemented in a subclass.")
 
-    def _create_variables(self, pyomo_model):
+    def _create_variables(self, pyomo_model, tech_name):
         """Create technology Pyomo variables to add to the Pyomo model instance.
 
         Args:
@@ -69,7 +69,7 @@ class PyomoRuleBaseClass(om.ExplicitComponent):
                                   If no variables to add, simply use a pass function"
         )
 
-    def _create_constraints(self, pyomo_model):
+    def _create_constraints(self, pyomo_model, tech_name):
         """Create technology Pyomo constraints to add to the Pyomo model instance.
 
         Args:
@@ -84,7 +84,7 @@ class PyomoRuleBaseClass(om.ExplicitComponent):
                                   If no constraints to add, simply use a pass function"
         )
 
-    def _create_ports(self, hybrid):
+    def _create_ports(self, pyomo_model, tech_name):
         """Create technology Pyomo port to add to the Pyomo model instance.
 
         Args:

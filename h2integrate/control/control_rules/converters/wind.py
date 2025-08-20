@@ -4,7 +4,7 @@ from h2integrate.control.control_rules.pyomo_rule_baseclass import PyomoRuleBase
 
 
 class PyomoDispatchWind(PyomoRuleBaseClass):
-    def _create_variables(self, pyomo_model):
+    def _create_variables(self, pyomo_model: pyo.ConcreteModel, tech_name: str):
         """Create wind variables to add to pyomo model hybrid plant instance.
 
         Args:
@@ -16,15 +16,18 @@ class PyomoDispatchWind(PyomoRuleBaseClass):
                 - load: Load from given technology.
 
         """
-        pyomo_model.wind_electricity = pyo.Var(
-            doc="Electricity generation from wind turbines [MW]",
-            domain=pyo.NonNegativeReals,
-            units=pyo.units.MW,
-            initialize=0.0,
+        setattr(
+            pyomo_model,
+            f"{tech_name}_electricity",
+            pyo.Var(
+                doc="Electricity generation from wind turbines [MW]",
+                domain=pyo.NonNegativeReals,
+                units=pyo.units.MW,
+                initialize=0.0,
+            ),
         )
-        return pyomo_model.wind_electricity, 0
 
-    def _create_ports(self, pyomo_model):
+    def _create_ports(self, pyomo_model: pyo.ConcreteModel, tech_name: str):
         """Create wind port to add to hybrid plant instance.
 
         Args:
@@ -34,12 +37,17 @@ class PyomoDispatchWind(PyomoRuleBaseClass):
             Port: Wind Port object.
 
         """
-        pyomo_model.wind_port = pyo.Port(
-            initialize={"wind_electricity": pyomo_model.wind_electricity}
+        setattr(
+            pyomo_model,
+            f"{tech_name}_port",
+            pyo.Port(
+                initialize={
+                    f"{tech_name}_electricity": getattr(pyomo_model, f"{tech_name}_electricity")
+                }
+            ),
         )
-        return pyomo_model.wind_port
 
-    def _create_parameters(self, pyomo_model):
+    def _create_parameters(self, pyomo_model: pyo.ConcreteModel, tech_name: str):
         """Create technology Pyomo parameters to add to the Pyomo model instance.
 
         Args:
@@ -51,7 +59,7 @@ class PyomoDispatchWind(PyomoRuleBaseClass):
 
         pass
 
-    def _create_constraints(self, pyomo_model):
+    def _create_constraints(self, pyomo_model: pyo.ConcreteModel, tech_name: str):
         """Create technology Pyomo parameters to add to the Pyomo model instance.
 
         Args:

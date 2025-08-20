@@ -180,8 +180,9 @@ class PyomoControllerBaseClass(ControllerBaseClass):
         pyomo_model = pyomo.ConcreteModel()
 
         # run each pyomo rule set up function for each technology
-        for key in discrete_inputs:
-            discrete_inputs[key](pyomo_model)
+        for key, dispatch_block_rule_function in discrete_inputs.items():
+            tech_name = key.split("_")[-1]
+            dispatch_block_rule_function(pyomo_model, tech_name)
 
         # define dispatch solver
         def pyomo_dispatch_solver(performance_model: callable, kwargs, pyomo_model=pyomo_model):
