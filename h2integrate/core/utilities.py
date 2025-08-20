@@ -289,6 +289,7 @@ def make_time_profile(
         t += time_step
     return time_profile
 
+
 def dict_to_yaml_formatting(orig_dict):
     """Recursive method to convert arrays to lists and numerical entries to floats.
     This is primarily used before writing a dictionary to a YAML file to ensure
