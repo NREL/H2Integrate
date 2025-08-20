@@ -38,6 +38,8 @@ class DOCPerformanceConfig(MarineCarbonCapturePerformanceConfig):
     """Extended configuration for Direct Ocean Capture (DOC) performance model.
 
     Attributes:
+        power_single_ed_w (float): Power requirement of a single electrodialysis (ED) unit (watts).
+        flow_rate_single_ed_m3s (float): Flow rate of a single ED unit (cubic meters per second).
         E_HCl (float): Energy required per mole of HCl produced (kWh/mol).
         E_NaOH (float): Energy required per mole of NaOH produced (kWh/mol).
         y_ext (float): CO2 extraction efficiency (unitless fraction).
@@ -51,6 +53,8 @@ class DOCPerformanceConfig(MarineCarbonCapturePerformanceConfig):
         initial_tank_volume_m3 (float): Initial volume of the tank (m³).
     """
 
+    power_single_ed_w: float = field()
+    flow_rate_single_ed_m3s: float = field()
     E_HCl: float = field()
     E_NaOH: float = field()
     y_ext: float = field()
@@ -80,7 +84,8 @@ class DOCPerformanceModel(MarineCarbonCapturePerformanceBaseClass):
         super().initialize()
         if echem_mcc is None:
             raise ImportError(
-                "The `mcm` package is required. Install it via:\n"
+                "The `mcm` package is required to use the Direct Ocean Capture model. "
+                "Install it via:\n"
                 "pip install git+https://github.com/NREL/MarineCarbonManagement.git"
             )
 
@@ -153,7 +158,8 @@ class DOCCostModel(MarineCarbonCaptureCostBaseClass):
         super().initialize()
         if echem_mcc is None:
             raise ImportError(
-                "The `mcm` package is required. Install it via:\n"
+                "The `mcm` package is required to use the Direct Ocean Capture model. "
+                "Install it via:\n"
                 "pip install git+https://github.com/NREL/MarineCarbonManagement.git"
             )
 
