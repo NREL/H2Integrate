@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import attrs
 import numpy as np
 import openmdao.api as om
@@ -7,12 +9,15 @@ from h2integrate.core.utilities import (
     BaseConfig,
     attr_serializer,
     attr_hopp_filter,
+    dict_to_yaml_formatting,
     check_plant_config_and_profast_params,
 )
 from h2integrate.core.dict_utils import update_defaults
 from h2integrate.core.validators import gt_zero, contains, gte_zero, range_val
 from h2integrate.tools.profast_tools import run_profast, create_and_populate_profast
 from h2integrate.core.supported_models import finance_models_outputs
+from h2integrate.core.inputs.validation import write_yaml
+from h2integrate.tools.profast_reverse_tools import convert_pf_to_dict
 
 
 finance_to_pf_param_mapper = {
@@ -427,8 +432,17 @@ class ProFastComp(om.ExplicitComponent):
         sol, summary, price_breakdown = run_profast(pf)
 
         # Check whether to export profast object to .yaml file
-        # TODO: save profast object to dictionary if desired
-        # see PR #207 https://github.com/NREL/H2Integrate/pull/207
+        if self.options["plant_config"]["finance_parameters"].get("save_profast_to_file", False):
+            output_dir = self.options["driver_config"]["general"]["folder_output"]
+            fdesc = self.options["plant_config"]["finance_parameters"]["profast_output_description"]
+            fname = f"{fdesc}_{self.options['commodity_type']}.yaml"
+            fpath = Path(output_dir) / fname
+            output_dir = Path(output_dir)
+            output_dir.mkdir(parents=True, exist_ok=True)
+            d = convert_pf_to_dict(pf)
+            d = dict_to_yaml_formatting(d)
+            write_yaml(d, fpath)
+
         if "lco" in self.model_outputs:
             outputs[self.LCO_str] = sol["price"]  # TODO: replace with sol['lco']
         if "profit index" in self.model_outputs:
