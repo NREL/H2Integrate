@@ -138,6 +138,9 @@ def test_heuristic_load_following_dispatch(subtests):
     # Check that the has non-zero charge and discharge power, and that the sum of charge
     # and discharge power are equal.
     with subtests.test("charge_resource"):
+        import pdb
+
+        pdb.set_trace()
         assert sum(battery.dispatch.charge_resource) > 0.0
 
     with subtests.test("discharge_resource"):

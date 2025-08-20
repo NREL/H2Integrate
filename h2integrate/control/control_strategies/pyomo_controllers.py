@@ -1,82 +1,227 @@
-from typing import Optional, List, Dict, Union, TYPE_CHECKING
-
-from attrs import field, define
-
-import PySAM.BatteryStateful as BatteryStateful
+from typing import TYPE_CHECKING, Union
 
 import pyomo.environ as pyomo
-from pyomo.network import Port
+import PySAM.BatteryStateful as BatteryStateful
+from attrs import field, define
 from pyomo.environ import units as u
+from pyomo.network import Port
 
 from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
 from h2integrate.control.control_strategies.controller_baseclass import ControllerBaseClass
 
 
-if TYPE_CHECKING: # to avoid circular imports
+if TYPE_CHECKING:  # to avoid circular imports
     from h2integrate.control.control_rules.pyomo_control_options import PyomoControlOptions
 
 
+@define
+class PyomoControllerBaseConfig(BaseConfig):
+    """
+    Configuration class for the DemandOpenLoopController.
+
+    This class defines the parameters required to configure the `DemandOpenLoopController`.
+
+    Attributes:
+        resource_name (str): Name of the resource being controlled (e.g., "hydrogen").
+        resource_units (str): Units of the resource (e.g., "kg/h").
+        time_steps (int): Number of time steps in the simulation.
+        max_capacity (float): Maximum storage capacity of the resource (in non-rate units,
+            e.g., "kg" if `resource_units` is "kg/h").
+        max_charge_percent (float): Maximum allowable state of charge (SOC) as a percentage
+            of `max_capacity`, represented as a decimal between 0 and 1.
+        min_charge_percent (float): Minimum allowable SOC as a percentage of `max_capacity`,
+            represented as a decimal between 0 and 1.
+        init_charge_percent (float): Initial SOC as a percentage of `max_capacity`, represented
+            as a decimal between 0 and 1.
+        max_charge_rate (float): Maximum rate at which the resource can be charged (in units
+            per time step, e.g., "kg/time step").
+        max_discharge_rate (float): Maximum rate at which the resource can be discharged (in
+            units per time step, e.g., "kg/time step").
+        charge_efficiency (float): Efficiency of charging the storage, represented as a decimal
+            between 0 and 1 (e.g., 0.9 for 90% efficiency).
+        discharge_efficiency (float): Efficiency of discharging the storage, represented as a
+            decimal between 0 and 1 (e.g., 0.9 for 90% efficiency).
+        demand_profile (scalar or list): The demand values for each time step (in the same units
+            as `resource_units`) or a scalar for a constant demand.
+    """
+
+    resource_name: str = field()
+    resource_rate_units: str = field()
+    time_steps: int = field()
+    max_capacity: float = field()
+    max_charge_percent: float = field()
+    min_charge_percent: float = field()
+    init_charge_percent: float = field()
+    max_charge_rate: float = field()
+    max_discharge_rate: float = field()
+    charge_efficiency: float = field()
+    discharge_efficiency: float = field()
+    demand_profile: int | float | list = field()
+    # added by cbay, moved here by jthomas
+    include_lifecycle_count: bool = field(default=False)
+
 
 class PyomoControllerBaseClass(ControllerBaseClass):
-    def setup(
-            self,
-            pyomo_model: pyomo.ConcreteModel,
-            index_set: pyomo.Set,
-            system_model,
-            block_set_name: str = "dispatch",
-    ):
-        self.block_set_name = block_set_name
-        self.round_digits = int(4)
-
-        self._model = pyomo_model
-        self._blocks = pyomo.Block(index_set, rule=self.dispatch_block_rule)
-        setattr(self.model, self.block_set_name, self.blocks)
-
-        self._system_model = system_model
-
-    @staticmethod
-    def dispatch_block_rule(block, t):
-        raise NotImplemented(
-            "This function must be overridden for specific dispatch model"
+    def setup(self):
+        self.config = PyomoControllerBaseConfig.from_dict(
+            merge_shared_inputs(self.options["tech_config"]["model_inputs"], "control")
         )
 
-    def initialize_parameters(self):
-        raise NotImplemented(
-            "This function must be overridden for specific dispatch model"
+        self.add_input(
+            f"{self.config.resource_name}_in",
+            shape_by_conn=True,
+            units=self.config.resource_units,
+            desc=f"{self.config.resource_name} input timeseries from production to storage",
         )
 
-    def update_time_series_parameters(self, start_time: int):
-        raise NotImplemented(
-            "This function must be overridden for specific dispatch model"
+        self.add_output(
+            f"{self.config.resource_name}_out",
+            copy_shape=f"{self.config.resource_name}_in",
+            units=self.config.resource_units,
+            desc=f"{self.config.resource_name} output timeseries from plant after storage",
         )
 
-    @staticmethod
-    def _check_efficiency_value(efficiency):
-        """Checks efficiency is between 0 and 1 or 0 and 100. Returns fractional value"""
-        if efficiency < 0:
-            raise ValueError("Efficiency value must greater than 0")
-        elif efficiency > 1:
-            efficiency /= 100
-            if efficiency > 1:
-                raise ValueError("Efficiency value must between 0 and 1 or 0 and 100")
-        return efficiency
+        self.add_output(  # using non-discrete outputs so shape and units can be specified
+            f"{self.config.resource_name}_soc",
+            copy_shape=f"{self.config.resource_name}_in",
+            units="unitless",
+            desc=f"{self.config.resource_name} state of charge timeseries for storage",
+        )
 
-    @property
-    def blocks(self) -> pyomo.Block:
-        return self._blocks
+        self.add_output(  # using non-discrete outputs so shape and units can be specified
+            f"{self.config.resource_name}_curtailed",
+            copy_shape=f"{self.config.resource_name}_in",
+            units=self.config.resource_units,
+            desc=f"{self.config.resource_name} curtailment timeseries for inflow resource at \
+                storage point",
+        )
 
-    @property
-    def model(self) -> pyomo.ConcreteModel:
-        return self._model
+        self.add_output(  # using non-discrete outputs so shape and units can be specified
+            f"{self.config.resource_name}_missed_load",
+            copy_shape=f"{self.config.resource_name}_in",
+            units=self.config.resource_units,
+            desc=f"{self.config.resource_name} missed load timeseries",
+        )
+
+        # get technology group name
+        tech_group_name = self.pathname.split(".")[-2]
+        dispatch_connections = self.options["plant_config"]["tech_to_dispatch_connections"]
+        for connection in dispatch_connections:
+            source_tech, intended_dispatch_tech, object_name = connection
+            if intended_dispatch_tech == tech_group_name:
+                self.add_discrete_input(f"{object_name}_{source_tech}", val=None)
+            else:
+                continue
+
+    def compute(
+        self, inputs, outputs, discrete_inputs, discrete_outputs
+    ):  # , discrete_inputs, discrete_outputs):
+        """
+        Compute the state of charge (SOC) and output flow based on demand and storage constraints.
+
+        """
+        demand_profile = self.config.demand_profile
+
+        # if demand_profile is a scalar, then use it to create a constant timeseries
+        if isinstance(demand_profile, (int, float)):
+            demand_profile = [demand_profile] * self.config.time_steps
+
+        # outputs[f"{resource_name}_out"] = output_array
+        # # Return the SOC
+        # outputs[f"{resource_name}_soc"] = soc_array
+        # # Return the curtailment
+        # outputs[f"{resource_name}_curtailed"] = curtailment_array
+        # # Return the missed load
+        # outputs[f"{resource_name}_missed_load"] = missed_load_array
 
 
-@define
-class SimpleLoadFollowingControllerConfig(BaseConfig):
-    resource_name: str = field()
-    resource_units: str = field()
-    resource_rate_units: str = field()
-    system_capacity_kw: int = field()
-    include_lifecycle_count: bool = field(default=False)
+# class PyomoControllerBaseClass(ControllerBaseClass):
+#     def setup(self):
+#         self.config = PyomoControllerBaseConfig.from_dict(
+#             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "control")
+#         )
+
+#         # if demand_profile is a scalar, then use it to create a constant timeseries
+#         self.demand_profile = self.config.demand_profile
+#         if isinstance(self.demand_profile, (int, float)):
+#             self.demand_profile = [self.demand_profile] * self.config.time_steps
+
+#         # get technology group name
+#         tech_group_name = self.pathname.split(".")[-2]
+
+#         # create inputs for all pyomo object creation functions from all connected technologies
+#         dispatch_connections = self.options["plant_config"]["tech_to_dispatch_connections"]
+#         for connection in dispatch_connections:
+#             source_tech, intended_dispatch_tech, object_name = connection
+#             if intended_dispatch_tech == tech_group_name:
+#                 self.add_discrete_input(f"{object_name}_{source_tech}", val=None)
+#             else:
+#                 continue
+
+#         # create output for the pyomo control model
+#         self.add_discrete_output("pyomo_model", desc="fully formed pyomo
+# model to be run by owning technologies performance model")
+
+# #     def compute(input, outputs, discrete_inputs, discrete_outputs):
+
+# #         pyomo_model = dispatch_function
+
+# #         discrete_outputs["pyomo_model"] = pyomo_model
+
+# #     def dispatch_function(self, performance_model, kwargs):
+
+# # #
+
+
+#     def pyomo_setup(self,
+#             pyomo_model: pyomo.ConcreteModel,
+#             index_set: pyomo.Set,
+#             system_model,
+#             block_set_name: str = "dispatch",):
+
+#         self.block_set_name = block_set_name
+#         self.round_digits = int(4)
+
+#         self._model = pyomo_model
+#         self._blocks = pyomo.Block(index_set, rule=self.dispatch_block_rule)
+#         setattr(self.model, self.block_set_name, self.blocks)
+
+#         self._system_model = system_model
+
+#     @staticmethod
+#     def dispatch_block_rule(block, t):
+#         raise NotImplemented(
+#             "This function must be overridden for specific dispatch model"
+#         )
+
+#     def initialize_parameters(self):
+#         raise NotImplemented(
+#             "This function must be overridden for specific dispatch model"
+#         )
+
+#     def update_time_series_parameters(self, start_time: int):
+#         raise NotImplemented(
+#             "This function must be overridden for specific dispatch model"
+#         )
+
+#     @staticmethod
+#     def _check_efficiency_value(efficiency):
+#         """Checks efficiency is between 0 and 1 or 0 and 100. Returns fractional value"""
+#         if efficiency < 0:
+#             raise ValueError("Efficiency value must greater than 0")
+#         elif efficiency > 1:
+#             efficiency /= 100
+#             if efficiency > 1:
+#                 raise ValueError("Efficiency value must between 0 and 1 or 0 and 100")
+#         return efficiency
+
+#     @property
+#     def blocks(self) -> pyomo.Block:
+#         return self._blocks
+
+#     @property
+#     def model(self) -> pyomo.ConcreteModel:
+#         return self._model
 
 
 class SimpleBatteryControllerHeuristic(PyomoControllerBaseClass):
@@ -86,14 +231,14 @@ class SimpleBatteryControllerHeuristic(PyomoControllerBaseClass):
 
     """
 
-    def setup(
+    def pyomo_setup(
         self,
         pyomo_model: pyomo.ConcreteModel,
         index_set: pyomo.Set,
         system_model: BatteryStateful.BatteryStateful,
-        fixed_dispatch: Optional[List] = None,
+        fixed_dispatch: list | None = None,
         block_set_name: str = "heuristic_battery",
-        control_options: Optional[Dict] = None,
+        control_options: dict | None = None,
     ):
         """Initialize SimpleBatteryControllerHeuristic.
 
@@ -109,11 +254,8 @@ class SimpleBatteryControllerHeuristic(PyomoControllerBaseClass):
         """
         if control_options is None:
             control_options = {}
-        self.config = SimpleLoadFollowingControllerConfig.from_dict(
-            merge_shared_inputs(self.options["tech_config"]["model_inputs"], "control")
-        )
 
-        super().setup(
+        super().pyomo_setup(
             pyomo_model,
             index_set,
             system_model,
@@ -156,7 +298,7 @@ class SimpleBatteryControllerHeuristic(PyomoControllerBaseClass):
         #     0
         # ]  # [$/MWh]
         self.minimum_storage = 0.0
-        self.maximum_storage = self.config.system_capacity_kw
+        self.maximum_storage = self.config.max_capacity
         # NOTE: `_system_model` format copied from HOPP, largely influenced by PySAM
         self.minimum_soc = self._system_model.value("minimum_SOC")
         self.maximum_soc = self._system_model.value("maximum_SOC")
@@ -217,14 +359,20 @@ class SimpleBatteryControllerHeuristic(PyomoControllerBaseClass):
         #     units=u.USD / u.MWh,
         # )
         storage.minimum_storage = pyomo.Param(
-            doc=self.block_set_name + " minimum storage rating [" + self.config.resource_units + "]",
+            doc=self.block_set_name
+            + " minimum storage rating ["
+            + self.config.resource_units
+            + "]",
             default=0.0,
             within=pyomo.NonNegativeReals,
             mutable=True,
             units=eval("u." + self.config.resource_units),
         )
         storage.maximum_storage = pyomo.Param(
-            doc=self.block_set_name + " maximum storage rating [" + self.config.resource_units + "]",
+            doc=self.block_set_name
+            + " maximum storage rating ["
+            + self.config.resource_units
+            + "]",
             within=pyomo.NonNegativeReals,
             mutable=True,
             units=eval("u." + self.config.resource_units),
@@ -301,8 +449,7 @@ class SimpleBatteryControllerHeuristic(PyomoControllerBaseClass):
             units=u.dimensionless,
         )
         storage.soc0 = pyomo.Var(
-            doc=self.block_set_name
-            + " initial state-of-charge at beginning of period[-]",
+            doc=self.block_set_name + " initial state-of-charge at beginning of period[-]",
             domain=pyomo.PercentFraction,
             bounds=(storage.minimum_soc, storage.maximum_soc),
             units=u.dimensionless,
@@ -314,12 +461,22 @@ class SimpleBatteryControllerHeuristic(PyomoControllerBaseClass):
             units=u.dimensionless,
         )
         storage.charge_resource = pyomo.Var(
-            doc=self.config.resource_name + " into " + self.block_set_name + " [" + self.config.resource_units + "]",
+            doc=self.config.resource_name
+            + " into "
+            + self.block_set_name
+            + " ["
+            + self.config.resource_units
+            + "]",
             domain=pyomo.NonNegativeReals,
             units=eval("u." + self.config.resource_units),
         )
         storage.discharge_resource = pyomo.Var(
-            doc=self.config.resource_name + " out of " + self.block_set_name + " [" + self.config.resource_units + "]",
+            doc=self.config.resource_name
+            + " out of "
+            + self.block_set_name
+            + " ["
+            + self.config.resource_units
+            + "]",
             domain=pyomo.NonNegativeReals,
             units=eval("u." + self.config.resource_units),
         )
@@ -340,18 +497,15 @@ class SimpleBatteryControllerHeuristic(PyomoControllerBaseClass):
         # Discharge power bounds
         storage.discharge_resource_lb = pyomo.Constraint(
             doc=self.block_set_name + " Discharging storage lower bound",
-            expr=storage.discharge_resource
-            >= storage.minimum_storage * storage.is_discharging,
+            expr=storage.discharge_resource >= storage.minimum_storage * storage.is_discharging,
         )
         storage.discharge_resource_ub = pyomo.Constraint(
             doc=self.block_set_name + " Discharging storage upper bound",
-            expr=storage.discharge_resource
-            <= storage.maximum_storage * storage.is_discharging,
+            expr=storage.discharge_resource <= storage.maximum_storage * storage.is_discharging,
         )
         # Storage packing constraint
         storage.charge_discharge_packing = pyomo.Constraint(
-            doc=self.block_set_name
-            + " packing constraint for charging and discharging binaries",
+            doc=self.block_set_name + " packing constraint for charging and discharging binaries",
             expr=storage.is_charging + storage.is_discharging <= 1,
         )
 
@@ -412,10 +566,8 @@ class SimpleBatteryControllerHeuristic(PyomoControllerBaseClass):
 
         """
         # NOTE: storage specific code here
-        self.round_trip_efficiency = (
-            round_trip_efficiency  # Including converter efficiency
-        )
-        self.capacity = self._system_model.value("nominal_energy") # / 1e3  # [MWh]
+        self.round_trip_efficiency = round_trip_efficiency  # Including converter efficiency
+        self.capacity = self._system_model.value("nominal_energy")  # / 1e3  # [MWh]
 
     def _create_soc_linking_constraint(self):
         """Creates state-of-charge linking constraint."""
@@ -423,8 +575,7 @@ class SimpleBatteryControllerHeuristic(PyomoControllerBaseClass):
         # Parameters                     #
         ##################################
         self.model.initial_soc = pyomo.Param(
-            doc=self.block_set_name
-            + " initial state-of-charge at beginning of the horizon[-]",
+            doc=self.block_set_name + " initial state-of-charge at beginning of the horizon[-]",
             within=pyomo.PercentFraction,
             default=0.5,
             mutable=True,
@@ -456,7 +607,7 @@ class SimpleBatteryControllerHeuristic(PyomoControllerBaseClass):
         # TODO: provide more control; currently don't use `start_time`
         self.time_duration = [1.0] * len(self.blocks.index_set())
 
-    def update_dispatch_initial_soc(self, initial_soc: float = None):
+    def update_dispatch_initial_soc(self, initial_soc: float | None = None):
         """Updates dispatch initial state of charge (SOC).
 
         Args:
@@ -547,7 +698,7 @@ class SimpleBatteryControllerHeuristic(PyomoControllerBaseClass):
 
         Returns:
             soc (float): Updated SOC.
-            
+
         """
         if storage_fraction > 0.0:
             discharge_resource = storage_fraction * self.maximum_storage
@@ -620,7 +771,7 @@ class SimpleBatteryControllerHeuristic(PyomoControllerBaseClass):
 
         Returns:
             float: Checked initial state-of-charge.
-            
+
         """
         if initial_soc > 1:
             initial_soc /= 100.0
@@ -630,7 +781,7 @@ class SimpleBatteryControllerHeuristic(PyomoControllerBaseClass):
                 "Warning: Storage dispatch was initialized with a state-of-charge greater than "
                 "maximum value!"
             )
-            print("Initial SOC = {}".format(initial_soc))
+            print(f"Initial SOC = {initial_soc}")
             print("Initial SOC was set to maximum value.")
             initial_soc = self.maximum_soc / 100
         elif initial_soc < self.minimum_soc / 100:
@@ -638,7 +789,7 @@ class SimpleBatteryControllerHeuristic(PyomoControllerBaseClass):
                 "Warning: Storage dispatch was initialized with a state-of-charge less than "
                 "minimum value!"
             )
-            print("Initial SOC = {}".format(initial_soc))
+            print(f"Initial SOC = {initial_soc}")
             print("Initial SOC was set to minimum value.")
             initial_soc = self.minimum_soc / 100
         return initial_soc
@@ -657,13 +808,9 @@ class SimpleBatteryControllerHeuristic(PyomoControllerBaseClass):
     def user_fixed_dispatch(self, fixed_dispatch: list):
         # TODO: Annual dispatch array...
         if len(fixed_dispatch) != len(self.blocks.index_set()):
-            raise ValueError(
-                "fixed_dispatch must be the same length as dispatch index set."
-            )
+            raise ValueError("fixed_dispatch must be the same length as dispatch index set.")
         elif max(fixed_dispatch) > 1.0 or min(fixed_dispatch) < -1.0:
-            raise ValueError(
-                "fixed_dispatch must be normalized values between -1 and 1."
-            )
+            raise ValueError("fixed_dispatch must be normalized values between -1 and 1.")
         else:
             self._user_fixed_dispatch = fixed_dispatch
 
@@ -796,9 +943,9 @@ class HeuristicLoadFollowingController(SimpleBatteryControllerHeuristic):
         pyomo_model: pyomo.ConcreteModel,
         index_set: pyomo.Set,
         system_model: BatteryStateful.BatteryStateful,
-        fixed_dispatch: Optional[List] = None,
+        fixed_dispatch: list | None = None,
         block_set_name: str = "heuristic_load_following_battery",
-        control_options: Optional[Union[Dict, 'PyomoControlOptions']] = None,
+        control_options: Union[dict, "PyomoControlOptions"] | None = None,
     ):
         """Initialize HeuristicLoadFollowingController.
 
@@ -860,122 +1007,3 @@ class HeuristicLoadFollowingController(SimpleBatteryControllerHeuristic):
                 if -fd > self.max_charge_fraction[t]:
                     fd = -self.max_charge_fraction[t]
             self._fixed_dispatch[t] = fd
-
-
-@define
-class PyomoOpenLoopControllerConfig(BaseConfig):
-    """
-    Configuration class for the DemandOpenLoopController.
-
-    This class defines the parameters required to configure the `DemandOpenLoopController`.
-
-    Attributes:
-        resource_name (str): Name of the resource being controlled (e.g., "hydrogen").
-        resource_units (str): Units of the resource (e.g., "kg/h").
-        time_steps (int): Number of time steps in the simulation.
-        max_capacity (float): Maximum storage capacity of the resource (in non-rate units,
-            e.g., "kg" if `resource_units` is "kg/h").
-        max_charge_percent (float): Maximum allowable state of charge (SOC) as a percentage
-            of `max_capacity`, represented as a decimal between 0 and 1.
-        min_charge_percent (float): Minimum allowable SOC as a percentage of `max_capacity`,
-            represented as a decimal between 0 and 1.
-        init_charge_percent (float): Initial SOC as a percentage of `max_capacity`, represented
-            as a decimal between 0 and 1.
-        max_charge_rate (float): Maximum rate at which the resource can be charged (in units
-            per time step, e.g., "kg/time step").
-        max_discharge_rate (float): Maximum rate at which the resource can be discharged (in
-            units per time step, e.g., "kg/time step").
-        charge_efficiency (float): Efficiency of charging the storage, represented as a decimal
-            between 0 and 1 (e.g., 0.9 for 90% efficiency).
-        discharge_efficiency (float): Efficiency of discharging the storage, represented as a
-            decimal between 0 and 1 (e.g., 0.9 for 90% efficiency).
-        demand_profile (scalar or list): The demand values for each time step (in the same units
-            as `resource_units`) or a scalar for a constant demand.
-    """
-
-    resource_name: str = field()
-    resource_units: str = field()
-    time_steps: int = field()
-    max_capacity: float = field()
-    max_charge_percent: float = field()
-    min_charge_percent: float = field()
-    init_charge_percent: float = field()
-    max_charge_rate: float = field()
-    max_discharge_rate: float = field()
-    charge_efficiency: float = field()
-    discharge_efficiency: float = field()
-    demand_profile: int | float | list = field()
-
-
-class PyomoOpenLoopController(ControllerBaseClass):
-    def setup(self):
-        self.config = PyomoOpenLoopControllerConfig.from_dict(
-            merge_shared_inputs(self.options["tech_config"]["model_inputs"], "control")
-        )
-
-        self.add_input(
-            f"{self.config.resource_name}_in",
-            shape_by_conn=True,
-            units=self.config.resource_units,
-            desc=f"{self.config.resource_name} input timeseries from production to storage",
-        )
-
-        self.add_output(
-            f"{self.config.resource_name}_out",
-            copy_shape=f"{self.config.resource_name}_in",
-            units=self.config.resource_units,
-            desc=f"{self.config.resource_name} output timeseries from plant after storage",
-        )
-
-        self.add_output(  # using non-discrete outputs so shape and units can be specified
-            f"{self.config.resource_name}_soc",
-            copy_shape=f"{self.config.resource_name}_in",
-            units="unitless",
-            desc=f"{self.config.resource_name} state of charge timeseries for storage",
-        )
-
-        self.add_output(  # using non-discrete outputs so shape and units can be specified
-            f"{self.config.resource_name}_curtailed",
-            copy_shape=f"{self.config.resource_name}_in",
-            units=self.config.resource_units,
-            desc=f"{self.config.resource_name} curtailment timeseries for inflow resource at \
-                storage point",
-        )
-
-        self.add_output(  # using non-discrete outputs so shape and units can be specified
-            f"{self.config.resource_name}_missed_load",
-            copy_shape=f"{self.config.resource_name}_in",
-            units=self.config.resource_units,
-            desc=f"{self.config.resource_name} missed load timeseries",
-        )
-
-        # get technology group name
-        tech_group_name = self.pathname.split(".")[-2]
-        dispatch_connections = self.options["plant_config"]["tech_to_dispatch_connections"]
-        for connection in dispatch_connections:
-            source_tech, intended_dispatch_tech, object_name = connection
-            if intended_dispatch_tech == tech_group_name:
-                self.add_discrete_input(f"{object_name}_{source_tech}", val=None)
-            else:
-                continue
-
-    def compute(
-        self, inputs, outputs, discrete_inputs, discrete_outputs
-    ):  # , discrete_inputs, discrete_outputs):
-        """
-        Compute the state of charge (SOC) and output flow based on demand and storage constraints.
-
-        """
-        demand_profile = self.config.demand_profile
-
-        # if demand_profile is a scalar, then use it to create a constant timeseries
-        if isinstance(demand_profile, (int, float)):
-            demand_profile = [demand_profile] * self.config.time_steps
-
-        # outputs[f"{resource_name}_out"] = output_array
-        # # Return the SOC
-        # outputs[f"{resource_name}_soc"] = soc_array
-        # # Return the curtailment
-        # outputs[f"{resource_name}_curtailed"] = curtailment_array
-        # # Return the missed load
-        # outputs[f"{resource_name}_missed_load"] = missed_load_array
