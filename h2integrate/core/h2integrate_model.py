@@ -7,7 +7,6 @@ import openmdao.api as om
 
 from h2integrate.core.finances import ProFastComp, AdjustedCapexOpexComp
 from h2integrate.core.utilities import create_xdsm_from_config
-from h2integrate.core.feedstocks import FeedstockComponent
 from h2integrate.core.resource_summer import ElectricitySumComp
 from h2integrate.core.supported_models import supported_models, electricity_producing_techs
 from h2integrate.core.inputs.validation import load_tech_yaml, load_plant_yaml, load_driver_yaml
@@ -187,11 +186,18 @@ class H2IntegrateModel:
 
         combined_performance_and_cost_models = ["hopp", "h2_storage", "wombat"]
 
+        add_cost_feedstock_later = False
         # Create a technology group for each technology
         for tech_name, individual_tech_config in self.technology_config["technologies"].items():
             if "feedstocks" in tech_name:
-                feedstock_component = FeedstockComponent(feedstocks_config=individual_tech_config)
-                self.plant.add_subsystem(tech_name, feedstock_component)
+                perf_model = individual_tech_config.get("performance_model", {}).get("model")
+                comp = self.supported_models[perf_model](
+                    driver_config=self.driver_config,
+                    plant_config=self.plant_config,
+                    tech_config=individual_tech_config,
+                )
+                self.plant.add_subsystem("feedstocks_performance", comp)
+                add_cost_feedstock_later = True
             else:
                 tech_group = self.plant.add_subsystem(tech_name, om.Group())
                 self.tech_names.append(tech_name)
@@ -252,6 +258,15 @@ class H2IntegrateModel:
                             promotes=["*"],
                         )
                         self.financial_models.append(financial_object)
+
+        if add_cost_feedstock_later:
+            cost_model = individual_tech_config.get("cost_model", {}).get("model")
+            comp = self.supported_models[cost_model](
+                driver_config=self.driver_config,
+                plant_config=self.plant_config,
+                tech_config=individual_tech_config,
+            )
+            self.plant.add_subsystem("feedstocks_cost", comp)
 
     def _process_model(self, model_type, individual_tech_config, tech_group):
         # Generalized function to process model definitions
@@ -317,6 +332,8 @@ class H2IntegrateModel:
             if "geoh2" in tech_configs:
                 commodity_types.append("hydrogen")
             if "doc" in tech_configs:
+                commodity_types.append("co2")
+            if "oae" in tech_configs:
                 commodity_types.append("co2")
             for tech in electricity_producing_techs:
                 if tech in tech_configs:
@@ -546,6 +563,8 @@ class H2IntegrateModel:
                     commodity_types.append("co2")
                 if "air_separator" in tech_configs:
                     commodity_types.append("nitrogen")
+                if "oae" in tech_configs:
+                    commodity_types.append("co2")
                 for tech in electricity_producing_techs:
                     if tech in tech_configs:
                         commodity_types.append("electricity")
@@ -616,6 +635,13 @@ class H2IntegrateModel:
                                 f"{tech_name}.co2_capture_mtpy",
                                 f"financials_group_{group_id}.co2_capture_kgpy",
                             )
+
+                        if "oae" in tech_name:
+                            self.plant.connect(
+                                f"{tech_name}.co2_capture_mtpy",
+                                f"financials_group_{group_id}.co2_capture_kgpy",
+                            )
+
                         if "air_separator" in tech_name:
                             self.plant.connect(
                                 f"{tech_name}.total_nitrogen_produced",

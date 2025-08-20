@@ -70,6 +70,15 @@ class NaturalGasPerformanceModel(om.ExplicitComponent):
             desc="Natural gas input energy",
         )
 
+        # Add natural gas consumed output
+        self.add_output(
+            "natural_gas_consumed",
+            val=0.0,
+            shape=n_timesteps,
+            units="MMBtu",
+            desc="Natural gas consumed by the plant",
+        )
+
         # Add electricity output
         self.add_output(
             "electricity_out",

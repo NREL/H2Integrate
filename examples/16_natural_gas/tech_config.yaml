@@ -3,12 +3,17 @@ description: "This plant produces electricity from natural gas using a combined 
 
 technologies:
   feedstocks:
-    natural_gas:
-      rated_capacity: 100.
-      capacity_units: "MMBtu"
-      price: 4.2  # $/MMBtu
-    cost_parameters:
-      cost_year: 2023
+    performance_model:
+      model: "feedstock_performance"
+    cost_model:
+      model: "feedstock_cost"
+    model_inputs:
+      natural_gas:
+        rated_capacity: 100.
+        capacity_units: "MMBtu"
+        price: 4.2  # $/MMBtu
+      cost_parameters:
+        cost_year: 2023
   natural_gas_plant:
     performance_model:
       model: "natural_gas_performance"

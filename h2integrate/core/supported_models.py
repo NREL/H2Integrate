@@ -1,4 +1,5 @@
 from h2integrate.resource.river import RiverResource
+from h2integrate.core.feedstocks import FeedstockCostModel, FeedstockPerformanceModel
 from h2integrate.transporters.pipe import PipePerformanceModel
 from h2integrate.transporters.cable import CablePerformanceModel
 from h2integrate.transporters.ng_pipe import NGPipePerformanceModel
@@ -66,6 +67,11 @@ from h2integrate.converters.hydrogen.geologic.natural_geoh2_plant import (
     NaturalGeoH2FinanceModel,
     NaturalGeoH2PerformanceModel,
 )
+from h2integrate.converters.co2.marine.ocean_alkalinity_enhancement import (
+    OAECostModel,
+    OAEPerformanceModel,
+    OAECostAndFinancialModel,
+)
 from h2integrate.converters.hydrogen.geologic.stimulated_geoh2_plant import (
     StimulatedGeoH2CostModel,
     StimulatedGeoH2FinanceModel,
@@ -111,6 +117,9 @@ supported_models = {
     "co2h_methanol_plant_financial": CO2HMethanolPlantFinanceModel,
     "direct_ocean_capture_performance": DOCPerformanceModel,
     "direct_ocean_capture_cost": DOCCostModel,
+    "ocean_alkalinity_enhancement_performance": OAEPerformanceModel,
+    "ocean_alkalinity_enhancement_cost": OAECostModel,
+    "ocean_alkalinity_enhancement_cost_financial": OAECostAndFinancialModel,
     "natural_geoh2_performance": NaturalGeoH2PerformanceModel,
     "natural_geoh2_cost": NaturalGeoH2CostModel,
     "natural_geoh2": NaturalGeoH2FinanceModel,
@@ -130,6 +139,9 @@ supported_models = {
     # Storage
     "hydrogen_tank_performance": HydrogenTankPerformanceModel,
     "hydrogen_tank_cost": HydrogenTankCostModel,
+    # Feedstock
+    "feedstock_performance": FeedstockPerformanceModel,
+    "feedstock_cost": FeedstockCostModel,
 }
 
 electricity_producing_techs = ["wind", "solar", "pv", "river", "hopp", "natural_gas_plant"]
