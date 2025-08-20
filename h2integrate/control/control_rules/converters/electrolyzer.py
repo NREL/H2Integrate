@@ -4,12 +4,6 @@ from h2integrate.control.control_rules.pyomo_rule_baseclass import PyomoRuleBase
 
 
 class PyomoDispatchElectrolyzer(PyomoRuleBaseClass):
-    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
-        discrete_outputs["_create_port"] = self._create_port
-        discrete_outputs["_create_variables"] = self._create_variables
-
-        return
-
     def _create_variables(self, pyomo_model):
         """Create pyomo electrolyzer variables to add to hybrid plant instance.
 
@@ -44,3 +38,27 @@ class PyomoDispatchElectrolyzer(PyomoRuleBaseClass):
             initialize={"electrolyzer_hydrogen": pyomo_model.electrolyzer_hydrogen}
         )
         return pyomo_model.electrolyzer_port
+
+    def _create_parameters(self, pyomo_model):
+        """Create technology Pyomo parameters to add to the Pyomo model instance.
+
+        Args:
+            pyomo_model: Pyomo Hybrid plant instance.
+
+        Returns:
+            tuple: Tuple containing created variables.
+        """
+
+        pass
+
+    def _create_constraints(self, pyomo_model):
+        """Create technology Pyomo parameters to add to the Pyomo model instance.
+
+        Args:
+            pyomo_model: Pyomo Hybrid plant instance.
+
+        Returns:
+            tuple: Tuple containing created variables.
+        """
+
+        pass

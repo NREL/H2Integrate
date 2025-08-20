@@ -4,46 +4,7 @@ from pyomo.network import Port
 from h2integrate.control.control_rules.pyomo_rule_baseclass import PyomoRuleBaseClass
 
 
-class PyomoRuleStorageBaseClass(PyomoRuleBaseClass):
-    def initialize(self):
-        self.options.declare("driver_config", types=dict)
-        self.options.declare("plant_config", types=dict)
-        self.options.declare("tech_config", types=dict)
-
-    def setup(self):
-        self.add_discrete_output(
-            "dispatch_block_rule_function", val=None, desc="pyomo port creation function"
-        )
-
-    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
-        """
-        Return the Pyomo model elements for a given technology through the OpenMDAO
-        infrastructure.
-
-        For a template class this is not implement and raises an error.
-        """
-
-        discrete_outputs["dispatch_block_rule_function"] = self.dispatch_block_rule_function
-
-    def dispatch_block_rule_function(self, pyomo_model: pyo.ConcreteModel):
-        """Initializes technology parameters, variables, constraints, and ports.
-            Called during Dispatch's __init__.
-
-        Args:
-            storage: Storage instance.
-
-        """
-        # Parameters
-        self._create_parameters(pyomo_model)
-        # Variables
-        self._create_variables(pyomo_model)
-        # Constraints
-        self._create_constraints(pyomo_model)
-        # Ports
-        self._create_ports(pyomo_model)
-
-
-class PyomoRulesStorageBaseclass(PyomoRuleBaseClass):
+class PyomoRuleStorageBaseclass(PyomoRuleBaseClass):
     def _create_parameters(self, storage):
         """Creates storage parameters.
 

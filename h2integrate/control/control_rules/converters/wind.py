@@ -4,17 +4,11 @@ from h2integrate.control.control_rules.pyomo_rule_baseclass import PyomoRuleBase
 
 
 class PyomoDispatchWind(PyomoRuleBaseClass):
-    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
-        discrete_outputs["_create_port"] = self._create_port
-        discrete_outputs["_create_variables"] = self._create_variables
-
-        return
-
     def _create_variables(self, pyomo_model):
-        """Create wind variables to add to hybrid plant instance.
+        """Create wind variables to add to pyomo model hybrid plant instance.
 
         Args:
-            hybrid: Hybrid plant instance.
+            pyomo_model: Hybrid plant instance.
 
         Returns:
             tuple: Tuple containing created variables.
@@ -30,7 +24,7 @@ class PyomoDispatchWind(PyomoRuleBaseClass):
         )
         return pyomo_model.wind_electricity, 0
 
-    def _create_port(self, pyomo_model):
+    def _create_ports(self, pyomo_model):
         """Create wind port to add to hybrid plant instance.
 
         Args:
@@ -44,3 +38,27 @@ class PyomoDispatchWind(PyomoRuleBaseClass):
             initialize={"wind_electricity": pyomo_model.wind_electricity}
         )
         return pyomo_model.wind_port
+
+    def _create_parameters(self, pyomo_model):
+        """Create technology Pyomo parameters to add to the Pyomo model instance.
+
+        Args:
+            pyomo_model: Pyomo Hybrid plant instance.
+
+        Returns:
+            tuple: Tuple containing created variables.
+        """
+
+        pass
+
+    def _create_constraints(self, pyomo_model):
+        """Create technology Pyomo parameters to add to the Pyomo model instance.
+
+        Args:
+            pyomo_model: Pyomo Hybrid plant instance.
+
+        Returns:
+            tuple: Tuple containing created variables.
+        """
+
+        pass

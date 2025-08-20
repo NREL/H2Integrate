@@ -1,5 +1,7 @@
-from h2integrate.control.control_rules.pyomo_rule_baseclass import PyomoRuleBaseClass
+from h2integrate.control.control_rules.storage.pyomo_storage_rule_baseclass import (
+    PyomoRuleStorageBaseclass,
+)
 
 
-class PyomoDispatchBattery(PyomoRuleBaseClass):
-    """what goes here?"""
+class PyomoDispatchBattery(PyomoRuleStorageBaseclass):
+    pass
