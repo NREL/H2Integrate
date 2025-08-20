@@ -19,10 +19,6 @@ site:
     }
   ]
 
-  resources:
-    natural_gas_resource:
-      filename: "natural_gas_data.csv"
-
 # array of arrays containing left-to-right technology
 # interconnections; can support bidirectional connections
 # with the reverse definition.
@@ -31,11 +27,6 @@ site:
 # hence the empty array.
 technology_interconnections: [
     ["feedstocks", "natural_gas_plant", "natural_gas", "ng_pipe"],
-]
-
-# resource interconnections
-# array of arrays containing left-to-right resource interconnections;
-resource_to_tech_connections: [
 ]
 
 plant:
