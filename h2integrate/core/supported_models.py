@@ -2,9 +2,7 @@ from h2integrate.resource.river import RiverResource
 from h2integrate.transporters.pipe import PipePerformanceModel
 from h2integrate.transporters.cable import CablePerformanceModel
 from h2integrate.converters.steel.steel import SteelPerformanceModel, SteelCostAndFinancialModel
-from h2integrate.control.control_rules.converters.wind import PyomoDispatchWind
 from h2integrate.converters.wind.wind_plant import WindPlantCostModel, WindPlantPerformanceModel
-from h2integrate.control.control_rules.storage.h2_storage import PyomoDispatchH2Storage
 from h2integrate.transporters.power_combiner import CombinerPerformanceModel
 from h2integrate.converters.hopp.hopp_wrapper import HOPPComponent
 from h2integrate.converters.solar.solar_pysam import PYSAMSolarPlantPerformanceModel
@@ -14,16 +12,8 @@ from h2integrate.storage.hydrogen.tank_baseclass import (
     HydrogenTankCostModel,
     HydrogenTankPerformanceModel,
 )
-from h2integrate.control.control_strategies.pyomo_controllers import (
-    PyomoOpenLoopController,
-)
-from h2integrate.control.control_strategies.openloop_controllers import (
-    DemandOpenLoopController,
-    PassThroughOpenLoopController,
-)
 from h2integrate.converters.hydrogen.wombat_model import WOMBATElectrolyzerModel
 from h2integrate.converters.wind.wind_plant_pysam import PYSAMWindPlantPerformanceModel
-from h2integrate.control.control_rules.converters.electrolyzer import PyomoDispatchElectrolyzer
 from h2integrate.converters.ammonia.ammonia_synloop import (
     AmmoniaSynLoopCostModel,
     AmmoniaSynLoopPerformanceModel,
@@ -39,6 +29,7 @@ from h2integrate.converters.hydrogen.pem_electrolyzer import (
 )
 from h2integrate.converters.solar.atb_res_com_pv_cost import ATBResComPVCostModel
 from h2integrate.converters.solar.atb_utility_pv_cost import ATBUtilityPVCostModel
+from h2integrate.control.control_rules.converters.wind import PyomoDispatchWind
 from h2integrate.converters.methanol.smr_methanol_plant import (
     SMRMethanolPlantCostModel,
     SMRMethanolPlantFinanceModel,
@@ -53,10 +44,17 @@ from h2integrate.converters.methanol.co2h_methanol_plant import (
     CO2HMethanolPlantFinanceModel,
     CO2HMethanolPlantPerformanceModel,
 )
+from h2integrate.control.control_rules.storage.h2_storage import PyomoDispatchH2Storage
 from h2integrate.converters.hydrogen.singlitico_cost_model import SingliticoCostModel
 from h2integrate.converters.co2.marine.direct_ocean_capture import DOCCostModel, DOCPerformanceModel
+from h2integrate.control.control_strategies.pyomo_controllers import PyomoControllerBaseClass
+from h2integrate.control.control_rules.converters.electrolyzer import PyomoDispatchElectrolyzer
 from h2integrate.converters.hydrogen.eco_tools_pem_electrolyzer import (
     ECOElectrolyzerPerformanceModel,
+)
+from h2integrate.control.control_strategies.openloop_controllers import (
+    DemandOpenLoopController,
+    PassThroughOpenLoopController,
 )
 from h2integrate.converters.water_power.hydro_plant_run_of_river import (
     RunOfRiverHydroCostModel,
@@ -128,7 +126,7 @@ supported_models = {
     # Control
     "pass_through_controller": PassThroughOpenLoopController,
     "demand_open_loop_controller": DemandOpenLoopController,
-    "pyomo_open_loop_controller": PyomoOpenLoopController,
+    "pyomo_open_loop_controller": PyomoControllerBaseClass,
     # Dispatch
     "pyomo_dispatch_wind": PyomoDispatchWind,
     "pyomo_dispatch_electrolyzer": PyomoDispatchElectrolyzer,

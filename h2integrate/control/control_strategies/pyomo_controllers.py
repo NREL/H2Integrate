@@ -60,81 +60,88 @@ class PyomoControllerBaseConfig(BaseConfig):
     include_lifecycle_count: bool = field(default=False)
 
 
-class PyomoControllerBaseClass1(ControllerBaseClass):
-    def setup(self):
-        self.config = PyomoControllerBaseConfig.from_dict(
-            merge_shared_inputs(self.options["tech_config"]["model_inputs"], "control")
-        )
+# class PyomoControllerBaseClass1(ControllerBaseClass):
+#     def setup(self):
+#         self.config = PyomoControllerBaseConfig.from_dict(
+#             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "control")
+#         )
 
-        self.add_input(
-            f"{self.config.resource_name}_in",
-            shape_by_conn=True,
-            units=self.config.resource_units,
-            desc=f"{self.config.resource_name} input timeseries from production to storage",
-        )
+#         self.add_input(
+#             f"{self.config.resource_name}_in",
+#             shape_by_conn=True,
+#             units=self.config.resource_units,
+#             desc=f"{self.config.resource_name} input timeseries from production to storage",
+#         )
 
-        self.add_output(
-            f"{self.config.resource_name}_out",
-            copy_shape=f"{self.config.resource_name}_in",
-            units=self.config.resource_units,
-            desc=f"{self.config.resource_name} output timeseries from plant after storage",
-        )
+#         self.add_output(
+#             f"{self.config.resource_name}_out",
+#             copy_shape=f"{self.config.resource_name}_in",
+#             units=self.config.resource_units,
+#             desc=f"{self.config.resource_name} output timeseries from plant after storage",
+#         )
 
-        self.add_output(  # using non-discrete outputs so shape and units can be specified
-            f"{self.config.resource_name}_soc",
-            copy_shape=f"{self.config.resource_name}_in",
-            units="unitless",
-            desc=f"{self.config.resource_name} state of charge timeseries for storage",
-        )
+#         self.add_output(  # using non-discrete outputs so shape and units can be specified
+#             f"{self.config.resource_name}_soc",
+#             copy_shape=f"{self.config.resource_name}_in",
+#             units="unitless",
+#             desc=f"{self.config.resource_name} state of charge timeseries for storage",
+#         )
 
-        self.add_output(  # using non-discrete outputs so shape and units can be specified
-            f"{self.config.resource_name}_curtailed",
-            copy_shape=f"{self.config.resource_name}_in",
-            units=self.config.resource_units,
-            desc=f"{self.config.resource_name} curtailment timeseries for inflow resource at \
-                storage point",
-        )
+#         self.add_output(  # using non-discrete outputs so shape and units can be specified
+#             f"{self.config.resource_name}_curtailed",
+#             copy_shape=f"{self.config.resource_name}_in",
+#             units=self.config.resource_units,
+#             desc=f"{self.config.resource_name} curtailment timeseries for inflow resource at \
+#                 storage point",
+#         )
 
-        self.add_output(  # using non-discrete outputs so shape and units can be specified
-            f"{self.config.resource_name}_missed_load",
-            copy_shape=f"{self.config.resource_name}_in",
-            units=self.config.resource_units,
-            desc=f"{self.config.resource_name} missed load timeseries",
-        )
+#         self.add_output(  # using non-discrete outputs so shape and units can be specified
+#             f"{self.config.resource_name}_missed_load",
+#             copy_shape=f"{self.config.resource_name}_in",
+#             units=self.config.resource_units,
+#             desc=f"{self.config.resource_name} missed load timeseries",
+#         )
 
-        # get technology group name
-        tech_group_name = self.pathname.split(".")[-2]
-        dispatch_connections = self.options["plant_config"]["tech_to_dispatch_connections"]
-        for connection in dispatch_connections:
-            source_tech, intended_dispatch_tech, object_name = connection
-            if intended_dispatch_tech == tech_group_name:
-                self.add_discrete_input(f"{object_name}_{source_tech}", val=None)
-            else:
-                continue
+#         # get technology group name
+#         tech_group_name = self.pathname.split(".")[-2]
+#         dispatch_connections = self.options["plant_config"]["tech_to_dispatch_connections"]
+#         for connection in dispatch_connections:
+#             source_tech, intended_dispatch_tech, object_name = connection
+#             if intended_dispatch_tech == tech_group_name:
+#                 self.add_discrete_input(f"{object_name}_{source_tech}", val=None)
+#             else:
+#                 continue
 
-    def compute(
-        self, inputs, outputs, discrete_inputs, discrete_outputs
-    ):  # , discrete_inputs, discrete_outputs):
-        """
-        Compute the state of charge (SOC) and output flow based on demand and storage constraints.
+#     def compute(
+#         self, inputs, outputs, discrete_inputs, discrete_outputs
+#     ):  # , discrete_inputs, discrete_outputs):
+#         """
+#         Compute the state of charge (SOC) and output flow based on demand and storage constraints.
 
-        """
-        demand_profile = self.config.demand_profile
+#         """
+#         demand_profile = self.config.demand_profile
 
-        # if demand_profile is a scalar, then use it to create a constant timeseries
-        if isinstance(demand_profile, (int, float)):
-            demand_profile = [demand_profile] * self.config.time_steps
+#         # if demand_profile is a scalar, then use it to create a constant timeseries
+#         if isinstance(demand_profile, (int, float)):
+#             demand_profile = [demand_profile] * self.config.time_steps
 
-        # outputs[f"{resource_name}_out"] = output_array
-        # # Return the SOC
-        # outputs[f"{resource_name}_soc"] = soc_array
-        # # Return the curtailment
-        # outputs[f"{resource_name}_curtailed"] = curtailment_array
-        # # Return the missed load
-        # outputs[f"{resource_name}_missed_load"] = missed_load_array
+#         # outputs[f"{resource_name}_out"] = output_array
+#         # # Return the SOC
+#         # outputs[f"{resource_name}_soc"] = soc_array
+#         # # Return the curtailment
+#         # outputs[f"{resource_name}_curtailed"] = curtailment_array
+#         # # Return the missed load
+#         # outputs[f"{resource_name}_missed_load"] = missed_load_array
 
 
-class PyomoControllerBaseClass2(ControllerBaseClass):
+def dummy_function():
+    return None
+
+
+class PyomoControllerBaseClass(ControllerBaseClass):
+    def dummy_method(self):
+        return None
+
     def setup(self):
         self.config = PyomoControllerBaseConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "control")
@@ -153,20 +160,34 @@ class PyomoControllerBaseClass2(ControllerBaseClass):
         for connection in dispatch_connections:
             source_tech, intended_dispatch_tech, object_name = connection
             if intended_dispatch_tech == tech_group_name:
-                self.add_discrete_input(f"{object_name}_{source_tech}", val=None)
+                self.add_discrete_input(f"{object_name}_{source_tech}", val=self.dummy_method)
             else:
                 continue
 
         # create output for the pyomo control model
         self.add_discrete_output(
-            "pyomo_model",
-            desc="fully formed pyomo model to be run by owning technologies performance model",
+            "pyomo_dispatch_solver",
+            val=dummy_function,
+            desc="callable: fully formed pyomo model and execution logic to be run \
+                by owning technologies performance model",
         )
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
-        dispatch_solver = self.pyomo_setup(discrete_inputs)
+        discrete_outputs["pyomo_dispatch_solver"] = self.pyomo_setup(discrete_inputs)
 
-        discrete_outputs["dispatch_solver"] = dispatch_solver
+    def pyomo_setup(self, discrete_inputs):
+        # initialize the pyomo model
+        pyomo_model = pyomo.ConcreteModel()
+
+        # run each pyomo rule set up function for each technology
+        for key in discrete_inputs:
+            discrete_inputs[key](pyomo_model)
+
+        # define dispatch solver
+        def pyomo_dispatch_solver(performance_model: callable, kwargs, pyomo_model=pyomo_model):
+            return performance_model(kwargs)
+
+        return pyomo_dispatch_solver
 
     # def pyomo_setup(self,
     #         pyomo_model: pyomo.ConcreteModel,
@@ -184,12 +205,14 @@ class PyomoControllerBaseClass2(ControllerBaseClass):
     #     self._system_model = system_model
 
     #     def dispatch_function(performance_model, kwargs, pyomo_model=pyomo_model):
-    #         for
-    #             for
-    #                 pyomo
-    #                 performance
 
-    #         return output(s)_timeseries
+    #         pass
+    #         # for
+    #         #     for
+    #         #         pyomo
+    #         #         performance
+
+    #         # return output(s)_timeseries
 
     #     return dispatch_function
 
@@ -223,7 +246,7 @@ class PyomoControllerBaseClass2(ControllerBaseClass):
         return self._model
 
 
-class SimpleBatteryControllerHeuristic(PyomoControllerBaseClass2):
+class SimpleBatteryControllerHeuristic(PyomoControllerBaseClass):
     """Fixes battery dispatch operations based on user input.
 
     Currently, enforces available generation and grid limit assuming no battery charging from grid.
@@ -698,13 +721,13 @@ class SimpleBatteryControllerHeuristic(PyomoControllerBaseClass2):
         self.discharge_efficiency = efficiency
 
 
-@define
-class HeuristicLoadFollowingControllerConfig(BaseConfig):
-    resource_name: str = field()
-    resource_units: str = field()
-    resource_rate_units: str = field()
-    system_capacity_kw: int = field()
-    include_lifecycle_count: bool = field(default=False)
+# @define
+# class HeuristicLoadFollowingControllerConfig(BaseConfig):
+#     resource_name: str = field()
+#     resource_units: str = field()
+#     resource_rate_units: str = field()
+#     system_capacity_kw: int = field()
+#     include_lifecycle_count: bool = field(default=False)
 
 
 class HeuristicLoadFollowingController(SimpleBatteryControllerHeuristic):
@@ -737,7 +760,7 @@ class HeuristicLoadFollowingController(SimpleBatteryControllerHeuristic):
             control_options (Optional[dict], optional): Dispatch options. Defaults to None.
 
         """
-        self.config = HeuristicLoadFollowingControllerConfig.from_dict(
+        self.config = PyomoControllerBaseConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "control")
         )
 

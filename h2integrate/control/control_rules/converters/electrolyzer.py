@@ -1,4 +1,5 @@
 import pyomo.environ as pyo
+from pyomo.network import Port
 
 from h2integrate.control.control_rules.pyomo_rule_baseclass import PyomoRuleBaseClass
 
@@ -24,7 +25,7 @@ class PyomoDispatchElectrolyzer(PyomoRuleBaseClass):
         )
         return pyomo_model.electrolyzer_hydrogen, 0
 
-    def _create_port(self, pyomo_model):
+    def _create_ports(self, pyomo_model):
         """Create electrolyzer port to add to hybrid plant instance.
 
         Args:
@@ -34,7 +35,7 @@ class PyomoDispatchElectrolyzer(PyomoRuleBaseClass):
             Port: Wind Port object.
 
         """
-        pyomo_model.electrolyzer_port = pyo.Port(
+        pyomo_model.electrolyzer_port = Port(
             initialize={"electrolyzer_hydrogen": pyomo_model.electrolyzer_hydrogen}
         )
         return pyomo_model.electrolyzer_port

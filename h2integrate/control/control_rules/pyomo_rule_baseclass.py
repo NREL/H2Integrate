@@ -10,7 +10,9 @@ class PyomoRuleBaseClass(om.ExplicitComponent):
 
     def setup(self):
         self.add_discrete_output(
-            "dispatch_block_rule_function", val=None, desc="pyomo port creation function"
+            "dispatch_block_rule_function",
+            val=self.dispatch_block_rule_function,
+            desc="pyomo port creation function",
         )
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
@@ -21,7 +23,7 @@ class PyomoRuleBaseClass(om.ExplicitComponent):
         For a template class this is not implement and raises an error.
         """
 
-        discrete_outputs["dispatch_block_rule_function"] = self.dispatch_block_rule_function
+        pass
 
     def dispatch_block_rule_function(self, pyomo_model: pyomo.ConcreteModel):
         """Initializes technology parameters, variables, constraints, and ports.
