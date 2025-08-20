@@ -10,13 +10,10 @@ class SteelPerformanceBaseClass(om.ExplicitComponent):
         self.options.declare("tech_config", types=dict)
 
     def setup(self):
-        self.add_input(
-            "electricity_in", val=0.0, shape_by_conn=True, copy_shape="steel", units="kW"
-        )
-        self.add_input("hydrogen_in", val=0.0, shape_by_conn=True, copy_shape="steel", units="kg/h")
-        self.add_output(
-            "steel", val=0.0, shape_by_conn=True, copy_shape="electricity_in", units="t/year"
-        )
+        n_timesteps = self.options["plant_config"]["plant"]["simulation"]["n_timesteps"]
+        self.add_input("electricity_in", val=0.0, shape=n_timesteps, units="kW")
+        self.add_input("hydrogen_in", val=0.0, shape=n_timesteps, units="kg/h")
+        self.add_output("steel", val=0.0, shape=n_timesteps, units="t/year")
 
     def compute(self, inputs, outputs):
         """

@@ -168,6 +168,7 @@ def setup_hopp(
     battery_rating_kw=None,
     battery_rating_kwh=None,
     electrolyzer_rating=None,
+    n_timesteps=8760,
 ):
     # overwrite individual fin_model values with cost_info values
     hopp_config_internal = copy.deepcopy(hopp_config)
@@ -178,10 +179,10 @@ def setup_hopp(
         "desired_schedule" not in hopp_config_internal["site"].keys()
         or hopp_config_internal["site"]["desired_schedule"] == []
     ):
-        hopp_config_internal["site"]["desired_schedule"] = [10.0] * 8760
+        hopp_config_internal["site"]["desired_schedule"] = [10.0] * n_timesteps
 
     if electrolyzer_rating is not None:
-        hopp_config_internal["site"]["desired_schedule"] = [electrolyzer_rating] * 8760
+        hopp_config_internal["site"]["desired_schedule"] = [electrolyzer_rating] * n_timesteps
 
     hopp_site = SiteInfo(**hopp_config_internal["site"])
 
@@ -213,7 +214,7 @@ def setup_hopp(
 
 
 # Function to run hopp from provided inputs from setup_hopp()
-def run_hopp(hi, project_lifetime, verbose=True):
+def run_hopp(hi, project_lifetime, verbose=True, n_timesteps=8760):
     hi.simulate(project_life=project_lifetime)
 
     capex = 0.0
@@ -247,7 +248,9 @@ def run_hopp(hi, project_lifetime, verbose=True):
     hopp_results = {
         "hopp_interface": hi,
         "hybrid_plant": hi.system,
-        "combined_hybrid_power_production_hopp": grid_outputs.system_pre_interconnect_kwac[0:8760],
+        "combined_hybrid_power_production_hopp": grid_outputs.system_pre_interconnect_kwac[
+            0:n_timesteps
+        ],
         "combined_hybrid_curtailment_hopp": hi.system.grid.generation_curtailed,
         "curtailment_percent": hi.system.grid.curtailment_percent,
         "percent_load_missed": hi.system.grid.missed_load_percentage,

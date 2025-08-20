@@ -130,6 +130,8 @@ class GeoH2CostBaseClass(CostModelBaseClass):
 
     def setup(self):
         super().setup()
+        n_timesteps = self.options["plant_config"]["plant"]["simulation"]["n_timesteps"]
+
         self.add_input("well_lifetime", units="year", val=self.config.well_lifetime)
         self.add_input("test_drill_cost", units="USD", val=self.config.test_drill_cost)
         self.add_input("permit_fees", units="USD", val=self.config.permit_fees)
@@ -145,9 +147,9 @@ class GeoH2CostBaseClass(CostModelBaseClass):
         self.add_input("as_spent_ratio", units=None, val=self.config.as_spent_ratio)
         self.add_input(
             "hydrogen_out",
-            shape=8760,
+            shape=n_timesteps,
             units="kg/h",
-            desc="Hydrogen production rate in kg/h over 8760 hours.",
+            desc=f"Hydrogen production rate in kg/h over {n_timesteps} hours.",
         )
 
         self.add_output("bare_capital_cost", units="USD")
@@ -204,6 +206,8 @@ class GeoH2FinanceBaseClass(om.ExplicitComponent):
         self.options.declare("driver_config", types=dict)
 
     def setup(self):
+        n_timesteps = self.options["plant_config"]["plant"]["simulation"]["n_timesteps"]
+
         self.add_input("well_lifetime", units="year", val=self.config.well_lifetime)
         self.add_input("eff_tax_rate", units="year", val=self.config.eff_tax_rate)
         self.add_input("atwacc", units="year", val=self.config.atwacc)
@@ -225,7 +229,7 @@ class GeoH2FinanceBaseClass(om.ExplicitComponent):
         )
         self.add_input(
             "hydrogen_out",
-            shape=8760,
+            shape=n_timesteps,
             units="kg/h",
             desc="Hydrogen production rate in kg/h.",
         )
