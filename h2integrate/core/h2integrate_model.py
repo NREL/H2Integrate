@@ -414,13 +414,8 @@ class H2IntegrateModel:
         # Check if the user defined specific technologies to include in the metrics.
         # If provided, only include those technologies in the stackup.
         # If not provided, include all technologies in the financial group in the stackup.
-        metrics_map = {
-            "hydrogen": "LCOH",
-            "electricity": "LCOE",
-            "ammonia": "LCOA",
-            "nitrogen": "LCON",
-        }
-        metric_key = metrics_map.get(commodity_type)
+        metric_key = f"LCO{commodity_type[0].upper()}"
+        # metric_key = metrics_map.get(commodity_type)
         included_techs = (
             plant_config["finance_parameters"]
             .get("technologies_included_in_metrics", {})
@@ -613,7 +608,7 @@ class H2IntegrateModel:
                             )
                             self.plant.connect(
                                 f"{tech_name}.time_until_replacement",
-                                f"financials_group_{group_id}.time_until_replacement",
+                                f"financials_group_{group_id}.{tech_name}_time_until_replacement",
                             )
 
                         if "ammonia" in tech_name:

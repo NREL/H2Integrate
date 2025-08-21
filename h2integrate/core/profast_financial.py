@@ -283,6 +283,55 @@ class ProFASTDefaultIncentive(BaseConfig):
 
 
 class ProFastComp(om.ExplicitComponent):
+    """
+    This component calculates the Levelized Cost of Commodity (LCO) for a user-defined set
+    of technologies and commodities, including hydrogen (LCOH), electricity (LCOE),
+    ammonia (LCOA), nitrogen (LCON), and CO2 (LCOC). Only the user-defined technologies specified
+    in the `tech_config` are included in the LCO stackup (or all if no specific technologies are
+    defined).
+
+    Attributes:
+        tech_config (dict): Dictionary specifying the technologies to include in the
+            LCO calculation. Only these technologies are considered in the stackup.
+        plant_config (dict): Plant configuration parameters, including financial and
+            operational settings.
+        driver_config (dict): Driver configuration parameters (not directly used in calculations).
+        commodity_type (str): The type of commodity for which the LCO is calculated.
+            Supported values are "hydrogen", "electricity", "ammonia", "nitrogen", and "co2".
+
+    Inputs:
+        capex_adjusted_{tech} (float): Adjusted capital expenditure for each
+            user-defined technology, in USD.
+        opex_adjusted_{tech} (float): Adjusted operational expenditure for each
+            user-defined technology, in USD/year.
+        total_{commodity}_produced (float): Total annual production of the selected commodity
+            (units depend on commodity type).
+        {tech}_time_until_replacement (float): Time until technology is replaced, in hours
+            (currently only supported if "electrolyzer" is in tech_config).
+        co2_capture_kgpy (float): Total annual CO2 captured, in kg/year
+            (only for commodity_type "co2").
+
+    Outputs:
+        LCOx (float): Levelized Cost of commodity (where 'x' is the uppercase first letter
+            of the commodity). For example, LCOH if commodity_type is "hydrogen".
+            If commodity_type is "hydrogen", "ammonia", "nitrogen", or "co2", the units are USD/kg.
+            If the commodity type is "electricity", the units are USD/kWh.
+
+    Methods:
+        initialize(): Declares component options.
+        setup(): Defines inputs and outputs based on user configuration and validates
+            required parameters.
+        compute(inputs, outputs): Assembles financial parameters, adds capital and fixed cost
+            items for user-defined technologies, runs the ProFAST financial model,
+            and sets the appropriate LCOx output.
+
+    Notes:
+        - Only technologies specified by the user in `tech_config` are included in the LCO stackup.
+        - The component supports flexible configuration for different commodities
+            and technology mixes.
+        - Only includes fixed annual operating costs and capital costs at the moment.
+    """
+
     def initialize(self):
         self.options.declare("driver_config", types=dict)
         self.options.declare("plant_config", types=dict)
@@ -315,7 +364,7 @@ class ProFastComp(om.ExplicitComponent):
             self.add_input(f"opex_adjusted_{tech}", val=0.0, units="USD/year")
 
         if "electrolyzer" in tech_config:
-            self.add_input("time_until_replacement", units="h")
+            self.add_input("electrolyzer_time_until_replacement", units="h")
 
         plant_config = self.options["plant_config"]
 
@@ -438,7 +487,9 @@ class ProFastComp(om.ExplicitComponent):
                     refurb_period = tech_capex_info["refurbishment_period_years"]
                 else:
                     # TODO: make below tech specific
-                    refurb_period = round(float(inputs["time_until_replacement"][0]) / (24 * 365))
+                    refurb_period = round(
+                        float(inputs[f"{tech}_time_until_replacement"][0]) / (24 * 365)
+                    )
 
                 refurb_schedule[refurb_period : self.params.plant_life : refurb_period] = (
                     tech_capex_info["replacement_cost_percent"]

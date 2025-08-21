@@ -88,7 +88,7 @@ class TestProFastComp(unittest.TestCase):
         prob.set_val("opex_adjusted_electrolyzer", 1.0e4, units="USD/year")
 
         prob.set_val("total_hydrogen_produced", 4.0e5, units="kg/year")
-        prob.set_val("time_until_replacement", 5.0e3, units="h")
+        prob.set_val("electrolyzer_time_until_replacement", 5.0e3, units="h")
 
         prob.run_model()
 
@@ -122,7 +122,7 @@ class TestProFastComp(unittest.TestCase):
         prob.set_val("capex_adjusted_steel", 3.0e6, units="USD")
         prob.set_val("opex_adjusted_steel", 3.0e3, units="USD/year")
         prob.set_val("total_electricity_produced", 2.0e7, units="kW*h/year")
-        prob.set_val("time_until_replacement", 80000.0, units="h")
+        prob.set_val("electrolyzer_time_until_replacement", 80000.0, units="h")
 
         prob.run_model()
 
@@ -162,7 +162,7 @@ class TestProFastComp(unittest.TestCase):
         prob.set_val("capex_adjusted_steel", 3.0e6, units="USD")
         prob.set_val("opex_adjusted_steel", 3.0e3, units="USD/year")
         prob.set_val("total_electricity_produced", 2.0e7, units="kW*h/year")
-        prob.set_val("time_until_replacement", 80000.0, units="h")
+        prob.set_val("electrolyzer_time_until_replacement", 80000.0, units="h")
 
         prob.run_model()
 
@@ -286,7 +286,7 @@ def test_profast_config_provided():
     prob.set_val("opex_adjusted_electrolyzer", 1.0e4, units="USD/year")
 
     prob.set_val("total_hydrogen_produced", 4.0e5, units="kg/year")
-    prob.set_val("time_until_replacement", 5.0e3, units="h")
+    prob.set_val("electrolyzer_time_until_replacement", 5.0e3, units="h")
 
     prob.run_model()
 
