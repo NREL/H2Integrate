@@ -5,8 +5,8 @@ import pytest
 import openmdao.api as om
 from pytest import approx
 
-from h2integrate.core.finances import ProFastComp
 from h2integrate.core.inputs.validation import load_tech_yaml, load_plant_yaml, load_driver_yaml
+from h2integrate.core.profast_financial import ProFastComp
 
 
 examples_dir = Path(__file__).resolve().parent.parent.parent.parent / "examples/."
@@ -16,13 +16,13 @@ class TestProFastComp(unittest.TestCase):
     def setUp(self):
         self.plant_config = {
             "finance_parameters": {
-                "analysis_start_year": 2022,
-                "installation_time": 24,
-                "inflation_rate": 0.02,
-                "discount_rate": 0.08,
                 "finance_model": "ProFastComp",
-                "profast_inputs": {
+                "model_inputs": {
                     "params": {
+                        "analysis_start_year": 2022,
+                        "installation_time": 24,
+                        "inflation_rate": 0.02,
+                        "discount_rate": 0.08,
                         "debt_equity_ratio": 2.3333333333333335,
                         "property_tax_and_insurance": 0.015,
                         "total_income_tax_rate": 0.21,
@@ -176,8 +176,10 @@ def test_profast_config_provided():
     """
 
     pf_params = {
+        "installation_time": 24,
+        "analysis_start_year": 2024,
+        "inflation_rate": 0.02,
         "demand rampup": 0,
-        "analysis start year": 2024,
         "operating life": 30,
         "installation months": 24,
         "TOPC": {"unit price": 0.0, "decay": 0.0, "support utilization": 0.0, "sunset years": 0},
@@ -227,11 +229,8 @@ def test_profast_config_provided():
     }
     plant_config = {
         "finance_parameters": {
-            "installation_time": 24,
-            "analysis_start_year": 2024,
-            "inflation_rate": 0.02,
             "finance_model": "ProFastComp",
-            "profast_inputs": {
+            "model_inputs": {
                 "params": pf_params,
                 "capital_items": {
                     "depr_type": "Straight line",
@@ -300,9 +299,11 @@ def test_parameter_validation_clashing_values():
 
     # Create plant config with clashing values
     pf_params = {
-        "analysis start year": 2023,  # Different from plant config (2024)
+        "installation_time": 24,  # Different from installation_months
+        "installation months": 12,  # Different from installation_time (24)
+        "inflation_rate": 0.0,
+        "analysis start year": 2023,
         "operating life": 25,  # Different from plant config (30)
-        "installation months": 12,  # Different from plant config (24)
         "commodity": {"name": "Hydrogen", "unit": "kg", "initial price": 100, "escalation": 0.02},
         "general inflation rate": 0.0,
         "admin_expense": 0.0,
@@ -320,11 +321,103 @@ def test_parameter_validation_clashing_values():
 
     plant_config = {
         "finance_parameters": {
-            "analysis_start_year": 2024,  # Different from pf_params
-            "installation_time": 24,  # Different from pf_params
-            "inflation_rate": 0.0,
             "finance_model": "ProFastComp",
-            "profast_inputs": {
+            "model_inputs": {
+                "params": pf_params,
+                "capital_items": {
+                    "depr_type": "Straight line",
+                    "depr_period": 20,
+                },
+            },
+            # "pf_params": {"params": pf_params},
+            # "depreciation_method": "Straight line",
+            # "depreciation_period": 20,
+            # "depreciation_period_electrolyzer": 10,
+            "cost_adjustment_parameters": {
+                "target_dollar_year": 2022,
+                "cost_year_adjustment_inflation": 0.0,
+            },
+        },
+        "plant": {
+            "plant_life": 30,  # Different from pf_params
+        },
+    }
+
+    tech_config = {
+        "electrolyzer": {
+            "model_inputs": {
+                "financial_parameters": {
+                    "capital_items": {
+                        "depr_period": 10,
+                        "replacement_cost_percent": 0.1,
+                    }
+                }
+            }
+        },
+    }
+
+    driver_config = {"general": {}}
+
+    prob = om.Problem()
+    comp = ProFastComp(
+        plant_config=plant_config,
+        tech_config=tech_config,
+        driver_config=driver_config,
+        commodity_type="hydrogen",
+    )
+    prob.model.add_subsystem("comp", comp, promotes=["*"])
+
+    # Should raise ValueError during setup due to clashing values for installation
+    with pytest.raises(ValueError, match="Inconsistent values provided"):
+        prob.setup()
+
+    # check that it works for just operating life
+    plant_config["finance_parameters"]["model_inputs"]["params"].pop("installation months")
+    prob = om.Problem()
+    comp = ProFastComp(
+        plant_config=plant_config,
+        tech_config=tech_config,
+        driver_config=driver_config,
+        commodity_type="hydrogen",
+    )
+    prob.model.add_subsystem("comp", comp, promotes=["*"])
+
+    # Should raise ValueError during setup due to clashing values
+    with pytest.raises(ValueError, match="Inconsistent values provided"):
+        prob.setup()
+
+
+def test_parameter_validation_duplicate_values():
+    """Test that parameter validation raises an error when plant config and pf_params
+    have different values for the same parameter."""
+
+    # Create plant config with clashing values
+    pf_params = {
+        "analysis_start_year": 2024,  # Different from pf_params
+        "installation_time": 24,  # Different from installation_months
+        "inflation_rate": 0.0,
+        "analysis start year": 2023,  # Different from plant config (2024)
+        "operating life": 25,  # Different from plant config (30)
+        "installation months": 12,  # Different from installation_time (24)
+        "commodity": {"name": "Hydrogen", "unit": "kg", "initial price": 100, "escalation": 0.02},
+        "general inflation rate": 0.0,
+        "admin_expense": 0.0,
+        "capital_gains_tax_rate": 0.15,
+        "sales_tax_rate": 0.07,
+        "debt_interest_rate": 0.05,
+        "debt_type": "Revolving debt",
+        "loan_period_if_used": 10,
+        "cash_onhand_months": 6,
+        "property_tax_and_insurance": 0.03,
+        "discount_rate": 0.09,
+        "debt_equity_ratio": 1.62,
+        "total_income_tax_rate": 0.25,
+    }
+
+    plant_config = {
+        "finance_parameters": {
+            "finance_model": "ProFastComp",
+            "model_inputs": {
                 "params": pf_params,
                 "capital_items": {
                     "depr_type": "Straight line",
@@ -370,5 +463,5 @@ def test_parameter_validation_clashing_values():
     prob.model.add_subsystem("comp", comp, promotes=["*"])
 
     # Should raise ValueError during setup due to clashing values
-    with pytest.raises(ValueError, match="Inconsistent values provided"):
+    with pytest.raises(ValueError, match="Duplicate entries found in ProFastComp params"):
         prob.setup()

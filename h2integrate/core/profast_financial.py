@@ -15,7 +15,6 @@ from h2integrate.core.utilities import (
 from h2integrate.core.dict_utils import update_defaults
 from h2integrate.core.validators import gt_zero, contains, gte_zero, range_val
 from h2integrate.tools.profast_tools import run_profast, create_and_populate_profast
-from h2integrate.core.supported_models import finance_models_outputs
 from h2integrate.core.inputs.validation import write_yaml
 from h2integrate.tools.profast_reverse_tools import convert_pf_to_dict
 
@@ -43,17 +42,6 @@ def check_param_format(param_dict):
         else:
             param_dict_reformatted[k_new] = v
     return param_dict_reformatted
-
-
-def check_output_contains(name, value):
-    valid_items = finance_models_outputs["ProFastComp"]
-    if isinstance(value, list):
-        for val in value:
-            if val.strip().lower().replace("_", " ") not in valid_items:
-                raise ValueError(f"Item {val} not found in list for {name}: {valid_items}")
-    if isinstance(value, str):
-        if value.strip().lower().replace("_", " ") not in valid_items:
-            raise ValueError(f"Item {value} not found in list for {name}: {valid_items}")
 
 
 @define
@@ -257,9 +245,6 @@ class ProFastComp(om.ExplicitComponent):
         self.options.declare("plant_config", types=dict)
         self.options.declare("tech_config", types=dict)
         self.options.declare("commodity_type", types=str)
-        self.options.declare(
-            "outputs", default="lco", types=(str, list), check_valid=check_output_contains
-        )
 
     def setup(self):
         if self.options["commodity_type"] == "electricity":
@@ -269,21 +254,8 @@ class ProFastComp(om.ExplicitComponent):
             commodity_units = "kg/year"
             lco_units = "USD/kg"
 
-        if isinstance(self.options["outputs"], str):
-            self.model_outputs = [self.options["outputs"].strip().lower().replace("_", " ")]
-        else:
-            self.model_outputs = [
-                o.strip().lower().replace("_", " ") for o in self.options["outputs"]
-            ]
-        if "lco" in self.model_outputs:
-            self.LCO_str = f"LCO{self.options['commodity_type'][0].upper()}"
-            self.add_output(self.LCO_str, val=0.0, units=lco_units)
-        if "profit index" in self.model_outputs:
-            self.profit_index_str = f"profit_index_{self.options['commodity_type']}"
-            self.add_output(self.profit_index_str, val=0.0, units="USD")  # TODO: check units
-        if "payback period" in self.model_outputs:
-            self.ipp_str = f"payback_period_{self.options['commodity_type']}"
-            self.add_output(self.ipp_str, val=0.0, units="yr")  # TODO: check units
+        self.LCO_str = f"LCO{self.options['commodity_type'][0].upper()}"
+        self.add_output(self.LCO_str, val=0.0, units=lco_units)
 
         if self.options["commodity_type"] == "co2":
             self.add_input("co2_capture_kgpy", val=0.0, units="kg/year")
@@ -304,9 +276,41 @@ class ProFastComp(om.ExplicitComponent):
 
         plant_config = self.options["plant_config"]
 
-        fin_params = plant_config["finance_parameters"]["model_inputs"]["params"]
+        finance_params = plant_config["finance_parameters"]["model_inputs"]["params"]
 
-        # if profast params were already in profast format
+        # make consistent formatting
+        fin_params = {k.replace("_", " "): v for k, v in finance_params.items()}
+        # check for duplicated entries (ex. 'analysis_start_year' and 'analysis start year')
+        if len(fin_params) != len(finance_params):
+            finance_keys = [k.replace("_", " ") for k, v in finance_params.items()]
+            fin_keys = list(fin_params.keys())
+            duplicated_entries = [k for k in fin_keys if finance_keys.count(k) > 1]
+            err_info = "\n".join(
+                f"{d}: both `{d}` and `{d.replace('_','')}` map to {d}" for d in duplicated_entries
+            )
+            # NOTE: not an issue if both values are the same,
+            # but better to inform users earlier on to prevent accidents
+            for d in duplicated_entries:
+                err_info += f"{d}: both `{d}` and `{d.replace(' ','_')}` map to {d}"
+            msg = (
+                f"Duplicate entries found in ProFastComp params. Duplicated entries are: {err_info}"
+            )
+            raise ValueError(msg)
+
+        # check if duplicate entries were input, like "installation time" AND "installation months"
+        for nickname, realname in finance_to_pf_param_mapper.items():
+            has_nickname = any(k == nickname for k, v in fin_params.items())
+            has_realname = any(k == realname for k, v in fin_params.items())
+            # check for duplicate entries
+            if has_nickname and has_realname:
+                check_plant_config_and_profast_params(fin_params, fin_params, nickname, realname)
+        # check for value mismatch
+        if "operating life" in fin_params:
+            check_plant_config_and_profast_params(
+                plant_config["plant"], fin_params, "plant_life", "operating life"
+            )
+
+        # if profast params are in profast format
         if any(k in list(finance_to_pf_param_mapper.values()) for k, v in fin_params.items()):
             pf_param_to_finance_mapper = {v: k for k, v in finance_to_pf_param_mapper.items()}
             pf_params = {}
@@ -319,11 +323,7 @@ class ProFastComp(om.ExplicitComponent):
 
         fin_params = check_param_format(fin_params)
 
-        if "operating_life" in fin_params:
-            check_plant_config_and_profast_params(
-                plant_config["plant"], fin_params, "plant_life", "operating_life"
-            )
-
+        fin_params.update({"plant_life": plant_config["plant"]["plant_life"]})
         # initialize financial parameters
         self.params = BasicProFASTParameterConfig.from_dict(fin_params)
 
@@ -432,9 +432,13 @@ class ProFastComp(om.ExplicitComponent):
         sol, summary, price_breakdown = run_profast(pf)
 
         # Check whether to export profast object to .yaml file
-        if self.options["plant_config"]["finance_parameters"].get("save_profast_to_file", False):
+        if self.options["plant_config"]["finance_parameters"]["model_inputs"].get(
+            "save_profast_to_file", False
+        ):
             output_dir = self.options["driver_config"]["general"]["folder_output"]
-            fdesc = self.options["plant_config"]["finance_parameters"]["profast_output_description"]
+            fdesc = self.options["plant_config"]["finance_parameters"]["model_inputs"][
+                "profast_output_description"
+            ]
             fname = f"{fdesc}_{self.options['commodity_type']}.yaml"
             fpath = Path(output_dir) / fname
             output_dir = Path(output_dir)
@@ -443,9 +447,4 @@ class ProFastComp(om.ExplicitComponent):
             d = dict_to_yaml_formatting(d)
             write_yaml(d, fpath)
 
-        if "lco" in self.model_outputs:
-            outputs[self.LCO_str] = sol["price"]  # TODO: replace with sol['lco']
-        if "profit index" in self.model_outputs:
-            outputs[self.profit_index_str] = sol["profit index"]
-        if "payback period" in self.model_outputs:
-            outputs[self.ipp_str] = sol["investor payback period"]
+        outputs[self.LCO_str] = sol["price"]  # TODO: replace with sol['lco']
