@@ -63,7 +63,34 @@ class H2Storage(CostModelBaseClass):
         )
         self.add_input("efficiency", val=0.0, desc="Average efficiency of the electrolyzer")
 
+        # create inputs for pyomo control model
+        if "tech_to_dispatch_connections" in self.options["plant_config"]:
+            # get technology group name
+            self.tech_group_name = self.pathname.split(".")[-2]
+            for _source_tech, intended_dispatch_tech in self.options["plant_config"][
+                "tech_to_dispatch_connections"
+            ]:
+                if intended_dispatch_tech == self.tech_group_name:
+                    self.add_discrete_input("pyomo_dispatch_solver", val=dummy_function)
+                    self.add_output(
+                        "hydrogen_out",
+                        val=0.0,
+                        copy_shape="hydrogen_in",
+                        units="kg/h",
+                    )
+                    break
+
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
+        if "pyomo_dispatch_solver" in discrete_inputs:
+            discrete_inputs["pyomo_dispatch_solver"]
+            # TODO call pyomo_dispatch_solver correctly
+            # dispatch = pyomo_dispatch_solver()
+            # TODO adjust hydrogen out based on dispatch
+            outputs["hydrogen_out"] = inputs["hydrogen_in"]
+        else:
+            self.performance_cost_model(self, inputs, outputs, discrete_inputs, discrete_outputs)
+
+    def performance_cost_model(self, inputs, outputs, discrete_inputs, discrete_outputs):
         ########### initialize output dictionary ###########
         h2_storage_results = {}
 
@@ -214,3 +241,8 @@ class H2Storage(CostModelBaseClass):
 
         outputs["CapEx"] = h2_storage_results["storage_capex"]
         outputs["OpEx"] = h2_storage_results["storage_opex"]
+
+
+def dummy_function():
+    # this function is required for initialzing the pyomo control input and nothing else
+    pass
