@@ -1,4 +1,5 @@
 import pyomo.environ as pyo
+from pyomo.network import Port
 
 from h2integrate.control.control_rules.pyomo_rule_baseclass import PyomoRuleBaseClass
 
@@ -22,7 +23,7 @@ class PyomoDispatchElectrolyzer(PyomoRuleBaseClass):
             pyo.Var(
                 doc="Hydrogen generation from electrolysis [kg]",
                 domain=pyo.NonNegativeReals,
-                units=pyo.units.kg,
+                units=eval("pyo.units." + self.config.resource_storage_units),
                 initialize=0.0,
             ),
         )
@@ -39,12 +40,9 @@ class PyomoDispatchElectrolyzer(PyomoRuleBaseClass):
         """
         setattr(
             pyomo_model,
-            f"{tech_name}_hydrogen",
-            pyo.Var(
-                doc="Hydrogen generation from electrolysis [kg]",
-                domain=pyo.NonNegativeReals,
-                units=pyo.units.kg,
-                initialize=0.0,
+            f"{tech_name}_port",
+            Port(
+                initialize={f"{tech_name}_hydrogen": getattr(pyomo_model, f"{tech_name}_hydrogen")}
             ),
         )
 

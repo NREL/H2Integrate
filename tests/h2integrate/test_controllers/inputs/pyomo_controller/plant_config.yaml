@@ -31,7 +31,9 @@ technology_interconnections: [
 
 # array of arrays containing left-to-right source technology, dispatching technology, object_name
 tech_to_dispatch_connections: [
-  ["electrolyzer", "h2_storage", "dispatch_block_rule_function"],
+  ["wind", "h2_storage"],
+  ["electrolyzer", "h2_storage"],
+  ["h2_storage", "h2_storage"],
 ]
 
 plant:

@@ -139,7 +139,7 @@ def dummy_function():
 
 
 class PyomoControllerBaseClass(ControllerBaseClass):
-    def dummy_method(self):
+    def dummy_method(self, in1, in2):
         return None
 
     def setup(self):
@@ -153,14 +153,21 @@ class PyomoControllerBaseClass(ControllerBaseClass):
             self.demand_profile = [self.demand_profile] * self.config.time_steps
 
         # get technology group name
-        tech_group_name = self.pathname.split(".")[-2]
+        self.tech_group_name = self.pathname.split(".")[-2]
 
         # create inputs for all pyomo object creation functions from all connected technologies
-        dispatch_connections = self.options["plant_config"]["tech_to_dispatch_connections"]
-        for connection in dispatch_connections:
-            source_tech, intended_dispatch_tech, object_name = connection
-            if intended_dispatch_tech == tech_group_name:
-                self.add_discrete_input(f"{object_name}_{source_tech}", val=self.dummy_method)
+        self.dispatch_connections = self.options["plant_config"]["tech_to_dispatch_connections"]
+        for connection in self.dispatch_connections:
+            source_tech, intended_dispatch_tech = connection
+            if intended_dispatch_tech == self.tech_group_name:
+                if source_tech == intended_dispatch_tech:
+                    # When getting rules for the same tech, the tech name is not used in order to
+                    # allow for automatic connections rather than complicating the h2i model set up
+                    self.add_discrete_input("dispatch_block_rule_function", val=self.dummy_method)
+                else:
+                    self.add_discrete_input(
+                        f"{"dispatch_block_rule_function"}_{source_tech}", val=self.dummy_method
+                    )
             else:
                 continue
 
@@ -180,9 +187,26 @@ class PyomoControllerBaseClass(ControllerBaseClass):
         pyomo_model = pyomo.ConcreteModel()
 
         # run each pyomo rule set up function for each technology
-        for key, dispatch_block_rule_function in discrete_inputs.items():
-            tech_name = key.split("_")[-1]
-            dispatch_block_rule_function(pyomo_model, tech_name)
+        for connection in self.dispatch_connections:
+            source_tech, intended_dispatch_tech = connection
+            if intended_dispatch_tech == self.tech_group_name:
+                if source_tech == intended_dispatch_tech:
+                    dispatch_block_rule_function = discrete_inputs["dispatch_block_rule_function"]
+                else:
+                    dispatch_block_rule_function = discrete_inputs[
+                        f"{"dispatch_block_rule_function"}_{source_tech}"
+                    ]
+                dispatch_block_rule_function(pyomo_model, source_tech)
+            else:
+                continue
+
+        # for key, dispatch_block_rule_function in discrete_inputs.items():
+        #     tech_name = key.split("_")[-1]
+        #     dispatch_block_rule_function(pyomo_model, tech_name)
+
+        import pdb
+
+        pdb.set_trace()
 
         # define dispatch solver
         def pyomo_dispatch_solver(performance_model: callable, kwargs, pyomo_model=pyomo_model):

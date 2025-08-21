@@ -38,6 +38,9 @@ technologies:
       cost_parameters:
         cost_per_kw: 1500.0
         cost_year: 2024
+      dispatch_rule_parameters:
+        resource_name: "electricity"
+        resource_storage_units: "kW"
   electrolyzer:
     performance_model:
       model: "eco_pem_electrolyzer_performance"
@@ -61,7 +64,9 @@ technologies:
         uptime_hours_until_eol: 80000. #number of 'on' hours until electrolyzer reaches eol
         include_degradation_penalty: True #include degradation
         turndown_ratio: 0.1 #turndown_ratio = minimum_cluster_power/cluster_rating_MW
-
+      dispatch_rule_parameters:
+        resource_name: "hydrogen"
+        resource_storage_units: "kg"
       financial_parameters:
         replacement_cost_percent: 0.15 # percent of capex - H2A default case
   h2_storage:
@@ -76,6 +81,7 @@ technologies:
     model_inputs:
       shared_parameters:
         resource_name: "hydrogen"
+        resource_rate_units: "kg/h"
       performance_parameters:
         rating: 720. # electrolyzer rating for sizing
         size_capacity_from_demand:
@@ -84,7 +90,6 @@ technologies:
         type: "lined_rock_cavern" # can be one of ["none", "pipe", "turbine", "pressure_vessel", "salt_cavern", "lined_rock_cavern"]
         days: 10 #how many days worth of production we should be able to store (this is ignored if `capacity_from_max_on_turbine_storage` is set to True)
       control_parameters:
-        resource_rate_units: "kg/h"
         time_steps: 8760
         max_capacity: 60000.0  # kg
         max_charge_percent: 1.0  # percent as decimal
@@ -95,3 +100,6 @@ technologies:
         charge_efficiency: 1.0 # percent as decimal
         discharge_efficiency: 1.0 # percent as decimal
         demand_profile: 5000  # Example: 10 time steps with 50 kg/time step demand. Scalar indicates constant demand, array-like indicates dynamic demand
+      dispatch_rule_parameters:
+        resource_name: "hydrogen"
+        resource_storage_units: "kg"

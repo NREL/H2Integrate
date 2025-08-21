@@ -217,6 +217,13 @@ class H2IntegrateModel:
                     self.cost_models.append(comp)
                     self.financial_models.append(comp)
 
+                    # Catch dispatch rules for systems that have the same performance & cost models
+                    if "dispatch_rule_set" in individual_tech_config:
+                        control_object = self._process_model(
+                            "dispatch_rule_set", individual_tech_config, tech_group
+                        )
+                        self.control_strategies.append(control_object)
+
                     # Catch control models for systems that have the same performance & cost models
                     if "control_strategy" in individual_tech_config:
                         control_object = self._process_model(
@@ -646,16 +653,20 @@ class H2IntegrateModel:
         tech_to_dispatch_connections = self.plant_config.get("tech_to_dispatch_connections", [])
 
         for connection in tech_to_dispatch_connections:
-            if len(connection) != 3:
+            if len(connection) != 2:
                 err_msg = f"Invalid tech to dispatching_tech_name connection: {connection}"
                 raise ValueError(err_msg)
 
-            tech_name, dispatching_tech_name, object_name = connection
+            tech_name, dispatching_tech_name = connection
 
-            # Connect the dispatch rules output to the dispatching_tech_name input
-            self.model.connect(
-                f"{tech_name}.{object_name}", f"{dispatching_tech_name}.{object_name}_{tech_name}"
-            )
+            if tech_name == dispatching_tech_name:
+                continue
+            else:
+                # Connect the dispatch rules output to the dispatching_tech_name input
+                self.model.connect(
+                    f"{tech_name}.{"dispatch_block_rule_function"}",
+                    f"{dispatching_tech_name}.{"dispatch_block_rule_function"}_{tech_name}",
+                )
 
         if (pyxdsm is not None) and (len(technology_interconnections) > 0):
             create_xdsm_from_config(self.plant_config)

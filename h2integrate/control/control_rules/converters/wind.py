@@ -1,4 +1,5 @@
 import pyomo.environ as pyo
+from pyomo.network import Port
 
 from h2integrate.control.control_rules.pyomo_rule_baseclass import PyomoRuleBaseClass
 
@@ -22,7 +23,7 @@ class PyomoDispatchWind(PyomoRuleBaseClass):
             pyo.Var(
                 doc="Electricity generation from wind turbines [MW]",
                 domain=pyo.NonNegativeReals,
-                units=pyo.units.MW,
+                units=eval("pyo.units." + self.config.resource_storage_units),
                 initialize=0.0,
             ),
         )
@@ -40,7 +41,7 @@ class PyomoDispatchWind(PyomoRuleBaseClass):
         setattr(
             pyomo_model,
             f"{tech_name}_port",
-            pyo.Port(
+            Port(
                 initialize={
                     f"{tech_name}_electricity": getattr(pyomo_model, f"{tech_name}_electricity")
                 }
