@@ -78,6 +78,9 @@ technologies:
         operational_year: 2035
         o2_heat_integration: false
         lcoh: 7.37
+        inflation_rate:
+        installation_time: 36 # months
+        inflation_rate: 0.0 # 0 for nominal analysis
         feedstocks:
           oxygen_market_price: 0.0 # 0.03 $/kgO2 if `o2_heat_integration` == 1
           excess_oxygen: 395
@@ -129,7 +132,7 @@ technologies:
             "2063": 3.766164
             "2064": 3.766164
         finances:
-          plant_life: 30
+          # plant_life: 30
           grid_prices:
             "2035": 89.42320514456621
             "2036": 89.97947569251141

@@ -35,13 +35,13 @@ plant:
   hybrid_electricity_estimated_cf: 0.492 #should equal 1 if grid_connection = True
 
 finance_parameters:
-  analysis_start_year: 2032
-  installation_time: 36 # months
-  inflation_rate: 0.0 # 0 for real analysis
-  discount_rate: 0.06 # nominal return based on 2024 ATB baseline workbook for land-based wind
   finance_model: "ProFastComp"
-  profast_inputs:
+  model_inputs:
     params:
+      analysis_start_year: 2032
+      installation_time: 36 # months
+      inflation_rate: 0.0 # 0 for real analysis
+      discount_rate: 0.06 # nominal return based on 2024 ATB baseline workbook for land-based wind
       debt_equity_ratio: 0.724 # 2024 ATB uses 72.4% debt for land-based wind
       property_tax_and_insurance: 0.025 # percent of CAPEX estimated based on https://www.nrel.gov/docs/fy25osti/91775.pdf https://www.house.mn.gov/hrd/issinfo/clsrates.aspx
       total_income_tax_rate: 0.2574 # 0.257 tax rate in 2024 atb baseline workbook, value here is based on federal (21%) and state in MN (9.8)

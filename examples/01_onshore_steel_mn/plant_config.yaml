@@ -39,7 +39,8 @@ plant:
   hybrid_electricity_estimated_cf: 0.492 #should equal 1 if grid_connection = True
 
 finance_parameters:
-
+  # installation_time: 36 # months
+  # inflation_rate: 0.0 # 0 for nominal analysis
   finance_model: "ProFastComp"
   model_inputs:
     params:
