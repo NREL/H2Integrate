@@ -88,7 +88,7 @@ class H2Storage(CostModelBaseClass):
             # TODO adjust hydrogen out based on dispatch
             outputs["hydrogen_out"] = inputs["hydrogen_in"]
         else:
-            self.performance_cost_model(self, inputs, outputs, discrete_inputs, discrete_outputs)
+            self.performance_cost_model(inputs, outputs, discrete_inputs, discrete_outputs)
 
     def performance_cost_model(self, inputs, outputs, discrete_inputs, discrete_outputs):
         ########### initialize output dictionary ###########

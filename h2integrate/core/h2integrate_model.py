@@ -207,16 +207,6 @@ class H2IntegrateModel:
                     and perf_model == cost_model
                     and perf_model in combined_performance_and_cost_models
                 ):
-                    comp = self.supported_models[perf_model](
-                        driver_config=self.driver_config,
-                        plant_config=self.plant_config,
-                        tech_config=individual_tech_config,
-                    )
-                    tech_group.add_subsystem(tech_name, comp, promotes=["*"])
-                    self.performance_models.append(comp)
-                    self.cost_models.append(comp)
-                    self.financial_models.append(comp)
-
                     # Catch dispatch rules for systems that have the same performance & cost models
                     if "dispatch_rule_set" in individual_tech_config:
                         control_object = self._process_model(
@@ -230,16 +220,27 @@ class H2IntegrateModel:
                             "control_strategy", individual_tech_config, tech_group
                         )
                         self.control_strategies.append(control_object)
+
+                    comp = self.supported_models[perf_model](
+                        driver_config=self.driver_config,
+                        plant_config=self.plant_config,
+                        tech_config=individual_tech_config,
+                    )
+                    tech_group.add_subsystem(tech_name, comp, promotes=["*"])
+                    self.performance_models.append(comp)
+                    self.cost_models.append(comp)
+                    self.financial_models.append(comp)
+
                     continue
 
                 # Process the models
                 # TODO: integrate financial_model into the loop below
 
                 model_types = [
-                    "performance_model",
-                    "control_strategy",
-                    "cost_model",
                     "dispatch_rule_set",
+                    "control_strategy",
+                    "performance_model",
+                    "cost_model",
                 ]
 
                 for model_type in model_types:
@@ -664,8 +665,8 @@ class H2IntegrateModel:
             else:
                 # Connect the dispatch rules output to the dispatching_tech_name input
                 self.model.connect(
-                    f"{tech_name}.{"dispatch_block_rule_function"}",
-                    f"{dispatching_tech_name}.{"dispatch_block_rule_function"}_{tech_name}",
+                    f"{tech_name}.{'dispatch_block_rule_function'}",
+                    f"{dispatching_tech_name}.{'dispatch_block_rule_function'}_{tech_name}",
                 )
 
         if (pyxdsm is not None) and (len(technology_interconnections) > 0):
