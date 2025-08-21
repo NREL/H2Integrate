@@ -6,6 +6,7 @@ class ElectrolyzerPerformanceBaseClass(om.ExplicitComponent):
         self.options.declare("driver_config", types=dict)
         self.options.declare("plant_config", types=dict)
         self.options.declare("tech_config", types=dict)
+        self.options.declare("whole_tech_config", types=dict)
 
     def setup(self):
         # Define inputs for electricity and outputs for hydrogen and oxygen generation
@@ -30,6 +31,7 @@ class ElectrolyzerCostBaseClass(om.ExplicitComponent):
         self.options.declare("driver_config", types=dict)
         self.options.declare("plant_config", types=dict)
         self.options.declare("tech_config", types=dict)
+        self.options.declare("whole_tech_config", types=dict)
 
     def setup(self):
         self.add_input("total_hydrogen_produced", val=0.0, units="kg/year")
@@ -52,6 +54,7 @@ class ElectrolyzerFinanceBaseClass(om.ExplicitComponent):
         self.options.declare("driver_config", types=dict)
         self.options.declare("plant_config", types=dict)
         self.options.declare("tech_config", types=dict)
+        self.options.declare("whole_tech_config", types=dict)
 
     def setup(self):
         self.add_input("CapEx", val=0.0, units="USD")

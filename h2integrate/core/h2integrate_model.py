@@ -219,7 +219,10 @@ class H2IntegrateModel:
                     # Catch control models for systems that have the same performance & cost models
                     if "control_strategy" in individual_tech_config:
                         control_object = self._process_model(
-                            "control_strategy", individual_tech_config, tech_group
+                            "control_strategy",
+                            individual_tech_config,
+                            tech_group,
+                            self.technology_config,
                         )
                         self.control_strategies.append(control_object)
                     continue
@@ -230,7 +233,7 @@ class H2IntegrateModel:
                 for model_type in model_types:
                     if model_type in individual_tech_config:
                         model_object = self._process_model(
-                            model_type, individual_tech_config, tech_group
+                            model_type, individual_tech_config, tech_group, self.technology_config
                         )
                         getattr(self, model_type + "s").append(model_object)
                     elif model_type == "performance_model":
@@ -253,7 +256,7 @@ class H2IntegrateModel:
                         )
                         self.financial_models.append(financial_object)
 
-    def _process_model(self, model_type, individual_tech_config, tech_group):
+    def _process_model(self, model_type, individual_tech_config, tech_group, whole_tech_config={}):
         # Generalized function to process model definitions
         model_name = individual_tech_config[model_type]["model"]
         model_object = self.supported_models[model_name]
@@ -263,6 +266,7 @@ class H2IntegrateModel:
                 driver_config=self.driver_config,
                 plant_config=self.plant_config,
                 tech_config=individual_tech_config,
+                whole_tech_config=whole_tech_config,
             ),
             promotes=["*"],
         )

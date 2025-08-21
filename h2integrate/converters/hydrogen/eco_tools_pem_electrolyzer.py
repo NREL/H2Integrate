@@ -179,7 +179,9 @@ class ECOElectrolyzerPerformanceModel(ElectrolyzerPerformanceBaseClass):
                     ):
                         tech_found = True
                         if dest_tech == "ammonia":
-                            h2_kgphr = size_hydrogen(self.options["tech_config"])
+                            h2_kgphr = size_hydrogen(
+                                self.options["whole_tech_config"]["technologies"]["ammonia"]
+                            )
                         else:
                             raise ValueError(f"Sizing mode not defined for '{dest_tech}'")
                     else:
