@@ -14,7 +14,8 @@ technologies:
 
       performance_parameters:
         size_mode: "resize_for_max_product"
-        size_for: "hydrogen"
+        resize_by_flow: "hydrogen"
+        resize_by_tech: "ammonia"
         sizing:
           resize_for_enduse: False
           size_for: 'BOL' #'BOL' (generous) or 'EOL' (conservative)
@@ -29,35 +30,6 @@ technologies:
 
       financial_parameters:
         replacement_cost_percent: 0.15 # percent of capex - H2A default case
-  feedstock_profile:
-    performance_model:
-      model: "feedstock_performance"
-    cost_model:
-      model: "feedstock_cost"
-    model_inputs:
-      shared_parameters:
-        commodity: "electricity"
-        unit: "kW"
-      performance_parameters:
-        compute_mode: "product_size"
-        profile: "elec_profile.csv"
-      cost_parameters:
-        buy_price: 0.07
-  product_profile:
-    performance_model:
-      model: "product_performance"
-    cost_model:
-      model: "product_cost"
-    model_inputs:
-      shared_parameters:
-        commodity: "hydrogen"
-        unit: "kg/h"
-      performance_parameters:
-        compute_mode: "product_size"
-        profile: "h2_profile.csv"
-      cost_parameters:
-        sell_price: 1.50
-        is_coproduct: False
   hopp:
     performance_model:
       model: "hopp"

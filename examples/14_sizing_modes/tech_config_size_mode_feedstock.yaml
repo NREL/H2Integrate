@@ -14,7 +14,7 @@ technologies:
 
       performance_parameters:
         size_mode: "resize_for_max_feedstock"
-        size_for: "electricity"
+        resize_for: "electricity"
         sizing:
           resize_for_enduse: False
           size_for: 'BOL' #'BOL' (generous) or 'EOL' (conservative)

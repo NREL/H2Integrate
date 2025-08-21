@@ -25,8 +25,9 @@ site:
 # this will naturally grow as we mature the interconnected tech
 technology_interconnections: [
   ["hopp","electrolyzer","electricity","cable"],
-  ["electrolyzer","ammonia","hydrogen","pipe"],
-  ["ammonia","electrolyzer","max_hydrogen_capacity"]
+  ["electrolyzer", "h2_storage", "efficiency"],
+  ["electrolyzer", "h2_storage", "hydrogen", "pipe"],
+  ["h2_storage", "ammonia", "hydrogen", "pipe"],
 ]
 
 plant:
@@ -58,9 +59,10 @@ finance_parameters:
   depreciation_period: 7 # years - for clean energy facilities as specified by the IRS MACRS schedule https://www.irs.gov/publications/p946#en_US_2020_publink1000107507
   depreciation_period_electrolyzer: 7 # based on PEM Electrolysis H2A Production Case Study Documentation estimate of 7 years. also see https://www.irs.gov/publications/p946#en_US_2020_publink1000107507
   discount_years:
+    hopp: 2019
     electrolyzer: 2016 # based on IRENA report https://www.irena.org/-/media/Files/IRENA/Agency/Publication/2020/Dec/IRENA_Green_hydrogen_cost_2020.pdf
-    feedstock_profile: 2019
-    product_profile: 2019
+    h2_storage: 2018 # based on Papadias 2021 and HD SAM
+    ammonia: 2021
   wind:
     expected_plant_cost: 'none'
   cost_adjustment_parameters:
