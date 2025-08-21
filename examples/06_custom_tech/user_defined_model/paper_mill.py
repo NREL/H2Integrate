@@ -88,9 +88,9 @@ class PaperMillFinance(om.ExplicitComponent):
     def compute(self, inputs, outputs):
         # Financial parameters
         project_lifetime = self.options["plant_config"]["plant"]["plant_life"]  # years
-        discount_rate = self.options["plant_config"]["finance_parameters"]["model_inputs"][
-            "params"
-        ]["discount_rate"]  # annual discount rate
+        discount_rate = self.options["tech_config"]["model_inputs"]["finance_parameters"][
+            "discount_rate"
+        ]  # annual discount rate
 
         # Calculate the annualized CapEx using the present value of an annuity formula
         annualized_CapEx = npf.pmt(discount_rate, project_lifetime, -inputs["CapEx"])
