@@ -33,6 +33,16 @@ finance_to_pf_param_mapper = {
 
 
 def check_param_format(param_dict):
+    """Replace underscores with spaces for dictionary keys so dictionary is
+    compatible with ProFAST parameter inputs.
+
+
+    Args:
+        param_dict (dict): dictionary of ProFAST parameters
+
+    Returns:
+        dict: ProFAST formatted dictionary of parameters.
+    """
     param_dict_reformatted = {}
     for k, v in param_dict.items():
         k_new = k.replace(" ", "_")
@@ -46,7 +56,7 @@ def check_param_format(param_dict):
 
 @define
 class BasicProFASTParameterConfig(BaseConfig):
-    """Financing parameters for ProFAST
+    """Config of financing parameters for ProFAST.
 
     Attributes:
         plant_life (int): operating life of plant in years
@@ -62,22 +72,26 @@ class BasicProFASTParameterConfig(BaseConfig):
         inflation_rate (float): escalation rate. Set to zero for a nominal analysis.
         cash_onhand_months (int): number of months with cash onhand.
         admin_expense (float): adminstrative expense as a fraction of sales
-
-        non_depr_assets (float): cost (in `$`) of nondepreciable assets, such as land.
-        end_of_proj_sale_non_depr_assets (float): cost (in `$`) of nondepreciable assets
-            that are sold at the end of the project.
-
-        Optional:
-        tax_loss_carry_forward_years (int, optional):
-        tax_losses_monetized (bool, optional):
-        sell_undepreciated_cap (bool, optional):
-        credit_card_fees (float, optional):
-        demand_rampup (float, optional):
-        debt_type (str, optional):
-        loan_period_if_used (int, optional)
+        non_depr_assets (float, optional): cost (in `$`) of nondepreciable assets, such as land.
+            Defaults to 0.
+        end_of_proj_sale_non_depr_assets (float, optional): cost (in `$`) of nondepreciable assets
+            that are sold at the end of the project. Defaults to 0.
+        tax_loss_carry_forward_years (int, optional): Defaults to 0.
+        tax_losses_monetized (bool, optional): Defaults to True.
+        sell_undepreciated_cap (bool, optional): Defaults to True.
+        credit_card_fees (float, optional): credit card fees as a fraction.
+        demand_rampup (float, optional): Defaults to 0.
+        debt_type (str, optional): must be either "Revolving debt" or "One time loan".
+            Defaults to "Revolving debt".
+        loan_period_if_used (int, optional): Loan period in years.
+            Only used if `debt_type` is "One time loan". Defaults to 0.
         commodity (dict, optional):
         installation_cost  (dict, optional):
-        topc (dict, optional):
+            - **value** (*float*): installation cost in USD. Defaults to 0.
+            - **depr type** (*str*): either "Straight line" or "MACRS". Defaults to "Straight line"
+            - **depr period** (*int*): depreciation period in years. Defaults to 4.
+            - **depreciable** (*bool*): True if cost depreciates. Defaults to False.
+        topc (dict, optional): take or pay contract.
         annual_operating_incentive (dict, optional):
         incidental_revenue (dict, optional):
         road_tax (dict, optional):
@@ -85,10 +99,7 @@ class BasicProFASTParameterConfig(BaseConfig):
         maintenance (dict, optional):
         rent (dict, optional):
         license_and_permit (dict, optional):
-        one_time_cap_inct (dict, optional):
-
-    Returns:
-        _type_: _description_
+        one_time_cap_inct (dict, optional): investment tax credit.
     """
 
     plant_life: int = field(converter=int, validator=gte_zero)
@@ -104,7 +115,6 @@ class BasicProFASTParameterConfig(BaseConfig):
     sales_tax_rate: float = field(validator=range_val(0, 1))
     debt_interest_rate: float = field(validator=range_val(0, 1))
 
-    # TODO: see if folks want this to be just 'inflation rate'
     inflation_rate: float = field(validator=range_val(0, 1))
 
     cash_onhand_months: int = field(converter=int)  # int?
@@ -207,6 +217,19 @@ class BasicProFASTParameterConfig(BaseConfig):
 
 @define
 class ProFASTDefaultCapitalItem(BaseConfig):
+    """Configuration class of default settings for ProFAST capital items.
+
+    Attributes:
+        depr_period (int): depreciation period in years if using MACRS depreciation.
+            Must be either 3, 5, 7, 10, 15 or 20.
+        depr_type (str, optional): depreciation "MACRS" or "Straight line". Defaults to 'MACRS'.
+        refurb (list[float], optional): Replacement schedule as a fraction of the capital cost.
+            Defaults to [0.].
+        replacement_cost_percent (float | int, optional): Replacement cost as a fraction of CapEx.
+            Defaults to 0.0
+
+    """
+
     depr_period: int = field(converter=int, validator=contains([3, 5, 7, 10, 15, 20]))
     depr_type: str = field(converter=str.strip, validator=contains(["MACRS", "Straight line"]))
     refurb: int | float | list[float] = field(default=[0.0])
@@ -221,6 +244,16 @@ class ProFASTDefaultCapitalItem(BaseConfig):
 
 @define
 class ProFASTDefaultFixedCost(BaseConfig):
+    """Configuration class of default settings for ProFAST fixed costs.
+
+    Attributes:
+        escalation (float | int, optional): annual escalation of price.
+            Defaults to 0.
+        unit (str): unit of the cost. Defaults to `$/year`.
+        usage (float, optional): Usage multiplier, likely should be set to 1.
+            Defaults to 1.0.
+    """
+
     escalation: float | int = field()
     unit: str = field(default="$/year")
     usage: float | int = field(default=1.0)
@@ -231,6 +264,16 @@ class ProFASTDefaultFixedCost(BaseConfig):
 
 @define
 class ProFASTDefaultIncentive(BaseConfig):
+    """Configuration class of default settings for ProFAST production-based incentives.
+
+    Attributes:
+        decay (float): rate of decay of incentive value.
+            Recommended to set as -1*general inflation rate.
+        sunset_years (int, optional): number of years incentive is active. Defaults to 10.
+        tax_credit (bool, optional): Whether the incentive is a tax credit. Defaults to True.
+
+    """
+
     decay: float | int = field()
     sunset_years: int = field(default=10, converter=int)
     tax_credit: bool = field(default=True)
