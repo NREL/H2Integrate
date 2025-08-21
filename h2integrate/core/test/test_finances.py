@@ -294,7 +294,7 @@ def test_profast_config_provided():
 
 
 def test_parameter_validation_clashing_values():
-    """Test that parameter validation raises an error when plant config and pf_params
+    """Test that parameter validation raises an error when plant config and params
     have different values for the same parameter."""
 
     # Create plant config with clashing values
@@ -329,10 +329,6 @@ def test_parameter_validation_clashing_values():
                     "depr_period": 20,
                 },
             },
-            # "pf_params": {"params": pf_params},
-            # "depreciation_method": "Straight line",
-            # "depreciation_period": 20,
-            # "depreciation_period_electrolyzer": 10,
             "cost_adjustment_parameters": {
                 "target_dollar_year": 2022,
                 "cost_year_adjustment_inflation": 0.0,
@@ -387,7 +383,7 @@ def test_parameter_validation_clashing_values():
         prob.setup()
 
 
-def test_parameter_validation_duplicate_values():
+def test_parameter_validation_duplicate_parameters():
     """Test that parameter validation raises an error when plant config and pf_params
     have different values for the same parameter."""
 
@@ -424,10 +420,6 @@ def test_parameter_validation_duplicate_values():
                     "depr_period": 20,
                 },
             },
-            # "pf_params": {"params": pf_params},
-            # "depreciation_method": "Straight line",
-            # "depreciation_period": 20,
-            # "depreciation_period_electrolyzer": 10,
             "cost_adjustment_parameters": {
                 "target_dollar_year": 2022,
                 "cost_year_adjustment_inflation": 0.0,
