@@ -1,7 +1,6 @@
 from pathlib import Path
 
 import pytest
-import openmdao.api as om
 
 from h2integrate.core.h2integrate_model import H2IntegrateModel
 
@@ -19,7 +18,6 @@ def test_pyomo_controller(subtests):
 
     prob = model.prob
 
-    om.n2(prob)
     # Run the test
     with subtests.test("Check output"):
         assert pytest.approx([0.5, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]) == prob.get_val(

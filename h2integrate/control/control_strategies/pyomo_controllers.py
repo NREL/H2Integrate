@@ -166,7 +166,7 @@ class PyomoControllerBaseClass(ControllerBaseClass):
                     self.add_discrete_input("dispatch_block_rule_function", val=self.dummy_method)
                 else:
                     self.add_discrete_input(
-                        f"{"dispatch_block_rule_function"}_{source_tech}", val=self.dummy_method
+                        f"{'dispatch_block_rule_function'}_{source_tech}", val=self.dummy_method
                     )
             else:
                 continue
@@ -194,7 +194,7 @@ class PyomoControllerBaseClass(ControllerBaseClass):
                     dispatch_block_rule_function = discrete_inputs["dispatch_block_rule_function"]
                 else:
                     dispatch_block_rule_function = discrete_inputs[
-                        f"{"dispatch_block_rule_function"}_{source_tech}"
+                        f"{'dispatch_block_rule_function'}_{source_tech}"
                     ]
                 dispatch_block_rule_function(pyomo_model, source_tech)
             else:
@@ -203,10 +203,6 @@ class PyomoControllerBaseClass(ControllerBaseClass):
         # for key, dispatch_block_rule_function in discrete_inputs.items():
         #     tech_name = key.split("_")[-1]
         #     dispatch_block_rule_function(pyomo_model, tech_name)
-
-        import pdb
-
-        pdb.set_trace()
 
         # define dispatch solver
         def pyomo_dispatch_solver(performance_model: callable, kwargs, pyomo_model=pyomo_model):
