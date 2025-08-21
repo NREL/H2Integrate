@@ -1,9 +1,6 @@
 import openmdao.api as om
 
 
-n_timesteps = 8760
-
-
 class BatteryPerformanceBaseClass(om.ExplicitComponent):
     def initialize(self):
         self.options.declare("driver_config", types=dict)
@@ -14,7 +11,7 @@ class BatteryPerformanceBaseClass(om.ExplicitComponent):
         self.add_input(
             "electricity_in",
             val=0.0,
-            shape=n_timesteps,
+            shape_by_conn=True,
             units="kW",
             desc="Power input to Battery",
         )
@@ -22,9 +19,17 @@ class BatteryPerformanceBaseClass(om.ExplicitComponent):
         self.add_output(
             "electricity_out",
             val=0.0,
-            shape=n_timesteps,
+            copy_shape="electricity_in",
             units="kW",
             desc="Power output from Battery",
+        )
+
+        self.add_output(
+            "SOC",
+            val=0.0,
+            copy_shape="electricity_in",
+            units="percent",
+            desc="SOC of Battery",
         )
 
     def compute(self, inputs, outputs):
