@@ -28,6 +28,7 @@ technology_interconnections: [
   ["electrolyzer", "h2_storage", "efficiency"],
   ["electrolyzer", "h2_storage", "hydrogen", "pipe"],
   ["h2_storage", "ammonia", "hydrogen", "pipe"],
+  ["ammonia", "electrolyzer", "max_hydrogen_capacity"],
 ]
 
 plant:

@@ -15,7 +15,7 @@ technologies:
         size_mode: "resize_for_max_product"
         resize_by_flow: "hydrogen"
         resize_by_tech: "ammonia"
-        iterative_mode: True
+        iterative_mode: False
         sizing:
           resize_for_enduse: False
           size_for: 'BOL' #'BOL' (generous) or 'EOL' (conservative)
@@ -66,7 +66,7 @@ technologies:
         catalyst_consumption_rate: 0.000091295354067341
         catalyst_replacement_interval: 3
       performance_parameters:
-        iterative_mode: True
+        iterative_mode: False
         capacity_factor: 0.9
         energy_demand: 0.530645243
         heat_output: 0.8299956

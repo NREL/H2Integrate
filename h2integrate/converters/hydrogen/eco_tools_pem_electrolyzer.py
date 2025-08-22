@@ -169,7 +169,7 @@ class ECOElectrolyzerPerformanceModel(ElectrolyzerPerformanceBaseClass):
             electrolyzer_size_mw = inputs["n_clusters"][0] * self.config.cluster_rating_MW
         elif self.config.size_mode == "resize_for_max_feedstock":
             # In this sizing mode, electrolyzer size comes from feedstock
-            if self.config.resize_for == "electricity":
+            if self.config.resize_by_flow == "electricity":
                 electrolyzer_size_mw = np.max(inputs["electricity_in"]) / 1000
             else:
                 raise ValueError(f"Cannot resize for '{self.config.resize_by_flow}' feedstock")
