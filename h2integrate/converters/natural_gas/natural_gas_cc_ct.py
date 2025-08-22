@@ -117,6 +117,7 @@ class NaturalGasPerformanceModel(om.ExplicitComponent):
         electricity_out = natural_gas_in / heat_rate_mmbtu_per_mwh
 
         outputs["electricity_out"] = electricity_out
+        outputs["natural_gas_consumed"] = natural_gas_in
 
 
 @define

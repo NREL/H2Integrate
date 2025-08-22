@@ -2,18 +2,22 @@ name: "technology_config"
 description: "This plant produces electricity from natural gas using a combined cycle turbine"
 
 technologies:
-  feedstocks:
+  ng_feedstock:
     performance_model:
       model: "feedstock_performance"
     cost_model:
       model: "feedstock_cost"
     model_inputs:
-      natural_gas:
+      shared_parameters:
+        feedstock_type: "natural_gas"
+        units: "MMBtu"
+      performance_parameters:
         rated_capacity: 100.
-        capacity_units: "MMBtu"
-        price: 4.2  # $/MMBtu
       cost_parameters:
         cost_year: 2023
+        price: 4.2
+        annual_cost: 0.
+        start_up_cost: 100000.
   natural_gas_plant:
     performance_model:
       model: "natural_gas_performance"

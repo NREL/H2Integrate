@@ -26,7 +26,7 @@ site:
 # and not connected to additional technologies.
 # hence the empty array.
 technology_interconnections: [
-    ["feedstocks", "natural_gas_plant", "natural_gas", "ng_pipe"],
+    ["ng_feedstock", "natural_gas_plant", "natural_gas", "ng_pipe"],
 ]
 
 plant:
@@ -34,6 +34,8 @@ plant:
   grid_connection: False # option, can be turned on or off
   ppa_price: 0.027498168 # based off correlations of LBNL PPA data
   hybrid_electricity_estimated_cf: 0.492 #should equal 1 if grid_connection = True
+  simulation:
+    n_timesteps: 8760
 
 finance_parameters:
   analysis_start_year: 2032
