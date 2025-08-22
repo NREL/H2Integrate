@@ -32,16 +32,17 @@ finance_to_pf_param_mapper = {
 }
 
 
-def check_param_format(param_dict):
-    """Replace underscores with spaces for dictionary keys so dictionary is
-    compatible with ProFAST parameter inputs.
+def format_params_for_profast_config(param_dict):
+    """Replace spaces with underscores for top-level dictionary keys and replace
+    underscores with spaces for any embedded dictionaries. Create a dictionary that is
+    formatted for BasicProFASTParameterConfig.
 
 
     Args:
-        param_dict (dict): dictionary of ProFAST parameters
+        param_dict (dict): dictionary of financing parameters
 
     Returns:
-        dict: ProFAST formatted dictionary of parameters.
+        dict: financing parameters formatted for BasicProFASTParameterConfig
     """
     param_dict_reformatted = {}
     for k, v in param_dict.items():
@@ -52,6 +53,77 @@ def check_param_format(param_dict):
         else:
             param_dict_reformatted[k_new] = v
     return param_dict_reformatted
+
+
+def check_parameter_inputs(finance_params, plant_config):
+    """Check and format the input finance parameters. This method checks:
+
+    1) for duplicated keys that only differ in formatting (spaces or underscores).
+        Such as 'analysis_start_year' and 'analysis start year'. Throws an error if found.
+    2) two keys that map to the same parameter have differing values,
+        see `finance_to_pf_param_mapper`. Such as 'installation time' and
+        'installation months'. Throws an error if values differ.
+    3) parameters that are in the ProFAST format are reformatted to be compatible with
+        BasicProFASTParameterConfig
+
+    Args:
+        finance_params (dict): `params` dictionary containing financing information.
+        plant_config (dict): plant configuration dictionary.
+
+    Raises:
+        ValueError: If duplicated keys are input.
+        ValueError: If two equivalent keys have different values.
+
+    Returns:
+        dict: financing parameters formatted for BasicProFASTParameterConfig
+        validated financing parameters with consistent formatting.
+    """
+    # make consistent formatting
+    fin_params = {k.replace("_", " "): v for k, v in finance_params.items()}
+
+    # check for duplicated entries (ex. 'analysis_start_year' and 'analysis start year')
+    if len(fin_params) != len(finance_params):
+        finance_keys = [k.replace("_", " ") for k, v in finance_params.items()]
+        fin_keys = list(fin_params.keys())
+        duplicated_entries = [k for k in fin_keys if finance_keys.count(k) > 1]
+        # NOTE: not an issue if both values are the same,
+        # but better to inform users earlier on to prevent accidents
+        err_info = "\n".join(
+            f"{d}: both `{d}` and `{d.replace('_','')}` map to {d}" for d in duplicated_entries
+        )
+
+        msg = f"Duplicate entries found in ProFastComp params. Duplicated entries are: {err_info}"
+        raise ValueError(msg)
+
+    # check if duplicate entries were input, like "installation time" AND "installation months"
+    for nickname, realname in finance_to_pf_param_mapper.items():
+        has_nickname = any(k == nickname for k, v in fin_params.items())
+        has_realname = any(k == realname for k, v in fin_params.items())
+        # check for duplicate entries
+        if has_nickname and has_realname:
+            check_plant_config_and_profast_params(fin_params, fin_params, nickname, realname)
+
+    # check for value mismatch
+    if "operating life" in fin_params:
+        check_plant_config_and_profast_params(
+            plant_config["plant"], fin_params, "plant_life", "operating life"
+        )
+
+    # if profast params are in profast format
+    if any(k in list(finance_to_pf_param_mapper.values()) for k, v in fin_params.items()):
+        pf_param_to_finance_mapper = {v: k for k, v in finance_to_pf_param_mapper.items()}
+        pf_params = {}
+        for k, v in fin_params.items():
+            if k.replace("_", " ") in pf_param_to_finance_mapper:
+                pf_params[pf_param_to_finance_mapper[k]] = v
+            else:
+                pf_params[k] = v
+        fin_params = dict(pf_params.items())
+
+    fin_params = format_params_for_profast_config(fin_params)
+    fin_params.update({"plant_life": plant_config["plant"]["plant_life"]})
+
+    return fin_params
 
 
 @define
@@ -370,52 +442,8 @@ class ProFastComp(om.ExplicitComponent):
 
         finance_params = plant_config["finance_parameters"]["model_inputs"]["params"]
 
-        # make consistent formatting
-        fin_params = {k.replace("_", " "): v for k, v in finance_params.items()}
-        # check for duplicated entries (ex. 'analysis_start_year' and 'analysis start year')
-        if len(fin_params) != len(finance_params):
-            finance_keys = [k.replace("_", " ") for k, v in finance_params.items()]
-            fin_keys = list(fin_params.keys())
-            duplicated_entries = [k for k in fin_keys if finance_keys.count(k) > 1]
-            err_info = "\n".join(
-                f"{d}: both `{d}` and `{d.replace('_','')}` map to {d}" for d in duplicated_entries
-            )
-            # NOTE: not an issue if both values are the same,
-            # but better to inform users earlier on to prevent accidents
-            for d in duplicated_entries:
-                err_info += f"{d}: both `{d}` and `{d.replace(' ','_')}` map to {d}"
-            msg = (
-                f"Duplicate entries found in ProFastComp params. Duplicated entries are: {err_info}"
-            )
-            raise ValueError(msg)
+        fin_params = check_parameter_inputs(finance_params, plant_config)
 
-        # check if duplicate entries were input, like "installation time" AND "installation months"
-        for nickname, realname in finance_to_pf_param_mapper.items():
-            has_nickname = any(k == nickname for k, v in fin_params.items())
-            has_realname = any(k == realname for k, v in fin_params.items())
-            # check for duplicate entries
-            if has_nickname and has_realname:
-                check_plant_config_and_profast_params(fin_params, fin_params, nickname, realname)
-        # check for value mismatch
-        if "operating life" in fin_params:
-            check_plant_config_and_profast_params(
-                plant_config["plant"], fin_params, "plant_life", "operating life"
-            )
-
-        # if profast params are in profast format
-        if any(k in list(finance_to_pf_param_mapper.values()) for k, v in fin_params.items()):
-            pf_param_to_finance_mapper = {v: k for k, v in finance_to_pf_param_mapper.items()}
-            pf_params = {}
-            for k, v in fin_params.items():
-                if k.replace("_", " ") in pf_param_to_finance_mapper:
-                    pf_params[pf_param_to_finance_mapper[k]] = v
-                else:
-                    pf_params[k] = v
-            fin_params = dict(pf_params.items())
-
-        fin_params = check_param_format(fin_params)
-
-        fin_params.update({"plant_life": plant_config["plant"]["plant_life"]})
         # initialize financial parameters
         self.params = BasicProFASTParameterConfig.from_dict(fin_params)
 
@@ -486,7 +514,6 @@ class ProFastComp(om.ExplicitComponent):
                 if "refurbishment_period_years" in tech_capex_info:
                     refurb_period = tech_capex_info["refurbishment_period_years"]
                 else:
-                    # TODO: make below tech specific
                     refurb_period = round(
                         float(inputs[f"{tech}_time_until_replacement"][0]) / (24 * 365)
                     )
