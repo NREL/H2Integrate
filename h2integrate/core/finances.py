@@ -186,7 +186,10 @@ class ProFastComp(om.ExplicitComponent):
         if self.options["commodity_type"] != "co2":
             params.setdefault(
                 "capacity",
-                float(inputs[f"total_{self.options['commodity_type']}_produced"][0]) / 365.0,
+                max(
+                    float(inputs[f"total_{self.options['commodity_type']}_produced"][0]) / 365.0,
+                    1e-6,
+                ),
             )
         else:
             params.setdefault(

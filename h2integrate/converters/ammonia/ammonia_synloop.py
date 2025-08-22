@@ -37,6 +37,11 @@ class AmmoniaSynLoopPerformanceConfig(BaseConfig):
     The other inputs are from tech_config/ammonia/model_inputs/performance_parameters
 
     Attributes:
+        iterative_mode (bool): A temporary boolean used to switch between the two methods of
+            executing "resize_for_max_product" mode on the electrolyzer. When true, an additional
+            connected variable will be made connecting the ammonia plant's maximum hydrogen
+            capacity to the upstream electrolyzer, creating a group with no explicit solution.
+            OM will attempt to solve this but will crash - just here for demonstration purposes.
         *production_capacity (float): The total production capacity of the ammonia synthesis loop
             (in kg ammonia per hour)
         *catalyst_consumption_rate (float): The mass ratio of catalyst consumed by the reactor over
@@ -64,6 +69,7 @@ class AmmoniaSynLoopPerformanceConfig(BaseConfig):
             decimal)
     """
 
+    iterative_mode: bool = field()
     production_capacity: float = field(validator=gt_zero)
     catalyst_consumption_rate: float = field(validator=gt_zero)
     catalyst_replacement_interval: float = field(validator=gt_zero)
@@ -185,6 +191,7 @@ class AmmoniaSynLoopPerformanceModel(om.ExplicitComponent):
         self.add_output(
             "limiting_input", val=0, shape_by_conn=True, copy_shape="hydrogen_in", units=None
         )
+        self.add_output("max_hydrogen_capacity", val=1.0, units="kg/h")
 
     def compute(self, inputs, outputs):
         # Get config values
@@ -268,6 +275,10 @@ class AmmoniaSynLoopPerformanceModel(om.ExplicitComponent):
         outputs["total_hydrogen_consumed"] = h2_in.sum()
         outputs["total_nitrogen_consumed"] = n2_in.sum()
         outputs["total_electricity_consumed"] = elec_in.sum()
+
+        if self.config.iterative_mode:
+            h2_cap = nh3_cap * h2_rate  # kg H2 per houe
+            outputs["max_hydrogen_capacity"] = h2_cap
 
 
 @define

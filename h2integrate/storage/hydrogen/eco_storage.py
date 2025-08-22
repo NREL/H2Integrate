@@ -56,6 +56,10 @@ class H2Storage(om.ExplicitComponent):
 
     def compute(self, inputs, outputs):
         self.options["tech_config"]
+
+        # Need to make sure hydrogen_in is never exactly zero to prevent NaNs in iterative_mode
+        self.set_val("hydrogen_in", np.maximum(inputs["hydrogen_in"], 1e-6))
+
         ########### initialize output dictionary ###########
         h2_storage_results = {}
 
