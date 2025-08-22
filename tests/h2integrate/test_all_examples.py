@@ -540,16 +540,32 @@ def test_natural_gas_example(subtests):
         )[0]
         assert pytest.approx(total_electricity, rel=1e-6) == 1.168e8
 
-    with subtests.test("Check capex adjusted feedstocks"):
-        capex_feedstocks = model.prob.get_val("financials_group_default.capex_adjusted_feedstocks")[
-            0
-        ]
-        assert pytest.approx(capex_feedstocks, rel=1e-6) == 0.0
+    with subtests.test("Check opex adjusted ng_feedstock"):
+        opex_ng_feedstock = model.prob.get_val(
+            "financials_group_default.opex_adjusted_ng_feedstock"
+        )[0]
+        assert pytest.approx(opex_ng_feedstock, rel=1e-6) == 3589463.41463415
 
-    with subtests.test("Check opex adjusted feedstocks"):
-        opex_feedstocks = model.prob.get_val("financials_group_default.opex_adjusted_feedstocks")[0]
-        assert pytest.approx(opex_feedstocks, rel=1e-6) == 3589463.41463415
+    with subtests.test("Check capex adjusted natural_gas_plant"):
+        capex_ng_plant = model.prob.get_val(
+            "financials_group_default.capex_adjusted_natural_gas_plant"
+        )[0]
+        assert pytest.approx(capex_ng_plant, rel=1e-6) == 97560975.60975611
+
+    with subtests.test("Check opex adjusted natural_gas_plant"):
+        opex_ng_plant = model.prob.get_val(
+            "financials_group_default.opex_adjusted_natural_gas_plant"
+        )[0]
+        assert pytest.approx(opex_ng_plant, rel=1e-6) == 1260487.80487805
+
+    with subtests.test("Check total adjusted CapEx"):
+        total_capex = model.prob.get_val("financials_group_default.total_capex_adjusted")[0]
+        assert pytest.approx(total_capex, rel=1e-6) == 97658536.58536586
+
+    with subtests.test("Check total adjusted OpEx"):
+        total_opex = model.prob.get_val("financials_group_default.total_opex_adjusted")[0]
+        assert pytest.approx(total_opex, rel=1e-6) == 4849951.2195122
 
     with subtests.test("Check LCOE"):
         lcoe = model.prob.get_val("financials_group_default.LCOE")[0]
-        assert pytest.approx(lcoe, rel=1e-6) == 0.12950673
+        assert pytest.approx(lcoe, rel=1e-6) == 0.12959097
