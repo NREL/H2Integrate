@@ -10,9 +10,11 @@ class CustomElectrolyzerCostModelConfig(CostModelBaseConfig):
     """Configuration class for the CustomElectrolyzerCostModel.
 
     Attributes:
-        capex_USD_per_kW (float):
-        fixed_om_USD_per_kW_per_year (float):
-        cost_year (int): cost year for capex and opex
+        capex_USD_per_kW (float): capital cost of electrolyzer system in USD/kW
+        fixed_om_USD_per_kW_per_year (float): fixed annual operating cost of
+            electrolyzer system in USD/kW/year
+        cost_year (int): dollar year of capex_USD_per_kW and
+            fixed_om_USD_per_kW_per_year
     """
 
     capex_USD_per_kW: float = field(validator=gte_zero)
@@ -20,6 +22,10 @@ class CustomElectrolyzerCostModelConfig(CostModelBaseConfig):
 
 
 class CustomElectrolyzerCostModel(ElectrolyzerCostBaseClass):
+    """
+    An OpenMDAO component that computes the cost of a PEM electrolyzer.
+    """
+
     def setup(self):
         self.config = CustomElectrolyzerCostModelConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost")
