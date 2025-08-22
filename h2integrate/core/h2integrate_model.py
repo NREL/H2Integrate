@@ -12,7 +12,6 @@ from h2integrate.core.resource_summer import ElectricitySumComp
 from h2integrate.core.supported_models import supported_models, electricity_producing_techs
 from h2integrate.core.inputs.validation import load_tech_yaml, load_plant_yaml, load_driver_yaml
 from h2integrate.core.pose_optimization import PoseOptimization
-from h2integrate.core.profast_financial import ProFastComp
 
 
 try:
@@ -381,18 +380,29 @@ class H2IntegrateModel:
                     tech: config for tech, config in tech_configs.items() if tech in included_techs
                 }
 
-                if (
-                    self.plant_config["finance_parameters"].get("finance_model", "ProFastComp")
-                    == "ProFastComp"
-                ):
-                    profast_comp = ProFastComp(
+                fin_model_name = self.plant_config["finance_parameters"].get("finance_model")
+                if isinstance(fin_model_name, list):
+                    for model_name in fin_model_name:
+                        fin_model = self.supported_models.get(model_name)
+                        fin_comp = fin_model(
+                            driver_config=self.driver_config,
+                            tech_config=filtered_tech_configs,
+                            plant_config=self.plant_config,
+                            commodity_type=commodity_type,
+                        )
+                        financial_group.add_subsystem(
+                            f"{model_name}_{idx}", fin_comp, promotes=["*"]
+                        )
+                else:
+                    fin_model = self.supported_models.get(fin_model_name)
+                    fin_comp = fin_model(
                         driver_config=self.driver_config,
                         tech_config=filtered_tech_configs,
                         plant_config=self.plant_config,
                         commodity_type=commodity_type,
                     )
                     financial_group.add_subsystem(
-                        f"profast_comp_{idx}", profast_comp, promotes=["*"]
+                        f"{fin_model_name}_{idx}", fin_comp, promotes=["*"]
                     )
 
             self.plant.add_subsystem(f"financials_group_{group_id}", financial_group)
@@ -415,7 +425,7 @@ class H2IntegrateModel:
         # If provided, only include those technologies in the stackup.
         # If not provided, include all technologies in the financial group in the stackup.
         metric_key = f"LCO{commodity_type[0].upper()}"
-        # metric_key = metrics_map.get(commodity_type)
+
         included_techs = (
             plant_config["finance_parameters"]
             .get("technologies_included_in_metrics", {})
