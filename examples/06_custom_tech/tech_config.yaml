@@ -35,6 +35,7 @@ technologies:
         adjust_air_density_for_elevation: True
       cost_parameters:
         cost_per_kw: 1500.0
+        cost_year: 2019
   paper_mill:
     performance_model:
       model: paper_mill_performance
@@ -55,3 +56,4 @@ technologies:
         plant_capacity: 10.0  # tonnes/day
         cost_per_tonne: 4000000.  # $/tonne
         opex_rate: 0.05  # 5% of CAPEX
+        cost_year: 2024

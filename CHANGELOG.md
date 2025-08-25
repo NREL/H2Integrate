@@ -1,9 +1,12 @@
 # CHANGELOG
 
 ## 0.3.1, Unreleased, TBD
-
+- Added rule-based storage system control capability
+- Bugfix: only run pyxdsm when there are connections in the system
+- Added *_out/ to .gitignore to avoid clutter
 - Added methanol production base class
 - Added steam methane reforming methanol production technology
+- Added CO2 hydrogenation methanol production technology
 - Added a new optimization example with a wind plant and electrolyzer to showcase how to define design variables, constraints, and objective functions
 - Added capability for user-defined technologies in the H2Integrate framework, allowing for custom models to be integrated into the system.
 - Added an example of a user-defined technology in the `examples` directory, demonstrating an extremely simple paper mill model.
@@ -25,6 +28,20 @@
 - Added WOMBAT electrolyzer O&M model
 - Added marine carbon capture base class
 - Added direct ocean capture technology
+- Added option for user to provide ProFAST parameters in finance parameters
+- Added ammonia synloop, partially addressing https://github.com/NREL/H2Integrate/issues/169
+- Added geologic hydrogen (geoh2) converter and examples [PR 135](https://github.com/NREL/H2Integrate/pull/135)
+- Changed plant_config `atb_year` entry to `financial_analysis_start_year`
+- Allow users to specify the technologies to include in the metrics calculations in the plant configuration file
+- Update PySAM solar performance model to allow for more user-configurability.
+- Added simple air separation unit (ASU) converter to model nitrogen production.
+- Added two ATB-compatible solar-PV cost models.
+- Changed electrolyzer capacity to be specified as `n_clusters` rather than `rating` in electrolyzer performance model config
+- Changed electrolyzer capacity to be an input to the electrolyzer cost models rather than pulled from the cost model config.
+- Updated finance parameter organization naming in `plant_config`.
+- Added cost model base class and removed `plant_config['finance_parameters']['discount_years']['tech']`. Some cost models require user-input cost year (`tech_config[tech]['model_inputs']['cost_parameters']['cost_year']`) others do not. Cost year is output from cost models as a discrete output.
+- Add ocean alkalinity enhancement technology model.
+- Added ability to export ProFAST object to yaml file in `ProFastComp`
 - Added a power splitter technology, allowing for flexible power distribution between multiple technologies
 
 ## 0.3.0 [May 2 2025]

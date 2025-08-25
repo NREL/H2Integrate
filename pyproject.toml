@@ -37,7 +37,7 @@ requires-python = ">=3.11, <3.14"
 license = {file = "LICENSE"}
 dependencies = [
     "attrs",
-    "CoolProp",
+    "CoolProp<7.0.0",
     "floris==4.3",
     "geopy",
     "hopp>=3.3.0",
@@ -54,7 +54,7 @@ dependencies = [
     "Pyomo>=6.1.2",
     "rainflow",
     "ruamel.yaml",
-    "scipy==1.15.3",
+    "scipy",
     "wombat>=0.11",
 ]
 keywords = [
