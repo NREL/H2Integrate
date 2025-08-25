@@ -55,6 +55,18 @@ def ngct_cost_params():
     return cost_params
 
 
+def get_plant_config():
+    """Fixture to get plant configuration."""
+    return {
+        "plant": {
+            "plant_life": 30,
+        },
+        "simulation": {
+            "n_timesteps": 8760,
+        },
+    }
+
+
 def test_ngcc_performance(ngcc_performance_params, subtests):
     """Test NGCC performance model with typical operating conditions."""
     tech_config_dict = {
@@ -68,7 +80,7 @@ def test_ngcc_performance(ngcc_performance_params, subtests):
 
     prob = om.Problem()
     perf_comp = NaturalGasPerformanceModel(
-        plant_config={},
+        plant_config=get_plant_config(),
         tech_config=tech_config_dict,
     )
 
@@ -104,7 +116,7 @@ def test_ngct_performance(ngct_performance_params, subtests):
 
     prob = om.Problem()
     perf_comp = NaturalGasPerformanceModel(
-        plant_config={},
+        plant_config=get_plant_config(),
         tech_config=tech_config_dict,
     )
 
@@ -144,7 +156,7 @@ def test_ngcc_cost(ngcc_cost_params, subtests):
 
     prob = om.Problem()
     cost_comp = NaturalGasCostModel(
-        plant_config={},
+        plant_config=get_plant_config(),
         tech_config=tech_config_dict,
     )
 
@@ -193,7 +205,7 @@ def test_ngct_cost(ngct_cost_params, subtests):
 
     prob = om.Problem()
     cost_comp = NaturalGasCostModel(
-        plant_config={},
+        plant_config=get_plant_config(),
         tech_config=tech_config_dict,
     )
 

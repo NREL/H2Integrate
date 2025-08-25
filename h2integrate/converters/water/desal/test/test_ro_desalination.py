@@ -77,8 +77,17 @@ def test_ro_desalination_cost(subtests):
         }
     }
 
+    plant_config = {
+        "plant": {
+            "plant_life": 30,
+            "simulation": {
+                "n_timesteps": 8760,
+            },
+        },
+    }
+
     prob = om.Problem()
-    comp = ReverseOsmosisCostModel(tech_config=tech_config)
+    comp = ReverseOsmosisCostModel(tech_config=tech_config, plant_config=plant_config)
     prob.model.add_subsystem("comp", comp, promotes=["*"])
 
     prob.setup()

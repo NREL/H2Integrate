@@ -584,7 +584,7 @@ def test_natural_gas_example(subtests):
 
     # Test feedstock-specific values
     with subtests.test("Check feedstock output"):
-        ng_output = model.prob.get_val("ng_feedstock.natural_gas_out")
+        ng_output = model.prob.get_val("ng_feedstock_source.natural_gas_out")
         # Should be rated capacity (100 MMBtu) for all timesteps
         assert all(ng_output == 100.0)
 
@@ -592,7 +592,7 @@ def test_natural_gas_example(subtests):
         ng_consumed = model.prob.get_val("ng_feedstock.natural_gas_consumed")
         # Total consumption should match what the natural gas plant uses
         expected_consumption = (
-            model.prob.get_val("natural_gas_plant.electricity_out") * 7.5 / 1000
+            model.prob.get_val("natural_gas_plant.electricity_out") * 7.5
         )  # Convert MWh to MMBtu using heat rate
         assert pytest.approx(ng_consumed.sum(), rel=1e-3) == expected_consumption.sum()
 
@@ -604,5 +604,5 @@ def test_natural_gas_example(subtests):
         ng_opex = model.prob.get_val("ng_feedstock.OpEx")[0]
         # OpEx should be annual_cost (0) + price * consumption
         ng_consumed = model.prob.get_val("ng_feedstock.natural_gas_consumed")
-        expected_opex = 0.0 + 4.2 * ng_consumed.sum()  # price = 4.2 $/MMBtu
+        expected_opex = 4.2 * ng_consumed.sum()  # price = 4.2 $/MMBtu
         assert pytest.approx(ng_opex, rel=1e-6) == expected_opex
