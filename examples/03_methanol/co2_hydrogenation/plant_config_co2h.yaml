@@ -28,6 +28,7 @@ technology_interconnections: [
   ["electrolyzer", "methanol", "hydrogen", "pipe"],
   ["financials_group_1", "methanol", "LCOE"],
   ["financials_group_1", "methanol", "LCOH"],
+  ["wind","doc","electricity","cable"],
   ["doc","methanol","co2","pipe"],
 ]
 
@@ -61,6 +62,7 @@ finance_parameters:
     hopp: 2019
     electrolyzer: 2021
     methanol: 2020
+    wind: 2020
     doc: 2020
   options:
     commodity_type: "methanol"

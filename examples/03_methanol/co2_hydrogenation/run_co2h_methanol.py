@@ -1,3 +1,5 @@
+from plot_co2h_methanol import plot_methanol
+
 from h2integrate.core.h2integrate_model import H2IntegrateModel
 
 
@@ -8,3 +10,5 @@ h2i = H2IntegrateModel("03_co2h_methanol.yaml")
 h2i.run()
 
 h2i.post_process()
+
+plot_methanol(h2i.prob.model)
