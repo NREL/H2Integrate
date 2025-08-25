@@ -9,18 +9,18 @@ technologies:
       model: "wind_plant_ard"
     model_inputs:
       shared_parameters:
+        ard_data_path: "./"
         ard_system:
           system: "onshore"
           modeling_options:
-            farm:
-              N_turbines: 100
+            windIO_plant: !include "./windio.yaml"
+            layout:
+              N_turbines: 25
               N_substations: 1
               spacing_primary: 10.0
               spacing_secondary: 10.0
               angle_orientation: 0.0
               angle_skew: 0.0
-              x_substations: 0.1
-              y_substations: 0.1
             wind_rose:
               file: wrg_example.wrg
               wd_step: 90.0
@@ -37,8 +37,27 @@ technologies:
                 topology: "branched"
                 feeder_route: "radial"
                 feeder_limit: "unlimited"
+            costs:
+              rated_power: 3.4  # MW
+              num_blades: 3
+              rated_thrust_N: 645645.83964671
+              gust_velocity_m_per_s: 52.5
+              blade_surface_area: 69.7974979
+              tower_mass: 620440.7337521
+              nacelle_mass: 101985.82836439
+              hub_mass: 8384.07517646
+              blade_mass: 14563.41339641
+              foundation_height: 0.0
+              commissioning_cost_kW: 44.0
+              decommissioning_cost_kW: 58.0
+              trench_len_to_substation_km: 50.0
+              distance_to_interconnect_mi: 4.97096954
+              interconnect_voltage_kV: 130.0
+              tcc_per_kW: 1300.00  # (USD/kW)
+              opex_per_kW: 44.00  # (USD/kWh)
             offshore: false
             floating: false
+          analysis_options:
   electrolyzer:
     performance_model:
       model: "eco_pem_electrolyzer_performance"
@@ -46,7 +65,6 @@ technologies:
       model: "singlitico_electrolyzer_cost"
     model_inputs:
       shared_parameters:
-        rating: 500. # MW
         location: "onshore"
         electrolyzer_capex: 1295 # $/kW overnight installed capital costs for a 1 MW system in 2022
 
@@ -55,6 +73,7 @@ technologies:
           resize_for_enduse: False
           size_for: 'BOL' #'BOL' (generous) or 'EOL' (conservative)
           hydrogen_dmd:
+        n_clusters: 12 # MW
         cluster_rating_MW: 40
         pem_control_type: 'basic'
         eol_eff_percent_loss: 13 #eol defined as x% change in efficiency from bol
