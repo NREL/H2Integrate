@@ -8,11 +8,15 @@ Currently, H2I recognizes four types of models:
 - [Storage](#storage)
 
 ## Resource
-`Resource` models processes resource data that is usually passed to a technology model.
+`Resource` models process resource data that is usually passed to a technology model.
 
 | Resource name     | Resource Type  |
 | :---------------- | :---------------: |
 | `river_resource`  | river resource |
+
+```{note}
+The `Resource` models are under development. Many of the resources are currently integrated into the `Converter` model directly, notably this is true for the wind resource used in the `wind` converter and solar resource used in the `solar` converter.
+```
 
 ## Converters
 `Converter` models are technologies that:

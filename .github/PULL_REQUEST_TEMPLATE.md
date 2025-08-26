@@ -30,11 +30,11 @@ IMPORTANT NOTES
 
 ## Type of Contribution
 <!-- Check all that apply to help reviewers understand your contribution -->
-- [ ] New Technology Model
-- [ ] Bug Fix
 - [ ] Feature Enhancement
+  - [ ] New Technology Model
+- [ ] Bug Fix
 - [ ] Documentation Update
-- [ ] Infrastructure/CI Changes
+- [ ] CI Changes
 - [ ] Other (please describe):
 
 ## General PR Checklist
@@ -52,21 +52,22 @@ IMPORTANT NOTES
 
 ## New Technology Checklist
 <!-- Complete this section only if you checked "New Technology Model" above -->
-- [ ] **Performance Model**: Technology performance model has been implemented and follows H2Integrate patterns
+- [ ] **Performance Model**: Technology performance model has been implemented and follows H2Integrate patterns (if applicable)
 - [ ] **Cost Model**: Technology cost model has been implemented (if applicable)
 - [ ] **Tests**: Unit tests have been added for the new technology
-  - [ ] Performance model tests
+  - [ ] Performance model tests (if applicable)
   - [ ] Cost model tests (if applicable)
   - [ ] Integration tests with H2Integrate system
 - [ ] **Example**: A working example demonstrating the new technology has been created
-  - [ ] Example has been tested and runs successfully
+  - [ ] Example has been tested and runs successfully in `test_all_examples.py`
   - [ ] Example is documented with clear explanations
 - [ ] **Documentation**:
   - [ ] Technology documentation page added to `docs/technology_models/`
-  - [ ] Technology added to the main technology models list in documentation
+  - [ ] Technology added to the main technology models list in `docs/technology_models/technology_overview.md`
 - [ ] **Integration**: Technology has been properly integrated into H2Integrate
   - [ ] Added to `supported_models.py`
-  - [ ] Follows established naming conventions, e.g. input/output names
+  - [ ] If a new commodity_type is added, update `create_financial_model` in `h2integrate_model.py`
+  - [ ] Follows established naming conventions outlined in `docs/developer_guide/coding_guidelines.md`
 
 ## Related issues
 
