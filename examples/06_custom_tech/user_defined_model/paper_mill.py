@@ -88,7 +88,7 @@ class PaperMillFinance(om.ExplicitComponent):
     def compute(self, inputs, outputs):
         # Financial parameters
         project_lifetime = self.options["plant_config"]["plant"]["plant_life"]  # years
-        discount_rate = self.options["plant_config"]["finance_parameters"][
+        discount_rate = self.options["tech_config"]["model_inputs"]["finance_parameters"][
             "discount_rate"
         ]  # annual discount rate
 
