@@ -2,7 +2,7 @@ import numpy as np
 import openmdao.api as om
 from pytest import approx
 
-from h2integrate.transporters.power_combiner import CombinerPerformanceModel
+from h2integrate.transporters.electricity_combiner import CombinerPerformanceModel
 
 
 rng = np.random.default_rng(seed=0)

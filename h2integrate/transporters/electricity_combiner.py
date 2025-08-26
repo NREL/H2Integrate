@@ -3,7 +3,7 @@ import openmdao.api as om
 
 class CombinerPerformanceModel(om.ExplicitComponent):
     """
-    Combine power from two sources into one output without losses.
+    Combine electricity from two sources into one output without losses.
 
     This component is purposefully simple; a more realistic case might include
     losses or other considerations from power electronics.
