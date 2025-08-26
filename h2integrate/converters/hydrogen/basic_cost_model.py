@@ -1,7 +1,7 @@
 from attrs import field, define
 
-from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
-from h2integrate.core.validators import gt_zero, contains
+from h2integrate.core.utilities import CostModelBaseConfig, merge_shared_inputs
+from h2integrate.core.validators import gt_zero, contains, must_equal
 from h2integrate.converters.hydrogen.electrolyzer_baseclass import ElectrolyzerCostBaseClass
 from h2integrate.simulation.technologies.hydrogen.electrolysis.H2_cost_model import (
     basic_H2_cost_model,
@@ -9,9 +9,11 @@ from h2integrate.simulation.technologies.hydrogen.electrolysis.H2_cost_model imp
 
 
 @define
-class BasicElectrolyzerCostModelConfig(BaseConfig):
+class BasicElectrolyzerCostModelConfig(CostModelBaseConfig):
     """
-    Configuration class for the ECOElectrolyzerPerformanceModel.
+    Configuration class for the basic_H2_cost_model which is based on costs from
+    `HFTO Program Record 19009 <https://www.hydrogen.energy.gov/pdfs/19009_h2_production_cost_pem_electrolysis_2019.pdf>`_
+    which provides costs in 2016 USD.
 
     Args:
         location (str): The location of the electrolyzer; options include "onshore" or "offshore".
@@ -24,6 +26,7 @@ class BasicElectrolyzerCostModelConfig(BaseConfig):
     location: str = field(validator=contains(["onshore", "offshore"]))
     electrolyzer_capex: int = field()
     time_between_replacement: int = field(validator=gt_zero)
+    cost_year: int = field(default=2016, converter=int, validator=must_equal(2016))
 
 
 class BasicElectrolyzerCostModel(ElectrolyzerCostBaseClass):
@@ -32,10 +35,11 @@ class BasicElectrolyzerCostModel(ElectrolyzerCostBaseClass):
     """
 
     def setup(self):
-        super().setup()
         self.config = BasicElectrolyzerCostModelConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost")
         )
+        super().setup()
+
         self.add_input(
             "electrolyzer_size_mw",
             val=0.0,
@@ -43,7 +47,7 @@ class BasicElectrolyzerCostModel(ElectrolyzerCostBaseClass):
             desc="Size of the electrolyzer in MW",
         )
 
-    def compute(self, inputs, outputs):
+    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         # unpack inputs
         plant_config = self.options["plant_config"]
 

@@ -8,7 +8,7 @@ There are two approaches for specifying other finance parameters:
 - [ProFAST parameters config](finance:pf_params_opt)
 
 Both approaches require the following additional finance parameters to be specified:
-- `cost_year_adjustment_inflation` is used to adjust costs for each technology from the year provided under `discount_years` to the `target_dollar_year` specified in the `plant_config` under the `finance_parameters` section.
+- `cost_year_adjustment_inflation` is used to adjust costs for each technology from the cost year of the technology model (see [details on cost years and cost models here](#cost-year-of-cost-models)) to the `target_dollar_year` specified in the `plant_config` under the `finance_parameters` section.
 - `depreciation_method`: depreciation method to apply to capital items
 - `depreciation_period`: depreciation period (in years) for capital items (except electrolyzer, if used)
 - `depreciation_period_electrolyzer`: depreciation period (in years) for electrolyzer capital item (if used)
@@ -41,14 +41,10 @@ finance_parameters:
   depreciation_method: "MACRS"
   depreciation_period: 5
   depreciation_period_electrolyzer: 7
-  # To adjust costs from discount_years to target_dollar_year
+  # To adjust costs for technologies to target_dollar_year
   cost_adjustment_parameters:
     target_dollar_year: 2022
     cost_year_adjustment_inflation: 0.025
-  # Cost year of each component
-  discount_years:
-    wind: 2022
-    electrolyzer: 2022
 ```
 
 This approach also relies on data from `plant_config`:
@@ -96,10 +92,7 @@ finance_parameters:
   depreciation_period_electrolyzer: 7 #depreciation period for electrolyzer
   cost_adjustment_parameters:
     target_dollar_year: 2022
-    cost_year_adjustment_inflation: 0.025 # used to adjust costs for technologies under `discount_years` to target_dollar_year
-  discount_years:
-    wind: 2022
-    electrolyzer: 2022
+    cost_year_adjustment_inflation: 0.025 # used to adjust costs for technologies to target_dollar_year
 ```
 
 Below is an example of a valid `pf_params` config that may be specified in the `finance_parameters` section of `plant_config`:
@@ -172,4 +165,64 @@ params:
   tax loss carry forward years: 0
   tax losses monetized: True
   loan period if used: 0
+```
+
+
+# Cost year of Cost Models
+Some cost models are derived from literature and output costs (CapEx and OpEx) in a specific dollar-year. Some cost models require users to input the key cost information, and the output costs are in the same cost year as the user-provided costs. For [cost models with a built-in cost year](#cost-models-with-inherent-cost-year), the cost year is not required as an input for the cost model. For [cost models based on user provided costs](#cost-models-with-user-input-cost-year), the `cost_year` should be included in the tech_config for that technology.
+
+## Cost models with inherent cost year
+
+### Summary of cost models that are based around a cost year
+| Cost Model              | Cost Year  |
+| :---------------------- | :---------------: |
+| `basic_electrolyzer_cost`|  2016    |
+| `pem_electrolyzer_cost`|  2021    |
+| `singlitico_electrolyzer_cost`|  2021    |
+| `h2_storage`  with `'mch'` storage type  |  2024    |
+| `h2_storage` for geologic storage or buried pipe | 2018 |
+| `simple_ammonia_cost`   |  2022    |
+| `direct_ocean_capture_cost` | 2023 |
+| `ocean_alkalinity_enhancement_cost` | 2024 |
+| `ocean_alkalinity_enhancement_cost_financial` | 2024 |
+| `steel_cost`            |  2022    |
+| `reverse_osmosis_desalination_cost` | 2013 |
+| `synloop_ammonia_cost`  |  N/A (adjusts costs to `target_dollar_year` within cost model)  |
+
+
+## Cost models with user input cost year
+
+### Summary of cost models that have user-input cost year
+| Cost Model              |
+| :---------------------- |
+| `wind_plant_cost` |
+| `atb_utility_pv_cost` |
+| `atb_comm_res_pv_cost` |
+| `simple_ASU_cost` |
+| `hopp`            |
+| `run_of_river_hydro_cost` |
+| `smr_methanol_plant_cost` |
+| `stimulated_geoh2_cost` |
+| `natural_geoh2_cost`    |
+| `wombat`                |
+| `hydrogen_tank_cost`    |
+
+### Example tech_config input for user-input cost year
+```yaml
+technologies:
+  solar:
+    performance_model:
+      model: "pysam_solar_plant_performance"
+    cost_model:
+      model: "atb_utility_pv_cost"
+    model_inputs:
+        performance_parameters:
+            pv_capacity_kWdc: 100000
+            dc_ac_ratio: 1.34
+            ...
+        cost_parameters:
+            capex_per_kWac: 1044
+            opex_per_kWac_per_year: 18
+            cost_year: 2022
+
 ```

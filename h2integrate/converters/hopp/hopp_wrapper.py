@@ -3,16 +3,17 @@ from pathlib import Path
 
 import dill
 import numpy as np
-import openmdao.api as om
 from hopp.tools.dispatch.plot_tools import plot_battery_output, plot_generation_profile
 
+from h2integrate.core.utilities import CostModelBaseConfig
+from h2integrate.core.model_baseclasses import CostModelBaseClass
 from h2integrate.converters.hopp.hopp_mgmt import run_hopp, setup_hopp
 
 
 n_timesteps = 8760
 
 
-class HOPPComponent(om.ExplicitComponent):
+class HOPPComponent(CostModelBaseClass):
     """
     A simple OpenMDAO component that represents a HOPP model.
 
@@ -22,12 +23,13 @@ class HOPPComponent(om.ExplicitComponent):
     computed results when the same configuration is encountered.
     """
 
-    def initialize(self):
-        self.options.declare("driver_config", types=dict)
-        self.options.declare("tech_config", types=dict)
-        self.options.declare("plant_config", types=dict)
-
     def setup(self):
+        config_dict = {
+            "cost_year": self.options["tech_config"]["model_inputs"]["cost_parameters"]["cost_year"]
+        }
+        self.config = CostModelBaseConfig.from_dict(config_dict)
+        super().setup()
+
         self.hopp_config = self.options["tech_config"]["performance_model"]["config"]
 
         if "simulation_options" in self.hopp_config["config"]:
@@ -81,10 +83,8 @@ class HOPPComponent(om.ExplicitComponent):
             units="unitless",
             desc="Power capacity to interconnect ratio",
         )
-        self.add_output("CapEx", val=0.0, units="USD", desc="Total capital expenditures")
-        self.add_output("OpEx", val=0.0, units="USD/year", desc="Total fixed operating costs")
 
-    def compute(self, inputs, outputs):
+    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         # Define the keys of interest from the HOPP results that we want to cache
         keys_of_interest = [
             "percent_load_missed",

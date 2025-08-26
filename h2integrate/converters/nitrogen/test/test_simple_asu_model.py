@@ -103,6 +103,7 @@ def test_simple_ASU_cost_model_usd_pr_kw(subtests):
                 "capex_unit": "kw",
                 "opex_usd_per_unit_per_year": opex_usd_per_kw,  # dummy number
                 "opex_unit": "kw",
+                "cost_year": 2022,
             },
         }
     }
@@ -147,6 +148,7 @@ def test_simple_ASU_cost_model_usd_pr_mw(subtests):
                 "capex_unit": "mw",
                 "opex_usd_per_unit_per_year": opex_usd_per_mw,  # dummy number
                 "opex_unit": "mw",
+                "cost_year": 2022,
             },
         }
     }
@@ -196,6 +198,7 @@ def test_simple_ASU_performance_and_cost_size_for_demand(subtests):
                 "capex_unit": "mw",
                 "opex_usd_per_unit_per_year": opex_usd_per_mw,  # dummy number
                 "opex_unit": "mw",
+                "cost_year": 2022,
             },
         }
     }

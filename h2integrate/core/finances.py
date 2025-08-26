@@ -1,9 +1,16 @@
+from pathlib import Path
+
 import numpy as np
 import ProFAST  # system financial model
 import openmdao.api as om
 import numpy_financial as npf
 
-from h2integrate.core.utilities import check_plant_config_and_profast_params
+from h2integrate.core.utilities import (
+    dict_to_yaml_formatting,
+    check_plant_config_and_profast_params,
+)
+from h2integrate.core.inputs.validation import write_yaml
+from h2integrate.tools.profast_reverse_tools import convert_pf_to_dict
 
 
 class AdjustedCapexOpexComp(om.ExplicitComponent):
@@ -15,7 +22,6 @@ class AdjustedCapexOpexComp(om.ExplicitComponent):
     def setup(self):
         tech_config = self.options["tech_config"]
         plant_config = self.options["plant_config"]
-        self.discount_years = plant_config["finance_parameters"]["discount_years"]
         self.inflation_rate = plant_config["finance_parameters"]["cost_adjustment_parameters"][
             "cost_year_adjustment_inflation"
         ]
@@ -26,19 +32,21 @@ class AdjustedCapexOpexComp(om.ExplicitComponent):
         for tech in tech_config:
             self.add_input(f"capex_{tech}", val=0.0, units="USD")
             self.add_input(f"opex_{tech}", val=0.0, units="USD/year")
+            self.add_discrete_input(f"cost_year_{tech}", val=0, desc="Dollar year for costs")
+
             self.add_output(f"capex_adjusted_{tech}", val=0.0, units="USD")
             self.add_output(f"opex_adjusted_{tech}", val=0.0, units="USD/year")
 
         self.add_output("total_capex_adjusted", val=0.0, units="USD")
         self.add_output("total_opex_adjusted", val=0.0, units="USD/year")
 
-    def compute(self, inputs, outputs):
+    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         total_capex_adjusted = 0.0
         total_opex_adjusted = 0.0
         for tech in self.options["tech_config"]:
             capex = float(inputs[f"capex_{tech}"][0])
             opex = float(inputs[f"opex_{tech}"][0])
-            cost_year = self.discount_years[tech]
+            cost_year = int(discrete_inputs[f"cost_year_{tech}"])
             periods = self.target_dollar_year - cost_year
             adjusted_capex = -npf.fv(self.inflation_rate, periods, 0.0, capex)
             adjusted_opex = -npf.fv(self.inflation_rate, periods, 0.0, opex)
@@ -331,6 +339,18 @@ class ProFastComp(om.ExplicitComponent):
         # ------------------------------------ solve and post-process -----------------------------
 
         sol = pf.solve_price()
+
+        # Check whether to export profast object to .yaml file
+        if self.options["plant_config"]["finance_parameters"].get("save_profast_to_file", False):
+            output_dir = self.options["driver_config"]["general"]["folder_output"]
+            fdesc = self.options["plant_config"]["finance_parameters"]["profast_output_description"]
+            fname = f"{fdesc}_{self.options['commodity_type']}.yaml"
+            fpath = Path(output_dir) / fname
+            output_dir = Path(output_dir)
+            output_dir.mkdir(parents=True, exist_ok=True)
+            d = convert_pf_to_dict(pf)
+            d = dict_to_yaml_formatting(d)
+            write_yaml(d, fpath)
 
         # Only hydrogen supported in the very short term
         if self.options["commodity_type"] == "hydrogen":

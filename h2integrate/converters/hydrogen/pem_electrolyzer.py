@@ -1,6 +1,7 @@
 from attrs import field, define
 
-from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
+from h2integrate.core.utilities import BaseConfig, CostModelBaseConfig, merge_shared_inputs
+from h2integrate.core.validators import must_equal
 from h2integrate.converters.hydrogen.electrolyzer_baseclass import (
     ElectrolyzerCostBaseClass,
     ElectrolyzerPerformanceBaseClass,
@@ -55,23 +56,26 @@ class ElectrolyzerPerformanceModel(ElectrolyzerPerformanceBaseClass):
 
 
 @define
-class ElectrolyzeCostModelConfig(BaseConfig):
+class ElectrolyzeCostModelConfig(CostModelBaseConfig):
     cluster_size_mw: float = field()
     electrolyzer_cost: float = field()
+    cost_year: int = field(default=2021, converter=int, validator=must_equal(2021))
 
 
 class ElectrolyzerCostModel(ElectrolyzerCostBaseClass):
     """
-    An OpenMDAO component that computes the cost of a PEM electrolyzer.
+    An OpenMDAO component that computes the cost of a PEM electrolyzer cluster
+    using PEMCostsSinglicitoModel which outputs costs in 2021 USD.
     """
 
     def setup(self):
-        super().setup()
         self.cost_model = PEMCostsSingliticoModel(elec_location=1)
         # Define inputs: electrolyzer capacity and reference cost
         self.config = ElectrolyzeCostModelConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost")
         )
+        super().setup()
+
         self.add_input(
             "P_elec",
             val=self.config.cluster_size_mw,
@@ -85,7 +89,7 @@ class ElectrolyzerCostModel(ElectrolyzerCostBaseClass):
             desc="Reference cost of the electrolyzer",
         )
 
-    def compute(self, inputs, outputs):
+    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         # Call the cost model to compute costs
         P_elec = inputs["P_elec"] * 1.0e-3  # Convert MW to GW
         RC_elec = inputs["RC_elec"]

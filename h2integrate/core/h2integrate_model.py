@@ -318,6 +318,8 @@ class H2IntegrateModel:
                 commodity_types.append("hydrogen")
             if "doc" in tech_configs:
                 commodity_types.append("co2")
+            if "oae" in tech_configs:
+                commodity_types.append("co2")
             for tech in electricity_producing_techs:
                 if tech in tech_configs:
                     commodity_types.append("electricity")
@@ -546,6 +548,8 @@ class H2IntegrateModel:
                     commodity_types.append("co2")
                 if "air_separator" in tech_configs:
                     commodity_types.append("nitrogen")
+                if "oae" in tech_configs:
+                    commodity_types.append("co2")
                 for tech in electricity_producing_techs:
                     if tech in tech_configs:
                         commodity_types.append("electricity")
@@ -590,6 +594,10 @@ class H2IntegrateModel:
                         self.plant.connect(
                             f"{tech_name}.OpEx", f"financials_group_{group_id}.opex_{tech_name}"
                         )
+                        self.plant.connect(
+                            f"{tech_name}.cost_year",
+                            f"financials_group_{group_id}.cost_year_{tech_name}",
+                        )
 
                         if "electrolyzer" in tech_name:
                             self.plant.connect(
@@ -612,6 +620,13 @@ class H2IntegrateModel:
                                 f"{tech_name}.co2_capture_mtpy",
                                 f"financials_group_{group_id}.co2_capture_kgpy",
                             )
+
+                        if "oae" in tech_name:
+                            self.plant.connect(
+                                f"{tech_name}.co2_capture_mtpy",
+                                f"financials_group_{group_id}.co2_capture_kgpy",
+                            )
+
                         if "air_separator" in tech_name:
                             self.plant.connect(
                                 f"{tech_name}.total_nitrogen_produced",
