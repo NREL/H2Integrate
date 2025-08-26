@@ -11,4 +11,5 @@ h2i.run()
 
 h2i.post_process()
 
+# Plot major in/out flows
 plot_methanol(h2i.prob.model)

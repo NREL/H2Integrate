@@ -59,4 +59,6 @@ def plot_methanol(model):
     plt.yscale("log")
     plt.legend()
 
+    fig = plt.gcf()
+    fig.tight_layout()
     plt.show()
