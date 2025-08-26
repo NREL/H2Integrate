@@ -40,9 +40,9 @@ plant
       OpEx                            [16541049.81608545]   USD/year   electrolyzer.OpEx
 <...>
   financials_group_default
-    profast_comp_0
+    ProFastComp_0
       LCOH                            [7.47944016]          USD/kg     financials_group_default.LCOH
-    profast_comp_1
+    ProFastComp_1
       LCOE                            [0.09795931]          USD/kW/h   financials_group_default.LCOE
   steel
     steel_performance
