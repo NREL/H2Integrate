@@ -205,8 +205,24 @@ class PyomoControllerBaseClass(ControllerBaseClass):
         #     dispatch_block_rule_function(pyomo_model, tech_name)
 
         # define dispatch solver
-        def pyomo_dispatch_solver(performance_model: callable, kwargs, pyomo_model=pyomo_model):
-            return performance_model(kwargs)
+        def pyomo_dispatch_solver(
+            performance_model: callable, performance_model_kwargs, pyomo_model=pyomo_model
+        ):
+            # n_time_steps = 8760
+            # n_blocks = 365
+            # n_time_steps_per_block = 24
+
+            # for block in range(n_blocks)
+
+            # run the pyomo_model(args) for n_time_steps_per_block
+
+            # run the performance_model(performance_model_kwargs) n_time_steps_per_block
+
+            # determine final performance to pass out for the block based on the previous calcs
+
+            # return final_performance
+
+            pass
 
         return pyomo_dispatch_solver
 
