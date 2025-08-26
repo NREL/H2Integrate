@@ -12,7 +12,7 @@ technologies:
       cost_parameters:
         cost_year: 2022
 
-  power_splitter:
+  electricity_splitter:
     performance_model:
       model: "splitter_performance"
       config:

@@ -33,9 +33,9 @@ plant:
 # with the reverse definition.
 # this will naturally grow as we mature the interconnected tech
 technology_interconnections: [
-  ["hopp", "power_splitter", "electricity", "cable"],
-  ["power_splitter", "doc", "electricity", "cable"],
-  ["power_splitter", "electrolyzer", "electricity", "cable"],
+  ["hopp", "electricity_splitter", "electricity", "cable"],
+  ["electricity_splitter", "doc", "electricity", "cable"],
+  ["electricity_splitter", "electrolyzer", "electricity", "cable"],
 ]
 
 finance_parameters:
