@@ -60,7 +60,9 @@ IMPORTANT NOTES
   - [ ] Integration tests with H2Integrate system
 - [ ] **Example**: A working example demonstrating the new technology has been created
   - [ ] Example has been tested and runs successfully in `test_all_examples.py`
-  - [ ] Example is documented with clear explanations
+  - [ ] Example is documented with clear explanations in `examples/README.md`
+    - [ ] Input file comments
+    - [ ] Run file comments
 - [ ] **Documentation**:
   - [ ] Technology documentation page added to `docs/technology_models/`
   - [ ] Technology added to the main technology models list in `docs/technology_models/technology_overview.md`
