@@ -25,7 +25,7 @@ def plot_methanol(model):
         "hydrogen_out"
     )
     plt.plot(times, elyzer_elec_in, label="electricity_in [kW]")
-    plt.plot(times, elyzer_h2_out, label="hydrogen_out [kg/hr]")
+    plt.plot(times, elyzer_h2_out, label="hydrogen_out [kg/hr]", color=[1, 0.5, 0])
     plt.yscale("log")
     plt.legend()
 
@@ -40,10 +40,10 @@ def plot_methanol(model):
     # Electricity to CO2 using DOC
     plt.subplot(3, 2, 4)
     plt.title("DOC")
-    doc_elec_in = model.plant.doc.direct_ocean_capture_performance.get_val("electricity_in")
+    doc_elec_in = model.plant.doc.direct_ocean_capture_performance.get_val("electricity_in") / 1000
     doc_co2_out = model.plant.doc.direct_ocean_capture_performance.get_val("co2_out")
     plt.plot(times, doc_elec_in, label="electricity_in [kW]")
-    plt.plot(times, doc_co2_out, label="co2_out [kg/hr]")
+    plt.plot(times, doc_co2_out, label="co2_out [kg/hr]", color=[0.5, 0.25, 0])
     plt.yscale("log")
     plt.legend()
 
@@ -53,9 +53,9 @@ def plot_methanol(model):
     meoh_h2_in = model.plant.methanol.co2h_methanol_plant_performance.get_val("hydrogen_in")
     meoh_co2_in = model.plant.methanol.co2h_methanol_plant_performance.get_val("co2_in")
     meoh_meoh_out = model.plant.methanol.co2h_methanol_plant_performance.get_val("methanol_out")
-    plt.plot(times, meoh_h2_in, label="hydrogen_in [kg/hr]")
-    plt.plot(times, meoh_co2_in, label="co2_in [kg/hr]")
-    plt.plot(times, meoh_meoh_out, label="methanol_out [kg/hr]")
+    plt.plot(times, meoh_h2_in, label="hydrogen_in [kg/hr]", color=[1, 0.5, 0])
+    plt.plot(times, meoh_co2_in, label="co2_in [kg/hr]", color=[0.5, 0.25, 0])
+    plt.plot(times, meoh_meoh_out, label="methanol_out [kg/hr]", color=[1, 0, 0.5])
     plt.yscale("log")
     plt.legend()
 
