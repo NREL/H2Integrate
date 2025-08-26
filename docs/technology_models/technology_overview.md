@@ -6,6 +6,7 @@ Currently, H2I recognizes four types of models:
 - [Converter](#converters)
 - [Transport](#transport)
 - [Storage](#storage)
+- [Controllers](#controller)
 
 ## Resource
 `Resource` models process resource data that is usually passed to a technology model.
@@ -36,6 +37,7 @@ The inputs, outputs, and corresponding technology that are currently available i
 | `steel`          |  steel        | hydrogen |
 | `ammonia`        |  ammonia      | nitrogen, hydrogen |
 | `doc`   |  co2     | electricity |
+| `oae`   |  co2     | electricity |
 | `methanol`   |  methanol     | ??? |
 | `air_separator`   |  nitrogen     | electricity |
 | `desal`   |  water     | electricity |
@@ -66,6 +68,13 @@ Connection: `[source_tech, dest_tech, transport_commodity, transport_technology]
 | `h2_storage`      |  hydrogen         |
 | `battery`         |  electricity      |
 
+## Controller
+`Controller` models are used to control the `Storage` models and resource flows.
+
+| Controller        | Control Method |
+| :----------------------------- | :---------------: |
+| `pass_through_controller`      |  open-loop control. directly passes the input resource flow to the output without any modifications         |
+| `demand_open_loop_controller`  |  open-loop control. manages resource flow based on demand and storage constraints     |
 
 # Technology Models Overview
 
@@ -139,6 +148,13 @@ Below summarizes the available performance, cost, and financial models for each 
         + `'direct_ocean_capture_performance'`
     - cost models:
         + `'direct_ocean_capture_cost'`
+- `oae`: ocean alkalinity enhancement
+    - performance models:
+        + `'ocean_alkalinity_enhancement_performance'`
+    - cost models:
+        + `'ocean_alkalinity_enhancement_cost'`
+    - financial models:
+        + `'ocean_alkalinity_enhancement_cost_financial'`
 - `methanol`: methanol synthesis
     - performance models:
         + `'smr_methanol_plant_performance'`
@@ -178,3 +194,7 @@ Below summarizes the available performance, cost, and financial models for each 
         + `'hydrogen_tank_performance'`
     - cost models:
         + `'hydrogen_tank_cost'`
+
+### Controller Models
+- `pass_through_controller`
+- `demand_open_loop_controller`
