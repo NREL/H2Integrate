@@ -18,7 +18,6 @@ def test_splitter_ratio_mode_edge_cases():
         "performance_model": {
             "config": {
                 "split_mode": "fraction",
-                "priority_tech": "electrolyzer",
                 "fraction_to_priority_tech": 0.0,
             }
         }
@@ -68,7 +67,6 @@ def test_splitter_prescribed_electricity_mode():
         "performance_model": {
             "config": {
                 "split_mode": "prescribed_electricity",
-                "priority_tech": "electrolyzer",
                 "prescribed_electricity_to_priority_tech": 200.0,
             }
         }
@@ -112,7 +110,6 @@ def test_splitter_prescribed_electricity_mode_limited_input():
         "performance_model": {
             "config": {
                 "split_mode": "prescribed_electricity",
-                "priority_tech": "electrolyzer",
                 "prescribed_electricity_to_priority_tech": 150.0,
             }
         }
@@ -148,7 +145,6 @@ def test_splitter_invalid_mode():
         "performance_model": {
             "config": {
                 "split_mode": "invalid_mode",
-                "priority_tech": "electrolyzer",
             }
         }
     }
@@ -169,7 +165,6 @@ def test_splitter_scalar_inputs():
         "performance_model": {
             "config": {
                 "split_mode": "fraction",
-                "priority_tech": "electrolyzer",
                 "fraction_to_priority_tech": 0.4,
             }
         }
@@ -193,7 +188,6 @@ def test_splitter_scalar_inputs():
         "performance_model": {
             "config": {
                 "split_mode": "prescribed_electricity",
-                "priority_tech": "electrolyzer",
                 "prescribed_electricity_to_priority_tech": 30.0,
             }
         }
@@ -220,7 +214,6 @@ def test_splitter_prescribed_electricity_varied_array():
         "performance_model": {
             "config": {
                 "split_mode": "prescribed_electricity",
-                "priority_tech": "electrolyzer",
                 "prescribed_electricity_to_priority_tech": 75000.0,  # Default value in kW
             }
         }
@@ -278,7 +271,7 @@ def test_splitter_prescribed_electricity_varied_array():
 def test_splitter_missing_config():
     """Test that missing required config fields cause an error."""
 
-    incomplete_config_dict = {"split_mode": "fraction", "priority_tech": "electrolyzer"}
+    incomplete_config_dict = {"split_mode": "fraction"}
 
     with pytest.raises(
         ValueError,

@@ -18,11 +18,6 @@ class AdjustedCapexOpexComp(om.ExplicitComponent):
             "target_dollar_year"
         ]
 
-        # Ensure all technologies have a discount year set; use cost year if not specified
-        for tech in tech_config:
-            if tech not in self.discount_years:
-                self.discount_years[tech] = self.cost_year
-
         for tech in tech_config:
             self.add_input(f"capex_{tech}", val=0.0, units="USD")
             self.add_input(f"opex_{tech}", val=0.0, units="USD/year")

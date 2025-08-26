@@ -8,7 +8,6 @@ from h2integrate.core.utilities import BaseConfig
 @define
 class SplitterPerformanceConfig(BaseConfig):
     split_mode: str = field()
-    priority_tech: str = field()
     fraction_to_priority_tech: float = field(default=None)
     prescribed_electricity_to_priority_tech: float = field(default=None)
 
@@ -75,8 +74,7 @@ class SplitterPerformanceModel(om.ExplicitComponent):
             self.add_input(
                 "fraction_to_priority_tech",
                 val=self.config.fraction_to_priority_tech,
-                desc=f"Fraction of input power to send to the priority technology "
-                f"({self.config.priority_tech}) (0.0 to 1.0)",
+                desc="Fraction of input power to send to the priority technology (0.0 to 1.0)",
             )
         elif split_mode == "prescribed_electricity":
             self.add_input(
@@ -84,8 +82,7 @@ class SplitterPerformanceModel(om.ExplicitComponent):
                 val=self.config.prescribed_electricity_to_priority_tech,
                 copy_shape="electricity_in",
                 units="kW",
-                desc=f"Prescribed amount of power to send to the priority technology "
-                f"({self.config.priority_tech})",
+                desc="Prescribed amount of power to send to the priority technology",
             )
         else:
             raise ValueError(

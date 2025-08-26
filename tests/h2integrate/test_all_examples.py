@@ -385,7 +385,7 @@ def test_wind_wave_doc_example(subtests):
 @unittest.skipUnless(importlib.util.find_spec("mcm") is not None, "mcm is not installed")
 def test_splitter_wind_doc_h2_example(subtests):
     # Change the current working directory to the example's directory
-    os.chdir(examples_dir / "12_splitter_wind_doc_h2")
+    os.chdir(examples_dir / "15_splitter_wind_doc_h2")
 
     # Create a H2Integrate model
     model = H2IntegrateModel(Path.cwd() / "offshore_plant_splitter_doc_h2.yaml")
@@ -397,13 +397,22 @@ def test_splitter_wind_doc_h2_example(subtests):
 
     # Subtests for checking specific values
     with subtests.test("Check LCOH"):
-        assert pytest.approx(model.prob.get_val("financials_group_1.LCOH"), rel=1e-3) == 15.36040206
+        assert (
+            pytest.approx(model.prob.get_val("financials_group_default.LCOH")[0], rel=1e-3)
+            == 10.25515911
+        )
 
     with subtests.test("Check LCOC"):
-        assert pytest.approx(model.prob.get_val("financials_group_1.LCOC"), rel=1e-3) == 17.30108848
+        assert (
+            pytest.approx(model.prob.get_val("financials_group_default.LCOC")[0], rel=1e-3)
+            == 14.19802243
+        )
 
     with subtests.test("Check LCOE"):
-        assert pytest.approx(model.prob.get_val("financials_group_1.LCOE"), rel=1e-3) == 0.21504145
+        assert (
+            pytest.approx(model.prob.get_val("financials_group_default.LCOE")[0], rel=1e-3)
+            == 0.1385128
+        )
 
 
 def test_hydro_example(subtests):
