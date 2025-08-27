@@ -5,8 +5,9 @@ from pathlib import Path
 import yaml
 import pytest
 
+from h2integrate import EXAMPLE_DIR
 from h2integrate.core.h2integrate_model import H2IntegrateModel
-from h2integrate.core.inputs.validation import load_tech_yaml
+from h2integrate.core.inputs.validation import load_tech_yaml, load_plant_yaml
 
 
 examples_dir = Path(__file__).resolve().parent.parent.parent.parent / "examples/."
@@ -161,3 +162,39 @@ def test_get_included_technologies():
         raise AssertionError("Should have raised ValueError for invalid technology")
     except ValueError as e:
         assert "invalid_tech" in str(e), f"Error message should mention invalid_tech: {e}"
+
+
+def test_unsupported_simulation_parameters():
+    orig_plant_config = EXAMPLE_DIR / "01_onshore_steel_mn" / "plant_config.yaml"
+    temp_plant_config_ntimesteps = Path.cwd() / "temp_plant_config_ntimesteps.yaml"
+    temp_plant_config_dt = Path.cwd() / "temp_plant_config_dt.yaml"
+
+    shutil.copy(orig_plant_config, temp_plant_config_ntimesteps)
+    shutil.copy(orig_plant_config, temp_plant_config_dt)
+
+    # Load the plant_config YAML content
+    plant_config_data_ntimesteps = load_plant_yaml(temp_plant_config_ntimesteps)
+    plant_config_data_dt = load_plant_yaml(temp_plant_config_dt)
+
+    # Modify the n_timesteps entry for the temp_plant_config_ntimesteps
+    plant_config_data_ntimesteps["plant"]["simulation"]["n_timesteps"] = 8759
+    # Modify the dt entry for the temp_plant_config_dt
+    plant_config_data_dt["plant"]["simulation"]["dt"] = 3601
+
+    # Save the modified plant_configs YAML back
+    with temp_plant_config_ntimesteps.open("w") as f:
+        yaml.safe_dump(plant_config_data_ntimesteps, f)
+    with temp_plant_config_dt.open("w") as f:
+        yaml.safe_dump(plant_config_data_dt, f)
+
+    # check that error is thrown when loading config with invalid number of timesteps
+    with pytest.raises(ValueError, match="greater than 1-year"):
+        load_plant_yaml(plant_config_data_ntimesteps)
+
+    # check that error is thrown when loading config with invalid time interval
+    with pytest.raises(ValueError, match="with a time step that"):
+        load_plant_yaml(plant_config_data_dt)
+
+    # Clean up temporary YAML files
+    temp_plant_config_ntimesteps.unlink(missing_ok=True)
+    temp_plant_config_dt.unlink(missing_ok=True)
