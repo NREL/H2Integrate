@@ -15,9 +15,10 @@ class CombinerPerformanceModel(om.ExplicitComponent):
         self.options.declare("tech_config", types=dict)
 
     def setup(self):
-        self.add_input("electricity_input1", val=0.0, shape_by_conn=True, units="kW")
-        self.add_input("electricity_input2", val=0.0, shape_by_conn=True, units="kW")
-        self.add_output("electricity_out", val=0.0, copy_shape="electricity_input1", units="kW")
+        (self.options["plant_config"]["plant"].get("simulation", {}).get("n_timesteps", 8760))
+        self.add_input("electricity_in1", val=0.0, shape_by_conn=True, units="kW")
+        self.add_input("electricity_in2", val=0.0, shape_by_conn=True, units="kW")
+        self.add_output("electricity_out", val=0.0, copy_shape="electricity_in1", units="kW")
 
     def compute(self, inputs, outputs):
-        outputs["electricity_out"] = inputs["electricity_input1"] + inputs["electricity_input2"]
+        outputs["electricity_out"] = inputs["electricity_in1"] + inputs["electricity_in2"]
