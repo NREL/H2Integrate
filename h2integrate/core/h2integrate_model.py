@@ -498,6 +498,10 @@ class H2IntegrateModel:
                     if f"lco{commodity_type[0].lower()}" in k.lower()
                 ]
 
+            if len(metric_keys) == 0:
+                included_techs = list(tech_config.keys())
+                return included_techs, commodity_type
+
             if len(metric_keys) == 1:
                 included_techs = check_for_valid_included_techs(metric_keys[0])
                 return included_techs, commodity_type
