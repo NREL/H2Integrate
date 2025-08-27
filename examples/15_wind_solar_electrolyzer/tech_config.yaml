@@ -14,7 +14,7 @@ technologies:
     model_inputs:
       shared_parameters:
         num_turbines: 100
-        turbine_rating_kw: 8300
+        turbine_rating_kw: 6000
       performance_parameters:
         rotor_diameter: 170.
         hub_height: 115.
