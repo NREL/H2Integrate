@@ -43,6 +43,7 @@
 - Add ocean alkalinity enhancement technology model.
 - Added ability to export ProFAST object to yaml file in `ProFastComp`
 - Refactored `ProFastComp` and put in a new file (`h2integrate/core/profast_financial.py`). Added flexibility to allow users to specify different financial models.
+- Bugfix on `h2integrate/transporters/power_combiner.py` and enabled usage of multiple electricity producing technologies.
 
 ## 0.3.0 [May 2 2025]
 
