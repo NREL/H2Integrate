@@ -15,7 +15,6 @@ class CombinerPerformanceModel(om.ExplicitComponent):
         self.options.declare("tech_config", types=dict)
 
     def setup(self):
-        (self.options["plant_config"]["plant"].get("simulation", {}).get("n_timesteps", 8760))
         self.add_input("electricity_in1", val=0.0, shape_by_conn=True, units="kW")
         self.add_input("electricity_in2", val=0.0, shape_by_conn=True, units="kW")
         self.add_output("electricity_out", val=0.0, copy_shape="electricity_in1", units="kW")
