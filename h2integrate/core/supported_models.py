@@ -1,6 +1,7 @@
 from h2integrate.resource.river import RiverResource
 from h2integrate.core.feedstocks import FeedstockCostModel, FeedstockPerformanceModel
 from h2integrate.transporters.pipe import PipePerformanceModel
+from h2integrate.core.npv_financial import NPVFinancial
 from h2integrate.transporters.cable import CablePerformanceModel
 from h2integrate.finances.profast_npv import ProFASTNPV
 from h2integrate.converters.steel.steel import SteelPerformanceModel, SteelCostAndFinancialModel
@@ -170,6 +171,7 @@ supported_models = {
     # Finance
     "ProFastComp": ProFastComp,
     "ProFastNPV": ProFASTNPV,
+    "NPVFinancial": NPVFinancial,
 }
 
 electricity_producing_techs = ["wind", "solar", "pv", "river", "hopp", "natural_gas_plant"]
