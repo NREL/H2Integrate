@@ -48,12 +48,12 @@ class H2IntegrateModel:
         # they will need tech_config but not driver or plant config
         self.create_technology_models()
 
-        self.create_financial_model()
+        self.create_financial_model()  # TODO
 
         # connect technologies
         # technologies are connected within the `technology_interconnections` section of the
         # plant config
-        self.connect_technologies()
+        self.connect_technologies()  # TODO
 
         # create driver model
         # might be an analysis or optimization
@@ -323,7 +323,7 @@ class H2IntegrateModel:
             for tech in electricity_producing_techs:
                 if tech in tech_configs:
                     commodity_types.append("electricity")
-                    continue
+                    break
 
             # Steel, methanol provides their own financials
             if any(c in commodity_types for c in ("steel", "methanol")):
@@ -337,7 +337,7 @@ class H2IntegrateModel:
                 continue
 
             financial_group = om.Group()
-
+            # ESG NOTE: duplicate commodity types here!
             # Determine all technologies that should be included across all
             # commodity types for this group
             all_included_techs = set()
@@ -380,20 +380,35 @@ class H2IntegrateModel:
                     tech: config for tech, config in tech_configs.items() if tech in included_techs
                 }
 
-                fin_model_name = self.plant_config["finance_parameters"].get("finance_model")
-                if isinstance(fin_model_name, list):
-                    for model_name in fin_model_name:
-                        fin_model = self.supported_models.get(model_name)
-                        fin_comp = fin_model(
-                            driver_config=self.driver_config,
-                            tech_config=filtered_tech_configs,
-                            plant_config=self.plant_config,
-                            commodity_type=commodity_type,
-                        )
-                        financial_group.add_subsystem(
-                            f"{model_name}_{idx}", fin_comp, promotes=["*"]
-                        )
-                else:
+                # multiple finance models
+                if "finance_model" not in self.plant_config["finance_parameters"]:
+                    for fin_model_inputs in self.plant_config["finance_parameters"].values():
+                        if "finance_model" in fin_model_inputs:
+                            model_name = fin_model_inputs.get("finance_model")
+                            fin_model = self.supported_models.get(model_name)
+                            finance_params = {
+                                k: v
+                                for k, v in self.plant_config["finance_parameters"].items()
+                                if "finance_model" in v
+                            }
+                            finance_params.update(fin_model_inputs)
+                            plant_inputs = {
+                                k: v
+                                for k, v in self.plant_config.items()
+                                if k != "finance_parameters"
+                            }
+                            filtered_plant_config = plant_inputs.update(finance_params)
+                            fin_comp = fin_model(
+                                driver_config=self.driver_config,
+                                tech_config=filtered_tech_configs,
+                                plant_config=filtered_plant_config,
+                                commodity_type=commodity_type,
+                            )
+                            financial_group.add_subsystem(
+                                f"{model_name}_{idx}", fin_comp, promotes=["*"]
+                            )
+                else:  # run a single finance model
+                    fin_model_name = self.plant_config["finance_parameters"].get("finance_model")
                     fin_model = self.supported_models.get(fin_model_name)
                     fin_comp = fin_model(
                         driver_config=self.driver_config,
@@ -424,7 +439,13 @@ class H2IntegrateModel:
         # Check if the user defined specific technologies to include in the metrics.
         # If provided, only include those technologies in the stackup.
         # If not provided, include all technologies in the financial group in the stackup.
+
+        # TODO: replace metric_key
         metric_key = f"LCO{commodity_type[0].upper()}"
+
+        metrics_to_techs = plant_config["finance_parameters"].get(
+            "technologies_included_in_metrics", None
+        )
 
         included_techs = (
             plant_config["finance_parameters"]
@@ -432,8 +453,10 @@ class H2IntegrateModel:
             .get(metric_key, None)
         )
 
-        # Check if the included technologies are valid
         if included_techs is not None:
+            # if any(commodity_type in k.lower() for k,v in metrics_to_techs.items()):
+
+            # Check if the included technologies are valid
             missing_techs = [tech for tech in included_techs if tech not in tech_config]
             if missing_techs:
                 raise ValueError(
@@ -442,7 +465,7 @@ class H2IntegrateModel:
                 )
 
         # If no specific technologies are included, default to all technologies in tech_config
-        if included_techs is None:
+        if metrics_to_techs is None:
             included_techs = list(tech_config.keys())
 
         return included_techs
