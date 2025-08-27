@@ -57,3 +57,5 @@ technologies:
         cost_per_tonne: 4000000.  # $/tonne
         opex_rate: 0.05  # 5% of CAPEX
         cost_year: 2024
+      finance_parameters:
+        discount_rate: 0.09 # nominal return based on 2024 ATB baseline workbook for land-based wind
