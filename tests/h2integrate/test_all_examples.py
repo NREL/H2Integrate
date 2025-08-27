@@ -30,6 +30,12 @@ def test_steel_example(subtests):
             == 7.47944016
         )
 
+    with subtests.test("Check LCOH produced"):
+        assert (
+            model.prob.get_val("financials_group_default.LCOH_produced")[0]
+            < model.prob.get_val("financials_group_default.LCOH")[0]
+        )
+
     with subtests.test("Check LCOS"):
         assert pytest.approx(model.prob.get_val("steel.LCOS")[0], rel=1e-3) == 1213.87728644
 
