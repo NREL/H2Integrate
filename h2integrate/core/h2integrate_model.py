@@ -1,3 +1,5 @@
+import operator
+import functools
 import importlib.util
 from pathlib import Path
 
@@ -48,12 +50,12 @@ class H2IntegrateModel:
         # they will need tech_config but not driver or plant config
         self.create_technology_models()
 
-        self.create_financial_model()  # TODO
+        self.create_financial_model()
 
         # connect technologies
         # technologies are connected within the `technology_interconnections` section of the
         # plant config
-        self.connect_technologies()  # TODO
+        self.connect_technologies()
 
         # create driver model
         # might be an analysis or optimization
@@ -337,15 +339,16 @@ class H2IntegrateModel:
                 continue
 
             financial_group = om.Group()
-            # ESG NOTE: duplicate commodity types here!
             # Determine all technologies that should be included across all
             # commodity types for this group
             all_included_techs = set()
             for commodity_type in commodity_types:
                 if commodity_type not in ["steel", "methanol"]:  # These handle their own financials
-                    included_techs = self.get_included_technologies(
+                    included_techs, commods = self.get_included_technologies(
                         tech_configs, commodity_type, self.plant_config
                     )
+                    if isinstance(included_techs[0], list):
+                        included_techs = functools.reduce(operator.iadd, included_techs, [])
                     all_included_techs.update(included_techs)
 
             # Filter tech_configs to only include technologies that are in at least one stackup
@@ -369,56 +372,73 @@ class H2IntegrateModel:
             )
 
             # Add profast components
-            for idx, commodity_type in enumerate(commodity_types):
+            for _idx, commodity_type in enumerate(commodity_types):
                 # Get included technologies for this commodity type
-                included_techs = self.get_included_technologies(
+                included_technologies, commods = self.get_included_technologies(
                     tech_configs, commodity_type, self.plant_config
                 )
 
-                # Filter tech_configs to only include the technologies in the stackup
-                filtered_tech_configs = {
-                    tech: config for tech, config in tech_configs.items() if tech in included_techs
-                }
+                if isinstance(included_technologies[0], str):
+                    included_technologies = [included_technologies]
+                    commods = [commods]
 
-                # multiple finance models
-                if "finance_model" not in self.plant_config["finance_parameters"]:
-                    for fin_model_inputs in self.plant_config["finance_parameters"].values():
-                        if "finance_model" in fin_model_inputs:
-                            model_name = fin_model_inputs.get("finance_model")
-                            fin_model = self.supported_models.get(model_name)
-                            finance_params = {
-                                k: v
-                                for k, v in self.plant_config["finance_parameters"].items()
-                                if "finance_model" in v
-                            }
-                            finance_params.update(fin_model_inputs)
-                            plant_inputs = {
-                                k: v
-                                for k, v in self.plant_config.items()
-                                if k != "finance_parameters"
-                            }
-                            filtered_plant_config = plant_inputs.update(finance_params)
-                            fin_comp = fin_model(
-                                driver_config=self.driver_config,
-                                tech_config=filtered_tech_configs,
-                                plant_config=filtered_plant_config,
-                                commodity_type=commodity_type,
-                            )
-                            financial_group.add_subsystem(
-                                f"{model_name}_{idx}", fin_comp, promotes=["*"]
-                            )
-                else:  # run a single finance model
-                    fin_model_name = self.plant_config["finance_parameters"].get("finance_model")
-                    fin_model = self.supported_models.get(fin_model_name)
-                    fin_comp = fin_model(
-                        driver_config=self.driver_config,
-                        tech_config=filtered_tech_configs,
-                        plant_config=self.plant_config,
-                        commodity_type=commodity_type,
-                    )
-                    financial_group.add_subsystem(
-                        f"{fin_model_name}_{idx}", fin_comp, promotes=["*"]
-                    )
+                for included_techs, commodity_desc in zip(included_technologies, commods):
+                    # Filter tech_configs to only include the technologies in the stackup
+                    filtered_tech_configs = {
+                        tech: config
+                        for tech, config in tech_configs.items()
+                        if tech in included_techs
+                    }
+
+                    # multiple finance models
+                    if "finance_model" not in self.plant_config["finance_parameters"]:
+                        for fin_model_inputs in self.plant_config["finance_parameters"].values():
+                            if "finance_model" in fin_model_inputs:
+                                model_name = fin_model_inputs.get("finance_model")
+                                fin_model = self.supported_models.get(model_name)
+                                finance_params = {
+                                    k: v
+                                    for k, v in self.plant_config["finance_parameters"].items()
+                                    if "finance_model" in v
+                                }
+                                finance_params.update(fin_model_inputs)
+                                plant_inputs = {
+                                    k: v
+                                    for k, v in self.plant_config.items()
+                                    if k != "finance_parameters"
+                                }
+                                filtered_plant_config = plant_inputs.update(finance_params)
+                                fin_comp = fin_model(
+                                    driver_config=self.driver_config,
+                                    tech_config=filtered_tech_configs,
+                                    plant_config=filtered_plant_config,
+                                    commodity_type=commodity_type,
+                                    description=commodity_desc,
+                                )
+                                # financial_group.add_subsystem(
+                                #     f"{model_name}_{idx}", fin_comp, promotes=["*"]
+                                # )
+                                financial_group.add_subsystem(
+                                    f"{model_name}_{commodity_desc}", fin_comp, promotes=["*"]
+                                )
+                    else:  # run a single finance model
+                        fin_model_name = self.plant_config["finance_parameters"].get(
+                            "finance_model"
+                        )
+                        fin_model = self.supported_models.get(fin_model_name)
+                        fin_comp = fin_model(
+                            driver_config=self.driver_config,
+                            tech_config=filtered_tech_configs,
+                            plant_config=self.plant_config,
+                            commodity_type=commodity_type,
+                            description=commodity_desc,
+                        )
+                        # financial_group.add_subsystem(
+                        #     f"{fin_model_name}_{idx}", fin_comp, promotes=["*"]
+                        # )
+                        financial_group.add_subsystem(
+                            f"{fin_model_name}_{commodity_desc}", fin_comp, promotes=["*"]
+                        )
 
             self.plant.add_subsystem(f"financials_group_{group_id}", financial_group)
 
@@ -440,22 +460,12 @@ class H2IntegrateModel:
         # If provided, only include those technologies in the stackup.
         # If not provided, include all technologies in the financial group in the stackup.
 
-        # TODO: replace metric_key
-        metric_key = f"LCO{commodity_type[0].upper()}"
-
-        metrics_to_techs = plant_config["finance_parameters"].get(
-            "technologies_included_in_metrics", None
-        )
-
-        included_techs = (
-            plant_config["finance_parameters"]
-            .get("technologies_included_in_metrics", {})
-            .get(metric_key, None)
-        )
-
-        if included_techs is not None:
-            # if any(commodity_type in k.lower() for k,v in metrics_to_techs.items()):
-
+        def check_for_valid_included_techs(key):
+            included_techs = (
+                plant_config["finance_parameters"]
+                .get("technologies_included_in_metrics", {})
+                .get(key)
+            )
             # Check if the included technologies are valid
             missing_techs = [tech for tech in included_techs if tech not in tech_config]
             if missing_techs:
@@ -463,12 +473,79 @@ class H2IntegrateModel:
                     f"Included technology(ies) {missing_techs} not found in tech_config. "
                     f"Available techs: {list(tech_config.keys())}"
                 )
+            return included_techs
+
+        metrics_to_techs = plant_config["finance_parameters"].get(
+            "technologies_included_in_metrics", None
+        )
+
+        if metrics_to_techs is not None:
+            commodity_named_metrics = any(
+                commodity_type in k.lower() for k, v in metrics_to_techs.items()
+            )
+            lco_named_metrics = any(
+                f"lco{commodity_type[0].lower()}" in k.lower() for k, v in metrics_to_techs.items()
+            )
+            metric_keys = []
+            if commodity_named_metrics:
+                metric_keys += [
+                    k for k, v in metrics_to_techs.items() if commodity_type.lower() in k.lower()
+                ]
+            if lco_named_metrics:
+                metric_keys += [
+                    k
+                    for k, v in metrics_to_techs.items()
+                    if f"lco{commodity_type[0].lower()}" in k.lower()
+                ]
+
+            if len(metric_keys) == 1:
+                included_techs = check_for_valid_included_techs(metric_keys[0])
+                return included_techs, commodity_type
+            else:
+                for m in metric_keys:
+                    check_for_valid_included_techs(m)
+
+                # check for duplicated combinations of techs
+                tech_couplings = [metrics_to_techs[k] for k in metric_keys]
+                if any(tech_couplings.count(techs) > 0 for techs in tech_couplings):
+                    tech_pairs = list({tuple(sorted(techs)) for techs in tech_couplings})
+                    tech_couplings = [list(techs) for techs in tech_pairs]
+
+                if len(tech_couplings) == 1:
+                    included_techs = tech_couplings[0]
+                    return included_techs, commodity_type
+                else:
+                    metric_to_included_technologies = {}
+                    for metric in metric_keys:
+                        temp = [
+                            included_techs
+                            for included_techs in tech_couplings
+                            if all(tech in metrics_to_techs[metric] for tech in included_techs)
+                            and len(included_techs) == len(metrics_to_techs[metric])
+                        ]
+                        if not any(
+                            v == temp[0] for k, v in metric_to_included_technologies.items()
+                        ):
+                            # metric_to_included_technologies.update({metric:temp[0]})
+                            metric_description = (
+                                metric.lower()
+                                .replace(f"lco{commodity_type[0].lower()}", "")
+                                .replace(commodity_type.lower(), "")
+                                .strip()
+                                .strip("-()_")
+                            )
+                            metric_to_included_technologies.update(
+                                {f"{commodity_type}_{metric_description}": temp[0]}
+                            )
+                    commodity_descriptions = [k for k, v in metric_to_included_technologies.items()]
+                    included_technologies = [v for k, v in metric_to_included_technologies.items()]
+                    return included_technologies, commodity_descriptions
 
         # If no specific technologies are included, default to all technologies in tech_config
         if metrics_to_techs is None:
             included_techs = list(tech_config.keys())
 
-        return included_techs
+            return included_techs, commodity_type
 
     def connect_technologies(self):
         technology_interconnections = self.plant_config.get("technology_interconnections", [])
@@ -597,9 +674,11 @@ class H2IntegrateModel:
                         "steel",
                         "methanol",
                     ]:  # These handle their own financials
-                        included_techs = self.get_included_technologies(
+                        included_techs, commods = self.get_included_technologies(
                             tech_configs, commodity_type, self.plant_config
                         )
+                        if isinstance(included_techs[0], list):
+                            included_techs = functools.reduce(operator.iadd, included_techs, [])
                         all_included_techs.update(included_techs)
 
                 # Loop through technologies and connect electricity outputs to the ExecComp

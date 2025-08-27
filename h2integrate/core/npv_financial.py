@@ -53,15 +53,34 @@ class NPVFinancial(om.ExplicitComponent):
         self.options.declare("plant_config", types=dict)
         self.options.declare("tech_config", types=dict)
         self.options.declare("commodity_type", types=str)
+        self.options.declare("description", types=str, default="")
 
     def setup(self):
+        if (
+            self.options["description"] == ""
+            or self.options["description"] == self.options["commodity_type"]
+        ):
+            self.NPV_str = f"{self.options['commodity_type']}_NPV"
+        else:
+            NPV_base_str = f"{self.options['commodity_type']}"
+            NPV_desc_str = (
+                self.options["description"]
+                .replace(self.options["commodity_type"], "")
+                .strip()
+                .strip("_()-")
+            )
+            if NPV_desc_str == "":
+                self.NPV_str = f"{NPV_base_str}_NPV"
+            else:
+                self.NPV_str = f"{NPV_base_str}_{NPV_desc_str}_NPV"
+
         # TODO: update below with standardized naming
         if self.options["commodity_type"] == "electricity":
             commodity_units = "kW*h/year"
         else:
             commodity_units = "kg/year"
 
-        self.add_output(f"{self.options['commodity_type']}_NPV", val=0.0, units="USD")
+        self.add_output(self.NPV_str, val=0.0, units="USD")
 
         if self.options["commodity_type"] == "co2":
             self.add_input("co2_capture_kgpy", val=0.0, units="kg/year")
@@ -160,10 +179,20 @@ class NPVFinancial(om.ExplicitComponent):
             output_dir.mkdir(parents=True, exist_ok=True)
             fdesc = self.config.cost_breakdown_file_description
 
-            if self.config.save_npv_breakdown:
-                npv_fname = (
-                    f"{fdesc}_{self.options['commodity_type']}_NPVFinancial_NPV_breakdown.csv"
+            if (
+                self.options["description"] == ""
+                or self.options["description"] == self.options["commodity"]
+            ):
+                filename_base = f"{fdesc}_{self.options['commodity_type']}_NPVFinancial"
+            else:
+                desc = (
+                    self.NPV_str.replace("_NPV", "")
+                    .replace(self.options["commodity_type"], "")
+                    .strip("_")
                 )
+                filename_base = f"{fdesc}_{self.options['commodity_type']}_{desc}_NPVFinancial"
+            if self.config.save_npv_breakdown:
+                npv_fname = f"{filename_base}_NPV_breakdown.csv"
                 npv_fpath = Path(output_dir) / npv_fname
                 npv_breakdown = pd.Series(npv_cost_breakdown)
                 npv_breakdown.loc["Total"] = npv_item_check
@@ -171,9 +200,7 @@ class NPVFinancial(om.ExplicitComponent):
                 npv_breakdown.to_csv(npv_fpath)
 
             if self.config.save_cost_breakdown:
-                cost_fname = (
-                    f"{fdesc}_{self.options['commodity_type']}_NPVFinancial_cost_breakdown.csv"
-                )
+                cost_fname = f"{filename_base}_cost_breakdown.csv"
                 cost_fpath = Path(output_dir) / cost_fname
 
                 annual_cost_breakdown = pd.DataFrame(cost_breakdown).T
@@ -187,4 +214,4 @@ class NPVFinancial(om.ExplicitComponent):
                 )
                 annual_cost_breakdown.to_csv(cost_fpath)
 
-            outputs[f"{self.options['commodity_type']}_NPV"] = npv_item_check
+            outputs[self.NPV_str] = npv_item_check
