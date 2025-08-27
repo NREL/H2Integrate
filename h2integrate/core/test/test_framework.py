@@ -121,7 +121,9 @@ def test_get_included_technologies():
     }
     plant_config = {"finance_parameters": {}}
 
-    included_techs = model.get_included_technologies(tech_config, "hydrogen", plant_config)
+    included_techs, commod_desc = model.get_included_technologies(
+        tech_config, "hydrogen", plant_config
+    )
     expected = ["wind", "electrolyzer", "storage"]
     assert set(included_techs) == set(expected), f"Expected {expected}, got {included_techs}"
 
@@ -132,7 +134,7 @@ def test_get_included_technologies():
         }
     }
 
-    included_techs = model.get_included_technologies(
+    included_techs, commod_desc = model.get_included_technologies(
         tech_config, "hydrogen", plant_config_with_specific
     )
     expected = ["electrolyzer", "wind"]
@@ -143,7 +145,7 @@ def test_get_included_technologies():
         "finance_parameters": {"technologies_included_in_metrics": {"LCOE": ["wind"]}}
     }
 
-    included_techs = model.get_included_technologies(
+    included_techs, commod_desc = model.get_included_technologies(
         tech_config, "electricity", plant_config_with_lcoe
     )
     expected = ["wind"]
@@ -161,3 +163,79 @@ def test_get_included_technologies():
         raise AssertionError("Should have raised ValueError for invalid technology")
     except ValueError as e:
         assert "invalid_tech" in str(e), f"Error message should mention invalid_tech: {e}"
+
+    # Test case 4: multiple groups for same commodity type
+    plant_config_multi_lcoh = {
+        "finance_parameters": {
+            "technologies_included_in_metrics": {
+                "LCOH_produced": ["electrolyzer", "wind"],
+                "LCOH": ["electrolyzer", "wind", "storage"],
+            }
+        }
+    }
+
+    included_techs, commod_descs = model.get_included_technologies(
+        tech_config, "hydrogen", plant_config_multi_lcoh
+    )
+    expected_descriptions_to_techs = {
+        "hydrogen": ["electrolyzer", "wind", "storage"],
+        "hydrogen_produced": ["electrolyzer", "wind"],
+    }
+    for included_tech, commod_desc in zip(included_techs, commod_descs):
+        assert (
+            commod_desc in expected_descriptions_to_techs
+        ), f"Unxpected commodity description of {commod_desc}"
+        assert set(included_tech) == set(
+            expected_descriptions_to_techs[commod_desc]
+        ), f"Expected {expected}, got {included_techs}"
+
+    # Test case 5: duplicated groups for same commodity and same technologies
+    plant_config_multi_lcoh = {
+        "finance_parameters": {
+            "technologies_included_in_metrics": {
+                "LCOH_produced": ["electrolyzer", "wind"],
+                "LCOH": ["electrolyzer", "wind", "storage"],
+                "LCOH_delivered": ["electrolyzer", "wind", "storage"],
+            }
+        }
+    }
+
+    included_techs, commod_descs = model.get_included_technologies(
+        tech_config, "hydrogen", plant_config_multi_lcoh
+    )
+    expected_descriptions_to_techs = {
+        "hydrogen": ["electrolyzer", "wind", "storage"],
+        "hydrogen_produced": ["electrolyzer", "wind"],
+    }
+    for included_tech, commod_desc in zip(included_techs, commod_descs):
+        assert (
+            commod_desc in expected_descriptions_to_techs
+        ), f"Unxpected commodity description of {commod_desc}"
+        assert set(included_tech) == set(
+            expected_descriptions_to_techs[commod_desc]
+        ), f"Expected {expected}, got {included_techs}"
+
+    # Test case 6: group named includes commodity string
+    plant_config_multi_lcoh = {
+        "finance_parameters": {
+            "technologies_included_in_metrics": {
+                "hydrogen_produced": ["electrolyzer", "wind"],
+                "hydrogen": ["electrolyzer", "wind", "storage"],
+            }
+        }
+    }
+
+    included_techs, commod_descs = model.get_included_technologies(
+        tech_config, "hydrogen", plant_config_multi_lcoh
+    )
+    expected_descriptions_to_techs = {
+        "hydrogen": ["electrolyzer", "wind", "storage"],
+        "hydrogen_produced": ["electrolyzer", "wind"],
+    }
+    for included_tech, commod_desc in zip(included_techs, commod_descs):
+        assert (
+            commod_desc in expected_descriptions_to_techs
+        ), f"Unxpected commodity description of {commod_desc}"
+        assert set(included_tech) == set(
+            expected_descriptions_to_techs[commod_desc]
+        ), f"Expected {expected}, got {included_techs}"

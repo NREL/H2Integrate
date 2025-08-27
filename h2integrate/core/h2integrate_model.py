@@ -534,9 +534,14 @@ class H2IntegrateModel:
                                 .strip()
                                 .strip("-()_")
                             )
-                            metric_to_included_technologies.update(
-                                {f"{commodity_type}_{metric_description}": temp[0]}
-                            )
+                            if len(metric_description) > 0:
+                                metric_to_included_technologies.update(
+                                    {f"{commodity_type}_{metric_description}": temp[0]}
+                                )
+                            else:
+                                metric_to_included_technologies.update(
+                                    {f"{commodity_type}": temp[0]}
+                                )
                     commodity_descriptions = [k for k, v in metric_to_included_technologies.items()]
                     included_technologies = [v for k, v in metric_to_included_technologies.items()]
                     return included_technologies, commodity_descriptions

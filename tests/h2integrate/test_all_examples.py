@@ -137,13 +137,13 @@ def test_simple_ammonia_example(subtests):
     # Check that the expected output files exist
     outputs_dir = Path.cwd() / "outputs"
     assert (
-        outputs_dir / "profast_output_ammonia.yaml"
+        outputs_dir / "profast_output_ammonia_LCOA.yaml"
     ).is_file(), "profast_output_ammonia.yaml not found"
     assert (
-        outputs_dir / "profast_output_electricity.yaml"
+        outputs_dir / "profast_output_electricity_LCOE.yaml"
     ).is_file(), "profast_output_electricity.yaml not found"
     assert (
-        outputs_dir / "profast_output_hydrogen.yaml"
+        outputs_dir / "profast_output_hydrogen_LCOH.yaml"
     ).is_file(), "profast_output_hydrogen.yaml not found"
 
 
