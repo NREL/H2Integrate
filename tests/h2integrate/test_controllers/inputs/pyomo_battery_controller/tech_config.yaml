@@ -1,0 +1,73 @@
+name: "technology_config"
+description: "This hybrid plant produces hydrogen"
+
+technologies:
+  wind:
+    performance_model:
+      model: "wind_plant_performance"
+    cost_model:
+      model: "wind_plant_cost"
+    dispatch_rule_set:
+      model: "pyomo_dispatch_wind"
+    resource:
+      type: "pysam_wind"
+      wind_speed: 9.
+    model_inputs:
+      shared_parameters:
+        num_turbines: 100
+        turbine_rating_kw: 8300
+      performance_parameters:
+        rotor_diameter: 196.
+        hub_height: 130.
+        layout_mode: "basicgrid"
+        model_name: "pysam"
+        model_input_file: null
+        layout_params:
+          row_D_spacing: 10.
+          turbine_D_spacing: 10.
+        rating_range_kw: [1000, 5000]
+        floris_config: null
+        operational_losses: 10.0
+        timestep: [1, 60]
+        fin_model: "default"
+        name: "UtilityScaleWindPlant"
+        turbine_name: "2023NREL_Bespoke_8.3MW_196" #turbine model to use
+        turbine_group: "onshore"
+        override_wind_resource_height: False
+        adjust_air_density_for_elevation: True
+      cost_parameters:
+        cost_per_kw: 1500.0
+        cost_year: 2024
+      dispatch_rule_parameters:
+        resource_name: "electricity"
+        resource_storage_units: "kW"
+  battery:
+    dispatch_rule_set:
+      model: "pyomo_dispatch_battery"
+    control_strategy:
+      model: "heuristic_load_following_controller"
+    performance_model:
+      model: "pysam_battery"
+    cost_model:
+      model: "pysam_battery"
+    model_inputs:
+      shared_parameters:
+        system_capacity_kw: 50000
+        max_capacity: 200000
+        n_timesteps: 8760
+        dt: 1.0
+        n_control_window: 24
+        n_horizon_window: 48
+        init_charge_percent: 0.5
+        max_charge_percent: 0.9
+        min_charge_percent: 0.1
+      performance_parameters:
+        cost_year: 2019
+      control_parameters:
+        demand_profile: 500
+        grid_limit: 5000
+        resource_name: "electricity"
+        resource_storage_units: "kW"
+      dispatch_rule_parameters:
+        resource_name: "electricity"
+        resource_storage_units: "kW"
