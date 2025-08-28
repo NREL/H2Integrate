@@ -47,6 +47,8 @@ class SteelPerformanceModel(SteelPerformanceBaseClass):
 
 @define
 class SteelCostAndFinancialModelConfig(BaseConfig):
+    installation_time: int = field()
+    inflation_rate: float = field()
     operational_year: int = field()
     plant_capacity_mtpy: float = field()
     capacity_factor: float = field()
@@ -55,13 +57,6 @@ class SteelCostAndFinancialModelConfig(BaseConfig):
     feedstocks: dict = field()  # TODO: build validator for this large dictionary
     finances: dict = field()  # TODO: build validator for this large dictionary
     cost_year: int = field(default=2022, converter=int, validator=must_equal(2022))
-
-
-@define
-class SteelCostAndFinancialPlantConfig(BaseConfig):
-    plant_life: int = field()
-    installation_time: int = field()
-    gen_inflation: float = field()
 
 
 class SteelCostAndFinancialModel(SteelCostBaseClass):
@@ -86,13 +81,6 @@ class SteelCostAndFinancialModel(SteelCostBaseClass):
             lcoh=self.config.lcoh,
         )
         # TODO Review whether to split plant and finance_parameters configs or combine somehow
-        self.plant_config = SteelCostAndFinancialPlantConfig(
-            plant_life=self.options["plant_config"]["plant"]["plant_life"],
-            installation_time=self.options["plant_config"]["finance_parameters"][
-                "installation_time"
-            ],
-            gen_inflation=self.options["plant_config"]["finance_parameters"]["inflation_rate"],
-        )
 
         self.add_input("steel_production_mtpy", val=0.0, units="t/year")
 
@@ -108,7 +96,7 @@ class SteelCostAndFinancialModel(SteelCostBaseClass):
 
         # TODO Bring this config dict into new_h2integrate from old h2integrate
         finance_config = SteelFinanceModelConfig(
-            plant_life=self.plant_config.plant_life,
+            plant_life=self.options["plant_config"]["plant"]["plant_life"],
             plant_capacity_mtpy=self.config.plant_capacity_mtpy,
             plant_capacity_factor=self.config.capacity_factor,
             steel_production_mtpy=inputs["steel_production_mtpy"],
@@ -118,8 +106,8 @@ class SteelCostAndFinancialModel(SteelCostBaseClass):
             costs=cost_model_outputs,
             o2_heat_integration=self.config.o2_heat_integration,
             financial_assumptions=self.config.finances["financial_assumptions"],
-            install_years=int(self.plant_config.installation_time / 12),
-            gen_inflation=self.plant_config.gen_inflation,
+            install_years=int(self.config.installation_time / 12),
+            gen_inflation=self.config.inflation_rate,
             save_plots=False,
             show_plots=False,
             output_dir="./output/",

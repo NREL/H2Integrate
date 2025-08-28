@@ -10,10 +10,9 @@ def gt_zero(instance, attribute, value):
 
 
 def gte_zero(instance, attribute, value):
-    """Validates that an attribute's value is greater than or equal to
-    zero."""
+    """Validates that an attribute's value is greater than or equal to zero."""
     if value < 0:
-        raise ValueError(f"{attribute} cannot be negative")
+        raise ValueError(f"{attribute} must be greater than or equal to zero")
 
 
 def range_val(min_val, max_val):
