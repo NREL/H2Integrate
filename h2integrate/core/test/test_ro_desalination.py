@@ -78,7 +78,9 @@ def test_ro_desalination_cost(subtests):
     }
 
     prob = om.Problem()
-    comp = ReverseOsmosisCostModel(tech_config=tech_config)
+    comp = ReverseOsmosisCostModel(
+        plant_config={"plant": {"plant_life": 30}}, tech_config=tech_config
+    )
     prob.model.add_subsystem("comp", comp, promotes=["*"])
 
     prob.setup()

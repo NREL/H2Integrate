@@ -52,7 +52,7 @@ def test_simple_ammonia_performance_model():
 def test_simple_ammonia_cost_model(subtests):
     prob = om.Problem()
     comp = SimpleAmmoniaCostModel(
-        plant_config={},
+        plant_config={"plant": {"plant_life": 30}},
         tech_config=tech_config_dict,
     )
 

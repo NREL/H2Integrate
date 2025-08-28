@@ -113,7 +113,7 @@ def test_simple_ASU_cost_model_usd_pr_kw(subtests):
     rated_N2_mfr = rated_power_kW / efficiency_kWh_per_kg
     prob = om.Problem()
     comp = SimpleASUCostModel(
-        plant_config={},
+        plant_config={"plant": {"plant_life": 30}},
         tech_config=tech_config_dict,
     )
 
@@ -158,7 +158,7 @@ def test_simple_ASU_cost_model_usd_pr_mw(subtests):
     rated_N2_mfr = rated_power_kW / efficiency_kWh_per_kg
     prob = om.Problem()
     comp = SimpleASUCostModel(
-        plant_config={},
+        plant_config={"plant": {"plant_life": 30}},
         tech_config=tech_config_dict,
     )
 
@@ -210,7 +210,7 @@ def test_simple_ASU_performance_and_cost_size_for_demand(subtests):
     )
 
     asu_cost = SimpleASUCostModel(
-        plant_config={},
+        plant_config={"plant": {"plant_life": 30}},
         tech_config=tech_config_dict,
         driver_config={},
     )

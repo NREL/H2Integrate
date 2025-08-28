@@ -114,7 +114,7 @@ def test_utility_pv_cost(utility_scale_pv_performance_params, solar_resource_dic
         tech_config=tech_config_dict,
     )
     cost_comp = ATBUtilityPVCostModel(
-        plant_config={},
+        plant_config={"plant": {"plant_life": 30}},
         tech_config=tech_config_dict,
     )
 
@@ -162,7 +162,7 @@ def test_commercial_pv_cost(commercial_pv_performance_params, solar_resource_dic
         tech_config=tech_config_dict,
     )
     cost_comp = ATBResComPVCostModel(
-        plant_config={},
+        plant_config={"plant": {"plant_life": 30}},
         tech_config=tech_config_dict,
     )
 
@@ -207,7 +207,7 @@ def test_residential_pv_cost(residential_pv_performance_params, solar_resource_d
         tech_config=tech_config_dict,
     )
     cost_comp = ATBResComPVCostModel(
-        plant_config={},
+        plant_config={"plant": {"plant_life": 30}},
         tech_config=tech_config_dict,
     )
 
