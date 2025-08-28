@@ -607,6 +607,10 @@ class H2IntegrateModel:
                             f"{tech_name}.OpEx", f"financials_group_{group_id}.opex_{tech_name}"
                         )
                         self.plant.connect(
+                            f"{tech_name}.VarOpEx",
+                            f"financials_group_{group_id}.varopex_{tech_name}",
+                        )
+                        self.plant.connect(
                             f"{tech_name}.cost_year",
                             f"financials_group_{group_id}.cost_year_{tech_name}",
                         )

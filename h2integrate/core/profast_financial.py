@@ -335,6 +335,29 @@ class ProFASTDefaultFixedCost(BaseConfig):
 
 
 @define
+class ProFASTDefaultVariableCost(BaseConfig):
+    """Configuration class of default settings for ProFAST variable costs.
+    The total cost is calculated as ``usage*cost``.
+
+    Attributes:
+        escalation (float | int, optional): annual escalation of price.
+            Defaults to 0.
+        unit (str): unit of the cost, only used for reporting. Defaults to `$/year`.
+        usage (float, optional): Usage of feedstock per unit of commondity.
+            Defaults to 1.0.
+
+
+    """
+
+    escalation: float | int = field()
+    unit: str = field(default="$/year")
+    usage: float | int = field(default=1.0)
+
+    def create_dict(self):
+        return self.as_dict()
+
+
+@define
 class ProFASTDefaultIncentive(BaseConfig):
     """Configuration class of default settings for ProFAST production-based incentives.
 
@@ -430,10 +453,12 @@ class ProFastComp(om.ExplicitComponent):
                 units=commodity_units,
             )
 
+        plant_life = int(self.options["plant_config"]["plant"]["plant_life"])
         tech_config = self.tech_config = self.options["tech_config"]
         for tech in tech_config:
             self.add_input(f"capex_adjusted_{tech}", val=0.0, units="USD")
             self.add_input(f"opex_adjusted_{tech}", val=0.0, units="USD/year")
+            self.add_input(f"varopex_adjusted_{tech}", val=0.0, shape=plant_life, units="USD/year")
 
         if "electrolyzer" in tech_config:
             self.add_input("electrolyzer_time_until_replacement", units="h")
@@ -460,6 +485,13 @@ class ProFastComp(om.ExplicitComponent):
         fixed_cost_params.setdefault("escalation", self.params.inflation_rate)
         self.fixed_cost_settings = ProFASTDefaultFixedCost.from_dict(fixed_cost_params)
 
+        # initialize default variable cost parameters (same as feedstocks)
+        variable_cost_params = plant_config["finance_parameters"]["model_inputs"].get(
+            "variable_costs", {}
+        )
+        variable_cost_params.setdefault("escalation", self.params.inflation_rate)
+        self.variable_cost_settings = ProFASTDefaultVariableCost.from_dict(variable_cost_params)
+
         # incentives - unused for now
         # incentive_params = plant_config["finance_parameters"]["model_inputs"].get(
         #     "incentives", {}
@@ -469,6 +501,8 @@ class ProFastComp(om.ExplicitComponent):
 
     def compute(self, inputs, outputs):
         mass_commodities = ["hydrogen", "ammonia", "co2", "nitrogen"]
+
+        years_of_operation = self.params.create_years_of_operation()
 
         # update parameters with commodity, capacity, and utilization
         profast_params = self.params.as_dict()
@@ -490,10 +524,12 @@ class ProFastComp(om.ExplicitComponent):
         # initialize dictionary of capital items and fixed costs
         capital_items = {}
         fixed_costs = {}
+        variable_costs = {}
 
         # create default capital item and fixed cost entries
         capital_item_defaults = self.capital_item_settings.create_dict()
         fixed_cost_defaults = self.fixed_cost_settings.create_dict()
+        variable_cost_defaults = self.variable_cost_settings.create_dict()
 
         # loop through technologies and create cost entries
         for tech in self.tech_config:
@@ -544,9 +580,26 @@ class ProFastComp(om.ExplicitComponent):
                 tech_opex_info.setdefault(fix_cost_key, fix_cost_val)
             fixed_costs[tech] = tech_opex_info
 
+            # get tech-specific variable cost parameters
+            tech_varopex_info = (
+                self.tech_config[tech]["model_inputs"]
+                .get("financial_parameters", {})
+                .get("variable_costs", {})
+            )
+
+            # add CapEx cost to tech-specific variable cost entry
+            varom_dict = dict(zip(years_of_operation, inputs[f"varopex_adjusted_{tech}"]))
+            tech_varopex_info.update({"cost": varom_dict})
+
+            # update any unset variable cost parameters with the default values
+            for var_cost_key, var_cost_val in variable_cost_defaults.items():
+                tech_varopex_info.setdefault(var_cost_key, var_cost_val)
+            variable_costs[tech] = tech_varopex_info
+
         # add capital costs and fixed costs to pf_dict
         pf_dict["capital_items"] = capital_items
         pf_dict["fixed_costs"] = fixed_costs
+        pf_dict["feedstocks"] = variable_costs
         # create ProFAST object
         pf = create_and_populate_profast(pf_dict)
         # simulate ProFAST

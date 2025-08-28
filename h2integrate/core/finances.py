@@ -1,3 +1,4 @@
+import numpy as np
 import openmdao.api as om
 import numpy_financial as npf
 
@@ -17,32 +18,43 @@ class AdjustedCapexOpexComp(om.ExplicitComponent):
         self.target_dollar_year = plant_config["finance_parameters"]["cost_adjustment_parameters"][
             "target_dollar_year"
         ]
+        plant_life = self.plant_life = int(self.options["plant_config"]["plant"]["plant_life"])
 
         for tech in tech_config:
             self.add_input(f"capex_{tech}", val=0.0, units="USD")
             self.add_input(f"opex_{tech}", val=0.0, units="USD/year")
+            self.add_input(f"varopex_{tech}", val=0.0, shape=plant_life, units="USD/year")
+
             self.add_discrete_input(f"cost_year_{tech}", val=0, desc="Dollar year for costs")
 
             self.add_output(f"capex_adjusted_{tech}", val=0.0, units="USD")
             self.add_output(f"opex_adjusted_{tech}", val=0.0, units="USD/year")
+            self.add_output(f"varopex_adjusted_{tech}", val=0.0, shape=plant_life, units="USD/year")
 
         self.add_output("total_capex_adjusted", val=0.0, units="USD")
         self.add_output("total_opex_adjusted", val=0.0, units="USD/year")
+        self.add_output("total_varopex_adjusted", val=0.0, shape=plant_life, units="USD/year")
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         total_capex_adjusted = 0.0
         total_opex_adjusted = 0.0
+        total_varopex_adjusted = np.zeros(self.plant_life)
         for tech in self.options["tech_config"]:
             capex = float(inputs[f"capex_{tech}"][0])
             opex = float(inputs[f"opex_{tech}"][0])
+            varopex = inputs[f"varopex_{tech}"][0]
             cost_year = int(discrete_inputs[f"cost_year_{tech}"])
             periods = self.target_dollar_year - cost_year
             adjusted_capex = -npf.fv(self.inflation_rate, periods, 0.0, capex)
             adjusted_opex = -npf.fv(self.inflation_rate, periods, 0.0, opex)
+            adjusted_varopex = -npf.fv(self.inflation_rate, periods, 0.0, varopex)
             outputs[f"capex_adjusted_{tech}"] = adjusted_capex
             outputs[f"opex_adjusted_{tech}"] = adjusted_opex
+            outputs[f"varopex_adjusted_{tech}"] = adjusted_varopex
             total_capex_adjusted += adjusted_capex
             total_opex_adjusted += adjusted_opex
+            total_varopex_adjusted += adjusted_varopex
 
         outputs["total_capex_adjusted"] = total_capex_adjusted
         outputs["total_opex_adjusted"] = total_opex_adjusted
+        outputs["total_varopex_adjusted"] = total_varopex_adjusted
