@@ -12,11 +12,17 @@ technologies:
     model_inputs:
       shared_parameters:
         system_capacity_kw: 50000
-      control_parameters:
-        resource_name: "power"
-        resource_rate_units: "kWh"
-      performance_parameters:
         max_capacity: 200000
-        minimum_SOC: 10.0
-        maximum_SOC: 90.0
-        initial_SOC: 90.0
+        n_timesteps: 24
+        dt: 1.0
+        n_control_window: 24
+        n_horizon_window: 48
+        init_charge_percent: 0.5
+        max_charge_percent: 0.9
+        min_charge_percent: 0.1
+      control_parameters:
+        resource_name: "electricity"
+        resource_rate_units: "kWh"
+        demand_profile: 500
+      performance_parameters:
+        cost_year: 2019

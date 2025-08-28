@@ -94,7 +94,7 @@ def test_demand_controller(subtests):
         "charge_efficiency": 1.0,
         "discharge_efficiency": 1.0,
         "demand_profile": [1.0] * 10,  # Example: 10 time steps with 10 kg/time step demand
-        "n_time_steps": 10,
+        "n_timesteps": 10,
     }
 
     # Set up the OpenMDAO problem
@@ -166,7 +166,7 @@ def test_demand_controller_round_trip_efficiency(subtests):
         "charge_efficiency": 1.0,
         "discharge_efficiency": 1.0,
         "demand_profile": [1.0] * 10,  # Example: 10 time steps with 10 kg/time step demand
-        "n_time_steps": 10,
+        "n_timesteps": 10,
     }
 
     tech_config_rte = deepcopy(tech_config)
@@ -181,7 +181,7 @@ def test_demand_controller_round_trip_efficiency(subtests):
         "max_discharge_rate": 0.5,  # kg/time step
         "round_trip_efficiency": 1.0,
         "demand_profile": [1.0] * 10,  # Example: 10 time steps with 10 kg/time step demand
-        "n_time_steps": 10,
+        "n_timesteps": 10,
     }
 
     def set_up_and_run_problem(config):

@@ -5,7 +5,7 @@ from h2integrate.control.control_rules.pyomo_rule_baseclass import PyomoRuleBase
 
 
 class PyomoRuleStorageBaseclass(PyomoRuleBaseClass):
-    def _create_parameters(self, pyomo_model: pyo.ConcreteModel, tech_name: str):
+    def _create_parameters(self, pyomo_model: pyo.ConcreteModel, t):
         """Creates storage parameters.
 
         Args:
@@ -16,7 +16,7 @@ class PyomoRuleStorageBaseclass(PyomoRuleBaseClass):
         # Storage Parameters             #
         ##################################
         pyomo_model.time_duration = pyo.Param(
-            doc=tech_name + " Time step [hour]",
+            doc=pyomo_model.name + " time step [hour]",
             default=1.0,
             within=pyo.NonNegativeReals,
             mutable=True,
@@ -37,27 +37,27 @@ class PyomoRuleStorageBaseclass(PyomoRuleBaseClass):
         #     units=pyo.units.USD / pyo.units.MWh,
         # )
         pyomo_model.minimum_storage = pyo.Param(
-            doc=tech_name + " minimum storage rating [" + self.config.resource_storage_units + "]",
+            doc=pyomo_model.name + " minimum storage rating [" + self.config.resource_storage_units + "]",
             default=0.0,
             within=pyo.NonNegativeReals,
             mutable=True,
             units=eval("pyo.units." + self.config.resource_storage_units),
         )
         pyomo_model.maximum_storage = pyo.Param(
-            doc=tech_name + " maximum storage rating [" + self.config.resource_storage_units + "]",
+            doc=pyomo_model.name + " maximum storage rating [" + self.config.resource_storage_units + "]",
             within=pyo.NonNegativeReals,
             mutable=True,
             units=eval("pyo.units." + self.config.resource_storage_units),
         )
         pyomo_model.minimum_soc = pyo.Param(
-            doc=tech_name + " minimum state-of-charge [-]",
+            doc=pyomo_model.name + " minimum state-of-charge [-]",
             default=0.1,
             within=pyo.PercentFraction,
             mutable=True,
             units=pyo.units.dimensionless,
         )
         pyomo_model.maximum_soc = pyo.Param(
-            doc=tech_name + " maximum state-of-charge [-]",
+            doc=pyomo_model.name + " maximum state-of-charge [-]",
             default=0.9,
             within=pyo.PercentFraction,
             mutable=True,
@@ -68,14 +68,14 @@ class PyomoRuleStorageBaseclass(PyomoRuleBaseClass):
         # Efficiency Parameters          #
         ##################################
         pyomo_model.charge_efficiency = pyo.Param(
-            doc=tech_name + " Charging efficiency [-]",
+            doc=pyomo_model.name + " Charging efficiency [-]",
             default=0.938,
             within=pyo.PercentFraction,
             mutable=True,
             units=pyo.units.dimensionless,
         )
         pyomo_model.discharge_efficiency = pyo.Param(
-            doc=tech_name + " discharging efficiency [-]",
+            doc=pyomo_model.name + " discharging efficiency [-]",
             default=0.938,
             within=pyo.PercentFraction,
             mutable=True,
@@ -86,13 +86,13 @@ class PyomoRuleStorageBaseclass(PyomoRuleBaseClass):
         ##################################
 
         pyomo_model.capacity = pyo.Param(
-            doc=tech_name + " capacity [" + self.config.resource_storage_units + "]",
+            doc=pyomo_model.name + " capacity [" + self.config.resource_storage_units + "]",
             within=pyo.NonNegativeReals,
             mutable=True,
             units=eval("pyo.units." + self.config.resource_storage_units),
         )
 
-    def _create_variables(self, pyomo_model: pyo.ConcreteModel, tech_name: str):
+    def _create_variables(self, pyomo_model: pyo.ConcreteModel, t):
         """Creates storage variables.
 
         Args:
@@ -103,23 +103,23 @@ class PyomoRuleStorageBaseclass(PyomoRuleBaseClass):
         # Variables                      #
         ##################################
         pyomo_model.is_charging = pyo.Var(
-            doc="1 if " + tech_name + " is charging; 0 Otherwise [-]",
+            doc="1 if " + pyomo_model.name + " is charging; 0 Otherwise [-]",
             domain=pyo.Binary,
             units=pyo.units.dimensionless,
         )
         pyomo_model.is_discharging = pyo.Var(
-            doc="1 if " + tech_name + " is discharging; 0 Otherwise [-]",
+            doc="1 if " + pyomo_model.name + " is discharging; 0 Otherwise [-]",
             domain=pyo.Binary,
             units=pyo.units.dimensionless,
         )
         pyomo_model.soc0 = pyo.Var(
-            doc=tech_name + " initial state-of-charge at beginning of period[-]",
+            doc=pyomo_model.name + " initial state-of-charge at beginning of period[-]",
             domain=pyo.PercentFraction,
             bounds=(pyomo_model.minimum_soc, pyomo_model.maximum_soc),
             units=pyo.units.dimensionless,
         )
         pyomo_model.soc = pyo.Var(
-            doc=tech_name + " state-of-charge at end of period [-]",
+            doc=pyomo_model.name + " state-of-charge at end of period [-]",
             domain=pyo.PercentFraction,
             bounds=(pyomo_model.minimum_soc, pyomo_model.maximum_soc),
             units=pyo.units.dimensionless,
@@ -127,7 +127,7 @@ class PyomoRuleStorageBaseclass(PyomoRuleBaseClass):
         pyomo_model.charge_resource = pyo.Var(
             doc=self.config.resource_name
             + " into "
-            + tech_name
+            + pyomo_model.name
             + " ["
             + self.config.resource_storage_units
             + "]",
@@ -137,7 +137,7 @@ class PyomoRuleStorageBaseclass(PyomoRuleBaseClass):
         pyomo_model.discharge_resource = pyo.Var(
             doc=self.config.resource_name
             + " out of "
-            + tech_name
+            + pyomo_model.name
             + " ["
             + self.config.resource_storage_units
             + "]",
@@ -145,35 +145,35 @@ class PyomoRuleStorageBaseclass(PyomoRuleBaseClass):
             units=eval("pyo.units." + self.config.resource_storage_units),
         )
 
-    def _create_constraints(self, pyomo_model: pyo.ConcreteModel, tech_name: str):
+    def _create_constraints(self, pyomo_model: pyo.ConcreteModel, t):
         ##################################
         # Charging Constraints           #
         ##################################
-        # Charge power bounds
+        # Charge resource bounds
         pyomo_model.charge_resource_ub = pyo.Constraint(
-            doc=tech_name + " charging storage upper bound",
+            doc=pyomo_model.name + " charging storage upper bound",
             expr=pyomo_model.charge_resource
             <= pyomo_model.maximum_storage * pyomo_model.is_charging,
         )
         pyomo_model.charge_resource_lb = pyo.Constraint(
-            doc=tech_name + " charging storage lower bound",
+            doc=pyomo_model.name + " charging storage lower bound",
             expr=pyomo_model.charge_resource
             >= pyomo_model.minimum_storage * pyomo_model.is_charging,
         )
-        # Discharge power bounds
+        # Discharge resource bounds
         pyomo_model.discharge_resource_lb = pyo.Constraint(
-            doc=tech_name + " Discharging storage lower bound",
+            doc=pyomo_model.name + " Discharging storage lower bound",
             expr=pyomo_model.discharge_resource
             >= pyomo_model.minimum_storage * pyomo_model.is_discharging,
         )
         pyomo_model.discharge_resource_ub = pyo.Constraint(
-            doc=tech_name + " Discharging storage upper bound",
+            doc=pyomo_model.name + " Discharging storage upper bound",
             expr=pyomo_model.discharge_resource
             <= pyomo_model.maximum_storage * pyomo_model.is_discharging,
         )
         # Storage packing constraint
         pyomo_model.charge_discharge_packing = pyo.Constraint(
-            doc=tech_name + " packing constraint for charging and discharging binaries",
+            doc=pyomo_model.name + " packing constraint for charging and discharging binaries",
             expr=pyomo_model.is_charging + pyomo_model.is_discharging <= 1,
         )
 
@@ -194,15 +194,32 @@ class PyomoRuleStorageBaseclass(PyomoRuleBaseClass):
 
         # Storage State-of-charge balance
         pyomo_model.soc_inventory = pyo.Constraint(
-            doc=tech_name + " state-of-charge inventory balance",
+            doc=pyomo_model.name + " state-of-charge inventory balance",
             rule=soc_inventory_rule,
         )
 
-    def _create_ports(self, pyomo_model: pyo.ConcreteModel, tech_name: str):
+        ##################################
+        # SOC Linking Constraints        #
+        ##################################
+
+        # TODO: Make work for pyomo optimization, not needed for heuristic method
+        # # Linking time periods together
+        # def storage_soc_linking_rule(m, t):
+        #     if t == m.blocks.index_set().first():
+        #         return m.blocks[t].soc0 == m.initial_soc
+        #     return m.blocks[t].soc0 == self.blocks[t - 1].soc
+
+        # pyomo_model.soc_linking = pyo.Constraint(
+        #     pyomo_model.blocks.index_set(),
+        #     doc=self.block_set_name + " state-of-charge block linking constraint",
+        #     rule=storage_soc_linking_rule,
+        # )
+
+    def _create_ports(self, pyomo_model: pyo.ConcreteModel, t):
         """Creates storage port.
 
         Args:
-            storage: Storage instance.
+            pyomo_model: Pyomo storage instance.
 
         """
         ##################################
