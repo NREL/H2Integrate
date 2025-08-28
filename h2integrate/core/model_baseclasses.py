@@ -7,7 +7,8 @@ class CostModelBaseClass(om.ExplicitComponent):
 
     Outputs:
         - CapEx (float): capital expenditure costs in $
-        - OpEx (float): annual operating expenditure costs in $/year
+        - OpEx (float): annual fixed operating expenditure costs in $/year
+        - VarOpEx (float): annual variable operating expenditure costs in $/year
 
     Discrete Outputs:
         - cost_year (int): dollar-year corresponding to CapEx and OpEx values.
