@@ -65,7 +65,7 @@ properties:
     items:
       type: array
       items:
-        type: string
+        type: [string, array]
         description: Technology names and connection types
 required:
   - name
