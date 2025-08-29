@@ -178,9 +178,13 @@ def test_technology_connections():
     # Load the plant_config YAML content
     plant_config_data = load_plant_yaml(temp_plant_config)
 
-    # TODO: update the below to have different variable names at some point
-    new_connection = ["electrolyzer", "h2_storage", ("efficiency", "efficiency")]
-    plant_config_data["technology_interconnections"][1] = new_connection
+    new_connection = (["financials_group_default", "steel", ("LCOE", "electricity_cost")],)
+    new_tech_interconnections = (
+        plant_config_data["technology_interconnections"][0:4]
+        + list(new_connection)
+        + [plant_config_data["technology_interconnections"][4]]
+    )
+    plant_config_data["technology_interconnections"] = new_tech_interconnections
 
     # Save the modified tech_config YAML back
     with temp_plant_config.open("w") as f:
