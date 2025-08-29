@@ -190,7 +190,7 @@ class H2IntegrateModel:
         for tech_name, individual_tech_config in self.technology_config["technologies"].items():
             perf_model = individual_tech_config.get("performance_model", {}).get("model")
 
-            if "feedstock" in perf_model:
+            if perf_model is not None and "feedstock" in perf_model:
                 comp = self.supported_models[perf_model](
                     driver_config=self.driver_config,
                     plant_config=self.plant_config,
@@ -260,7 +260,7 @@ class H2IntegrateModel:
 
         for tech_name, individual_tech_config in self.technology_config["technologies"].items():
             cost_model = individual_tech_config.get("cost_model", {}).get("model")
-            if "feedstock" in cost_model:
+            if cost_model is not None and "feedstock" in cost_model:
                 comp = self.supported_models[cost_model](
                     driver_config=self.driver_config,
                     plant_config=self.plant_config,

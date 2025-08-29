@@ -7,6 +7,15 @@ from h2integrate.converters.ammonia.simple_ammonia_model import (
 )
 
 
+plant_config = {
+    "plant": {
+        "plant_life": 30,
+        "simulation": {
+            "n_timesteps": 8760,
+        },
+    },
+}
+
 tech_config_dict = {
     "model_inputs": {
         "shared_parameters": {
@@ -34,7 +43,7 @@ tech_config_dict = {
 def test_simple_ammonia_performance_model():
     prob = om.Problem()
     comp = SimpleAmmoniaPerformanceModel(
-        plant_config={},
+        plant_config=plant_config,
         tech_config=tech_config_dict,
     )
     prob.model.add_subsystem("ammonia_perf", comp)
@@ -52,7 +61,7 @@ def test_simple_ammonia_performance_model():
 def test_simple_ammonia_cost_model(subtests):
     prob = om.Problem()
     comp = SimpleAmmoniaCostModel(
-        plant_config={},
+        plant_config=plant_config,
         tech_config=tech_config_dict,
     )
 
