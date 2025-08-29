@@ -14,6 +14,9 @@ def test_wombat_model_outputs(subtests):
             plant_config={
                 "plant": {
                     "plant_life": 20,
+                    "simulation": {
+                        "n_timesteps": 8760,
+                    },
                 },
             },
             tech_config={
@@ -73,6 +76,9 @@ def test_wombat_error(subtests):
             plant_config={
                 "plant": {
                     "plant_life": 20,
+                    "simulation": {
+                        "n_timesteps": 8760,
+                    },
                 },
             },
             tech_config={

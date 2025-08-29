@@ -108,9 +108,16 @@ def test_utility_pv_cost(utility_scale_pv_performance_params, solar_resource_dic
         }
     }
 
+    plant_info = {
+        "simulation": {
+            "n_timesteps": 8760,
+            "dt": 3600,
+        }
+    }
+
     prob = om.Problem()
     perf_comp = PYSAMSolarPlantPerformanceModel(
-        plant_config={"site": solar_resource_dict},
+        plant_config={"site": solar_resource_dict, "plant": plant_info},
         tech_config=tech_config_dict,
     )
     cost_comp = ATBUtilityPVCostModel(
@@ -156,9 +163,16 @@ def test_commercial_pv_cost(commercial_pv_performance_params, solar_resource_dic
         }
     }
 
+    plant_info = {
+        "simulation": {
+            "n_timesteps": 8760,
+            "dt": 3600,
+        }
+    }
+
     prob = om.Problem()
     perf_comp = PYSAMSolarPlantPerformanceModel(
-        plant_config={"site": solar_resource_dict},
+        plant_config={"site": solar_resource_dict, "plant": plant_info},
         tech_config=tech_config_dict,
     )
     cost_comp = ATBResComPVCostModel(
@@ -201,9 +215,16 @@ def test_residential_pv_cost(residential_pv_performance_params, solar_resource_d
         }
     }
 
+    plant_info = {
+        "simulation": {
+            "n_timesteps": 8760,
+            "dt": 3600,
+        }
+    }
+
     prob = om.Problem()
     perf_comp = PYSAMSolarPlantPerformanceModel(
-        plant_config={"site": solar_resource_dict},
+        plant_config={"site": solar_resource_dict, "plant": plant_info},
         tech_config=tech_config_dict,
     )
     cost_comp = ATBResComPVCostModel(

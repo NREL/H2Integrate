@@ -56,6 +56,7 @@ class NaturalGeoH2PerformanceModel(GeoH2PerformanceBaseClass):
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance")
         )
         super().setup()
+        n_timesteps = self.options["plant_config"]["plant"]["simulation"]["n_timesteps"]
 
         self.add_input("site_prospectivity", units=None, val=self.config.site_prospectivity)
         self.add_input("initial_wellhead_flow", units="kg/h", val=self.config.initial_wellhead_flow)
@@ -63,7 +64,7 @@ class NaturalGeoH2PerformanceModel(GeoH2PerformanceBaseClass):
 
         self.add_output("wellhead_h2_conc", units="percent")
         self.add_output("lifetime_wellhead_flow", units="kg/h")
-        self.add_output("hydrogen_accumulated", units="kg/h", shape=(8760,))
+        self.add_output("hydrogen_accumulated", units="kg/h", shape=(n_timesteps,))
 
     def compute(self, inputs, outputs):
         if self.config.rock_type == "peridotite":  # TODO: sub-models for different rock types
@@ -75,7 +76,8 @@ class NaturalGeoH2PerformanceModel(GeoH2PerformanceBaseClass):
         init_wh_flow = inputs["initial_wellhead_flow"]
         lifetime = int(inputs["well_lifetime"][0])
         res_size = inputs["gas_reservoir_size"]
-        avg_wh_flow = min(init_wh_flow, res_size / lifetime * 1000 / 8760)
+        n_timesteps = self.options["plant_config"]["plant"]["simulation"]["n_timesteps"]
+        avg_wh_flow = min(init_wh_flow, res_size / lifetime * 1000 / n_timesteps)
 
         # Calculate hydrogen flow out from accumulated gas
         h2_accum = wh_h2_conc / 100 * avg_wh_flow
@@ -83,7 +85,7 @@ class NaturalGeoH2PerformanceModel(GeoH2PerformanceBaseClass):
         # Parse outputs
         outputs["wellhead_h2_conc"] = wh_h2_conc
         outputs["lifetime_wellhead_flow"] = avg_wh_flow
-        outputs["hydrogen_accumulated"] = h2_accum
+        outputs["hydrogen_accumulated"] = np.full(n_timesteps, h2_accum)
         outputs["hydrogen_out"] = h2_accum
 
 
