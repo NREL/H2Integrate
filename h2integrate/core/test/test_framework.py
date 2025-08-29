@@ -201,7 +201,9 @@ def test_technology_connections():
     with temp_highlevel_yaml.open("w") as f:
         yaml.safe_dump(highlevel_data, f)
 
-    H2IntegrateModel(temp_highlevel_yaml)
+    h2i_model = H2IntegrateModel(temp_highlevel_yaml)
+
+    h2i_model.run()
 
     # Clean up temporary YAML files
     temp_plant_config.unlink(missing_ok=True)
