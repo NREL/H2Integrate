@@ -512,10 +512,15 @@ class H2IntegrateModel:
             elif len(connection) == 3:
                 # connect directly from source to dest
                 source_tech, dest_tech, connected_parameter = connection
-
-                self.plant.connect(
-                    f"{source_tech}.{connected_parameter}", f"{dest_tech}.{connected_parameter}"
-                )
+                if isinstance(connected_parameter, (tuple, list)):
+                    source_parameter, dest_parameter = connected_parameter
+                    self.plant.connect(
+                        f"{source_tech}.{source_parameter}", f"{dest_tech}.{dest_parameter}"
+                    )
+                else:
+                    self.plant.connect(
+                        f"{source_tech}.{connected_parameter}", f"{dest_tech}.{connected_parameter}"
+                    )
 
             else:
                 err_msg = f"Invalid connection: {connection}"
