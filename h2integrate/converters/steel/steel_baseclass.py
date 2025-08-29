@@ -10,13 +10,10 @@ class SteelPerformanceBaseClass(om.ExplicitComponent):
         self.options.declare("tech_config", types=dict)
 
     def setup(self):
-        self.add_input(
-            "electricity_in", val=0.0, shape_by_conn=True, copy_shape="steel", units="kW"
-        )
-        self.add_input("hydrogen_in", val=0.0, shape_by_conn=True, copy_shape="steel", units="kg/h")
-        self.add_output(
-            "steel", val=0.0, shape_by_conn=True, copy_shape="electricity_in", units="t/year"
-        )
+        n_timesteps = self.options["plant_config"]["plant"]["simulation"]["n_timesteps"]
+        self.add_input("electricity_in", val=0.0, shape=n_timesteps, units="kW")
+        self.add_input("hydrogen_in", val=0.0, shape=n_timesteps, units="kg/h")
+        self.add_output("steel", val=0.0, shape=n_timesteps, units="t/year")
 
     def compute(self, inputs, outputs):
         """
@@ -35,6 +32,9 @@ class SteelCostBaseClass(CostModelBaseClass):
         self.add_input("plant_capacity_mtpy", val=0.0, units="t/year", desc="Annual plant capacity")
         self.add_input("plant_capacity_factor", val=0.0, units=None, desc="Capacity factor")
         self.add_input("LCOH", val=0.0, units="USD/kg", desc="Levelized cost of hydrogen")
+        self.add_input(
+            "electricity_cost", val=0.0, units="USD/MW/h", desc="Levelized cost of electricity"
+        )
 
 
 class SteelFinanceBaseClass(om.ExplicitComponent):

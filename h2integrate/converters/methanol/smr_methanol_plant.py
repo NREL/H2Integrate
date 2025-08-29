@@ -43,6 +43,7 @@ class SMRMethanolPlantPerformanceModel(MethanolPerformanceBaseClass):
     """
 
     def setup(self):
+        n_timesteps = self.options["plant_config"]["plant"]["simulation"]["n_timesteps"]
         self.config = SMRPerformanceConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance")
         )
@@ -60,20 +61,23 @@ class SMRMethanolPlantPerformanceModel(MethanolPerformanceBaseClass):
 
         # Set up feedstock supply inputs - can be replaced by connections
         meoh_cap = self.config.plant_capacity_kgpy
-        meoh_max_out = np.ones(8760) * meoh_cap / 8760
+        meoh_max_out = np.ones(n_timesteps) * meoh_cap / n_timesteps
         self.add_input("meoh_syn_cat_in", units="ft**3/yr", val=syn_ratio * np.sum(meoh_max_out))
         self.add_input("meoh_atr_cat_in", units="ft**3/yr", val=atr_ratio * np.sum(meoh_max_out))
-        self.add_input("ng_in", shape=8760, units="kg/h", val=ng_ratio * np.sum(meoh_max_out))
+        self.add_input(
+            "ng_in", shape=n_timesteps, units="kg/h", val=ng_ratio * np.sum(meoh_max_out)
+        )
 
         # Set up feedstock consumption outputs
         self.add_output("meoh_syn_cat_consume", units="ft**3/yr")
         self.add_output("meoh_atr_cat_consume", units="ft**3/yr")
-        self.add_output("ng_consume", shape=8760, units="kg/h")
+        self.add_output("ng_consume", shape=n_timesteps, units="kg/h")
 
         # Set up electricity production output
-        self.add_output("electricity_out", shape=8760, units="kW*h/h")
+        self.add_output("electricity_out", shape=n_timesteps, units="kW*h/h")
 
     def compute(self, inputs, outputs):
+        n_timesteps = len(inputs["ng_in"])
         # Calculate max methanol production from each input
         syn_in = inputs["meoh_syn_cat_in"]
         atr_in = inputs["meoh_atr_cat_in"]
@@ -81,13 +85,13 @@ class SMRMethanolPlantPerformanceModel(MethanolPerformanceBaseClass):
         syn_ratio = inputs["meoh_syn_cat_consume_ratio"]
         atr_ratio = inputs["meoh_atr_cat_consume_ratio"]
         ng_ratio = inputs["ng_consume_ratio"]
-        meoh_from_syn = np.ones(8760) * syn_in / syn_ratio / 8760
-        meoh_from_atr = np.ones(8760) * atr_in / atr_ratio / 8760
+        meoh_from_syn = np.ones(n_timesteps) * syn_in / syn_ratio / n_timesteps
+        meoh_from_atr = np.ones(n_timesteps) * atr_in / atr_ratio / n_timesteps
         meoh_from_ng = ng_in / ng_ratio
 
         # Limiting methanol production per hour
         meoh_prod = np.minimum.reduce([meoh_from_syn, meoh_from_atr, meoh_from_ng])
-        meoh_cap = np.ones(8760) * inputs["plant_capacity_kgpy"] / 8760
+        meoh_cap = np.ones(n_timesteps) * inputs["plant_capacity_kgpy"] / n_timesteps
         meoh_prod = np.minimum.reduce([meoh_prod, meoh_cap])
 
         # Get co-product ratio0
@@ -136,12 +140,13 @@ class SMRMethanolPlantCostModel(MethanolCostBaseClass):
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost")
         )
         super().setup()
+        n_timesteps = self.options["plant_config"]["plant"]["simulation"]["n_timesteps"]
 
         self.add_input("ng_lhv", units="MJ/kg", val=self.config.ng_lhv)
         self.add_input("meoh_syn_cat_consume", units="ft**3/yr")
         self.add_input("meoh_atr_cat_consume", units="ft**3/yr")
-        self.add_input("ng_consume", shape=8760, units="kg/h")
-        self.add_input("electricity_out", shape=8760, units="kW*h/h")
+        self.add_input("ng_consume", shape=n_timesteps, units="kg/h")
+        self.add_input("electricity_out", shape=n_timesteps, units="kW*h/h")
         self.add_input("meoh_syn_cat_price", units="USD/ft**3", val=self.config.meoh_syn_cat_price)
         self.add_input("meoh_atr_cat_price", units="USD/ft**3", val=self.config.meoh_atr_cat_price)
         self.add_input(

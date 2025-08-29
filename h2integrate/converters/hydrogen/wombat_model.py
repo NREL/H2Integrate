@@ -91,7 +91,7 @@ class WOMBATElectrolyzerModel(ECOElectrolyzerPerformanceModel):
             random_seed=314,
         )
 
-        # The "until" parameter is set to 8760 to simulate one year of operation.
+        # WOMBAT expects 8760 hours to simulate one year of operation.
         sim.run(delete_logs=True, save_metrics_inputs=False, until=8760)
 
         scaling_factor = rating_from_config  # The baseline electrolyzer in WOMBAT is 1MW

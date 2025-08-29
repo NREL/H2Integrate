@@ -84,6 +84,8 @@ class OAEPerformanceModel(MarineCarbonCapturePerformanceBaseClass):
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance")
         )
         super().setup()
+        n_timesteps = self.options["plant_config"]["plant"]["simulation"]["n_timesteps"]
+
         self.add_output(
             "plant_mCC_capacity_mtph",
             val=0.0,
@@ -92,46 +94,46 @@ class OAEPerformanceModel(MarineCarbonCapturePerformanceBaseClass):
         )
         self.add_output(
             "alkaline_seawater_flow_rate",
-            shape=8760,
+            shape=n_timesteps,
             val=0.0,
             units="m**3/s",
             desc="Alkaline seawater flow rate (m³/s)",
         )
         self.add_output(
-            "alkaline_seawater_pH", val=0.0, shape=8760, desc="pH of the alkaline seawater"
+            "alkaline_seawater_pH", val=0.0, shape=n_timesteps, desc="pH of the alkaline seawater"
         )
         self.add_output(
             "alkaline_seawater_dic",
             val=0.0,
-            shape=8760,
+            shape=n_timesteps,
             units="mol/L",
             desc="Dissolved inorganic carbon concentration in the alkaline seawater",
         )
         self.add_output(
             "alkaline_seawater_ta",
             val=0.0,
-            shape=8760,
+            shape=n_timesteps,
             units="mol/L",
             desc="Total alkalinity of the alkaline seawater",
         )
         self.add_output(
             "alkaline_seawater_salinity",
             val=0.0,
-            shape=8760,
+            shape=n_timesteps,
             units="ppt",
             desc="Salinity of the alkaline seawater",
         )
         self.add_output(
             "alkaline_seawater_temp",
             val=0.0,
-            shape=8760,
+            shape=n_timesteps,
             units="C",
             desc="Temperature of the alkaline seawater (°C)",
         )
         self.add_output(
             "excess_acid",
             val=0.0,
-            shape=8760,
+            shape=n_timesteps,
             units="m**3",
             desc="Excess acid produced (m³)",
         )
@@ -174,7 +176,7 @@ class OAEPerformanceModel(MarineCarbonCapturePerformanceBaseClass):
         self.add_output(
             "excess_energy",
             val=0.0,
-            shape=8760,
+            shape=n_timesteps,
             units="W",
             desc="Excess energy unused by OAE system (W)",
         )
@@ -356,7 +358,7 @@ class OAECostAndFinancialModel(MarineCarbonCaptureCostBaseClass):
         else:
             self.config = OAECostModelConfig.from_dict(data={})
         super().setup()
-
+        n_timesteps = self.options["plant_config"]["plant"]["simulation"]["n_timesteps"]
         self.add_input(
             "LCOE",
             val=0.0,
@@ -372,7 +374,7 @@ class OAECostAndFinancialModel(MarineCarbonCaptureCostBaseClass):
         self.add_input(
             "excess_energy",
             val=0.0,
-            shape=8760,
+            shape=n_timesteps,
             units="W",
             desc="Excess energy unused by OAE system (W)",
         )
