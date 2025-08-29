@@ -67,33 +67,18 @@ class SimpleASUPerformanceModel(om.ExplicitComponent):
         self.options.declare("driver_config", types=dict)
 
     def setup(self):
+        n_timesteps = self.options["plant_config"]["plant"]["simulation"]["n_timesteps"]
         self.config = SimpleASUPerformanceConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance")
         )
         if self.config.size_from_N2_demand:
-            shp_cpy = "nitrogen_in"
-            self.add_input(
-                "nitrogen_in",
-                val=0.0,
-                shape_by_conn=True,
-                copy_shape="nitrogen_out",
-                units="kg/h",
-            )
-            self.add_output(
-                "electricity_in", val=0.0, shape_by_conn=True, copy_shape=shp_cpy, units="kW"
-            )
+            self.add_input("nitrogen_in", val=0.0, shape=n_timesteps, units="kg/h")
+            self.add_output("electricity_in", val=0.0, shape=n_timesteps, units="kW")
 
         else:
-            shp_cpy = "electricity_in"
-            self.add_input(
-                "electricity_in",
-                val=0.0,
-                shape_by_conn=True,
-                copy_shape="nitrogen_out",
-                units="kW",
-            )
+            self.add_input("electricity_in", val=0.0, shape=n_timesteps, units="kW")
 
-        self.add_output("air_in", val=0.0, shape_by_conn=True, copy_shape=shp_cpy, units="kg/h")
+        self.add_output("air_in", val=0.0, shape=n_timesteps, units="kg/h")
         self.add_output("ASU_capacity_kW", val=0.0, units="kW", desc="ASU rated capacity in kW")
         self.add_output(
             "rated_N2_kg_pr_hr", val=0.0, units="kg/h", desc="ASU rated capacity in kg-N2/hour"
@@ -124,13 +109,9 @@ class SimpleASUPerformanceModel(om.ExplicitComponent):
             desc="ASU annual nitrogen production in kg-N2/year",
         )
 
-        self.add_output(
-            "nitrogen_out", val=0.0, shape_by_conn=True, copy_shape=shp_cpy, units="kg/h"
-        )
-
-        self.add_output("oxygen_out", val=0.0, shape_by_conn=True, copy_shape=shp_cpy, units="kg/h")
-
-        self.add_output("argon_out", val=0.0, shape_by_conn=True, copy_shape=shp_cpy, units="kg/h")
+        self.add_output("nitrogen_out", val=0.0, shape=n_timesteps, units="kg/h")
+        self.add_output("oxygen_out", val=0.0, shape=n_timesteps, units="kg/h")
+        self.add_output("argon_out", val=0.0, shape=n_timesteps, units="kg/h")
 
     def compute(self, inputs, outputs):
         """Calculate the amount of N2 that can be produced and the amount of feedstocks required

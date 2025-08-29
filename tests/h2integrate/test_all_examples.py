@@ -6,15 +6,13 @@ from pathlib import Path
 import pytest
 import openmdao.api as om
 
+from h2integrate import EXAMPLE_DIR
 from h2integrate.core.h2integrate_model import H2IntegrateModel
-
-
-examples_dir = Path(__file__).resolve().parent.parent.parent / "examples/."
 
 
 def test_steel_example(subtests):
     # Change the current working directory to the example's directory
-    os.chdir(examples_dir / "01_onshore_steel_mn")
+    os.chdir(EXAMPLE_DIR / "01_onshore_steel_mn")
 
     # Create a H2Integrate model
     model = H2IntegrateModel(Path.cwd() / "01_onshore_steel_mn.yaml")
@@ -58,7 +56,7 @@ def test_steel_example(subtests):
 
 def test_simple_ammonia_example(subtests):
     # Change the current working directory to the example's directory
-    os.chdir(examples_dir / "02_texas_ammonia")
+    os.chdir(EXAMPLE_DIR / "02_texas_ammonia")
 
     # Create a H2Integrate model
     model = H2IntegrateModel(Path.cwd() / "02_texas_ammonia.yaml")
@@ -143,7 +141,7 @@ def test_simple_ammonia_example(subtests):
 
 def test_ammonia_synloop_example(subtests):
     # Change the current working directory to the example's directory
-    os.chdir(examples_dir / "12_ammonia_synloop")
+    os.chdir(EXAMPLE_DIR / "12_ammonia_synloop")
 
     # Create a H2Integrate model
     model = H2IntegrateModel(Path.cwd() / "12_ammonia_synloop.yaml")
@@ -215,7 +213,7 @@ def test_ammonia_synloop_example(subtests):
 
 def test_smr_methanol_example(subtests):
     # Change the current working directory to the SMR example's directory
-    os.chdir(examples_dir / "03_methanol" / "smr")
+    os.chdir(EXAMPLE_DIR / "03_methanol" / "smr")
 
     # Create a H2Integrate model
     model = H2IntegrateModel(Path.cwd() / "03_smr_methanol.yaml")
@@ -232,7 +230,7 @@ def test_smr_methanol_example(subtests):
 
 def test_co2h_methanol_example(subtests):
     # Change the current working directory to the CO2 Hydrogenation example's directory
-    os.chdir(examples_dir / "03_methanol" / "co2_hydrogenation")
+    os.chdir(EXAMPLE_DIR / "03_methanol" / "co2_hydrogenation")
 
     # Create a H2Integrate model
     model = H2IntegrateModel(Path.cwd() / "03_co2h_methanol.yaml")
@@ -249,7 +247,7 @@ def test_co2h_methanol_example(subtests):
 
 def test_wind_h2_opt_example(subtests):
     # Change the current working directory to the example's directory
-    os.chdir(examples_dir / "05_wind_h2_opt")
+    os.chdir(EXAMPLE_DIR / "05_wind_h2_opt")
 
     # Run without optimization
     model_init = H2IntegrateModel(Path.cwd() / "wind_plant_electrolyzer0.yaml")
@@ -335,7 +333,7 @@ def test_wind_h2_opt_example(subtests):
 
 def test_paper_example(subtests):
     # Change the current working directory to the example's directory
-    os.chdir(examples_dir / "06_custom_tech")
+    os.chdir(EXAMPLE_DIR / "06_custom_tech")
 
     # Create a H2Integrate model
     model = H2IntegrateModel(Path.cwd() / "wind_plant_paper.yaml")
@@ -358,7 +356,7 @@ def test_paper_example(subtests):
 @unittest.skipUnless(importlib.util.find_spec("mcm") is not None, "mcm is not installed")
 def test_wind_wave_doc_example(subtests):
     # Change the current working directory to the example's directory
-    os.chdir(examples_dir / "09_co2/direct_ocean_capture")
+    os.chdir(EXAMPLE_DIR / "09_co2/direct_ocean_capture")
 
     # Create a H2Integrate model
     model = H2IntegrateModel(Path.cwd() / "offshore_plant_doc.yaml")
@@ -384,7 +382,7 @@ def test_wind_wave_doc_example(subtests):
 
 def test_hydro_example(subtests):
     # Change the current working directory to the example's directory
-    os.chdir(examples_dir / "07_run_of_river_plant")
+    os.chdir(EXAMPLE_DIR / "07_run_of_river_plant")
 
     # Create a H2Integrate model
     model = H2IntegrateModel(Path.cwd() / "07_run_of_river.yaml")
@@ -406,7 +404,7 @@ def test_hydro_example(subtests):
 
 def test_hybrid_energy_plant_example(subtests):
     # Change the current working directory to the example's directory
-    os.chdir(examples_dir / "11_hybrid_energy_plant")
+    os.chdir(EXAMPLE_DIR / "11_hybrid_energy_plant")
 
     # Create a H2Integrate model
     model = H2IntegrateModel(Path.cwd() / "wind_pv_battery.yaml")
@@ -423,7 +421,7 @@ def test_hybrid_energy_plant_example(subtests):
 
 def test_asu_example(subtests):
     # Change the current working directory to the example's directory
-    os.chdir(examples_dir / "13_air_separator")
+    os.chdir(EXAMPLE_DIR / "13_air_separator")
 
     # Create a H2Integrate model
     model = H2IntegrateModel(Path.cwd() / "13_air_separator.yaml")
@@ -446,7 +444,7 @@ def test_asu_example(subtests):
 
 def test_hydrogen_dispatch_example(subtests):
     # Change the current working directory to the example's directory
-    os.chdir(examples_dir / "14_wind_hydrogen_dispatch")
+    os.chdir(EXAMPLE_DIR / "14_wind_hydrogen_dispatch")
 
     # Create a H2Integrate model
     model = H2IntegrateModel(Path.cwd() / "inputs" / "h2i_wind_to_h2_storage.yaml")
@@ -477,7 +475,7 @@ def test_hydrogen_dispatch_example(subtests):
 @unittest.skipUnless(importlib.util.find_spec("mcm") is not None, "mcm is not installed")
 def test_wind_wave_oae_example(subtests):
     # Change the current working directory to the example's directory
-    os.chdir(examples_dir / "09_co2/ocean_alkalinity_enhancement")
+    os.chdir(EXAMPLE_DIR / "09_co2/ocean_alkalinity_enhancement")
 
     # Create a H2Integrate model
     model = H2IntegrateModel(Path.cwd() / "offshore_plant_oae.yaml")
@@ -502,7 +500,7 @@ def test_wind_wave_oae_example(subtests):
 @unittest.skipUnless(importlib.util.find_spec("mcm") is not None, "mcm is not installed")
 def test_wind_wave_oae_example_with_financials(subtests):
     # Change the current working directory to the example's directory
-    os.chdir(examples_dir / "09_co2/ocean_alkalinity_enhancement_financials")
+    os.chdir(EXAMPLE_DIR / "09_co2/ocean_alkalinity_enhancement_financials")
 
     # Create a H2Integrate model
     model = H2IntegrateModel(Path.cwd() / "offshore_plant_oae.yaml")
@@ -526,12 +524,13 @@ def test_wind_wave_oae_example_with_financials(subtests):
 
 def test_natural_gas_example(subtests):
     # Change the current working directory to the example's directory
-    os.chdir(examples_dir / "16_natural_gas")
+    os.chdir(EXAMPLE_DIR / "16_natural_gas")
 
     # Create a H2Integrate model
     model = H2IntegrateModel(Path.cwd() / "natgas.yaml")
 
     # Run the model
+
     model.run()
 
     model.post_process()
@@ -606,3 +605,43 @@ def test_natural_gas_example(subtests):
         ng_consumed = model.prob.get_val("ng_feedstock.natural_gas_consumed")
         expected_opex = 4.2 * ng_consumed.sum()  # price = 4.2 $/MMBtu
         assert pytest.approx(ng_opex, rel=1e-6) == expected_opex
+
+
+def test_wind_solar_electrolyzer_example(subtests):
+    # Change the current working directory to the example's directory
+    os.chdir(EXAMPLE_DIR / "15_wind_solar_electrolyzer")
+
+    # Create a H2Integrate model
+    model = H2IntegrateModel(Path.cwd() / "15_wind_solar_electrolyzer.yaml")
+    model.run()
+
+    model.post_process()
+    with subtests.test("Check LCOE"):
+        assert (
+            pytest.approx(
+                model.prob.get_val("financials_group_default.LCOE", units="USD/MW/h")[0],
+                rel=1e-5,
+            )
+            == 54.12889
+        )
+
+    with subtests.test("Check LCOH"):
+        assert (
+            pytest.approx(
+                model.prob.get_val("financials_group_default.LCOH", units="USD/kg")[0],
+                rel=1e-5,
+            )
+            == 5.33209234
+        )
+
+    wind_generation = model.prob.get_val("wind.electricity_out", units="kW")
+    solar_generation = model.prob.get_val("solar.electricity_out", units="kW")
+    total_generation = model.prob.get_val("combiner_performance.electricity_out", units="kW")
+    total_energy_to_electrolyzer = model.prob.get_val("electrolyzer.electricity_in", units="kW")
+    with subtests.test("Check combiner output"):
+        assert (
+            pytest.approx(wind_generation.sum() + solar_generation.sum(), rel=1e-5)
+            == total_generation.sum()
+        )
+    with subtests.test("Check electrolyzer input power"):
+        assert pytest.approx(total_generation.sum(), rel=1e-5) == total_energy_to_electrolyzer.sum()

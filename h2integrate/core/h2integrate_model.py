@@ -338,7 +338,7 @@ class H2IntegrateModel:
             for tech in electricity_producing_techs:
                 if tech in tech_configs:
                     commodity_types.append("electricity")
-                    continue
+                    break
 
             # Steel, methanol provides their own financials
             if any(c in commodity_types for c in ("steel", "methanol")):
@@ -483,13 +483,13 @@ class H2IntegrateModel:
 
                 # If the source is a feedstock, make sure to connect the amount of
                 # feedstock consumed from the technology back to the feedstock cost model
-                if "feedstock" in cost_model_name:
+                if cost_model_name is not None and "feedstock" in cost_model_name:
                     self.plant.connect(
                         f"{dest_tech}.{transport_item}_consumed",
                         f"{source_tech}.{transport_item}_consumed",
                     )
 
-                if "feedstock" in perf_model_name:
+                if perf_model_name is not None and "feedstock" in perf_model_name:
                     source_tech = f"{source_tech}_source"
 
                 # Create the transport object
