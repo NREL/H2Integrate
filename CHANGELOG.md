@@ -44,6 +44,7 @@
 - Added ability to export ProFAST object to yaml file in `ProFastComp`
 - Added `natural_gas_performance` and `natural_gas_cost` models, allowing for natural gas power plant modeling.
 - Revamped the feedstocks technology group to allow for more precise modeling of feedstock supply chains, including capacity constraints and feedstock amount consumed.
+- Refactored `ProFastComp` and put in a new file (`h2integrate/core/profast_financial.py`). Added flexibility to allow users to specify different financial models.
 
 ## 0.3.0 [May 2 2025]
 
