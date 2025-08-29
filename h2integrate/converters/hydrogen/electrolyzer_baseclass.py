@@ -10,13 +10,10 @@ class ElectrolyzerPerformanceBaseClass(om.ExplicitComponent):
         self.options.declare("tech_config", types=dict)
 
     def setup(self):
+        n_timesteps = self.options["plant_config"]["plant"]["simulation"]["n_timesteps"]
         # Define inputs for electricity and outputs for hydrogen and oxygen generation
-        self.add_input(
-            "electricity_in", val=0.0, shape_by_conn=True, copy_shape="hydrogen_out", units="kW"
-        )
-        self.add_output(
-            "hydrogen_out", val=0.0, shape_by_conn=True, copy_shape="electricity_in", units="kg/h"
-        )
+        self.add_input("electricity_in", val=0.0, shape=n_timesteps, units="kW")
+        self.add_output("hydrogen_out", val=0.0, shape=n_timesteps, units="kg/h")
         self.add_output(
             "time_until_replacement", val=80000.0, units="h", desc="Time until replacement"
         )
@@ -35,9 +32,10 @@ class ElectrolyzerPerformanceBaseClass(om.ExplicitComponent):
 
 class ElectrolyzerCostBaseClass(CostModelBaseClass):
     def setup(self):
+        n_timesteps = self.options["plant_config"]["plant"]["simulation"]["n_timesteps"]
         super().setup()
         self.add_input("total_hydrogen_produced", val=0.0, units="kg/year")
-        self.add_input("electricity_in", val=0.0, shape_by_conn=True, units="kW")
+        self.add_input("electricity_in", val=0.0, shape=n_timesteps, units="kW")
 
 
 class ElectrolyzerFinanceBaseClass(om.ExplicitComponent):

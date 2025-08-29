@@ -39,8 +39,17 @@ class TestOAEPerformanceModel(unittest.TestCase):
             },
         }
 
+        plant_config = {
+            "plant": {
+                "simulation": {
+                    "n_timesteps": 8760,
+                    "dt": 3600,
+                }
+            }
+        }
+
         oae_model = OAEPerformanceModel(
-            driver_config=driver_config, plant_config={}, tech_config=self.config
+            driver_config=driver_config, plant_config=plant_config, tech_config=self.config
         )
         self.prob = om.Problem(model=om.Group())
         self.prob.model.add_subsystem("OAE", oae_model, promotes=["*"])
