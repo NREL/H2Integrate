@@ -45,6 +45,7 @@
 - Added `natural_gas_performance` and `natural_gas_cost` models, allowing for natural gas power plant modeling.
 - Revamped the feedstocks technology group to allow for more precise modeling of feedstock supply chains, including capacity constraints and feedstock amount consumed.
 - Refactored `ProFastComp` and put in a new file (`h2integrate/core/profast_financial.py`). Added flexibility to allow users to specify different financial models.
+- Updated option to pass variables in technology interconnections to allow for different variable names from source to destination in the format `[source_tech, dest_tech, (source_tech_variable, dest_tech_variable)]`
 
 ## 0.3.0 [May 2 2025]
 
