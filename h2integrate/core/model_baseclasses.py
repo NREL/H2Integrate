@@ -20,8 +20,6 @@ class CostModelBaseClass(om.ExplicitComponent):
         self.options.declare("tech_config", types=dict)
 
     def setup(self):
-        self.plant_life = int(self.options["plant_config"]["plant"]["plant_life"])
-
         # Define outputs: CapEx and OpEx costs
         self.add_output("CapEx", val=0.0, units="USD", desc="Capital expenditure")
         self.add_output(

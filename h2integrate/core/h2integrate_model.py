@@ -259,7 +259,7 @@ class H2IntegrateModel:
                         self.financial_models.append(financial_object)
 
         for tech_name, individual_tech_config in self.technology_config["technologies"].items():
-            cost_model = individual_tech_config.get("cost_model", {}).get("model")
+            cost_model = individual_tech_config.get("cost_model", {}).get("model", "")
             if "feedstock" in cost_model:
                 comp = self.supported_models[cost_model](
                     driver_config=self.driver_config,
