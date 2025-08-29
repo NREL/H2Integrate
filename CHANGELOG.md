@@ -43,6 +43,7 @@
 - Add ocean alkalinity enhancement technology model.
 - Refactored `ProFastComp` and put in a new file (`h2integrate/core/profast_financial.py`). Added flexibility to allow users to specify different financial models.
 - Added ability to export ProFAST object to yaml file in `ProFastComp`
+- Updated option to pass variables in technology interconnections to allow for different variable names from source to destination in the format `[source_tech, dest_tech, (source_tech_variable, dest_tech_variable)]`
 
 ## 0.3.0 [May 2 2025]
 
