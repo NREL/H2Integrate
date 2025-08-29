@@ -54,7 +54,6 @@ class FeedstockCostConfig(CostModelBaseConfig):
         price (scalar or list):  The cost of the feedstock in USD/`units`).
             If scalar, cost is assumed to be constant for each timestep and each year.
             If list, then it can be the cost per timestep of the simulation
-            or per year of the plant life.
 
         annual_cost (float, optional): fixed cost associated with the feedstock in USD/year
         start_up_cost (float, optional): one-time capital cost associated with the feedstock in USD.
@@ -64,8 +63,8 @@ class FeedstockCostConfig(CostModelBaseConfig):
     feedstock_type: str = field()
     units: str = field()
     price: int | float | list = field()
-    annual_cost: float = field()
-    start_up_cost: float = field()
+    annual_cost: float = field(default=0.0)
+    start_up_cost: float = field(default=0.0)
 
 
 class FeedstockCostModel(CostModelBaseClass):
@@ -81,7 +80,7 @@ class FeedstockCostModel(CostModelBaseClass):
         self.add_input(
             f"{feedstock_type}_consumed",
             val=0.0,
-            shape=n_timesteps,
+            shape=int(n_timesteps),
             units=self.config.units,
             desc=f"Consumption profile of {feedstock_type}",
         )
