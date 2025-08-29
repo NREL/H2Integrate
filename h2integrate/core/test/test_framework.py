@@ -198,3 +198,49 @@ def test_unsupported_simulation_parameters():
     # Clean up temporary YAML files
     temp_plant_config_ntimesteps.unlink(missing_ok=True)
     temp_plant_config_dt.unlink(missing_ok=True)
+
+def test_technology_connections():
+    os.chdir(examples_dir / "01_onshore_steel_mn")
+
+    # Path to the original plant_config.yaml and high-level yaml in the example directory
+    orig_plant_config = Path.cwd() / "plant_config.yaml"
+    temp_plant_config = Path.cwd() / "temp_plant_config.yaml"
+    orig_highlevel_yaml = Path.cwd() / "01_onshore_steel_mn.yaml"
+    temp_highlevel_yaml = Path.cwd() / "temp_01_onshore_steel_mn.yaml"
+
+    shutil.copy(orig_plant_config, temp_plant_config)
+    shutil.copy(orig_highlevel_yaml, temp_highlevel_yaml)
+
+    # Load the plant_config YAML content
+    plant_config_data = load_plant_yaml(temp_plant_config)
+
+    new_connection = (["financials_group_default", "steel", ("LCOE", "electricity_cost")],)
+    new_tech_interconnections = (
+        plant_config_data["technology_interconnections"][0:4]
+        + list(new_connection)
+        + [plant_config_data["technology_interconnections"][4]]
+    )
+    plant_config_data["technology_interconnections"] = new_tech_interconnections
+
+    # Save the modified tech_config YAML back
+    with temp_plant_config.open("w") as f:
+        yaml.safe_dump(plant_config_data, f)
+
+    # Load the high-level YAML content
+    with temp_highlevel_yaml.open() as f:
+        highlevel_data = yaml.safe_load(f)
+
+    # Modify the high-level YAML to point to the temp tech_config file
+    highlevel_data["plant_config"] = str(temp_plant_config.name)
+
+    # Save the modified high-level YAML back
+    with temp_highlevel_yaml.open("w") as f:
+        yaml.safe_dump(highlevel_data, f)
+
+    h2i_model = H2IntegrateModel(temp_highlevel_yaml)
+
+    h2i_model.run()
+
+    # Clean up temporary YAML files
+    temp_plant_config.unlink(missing_ok=True)
+    temp_highlevel_yaml.unlink(missing_ok=True)
