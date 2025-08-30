@@ -28,9 +28,9 @@ site:
 # this will naturally grow as we mature the interconnected tech
 technology_interconnections: [
   # ["hopp", "electrolyzer", "electricity", "cable"],
-  ["wind", "combiner_performance", "electricity", "cable"], #source_tech, dest_tech, transport_item, transport_type = connection
-  ["solar", "combiner_performance", "electricity", "cable"],
-  ["combiner_performance","electrolyzer","electricity","cable"],
+  ["wind", "combiner", "electricity", "cable"], #source_tech, dest_tech, transport_item, transport_type = connection
+  ["solar", "combiner", "electricity", "cable"],
+  ["combiner","electrolyzer","electricity","cable"],
 ]
 
 plant:
