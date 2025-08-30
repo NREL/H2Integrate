@@ -496,9 +496,9 @@ class H2IntegrateModel:
                         f"{connection_name}.{transport_item}_in",
                     )
 
-                # Check if the destination technology is a combiner
+                # Check if the transport type is a combiner
                 if "combiner" in dest_tech:
-                    # Connect the connection component to the destination technology
+                    # Connect the source technology to the connection component
                     # with specific input names
                     if dest_tech not in combiner_counts:
                         combiner_counts[dest_tech] = 1
@@ -508,7 +508,7 @@ class H2IntegrateModel:
                     # Connect the connection component to the destination technology
                     self.plant.connect(
                         f"{connection_name}.{transport_item}_out",
-                        f"{dest_tech}.electricity_input{combiner_counts[dest_tech]}",
+                        f"{dest_tech}.electricity_in{combiner_counts[dest_tech]}",
                     )
 
                 elif "storage" in dest_tech:
