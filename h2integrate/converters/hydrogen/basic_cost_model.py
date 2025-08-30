@@ -73,7 +73,7 @@ class BasicElectrolyzerCostModel(ElectrolyzerCostBaseClass):
             self.config.time_between_replacement,
             electrolyzer_size_mw,
             useful_life,
-            inputs["electricity"],
+            inputs["electricity_in"],
             total_hydrogen_produced,
             0.0,
             0.0,

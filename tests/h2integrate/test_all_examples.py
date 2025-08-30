@@ -380,6 +380,39 @@ def test_wind_wave_doc_example(subtests):
         )
 
 
+@unittest.skipUnless(importlib.util.find_spec("mcm") is not None, "mcm is not installed")
+def test_splitter_wind_doc_h2_example(subtests):
+    # Change the current working directory to the example's directory
+    os.chdir(EXAMPLE_DIR / "17_splitter_wind_doc_h2")
+
+    # Create a H2Integrate model
+    model = H2IntegrateModel(Path.cwd() / "offshore_plant_splitter_doc_h2.yaml")
+
+    # Run the model
+    model.run()
+
+    model.post_process()
+
+    # Subtests for checking specific values
+    with subtests.test("Check LCOH"):
+        assert (
+            pytest.approx(model.prob.get_val("financials_group_default.LCOH")[0], rel=1e-3)
+            == 10.25515911
+        )
+
+    with subtests.test("Check LCOC"):
+        assert (
+            pytest.approx(model.prob.get_val("financials_group_default.LCOC")[0], rel=1e-3)
+            == 14.19802243
+        )
+
+    with subtests.test("Check LCOE"):
+        assert (
+            pytest.approx(model.prob.get_val("financials_group_default.LCOE")[0], rel=1e-3)
+            == 0.1385128
+        )
+
+
 def test_hydro_example(subtests):
     # Change the current working directory to the example's directory
     os.chdir(EXAMPLE_DIR / "07_run_of_river_plant")
@@ -636,7 +669,7 @@ def test_wind_solar_electrolyzer_example(subtests):
 
     wind_generation = model.prob.get_val("wind.electricity_out", units="kW")
     solar_generation = model.prob.get_val("solar.electricity_out", units="kW")
-    total_generation = model.prob.get_val("combiner_performance.electricity_out", units="kW")
+    total_generation = model.prob.get_val("combiner.electricity_out", units="kW")
     total_energy_to_electrolyzer = model.prob.get_val("electrolyzer.electricity_in", units="kW")
     with subtests.test("Check combiner output"):
         assert (
