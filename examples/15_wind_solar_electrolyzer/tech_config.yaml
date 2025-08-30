@@ -65,7 +65,7 @@ technologies:
         capex_per_kWac: 1193
         opex_per_kWac_per_year: 18
         cost_year: 2024
-  combiner_performance:
+  combiner:
     performance_model:
       model: "combiner_performance"
   electrolyzer:
