@@ -586,7 +586,7 @@ def test_wind_solar_electrolyzer_example(subtests):
 
     wind_generation = model.prob.get_val("wind.electricity_out", units="kW")
     solar_generation = model.prob.get_val("solar.electricity_out", units="kW")
-    total_generation = model.prob.get_val("combiner_performance.electricity_out", units="kW")
+    total_generation = model.prob.get_val("combiner.electricity_out", units="kW")
     total_energy_to_electrolyzer = model.prob.get_val("electrolyzer.electricity_in", units="kW")
     with subtests.test("Check combiner output"):
         assert (
