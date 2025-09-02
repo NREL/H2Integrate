@@ -209,7 +209,7 @@ def test_variable_om_with_escalation(subtests):
     with subtests.test("Check variable o&m as scalar LCOH against original LCOH with escalation"):
         assert sol_scalar["price"] > sol_init["price"]
 
-    with subtests.test("Check variable o&m as scalar LCOH with zero escalation value"):
+    with subtests.test("Check variable o&m as scalar LCOH with escalation value"):
         assert pytest.approx(sol_scalar["price"], rel=1e-3) == 3.2366755610647453
 
     # calculate water cost per kg-H2 and format for costs per year
@@ -235,8 +235,8 @@ def test_variable_om_with_escalation(subtests):
     with subtests.test("Check variable o&m as array LCOH against original LCOH with escalation"):
         assert sol_list["price"] > sol_init["price"]
 
-    with subtests.test("Check variable o&m as array LCOH with zero escalation value"):
-        assert pytest.approx(sol_list["price"], rel=1e-3) == 3.2366755610647453
+    with subtests.test("Check variable o&m as array LCOH with escalation value"):
+        assert pytest.approx(sol_list["price"], rel=1e-3) == 3.23328899520
 
-    with subtests.test("Check variable o&m as scalar and as array have same LCOH with escalation"):
-        assert pytest.approx(sol_list["price"], rel=1e-3) == sol_scalar["price"]
+    with subtests.test("Check variable o&m as array LCOH is less than variable o&m as scalar LCOH"):
+        assert sol_scalar["price"] > sol_list["price"]
