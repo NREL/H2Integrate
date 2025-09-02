@@ -1,5 +1,5 @@
 name: Gauss
-description: Three turbines using Gauss model
+description: Wind plant
 floris_version: v4.0.0
 logging:
   console:

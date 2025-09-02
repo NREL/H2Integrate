@@ -128,6 +128,18 @@ def test_simple_ammonia_example(subtests):
             == 1.02470046
         )
 
+    # Check that the expected output files exist
+    outputs_dir = Path.cwd() / "outputs"
+    assert (
+        outputs_dir / "profast_output_ammonia.yaml"
+    ).is_file(), "profast_output_ammonia.yaml not found"
+    assert (
+        outputs_dir / "profast_output_electricity.yaml"
+    ).is_file(), "profast_output_electricity.yaml not found"
+    assert (
+        outputs_dir / "profast_output_hydrogen.yaml"
+    ).is_file(), "profast_output_hydrogen.yaml not found"
+
 
 def test_ammonia_synloop_example(subtests):
     # Change the current working directory to the example's directory
@@ -346,7 +358,7 @@ def test_paper_example(subtests):
 @unittest.skipUnless(importlib.util.find_spec("mcm") is not None, "mcm is not installed")
 def test_wind_wave_doc_example(subtests):
     # Change the current working directory to the example's directory
-    os.chdir(examples_dir / "09_wind_wave_doc")
+    os.chdir(examples_dir / "09_co2/direct_ocean_capture")
 
     # Create a H2Integrate model
     model = H2IntegrateModel(Path.cwd() / "offshore_plant_doc.yaml")
@@ -460,3 +472,53 @@ def test_hydrogen_dispatch_example(subtests):
             )
             == 5.68452215
         )
+
+
+@unittest.skipUnless(importlib.util.find_spec("mcm") is not None, "mcm is not installed")
+def test_wind_wave_oae_example(subtests):
+    # Change the current working directory to the example's directory
+    os.chdir(examples_dir / "09_co2/ocean_alkalinity_enhancement")
+
+    # Create a H2Integrate model
+    model = H2IntegrateModel(Path.cwd() / "offshore_plant_oae.yaml")
+
+    # Run the model
+    model.run()
+
+    model.post_process()
+
+    # Subtests for checking specific values
+    # Note: These are placeholder values. Update with actual values after running the test
+    # when MCM package is properly installed and configured
+    with subtests.test("Check LCOC"):
+        assert pytest.approx(model.prob.get_val("financials_group_default.LCOC"), rel=1e-3) == 37.82
+
+    with subtests.test("Check LCOE"):
+        assert (
+            pytest.approx(model.prob.get_val("financials_group_default.LCOE"), rel=1e-3) == 0.36956
+        )
+
+
+@unittest.skipUnless(importlib.util.find_spec("mcm") is not None, "mcm is not installed")
+def test_wind_wave_oae_example_with_financials(subtests):
+    # Change the current working directory to the example's directory
+    os.chdir(examples_dir / "09_co2/ocean_alkalinity_enhancement_financials")
+
+    # Create a H2Integrate model
+    model = H2IntegrateModel(Path.cwd() / "offshore_plant_oae.yaml")
+
+    # Run the model
+    model.run()
+
+    model.post_process()
+
+    # Subtests for checking specific values
+    # Note: These are placeholder values. Update with actual values after running the test
+    # when MCM package is properly installed and configured
+    with subtests.test("Check LCOE"):
+        assert (
+            pytest.approx(model.prob.get_val("financials_group_default.LCOE"), rel=1e-3) == 0.09180
+        )
+
+    with subtests.test("Check Carbon Credit"):
+        assert pytest.approx(model.prob.get_val("oae.carbon_credit_value"), rel=1e-3) == 569.5
