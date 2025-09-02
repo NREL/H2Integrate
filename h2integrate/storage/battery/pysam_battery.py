@@ -170,11 +170,12 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass, CostModelBaseCla
         # create inputs for pyomo control model
         if "tech_to_dispatch_connections" in self.options["plant_config"]:
             # get technology group name
-            self.tech_group_name = self.pathname.split(".")[-2]
+            # TODO: The split below seems brittle
+            self.tech_group_name = self.pathname.split(".")
             for _source_tech, intended_dispatch_tech in self.options["plant_config"][
                 "tech_to_dispatch_connections"
             ]:
-                if intended_dispatch_tech == self.tech_group_name:
+                if any(intended_dispatch_tech in name for name in self.tech_group_name):
                     self.add_discrete_input("pyomo_dispatch_solver", val=dummy_function)
                     break
 
@@ -232,7 +233,6 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass, CostModelBaseCla
                 ):
                     getattr(self.outputs, attr)[sim_start_index + t] = self.system_model.value(attr)
 
-
     def size_batterystateful(
             self,
             desired_capacity,
@@ -279,7 +279,6 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass, CostModelBaseCla
 
         self.system_model.ParamsPack.mass = thermal_outputs['mass']
         self.system_model.ParamsPack.surface_area = thermal_outputs['surface_area']
-
 
     def calculate_thermal_params(self, input_dict):
         """Calculates the mass and surface area of a battery by calculating from its current
@@ -335,7 +334,6 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass, CostModelBaseCla
             output_dict['surface_area'] = module_surface_area*desired_capacity/module_capacity
 
         return output_dict
-
 
     def _set_control_mode(
             self,

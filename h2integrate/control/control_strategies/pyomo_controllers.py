@@ -73,13 +73,15 @@ class PyomoControllerBaseClass(ControllerBaseClass):
             self.demand_profile = [self.demand_profile] * self.config.n_timesteps
 
         # get technology group name
-        self.tech_group_name = self.pathname.split(".")[-2]
+        # TODO: Make this more general, right now it might go astray if for example "battery" is
+        # used twice in an OpenMDAO subsystem pathname
+        self.tech_group_name = self.pathname.split(".")
 
         # create inputs for all pyomo object creation functions from all connected technologies
         self.dispatch_connections = self.options["plant_config"]["tech_to_dispatch_connections"]
         for connection in self.dispatch_connections:
             source_tech, intended_dispatch_tech = connection
-            if intended_dispatch_tech == self.tech_group_name:
+            if any(intended_dispatch_tech in name for name in self.tech_group_name):
                 if source_tech == intended_dispatch_tech:
                     # When getting rules for the same tech, the tech name is not used in order to
                     # allow for automatic connections rather than complicating the h2i model set up
@@ -111,7 +113,7 @@ class PyomoControllerBaseClass(ControllerBaseClass):
         # run each pyomo rule set up function for each technology
         for connection in self.dispatch_connections:
             source_tech, intended_dispatch_tech = connection
-            if intended_dispatch_tech == self.tech_group_name:
+            if any(intended_dispatch_tech in name for name in self.tech_group_name):
                 if source_tech == intended_dispatch_tech:
                     dispatch_block_rule_function = discrete_inputs["dispatch_block_rule_function"]
                 else:
@@ -144,6 +146,7 @@ class PyomoControllerBaseClass(ControllerBaseClass):
                     self.set_fixed_dispatch(
                         inputs[self.config.resource_name + "_in"][t:t + self.config.n_control_window],
                         self.config.grid_limit,
+                        self.demand_profile,
                     )
                 else:
                     # TODO: implement optimized solutions; this is where pyomo_model would be used
@@ -364,7 +367,7 @@ class SimpleBatteryControllerHeuristic(PyomoControllerBaseClass):
             self._system_model.setup()  # TODO: Do I need to re-setup stateful battery?
         self.initial_soc = self._system_model.value("SOC")
 
-    def set_fixed_dispatch(self, gen: list, grid_limit: list):
+    def set_fixed_dispatch(self, gen: list, grid_limit: list, goal_power: list):
         """Sets charge and discharge amount of storage dispatch using fixed_dispatch attribute
             and enforces available generation and grid limits.
 
@@ -696,7 +699,7 @@ class HeuristicLoadFollowingController(SimpleBatteryControllerHeuristic):
 
         super().setup()
 
-    def set_fixed_dispatch(self, gen: list, grid_limit: list):
+    def set_fixed_dispatch(self, gen: list, grid_limit: list, goal_power: list):
         """Sets charge and discharge power of battery dispatch using fixed_dispatch attribute
             and enforces available generation and grid limits.
 
@@ -708,7 +711,7 @@ class HeuristicLoadFollowingController(SimpleBatteryControllerHeuristic):
 
         self.check_gen_grid_limit(gen, grid_limit)
         self._set_power_fraction_limits(gen, grid_limit)
-        self._heuristic_method(gen, grid_limit)
+        self._heuristic_method(gen, goal_power)
         self._fix_dispatch_model_variables()
 
     def _heuristic_method(self, gen, goal_resource):
