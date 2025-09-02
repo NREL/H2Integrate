@@ -93,7 +93,7 @@ def test_variable_om_no_escalation(subtests):
     water_feedstock_entry = {
         "Water": {
             "escalation": inflation_rate,
-            "unit": "$/year",
+            "unit": "$/kg",
             "usage": 1.0,
             "cost": annual_water_cost_USD_per_kg,
         }
@@ -122,7 +122,7 @@ def test_variable_om_no_escalation(subtests):
     water_feedstock_entry = {
         "Water": {
             "escalation": inflation_rate,
-            "unit": "$/year",
+            "unit": "$/kg",
             "usage": 1.0,
             "cost": annual_water_cost_USD_per_year_dict,
         }
@@ -193,7 +193,7 @@ def test_variable_om_with_escalation(subtests):
     water_feedstock_entry = {
         "Water": {
             "escalation": inflation_rate,
-            "unit": "$/year",
+            "unit": "$/kg",
             "usage": 1.0,
             "cost": annual_water_cost_USD_per_kg,
         }
@@ -220,7 +220,7 @@ def test_variable_om_with_escalation(subtests):
     water_feedstock_entry = {
         "Water": {
             "escalation": inflation_rate,
-            "unit": "$/year",
+            "unit": "$/kg",
             "usage": 1.0,
             "cost": annual_water_cost_USD_per_year_dict,
         }
