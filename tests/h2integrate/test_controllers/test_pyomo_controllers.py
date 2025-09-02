@@ -10,6 +10,7 @@ import openmdao.api as om
 from h2integrate.core.h2integrate_model import H2IntegrateModel
 from h2integrate.storage.battery.pysam_battery import PySAMBatteryPerformanceModel
 from h2integrate.control.control_strategies.pyomo_controllers import HeuristicLoadFollowingController
+from h2integrate.control.control_rules.storage.battery import PyomoDispatchBattery
 from h2integrate.control.control_rules.pyomo_control_options import PyomoControlOptions
 
 
@@ -84,177 +85,87 @@ def test_pyomo_battery_controller(subtests):
     #     )
 
 
-def test_heuristic_load_following_dispatch(subtests):
+def test_heuristic_load_following_battery_dispatch(subtests):
     # Get the directory of the current script
     current_dir = Path(__file__).parent
 
-    # Resolve the paths to the input files
-    input_path = current_dir / "inputs" / "pyomo_battery_controller" / "h2i_wind_to_battery_storage.yaml"
-
-    model = H2IntegrateModel(input_path)
-
-    model.run()
-
-    prob = model.prob
-
-    print(prob.get_val("battery.SOC")[0:96])
-    print(prob.get_val("battery.electricity_out")[0:96])
-    lll
-
-    # Run the test
-    with subtests.test("Check output"):
-        assert pytest.approx([0.5, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]) == prob.get_val(
-            "battery.electricity_out"
-        )
-
-
+    # Get the paths for the relevant input files
+    plant_config_path = current_dir / "inputs" / "pyomo_battery_controller" / "plant_config.yaml"
     tech_config_path = current_dir / "inputs" / "pyomo_battery_controller" / "tech_config.yaml"
+
+    # Load the plant configuration
+    with plant_config_path.open() as file:
+        plant_config = yaml.safe_load(file)
 
     # Load the technology configuration
     with tech_config_path.open() as file:
         tech_config = yaml.safe_load(file)
 
-    n_look_ahead_half = 12
+    # Fabricate some oscillating power generation data: 0 kW for the first 12 hours, 10000 kW for
+    # the second tweleve hours, and repeat that daily cycle over a year.
+    n_look_ahead_half = int(24 / 2)
 
     grid_limit = np.concatenate(
-        (np.ones(n_look_ahead_half) * 900, np.ones(n_look_ahead_half) * 1100)
+        (np.ones(n_look_ahead_half) * 0, np.ones(n_look_ahead_half) * 10000)
     )
+    grid_limit = np.tile(grid_limit, 365)
 
+    # Setup the OpenMDAO problem and add subsystems
     prob = om.Problem()
 
     prob.model.add_subsystem(
-        name="IVC",
-        subsys=om.IndepVarComp(name="electricity_in", val=grid_limit),
+        "pyomo_dispatch_battery",
+        PyomoDispatchBattery(
+            plant_config=plant_config, tech_config=tech_config["technologies"]["battery"]
+        ),
+        promotes=["*"],
+    )
+
+    prob.model.add_subsystem(
+        "battery_heuristic_load_following_controller",
+        HeuristicLoadFollowingController(
+            plant_config=plant_config, tech_config=tech_config["technologies"]["battery"]
+        ),
         promotes=["*"],
     )
 
     prob.model.add_subsystem(
         "battery",
         PySAMBatteryPerformanceModel(
-            plant_config={}, tech_config=tech_config["technologies"]["battery"]
+            plant_config=plant_config, tech_config=tech_config["technologies"]["battery"]
         ),
         promotes=["*"],
     )
 
-    prob.model.add_subsystem(
-        "heuristic_controller",
-        HeuristicLoadFollowingController(
-            plant_config={}, tech_config=tech_config["technologies"]["battery"]
-        ),
-        promotes=["*"],
-    )
-
+    # Setup the system and required values
     prob.setup()
     prob.set_val("battery.control_variable", "input_power")
-    prob.set_val("heuristic_controller.dispatch_connections", ["battery, battery"])
+    prob.set_val("battery.electricity_in", grid_limit)
 
-    prob.run()
+    # Run the model
+    prob.run_model()
 
-    # dispatch_n_look_ahead = 48  # note this must be an even number for this test
+    # Check the expected outputs to actual outputs
+    expected_electricity_out = [
+        4.99999998e+03,  4.99246204e+03,  4.99196917e+03,  4.99163634e+03,
+        4.99126979e+03,  4.99086267e+03,  4.99041021e+03,  4.98990645e+03,
+        4.98934385e+03,  4.98871283e+03,  4.98800137e+03,  4.98719445e+03,
+        -3.99028109e+03, -3.99074342e+03, -3.99115649e+03, -3.99153813e+03,
+        -3.99189067e+03, -3.99221661e+03, -3.99251838e+03, -3.99279825e+03,
+        -3.99305834e+03, -3.99330052e+03, -3.99352651e+03, -3.99373781e+03,
+    ]
 
-    # # Get the directory of the current script
-    # current_dir = Path(__file__).parent
+    expected_SOC = [
+        49.80897816, 47.49611312, 45.12415453, 42.74694762, 40.36471502, 37.97666855,
+        35.58187831, 33.17931145, 30.76778337, 28.34588133, 25.9118617,  23.463506,
+        25.41518112, 27.36005981, 29.29758781, 31.22866815, 33.15405158, 35.07436754,
+        36.99014816, 38.9018471,  40.80985428, 42.71450741, 44.61610126, 46.51489486,
+    ]
 
-    # Resolve the paths to the configuration files
-    # tech_config_path = current_dir / "inputs" / "tech_config_heuristic.yaml"
+    with subtests.test("Check electricity_out"):
+        assert pytest.approx(expected_electricity_out) == prob.get_val(
+            "battery.electricity_out"
+        )[0:24]
 
-    # # Load the technology configuration
-    # with tech_config_path.open() as file:
-    #     tech_config = yaml.safe_load(file)
-
-    # # Set up the OpenMDAO problem
-    # # prob = om.Problem()
-
-    # # prob.model.add_subsystem(
-    # #     name="IVC",
-    # #     subsys=om.IndepVarComp(name="electricity_demand_in", val=np.arange(10)),
-    # #     promotes=["*"],
-    # # )
-
-    # # prob.model.add_subsystem(
-    # #     "pass_through_controller",
-    # #     HeuristicLoadFollowingController(
-    # #         plant_config={}, tech_config=tech_config["technologies"]["battery"]
-    # #     ),
-    # #     promotes=["*"],
-    # # )
-
-    # battery = PySAMBatteryPerformanceModel(
-    #     plant_config={}, tech_config=tech_config["technologies"]["battery"]
-    # )
-    # battery.setup()
-
-    # # Create pyomo model
-    # model = pyomo.ConcreteModel(name="battery_only")
-    # model.forecast_horizon = pyomo.Set(initialize=range(dispatch_n_look_ahead))
-
-    # # Instantiate battery dispatch
-    # battery.dispatch = HeuristicLoadFollowingController(
-    #     plant_config={}, tech_config=tech_config["technologies"]["battery"]
-    # )
-    # battery.dispatch.setup(
-    #     pyomo_model=model,
-    #     index_set=model.forecast_horizon,
-    #     system_model=battery.system_model,
-    #     block_set_name="heuristic_load_following_battery",
-    #     control_options=PyomoControlOptions(
-    #         {
-    #             "include_lifecycle_count": False,
-    #             "battery_dispatch": "load_following_heuristic",
-    #         }
-    #     ),
-    # )
-
-    # # Setup dispatch for battery
-    # battery.dispatch.initialize_parameters()
-    # battery.dispatch.update_time_series_parameters(0)
-    # # Set initial SOC to minimum
-    # battery.dispatch.update_dispatch_initial_soc(battery.dispatch.minimum_soc)
-    # assert_units_consistent(model)
-
-    # # Generate test data for n horizon, charging for first half of the horizon,
-    # # then discharging for the latter half.
-    # tot_gen = np.ones(dispatch_n_look_ahead) * 1000
-    # n_look_ahead_half = int(dispatch_n_look_ahead / 2)
-    # grid_limit = np.concatenate(
-    #     (np.ones(n_look_ahead_half) * 900, np.ones(n_look_ahead_half) * 1100)
-    # )
-
-    # # Set the dispatch pyomo variables
-    # battery.dispatch.set_fixed_dispatch(tot_gen, grid_limit, grid_limit)
-
-    # # Simulate the battery with the heuristic dispatch
-    # battery.battery_simulate_with_dispatch(n_periods=dispatch_n_look_ahead, sim_start_time=0)
-
-    # # Check that the power is being assigned correctly to the battery outputs
-    # dispatch_power = np.empty(dispatch_n_look_ahead)
-    # for i in range(dispatch_n_look_ahead):
-    #     with subtests.test(f"Check dispatch[{i}]"):
-    #         dispatch_power[i] = battery.dispatch.storage_amount[i]
-    #         assert battery.outputs.P[i] == pytest.approx(
-    #             dispatch_power[i], 1e-3 * abs(dispatch_power[i])
-    #         )
-
-    # # Check that the has non-zero charge and discharge power, and that the sum of charge
-    # # and discharge power are equal.
-    # with subtests.test("charge_resource"):
-    #     assert sum(battery.dispatch.charge_resource) > 0.0
-
-    # with subtests.test("discharge_resource"):
-    #     assert sum(battery.dispatch.discharge_resource) > 0.0
-
-    # with subtests.test("charge_resource equals discharge_resource"):
-    #     assert (
-    #         sum(
-    #             battery.dispatch.charge_resource
-    #         )  # * battery.dispatch.round_trip_efficiency / 100.0
-    #         == pytest.approx(sum(battery.dispatch.discharge_resource))
-    #     )
-
-    # # Check that the dispatch values have not changed
-
-    # with subtests.test("expected_dispatch_power"):
-    #     expected_dispatch_power = np.concatenate(
-    #         (np.ones(n_look_ahead_half) * -100.0, np.ones(n_look_ahead_half) * 100.0)
-    #     )
-    #     np.testing.assert_allclose(dispatch_power, expected_dispatch_power)
+    with subtests.test("Check SOC"):
+        assert pytest.approx(expected_SOC) == prob.get_val("battery.SOC")[0:24]
