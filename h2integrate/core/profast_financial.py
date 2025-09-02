@@ -342,7 +342,8 @@ class ProFASTDefaultVariableCost(BaseConfig):
     Attributes:
         escalation (float | int, optional): annual escalation of price.
             Defaults to 0.
-        unit (str): unit of the cost, only used for reporting. Defaults to `$/year`.
+        unit (str): unit of the cost, only used for reporting. The cost should be input in
+            USD/unit of commodity.
         usage (float, optional): Usage of feedstock per unit of commondity.
             Defaults to 1.0.
 
@@ -350,7 +351,7 @@ class ProFASTDefaultVariableCost(BaseConfig):
     """
 
     escalation: float | int = field()
-    unit: str = field(default="$/year")
+    unit: str = field()
     usage: float | int = field(default=1.0)
 
     def create_dict(self):
@@ -490,6 +491,7 @@ class ProFastComp(om.ExplicitComponent):
             "variable_costs", {}
         )
         variable_cost_params.setdefault("escalation", self.params.inflation_rate)
+        variable_cost_params.setdefault("unit", lco_units.replace("USD", "$"))
         self.variable_cost_settings = ProFASTDefaultVariableCost.from_dict(variable_cost_params)
 
         # incentives - unused for now
@@ -513,8 +515,10 @@ class ProFastComp(om.ExplicitComponent):
 
         if self.options["commodity_type"] != "co2":
             capacity = float(inputs[f"total_{self.options['commodity_type']}_produced"][0]) / 365.0
+            total_production = float(inputs[f"total_{self.options['commodity_type']}_produced"][0])
         else:
             capacity = float(inputs["co2_capture_kgpy"]) / 365.0
+            total_production = float(inputs["co2_capture_kgpy"])
         profast_params["capacity"] = capacity  # TODO: update to actual daily capacity
         profast_params["long term utilization"] = 1  # TODO: update to capacity factor
 
@@ -588,13 +592,15 @@ class ProFastComp(om.ExplicitComponent):
             )
 
             # add CapEx cost to tech-specific variable cost entry
-            varom_dict = dict(zip(years_of_operation, inputs[f"varopex_adjusted_{tech}"]))
-            tech_varopex_info.update({"cost": varom_dict})
+            varom_cost_per_unit_commodity = inputs[f"varopex_adjusted_{tech}"] / total_production
+            if not all(v == 0.0 for v in varom_cost_per_unit_commodity):
+                varom_dict = dict(zip(years_of_operation, varom_cost_per_unit_commodity))
+                tech_varopex_info.update({"cost": varom_dict})
 
-            # update any unset variable cost parameters with the default values
-            for var_cost_key, var_cost_val in variable_cost_defaults.items():
-                tech_varopex_info.setdefault(var_cost_key, var_cost_val)
-            variable_costs[tech] = tech_varopex_info
+                # update any unset variable cost parameters with the default values
+                for var_cost_key, var_cost_val in variable_cost_defaults.items():
+                    tech_varopex_info.setdefault(var_cost_key, var_cost_val)
+                variable_costs[tech] = tech_varopex_info
 
         # add capital costs and fixed costs to pf_dict
         pf_dict["capital_items"] = capital_items
