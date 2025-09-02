@@ -42,21 +42,21 @@ To use the feedstock performance and cost models, add an entry to your `tech_con
 
 ```yaml
 ng_feedstock:
-performance_model:
-    model: "feedstock_performance"
-cost_model:
-    model: "feedstock_cost"
-model_inputs:
-    shared_parameters:
-    feedstock_type: "natural_gas"
-    units: "MMBtu"
-    performance_parameters:
-    rated_capacity: 100.
-    cost_parameters:
-    cost_year: 2023
-    price: 4.2
-    annual_cost: 0.
-    start_up_cost: 100000.
+    performance_model:
+        model: "feedstock_performance"
+    cost_model:
+        model: "feedstock_cost"
+    model_inputs:
+        shared_parameters:
+        feedstock_type: "natural_gas"
+        units: "MMBtu"
+        performance_parameters:
+        rated_capacity: 100.
+        cost_parameters:
+        cost_year: 2023
+        price: 4.2
+        annual_cost: 0.
+        start_up_cost: 100000.
 ```
 
 ### Performance Model Parameters
@@ -71,9 +71,9 @@ model_inputs:
 - `units` (str): Must match the performance model units
 - `price` (float, int, or list): Cost per unit in USD/`units`. Can be:
   - Scalar: Constant price for all timesteps and years
-  - List: Price per timestep or per year
-- `annual_cost` (float): Fixed cost per year in USD/year
-- `start_up_cost` (float): One-time capital cost in USD
+  - List: Price per timestep
+- `annual_cost` (float, optional): Fixed cost per year in USD/year. Defaults to 0.0
+- `start_up_cost` (float, optional): One-time capital cost in USD. Defaults to 0.0
 - `cost_year` (int): Dollar year for cost inputs
 
 ```{tip}
