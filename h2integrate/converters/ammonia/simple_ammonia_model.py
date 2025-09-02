@@ -33,15 +33,12 @@ class SimpleAmmoniaPerformanceModel(om.ExplicitComponent):
         self.options.declare("driver_config", types=dict)
 
     def setup(self):
+        n_timesteps = self.options["plant_config"]["plant"]["simulation"]["n_timesteps"]
         self.config = AmmoniaPerformanceModelConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance")
         )
-        self.add_input(
-            "hydrogen_in", val=0.0, shape_by_conn=True, copy_shape="ammonia_out", units="kg/h"
-        )
-        self.add_output(
-            "ammonia_out", val=0.0, shape_by_conn=True, copy_shape="hydrogen_in", units="kg/h"
-        )
+        self.add_input("hydrogen_in", val=0.0, shape=n_timesteps, units="kg/h")
+        self.add_output("ammonia_out", val=0.0, shape=n_timesteps, units="kg/h")
         self.add_output("total_ammonia_produced", val=0.0, units="kg/year")
 
     def compute(self, inputs, outputs):

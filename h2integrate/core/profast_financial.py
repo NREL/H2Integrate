@@ -538,10 +538,11 @@ class ProFastComp(om.ExplicitComponent):
         # loop through technologies and create cost entries
         for tech in self.tech_config:
             # get tech-specific capital item parameters
-            tech_capex_info = (
-                self.tech_config[tech]["model_inputs"]
-                .get("financial_parameters", {})
-                .get("capital_items", {})
+            tech_model_inputs = self.tech_config[tech].get("model_inputs")
+            if tech_model_inputs is None:
+                continue  # Skip this tech if no model_inputs
+            tech_capex_info = tech_model_inputs.get("financial_parameters", {}).get(
+                "capital_items", {}
             )
 
             # add CapEx cost to tech-specific capital item entry

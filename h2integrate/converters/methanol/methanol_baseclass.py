@@ -39,14 +39,15 @@ class MethanolPerformanceBaseClass(om.ExplicitComponent):
         self.options.declare("tech_config", types=dict)
 
     def setup(self):
+        n_timesteps = self.options["plant_config"]["plant"]["simulation"]["n_timesteps"]
         self.add_input("plant_capacity_kgpy", units="kg/year", val=self.config.plant_capacity_kgpy)
         self.add_input("capacity_factor", units="unitless", val=self.config.capacity_factor)
         self.add_input("co2e_emit_ratio", units="kg/kg", val=self.config.co2e_emit_ratio)
         self.add_input("h2o_consume_ratio", units="kg/kg", val=self.config.h2o_consume_ratio)
 
-        self.add_output("methanol_out", units="kg/h", shape=(8760,))
-        self.add_output("co2e_emissions", units="kg/h", shape=(8760,))
-        self.add_output("h2o_consumption", units="kg/h", shape=(8760,))
+        self.add_output("methanol_out", units="kg/h", shape=n_timesteps)
+        self.add_output("co2e_emissions", units="kg/h", shape=n_timesteps)
+        self.add_output("h2o_consumption", units="kg/h", shape=n_timesteps)
 
 
 @define
@@ -85,12 +86,13 @@ class MethanolCostBaseClass(CostModelBaseClass):
     """
 
     def setup(self):
+        n_timesteps = self.options["plant_config"]["plant"]["simulation"]["n_timesteps"]
         super().setup()
         self.add_input("toc_kg_y", units="USD/kg/year", val=self.config.toc_kg_y)
         self.add_input("foc_kg_y2", units="USD/kg/year**2", val=self.config.foc_kg_y2)
         self.add_input("voc_kg", units="USD/kg", val=self.config.voc_kg)
         self.add_input("plant_capacity_kgpy", units="kg/year", val=self.config.plant_capacity_kgpy)
-        self.add_input("methanol_out", shape=8760, units="kg/h")
+        self.add_input("methanol_out", shape=n_timesteps, units="kg/h")
 
         self.add_output("Fixed_OpEx", units="USD/year")
         self.add_output("Variable_OpEx", units="USD/year")
@@ -117,7 +119,7 @@ class MethanolFinanceBaseClass(om.ExplicitComponent):
         - Variable_OpEx: (float) variable operational expenditure in USD/year
         - tasc_toc_multiplier: (float) multiplier for total as-spent cost to total overnight cost
         - fixed_charge_rate: (float) fixed charge rate for financial calculations
-        - methanol_out: (array) methanol production rate in kg/h over 8760 hours
+        - methanol_out: (array) methanol production rate in kg/h over n_timesteps hours
     Outputs:
         - LCOM: levelized cost of methanol in USD/kg
         - LCOM_meoh: levelized cost of methanol including all components in USD/kg
@@ -132,6 +134,7 @@ class MethanolFinanceBaseClass(om.ExplicitComponent):
         self.options.declare("tech_config", types=dict)
 
     def setup(self):
+        n_timesteps = self.options["plant_config"]["plant"]["simulation"]["n_timesteps"]
         self.add_input("CapEx", units="USD", val=1.0, desc="Total capital expenditure in USD.")
         self.add_input(
             "OpEx", units="USD/year", val=1.0, desc="Total operational expenditure in USD/year."
@@ -162,9 +165,9 @@ class MethanolFinanceBaseClass(om.ExplicitComponent):
         )
         self.add_input(
             "methanol_out",
-            shape=8760,
+            shape=n_timesteps,
             units="kg/h",
-            desc="Methanol production rate in kg/h over 8760 hours.",
+            desc="Methanol production rate in kg/h over n_timesteps hours.",
         )
 
         self.add_output("LCOM", units="USD/kg", desc="Levelized cost of methanol in USD/kg.")
