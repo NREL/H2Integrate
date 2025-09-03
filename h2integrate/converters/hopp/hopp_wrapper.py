@@ -10,9 +10,6 @@ from h2integrate.core.model_baseclasses import CostModelBaseClass
 from h2integrate.converters.hopp.hopp_mgmt import run_hopp, setup_hopp
 
 
-n_timesteps = 8760
-
-
 class HOPPComponent(CostModelBaseClass):
     """
     A simple OpenMDAO component that represents a HOPP model.
@@ -24,6 +21,7 @@ class HOPPComponent(CostModelBaseClass):
     """
 
     def setup(self):
+        n_timesteps = self.options["plant_config"]["plant"]["simulation"]["n_timesteps"]
         config_dict = {
             "cost_year": self.options["tech_config"]["model_inputs"]["cost_parameters"]["cost_year"]
         }
@@ -143,11 +141,14 @@ class HOPPComponent(CostModelBaseClass):
                 battery_rating_kw=battery_capacity_kw,
                 battery_rating_kwh=battery_capacity_kwh,
                 electrolyzer_rating=electrolyzer_rating,
+                n_timesteps=self.options["plant_config"]["plant"]["simulation"]["n_timesteps"],
             )
 
             # Run the HOPP model and get the results
             hopp_results = run_hopp(
-                self.hybrid_interface, self.options["plant_config"]["plant"]["plant_life"]
+                self.hybrid_interface,
+                self.options["plant_config"]["plant"]["plant_life"],
+                n_timesteps=self.options["plant_config"]["plant"]["simulation"]["n_timesteps"],
             )
             # Extract the subset of results we are interested in
             subset_of_hopp_results = {key: hopp_results[key] for key in keys_of_interest}

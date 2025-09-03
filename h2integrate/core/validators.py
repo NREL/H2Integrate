@@ -53,7 +53,7 @@ def must_equal(required_value):
     def validator(instance, attribute, value):
         if value != required_value:
             msg = (
-                f"{attribute} cannot be {value}, {attribute} "
+                f"{attribute.name} cannot be {value}, {attribute.name} "
                 f"must have value of {required_value}"
             )
             raise ValueError(msg)

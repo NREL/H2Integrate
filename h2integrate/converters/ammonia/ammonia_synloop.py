@@ -127,43 +127,26 @@ class AmmoniaSynLoopPerformanceModel(om.ExplicitComponent):
         self.options.declare("driver_config", types=dict)
 
     def setup(self):
+        n_timesteps = self.options["plant_config"]["plant"]["simulation"]["n_timesteps"]
         self.config = AmmoniaSynLoopPerformanceConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance")
         )
 
-        self.add_input(
-            "hydrogen_in", val=0.0, shape_by_conn=True, copy_shape="ammonia_out", units="kg/h"
-        )
-        self.add_input(
-            "nitrogen_in", val=0.0, shape_by_conn=True, copy_shape="ammonia_out", units="kg/h"
-        )
-        self.add_input(
-            "electricity_in", val=0.0, shape_by_conn=True, copy_shape="ammonia_out", units="MW"
-        )
+        self.add_input("hydrogen_in", val=0.0, shape=n_timesteps, units="kg/h")
+        self.add_input("nitrogen_in", val=0.0, shape=n_timesteps, units="kg/h")
+        self.add_input("electricity_in", val=0.0, shape=n_timesteps, units="MW")
 
-        self.add_output(
-            "ammonia_out", val=0.0, shape_by_conn=True, copy_shape="hydrogen_in", units="kg/h"
-        )
-        self.add_output(
-            "nitrogen_out", val=0.0, shape_by_conn=True, copy_shape="hydrogen_in", units="kg/h"
-        )
-        self.add_output(
-            "hydrogen_out", val=0.0, shape_by_conn=True, copy_shape="hydrogen_in", units="kg/h"
-        )
-        self.add_output(
-            "electricity_out", val=0.0, shape_by_conn=True, copy_shape="hydrogen_in", units="MW"
-        )
-        self.add_output(
-            "heat_out", val=0.0, shape_by_conn=True, copy_shape="hydrogen_in", units="kW*h/kg"
-        )
+        self.add_output("ammonia_out", val=0.0, shape=n_timesteps, units="kg/h")
+        self.add_output("nitrogen_out", val=0.0, shape=n_timesteps, units="kg/h")
+        self.add_output("hydrogen_out", val=0.0, shape=n_timesteps, units="kg/h")
+        self.add_output("electricity_out", val=0.0, shape=n_timesteps, units="MW")
+        self.add_output("heat_out", val=0.0, shape=n_timesteps, units="kW*h/kg")
         self.add_output("catalyst_mass", val=0.0, units="kg")
         self.add_output("total_ammonia_produced", val=0.0, units="kg/year")
         self.add_output("total_hydrogen_consumed", val=0.0, units="kg/year")
         self.add_output("total_nitrogen_consumed", val=0.0, units="kg/year")
         self.add_output("total_electricity_consumed", val=0.0, units="kW*h/year")
-        self.add_output(
-            "limiting_input", val=0, shape_by_conn=True, copy_shape="hydrogen_in", units=None
-        )
+        self.add_output("limiting_input", val=0, shape=n_timesteps, units=None)
 
     def compute(self, inputs, outputs):
         # Get config values
@@ -179,7 +162,7 @@ class AmmoniaSynLoopPerformanceModel(om.ExplicitComponent):
         x_n2_purge = self.config.purge_gas_x_n2  # mol frac
         ratio_purge = self.config.purge_gas_mass_ratio  # kg/kg NH3
 
-        # Inputs (arrays of length 8760)
+        # Inputs (arrays of length n_timesteps)
         h2_in = inputs["hydrogen_in"]
         n2_in = inputs["nitrogen_in"]
         if np.max(n2_in) == 0:  # Temporary until ASU is added

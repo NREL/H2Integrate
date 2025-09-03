@@ -323,7 +323,7 @@ class H2IntegrateModel:
             for tech in electricity_producing_techs:
                 if tech in tech_configs:
                     commodity_types.append("electricity")
-                    continue
+                    break
 
             # Steel, methanol provides their own financials
             if any(c in commodity_types for c in ("steel", "methanol")):
@@ -451,6 +451,7 @@ class H2IntegrateModel:
         technology_interconnections = self.plant_config.get("technology_interconnections", [])
 
         combiner_counts = {}
+        splitter_counts = {}
 
         # loop through each linkage and instantiate an OpenMDAO object (assume it exists) for
         # the connection type (e.g. cable, pipeline, etc)
@@ -467,7 +468,22 @@ class H2IntegrateModel:
                 # Add the connection component to the model
                 self.plant.add_subsystem(connection_name, connection_component)
 
-                if "storage" in source_tech:
+                # Check if the source technology is a splitter
+                if "splitter" in source_tech:
+                    # Connect the source technology to the connection component
+                    # with specific output names
+                    if source_tech not in splitter_counts:
+                        splitter_counts[source_tech] = 1
+                    else:
+                        splitter_counts[source_tech] += 1
+
+                    # Connect the splitter output to the connection component
+                    self.plant.connect(
+                        f"{source_tech}.electricity_out{splitter_counts[source_tech]}",
+                        f"{connection_name}.{transport_item}_in",
+                    )
+
+                elif "storage" in source_tech:
                     # Connect the source technology to the connection component
                     self.plant.connect(
                         f"{source_tech}.{transport_item}_out",
@@ -512,10 +528,15 @@ class H2IntegrateModel:
             elif len(connection) == 3:
                 # connect directly from source to dest
                 source_tech, dest_tech, connected_parameter = connection
-
-                self.plant.connect(
-                    f"{source_tech}.{connected_parameter}", f"{dest_tech}.{connected_parameter}"
-                )
+                if isinstance(connected_parameter, (tuple, list)):
+                    source_parameter, dest_parameter = connected_parameter
+                    self.plant.connect(
+                        f"{source_tech}.{source_parameter}", f"{dest_tech}.{dest_parameter}"
+                    )
+                else:
+                    self.plant.connect(
+                        f"{source_tech}.{connected_parameter}", f"{dest_tech}.{connected_parameter}"
+                    )
 
             else:
                 err_msg = f"Invalid connection: {connection}"
@@ -599,6 +620,10 @@ class H2IntegrateModel:
 
                 # Only connect technologies that are included in the financial stackup
                 for tech_name in tech_configs.keys():
+                    # For now, assume splitters and combiners do not add any costs
+                    if "splitter" in tech_name or "combiner" in tech_name:
+                        continue
+
                     if tech_name in all_included_techs:
                         self.plant.connect(
                             f"{tech_name}.CapEx", f"financials_group_{group_id}.capex_{tech_name}"
