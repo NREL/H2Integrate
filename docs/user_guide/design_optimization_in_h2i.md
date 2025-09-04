@@ -134,9 +134,9 @@ After each run of an H2I case, the outputs are printed to the screen like this:
 varname                               val                  units      prom_name
 ------------------------------------  -------------------  ---------  -------------------------------------------------------------
 <...cut for brevity...>
-    profast_comp_0
+    ProFastComp_0
       LCOE                            [0.09009908]         USD/kW/h   financials_group_default.LCOE
-    profast_comp_1
+    ProFastComp_1
       LCOH                            [4.63528661]         USD/kg     financials_group_default.LCOH
 ```
 

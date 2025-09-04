@@ -5,6 +5,15 @@ import openmdao.api as om
 from h2integrate.converters.nitrogen.simple_ASU import SimpleASUCostModel, SimpleASUPerformanceModel
 
 
+plant_config = {
+    "plant": {
+        "simulation": {
+            "n_timesteps": 8760,  # Default number of timesteps for the simulation
+        },
+    },
+}
+
+
 def test_simple_ASU_performance_model_set_capacity_kW(subtests):
     """Test user-defined capacity in kW and user input electricity profile"""
     p_max_kW = 1000.0
@@ -20,7 +29,7 @@ def test_simple_ASU_performance_model_set_capacity_kW(subtests):
     }
     prob = om.Problem()
     comp = SimpleASUPerformanceModel(
-        plant_config={},
+        plant_config=plant_config,
         tech_config=tech_config_dict,
         driver_config={},
     )
@@ -59,7 +68,7 @@ def test_simple_ASU_performance_model_size_for_demand(subtests):
     }
     prob = om.Problem()
     asu_perf = SimpleASUPerformanceModel(
-        plant_config={},
+        plant_config=plant_config,
         tech_config=tech_config_dict,
         driver_config={},
     )
@@ -103,6 +112,7 @@ def test_simple_ASU_cost_model_usd_pr_kw(subtests):
                 "capex_unit": "kw",
                 "opex_usd_per_unit_per_year": opex_usd_per_kw,  # dummy number
                 "opex_unit": "kw",
+                "cost_year": 2022,
             },
         }
     }
@@ -112,7 +122,7 @@ def test_simple_ASU_cost_model_usd_pr_kw(subtests):
     rated_N2_mfr = rated_power_kW / efficiency_kWh_per_kg
     prob = om.Problem()
     comp = SimpleASUCostModel(
-        plant_config={},
+        plant_config=plant_config,
         tech_config=tech_config_dict,
     )
 
@@ -147,6 +157,7 @@ def test_simple_ASU_cost_model_usd_pr_mw(subtests):
                 "capex_unit": "mw",
                 "opex_usd_per_unit_per_year": opex_usd_per_mw,  # dummy number
                 "opex_unit": "mw",
+                "cost_year": 2022,
             },
         }
     }
@@ -156,7 +167,7 @@ def test_simple_ASU_cost_model_usd_pr_mw(subtests):
     rated_N2_mfr = rated_power_kW / efficiency_kWh_per_kg
     prob = om.Problem()
     comp = SimpleASUCostModel(
-        plant_config={},
+        plant_config=plant_config,
         tech_config=tech_config_dict,
     )
 
@@ -196,18 +207,19 @@ def test_simple_ASU_performance_and_cost_size_for_demand(subtests):
                 "capex_unit": "mw",
                 "opex_usd_per_unit_per_year": opex_usd_per_mw,  # dummy number
                 "opex_unit": "mw",
+                "cost_year": 2022,
             },
         }
     }
     prob = om.Problem()
     asu_perf = SimpleASUPerformanceModel(
-        plant_config={},
+        plant_config=plant_config,
         tech_config=tech_config_dict,
         driver_config={},
     )
 
     asu_cost = SimpleASUCostModel(
-        plant_config={},
+        plant_config=plant_config,
         tech_config=tech_config_dict,
         driver_config={},
     )

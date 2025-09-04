@@ -29,6 +29,7 @@ technologies:
         meoh_syn_cat_price: 615.274273
         meoh_atr_cat_price: 747.9768786
         ng_price: 4.0
+        cost_year: 2020
       finance_parameters:
         # Sources in NETL-PUB-22580: Exhibit 3-5 and Exhibit 3-7
         tasc_toc_multiplier: 1.093

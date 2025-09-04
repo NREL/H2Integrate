@@ -2,8 +2,8 @@ from h2integrate.resource.river import RiverResource
 from h2integrate.transporters.pipe import PipePerformanceModel
 from h2integrate.transporters.cable import CablePerformanceModel
 from h2integrate.converters.steel.steel import SteelPerformanceModel, SteelCostAndFinancialModel
+from h2integrate.core.profast_financial import ProFastComp
 from h2integrate.converters.wind.wind_plant import WindPlantCostModel, WindPlantPerformanceModel
-from h2integrate.transporters.power_combiner import CombinerPerformanceModel
 from h2integrate.converters.hopp.hopp_wrapper import HOPPComponent
 from h2integrate.converters.solar.solar_pysam import PYSAMSolarPlantPerformanceModel
 from h2integrate.storage.hydrogen.eco_storage import H2Storage
@@ -18,6 +18,8 @@ from h2integrate.controllers.openloop_controllers import (
 )
 from h2integrate.converters.hydrogen.wombat_model import WOMBATElectrolyzerModel
 from h2integrate.converters.wind.wind_plant_pysam import PYSAMWindPlantPerformanceModel
+from h2integrate.transporters.electricity_combiner import CombinerPerformanceModel
+from h2integrate.transporters.electricity_splitter import SplitterPerformanceModel
 from h2integrate.converters.ammonia.ammonia_synloop import (
     AmmoniaSynLoopCostModel,
     AmmoniaSynLoopPerformanceModel,
@@ -61,6 +63,14 @@ from h2integrate.converters.hydrogen.geologic.natural_geoh2_plant import (
     NaturalGeoH2FinanceModel,
     NaturalGeoH2PerformanceModel,
 )
+from h2integrate.converters.co2.marine.ocean_alkalinity_enhancement import (
+    OAECostModel,
+    OAEPerformanceModel,
+    OAECostAndFinancialModel,
+)
+from h2integrate.converters.hydrogen.custom_electrolyzer_cost_model import (
+    CustomElectrolyzerCostModel,
+)
 from h2integrate.converters.hydrogen.geologic.stimulated_geoh2_plant import (
     StimulatedGeoH2CostModel,
     StimulatedGeoH2FinanceModel,
@@ -85,11 +95,11 @@ supported_models = {
     "eco_pem_electrolyzer_performance": ECOElectrolyzerPerformanceModel,
     "singlitico_electrolyzer_cost": SingliticoCostModel,
     "basic_electrolyzer_cost": BasicElectrolyzerCostModel,
+    "custom_electrolyzer_cost": CustomElectrolyzerCostModel,
+    "wombat": WOMBATElectrolyzerModel,
     "simple_ASU_cost": SimpleASUCostModel,
     "simple_ASU_performance": SimpleASUPerformanceModel,
-    "h2_storage": H2Storage,
     "hopp": HOPPComponent,
-    "wombat": WOMBATElectrolyzerModel,
     "reverse_osmosis_desalination_performance": ReverseOsmosisPerformanceModel,
     "reverse_osmosis_desalination_cost": ReverseOsmosisCostModel,
     "simple_ammonia_performance": SimpleAmmoniaPerformanceModel,
@@ -106,6 +116,9 @@ supported_models = {
     "co2h_methanol_plant_financial": CO2HMethanolPlantFinanceModel,
     "direct_ocean_capture_performance": DOCPerformanceModel,
     "direct_ocean_capture_cost": DOCCostModel,
+    "ocean_alkalinity_enhancement_performance": OAEPerformanceModel,
+    "ocean_alkalinity_enhancement_cost": OAECostModel,
+    "ocean_alkalinity_enhancement_cost_financial": OAECostAndFinancialModel,
     "natural_geoh2_performance": NaturalGeoH2PerformanceModel,
     "natural_geoh2_cost": NaturalGeoH2CostModel,
     "natural_geoh2": NaturalGeoH2FinanceModel,
@@ -116,12 +129,16 @@ supported_models = {
     "cable": CablePerformanceModel,
     "pipe": PipePerformanceModel,
     "combiner_performance": CombinerPerformanceModel,
+    "splitter_performance": SplitterPerformanceModel,
     # Control
     "pass_through_controller": PassThroughOpenLoopController,
     "demand_open_loop_controller": DemandOpenLoopController,
     # Storage
     "hydrogen_tank_performance": HydrogenTankPerformanceModel,
     "hydrogen_tank_cost": HydrogenTankCostModel,
+    "h2_storage": H2Storage,
+    # Finance
+    "ProFastComp": ProFastComp,
 }
 
 electricity_producing_techs = ["wind", "solar", "pv", "river", "hopp"]
