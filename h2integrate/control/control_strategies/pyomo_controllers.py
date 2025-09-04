@@ -54,6 +54,7 @@ class PyomoControllerBaseConfig(BaseConfig):
     n_horizon_window: int = field()
     resource_name: str = field()
     resource_storage_units: str = field()
+    tech_name: str = field()
     demand_profile: int | float | list = field()
 
 
@@ -124,10 +125,6 @@ class PyomoControllerBaseClass(ControllerBaseClass):
                 setattr(self.pyomo_model, source_tech, blocks)
             else:
                 continue
-
-        # for key, dispatch_block_rule_function in discrete_inputs.items():
-        #     tech_name = key.split("_")[-1]
-        #     dispatch_block_rule_function(pyomo_model, tech_name)
 
         # define dispatch solver
         def pyomo_dispatch_solver(
@@ -209,8 +206,9 @@ class PyomoControllerBaseClass(ControllerBaseClass):
 
     @property
     def blocks(self) -> pyomo.Block:
-        # TODO: NEED TO GENERALIZE .battery; won't work for H2 storage as is
-        return self.pyomo_model.battery
+        # TODO: Is there a way to inherit the correct tech name so it doesn't have to be defined
+        # in the input config?
+        return eval("self.pyomo_model." + self.config.tech_name)
 
     @property
     def model(self) -> pyomo.ConcreteModel:

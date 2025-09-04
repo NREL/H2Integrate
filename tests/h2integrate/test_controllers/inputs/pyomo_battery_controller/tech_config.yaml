@@ -68,6 +68,7 @@ technologies:
         grid_limit: 5000
         resource_name: "electricity"
         resource_storage_units: "kW"
+        tech_name: "battery"
       dispatch_rule_parameters:
         resource_name: "electricity"
         resource_storage_units: "kW"
