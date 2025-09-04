@@ -36,7 +36,14 @@ def make_synloop_config():
 
 def test_ammonia_synloop_limiting_cases():
     config = make_synloop_config()
-    # Each test is a single array of 3 hours, each with a different limiting case
+    plant_info = {
+        "simulation": {
+            "n_timesteps": 4,  # Using 4 timesteps for this test
+            "dt": 3600,
+        }
+    }
+
+    # Each test is a single array of 4 hours, each with a different limiting case
     # Case 1: N2 limiting
     cap_mult = 5000
     n2 = np.array([2.0, 5.0, 5.0, 5.0]) * cap_mult  # Only first entry is N2 limiting
@@ -54,7 +61,7 @@ def test_ammonia_synloop_limiting_cases():
     )
 
     prob = om.Problem()
-    comp = AmmoniaSynLoopPerformanceModel(plant_config={}, tech_config=config)
+    comp = AmmoniaSynLoopPerformanceModel(plant_config={"plant": plant_info}, tech_config=config)
     prob.model.add_subsystem("synloop", comp)
     prob.setup()
     prob.set_val("synloop.hydrogen_in", h2, units="kg/h")

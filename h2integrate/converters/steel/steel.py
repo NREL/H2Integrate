@@ -88,7 +88,11 @@ class SteelCostAndFinancialModel(SteelCostBaseClass):
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         config = self.cost_config
+
         config.lcoh = inputs["LCOH"]
+        if inputs["electricity_cost"] > 0:
+            self.config.feedstocks.update({"electricity_cost": inputs["electricity_cost"][0]})
+
         cost_model_outputs = run_steel_cost_model(config)
 
         outputs["CapEx"] = cost_model_outputs.total_plant_cost
