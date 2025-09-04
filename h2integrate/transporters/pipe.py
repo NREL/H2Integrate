@@ -1,4 +1,7 @@
 import openmdao.api as om
+from attrs import field
+
+from h2integrate.core.validators import contains
 
 
 class PipePerformanceModel(om.ExplicitComponent):
@@ -6,21 +9,27 @@ class PipePerformanceModel(om.ExplicitComponent):
     Pass-through pipe with no losses.
     """
 
+    transport_item: str = field(
+        validator=contains(["hydrogen", "co2", "methanol", "ammonia", "nitrogen"])
+    )
+
     def setup(self):
+        self.input_name = self.transport_item + "_in"
+        self.output_name = self.transport_item + "_out"
         self.add_input(
-            "hydrogen_in",
+            self.input_name,
             val=0.0,
             shape_by_conn=True,
-            copy_shape="hydrogen_out",
+            copy_shape=self.output_name,
             units="kg/s",
         )
         self.add_output(
-            "hydrogen_out",
+            self.output_name,
             val=0.0,
             shape_by_conn=True,
-            copy_shape="hydrogen_in",
+            copy_shape=self.input_name,
             units="kg/s",
         )
 
     def compute(self, inputs, outputs):
-        outputs["hydrogen_out"] = inputs["hydrogen_in"]
+        outputs[self.output_name] = inputs[self.input_name]
