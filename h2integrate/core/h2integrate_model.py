@@ -283,10 +283,10 @@ class H2IntegrateModel:
         if "finance_parameters" not in self.plant_config:
             return
 
-        subgroups = self.plant_config["finance_parameters"].get("subgroups", [])
+        subgroups = self.plant_config["finance_parameters"].get("subgroups", None)
         financial_groups = {}
 
-        if not subgroups:
+        if subgroups is None:
             # --- Default behavior ---
             commodity_type = self.plant_config["finance_parameters"].get("commodity_type")
             finance_model_name = self.plant_config["finance_parameters"].get("finance_model")
@@ -303,17 +303,19 @@ class H2IntegrateModel:
             subgroups = [subgroup]
 
         # --- Normal subgroup handling ---
-        for _idx, subgroup in enumerate(subgroups):
-            if not subgroup or not isinstance(subgroup[0], tuple) or len(subgroup[0]) < 2:
-                raise ValueError(
-                    f"Invalid subgroup format: {subgroup}. "
-                    f"Expected first tuple to be (commodity_type, finance_model)."
-                )
+        for subgroup_name, subgroup_params in subgroups.items():
+            commodity_type = subgroup_params.get("commodity", None)
+            commodity_desc = subgroup_params.get("commodity_desc", "")
+            finance_model_nicknames = subgroup_params.get(
+                "finance_groups", ["default"]
+            )  # TODO: what if they only have one finance model
+            tech_names = subgroup_params.get("technologies")
+            if isinstance(finance_model_nicknames, str):
+                finance_model_nicknames = [finance_model_nicknames]
 
-            commodity_type, finance_model_name = subgroup[0]
-
-            # Remaining tuples = technologies
-            tech_names = [tech for tup in subgroup[1:] for tech in tup]
+            # check commodity type
+            if commodity_type is None:
+                raise ValueError(f"Missing ``commodity`` provided in subgroup {subgroup_name}")
 
             tech_configs = {
                 tech: self.technology_config["technologies"][tech]
@@ -344,23 +346,70 @@ class H2IntegrateModel:
                 "adjusted_capex_opex_comp", adjusted_capex_opex_comp, promotes=["*"]
             )
 
-            # Add financial model component
-            fin_model = self.supported_models.get(finance_model_name)
-            if fin_model is None:
-                raise ValueError(f"Financial model '{finance_model_name}' not found.")
+            for finance_model_nickname in finance_model_nicknames:
+                if any(
+                    tech_name == finance_model_nickname
+                    for tech_name, tech_params in tech_configs.items()
+                ):
+                    tech_finance_model_name = (
+                        tech_configs.get(finance_model_nickname)
+                        .get("financial_model", {})
+                        .get("model")
+                    )
+                    tech_cost_model_name = (
+                        tech_configs.get(finance_model_nickname).get("cost_model", {}).get("model")
+                    )
 
-            fin_comp = fin_model(
-                driver_config=self.driver_config,
-                tech_config=tech_configs,
-                plant_config=self.plant_config,
-                commodity_type=commodity_type,
-            )
+                    # check for coupled cost/finance models and skip
+                    if tech_cost_model_name != tech_finance_model_name:
+                        fin_model = self.supported_models.get(tech_finance_model_name)
+                        # use financial model from tech config
+                        fin_comp = fin_model(
+                            driver_config=self.driver_config,
+                            tech_config=tech_configs[finance_model_nickname],
+                            plant_config=self.plant_config,
+                        )
+                else:
+                    finance_model_config = self.plant_config["finance_parameters"].get(
+                        finance_model_nickname
+                    )
+                    model_name = finance_model_config.get("finance_model")
+                    fin_model_inputs = finance_model_config.get("model_inputs")
 
-            financial_group.add_subsystem(
-                f"{finance_model_name}_{commodity_type}", fin_comp, promotes=["*"]
-            )
+                    # Add financial model component
+                    fin_model = self.supported_models.get(model_name)
 
-            self.plant.add_subsystem(f"financials_group_{commodity_type}", financial_group)
+                    if fin_model is None:
+                        raise ValueError(f"Financial model '{model_name}' not found.")
+
+                    finance_params = {
+                        k: v
+                        for k, v in self.plant_config["finance_parameters"].items()
+                        if "finance_model" in v
+                    }
+
+                    finance_params.update(fin_model_inputs)
+                    plant_inputs = {
+                        k: v for k, v in self.plant_config.items() if k != "finance_parameters"
+                    }
+                    filtered_plant_config = plant_inputs.update(finance_params)
+
+                    fin_comp = fin_model(
+                        driver_config=self.driver_config,
+                        tech_config=tech_configs,
+                        plant_config=filtered_plant_config,
+                        commodity_type=commodity_type,
+                        description=commodity_desc,
+                    )
+
+                    finance_subsystem_name = (
+                        f"{model_name}_{commodity_type}"
+                        if commodity_desc == ""
+                        else f"{model_name}_{commodity_type}_{commodity_desc}"
+                    )
+                    financial_group.add_subsystem(finance_subsystem_name, fin_comp, promotes=["*"])
+
+            self.plant.add_subsystem(f"financials_subgroup_{subgroup_name}", financial_group)
 
         self.financial_groups = financial_groups
 
