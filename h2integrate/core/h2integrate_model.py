@@ -272,142 +272,274 @@ class H2IntegrateModel:
         """
         Creates and configures the financial model for the plant.
 
-        Creates financial groups based on the technology configurations
-        and adds the appropriate financial components to each group.
+        - If subgroups are defined in finance_parameters:
+            * The first tuple in each subgroup is (commodity_type, finance_model).
+            * The remaining tuples list technologies belonging to that subgroup.
+        - If no subgroups are defined:
+            * A default subgroup is created with all technologies.
+            * commodity_type and finance_model are pulled from finance_parameters.
         """
 
         if "finance_parameters" not in self.plant_config:
             return
 
-        # Create a dictionary to hold financial groups
+        subgroups = self.plant_config["finance_parameters"].get("subgroups", [])
         financial_groups = {}
 
-        # Loop through each technology and add it to the appropriate financial group
-        for tech_name, individual_tech_config in self.technology_config["technologies"].items():
-            financial_group_id = individual_tech_config.get("financial_model", {}).get("group")
-            if financial_group_id is not None:
-                if financial_group_id not in financial_groups:
-                    financial_groups[financial_group_id] = {}
-                financial_groups[financial_group_id][tech_name] = individual_tech_config
+        if not subgroups:
+            # --- Default behavior ---
+            commodity_type = self.plant_config["finance_parameters"].get("commodity_type")
+            finance_model_name = self.plant_config["finance_parameters"].get("finance_model")
 
-        # Find technologies not assigned to any financial group and add them to group "default"
-        all_grouped_techs = set()
-        for group in financial_groups.values():
-            all_grouped_techs.update(group.keys())
+            if not commodity_type or not finance_model_name:
+                raise ValueError(
+                    "finance_parameters must define 'commodity_type' and 'finance_model' "
+                    "if no subgroups are provided."
+                )
 
-        for tech_name, tech_config in self.technology_config["technologies"].items():
-            if tech_name not in all_grouped_techs:
-                if "default" not in financial_groups:
-                    financial_groups["default"] = {}
-                financial_groups["default"][tech_name] = tech_config
+            # Collect all technologies into one subgroup
+            all_techs = tuple(self.technology_config["technologies"].keys())
+            subgroup = [(commodity_type, finance_model_name), all_techs]
+            subgroups = [subgroup]
 
-        # Add each financial group to the plant
-        for group_id, tech_configs in financial_groups.items():
-            commodity_types = []
-            if "steel" in tech_configs:
-                commodity_types.append("steel")
-            if "electrolyzer" in tech_configs:
-                commodity_types.append("hydrogen")
-            if "methanol" in tech_configs:
-                commodity_types.append("methanol")
-            if "ammonia" in tech_configs:
-                commodity_types.append("ammonia")
-            if "air_separator" in tech_configs:
-                commodity_types.append("nitrogen")
-            if "geoh2" in tech_configs:
-                commodity_types.append("hydrogen")
-            if "doc" in tech_configs:
-                commodity_types.append("co2")
-            if "oae" in tech_configs:
-                commodity_types.append("co2")
-            for tech in electricity_producing_techs:
-                if tech in tech_configs:
-                    commodity_types.append("electricity")
-                    break
+        # --- Normal subgroup handling ---
+        for _idx, subgroup in enumerate(subgroups):
+            if not subgroup or not isinstance(subgroup[0], tuple) or len(subgroup[0]) < 2:
+                raise ValueError(
+                    f"Invalid subgroup format: {subgroup}. "
+                    f"Expected first tuple to be (commodity_type, finance_model)."
+                )
 
-            # Steel, methanol provides their own financials
-            if any(c in commodity_types for c in ("steel", "methanol")):
-                continue
+            commodity_type, finance_model_name = subgroup[0]
 
-            # GeoH2 provides own financials
-            if "geoh2" in tech_configs:
-                continue
+            # Remaining tuples = technologies
+            tech_names = [tech for tup in subgroup[1:] for tech in tup]
 
-            if commodity_types == []:
-                continue
+            tech_configs = {
+                tech: self.technology_config["technologies"][tech]
+                for tech in tech_names
+                if tech in self.technology_config["technologies"]
+            }
+
+            if not tech_configs:
+                raise ValueError(
+                    f"Subgroup {subgroup} contains no valid technologies. "
+                    f"Available techs: {list(self.technology_config['technologies'].keys())}"
+                )
 
             financial_group = om.Group()
 
-            # Determine all technologies that should be included across all
-            # commodity types for this group
-            all_included_techs = set()
-            for commodity_type in commodity_types:
-                if commodity_type not in ["steel", "methanol"]:  # These handle their own financials
-                    included_techs = self.get_included_technologies(
-                        tech_configs, commodity_type, self.plant_config
-                    )
-                    all_included_techs.update(included_techs)
+            if commodity_type == "electricity":
+                financial_group.add_subsystem(
+                    "electricity_sum", ElectricitySumComp(tech_configs=tech_configs)
+                )
 
-            # Filter tech_configs to only include technologies that are in at least one stackup
-            filtered_tech_configs_for_capex = {
-                tech: config for tech, config in tech_configs.items() if tech in all_included_techs
-            }
-
-            # Add the ExecComp to the plant model
-            financial_group.add_subsystem(
-                "electricity_sum", ElectricitySumComp(tech_configs=filtered_tech_configs_for_capex)
-            )
-
-            # Add adjusted capex component
+            # Add adjusted capex/opex
             adjusted_capex_opex_comp = AdjustedCapexOpexComp(
                 driver_config=self.driver_config,
-                tech_config=filtered_tech_configs_for_capex,
+                tech_config=tech_configs,
                 plant_config=self.plant_config,
             )
             financial_group.add_subsystem(
                 "adjusted_capex_opex_comp", adjusted_capex_opex_comp, promotes=["*"]
             )
 
-            # Add profast components
-            for idx, commodity_type in enumerate(commodity_types):
-                # Get included technologies for this commodity type
-                included_techs = self.get_included_technologies(
-                    tech_configs, commodity_type, self.plant_config
-                )
+            # Add financial model component
+            fin_model = self.supported_models.get(finance_model_name)
+            if fin_model is None:
+                raise ValueError(f"Financial model '{finance_model_name}' not found.")
 
-                # Filter tech_configs to only include the technologies in the stackup
-                filtered_tech_configs = {
-                    tech: config for tech, config in tech_configs.items() if tech in included_techs
-                }
+            fin_comp = fin_model(
+                driver_config=self.driver_config,
+                tech_config=tech_configs,
+                plant_config=self.plant_config,
+                commodity_type=commodity_type,
+            )
 
-                fin_model_name = self.plant_config["finance_parameters"].get("finance_model")
-                if isinstance(fin_model_name, list):
-                    for model_name in fin_model_name:
-                        fin_model = self.supported_models.get(model_name)
-                        fin_comp = fin_model(
-                            driver_config=self.driver_config,
-                            tech_config=filtered_tech_configs,
-                            plant_config=self.plant_config,
-                            commodity_type=commodity_type,
-                        )
-                        financial_group.add_subsystem(
-                            f"{model_name}_{idx}", fin_comp, promotes=["*"]
-                        )
-                else:
-                    fin_model = self.supported_models.get(fin_model_name)
-                    fin_comp = fin_model(
-                        driver_config=self.driver_config,
-                        tech_config=filtered_tech_configs,
-                        plant_config=self.plant_config,
-                        commodity_type=commodity_type,
-                    )
-                    financial_group.add_subsystem(
-                        f"{fin_model_name}_{idx}", fin_comp, promotes=["*"]
-                    )
+            financial_group.add_subsystem(
+                f"{finance_model_name}_{commodity_type}", fin_comp, promotes=["*"]
+            )
 
-            self.plant.add_subsystem(f"financials_group_{group_id}", financial_group)
+            self.plant.add_subsystem(f"financials_group_{commodity_type}", financial_group)
 
         self.financial_groups = financial_groups
+
+    #     for idx, subgroup in enumerate(subgroups):
+    #         # First tuple = commodity type
+    #         if not subgroup or not isinstance(subgroup[0], tuple):
+    #             raise ValueError(f"Invalid subgroup format: {subgroup}")
+
+    #         commodity_type = subgroup[0][0]
+
+    #         # Remaining tuples = tech sets
+    #         tech_names = [tech for tup in subgroup[1:] for tech in tup]
+
+    #         tech_configs = {
+    #             tech: self.technology_config["technologies"][tech]
+    #             for tech in tech_names
+    #             if tech in self.technology_config["technologies"]
+    #         }
+
+    #         if not tech_configs:
+    #             raise ValueError(
+    #                 f"Subgroup {subgroup} contains no valid technologies. "
+    #                 f"Available techs: {list(self.technology_config['technologies'].keys())}"
+    #             )
+
+    #     # Add electricity sum if applicable
+    #     if "electricity" in commodity_type:
+    #         financial_group.add_subsystem(
+    #             "electricity_sum", ElectricitySumComp(tech_configs=filtered_tech_configs)
+    #         )
+
+    #     # Loop through each technology and add it to the appropriate financial group
+    #     for tech_name, individual_tech_config in self.technology_config["technologies"].items():
+    #         financial_group_id = individual_tech_config.get("financial_model", {}).get("group")
+    #         if financial_group_id is not None:
+    #             if financial_group_id not in financial_groups:
+    #                 financial_groups[financial_group_id] = {}
+    #             financial_groups[financial_group_id][tech_name] = individual_tech_config
+
+    #     # Find technologies not assigned to any financial group and add them to group "default"
+    #     all_grouped_techs = set()
+    #     for group in financial_groups.values():
+    #         all_grouped_techs.update(group.keys())
+
+    #     for tech_name, tech_config in self.technology_config["technologies"].items():
+    #         if tech_name not in all_grouped_techs:
+    #             if "default" not in financial_groups:
+    #                 financial_groups["default"] = {}
+    #             financial_groups["default"][tech_name] = tech_config
+
+    #     # Add each financial group to the plant
+    #     for group_id, tech_configs in financial_groups.items():
+    #         commodity_types = []
+    #         if "steel" in tech_configs:
+    #             commodity_types.append("steel")
+    #         if "electrolyzer" in tech_configs:
+    #             commodity_types.append("hydrogen")
+    #         if "methanol" in tech_configs:
+    #             commodity_types.append("methanol")
+    #         if "ammonia" in tech_configs:
+    #             commodity_types.append("ammonia")
+    #         if "air_separator" in tech_configs:
+    #             commodity_types.append("nitrogen")
+    #         if "geoh2" in tech_configs:
+    #             commodity_types.append("hydrogen")
+    #         if "doc" in tech_configs:
+    #             commodity_types.append("co2")
+    #         if "oae" in tech_configs:
+    #             commodity_types.append("co2")
+    #         for tech in electricity_producing_techs:
+    #             if tech in tech_configs:
+    #                 commodity_types.append("electricity")
+    #                 break
+
+    #         # Steel, methanol provides their own financials
+    #         if any(c in commodity_types for c in ("steel", "methanol")):
+    #             continue
+
+    #         # GeoH2 provides own financials
+    #         if "geoh2" in tech_configs:
+    #             continue
+
+    #         if commodity_types == []:
+    #             continue
+
+    #         financial_group = om.Group()
+
+    #         # Determine all technologies that should be included across all
+    #         # commodity types for this group
+    #         all_included_techs = set()
+    #         for commodity_type in commodity_types:
+    #         # These handle their own financials
+    #             if commodity_type not in ["steel", "methanol"]:
+    #                 included_techs = self.get_included_technologies(
+    #                     tech_configs, commodity_type, self.plant_config
+    #                 )
+    #                 all_included_techs.update(included_techs)
+
+    #         # Filter tech_configs to only include technologies that are in at least one stackup
+    #         filtered_tech_configs_for_capex = {
+    #             tech: config for tech, config in tech_configs.items()
+    #                if tech in all_included_techs
+    #         }
+
+    #         # Add the ExecComp to the plant model
+    #         financial_group.add_subsystem(
+    #             "electricity_sum", ElectricitySumComp(
+    #               tech_configs=filtered_tech_configs_for_capex)
+    #         )
+
+    #         # Add adjusted capex component
+    #         adjusted_capex_opex_comp = AdjustedCapexOpexComp(
+    #             driver_config=self.driver_config,
+    #             tech_config=filtered_tech_configs_for_capex,
+    #             plant_config=self.plant_config,
+    #         )
+    #         financial_group.add_subsystem(
+    #             "adjusted_capex_opex_comp", adjusted_capex_opex_comp, promotes=["*"]
+    #         )
+
+    #         # Add profast components
+    #         for idx, commodity_type in enumerate(commodity_types):
+    #             # Get included technologies for this commodity type
+    #             included_techs = self.get_included_technologies(
+    #                 tech_configs, commodity_type, self.plant_config
+    #             )
+
+    #             # Filter tech_configs to only include the technologies in the stackup
+    #             filtered_tech_configs = {
+    #                 tech: config for tech, config in tech_configs.items() if tech in
+    #                   included_techs
+    #             }
+
+    #             fin_model_name = self.plant_config["finance_parameters"].get("finance_model")
+    #             if isinstance(fin_model_name, list):
+    #                 for model_name in fin_model_name:
+    #                     fin_model = self.supported_models.get(model_name)
+    #                     fin_comp = fin_model(
+    #                         driver_config=self.driver_config,
+    #                         tech_config=filtered_tech_configs,
+    #                         plant_config=self.plant_config,
+    #                         commodity_type=commodity_type,
+    #                     )
+    #                     financial_group.add_subsystem(
+    #                         f"{model_name}_{idx}", fin_comp, promotes=["*"]
+    #                     )
+    #             else:
+    #                 fin_model = self.supported_models.get(fin_model_name)
+    #                 fin_comp = fin_model(
+    #                     driver_config=self.driver_config,
+    #                     tech_config=filtered_tech_configs,
+    #                     plant_config=self.plant_config,
+    #                     commodity_type=commodity_type,
+    #                 )
+    #                 financial_group.add_subsystem(
+    #                     f"{fin_model_name}_{idx}", fin_comp, promotes=["*"]
+    #                 )
+
+    #         self.plant.add_subsystem(f"financials_group_{group_id}", financial_group)
+
+    #     self.financial_groups = financial_groups
+
+    # def create_fianancial_subgroups(self,tech_config,plant_config):
+    #     # This blends the financial_groups and get_included_technologies methods
+    #     # The input will be a tuple in the yaml of the included technologies in the subgroup
+    #     # in another tuple it will be the commodity_type for that subgroup
+    #     financial_subgroups = {}
+    #     for subgroup in plant_config["finance_parameters"].get("financial_subgroups", []):
+    #         commodity_type, included_techs = subgroup
+    #         self.plant.add_subsystem(f"financials_group_{commodity_type}", financial_group)
+
+    #     missing_techs = [tech for tech in included_techs if tech not in tech_config]
+    #     if missing_techs:
+    #         raise ValueError(
+    #             f"Included technology(ies) {missing_techs} not found in tech_config. "
+    #             f"Available techs: {list(tech_config.keys())}"
+    #         )
+    #         financial_subgroups[commodity_type] = included_techs
+    #     return financial_subgroups
 
     def get_included_technologies(self, tech_config, commodity_type, plant_config):
         """
