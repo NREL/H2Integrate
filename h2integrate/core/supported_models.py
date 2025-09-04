@@ -74,6 +74,9 @@ from h2integrate.converters.co2.marine.ocean_alkalinity_enhancement import (
     OAEPerformanceModel,
     OAECostAndFinancialModel,
 )
+from h2integrate.converters.hydrogen.custom_electrolyzer_cost_model import (
+    CustomElectrolyzerCostModel,
+)
 from h2integrate.converters.hydrogen.geologic.stimulated_geoh2_plant import (
     StimulatedGeoH2CostModel,
     StimulatedGeoH2FinanceModel,
@@ -98,11 +101,11 @@ supported_models = {
     "eco_pem_electrolyzer_performance": ECOElectrolyzerPerformanceModel,
     "singlitico_electrolyzer_cost": SingliticoCostModel,
     "basic_electrolyzer_cost": BasicElectrolyzerCostModel,
+    "custom_electrolyzer_cost": CustomElectrolyzerCostModel,
+    "wombat": WOMBATElectrolyzerModel,
     "simple_ASU_cost": SimpleASUCostModel,
     "simple_ASU_performance": SimpleASUPerformanceModel,
-    "h2_storage": H2Storage,
     "hopp": HOPPComponent,
-    "wombat": WOMBATElectrolyzerModel,
     "reverse_osmosis_desalination_performance": ReverseOsmosisPerformanceModel,
     "reverse_osmosis_desalination_cost": ReverseOsmosisCostModel,
     "simple_ammonia_performance": SimpleAmmoniaPerformanceModel,
@@ -145,6 +148,7 @@ supported_models = {
     # Feedstock
     "feedstock_performance": FeedstockPerformanceModel,
     "feedstock_cost": FeedstockCostModel,
+    "h2_storage": H2Storage,
     # Finance
     "ProFastComp": ProFastComp,
 }
