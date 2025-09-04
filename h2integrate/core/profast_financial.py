@@ -409,6 +409,7 @@ class ProFastComp(om.ExplicitComponent):
         self.options.declare("plant_config", types=dict)
         self.options.declare("tech_config", types=dict)
         self.options.declare("commodity_type", types=str)
+        self.options.declare("description", types=str, default="")
 
     def setup(self):
         if self.options["commodity_type"] == "electricity":
@@ -418,7 +419,24 @@ class ProFastComp(om.ExplicitComponent):
             commodity_units = "kg/year"
             lco_units = "USD/kg"
 
-        self.LCO_str = f"LCO{self.options['commodity_type'][0].upper()}"
+        if (
+            self.options["description"] == ""
+            or self.options["description"] == self.options["commodity_type"]
+        ):
+            self.LCO_str = f"LCO{self.options['commodity_type'][0].upper()}"
+        else:
+            LCO_base_str = f"LCO{self.options['commodity_type'][0].upper()}"
+            LCO_desc_str = (
+                self.options["description"]
+                .replace(self.options["commodity_type"], "")
+                .strip()
+                .strip("_()-")
+            )
+            if LCO_desc_str == "":
+                self.LCO_str = LCO_base_str
+            else:
+                self.LCO_str = f"{LCO_base_str}_{LCO_desc_str}"
+
         self.add_output(self.LCO_str, val=0.0, units=lco_units)
 
         if self.options["commodity_type"] == "co2":
@@ -561,7 +579,11 @@ class ProFastComp(om.ExplicitComponent):
             fdesc = self.options["plant_config"]["finance_parameters"]["model_inputs"][
                 "profast_output_description"
             ]
-            fname = f"{fdesc}_{self.options['commodity_type']}.yaml"
+            if self.options["description"] == "":
+                fname = f"{fdesc}_{self.options['commodity_type']}.yaml"
+            else:
+                fname = f"{fdesc}_{self.options['commodity_type']}_{self.LCO_str}.yaml"
+
             fpath = Path(output_dir) / fname
             output_dir = Path(output_dir)
             output_dir.mkdir(parents=True, exist_ok=True)
