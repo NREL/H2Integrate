@@ -26,8 +26,6 @@ site:
 technology_interconnections: [
   ["hopp", "electrolyzer", "electricity", "cable"],
   ["electrolyzer", "methanol", "hydrogen", "pipe"],
-  ["financials_group_1", "methanol", "LCOE"],
-  ["financials_group_1", "methanol", "LCOH"],
   ["wind","doc","electricity","cable"],
   ["doc","methanol","co2","pipe"],
 ]

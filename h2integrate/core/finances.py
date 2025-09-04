@@ -127,6 +127,10 @@ class ProFastComp(om.ExplicitComponent):
             self.add_input("total_ammonia_produced", val=0.0, units="kg/year")
             self.add_output("LCOA", val=0.0, units="USD/kg")
 
+        if self.options["commodity_type"] == "methanol":
+            self.add_input("total_methanol_produced", val=0.0, units="kg/year")
+            self.add_output("LCOM", val=0.0, units="USD/kg")
+
         if self.options["commodity_type"] == "nitrogen":
             self.add_input("total_nitrogen_produced", val=0.0, units="kg/year")
             self.add_output("LCON", val=0.0, units="USD/kg")
@@ -161,7 +165,7 @@ class ProFastComp(om.ExplicitComponent):
         )
 
     def compute(self, inputs, outputs):
-        mass_commodities = ["hydrogen", "ammonia", "co2", "nitrogen"]
+        mass_commodities = ["hydrogen", "ammonia", "methanol", "co2", "nitrogen"]
 
         if "pf_params" in self.plant_config["finance_parameters"]:
             gen_inflation = self.plant_config["finance_parameters"]["pf_params"]["params"][
@@ -341,6 +345,9 @@ class ProFastComp(om.ExplicitComponent):
 
         elif self.options["commodity_type"] == "ammonia":
             outputs["LCOA"] = sol["price"]
+
+        elif self.options["commodity_type"] == "methanol":
+            outputs["LCOM"] = sol["price"]
 
         elif self.options["commodity_type"] == "electricity":
             outputs["LCOE"] = sol["price"]

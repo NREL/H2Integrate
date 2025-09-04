@@ -110,6 +110,7 @@ class CO2HMethanolPlantPerformanceModel(MethanolPerformanceBaseClass):
 
         # Parse outputs
         outputs["methanol_out"] = meoh_prod
+        outputs["total_methanol_produced"] = np.sum(meoh_prod)
         outputs["meoh_syn_cat_consume"] = np.sum(meoh_prod) * syn_ratio
         outputs["ng_consume"] = meoh_prod * ng_ratio
         outputs["co2_consume"] = meoh_prod * co2_ratio

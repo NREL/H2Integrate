@@ -98,6 +98,7 @@ class SMRMethanolPlantPerformanceModel(MethanolPerformanceBaseClass):
         outputs["meoh_atr_cat_consume"] = np.sum(meoh_prod) * atr_ratio
         outputs["ng_consume"] = meoh_prod * ng_ratio
         outputs["methanol_out"] = meoh_prod
+        outputs["total_methanol_produced"] = np.sum(meoh_prod)
         outputs["electricity_out"] = meoh_prod * elec_ratio
 
 

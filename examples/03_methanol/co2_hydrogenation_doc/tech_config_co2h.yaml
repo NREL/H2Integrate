@@ -41,6 +41,8 @@ technologies:
       model: "wind_plant_performance"
     cost_model:
       model: "wind_plant_cost"
+    financial_model:
+      group: "1"
     resource:
       type: "pysam_wind"
       wind_speed: 9.
@@ -74,6 +76,8 @@ technologies:
       model: "direct_ocean_capture_performance"
     cost_model:
       model: "direct_ocean_capture_cost"
+    financial_model:
+      group: "1"
     model_inputs:
       shared_parameters:
         power_single_ed_w: 24000000.0  # W
@@ -101,8 +105,9 @@ technologies:
     cost_model:
       model: "co2h_methanol_plant_cost"
     financial_model:
-      model: "co2h_methanol_plant_financial"
-      group: "2"
+      group: "1"
+    # financial_model:
+    #   model: "co2h_methanol_plant_financial"
     model_inputs:
       shared_parameters:
         plant_capacity_kgpy: 127893196.8
@@ -124,7 +129,7 @@ technologies:
         meoh_syn_cat_price: 615.274273
         ng_price: 4.0
         co2_price: 0.0549007
-      finance_parameters:
-        # Sources in NETL-PUB-22580: Exhibit 3-5 and Exhibit 3-7
-        tasc_toc_multiplier: 1.093
-        fixed_charge_rate: 0.0707
+      # finance_parameters:
+      #   # Sources in NETL-PUB-22580: Exhibit 3-5 and Exhibit 3-7
+      #   tasc_toc_multiplier: 1.093
+      #   fixed_charge_rate: 0.0707

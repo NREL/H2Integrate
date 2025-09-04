@@ -321,10 +321,10 @@ class H2IntegrateModel:
             for tech in electricity_producing_techs:
                 if tech in tech_configs:
                     commodity_types.append("electricity")
-                    continue
+                    break
 
             # Steel, methanol provides their own financials
-            if any(c in commodity_types for c in ("steel", "methanol")):
+            if any(c in commodity_types for c in ("steel")):
                 continue
 
             # GeoH2 provides own financials
@@ -340,7 +340,7 @@ class H2IntegrateModel:
             # commodity types for this group
             all_included_techs = set()
             for commodity_type in commodity_types:
-                if commodity_type not in ["steel", "methanol"]:  # These handle their own financials
+                if commodity_type not in ["steel"]:  # These handle their own financials
                     included_techs = self.get_included_technologies(
                         tech_configs, commodity_type, self.plant_config
                     )
@@ -410,6 +410,7 @@ class H2IntegrateModel:
             "electricity": "LCOE",
             "ammonia": "LCOA",
             "nitrogen": "LCON",
+            "methanol": "LCOM",
         }
         metric_key = metrics_map.get(commodity_type)
         included_techs = (
@@ -526,7 +527,7 @@ class H2IntegrateModel:
             # Connect the outputs of the technology models to the appropriate financial groups
             for group_id, tech_configs in self.financial_groups.items():
                 # Skip steel financials; it provides its own financials
-                if any(c in tech_configs for c in ("steel", "methanol", "geoh2")):
+                if any(c in tech_configs for c in ("steel", "geoh2")):
                     continue
 
                 plant_producing_electricity = False
@@ -557,7 +558,6 @@ class H2IntegrateModel:
                 for commodity_type in commodity_types:
                     if commodity_type not in [
                         "steel",
-                        "methanol",
                     ]:  # These handle their own financials
                         included_techs = self.get_included_technologies(
                             tech_configs, commodity_type, self.plant_config
@@ -606,6 +606,12 @@ class H2IntegrateModel:
                             self.plant.connect(
                                 f"{tech_name}.total_ammonia_produced",
                                 f"financials_group_{group_id}.total_ammonia_produced",
+                            )
+
+                        if "methanol" in tech_name:
+                            self.plant.connect(
+                                f"{tech_name}.total_methanol_produced",
+                                f"financials_group_{group_id}.total_methanol_produced",
                             )
 
                         if "doc" in tech_name:
