@@ -1,34 +1,26 @@
-from pathlib import Path
+from attrs import define
 
-import openmdao.api as om
-from attrs import field, define
-
-from h2integrate.core.utilities import BaseConfig
-from h2integrate.core.validators import contains, range_val
+from h2integrate.resource.resource_base import ResourceBaseAPIModel, ResourceBaseAPIConfig
 
 
 @define
-class SolarResourceConfig(BaseConfig):
-    latitude: float = field()
-    longitude: float = field()
-    resource_year: int = field(converter=int, validator=range_val(1998, 2024))
+class SolarResourceBaseAPIConfig(ResourceBaseAPIConfig):
+    # latitude: float = field()
+    # longitude: float = field()
+    # resource_year: int = field(converter=int, validator=range_val(1998, 2024))
+    resource_type: str = "solar"
 
-    interval: int = field(converter=int, validator=contains([30, 60]))
+    # interval: int = field(converter=int, validator=contains([30, 60]))
 
-    resource_data: dict | object = field(default={})
-    resource_filepath: Path | str = field(default="")
-    resource_dir: Path | str = field(default="")
+    # resource_data: dict | object = field(default={})
+    # resource_filepath: Path | str = field(default="")
+    # resource_dir: Path | str = field(default="")
 
-    dataset_desc: str = "default"
-    pass
+    # dataset_desc: str = "default"
+    # pass
 
 
-class SolarResource(om.ExplicitComponent):
-    def initialize(self):
-        self.options.declare("plant_config", types=dict)
-        self.options.declare("resource_config", types=dict)
-        self.options.declare("driver_config", types=dict)
-
+class SolarResourceBaseAPIModel(ResourceBaseAPIModel):
     def setup(self):
         self.resource_type = "solar"
 
@@ -48,7 +40,7 @@ class SolarResource(om.ExplicitComponent):
             "resource_dir", site_config["resources"].get("resource_dir", "")
         )
 
-        self.config = SolarResourceConfig.from_dict(solar_resource_specs)
+        self.config = SolarResourceBaseAPIConfig.from_dict(solar_resource_specs)
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         pass

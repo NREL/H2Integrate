@@ -11,6 +11,6 @@ class WindResourceBaseAPIConfig(ResourceBaseAPIConfig):
 class WindResourceBaseAPIModel(ResourceBaseAPIModel):
     def setup(self):
         super().setup()
-        self.add_input("hub_height", val=0.0, units="m")
-        self.add_output("windspeed_", val=0.0, shape=self.n_timesteps, units="m/s")
-        self.add_output("winddirection_", val=0.0, shape=self.n_timesteps, units="?")
+        # self.add_input("hub_height", val=0.0, units="m")
+        # self.add_output("windspeed_", val=0.0, shape=self.n_timesteps, units="m/s")
+        # self.add_output("winddirection_", val=0.0, shape=self.n_timesteps, units="?")
