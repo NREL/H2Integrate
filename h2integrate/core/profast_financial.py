@@ -499,6 +499,9 @@ class ProFastComp(om.ExplicitComponent):
             capacity = float(inputs[f"total_{self.options['commodity_type']}_produced"][0]) / 365.0
         else:
             capacity = float(inputs["co2_capture_kgpy"]) / 365.0
+        if capacity == 0.0:
+            raise ValueError("Capacity cannot be zero")
+
         profast_params["capacity"] = capacity  # TODO: update to actual daily capacity
         profast_params["long term utilization"] = 1  # TODO: update to capacity factor
 
@@ -567,6 +570,7 @@ class ProFastComp(om.ExplicitComponent):
         pf_dict["capital_items"] = capital_items
         pf_dict["fixed_costs"] = fixed_costs
         # create ProFAST object
+
         pf = create_and_populate_profast(pf_dict)
         # simulate ProFAST
         sol, summary, price_breakdown = run_profast(pf)
