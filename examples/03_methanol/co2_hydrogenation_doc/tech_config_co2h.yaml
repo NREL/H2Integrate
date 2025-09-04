@@ -11,6 +11,9 @@ technologies:
     financial_model:
       group: "1"
     electrolyzer_rating: 156. # MW
+    model_inputs:
+      cost_parameters:
+        cost_year: 2019
   electrolyzer:
     performance_model:
       model: "eco_pem_electrolyzer_performance"
@@ -35,7 +38,9 @@ technologies:
         include_degradation_penalty: True #include degradation
         turndown_ratio: 0.1 #turndown_ratio = minimum_cluster_power/cluster_rating_MW
       financial_parameters:
-        replacement_cost_percent: 0.15 # percent of capex - H2A default case
+        capital_items:
+          depr_period: 7 # based on PEM Electrolysis H2A Production Case Study Documentation estimate of 7 years. also see https://www.irs.gov/publications/p946#en_US_2020_publink1000107507
+          replacement_cost_percent: 0.15 # percent of capex - H2A default case
   wind:
     performance_model:
       model: "wind_plant_performance"
@@ -71,6 +76,7 @@ technologies:
         adjust_air_density_for_elevation: True
       cost_parameters:
         cost_per_kw: 1500.0
+        cost_year: 2019
   doc:
     performance_model:
       model: "direct_ocean_capture_performance"
@@ -80,7 +86,7 @@ technologies:
       group: "1"
     model_inputs:
       shared_parameters:
-        power_single_ed_w: 24000000.0  # W
+        power_single_ed_w: 3000000.0  # W
         flow_rate_single_ed_m3s: 0.6  # m^3/s
         number_ed_min: 1
         number_ed_max: 10
@@ -106,8 +112,6 @@ technologies:
       model: "co2h_methanol_plant_cost"
     financial_model:
       group: "1"
-    # financial_model:
-    #   model: "co2h_methanol_plant_financial"
     model_inputs:
       shared_parameters:
         plant_capacity_kgpy: 127893196.8
@@ -129,7 +133,4 @@ technologies:
         meoh_syn_cat_price: 615.274273
         ng_price: 4.0
         co2_price: 0.0549007
-      # finance_parameters:
-      #   # Sources in NETL-PUB-22580: Exhibit 3-5 and Exhibit 3-7
-      #   tasc_toc_multiplier: 1.093
-      #   fixed_charge_rate: 0.0707
+        cost_year: 2020
