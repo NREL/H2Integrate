@@ -1,9 +1,6 @@
 import openmdao.api as om
 
 
-n_timesteps = 8760
-
-
 class NaturalGasPerformanceBaseClass(om.ExplicitComponent):
     """
     Base class for natural gas plant performance models.
@@ -18,6 +15,7 @@ class NaturalGasPerformanceBaseClass(om.ExplicitComponent):
         self.options.declare("tech_config", types=dict)
 
     def setup(self):
+        n_timesteps = self.options["plant_config"]["plant"]["simulation"]["n_timesteps"]
         self.add_input(
             "natural_gas_in",
             val=0.0,

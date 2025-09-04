@@ -2,11 +2,8 @@ import openmdao.api as om
 from attrs import field, define
 
 from h2integrate.core.utilities import BaseConfig, CostModelBaseConfig, merge_shared_inputs
-from h2integrate.core.validators import gt_zero
+from h2integrate.core.validators import gt_zero, gte_zero
 from h2integrate.core.model_baseclasses import CostModelBaseClass
-
-
-n_timesteps = 8760
 
 
 @define
@@ -60,6 +57,7 @@ class NaturalGasPerformanceModel(om.ExplicitComponent):
         self.config = NaturalGasPerformanceConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance")
         )
+        n_timesteps = self.options["plant_config"]["plant"]["simulation"]["n_timesteps"]
 
         # Add natural gas input
         self.add_input(
@@ -111,10 +109,12 @@ class NaturalGasPerformanceModel(om.ExplicitComponent):
         natural_gas_in = inputs["natural_gas_in"]
         heat_rate_mmbtu_per_mwh = inputs["heat_rate_mmbtu_per_mwh"][0]
 
+        # heat_rate [MMBtu/MW*dt] = heat_rate [MMBtu/MWh] * 3600 [sec/h] * dt [1/sec]
+        dt = self.options["plant_config"]["plant"]["simulation"]["dt"]
+        heat_rate_mmbtu_per_dt = heat_rate_mmbtu_per_mwh * (3600 / dt)
         # Convert natural gas input to electricity output using heat rate
-        # electricity_out [MW] = natural_gas_in [MMBtu] / heat_rate [MMBtu/MWh]
-        # Note: This assumes hourly timesteps, so MWh = MW for hourly data
-        electricity_out = natural_gas_in / heat_rate_mmbtu_per_mwh
+        # electricity_out [MW*dt] = natural_gas_in [MMBtu] / heat_rate [MMBtu/MW*dt]
+        electricity_out = natural_gas_in / heat_rate_mmbtu_per_dt
 
         outputs["electricity_out"] = electricity_out
         outputs["natural_gas_consumed"] = natural_gas_in
@@ -152,9 +152,9 @@ class NaturalGasCostModelConfig(CostModelBaseConfig):
     """
 
     plant_capacity_mw: float | int = field(validator=gt_zero)
-    capex_per_kw: float | int = field(validator=gt_zero)
-    fixed_opex_per_kw_per_year: float | int = field(validator=gt_zero)
-    variable_opex_per_mwh: float | int = field(validator=gt_zero)
+    capex_per_kw: float | int = field(validator=gte_zero)
+    fixed_opex_per_kw_per_year: float | int = field(validator=gte_zero)
+    variable_opex_per_mwh: float | int = field(validator=gte_zero)
     heat_rate_mmbtu_per_mwh: float = field(validator=gt_zero)
 
 
@@ -184,7 +184,7 @@ class NaturalGasCostModel(CostModelBaseClass):
 
     Outputs:
         CapEx (float): Total capital expenditure in USD
-        OpEx (float): Total operating expenditure over project life in USD
+        OpEx (float): Total operating expenditure in USD/year
         cost_year (int): Dollar year for the costs
     """
 
@@ -192,6 +192,7 @@ class NaturalGasCostModel(CostModelBaseClass):
         self.config = NaturalGasCostModelConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost")
         )
+        n_timesteps = self.options["plant_config"]["plant"]["simulation"]["n_timesteps"]
 
         super().setup()
 
@@ -246,7 +247,9 @@ class NaturalGasCostModel(CostModelBaseClass):
 
         # Sum hourly electricity output to get annual generation
         # electricity_out is in MW, so sum gives MWh for hourly data
-        delivered_electricity_MWh = electricity_out.sum()
+        dt = self.options["plant_config"]["plant"]["simulation"]["dt"]
+        delivered_electricity_MWdt = electricity_out.sum()
+        delivered_electricity_MWh = delivered_electricity_MWdt * dt / 3600
 
         # Calculate capital expenditure
         capex = capex_per_kw * plant_capacity_kw
