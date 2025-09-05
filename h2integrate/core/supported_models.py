@@ -2,7 +2,6 @@ from h2integrate.resource.river import RiverResource
 from h2integrate.core.feedstocks import FeedstockCostModel, FeedstockPerformanceModel
 from h2integrate.transporters.pipe import PipePerformanceModel
 from h2integrate.transporters.cable import CablePerformanceModel
-from h2integrate.transporters.ng_pipe import NGPipePerformanceModel
 from h2integrate.converters.steel.steel import SteelPerformanceModel, SteelCostAndFinancialModel
 from h2integrate.core.profast_financial import ProFastComp
 from h2integrate.converters.wind.wind_plant import WindPlantCostModel, WindPlantPerformanceModel
@@ -136,7 +135,6 @@ supported_models = {
     # Transport
     "cable": CablePerformanceModel,
     "pipe": PipePerformanceModel,
-    "ng_pipe": NGPipePerformanceModel,
     "combiner_performance": CombinerPerformanceModel,
     "splitter_performance": SplitterPerformanceModel,
     # Control
