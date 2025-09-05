@@ -48,6 +48,7 @@
 - Added `simulation` section under `plant_config['plant']` that has information such as number of timesteps in the simulation, time step interval in seconds, simulation start time, and time zone.
 - Added `"custom_electrolyzer_cost"` model, an electrolyzer cost model that allows for user-defined capex and opex values
 - Made `pipe` and `cable` substance-agnostic rather than hard-coded for `hydrogen` and `electricity`
+- Added example of DOC integrating with methanol
 
 ## 0.3.0 [May 2 2025]
 
