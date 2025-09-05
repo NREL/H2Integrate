@@ -107,14 +107,10 @@ class NaturalGasPerformanceModel(om.ExplicitComponent):
             outputs: OpenMDAO outputs object for electricity_out
         """
         natural_gas_in = inputs["natural_gas_in"]
-        heat_rate_mmbtu_per_mwh = inputs["heat_rate_mmbtu_per_mwh"][0]
+        heat_rate_mmbtu_per_mwh = inputs["heat_rate_mmbtu_per_mwh"]
 
-        # heat_rate [MMBtu/MW*dt] = heat_rate [MMBtu/MWh] * dt [1/sec] / 3600 [sec/h]
-        dt = self.options["plant_config"]["plant"]["simulation"]["dt"]
-        heat_rate_mmbtu_per_dt = heat_rate_mmbtu_per_mwh * (dt / 3600)
         # Convert natural gas input to electricity output using heat rate
-        # electricity_out [MW*dt] = natural_gas_in [MMBtu] / heat_rate [MMBtu/MW*dt]
-        electricity_out = natural_gas_in / heat_rate_mmbtu_per_dt
+        electricity_out = natural_gas_in / heat_rate_mmbtu_per_mwh
 
         outputs["electricity_out"] = electricity_out
         outputs["natural_gas_consumed"] = natural_gas_in
