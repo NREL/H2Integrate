@@ -521,7 +521,9 @@ class H2IntegrateModel:
                 connection_name = f"{source_tech}_to_{dest_tech}_{transport_type}"
 
                 # Create the transport object
-                connection_component = self.supported_models[transport_type]()
+                connection_component = self.supported_models[transport_type](
+                    transport_item=transport_item
+                )
 
                 # Add the connection component to the model
                 self.plant.add_subsystem(connection_name, connection_component)

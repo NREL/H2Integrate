@@ -6,21 +6,28 @@ class PipePerformanceModel(om.ExplicitComponent):
     Pass-through pipe with no losses.
     """
 
+    def initialize(self):
+        self.options.declare(
+            "transport_item", values=["hydrogen", "co2", "methanol", "ammonia", "nitrogen"]
+        )
+
     def setup(self):
+        self.input_name = self.options["transport_item"] + "_in"
+        self.output_name = self.options["transport_item"] + "_out"
         self.add_input(
-            "hydrogen_in",
+            self.input_name,
             val=0.0,
             shape_by_conn=True,
-            copy_shape="hydrogen_out",
+            copy_shape=self.output_name,
             units="kg/s",
         )
         self.add_output(
-            "hydrogen_out",
+            self.output_name,
             val=0.0,
             shape_by_conn=True,
-            copy_shape="hydrogen_in",
+            copy_shape=self.input_name,
             units="kg/s",
         )
 
     def compute(self, inputs, outputs):
-        outputs["hydrogen_out"] = inputs["hydrogen_in"]
+        outputs[self.output_name] = inputs[self.input_name]
