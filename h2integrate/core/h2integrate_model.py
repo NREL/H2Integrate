@@ -312,7 +312,7 @@ class H2IntegrateModel:
                     "model_inputs": default_model_inputs,
                 }
             }
-            self.plant_config["finance_parameters"].update({default_model_dict})
+            self.plant_config["finance_parameters"].update(default_model_dict)
 
         if subgroups is None:
             # --- Default behavior ---
@@ -617,7 +617,9 @@ class H2IntegrateModel:
                 plant_producing_electricity = False
 
                 # Determine which commodity types this financial group handles
-                commodity_types = determine_commodity_types_from_technology_names(tech_configs)
+                commodity_types = determine_commodity_types_from_technology_names(
+                    tech_configs, electricity_producing_techs
+                )
 
                 # Get all included technologies for all commodity types in this group
                 all_included_techs = set()

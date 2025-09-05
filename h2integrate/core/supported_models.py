@@ -142,13 +142,3 @@ supported_models = {
 }
 
 electricity_producing_techs = ["wind", "solar", "pv", "river", "hopp"]
-
-commodity_units = {
-    "hydrogen": "kg",
-    "steel": "t",  # metric ton, 1000 kg
-    "ammonia": "kg",
-    "nitrogen": "kg",
-    "co2": "kg",
-    "electricity": "kW",
-    "water": "galUS",
-}

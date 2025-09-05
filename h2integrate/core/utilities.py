@@ -5,8 +5,6 @@ import attrs
 import numpy as np
 from attrs import Attribute, field, define
 
-from h2integrate.core.supported_models import electricity_producing_techs
-
 
 try:
     from pyxdsm.XDSM import FUNC, XDSM
@@ -289,7 +287,7 @@ def dict_to_yaml_formatting(orig_dict):
     return orig_dict
 
 
-def determine_commodity_types_from_technology_names(tech_configs):
+def determine_commodity_types_from_technology_names(tech_configs, electricity_producing_techs):
     commodity_types = []
     if "steel" in tech_configs:
         commodity_types.append("steel")
