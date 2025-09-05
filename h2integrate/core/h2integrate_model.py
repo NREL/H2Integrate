@@ -6,7 +6,10 @@ import numpy as np
 import openmdao.api as om
 
 from h2integrate.core.finances import AdjustedCapexOpexComp
-from h2integrate.core.utilities import create_xdsm_from_config
+from h2integrate.core.utilities import (
+    create_xdsm_from_config,
+    determine_commodity_types_from_technology_names,
+)
 from h2integrate.core.feedstocks import FeedstockComponent
 from h2integrate.core.resource_summer import ElectricitySumComp
 from h2integrate.core.supported_models import supported_models, electricity_producing_techs
@@ -623,27 +626,7 @@ class H2IntegrateModel:
                 plant_producing_electricity = False
 
                 # Determine which commodity types this financial group handles
-                commodity_types = []
-                if "steel" in tech_configs:
-                    commodity_types.append("steel")
-                if "electrolyzer" in tech_configs:
-                    commodity_types.append("hydrogen")
-                if "methanol" in tech_configs:
-                    commodity_types.append("methanol")
-                if "ammonia" in tech_configs:
-                    commodity_types.append("ammonia")
-                if "geoh2" in tech_configs:
-                    commodity_types.append("hydrogen")
-                if "doc" in tech_configs:
-                    commodity_types.append("co2")
-                if "air_separator" in tech_configs:
-                    commodity_types.append("nitrogen")
-                if "oae" in tech_configs:
-                    commodity_types.append("co2")
-                for tech in electricity_producing_techs:
-                    if tech in tech_configs:
-                        commodity_types.append("electricity")
-                        break
+                commodity_types = determine_commodity_types_from_technology_names(tech_configs)
 
                 # Get all included technologies for all commodity types in this group
                 all_included_techs = set()
