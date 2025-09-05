@@ -460,6 +460,42 @@ class H2IntegrateModel:
 
         self.financial_groups = financial_groups
 
+    def get_included_technologies(self, tech_config, commodity_type, plant_config):
+        """
+        Determine which technologies should be included in the financial metrics.
+        Args:
+            tech_config: Dictionary of technology configurations
+            commodity_type: Type of commodity (e.g., 'hydrogen', 'electricity', 'ammonia')
+            plant_config: Plant configuration dictionary
+        Returns:
+            List of technology names to include in the financial stackup
+        """
+        # Check if the user defined specific technologies to include in the metrics.
+        # If provided, only include those technologies in the stackup.
+        # If not provided, include all technologies in the financial group in the stackup.
+        metric_key = f"LCO{commodity_type[0].upper()}"
+
+        included_techs = (
+            plant_config["finance_parameters"]
+            .get("technologies_included_in_metrics", {})
+            .get(metric_key, None)
+        )
+
+        # Check if the included technologies are valid
+        if included_techs is not None:
+            missing_techs = [tech for tech in included_techs if tech not in tech_config]
+            if missing_techs:
+                raise ValueError(
+                    f"Included technology(ies) {missing_techs} not found in tech_config. "
+                    f"Available techs: {list(tech_config.keys())}"
+                )
+
+        # If no specific technologies are included, default to all technologies in tech_config
+        if included_techs is None:
+            included_techs = list(tech_config.keys())
+
+        return included_techs
+
     def connect_technologies(self):
         technology_interconnections = self.plant_config.get("technology_interconnections", [])
 
