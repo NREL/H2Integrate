@@ -41,7 +41,8 @@ plant:
 finance_parameters:
   finance_model: "ProFastComp"
   model_inputs:
-    save_profast_to_file: True
+    save_profast_config: True
+    save_profast_results: False
     profast_output_description: "profast_output"
     params:
       analysis_start_year: 2032

@@ -131,13 +131,13 @@ def test_simple_ammonia_example(subtests):
     # Check that the expected output files exist
     outputs_dir = Path.cwd() / "outputs"
     assert (
-        outputs_dir / "profast_output_ammonia.yaml"
+        outputs_dir / "profast_output_ammonia_config.yaml"
     ).is_file(), "profast_output_ammonia.yaml not found"
     assert (
-        outputs_dir / "profast_output_electricity.yaml"
+        outputs_dir / "profast_output_electricity_config.yaml"
     ).is_file(), "profast_output_electricity.yaml not found"
     assert (
-        outputs_dir / "profast_output_hydrogen.yaml"
+        outputs_dir / "profast_output_hydrogen_config.yaml"
     ).is_file(), "profast_output_hydrogen.yaml not found"
 
 
@@ -244,7 +244,7 @@ def test_co2h_methanol_example(subtests):
 
     # Check levelized cost of methanol (LCOM)
     with subtests.test("Check CO2 Hydrogenation LCOM"):
-        assert pytest.approx(model.prob.get_val("methanol.LCOM"), rel=1e-6) == 1.38341179
+        assert pytest.approx(model.prob.get_val("methanol.LCOM")[0], rel=1e-6) == 1.38341179
 
 
 def test_wind_h2_opt_example(subtests):
@@ -491,7 +491,7 @@ def test_hydrogen_dispatch_example(subtests):
     with subtests.test("Check LCOE"):
         assert (
             pytest.approx(
-                model.prob.get_val("financials_group_default.LCOE", units="USD/MW/h")[0],
+                model.prob.get_val("financials_subgroup_elec.LCOE", units="USD/MW/h")[0],
                 rel=1e-5,
             )
             == 106.13987
@@ -500,7 +500,7 @@ def test_hydrogen_dispatch_example(subtests):
     with subtests.test("Check LCOH"):
         assert (
             pytest.approx(
-                model.prob.get_val("financials_group_default.LCOH", units="USD/kg")[0],
+                model.prob.get_val("financials_subgroup_h2.LCOH", units="USD/kg")[0],
                 rel=1e-5,
             )
             == 5.68452215

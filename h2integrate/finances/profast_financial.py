@@ -14,7 +14,12 @@ from h2integrate.core.utilities import (
 )
 from h2integrate.core.dict_utils import update_defaults
 from h2integrate.core.validators import gt_zero, contains, gte_zero, range_val
-from h2integrate.tools.profast_tools import run_profast, create_and_populate_profast
+from h2integrate.tools.profast_tools import (
+    run_profast,
+    make_price_breakdown,
+    create_and_populate_profast,
+    format_profast_price_breakdown_per_year,
+)
 from h2integrate.core.inputs.validation import write_yaml
 from h2integrate.tools.profast_reverse_tools import convert_pf_to_dict
 
@@ -421,7 +426,6 @@ class ProFastComp(om.ExplicitComponent):
         self.options.declare("description", types=str, default="")
 
     def setup(self):
-        self.cnt = 0
         if self.options["commodity_type"] == "electricity":
             commodity_units = "kW*h/year"
             lco_units = "USD/kW/h"
@@ -591,28 +595,39 @@ class ProFastComp(om.ExplicitComponent):
         sol, summary, price_breakdown = run_profast(pf)
 
         # Check whether to export profast object to .yaml file
-        if self.options["plant_config"]["finance_parameters"]["model_inputs"].get(
-            "save_profast_to_file", False
-        ):
+        save_results = self.options["plant_config"]["finance_parameters"]["model_inputs"].get(
+            "save_profast_results", False
+        )
+        save_config = self.options["plant_config"]["finance_parameters"]["model_inputs"].get(
+            "save_profast_config", False
+        )
+        if save_results or save_config:
+            pf_config_dict = convert_pf_to_dict(pf)
+
             output_dir = self.options["driver_config"]["general"]["folder_output"]
-            fdesc = self.options["plant_config"]["finance_parameters"]["model_inputs"][
-                "profast_output_description"
-            ]
-            if self.options["description"] == "":
-                fname = f"{fdesc}_{self.options['commodity_type']}.yaml"
-            else:
-                fname = f"{fdesc}_{self.options['commodity_type']}_{self.LCO_str}.yaml"
+            fdesc = self.options["plant_config"]["finance_parameters"]["model_inputs"].get(
+                "profast_output_description", "ProFastComp"
+            )
 
-            if self.cnt > 0:
-                fname = fname.replace(".yaml", f"_{self.cnt}.yaml")
-            self.cnt += 1
+            # if self.options["description"] == "":
+            #     fbasename = f"{fdesc}_{self.options['commodity_type']}"
+            # else:
+            fbasename = f"{fdesc}_{self.output_txt}"
 
-            fpath = Path(output_dir) / fname
             output_dir = Path(output_dir)
             output_dir.mkdir(parents=True, exist_ok=True)
-            d = convert_pf_to_dict(pf)
-            d = dict_to_yaml_formatting(d)
-            write_yaml(d, fpath)
+            if save_config:
+                pf_config_dict = dict_to_yaml_formatting(pf_config_dict)
+                config_fpath = Path(output_dir) / f"{fbasename}_config.yaml"
+                write_yaml(pf_config_dict, config_fpath)
+            if save_results:
+                lco_breakdown, lco_check = make_price_breakdown(price_breakdown, pf_config_dict)
+                price_breakdown_formatted = format_profast_price_breakdown_per_year(price_breakdown)
+                pf_breakdown_fpath = Path(output_dir) / f"{fbasename}_profast_price_breakdown.csv"
+                lco_breakdown_fpath = Path(output_dir) / f"{fbasename}_LCO_breakdown.yaml"
+                price_breakdown_formatted.to_csv(pf_breakdown_fpath)
+                lco_breakdown = dict_to_yaml_formatting(lco_breakdown)
+                write_yaml(lco_breakdown, lco_breakdown_fpath)
 
         outputs[self.LCO_str] = sol["lco"]
         for output_var in self.outputs_to_units.keys():
