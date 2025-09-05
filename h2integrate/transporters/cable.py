@@ -1,7 +1,4 @@
 import openmdao.api as om
-from attrs import field
-
-from h2integrate.core.validators import contains
 
 
 class CablePerformanceModel(om.ExplicitComponent):
@@ -9,12 +6,12 @@ class CablePerformanceModel(om.ExplicitComponent):
     Pass-through cable with no losses.
     """
 
-    transport_item: str = field(validator=contains(["electricity"]))
-    # TODO: Deliniate AC & DC electricity, voltage levels?
+    def initialize(self):
+        self.options.declare("transport_item", values=["electricity"])
 
     def setup(self):
-        self.input_name = self.transport_item + "_in"
-        self.output_name = self.transport_item + "_out"
+        self.input_name = self.options["transport_item"] + "_in"
+        self.output_name = self.options["transport_item"] + "_out"
         self.add_input(
             self.input_name,
             val=0.0,
