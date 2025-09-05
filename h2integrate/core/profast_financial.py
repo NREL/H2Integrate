@@ -388,6 +388,15 @@ class ProFastComp(om.ExplicitComponent):
             of the commodity). For example, LCOH if commodity_type is "hydrogen".
             If commodity_type is "hydrogen", "ammonia", "nitrogen", or "co2", the units are USD/kg.
             If the commodity type is "electricity", the units are USD/kWh.
+        wacc_<commodity> (float): weighted average cost of capital as a fraction.
+        crf_<commodity> (float): capital recovery factor as a fraction.
+        irr_<commodity> (float): internal rate of return as a fraction.
+        profit_index_<commodity> (float):
+        investor_payback_period_<commodity> (float): time until initial investment costs are
+            recovered in years.
+        price_<commodity> (float): first year price of commodity in same units as `LCOx`
+
+
 
     Methods:
         initialize(): Declares component options.
