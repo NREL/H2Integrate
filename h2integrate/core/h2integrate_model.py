@@ -279,11 +279,11 @@ class H2IntegrateModel:
         Creates and configures the financial model for the plant.
 
         - If subgroups are defined in finance_parameters:
-            * The first tuple in each subgroup is (commodity_type, finance_model).
+            * The first tuple in each subgroup is (commodity, finance_model).
             * The remaining tuples list technologies belonging to that subgroup.
         - If no subgroups are defined:
             * A default subgroup is created with all technologies.
-            * commodity_type and finance_model are pulled from finance_parameters.
+            * commodity and finance_model are pulled from finance_parameters.
         """
 
         if "finance_parameters" not in self.plant_config:
@@ -316,12 +316,16 @@ class H2IntegrateModel:
 
         if subgroups is None:
             # --- Default behavior ---
-            commodity_type = self.plant_config["finance_parameters"].get("commodity_type")
-            finance_model_name = self.plant_config["finance_parameters"].get("finance_model")
+            commodity = self.plant_config["finance_parameters"].get("commodity")
+            finance_model_name = (
+                self.plant_config["finance_parameters"]
+                .get(default_finance_model_nickname, {})
+                .get("finance_model")
+            )
 
-            if not commodity_type or not finance_model_name:
+            if not commodity or not finance_model_name:
                 raise ValueError(
-                    "finance_parameters must define 'commodity_type' and 'finance_model' "
+                    "finance_parameters must define 'commodity' and 'finance_model' "
                     "if no subgroups are provided."
                 )
 
@@ -329,7 +333,7 @@ class H2IntegrateModel:
             # Collect all technologies into one subgroup
             all_techs = list(self.technology_config["technologies"].keys())
             subgroup = {
-                "commodity": commodity_type,
+                "commodity": commodity,
                 "finance_groups": [default_finance_model_nickname],
                 "technologies": all_techs,
             }
@@ -341,7 +345,7 @@ class H2IntegrateModel:
         #             financial_groups["default"][tech_name] = tech_config
         # --- Normal subgroup handling ---
         for subgroup_name, subgroup_params in subgroups.items():
-            commodity_type = subgroup_params.get("commodity", None)
+            commodity = subgroup_params.get("commodity", None)
             commodity_desc = subgroup_params.get("commodity_desc", "")
             finance_model_nicknames = subgroup_params.get(
                 "finance_groups", [default_finance_model_nickname]
@@ -352,7 +356,7 @@ class H2IntegrateModel:
                 finance_model_nicknames = [finance_model_nicknames]
 
             # check commodity type
-            if commodity_type is None:
+            if commodity is None:
                 raise ValueError(f"Missing ``commodity`` provided in subgroup {subgroup_name}")
 
             tech_configs = {
@@ -371,7 +375,7 @@ class H2IntegrateModel:
                 {
                     subgroup_name: {
                         "tech_configs": tech_configs,
-                        "commodity": commodity_type,
+                        "commodity": commodity,
                     }
                 }
             )
@@ -439,15 +443,15 @@ class H2IntegrateModel:
                         driver_config=self.driver_config,
                         tech_config=tech_configs,
                         plant_config=filtered_plant_config,
-                        commodity_type=commodity_type,
+                        commodity_type=commodity,
                         description=commodity_desc,
                     )
 
                 if not skip_model:
                     finance_subsystem_name = (
-                        f"{finance_model_nickname}_{commodity_type}"
+                        f"{finance_model_nickname}_{commodity}"
                         if commodity_desc == ""
-                        else f"{finance_model_nickname}_{commodity_type}_{commodity_desc}"
+                        else f"{finance_model_nickname}_{commodity}_{commodity_desc}"
                     )
 
                     financial_group.add_subsystem(finance_subsystem_name, fin_comp, promotes=["*"])
@@ -455,44 +459,6 @@ class H2IntegrateModel:
             self.plant.add_subsystem(f"financials_subgroup_{subgroup_name}", financial_group)
 
         self.financial_groups = financial_groups
-
-    def get_included_technologies(self, tech_config, commodity_type, plant_config):
-        """
-        Determine which technologies should be included in the financial metrics.
-
-        Args:
-            tech_config: Dictionary of technology configurations
-            commodity_type: Type of commodity (e.g., 'hydrogen', 'electricity', 'ammonia')
-            plant_config: Plant configuration dictionary
-
-        Returns:
-            List of technology names to include in the financial stackup
-        """
-        # Check if the user defined specific technologies to include in the metrics.
-        # If provided, only include those technologies in the stackup.
-        # If not provided, include all technologies in the financial group in the stackup.
-        metric_key = f"LCO{commodity_type[0].upper()}"
-
-        included_techs = (
-            plant_config["finance_parameters"]
-            .get("technologies_included_in_metrics", {})
-            .get(metric_key, None)
-        )
-
-        # Check if the included technologies are valid
-        if included_techs is not None:
-            missing_techs = [tech for tech in included_techs if tech not in tech_config]
-            if missing_techs:
-                raise ValueError(
-                    f"Included technology(ies) {missing_techs} not found in tech_config. "
-                    f"Available techs: {list(tech_config.keys())}"
-                )
-
-        # If no specific technologies are included, default to all technologies in tech_config
-        if included_techs is None:
-            included_techs = list(tech_config.keys())
-
-        return included_techs
 
     def connect_technologies(self):
         technology_interconnections = self.plant_config.get("technology_interconnections", [])
