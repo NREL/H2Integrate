@@ -324,10 +324,9 @@ class H2IntegrateModel:
                 if tech in tech_configs:
                     commodity_types.append("electricity")
                     break
-                    break
 
             # Steel, methanol provides their own financials
-            if any(c in commodity_types for c in ("steel")):
+            if any(c in commodity_types for c in ("steel",)):
                 continue
 
             # GeoH2 provides own financials
