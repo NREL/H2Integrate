@@ -6,7 +6,7 @@ import openmdao.api as om
 from pytest import approx
 
 from h2integrate.core.inputs.validation import load_tech_yaml, load_plant_yaml, load_driver_yaml
-from h2integrate.core.profast_financial import ProFastComp
+from h2integrate.finances.profast_financial import ProFastComp
 
 
 examples_dir = Path(__file__).resolve().parent.parent.parent.parent / "examples/."
