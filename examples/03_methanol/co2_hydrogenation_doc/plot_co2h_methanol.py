@@ -47,13 +47,23 @@ def plot_methanol(model):
     plt.yscale("log")
     plt.legend()
 
-    # H2 and CO2 to Methanol
+    # H2 and Storage
     plt.subplot(3, 2, 5)
+    plt.title("H2 Storage")
+    h2_storage_in = model.plant.h2_storage.h2_storage.get_val("hydrogen_in")
+    h2_storage_out = model.plant.h2_storage_to_methanol_pipe.get_val("hydrogen_out") * 3600
+    plt.plot(times, h2_storage_in, label="hydrogen_in [kg/hr]", color=[1, 0.5, 0])
+    plt.plot(times, h2_storage_out, label="hydrogen_out [kg/hr]", color=[0, 0.5, 0])
+    plt.yscale("log")
+    plt.legend()
+
+    # H2 and CO2 to Methanol
+    plt.subplot(3, 2, 6)
     plt.title("Methanol")
     meoh_h2_in = model.plant.methanol.co2h_methanol_plant_performance.get_val("hydrogen_in")
     meoh_co2_in = model.plant.methanol.co2h_methanol_plant_performance.get_val("co2_in")
     meoh_meoh_out = model.plant.methanol.co2h_methanol_plant_performance.get_val("methanol_out")
-    plt.plot(times, meoh_h2_in, label="hydrogen_in [kg/hr]", color=[1, 0.5, 0])
+    plt.plot(times, meoh_h2_in, label="hydrogen_in [kg/hr]", color=[0, 0.5, 0])
     plt.plot(times, meoh_co2_in, label="co2_in [kg/hr]", color=[0.5, 0.25, 0])
     plt.plot(times, meoh_meoh_out, label="methanol_out [kg/hr]", color=[1, 0, 0.5])
     plt.yscale("log")

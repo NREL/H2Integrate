@@ -1,8 +1,8 @@
 site: #!include flatirons_site.yaml
   data:
-    lat: 32.34
-    lon: -98.27
-    elev: 440
+    lat: 29.2
+    lon: -94.6
+    elev: 0
     year: 2013
     tz: -6
     site_boundaries: # enlarged boundaries to fit all turbines
@@ -16,8 +16,8 @@ site: #!include flatirons_site.yaml
         - [0.0, 25000]
         - [25000, 25000]
         - [25000, 0.0]
-  solar_resource_file: "tech_inputs/weather/solar/32.31714_-100.18_psmv3_60_2013.csv"
-  wind_resource_file: "tech_inputs/weather/wind/32.31714_-100.18_windtoolkit_2013_60min_100m_120m.srw"
+  solar_resource_file: ""
+  wind_resource_file: ""
   wave_resource_file: ""
   grid_resource_file: ""
   hub_height: 115.0
@@ -29,18 +29,18 @@ site: #!include flatirons_site.yaml
 
 technologies:
   wind:
-    num_turbines: 35
-    turbine_rating_kw: 6000.0
+    num_turbines: 28
+    turbine_rating_kw: 15000.0
     model_name: pysam #floris
     timestep: [0, 8760]
     # floris_config: !include floris_input_lbw_6MW.yaml
     fin_model: !include default_fin_config.yaml
   pv:
-    system_capacity_kw: 12000
+    system_capacity_kw: 24000
     dc_degradation: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     fin_model: !include default_fin_config.yaml
   grid:
-    interconnect_kw: 156000 # Set higher than rated generation capacity
+    interconnect_kw: 312000 # Set higher than rated generation capacity
     fin_model: !include default_fin_config.yaml
 
 config:

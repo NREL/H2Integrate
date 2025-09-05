@@ -169,14 +169,19 @@ class SMRMethanolPlantCostModel(MethanolCostBaseClass):
         lhv_mj = inputs["ng_lhv"]
         lhv_mmbtu = convert_units(lhv_mj, "MJ", "MBtu")
 
-        outputs["CapEx"] = toc_usd
-        outputs["OpEx"] = foc_usd_y + voc_usd_y
         outputs["Fixed_OpEx"] = foc_usd_y
         outputs["Variable_OpEx"] = voc_usd_y
-        outputs["meoh_syn_cat_cost"] = inputs["meoh_syn_cat_consume"] * inputs["meoh_syn_cat_price"]
-        outputs["meoh_atr_cat_cost"] = inputs["meoh_atr_cat_consume"] * inputs["meoh_atr_cat_price"]
-        outputs["ng_cost"] = np.sum(inputs["ng_consume"]) * lhv_mmbtu * inputs["ng_price"]
-        outputs["elec_revenue"] = np.sum(inputs["electricity_out"]) * ppa_price
+        meoh_cat = inputs["meoh_syn_cat_consume"] * inputs["meoh_syn_cat_price"]
+        outputs["meoh_syn_cat_cost"] = meoh_cat
+        atr_cat = inputs["meoh_atr_cat_consume"] * inputs["meoh_atr_cat_price"]
+        outputs["meoh_atr_cat_cost"] = atr_cat
+        ng_cost = np.sum(inputs["ng_consume"]) * lhv_mmbtu * inputs["ng_price"]
+        outputs["ng_cost"] = ng_cost
+        elec_rev = np.sum(inputs["electricity_out"]) * ppa_price
+        outputs["elec_revenue"] = elec_rev
+
+        outputs["CapEx"] = toc_usd
+        outputs["OpEx"] = foc_usd_y + voc_usd_y + meoh_cat + atr_cat + ng_cost - elec_rev
 
 
 class SMRMethanolPlantFinanceModel(MethanolFinanceBaseClass):

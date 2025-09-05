@@ -181,13 +181,17 @@ class CO2HMethanolPlantCostModel(MethanolCostBaseClass):
         lhv_mj = inputs["ng_lhv"]
         lhv_mmbtu = convert_units(lhv_mj, "MJ", "MBtu")
 
-        outputs["CapEx"] = toc_usd
-        outputs["OpEx"] = foc_usd_y + voc_usd_y
         outputs["Fixed_OpEx"] = foc_usd_y
         outputs["Variable_OpEx"] = voc_usd_y
-        outputs["meoh_syn_cat_cost"] = inputs["meoh_syn_cat_consume"] * inputs["meoh_syn_cat_price"]
-        outputs["ng_cost"] = np.sum(inputs["ng_consume"]) * lhv_mmbtu * inputs["ng_price"]
-        outputs["co2_cost"] = np.sum(inputs["carbon_dioxide_consume"]) * inputs["co2_price"]
+        meoh_cat = inputs["meoh_syn_cat_consume"] * inputs["meoh_syn_cat_price"]
+        outputs["meoh_syn_cat_cost"] = meoh_cat
+        ng_cost = np.sum(inputs["ng_consume"]) * lhv_mmbtu * inputs["ng_price"]
+        outputs["ng_cost"] = ng_cost
+        co2_cost = np.sum(inputs["carbon_dioxide_consume"]) * inputs["co2_price"]
+        outputs["co2_cost"] = co2_cost
+
+        outputs["CapEx"] = toc_usd
+        outputs["OpEx"] = foc_usd_y + voc_usd_y + meoh_cat + ng_cost + co2_cost
 
 
 class CO2HMethanolPlantFinanceModel(MethanolFinanceBaseClass):
