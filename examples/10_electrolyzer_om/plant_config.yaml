@@ -4,8 +4,6 @@ description: "This plant is located in MN, USA..."
 site:
   latitude: 47.5233
   longitude: -92.5366
-  elevation_m: 439.0
-  time_zone: -5
 
   # array of polygons defining boundaries with x/y coords
   boundaries: [
@@ -71,6 +69,7 @@ finance_parameters:
         debt_type: "Revolving debt"
         loan_period_if_used: 0
         cash_onhand_months: 1
+        admin_expense: 0.00 # percent of sales H2FAST default
         non_depr_assets: 250000
         end_of_proj_sale_non_depr_assets: 250000
       capital_items:
@@ -87,6 +86,5 @@ finance_parameters:
       technologies: ["wind"]
     hydrogen:
       commodity: "hydrogen"
-      commodity_desc: "delivered"
-      finance_groups: ["lcoh_financials"]
+      finance_groups: ["lcoe_financials","lcoh_financials"]
       technologies: ["wind","electrolyzer"]

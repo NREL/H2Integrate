@@ -337,7 +337,7 @@ class H2IntegrateModel:
                 "finance_groups": [default_finance_model_nickname],
                 "technologies": all_techs,
             }
-            subgroups = {"all": subgroup}
+            subgroups = {default_finance_model_nickname: subgroup}
         # for tech_name, tech_config in self.technology_config["technologies"].items():
         #         if tech_name not in all_grouped_techs:
         #             if "default" not in financial_groups:
@@ -349,7 +349,7 @@ class H2IntegrateModel:
             commodity_desc = subgroup_params.get("commodity_desc", "")
             finance_model_nicknames = subgroup_params.get(
                 "finance_groups", [default_finance_model_nickname]
-            )  # TODO: what if they only have one finance model
+            )
             tech_names = subgroup_params.get("technologies")
 
             if isinstance(finance_model_nicknames, str):
@@ -439,12 +439,26 @@ class H2IntegrateModel:
                         }
                     )
 
+                    commodity_desc = subgroup_params.get("commodity_desc", "")
+                    commodity_output_desc = subgroup_params.get("commodity_desc", "")
+
+                    if len(finance_model_nicknames) > 1:
+                        non_tech_financials = [
+                            k
+                            for k in finance_model_nicknames
+                            if k in self.plant_config["finance_parameters"]
+                        ]
+                        if len(non_tech_financials) > 1:
+                            commodity_output_desc = (
+                                commodity_output_desc + f"_{finance_model_nickname}"
+                            )
+
                     fin_comp = fin_model(
                         driver_config=self.driver_config,
                         tech_config=tech_configs,
                         plant_config=filtered_plant_config,
                         commodity_type=commodity,
-                        description=commodity_desc,
+                        description=commodity_output_desc,
                     )
 
                 if not skip_model:
