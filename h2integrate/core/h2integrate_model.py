@@ -3,6 +3,7 @@ from pathlib import Path
 
 import yaml
 import numpy as np
+import networkx as nx
 import openmdao.api as om
 
 from h2integrate.core.finances import ProFastComp, AdjustedCapexOpexComp
@@ -624,15 +625,20 @@ class H2IntegrateModel:
 
         self.plant.options["auto_order"] = True
 
-        # Check if there are any connections FROM a financial group to ammonia
-        # This handles the case where LCOH is computed in the financial group and passed to ammonia
+        # Check if there are any loops in the technology interconnections
+        # If loops are present, add solvers to resolve the coupling
+        # Create a directed graph from the technology interconnections
+        G = nx.DiGraph()
         for connection in technology_interconnections:
-            if connection[0].startswith("financials_group_") and connection[1] == "ammonia":
-                # If the connection is from a financial group, set solvers for the
-                # plant to resolve the coupling
-                self.plant.nonlinear_solver = om.NonlinearBlockGS()
-                self.plant.linear_solver = om.DirectSolver()
-                break
+            source = connection[0]
+            destination = connection[1]
+            G.add_edge(source, destination)
+
+        # Check if there are any cycles (loops) in the graph
+        if list(nx.simple_cycles(G)):
+            # If cycles are found, set solvers for the plant to resolve the coupling
+            self.plant.nonlinear_solver = om.NonlinearBlockGS()
+            self.plant.linear_solver = om.DirectSolver()
 
         if (pyxdsm is not None) and (len(technology_interconnections) > 0):
             create_xdsm_from_config(self.plant_config)
