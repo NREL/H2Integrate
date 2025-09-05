@@ -421,6 +421,7 @@ class ProFastComp(om.ExplicitComponent):
         self.options.declare("description", types=str, default="")
 
     def setup(self):
+        self.cnt = 0
         if self.options["commodity_type"] == "electricity":
             commodity_units = "kW*h/year"
             lco_units = "USD/kW/h"
@@ -428,26 +429,18 @@ class ProFastComp(om.ExplicitComponent):
             commodity_units = "kg/year"
             lco_units = "USD/kg"
 
-        if (
-            self.options["description"] == ""
-            or self.options["description"] == self.options["commodity_type"]
-        ):
+        if self.options["description"] == "":
             self.LCO_str = f"LCO{self.options['commodity_type'][0].upper()}"
             self.output_txt = self.options["commodity_type"].lower()
         else:
             LCO_base_str = f"LCO{self.options['commodity_type'][0].upper()}"
-            LCO_desc_str = (
-                self.options["description"]
-                .replace(self.options["commodity_type"], "")
-                .strip()
-                .strip("_()-")
-            )
-            if LCO_desc_str == "":
+            desc_str = self.options["description"].strip().strip("_()-")
+            if desc_str == "":
                 self.output_txt = self.options["commodity_type"].lower()
                 self.LCO_str = LCO_base_str
             else:
-                self.output_txt = f"{self.options['commodity_type'].lower()}_{LCO_desc_str}"
-                self.LCO_str = f"{LCO_base_str}_{LCO_desc_str}"
+                self.output_txt = f"{self.options['commodity_type'].lower()}_{desc_str}"
+                self.LCO_str = f"{LCO_base_str}_{desc_str}"
 
         self.add_output(self.LCO_str, val=0.0, units=lco_units)
         self.outputs_to_units = {
@@ -609,6 +602,10 @@ class ProFastComp(om.ExplicitComponent):
                 fname = f"{fdesc}_{self.options['commodity_type']}.yaml"
             else:
                 fname = f"{fdesc}_{self.options['commodity_type']}_{self.LCO_str}.yaml"
+
+            if self.cnt > 0:
+                fname = fname.replace(".yaml", f"_{self.cnt}.yaml")
+            self.cnt += 1
 
             fpath = Path(output_dir) / fname
             output_dir = Path(output_dir)
