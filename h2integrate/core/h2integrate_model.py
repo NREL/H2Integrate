@@ -406,20 +406,9 @@ class H2IntegrateModel:
                         .get("financial_model", {})
                         .get("model")
                     )
-                    tech_cost_model_name = (
-                        tech_configs.get(finance_model_nickname).get("cost_model", {}).get("model")
-                    )
 
-                    # check for coupled cost/finance models and skip
-                    if tech_cost_model_name != tech_finance_model_name:
-                        fin_model = self.supported_models.get(tech_finance_model_name)
-                        # use financial model from tech config
-                        fin_comp = fin_model(
-                            driver_config=self.driver_config,
-                            tech_config=tech_configs[finance_model_nickname].get("model_inputs"),
-                            plant_config=self.plant_config,
-                        )
-                    else:
+                    # this is created in create_technologies()
+                    if tech_finance_model_name is not None:
                         skip_model = True
                 else:
                     finance_model_config = self.plant_config["finance_parameters"].get(
@@ -716,7 +705,7 @@ class H2IntegrateModel:
         # Check if there are any connections FROM a financial group to ammonia
         # This handles the case where LCOH is computed in the financial group and passed to ammonia
         for connection in technology_interconnections:
-            if connection[0].startswith("financials_group_") and connection[1] == "ammonia":
+            if connection[0].startswith("financials_subgroup_") and connection[1] == "ammonia":
                 # If the connection is from a financial group, set solvers for the
                 # plant to resolve the coupling
                 self.plant.nonlinear_solver = om.NonlinearBlockGS()
