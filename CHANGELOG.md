@@ -49,6 +49,7 @@
 - Updated option to pass variables in technology interconnections to allow for different variable names from source to destination in the format `[source_tech, dest_tech, (source_tech_variable, dest_tech_variable)]`
 - Added `simulation` section under `plant_config['plant']` that has information such as number of timesteps in the simulation, time step interval in seconds, simulation start time, and time zone.
 - Added `"custom_electrolyzer_cost"` model, an electrolyzer cost model that allows for user-defined capex and opex values
+- Made `pipe` and `cable` substance-agnostic rather than hard-coded for `hydrogen` and `electricity`
 
 ## 0.3.0 [May 2 2025]
 
