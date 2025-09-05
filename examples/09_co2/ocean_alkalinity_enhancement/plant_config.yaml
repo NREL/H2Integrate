@@ -60,3 +60,9 @@ finance_parameters:
     cost_year_adjustment_inflation: 0.025 # 2.5% inflation rate for cost adjustments
     target_dollar_year: 2022
   subgroups:
+    electricity:
+      commodity: "electricity"
+      technologies: ["hopp", "oae"]
+    co2:
+      commodity: "co2"
+      technologies: ["hopp","oae"]

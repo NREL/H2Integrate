@@ -274,7 +274,7 @@ def test_wind_h2_opt_example(subtests):
 
     with subtests.test("Check LCOE"):
         assert (
-            pytest.approx(model.prob.get_val("financials_group_default.LCOE")[0], rel=1e-3)
+            pytest.approx(model.prob.get_val("financials_subgroup_electricity.LCOE")[0], rel=1e-3)
             == 0.151189
         )
 
@@ -302,8 +302,8 @@ def test_wind_h2_opt_example(subtests):
     assert len(cases) > 1, "Not enough cases recorded in SQL file."
 
     # Get initial and final LCOH values
-    initial_lcoh = cases[0].outputs["financials_group_default.LCOH"][0]
-    final_lcoh = cases[-1].outputs["financials_group_default.LCOH"][0]
+    initial_lcoh = cases[0].outputs["financials_subgroup_hydrogen.LCOH"][0]
+    final_lcoh = cases[-1].outputs["financials_subgroup_hydrogen.LCOH"][0]
 
     with subtests.test("Check LCOH changed"):
         assert final_lcoh != initial_lcoh
@@ -311,14 +311,14 @@ def test_wind_h2_opt_example(subtests):
     with subtests.test("Check total adjusted CapEx"):
         assert (
             pytest.approx(
-                model.prob.get_val("financials_group_default.total_capex_adjusted")[0], rel=1e-3
+                model.prob.get_val("financials_subgroup_hydrogen.total_capex_adjusted")[0], rel=1e-3
             )
             == 2783126102
         )
     with subtests.test("Check total adjusted OpEx"):
         assert (
             pytest.approx(
-                model.prob.get_val("financials_group_default.total_opex_adjusted")[0], rel=1e-3
+                model.prob.get_val("financials_subgroup_hydrogen.total_opex_adjusted")[0], rel=1e-3
             )
             == 75543899
         )
@@ -371,13 +371,13 @@ def test_wind_wave_doc_example(subtests):
     # Subtests for checking specific values
     with subtests.test("Check LCOC"):
         assert (
-            pytest.approx(model.prob.get_val("financials_group_default.LCOC")[0], rel=1e-3)
+            pytest.approx(model.prob.get_val("financials_subgroup_co2.LCOC")[0], rel=1e-3)
             == 2.26955589
         )
 
     with subtests.test("Check LCOE"):
         assert (
-            pytest.approx(model.prob.get_val("financials_group_default.LCOE")[0], rel=1e-3)
+            pytest.approx(model.prob.get_val("financials_subgroup_electricity.LCOE")[0], rel=1e-3)
             == 1.05281478
         )
 
@@ -398,19 +398,19 @@ def test_splitter_wind_doc_h2_example(subtests):
     # Subtests for checking specific values
     with subtests.test("Check LCOH"):
         assert (
-            pytest.approx(model.prob.get_val("financials_group_default.LCOH")[0], rel=1e-3)
+            pytest.approx(model.prob.get_val("financials_subgroup_hydrogen.LCOH")[0], rel=1e-3)
             == 10.25515911
         )
 
     with subtests.test("Check LCOC"):
         assert (
-            pytest.approx(model.prob.get_val("financials_group_default.LCOC")[0], rel=1e-3)
+            pytest.approx(model.prob.get_val("financials_subgroup_co2.LCOC")[0], rel=1e-3)
             == 14.19802243
         )
 
     with subtests.test("Check LCOE"):
         assert (
-            pytest.approx(model.prob.get_val("financials_group_default.LCOE")[0], rel=1e-3)
+            pytest.approx(model.prob.get_val("financials_subgroup_electricity.LCOE")[0], rel=1e-3)
             == 0.1385128
         )
 
@@ -427,12 +427,12 @@ def test_hydro_example(subtests):
 
     model.post_process()
 
-    print(model.prob.get_val("financials_group_default.LCOE"))
+    print(model.prob.get_val("financials_subgroup_default.LCOE"))
 
     # Subtests for checking specific values
     with subtests.test("Check LCOE"):
         assert (
-            pytest.approx(model.prob.get_val("financials_group_default.LCOE"), rel=1e-3)
+            pytest.approx(model.prob.get_val("financials_subgroup_default.LCOE"), rel=1e-3)
             == 0.17653979
         )
 
@@ -451,7 +451,7 @@ def test_hybrid_energy_plant_example(subtests):
 
     # Subtests for checking specific values
     with subtests.test("Check LCOE"):
-        assert model.prob.get_val("financials_group_default.LCOE", units="USD/MW/h")[0] < 83.2123
+        assert model.prob.get_val("financials_subgroup_default.LCOE", units="USD/MW/h")[0] < 83.2123
 
 
 def test_asu_example(subtests):
@@ -470,7 +470,7 @@ def test_asu_example(subtests):
     with subtests.test("Check LCON"):
         assert (
             pytest.approx(
-                model.prob.get_val("financials_group_default.LCON", units="USD/kg")[0],
+                model.prob.get_val("financials_subgroup_default.LCON", units="USD/kg")[0],
                 abs=1e-4,
             )
             == 0.309041977334972
@@ -524,11 +524,12 @@ def test_wind_wave_oae_example(subtests):
     # Note: These are placeholder values. Update with actual values after running the test
     # when MCM package is properly installed and configured
     with subtests.test("Check LCOC"):
-        assert pytest.approx(model.prob.get_val("financials_group_default.LCOC"), rel=1e-3) == 37.82
+        assert pytest.approx(model.prob.get_val("financials_subgroup_co2.LCOC"), rel=1e-3) == 37.82
 
     with subtests.test("Check LCOE"):
         assert (
-            pytest.approx(model.prob.get_val("financials_group_default.LCOE"), rel=1e-3) == 0.36956
+            pytest.approx(model.prob.get_val("financials_subgroup_electricity.LCOE"), rel=1e-3)
+            == 0.36956
         )
 
 
@@ -550,7 +551,8 @@ def test_wind_wave_oae_example_with_financials(subtests):
     # when MCM package is properly installed and configured
     with subtests.test("Check LCOE"):
         assert (
-            pytest.approx(model.prob.get_val("financials_group_default.LCOE"), rel=1e-3) == 0.09180
+            pytest.approx(model.prob.get_val("financials_subgroup_electricity.LCOE"), rel=1e-3)
+            == 0.09180
         )
 
     with subtests.test("Check Carbon Credit"):
@@ -571,7 +573,7 @@ def test_wind_solar_electrolyzer_example(subtests):
     with subtests.test("Check LCOE"):
         assert (
             pytest.approx(
-                model.prob.get_val("financials_group_default.LCOE", units="USD/MW/h")[0],
+                model.prob.get_val("financials_subgroup_electricity.LCOE", units="USD/MW/h")[0],
                 rel=1e-5,
             )
             == 54.12889
@@ -580,7 +582,7 @@ def test_wind_solar_electrolyzer_example(subtests):
     with subtests.test("Check LCOH"):
         assert (
             pytest.approx(
-                model.prob.get_val("financials_group_default.LCOH", units="USD/kg")[0],
+                model.prob.get_val("financials_subgroup_hydrogen.LCOH", units="USD/kg")[0],
                 rel=1e-5,
             )
             == 5.33209234

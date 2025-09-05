@@ -62,7 +62,7 @@ finance_parameters:
   subgroups:
     electricity:
       commodity: "electricity"
-      technologies: ["hopp"]
+      technologies: ["hopp", "doc"]
     co2:
       commodity: "co2"
       technologies: ["hopp","doc"]
