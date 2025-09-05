@@ -18,7 +18,6 @@ technologies:
       model: "ocean_alkalinity_enhancement_performance"
     financial_model:
       model: "ocean_alkalinity_enhancement_cost_financial"
-      group: "oae"
     model_inputs:
       performance_parameters:
         number_ed_min: 1

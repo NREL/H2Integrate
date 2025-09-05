@@ -26,6 +26,7 @@ plant:
   installation_time: 12 # months
 
 finance_parameters:
+  commodity: "electricity"
   finance_model: "ProFastComp"
   model_inputs:
     params:

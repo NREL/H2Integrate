@@ -30,7 +30,7 @@ constraints:
       units: kg/year
 
 objective:
-  name: financials_group_default.LCOH
+  name: financials_subgroup_hydrogen.LCOH
 
 recorder:
   flag: True
