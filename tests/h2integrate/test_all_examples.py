@@ -24,7 +24,9 @@ def test_steel_example(subtests):
     # Subtests for checking specific values
     with subtests.test("Check LCOH"):
         assert (
-            pytest.approx(model.prob.get_val("financials_group_default.LCOH")[0], rel=1e-3)
+            pytest.approx(
+                model.prob.get_val("financials_subgroup_hydrogen.LCOH_delivered")[0], rel=1e-3
+            )
             == 7.47944016
         )
 
@@ -34,7 +36,7 @@ def test_steel_example(subtests):
     with subtests.test("Check total adjusted CapEx"):
         assert (
             pytest.approx(
-                model.prob.get_val("financials_group_default.total_capex_adjusted")[0], rel=1e-3
+                model.prob.get_val("financials_subgroup_hydrogen.total_capex_adjusted")[0], rel=1e-3
             )
             == 5.10869916e09
         )
@@ -42,7 +44,7 @@ def test_steel_example(subtests):
     with subtests.test("Check total adjusted OpEx"):
         assert (
             pytest.approx(
-                model.prob.get_val("financials_group_default.total_opex_adjusted")[0], rel=1e-3
+                model.prob.get_val("financials_subgroup_hydrogen.total_opex_adjusted")[0], rel=1e-3
             )
             == 96349901.77625626
         )

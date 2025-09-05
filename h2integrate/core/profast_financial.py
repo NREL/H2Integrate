@@ -424,6 +424,7 @@ class ProFastComp(om.ExplicitComponent):
             or self.options["description"] == self.options["commodity_type"]
         ):
             self.LCO_str = f"LCO{self.options['commodity_type'][0].upper()}"
+            self.output_txt = self.options["commodity_type"].lower()
         else:
             LCO_base_str = f"LCO{self.options['commodity_type'][0].upper()}"
             LCO_desc_str = (
@@ -433,11 +434,23 @@ class ProFastComp(om.ExplicitComponent):
                 .strip("_()-")
             )
             if LCO_desc_str == "":
+                self.output_txt = self.options["commodity_type"].lower()
                 self.LCO_str = LCO_base_str
             else:
+                self.output_txt = f"{self.options['commodity_type'].lower()}_{LCO_desc_str}"
                 self.LCO_str = f"{LCO_base_str}_{LCO_desc_str}"
 
         self.add_output(self.LCO_str, val=0.0, units=lco_units)
+        self.outputs_to_units = {
+            "wacc": "percent",
+            "crf": "percent",
+            "irr": "percent",
+            "profit_index": "unitless",
+            "investor_payback_period": "yr",
+            "price": lco_units,
+        }
+        for output_var, units in self.outputs_to_units.items():
+            self.add_output(f"{output_var}_{self.output_txt}", val=0.0, units=units)
 
         if self.options["commodity_type"] == "co2":
             self.add_input("co2_capture_kgpy", val=0.0, units="kg/year")
@@ -595,4 +608,9 @@ class ProFastComp(om.ExplicitComponent):
             d = dict_to_yaml_formatting(d)
             write_yaml(d, fpath)
 
-        outputs[self.LCO_str] = sol["price"]  # TODO: replace with sol['lco']
+        outputs[self.LCO_str] = sol["lco"]
+        for output_var in self.outputs_to_units.keys():
+            val = sol[output_var.replace("_", " ")]
+            if isinstance(val, (np.ndarray, list, tuple)):  # only for IRR
+                val = val[-1]
+            outputs[f"{output_var}_{self.output_txt}"] = val
