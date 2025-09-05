@@ -102,7 +102,7 @@ def test_simple_ammonia_example(subtests):
     with subtests.test("Check total adjusted CapEx"):
         assert (
             pytest.approx(
-                model.prob.get_val("financials_group_default.total_capex_adjusted")[0], rel=1e-3
+                model.prob.get_val("financials_subgroup_hydrogen.total_capex_adjusted")[0], rel=1e-3
             )
             == 2678403968.6
         )
@@ -110,7 +110,7 @@ def test_simple_ammonia_example(subtests):
     with subtests.test("Check total adjusted OpEx"):
         assert (
             pytest.approx(
-                model.prob.get_val("financials_group_default.total_opex_adjusted")[0], rel=1e-3
+                model.prob.get_val("financials_subgroup_hydrogen.total_opex_adjusted")[0], rel=1e-3
             )
             == 64338137.8
         )
@@ -118,13 +118,13 @@ def test_simple_ammonia_example(subtests):
     # Currently underestimated compared to the Reference Design Doc
     with subtests.test("Check LCOH"):
         assert (
-            pytest.approx(model.prob.get_val("financials_group_default.LCOH")[0], rel=1e-3)
+            pytest.approx(model.prob.get_val("financials_subgroup_hydrogen.LCOH")[0], rel=1e-3)
             == 4.233055
         )
     # Currently underestimated compared to the Reference Design Doc
     with subtests.test("Check LCOA"):
         assert (
-            pytest.approx(model.prob.get_val("financials_group_default.LCOA")[0], rel=1e-3)
+            pytest.approx(model.prob.get_val("financials_subgroup_ammonia.LCOA")[0], rel=1e-3)
             == 1.02470046
         )
 
@@ -187,7 +187,7 @@ def test_ammonia_synloop_example(subtests):
     with subtests.test("Check total adjusted CapEx"):
         assert (
             pytest.approx(
-                model.prob.get_val("financials_group_default.total_capex_adjusted")[0], rel=1e-6
+                model.prob.get_val("financials_subgroup_nh3.total_capex_adjusted")[0], rel=1e-6
             )
             == 3.7289e09
         )
@@ -195,20 +195,20 @@ def test_ammonia_synloop_example(subtests):
     with subtests.test("Check total adjusted OpEx"):
         assert (
             pytest.approx(
-                model.prob.get_val("financials_group_default.total_opex_adjusted")[0], rel=1e-6
+                model.prob.get_val("financials_subgroup_nh3.total_opex_adjusted")[0], rel=1e-6
             )
             == 78480154.4
         )
 
     with subtests.test("Check LCOH"):
         assert (
-            pytest.approx(model.prob.get_val("financials_group_default.LCOH")[0], rel=1e-6)
+            pytest.approx(model.prob.get_val("financials_subgroup_h2.LCOH")[0], rel=1e-6)
             == 5.659321302703965
         )
 
     with subtests.test("Check LCOA"):
         assert (
-            pytest.approx(model.prob.get_val("financials_group_default.LCOA")[0], rel=1e-6)
+            pytest.approx(model.prob.get_val("financials_subgroup_nh3.LCOA")[0], rel=1e-6)
             == 1.067030996544544
         )
 
@@ -597,3 +597,27 @@ def test_wind_solar_electrolyzer_example(subtests):
         )
     with subtests.test("Check electrolyzer input power"):
         assert pytest.approx(total_generation.sum(), rel=1e-5) == total_energy_to_electrolyzer.sum()
+
+
+def test_electrolyzer_om_example(subtests):
+    # Change the current working directory to the example's directory
+    os.chdir(EXAMPLE_DIR / "10_electrolyzer_om")
+
+    # Create a H2Integrate model
+    model = H2IntegrateModel(Path.cwd() / "electrolyzer_om.yaml")
+
+    model.run()
+
+    lcoe = model.prob.get_val("financials_subgroup_electricity.LCOE", units="USD/MW/h")[0]
+    lcoh_with_lcoh_financials = model.prob.get_val(
+        "financials_subgroup_hydrogen.LCOH_lcoh_financials", units="USD/kg"
+    )[0]
+    lcoh_with_lcoe_financials = model.prob.get_val(
+        "financials_subgroup_hydrogen.LCOH_lcoe_financials", units="USD/kg"
+    )[0]
+    with subtests.test("Check LCOE"):
+        assert pytest.approx(lcoe, rel=1e-5) == 40.12819
+    with subtests.test("Check LCOH with lcoh_financials"):
+        assert pytest.approx(lcoh_with_lcoh_financials, rel=1e-5) == 13.18328175
+    with subtests.test("Check LCOH with lcoe_financials"):
+        assert pytest.approx(lcoh_with_lcoe_financials, rel=1e-5) == 8.05688467
