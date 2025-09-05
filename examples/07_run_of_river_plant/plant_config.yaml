@@ -46,6 +46,7 @@ plant:
   hybrid_electricity_estimated_cf: 0.492 #should equal 1 if grid_connection = True
 
 finance_parameters:
+  commodity: "electricity"
   finance_model: "ProFastComp"
   model_inputs:
     params:
@@ -70,8 +71,3 @@ finance_parameters:
   cost_adjustment_parameters:
     cost_year_adjustment_inflation: 0.025 # used to adjust modeled costs to target_dollar_year
     target_dollar_year: 2022
-policy_parameters: # these should be adjusted for inflation prior to application - order of operations: rate in 1992 $, then prevailing wage multiplier if applicable, then inflation
-  electricity_itc: 0
-  electricity_ptc: 0
-  h2_ptc: 0
-  h2_storage_itc: 0
