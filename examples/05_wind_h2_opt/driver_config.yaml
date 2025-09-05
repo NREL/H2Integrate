@@ -7,11 +7,11 @@ general:
 driver:
   optimization:
     flag: True
+    solver: COBYLA
     tol: 0.1
     catol: 10000
     max_iter: 100
-    solver: COBYLA
-    rhobeg: 30
+    rhobeg: 10
     debug_print: True
 
 design_variables:
@@ -35,4 +35,4 @@ objective:
 recorder:
   flag: True
   file: "wind_h2_opt.sql"
-  includes: ["LCOH"]
+  includes: ["*"]
