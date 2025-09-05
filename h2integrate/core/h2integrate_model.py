@@ -672,33 +672,34 @@ class H2IntegrateModel:
 
                         if "electrolyzer" in tech_name:
                             self.plant.connect(
-                                f"{tech_name}.total_hydrogen_produced",
-                                f"financials_subgroup_{group_id}.total_hydrogen_produced",
-                            )
-                            self.plant.connect(
                                 f"{tech_name}.time_until_replacement",
                                 f"financials_subgroup_{group_id}.{tech_name}_time_until_replacement",
                             )
+                            if primary_commodity_type == "hydrogen":
+                                self.plant.connect(
+                                    f"{tech_name}.total_hydrogen_produced",
+                                    f"financials_subgroup_{group_id}.total_hydrogen_produced",
+                                )
 
-                        if "ammonia" in tech_name:
+                        if "ammonia" in tech_name and primary_commodity_type == "ammonia":
                             self.plant.connect(
                                 f"{tech_name}.total_ammonia_produced",
                                 f"financials_subgroup_{group_id}.total_ammonia_produced",
                             )
 
-                        if "doc" in tech_name:
+                        if "doc" in tech_name and primary_commodity_type == "co2":
                             self.plant.connect(
                                 f"{tech_name}.co2_capture_mtpy",
                                 f"financials_subgroup_{group_id}.co2_capture_kgpy",
                             )
 
-                        if "oae" in tech_name:
+                        if "oae" in tech_name and primary_commodity_type == "co2":
                             self.plant.connect(
                                 f"{tech_name}.co2_capture_mtpy",
                                 f"financials_subgroup_{group_id}.co2_capture_kgpy",
                             )
 
-                        if "air_separator" in tech_name:
+                        if "air_separator" in tech_name and primary_commodity_type == "nitrogen":
                             self.plant.connect(
                                 f"{tech_name}.total_nitrogen_produced",
                                 f"financials_subgroup_{group_id}.total_nitrogen_produced",
