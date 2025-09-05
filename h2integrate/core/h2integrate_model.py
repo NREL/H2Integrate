@@ -337,7 +337,7 @@ class H2IntegrateModel:
                 "finance_groups": [default_finance_model_nickname],
                 "technologies": all_techs,
             }
-            subgroups = {"all": subgroup}
+            subgroups = {default_finance_model_nickname: subgroup}
         # for tech_name, tech_config in self.technology_config["technologies"].items():
         #         if tech_name not in all_grouped_techs:
         #             if "default" not in financial_groups:
