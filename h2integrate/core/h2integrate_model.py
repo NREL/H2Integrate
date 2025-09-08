@@ -291,14 +291,61 @@ class H2IntegrateModel:
 
     def create_financial_model(self):
         """
-        Creates and configures the financial model for the plant.
+        Create and configure the financial model(s) for the plant.
 
-        - If subgroups are defined in finance_parameters:
-            * The first tuple in each subgroup is (commodity, finance_model).
-            * The remaining tuples list technologies belonging to that subgroup.
-        - If no subgroups are defined:
-            * A default subgroup is created with all technologies.
-            * commodity and finance_model are pulled from finance_parameters.
+        This method initializes financial subsystems for the plant based on the
+        configuration provided in ``self.plant_config["finance_parameters"]``. It
+        supports both default single-model setups and multiple subgroup-specific
+        financial models.
+
+        Behavior:
+            * If ``finance_parameters`` is not defined in the plant configuration,
+            no financial model is created.
+            * If no subgroups are defined, all technologies are grouped together
+            under a default finance model. ``commodity`` and ``finance_model`` are
+            required in this case.
+            * If subgroups are provided, each subgroup defines its own set of
+            technologies, associated commodity, and financial model(s).
+            Each subgroup is nested under a unique name of your choice under
+            ["finance_parameters"]["subgroups"] in the plant configuration.
+            * Subsystems such as ``ElectricitySumComp``, ``AdjustedCapexOpexComp``,
+            and the selected financial models are added to each subgroup's
+            financial group.
+            * Supports both global finance models and technology-specific finance
+            models. Technology-specific finance models are defined in the technology
+            configuration.
+
+        Raises:
+            ValueError:
+                If ``finance_parameters`` are incomplete (e.g., missing
+                ``commodity`` or ``finance_model``) when no subgroups are defined.
+            ValueError:
+                If a subgroup has no valid technologies.
+            ValueError:
+                If a specified financial model is not found in
+                ``self.supported_models``.
+
+        Side Effects:
+            * Updates ``self.plant_config["finance_parameters"]`` if only a single
+            finance model is provided (wraps it in a default group).
+            * Constructs and attaches OpenMDAO financial subsystem groups to the
+            plant model under names ``financials_subgroup_<subgroup_name>``.
+            * Stores processed subgroup configurations in
+            ``self.financial_groups``.
+
+        Example:
+            Suppose ``plant_config["finance_parameters"]`` defines a single finance
+            model without subgroups:
+
+            >>> self.plant_config["finance_parameters"] = {
+            ...     "commodity": "hydrogen",
+            ...     "finance_model": "ProFastComp",
+            ...     "model_inputs": {"discount_rate": 0.08},
+            ... }
+            >>> self.create_financial_model()
+            # Creates a default subgroup containing all technologies and
+            # attaches a ProFAST financial model component to the plant.
+
         """
 
         if "finance_parameters" not in self.plant_config:
