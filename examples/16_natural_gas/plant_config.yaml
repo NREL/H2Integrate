@@ -38,6 +38,7 @@ plant:
     n_timesteps: 8760
 
 finance_parameters:
+  commodity: "electricity"
   finance_model: "ProFastComp"
   model_inputs:
     params:

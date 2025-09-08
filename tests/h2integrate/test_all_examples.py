@@ -615,7 +615,7 @@ def test_natural_gas_example(subtests):
         assert pytest.approx(total_opex, rel=1e-6) == 4849951.2195122
 
     with subtests.test("Check LCOE"):
-        lcoe = model.prob.get_val("financials_group_default.LCOE")[0]
+        lcoe = model.prob.get_val("financials_subgroup_default.LCOE")[0]
         assert pytest.approx(lcoe, rel=1e-6) == 0.12959097
 
     # Test feedstock-specific values
