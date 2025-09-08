@@ -7,7 +7,6 @@ import openmdao.api as om
 
 from h2integrate.core.finances import AdjustedCapexOpexComp
 from h2integrate.core.utilities import create_xdsm_from_config
-from h2integrate.core.feedstocks import FeedstockComponent
 from h2integrate.core.resource_summer import ElectricitySumComp
 from h2integrate.core.supported_models import supported_models, electricity_producing_techs
 from h2integrate.core.inputs.validation import load_tech_yaml, load_plant_yaml, load_driver_yaml
@@ -190,9 +189,15 @@ class H2IntegrateModel:
 
         # Create a technology group for each technology
         for tech_name, individual_tech_config in self.technology_config["technologies"].items():
-            if "feedstocks" in tech_name:
-                feedstock_component = FeedstockComponent(feedstocks_config=individual_tech_config)
-                self.plant.add_subsystem(tech_name, feedstock_component)
+            perf_model = individual_tech_config.get("performance_model", {}).get("model")
+
+            if perf_model is not None and "feedstock" in perf_model:
+                comp = self.supported_models[perf_model](
+                    driver_config=self.driver_config,
+                    plant_config=self.plant_config,
+                    tech_config=individual_tech_config,
+                )
+                self.plant.add_subsystem(f"{tech_name}_source", comp)
             else:
                 tech_group = self.plant.add_subsystem(tech_name, om.Group())
                 self.tech_names.append(tech_name)
@@ -268,6 +273,16 @@ class H2IntegrateModel:
                             promotes=["*"],
                         )
                         self.financial_models.append(financial_object)
+
+        for tech_name, individual_tech_config in self.technology_config["technologies"].items():
+            cost_model = individual_tech_config.get("cost_model", {}).get("model")
+            if cost_model is not None and "feedstock" in cost_model:
+                comp = self.supported_models[cost_model](
+                    driver_config=self.driver_config,
+                    plant_config=self.plant_config,
+                    tech_config=individual_tech_config,
+                )
+                self.plant.add_subsystem(tech_name, comp)
 
     def _process_model(self, model_type, individual_tech_config, tech_group):
         # Generalized function to process model definitions
@@ -478,8 +493,26 @@ class H2IntegrateModel:
                 # make the connection_name based on source, dest, item, type
                 connection_name = f"{source_tech}_to_{dest_tech}_{transport_type}"
 
+                # Get the performance model of the source_tech
+                source_tech_config = self.technology_config["technologies"].get(source_tech, {})
+                perf_model_name = source_tech_config.get("performance_model", {}).get("model")
+                cost_model_name = source_tech_config.get("cost_model", {}).get("model")
+
+                # If the source is a feedstock, make sure to connect the amount of
+                # feedstock consumed from the technology back to the feedstock cost model
+                if cost_model_name is not None and "feedstock" in cost_model_name:
+                    self.plant.connect(
+                        f"{dest_tech}.{transport_item}_consumed",
+                        f"{source_tech}.{transport_item}_consumed",
+                    )
+
+                if perf_model_name is not None and "feedstock" in perf_model_name:
+                    source_tech = f"{source_tech}_source"
+
                 # Create the transport object
-                connection_component = self.supported_models[transport_type]()
+                connection_component = self.supported_models[transport_type](
+                    transport_item=transport_item
+                )
 
                 # Add the connection component to the model
                 self.plant.add_subsystem(connection_name, connection_component)
