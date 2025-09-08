@@ -7,6 +7,15 @@ from h2integrate.converters.ammonia.simple_ammonia_model import (
 )
 
 
+plant_config = {
+    "plant": {
+        "plant_life": 30,
+        "simulation": {
+            "n_timesteps": 8760,
+        },
+    },
+}
+
 tech_config_dict = {
     "model_inputs": {
         "shared_parameters": {
