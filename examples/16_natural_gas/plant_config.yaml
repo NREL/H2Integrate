@@ -31,9 +31,6 @@ technology_interconnections: [
 
 plant:
   plant_life: 30
-  grid_connection: False # option, can be turned on or off
-  ppa_price: 0.027498168 # based off correlations of LBNL PPA data
-  hybrid_electricity_estimated_cf: 0.492 #should equal 1 if grid_connection = True
   simulation:
     n_timesteps: 8760
 

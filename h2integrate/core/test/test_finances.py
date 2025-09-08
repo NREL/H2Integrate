@@ -101,10 +101,13 @@ class TestProFastComp(unittest.TestCase):
         tech_config = load_tech_yaml(example_case_dir / "tech_config.yaml")
         plant_config = load_plant_yaml(example_case_dir / "plant_config.yaml")
         driver_config = load_driver_yaml(example_case_dir / "driver_config.yaml")
+        finance_inputs = plant_config["finance_parameters"].pop("profast_model")
+        plant_config_filtered = {k: v for k, v in plant_config.items() if k != "finance_parameters"}
+        plant_config_filtered.update({"finance_parameters": finance_inputs})
         # Run ProFastComp with loaded configs
         prob = om.Problem()
         comp = ProFastComp(
-            plant_config=plant_config,
+            plant_config=plant_config_filtered,
             tech_config=tech_config["technologies"],
             driver_config=driver_config,
             commodity_type="electricity",
@@ -137,14 +140,17 @@ class TestProFastComp(unittest.TestCase):
         driver_config = load_driver_yaml(example_case_dir / "driver_config.yaml")
 
         # Only include HOPP and electrolyzer in metrics
-        plant_config["finance_parameters"]["technologies_included_in_metrics"]["LCOE"] = [
+        plant_config["finance_parameters"]["subgroups"]["electricity"]["technologies"] = [
             "hopp",
             "steel",
         ]
+        finance_inputs = plant_config["finance_parameters"].pop("profast_model")
+        plant_config_filtered = {k: v for k, v in plant_config.items() if k != "finance_parameters"}
+        plant_config_filtered.update({"finance_parameters": finance_inputs})
 
         prob = om.Problem()
         comp = ProFastComp(
-            plant_config=plant_config,
+            plant_config=plant_config_filtered,
             tech_config=tech_config["technologies"],
             driver_config=driver_config,
             commodity_type="electricity",
