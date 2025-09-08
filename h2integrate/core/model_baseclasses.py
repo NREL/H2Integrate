@@ -22,7 +22,13 @@ class CostModelBaseClass(om.ExplicitComponent):
     def setup(self):
         # Define outputs: CapEx and OpEx costs
         self.add_output("CapEx", val=0.0, units="USD", desc="Capital expenditure")
-        self.add_output("OpEx", val=0.0, units="USD/year", desc="Operational expenditure")
+        self.add_output(
+            "OpEx",
+            val=0.0,
+            units="USD/year",
+            desc="Total (fixed and variable) operational expenditure",
+        )
+
         # Define discrete outputs: cost_year
         self.add_discrete_output(
             "cost_year", val=self.config.cost_year, desc="Dollar year for costs"

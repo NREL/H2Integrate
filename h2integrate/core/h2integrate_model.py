@@ -9,7 +9,6 @@ from h2integrate.core.utilities import (
     create_xdsm_from_config,
     determine_commodity_types_from_technology_names,
 )
-from h2integrate.core.feedstocks import FeedstockComponent
 from h2integrate.finances.finances import AdjustedCapexOpexComp
 from h2integrate.core.resource_summer import ElectricitySumComp
 from h2integrate.core.supported_models import supported_models, electricity_producing_techs
@@ -192,9 +191,15 @@ class H2IntegrateModel:
 
         # Create a technology group for each technology
         for tech_name, individual_tech_config in self.technology_config["technologies"].items():
-            if "feedstocks" in tech_name:
-                feedstock_component = FeedstockComponent(feedstocks_config=individual_tech_config)
-                self.plant.add_subsystem(tech_name, feedstock_component)
+            perf_model = individual_tech_config.get("performance_model", {}).get("model")
+
+            if perf_model is not None and "feedstock" in perf_model:
+                comp = self.supported_models[perf_model](
+                    driver_config=self.driver_config,
+                    plant_config=self.plant_config,
+                    tech_config=individual_tech_config,
+                )
+                self.plant.add_subsystem(f"{tech_name}_source", comp)
             else:
                 tech_group = self.plant.add_subsystem(tech_name, om.Group())
                 self.tech_names.append(tech_name)
@@ -259,6 +264,16 @@ class H2IntegrateModel:
                             )
                             self.financial_models.append(financial_object)
 
+        for tech_name, individual_tech_config in self.technology_config["technologies"].items():
+            cost_model = individual_tech_config.get("cost_model", {}).get("model")
+            if cost_model is not None and "feedstock" in cost_model:
+                comp = self.supported_models[cost_model](
+                    driver_config=self.driver_config,
+                    plant_config=self.plant_config,
+                    tech_config=individual_tech_config,
+                )
+                self.plant.add_subsystem(tech_name, comp)
+
     def _process_model(self, model_type, individual_tech_config, tech_group):
         # Generalized function to process model definitions
         model_name = individual_tech_config[model_type]["model"]
@@ -276,14 +291,61 @@ class H2IntegrateModel:
 
     def create_financial_model(self):
         """
-        Creates and configures the financial model for the plant.
+        Create and configure the financial model(s) for the plant.
 
-        - If subgroups are defined in finance_parameters:
-            * The first tuple in each subgroup is (commodity, finance_model).
-            * The remaining tuples list technologies belonging to that subgroup.
-        - If no subgroups are defined:
-            * A default subgroup is created with all technologies.
-            * commodity and finance_model are pulled from finance_parameters.
+        This method initializes financial subsystems for the plant based on the
+        configuration provided in ``self.plant_config["finance_parameters"]``. It
+        supports both default single-model setups and multiple subgroup-specific
+        financial models.
+
+        Behavior:
+            * If ``finance_parameters`` is not defined in the plant configuration,
+            no financial model is created.
+            * If no subgroups are defined, all technologies are grouped together
+            under a default finance model. ``commodity`` and ``finance_model`` are
+            required in this case.
+            * If subgroups are provided, each subgroup defines its own set of
+            technologies, associated commodity, and financial model(s).
+            Each subgroup is nested under a unique name of your choice under
+            ["finance_parameters"]["subgroups"] in the plant configuration.
+            * Subsystems such as ``ElectricitySumComp``, ``AdjustedCapexOpexComp``,
+            and the selected financial models are added to each subgroup's
+            financial group.
+            * Supports both global finance models and technology-specific finance
+            models. Technology-specific finance models are defined in the technology
+            configuration.
+
+        Raises:
+            ValueError:
+                If ``finance_parameters`` are incomplete (e.g., missing
+                ``commodity`` or ``finance_model``) when no subgroups are defined.
+            ValueError:
+                If a subgroup has no valid technologies.
+            ValueError:
+                If a specified financial model is not found in
+                ``self.supported_models``.
+
+        Side Effects:
+            * Updates ``self.plant_config["finance_parameters"]`` if only a single
+            finance model is provided (wraps it in a default group).
+            * Constructs and attaches OpenMDAO financial subsystem groups to the
+            plant model under names ``financials_subgroup_<subgroup_name>``.
+            * Stores processed subgroup configurations in
+            ``self.financial_groups``.
+
+        Example:
+            Suppose ``plant_config["finance_parameters"]`` defines a single finance
+            model without subgroups:
+
+            >>> self.plant_config["finance_parameters"] = {
+            ...     "commodity": "hydrogen",
+            ...     "finance_model": "ProFastComp",
+            ...     "model_inputs": {"discount_rate": 0.08},
+            ... }
+            >>> self.create_financial_model()
+            # Creates a default subgroup containing all technologies and
+            # attaches a ProFAST financial model component to the plant.
+
         """
 
         if "finance_parameters" not in self.plant_config:
@@ -524,6 +586,22 @@ class H2IntegrateModel:
 
                 # make the connection_name based on source, dest, item, type
                 connection_name = f"{source_tech}_to_{dest_tech}_{transport_type}"
+
+                # Get the performance model of the source_tech
+                source_tech_config = self.technology_config["technologies"].get(source_tech, {})
+                perf_model_name = source_tech_config.get("performance_model", {}).get("model")
+                cost_model_name = source_tech_config.get("cost_model", {}).get("model")
+
+                # If the source is a feedstock, make sure to connect the amount of
+                # feedstock consumed from the technology back to the feedstock cost model
+                if cost_model_name is not None and "feedstock" in cost_model_name:
+                    self.plant.connect(
+                        f"{dest_tech}.{transport_item}_consumed",
+                        f"{source_tech}.{transport_item}_consumed",
+                    )
+
+                if perf_model_name is not None and "feedstock" in perf_model_name:
+                    source_tech = f"{source_tech}_source"
 
                 # Create the transport object
                 connection_component = self.supported_models[transport_type](
