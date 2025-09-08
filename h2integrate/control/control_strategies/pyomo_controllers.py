@@ -40,8 +40,6 @@ class PyomoControllerBaseConfig(BaseConfig):
             between 0 and 1 (e.g., 0.9 for 90% efficiency).
         discharge_efficiency (float): Efficiency of discharging the storage, represented as a
             decimal between 0 and 1 (e.g., 0.9 for 90% efficiency).
-        demand_profile (scalar or list): The demand values for each time step (in the same units
-            as `resource_units`) or a scalar for a constant demand.
     """
 
     n_timesteps: int = field()
@@ -55,8 +53,6 @@ class PyomoControllerBaseConfig(BaseConfig):
     resource_name: str = field()
     resource_storage_units: str = field()
     tech_name: str = field()
-    demand_profile: int | float | list = field()
-
 
 def dummy_function():
     return None
@@ -67,12 +63,6 @@ class PyomoControllerBaseClass(ControllerBaseClass):
         return None
 
     def setup(self):
-
-        # if demand_profile is a scalar, then use it to create a constant timeseries
-        self.demand_profile = self.config.demand_profile
-        if isinstance(self.demand_profile, (int, float)):
-            self.demand_profile = [self.demand_profile] * self.config.n_timesteps
-
         # get technology group name
         # TODO: Make this more general, right now it might go astray if for example "battery" is
         # used twice in an OpenMDAO subsystem pathname
@@ -141,9 +131,11 @@ class PyomoControllerBaseClass(ControllerBaseClass):
                 self.update_time_series_parameters()
                 if "heuristic" in self.options["tech_config"]["control_strategy"]["model"]:
                     self.set_fixed_dispatch(
-                        inputs[self.config.resource_name + "_in"][t:t + self.config.n_control_window],
+                        inputs[self.config.resource_name + "_in"][
+                            t:t + self.config.n_control_window
+                        ],
                         self.config.grid_limit,
-                        self.demand_profile,
+                        inputs["demand_in"][t:t + self.config.n_control_window],
                     )
                 else:
                     # TODO: implement optimized solutions; this is where pyomo_model would be used
@@ -152,38 +144,12 @@ class PyomoControllerBaseClass(ControllerBaseClass):
 
                 performance_model(
                     self.storage_amount,
+                    inputs["demand_in"][t:t + self.config.n_control_window],
                     **performance_model_kwargs,
                     sim_start_index=t,
                 )
 
         return pyomo_dispatch_solver
-
-    # def pyomo_setup(self,
-    #         pyomo_model: pyomo.ConcreteModel,
-    #         index_set: pyomo.Set,
-    #         system_model,
-    #         block_set_name: str = "dispatch",):
-
-    #     self.block_set_name = block_set_name
-    #     self.round_digits = int(4)
-
-    #     self._model = pyomo_model
-    #     self._blocks = pyomo.Block(index_set, rule=self.dispatch_block_rule)
-    #     setattr(self.model, self.block_set_name, self.blocks)
-
-    #     self._system_model = system_model
-
-    #     def dispatch_function(performance_model, kwargs, pyomo_model=pyomo_model):
-
-    #         pass
-    #         # for
-    #         #     for
-    #         #         pyomo
-    #         #         performance
-
-    #         # return output(s)_timeseries
-
-    #     return dispatch_function
 
     @staticmethod
     def dispatch_block_rule(block, t):
@@ -208,7 +174,7 @@ class PyomoControllerBaseClass(ControllerBaseClass):
     def blocks(self) -> pyomo.Block:
         # TODO: Is there a way to inherit the correct tech name so it doesn't have to be defined
         # in the input config?
-        return eval("self.pyomo_model." + self.config.tech_name)
+        return getattr(self.pyomo_model, self.config.tech_name)
 
     @property
     def model(self) -> pyomo.ConcreteModel:
@@ -231,15 +197,12 @@ class PyomoControllerH2StorageConfig(PyomoControllerBaseConfig):
             between 0 and 1 (e.g., 0.9 for 90% efficiency).
         discharge_efficiency (float): Efficiency of discharging the storage, represented as a
             decimal between 0 and 1 (e.g., 0.9 for 90% efficiency).
-        demand_profile (scalar or list): The demand values for each time step (in the same units
-            as `resource_units`) or a scalar for a constant demand.
     """
 
     max_charge_rate: float = field()
     max_discharge_rate: float = field()
     charge_efficiency: float = field()
     discharge_efficiency: float = field()
-    demand_profile: int | float | list = field()
 
 
 class PyomoControllerH2Storage(PyomoControllerBaseClass):
@@ -712,17 +675,17 @@ class HeuristicLoadFollowingController(SimpleBatteryControllerHeuristic):
         self._heuristic_method(gen, goal_power)
         self._fix_dispatch_model_variables()
 
-    def _heuristic_method(self, gen, goal_resource):
+    def _heuristic_method(self, generated_resource, goal_resource):
         """Enforces storage fraction limits and sets _fixed_dispatch attribute.
         Sets the _fixed_dispatch based on goal_resource and gen.
 
         Args:
-            gen: Resource generation profile.
+            generated_resource: Resource generation profile.
             goal_resource: Goal amount of resource.
 
         """
         for t in self.blocks.index_set():
-            fd = (goal_resource[t] - gen[t]) / self.maximum_storage
+            fd = (goal_resource[t] - generated_resource[t]) / self.maximum_storage
             if fd > 0.0:  # Discharging
                 if fd > self.max_discharge_fraction[t]:
                     fd = self.max_discharge_fraction[t]
