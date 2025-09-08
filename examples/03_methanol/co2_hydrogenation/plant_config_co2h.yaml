@@ -61,7 +61,7 @@ finance_parameters:
   subgroups:
     electricity:
       commodity: "electricity"
-      technologies: ["hopp"]
+      technologies: ["hopp","electrolyzer"]
     hydrogen:
       commodity: "hydrogen"
       technologies: ["hopp","electrolyzer"]
