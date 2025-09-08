@@ -4,8 +4,6 @@ description: "This plant is located in MN, USA..."
 site:
   latitude: 30.6617
   longitude: -101.7096
-  elevation_m: 0.0 #unsure
-  time_zone: -5 #unsure
   year: 2013
 
   # array of polygons defining boundaries with x/y coords
@@ -35,10 +33,10 @@ technology_interconnections: [
 
 plant:
   plant_life: 30
-  grid_connection: False # option, can be turned on or off
   simulation:
     n_timesteps: 8760
     dt: 3600
+
 finance_parameters:
   finance_model: "ProFastComp"
   model_inputs:

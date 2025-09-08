@@ -4,8 +4,6 @@ description: "This plant is located in MN, USA..."
 site:
   latitude: 47.5233
   longitude: -92.5366
-  # elevation_m: 439.0
-  # time_zone: -5
 
   # array of polygons defining boundaries with x/y coords
   boundaries: [
@@ -33,9 +31,6 @@ technology_interconnections: [
 
 plant:
   plant_life: 30
-  # grid_connection: False # option, can be turned on or off
-  # ppa_price: 0.025 # $/kWh based on 2022 land based wind market report (ERCOT area ppa prices) https://www.energy.gov/sites/default/files/2022-08/land_based_wind_market_report_2202.pdf
-  # hybrid_electricity_estimated_cf: 0.492 #should equal 1 if grid_connection = True
 
 finance_parameters:
   finance_model: "ProFastComp"
