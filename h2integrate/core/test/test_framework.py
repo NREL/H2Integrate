@@ -215,7 +215,7 @@ def test_technology_connections():
     # Load the plant_config YAML content
     plant_config_data = load_plant_yaml(temp_plant_config)
 
-    new_connection = (["financials_group_default", "steel", ("LCOE", "electricity_cost")],)
+    new_connection = (["financials_subgroup_electricity", "steel", ("LCOE", "electricity_cost")],)
     new_tech_interconnections = (
         plant_config_data["technology_interconnections"][0:4]
         + list(new_connection)
