@@ -4,8 +4,6 @@ description: "This plant is located in TX, USA near Sheffield"
 site:
   latitude: 30.6617
   longitude: -101.7096
-  # elevation_m: 930.0
-  # time_zone: -5
 
   # array of polygons defining boundaries with x/y coords
   boundaries: [
@@ -21,9 +19,6 @@ site:
 
 plant:
   plant_life: 30
-  # grid_connection: False # option, can be turned on or off
-  # ppa_price: 0.025 # $/kWh based on 2022 land based wind market report (ERCOT area ppa prices) https://www.energy.gov/sites/default/files/2022-08/land_based_wind_market_report_2202.pdf
-  # installation_time: 12 # months
 
 finance_parameters:
   commodity: "electricity"
