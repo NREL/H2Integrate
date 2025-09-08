@@ -3,7 +3,13 @@
 # ProFastComp
 The ``"ProFastComp"`` finance model calculates levelized cost of commodity using ProFAST.
 
-The inputs for the `ProFastComp` model are outlined in this section:
+The inputs, outputs, and naming convention for the `ProFastComp` model are outlined in this section.
+- [Input parameters](profastcomp:overview)
+  - [H2Integrate format](profastcomp:direct_opt)
+  - [ProFAST format](profastcomp:pf_params_opt)
+  - [Override defaults for specific technologies](profastcomp:tech_specific_finance)
+- [Output values and naming convention](profastcomp:outputs)
+
 
 (profastcomp:overview)=
 ## Finance parameters overview
@@ -206,3 +212,22 @@ technologies:
           refurbishment_period_years: 15
           replacement_cost_percent: 1.0
 ```
+
+(profastcomp:outputs)=
+## Output values and naming convention
+``ProFastComp`` outputs the following data:
+- `LCO<x_and_descriptor>`: levelized cost of commodity in USD/commodity unit.
+- `wacc_<commodity_and_descriptor>`: weighted average cost of capital as a fraction.
+- `crf_<commodity_and_descriptor>`: capital recovery factor as a fraction.
+- `irr_<commodity_and_descriptor>`: internal rate of return as a fraction.
+- `profit_index_<commodity_and_descriptor>`
+- `investor_payback_period_<commodity_and_descriptor>`: time until initial investment costs are recovered in years.
+- `price_<commodity_and_descriptor>`: first year price of commodity in same units as levelized cost.
+
+**Naming convention**:
+- `<commodity_and_descriptor>`:
+  - if `commodity_desc` is **not** provided, then `<commodity_and_descriptor>` this is just `commodity`. For example, `wacc_hydrogen` if the `commodity` is `"hydrogen"`.
+  - if `commodity_desc` is provided, then `<commodity_and_descriptor>` is `<commodity>_<commodity_desc>`. For example, `wacc_hydrogen_produced` if the `commodity` is `"hydrogen"` and `commodity_desc` is `"produced"`
+- `<x_and_descriptor>`:
+  - if `commodity_desc` is **not** provided, then `<x_and_descriptor>` is the upper-case first letter of the `commodity`. For example, `LCOH` if the `commodity` is `"hydrogen"`
+  - if `commodity_desc` is provided, then `<x_and_descriptor>` is the upper-case first letter of the `commodity` followed by the `commodity_desc` descriptor. For example, `LCOH_produced` if the `commodity` is `"hydrogen"` and the `commodity_desc` is `"produced"`.
