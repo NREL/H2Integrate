@@ -4,8 +4,6 @@ description: "This plant is located west of the Wolf Hollow II NGCC power plant 
 site:
   latitude: 32.34
   longitude: -98.27
-  elevation_m: 440.0
-  time_zone: -6
 
   # array of polygons defining boundaries with x/y coords
   boundaries: [
@@ -28,6 +26,4 @@ technology_interconnections: [
 
 plant:
   plant_life: 30
-  grid_connection: False # option, can be turned on or off
   ppa_price: 0.027498168 # based off correlations of LBNL PPA data
-  hybrid_electricity_estimated_cf: 0.492 #should equal 1 if grid_connection = True
