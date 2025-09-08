@@ -64,7 +64,6 @@ technologies:
       performance_parameters:
         cost_year: 2019
       control_parameters:
-        demand_profile: 6000
         grid_limit: 5000
         resource_name: "electricity"
         resource_storage_units: "kW"
