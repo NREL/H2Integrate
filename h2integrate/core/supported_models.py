@@ -1,4 +1,5 @@
 from h2integrate.resource.river import RiverResource
+from h2integrate.core.feedstocks import FeedstockCostModel, FeedstockPerformanceModel
 from h2integrate.transporters.pipe import PipePerformanceModel
 from h2integrate.transporters.cable import CablePerformanceModel
 from h2integrate.converters.steel.steel import SteelPerformanceModel, SteelCostAndFinancialModel
@@ -49,6 +50,10 @@ from h2integrate.converters.methanol.co2h_methanol_plant import (
     CO2HMethanolPlantFinanceModel,
     CO2HMethanolPlantPerformanceModel,
 )
+from h2integrate.converters.natural_gas.natural_gas_cc_ct import (
+    NaturalGasCostModel,
+    NaturalGasPerformanceModel,
+)
 from h2integrate.converters.hydrogen.singlitico_cost_model import SingliticoCostModel
 from h2integrate.converters.co2.marine.direct_ocean_capture import DOCCostModel, DOCPerformanceModel
 from h2integrate.converters.hydrogen.eco_tools_pem_electrolyzer import (
@@ -67,6 +72,9 @@ from h2integrate.converters.co2.marine.ocean_alkalinity_enhancement import (
     OAECostModel,
     OAEPerformanceModel,
     OAECostAndFinancialModel,
+)
+from h2integrate.converters.hydrogen.custom_electrolyzer_cost_model import (
+    CustomElectrolyzerCostModel,
 )
 from h2integrate.converters.hydrogen.geologic.stimulated_geoh2_plant import (
     StimulatedGeoH2CostModel,
@@ -92,11 +100,11 @@ supported_models = {
     "eco_pem_electrolyzer_performance": ECOElectrolyzerPerformanceModel,
     "singlitico_electrolyzer_cost": SingliticoCostModel,
     "basic_electrolyzer_cost": BasicElectrolyzerCostModel,
+    "custom_electrolyzer_cost": CustomElectrolyzerCostModel,
+    "wombat": WOMBATElectrolyzerModel,
     "simple_ASU_cost": SimpleASUCostModel,
     "simple_ASU_performance": SimpleASUPerformanceModel,
-    "h2_storage": H2Storage,
     "hopp": HOPPComponent,
-    "wombat": WOMBATElectrolyzerModel,
     "reverse_osmosis_desalination_performance": ReverseOsmosisPerformanceModel,
     "reverse_osmosis_desalination_cost": ReverseOsmosisCostModel,
     "simple_ammonia_performance": SimpleAmmoniaPerformanceModel,
@@ -122,6 +130,8 @@ supported_models = {
     "stimulated_geoh2_performance": StimulatedGeoH2PerformanceModel,
     "stimulated_geoh2_cost": StimulatedGeoH2CostModel,
     "stimulated_geoh2": StimulatedGeoH2FinanceModel,
+    "natural_gas_performance": NaturalGasPerformanceModel,
+    "natural_gas_cost": NaturalGasCostModel,
     # Transport
     "cable": CablePerformanceModel,
     "pipe": PipePerformanceModel,
@@ -133,8 +143,12 @@ supported_models = {
     # Storage
     "hydrogen_tank_performance": HydrogenTankPerformanceModel,
     "hydrogen_tank_cost": HydrogenTankCostModel,
+    # Feedstock
+    "feedstock_performance": FeedstockPerformanceModel,
+    "feedstock_cost": FeedstockCostModel,
+    "h2_storage": H2Storage,
     # Finance
     "ProFastComp": ProFastComp,
 }
 
-electricity_producing_techs = ["wind", "solar", "pv", "river", "hopp"]
+electricity_producing_techs = ["wind", "solar", "pv", "river", "hopp", "natural_gas_plant"]

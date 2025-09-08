@@ -259,6 +259,7 @@ Some cost models are derived from literature and output costs (CapEx and OpEx) i
 | `natural_geoh2_cost`    |
 | `wombat`                |
 | `hydrogen_tank_cost`    |
+| `custom_electrolyzer_cost` |
 
 ### Example tech_config input for user-input cost year
 ```yaml
