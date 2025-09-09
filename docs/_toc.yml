@@ -23,10 +23,6 @@ parts:
       sections:
       - file: finance_models/ProFastComp
 
-
-  sections:
-
-
 - caption: Technology Models
   chapters:
   - file: technology_models/feedstocks

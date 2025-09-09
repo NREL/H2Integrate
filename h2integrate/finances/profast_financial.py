@@ -148,7 +148,7 @@ class BasicProFASTParameterConfig(BaseConfig):
         debt_interest_rate (float): interest rate on debt
         inflation_rate (float): escalation rate. Set to zero for a nominal analysis.
         cash_onhand_months (int): number of months with cash onhand.
-        admin_expense (float): adminstrative expense as a fraction of sales
+        admin_expense (float): administrative expense as a fraction of sales
         non_depr_assets (float, optional): cost (in `$`) of nondepreciable assets, such as land.
             Defaults to 0.
         end_of_proj_sale_non_depr_assets (float, optional): cost (in `$`) of nondepreciable assets
@@ -217,7 +217,7 @@ class BasicProFASTParameterConfig(BaseConfig):
         default={
             "name": None,
             "unit": None,
-            "inital price": 100,
+            "initial price": 100,
             "escalation": 0.0,
         }
     )
@@ -433,17 +433,15 @@ class ProFastComp(om.ExplicitComponent):
             commodity_units = "kg/year"
             lco_units = "USD/kg"
 
+        LCO_base_str = f"LCO{self.options['commodity_type'][0].upper()}"
+        self.output_txt = self.options["commodity_type"].lower()
         if self.options["description"] == "":
-            self.LCO_str = f"LCO{self.options['commodity_type'][0].upper()}"
-            self.output_txt = self.options["commodity_type"].lower()
+            self.LCO_str = LCO_base_str
         else:
-            LCO_base_str = f"LCO{self.options['commodity_type'][0].upper()}"
             desc_str = self.options["description"].strip().strip("_()-")
             if desc_str == "":
-                self.output_txt = self.options["commodity_type"].lower()
                 self.LCO_str = LCO_base_str
             else:
-                self.output_txt = f"{self.options['commodity_type'].lower()}_{desc_str}"
                 self.LCO_str = f"{LCO_base_str}_{desc_str}"
 
         self.add_output(self.LCO_str, val=0.0, units=lco_units)

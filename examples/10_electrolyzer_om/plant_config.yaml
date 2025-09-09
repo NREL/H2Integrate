@@ -86,5 +86,5 @@ finance_parameters:
       technologies: ["wind"]
     hydrogen:
       commodity: "hydrogen"
-      finance_groups: ["lcoe_financials","lcoh_financials"]
-      technologies: ["wind","electrolyzer"]
+      finance_groups: ["lcoe_financials", "lcoh_financials"]
+      technologies: ["wind", "electrolyzer"]

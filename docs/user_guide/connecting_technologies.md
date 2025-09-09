@@ -16,7 +16,7 @@ Technology interconnections are defined as an array of arrays in your `plant_con
 technology_interconnections: [
   ["source_tech", "destination_tech", "variable_name", "transport_type"],
   ["tech_a", "tech_b", "shared_parameter"],
-  ["tech_a", "tech_b", ["tech_a_param_name","tech_b_param_name"]],
+  ["tech_a", "tech_b", ["tech_a_param_name", "tech_b_param_name"]],
   # ... more connections
 ]
 ```
@@ -45,13 +45,13 @@ There are two connection formats:
 
 ##### Different shared parameter names
 ```yaml
-["source_tech", "destination_tech", ["source_parameter","destination_parameter]]
+["source_tech", "destination_tech", ("source_parameter", "destination_parameter")]
 ```
 
 - **source_tech**: Name of the technology providing the output
 - **destination_tech**: Name of the technology receiving the input
-- **source_parameter**: The parameter name of ``"source_tech"``
-- **destination_parameter**: The parameter name of ``"destination_tech"``
+- **source_parameter**: The name of the parameter within ``"source_tech"``
+- **destination_parameter**: The name of the parameter within ``"destination_tech"``
 
 
 ### Internal connection logic

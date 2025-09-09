@@ -58,7 +58,7 @@ finance_parameters:
   subgroups:
     elec:
       commodity: "electricity"
-      technologies: ["wind","electrolyzer","h2_storage"]
+      technologies: ["wind", "electrolyzer", "h2_storage"]
     h2:
       commodity: "hydrogen"
-      technologies: ["wind","electrolyzer","h2_storage"]
+      technologies: ["wind", "electrolyzer", "h2_storage"]

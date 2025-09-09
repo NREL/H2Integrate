@@ -57,7 +57,7 @@ finance_parameters:
   subgroups:
     electricity:
       commodity: "electricity"
-      technologies: ["wind","electrolyzer"]
+      technologies: ["wind", "electrolyzer"]
     hydrogen:
       commodity: "hydrogen"
-      technologies: ["wind","electrolyzer"]
+      technologies: ["wind", "electrolyzer"]

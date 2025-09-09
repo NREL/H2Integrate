@@ -60,7 +60,7 @@ finance_parameters:
   subgroups:
     h2:
       commodity: "hydrogen"
-      technologies: ["hopp","electrolyzer","h2_storage","ammonia"]
+      technologies: ["hopp", "electrolyzer", "h2_storage", "ammonia"]
     nh3:
       commodity: "ammonia"
-      technologies: ["hopp","electrolyzer","h2_storage","ammonia"]
+      technologies: ["hopp", "electrolyzer", "h2_storage", "ammonia"]

@@ -288,7 +288,10 @@ def dict_to_yaml_formatting(orig_dict):
 
 
 def determine_commodity_types_from_technology_names(tech_configs, electricity_producing_techs):
+    """Determines the commodity types present in a plant based on the technology names."""
+
     commodity_types = []
+
     if "steel" in tech_configs:
         commodity_types.append("steel")
     if "electrolyzer" in tech_configs:
@@ -309,4 +312,5 @@ def determine_commodity_types_from_technology_names(tech_configs, electricity_pr
         if tech in tech_configs:
             commodity_types.append("electricity")
             break
+
     return commodity_types

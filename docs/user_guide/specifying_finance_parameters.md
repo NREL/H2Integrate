@@ -66,7 +66,7 @@ finance_parameters:
     subgroup_b:
       commodity: "commodity_b" #required
       commodity_desc: "" #optional description of commodity_b
-      technologies: ["tech_a","tech_b"]
+      technologies: ["tech_a", "tech_b"]
 ```
 
 - Format explained:
@@ -112,7 +112,7 @@ finance_parameters:
       commodity: "commodity_b" #required
       commodity_desc: "" #optional description of commodity_b
       finance_groups: [finance_model_nickname_a] #required in this case
-      technologies: ["tech_b","tech_c"]
+      technologies: ["tech_b", "tech_c"]
 ```
 
 - Format explained:
@@ -161,12 +161,12 @@ finance_parameters:
       commodity: "commodity_a" #required
       commodity_desc: "desc_b" #optional description of commodity_b
       finance_groups: [finance_model_nickname_a, finance_model_nickname_b]
-      technologies: ["tech_b","tech_c"]
+      technologies: ["tech_b", "tech_c"]
     subgroup_c:
       commodity: "commodity_b" #required
       commodity_desc: "" #optional description of commodity_b
       finance_groups: [finance_model_nickname_a, finance_model_nickname_c]
-      technologies: ["tech_b","tech_c"]
+      technologies: ["tech_b", "tech_c"]
 ```
 - Format explained:
   - **`finance_model_nickname_a`**: the name used to reference a specific finance model (`finance_model_a` in this example) and its corresponding inputs.

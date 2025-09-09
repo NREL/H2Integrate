@@ -25,7 +25,7 @@ technology_interconnections: [
   ["hopp", "electrolyzer", "electricity", "cable"],
   ["electrolyzer", "h2_storage", "efficiency"],
   ["electrolyzer", "h2_storage", "hydrogen", "pipe"],
-  ["financials_subgroup_hydrogen", "steel", ["LCOH_delivered","LCOH"]],
+  ["financials_subgroup_hydrogen", "steel", ["LCOH_delivered", "LCOH"]],
   ["hopp", "steel", "electricity", "cable"],
   # etc
 ]
@@ -65,7 +65,7 @@ finance_parameters:
       commodity: "hydrogen"
       commodity_desc: "delivered"
       finance_groups: ["profast_model"]
-      technologies: ["hopp","electrolyzer","h2_storage"]
+      technologies: ["hopp", "electrolyzer", "h2_storage"]
     steel:
       commodity: "steel"
       finance_groups: ["steel"]

@@ -452,7 +452,7 @@ class H2IntegrateModel:
             # Add adjusted capex/opex
             adjusted_capex_opex_comp = AdjustedCapexOpexComp(
                 driver_config=self.driver_config,
-                tech_config=tech_configs,
+                tech_configs=tech_configs,
                 plant_config=self.plant_config,
             )
 
@@ -781,13 +781,9 @@ class H2IntegrateModel:
                                 f"financials_subgroup_{group_id}.total_ammonia_produced",
                             )
 
-                        if "doc" in tech_name and primary_commodity_type == "co2":
-                            self.plant.connect(
-                                f"{tech_name}.co2_capture_mtpy",
-                                f"financials_subgroup_{group_id}.co2_capture_kgpy",
-                            )
-
-                        if "oae" in tech_name and primary_commodity_type == "co2":
+                        if (
+                            "doc" in tech_name or "oae" in tech_name
+                        ) and primary_commodity_type == "co2":
                             self.plant.connect(
                                 f"{tech_name}.co2_capture_mtpy",
                                 f"financials_subgroup_{group_id}.co2_capture_kgpy",

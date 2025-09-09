@@ -69,7 +69,6 @@ technologies:
       model: "steel_cost"
     financial_model:
       model: "steel_cost"
-      # group: steel
     model_inputs:
       shared_parameters:
         capacity_factor: 0.9

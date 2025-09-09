@@ -60,4 +60,4 @@ finance_parameters:
       technologies: ["hopp", "doc"]
     co2:
       commodity: "co2"
-      technologies: ["hopp","doc"]
+      technologies: ["hopp", "doc"]

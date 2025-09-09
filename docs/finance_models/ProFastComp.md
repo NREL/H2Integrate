@@ -1,24 +1,19 @@
 
 (profastcomp:profastcompmodel)=
 # ProFastComp
-The ``"ProFastComp"`` finance model calculates levelized cost of commodity using ProFAST.
+The `ProFastComp` finance model calculates levelized cost of commodity using [ProFAST](https://github.com/NREL/ProFAST).
 
-The inputs, outputs, and naming convention for the `ProFastComp` model are outlined in this section.
-- [Input parameters](profastcomp:overview)
-  - [H2Integrate format](profastcomp:direct_opt)
-  - [ProFAST format](profastcomp:pf_params_opt)
-  - [Override defaults for specific technologies](profastcomp:tech_specific_finance)
-- [Output values and naming convention](profastcomp:outputs)
+The inputs, outputs, and naming convention for the `ProFastComp` model are outlined in this doc page.
 
 
 (profastcomp:overview)=
 ## Finance parameters overview
 The main inputs for `ProFastComp` model include:
-- optional: information to export the ProFAST config to a .yaml file
 - required: financial parameters (`params` section). These can be input in the `ProFastComp` format or the `ProFAST` format. These two formats are described in the following sections:
   - [ProFastComp format](profastcomp:direct_opt)
   - [ProFAST format](profastcomp:pf_params_opt)
-- required: default capital item parameters (`capital_items` section). These parameters can be over-written for specific technologies if specified in the `tech_config`. Example usage of over-writing values in the `tech_config` is outlined [here](profastcomp:tech_specific_finance)
+- required: default capital item parameters (`capital_items` section). These parameters can be overridden for specific technologies if specified in the `tech_config`. Example usage of overriding values in the `tech_config` is outlined [here](profastcomp:tech_specific_finance)
+- optional: information to export the ProFAST config to a .yaml file
 
 ```yaml
 finance_parameters:
@@ -183,11 +178,12 @@ loan period if used: 0
 ```
 
 (profastcomp:tech_specific_finance)=
-## Over-ride defaults for specific technologies
+## Override defaults for specific technologies
 
-Capital item entries can be over-written for individual technologies.
+Capital item entries can be overridden for individual technologies.
+This means that specific technologies can have different financial parameters defined in `tech_config` than the defaults set in the `plant_config`.
 
-#### **Over-write depreciation period:**
+### **Override depreciation period:**
 
 Suppose the default depreciation period for capital items is 5 years (set in the `plant_config['finance_parameters']['model_inputs]['capital_items']['depr_period']`), but we want the depreciation period for the electrolyzer to be 7 years. This can be done in the `tech_config` as shown below:
 ```yaml
@@ -200,7 +196,7 @@ technologies:
 ```
 
 
-#### **Custom refurbishment period:**
+### **Custom refurbishment period:**
 
 Suppose the default refurbishment schedule for capital items is `[0.]` (set in the `plant_config['finance_parameters']['model_inputs]['capital_items']['refurb']`), but we want our battery to be replaced in 15-years and the replacement cost is equal to the capital cost. This can be accomplished in the tech_config as shown below:
 ```yaml
@@ -215,8 +211,8 @@ technologies:
 
 (profastcomp:outputs)=
 ## Output values and naming convention
-``ProFastComp`` outputs the following data:
-- `LCO<x_and_descriptor>`: levelized cost of commodity in USD/commodity unit.
+``ProFastComp`` outputs the following data following the naming convention detailed below:
+- `LCO<x_and_descriptor>`: levelized cost of commodity in USD/commodity unit, e.g. `LCOH_produced` for hydrogen produced.
 - `wacc_<commodity_and_descriptor>`: weighted average cost of capital as a fraction.
 - `crf_<commodity_and_descriptor>`: capital recovery factor as a fraction.
 - `irr_<commodity_and_descriptor>`: internal rate of return as a fraction.

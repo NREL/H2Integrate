@@ -1,6 +1,6 @@
 (cost:cost_years)=
 # Cost year of Cost Models
-Some cost models are derived from literature and output costs (CapEx and OpEx) in a specific dollar-year. Some cost models require users to input the key cost information, and the output costs are in the same cost year as the user-provided costs. For [cost models with a built-in cost year](#cost-models-with-inherent-cost-year), the cost year is not required as an input for the cost model. For [cost models based on user provided costs](#cost-models-with-user-input-cost-year), the `cost_year` should be included in the tech_config for that technology.
+Some cost models are derived from literature and output costs (CapEx and OpEx) in a specific dollar-year. Some cost models require users to input the key cost information, and the output costs are in the same cost year as the user-provided costs. For [cost models with a built-in cost year](#cost-models-with-inherent-cost-year), the cost year is not required as an input for the cost model. For [cost models based on user-provided costs](#cost-models-with-user-input-cost-year), the `cost_year` should be included in the tech_config for that technology.
 
 ## Cost models with inherent cost year
 
