@@ -1,16 +1,14 @@
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING
 
 import pyomo.environ as pyomo
-import PySAM.BatteryStateful as BatteryStateful
 from attrs import field, define
-from pyomo.environ import units as u
 
 from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
 from h2integrate.control.control_strategies.controller_baseclass import ControllerBaseClass
 
 
 if TYPE_CHECKING:  # to avoid circular imports
-    from h2integrate.control.control_rules.pyomo_control_options import PyomoControlOptions
+    pass
 
 
 @define
@@ -53,6 +51,7 @@ class PyomoControllerBaseConfig(BaseConfig):
     resource_name: str = field()
     resource_storage_units: str = field()
     tech_name: str = field()
+
 
 def dummy_function():
     return None
@@ -127,15 +126,15 @@ class PyomoControllerBaseClass(ControllerBaseClass):
 
             ti = list(range(0, self.config.n_timesteps, self.config.n_control_window))
 
-            for i, t in enumerate(ti):
+            for _i, t in enumerate(ti):
                 self.update_time_series_parameters()
                 if "heuristic" in self.options["tech_config"]["control_strategy"]["model"]:
                     self.set_fixed_dispatch(
                         inputs[self.config.resource_name + "_in"][
-                            t:t + self.config.n_control_window
+                            t : t + self.config.n_control_window
                         ],
                         self.config.grid_limit,
-                        inputs["demand_in"][t:t + self.config.n_control_window],
+                        inputs["demand_in"][t : t + self.config.n_control_window],
                     )
                 else:
                     # TODO: implement optimized solutions; this is where pyomo_model would be used
@@ -144,7 +143,7 @@ class PyomoControllerBaseClass(ControllerBaseClass):
 
                 performance_model(
                     self.storage_amount,
-                    inputs["demand_in"][t:t + self.config.n_control_window],
+                    inputs["demand_in"][t : t + self.config.n_control_window],
                     **performance_model_kwargs,
                     sim_start_index=t,
                 )
@@ -245,17 +244,16 @@ class SimpleBatteryControllerHeuristic(PyomoControllerBaseClass):
         #     if self.control_options.max_lifecycle_per_day < np.inf:
         #         self._create_lifecycle_count_constraint()
 
-        self.round_digits = int(4)
+        self.round_digits = 4
 
         self.max_charge_fraction = [0.0] * self.config.n_control_window
         self.max_discharge_fraction = [0.0] * self.config.n_control_window
         self._fixed_dispatch = [0.0] * self.config.n_control_window
-        
+
         # TODO: should I enforce either a day schedule or a year schedule year and save it as
         # user input? Additionally, Should I drop it as input in the init function?
         # if fixed_dispatch is not None:
         #     self.user_fixed_dispatch = fixed_dispatch
-
 
     def initialize_parameters(self):
         """Initializes parameters."""
@@ -306,7 +304,7 @@ class SimpleBatteryControllerHeuristic(PyomoControllerBaseClass):
     #         rule=storage_soc_linking_rule,
     #     )
 
-    def update_time_series_parameters(self, start_time: int=0):
+    def update_time_series_parameters(self, start_time: int = 0):
         """Updates time series parameters.
 
         Args:
@@ -629,7 +627,6 @@ class HeuristicLoadFollowingControllerConfig(PyomoControllerBaseConfig):
         # TODO: Is this the best way to handle scalar demand?
         if isinstance(self.grid_limit, (float, int)):
             self.grid_limit = [self.grid_limit] * self.n_control_window
-
 
 
 class HeuristicLoadFollowingController(SimpleBatteryControllerHeuristic):

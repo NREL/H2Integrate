@@ -1,7 +1,6 @@
 from copy import deepcopy
 
 import numpy as np
-
 from attrs import field, define
 
 from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
@@ -345,5 +344,3 @@ class DemandOpenLoopController(ControllerBaseClass):
 
         # Return the missed load
         outputs[f"{resource_name}_missed_load"] = missed_load_array
-
-
