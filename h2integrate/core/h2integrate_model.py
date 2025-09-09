@@ -149,10 +149,15 @@ class H2IntegrateModel:
         # Add the site resource component
         if "resources" in site_config:
             for resource_name, resource_config in site_config["resources"].items():
-                resource_class = self.supported_models.get(resource_name)
+                resource_model = resource_config.get("resource_model")
+                resource_inputs = resource_config.get("resource_parameters")
+                resource_class = self.supported_models.get(resource_model)
                 if resource_class:
                     resource_component = resource_class(
-                        filename=resource_config.get("filename"),
+                        plant_config=self.plant_config,
+                        resource_config=resource_inputs,
+                        driver_config=self.driver_config,
+                        # filename=resource_config.get("filename"),
                     )
                     site_group.add_subsystem(resource_name, resource_component)
 

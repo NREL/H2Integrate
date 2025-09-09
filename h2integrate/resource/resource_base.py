@@ -3,7 +3,6 @@ from pathlib import Path
 
 import openmdao.api as om
 from attrs import field, define
-from rex.sam_resource import SAMResource
 
 from h2integrate.core.utilities import BaseConfig
 from h2integrate.resource.utilities.file_tools import check_resource_dir
@@ -27,9 +26,9 @@ class ResourceBaseAPIConfig(BaseConfig):
     # resource_filename: Path | str = field(default="")
     # resource_dir: Path | str | None = field(default=None)
 
-    dataset_desc: str = "default"
-    resource_type: str = "none"
-    valid_intervals: ClassVar = [60]
+    dataset_desc: str = field(default="default", init=False)
+    resource_type: str = field(default="none", init=False)
+    valid_intervals: ClassVar = field(default=[60], init=False)
 
 
 class ResourceBaseAPIModel(om.ExplicitComponent):
@@ -44,26 +43,7 @@ class ResourceBaseAPIModel(om.ExplicitComponent):
         self.n_timesteps = int(self.sim_config["n_timesteps"])
         self.dt = self.sim_config["dt"]
         self.start_time = self.sim_config["start_time"]
-        # resource_specs = self.options["resource_config"][
-        #     "resource_parameters"
-        # ]  # TODO: update based on handling in H2IModel
-        # resource_specs.setdefault("latitude", site_config["latitude"])
-        # resource_specs.setdefault("longitude", site_config["longitude"])
-        # resource_specs.setdefault(
-        #     "resource_dir", site_config["resources"].get("resource_dir", None)
-        # )
 
-        # resource_specs.setdefault("timezone", sim_config.get("timezone"))
-        # resource_specs.setdefault("dt", sim_config.get("dt"))
-        # resource_specs.setdefault("n_timesteps", sim_config.get("n_timesteps"))
-
-        # resource_specs.setdefault("start_time", sim_config.get("start_time"))
-
-        # self.config = ResourceBaseAPIConfig.from_dict(resource_specs)
-
-        # TODO: add outputs
-
-    # TODO: add functions with not implemented errors
     def create_filename(self):
         raise NotImplementedError("This method should be implemented in a subclass.")
 
@@ -79,12 +59,6 @@ class ResourceBaseAPIModel(om.ExplicitComponent):
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         raise NotImplementedError("This method should be implemented in a subclass.")
-
-    def roll_data_for_timezone(self, data: dict, tz_to: int | float, tz_from: int | float):
-        n_dt_per_hour = 3600 // self.dt
-        tz_shift = tz_from + tz_to
-        for var, timeseries_data in data.items():
-            data[var] = SAMResource.roll_timeseries((timeseries_data), int(tz_shift), n_dt_per_hour)
 
     def get_data(self):
         data = None
@@ -114,17 +88,21 @@ class ResourceBaseAPIModel(om.ExplicitComponent):
                 filename = self.create_filename()
                 filepath = resource_dir / filename
             if filepath.is_file():
+                self.filepath = filepath
                 data = self.load_data(filepath)
                 return data
 
         # 3) download data if not found in file or not provided
         if data is None:
+            self.filepath = filepath
             url = self.create_url()
             success = self.download_data(url, filepath)
             if not success:
                 raise ValueError("Did not successfully download data")
             data = self.load_data(filepath)
             return data
+
+        self.filepath = filepath
 
         if data is None:
             raise ValueError("Unexpected situation occurred while trying to load data")
