@@ -620,7 +620,7 @@ class SimpleBatteryControllerHeuristic(PyomoControllerBaseClass):
 @define
 class HeuristicLoadFollowingControllerConfig(PyomoControllerBaseConfig):
     system_capacity_kw: int = field()
-    grid_limit: float = field()
+    grid_limit: float = field(default=1e12)
     include_lifecycle_count: bool = field(default=False)
 
     def __attrs_post_init__(self):
