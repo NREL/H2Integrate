@@ -126,7 +126,7 @@ def test_demand_controller(subtests):
 
     with subtests.test("Check curtailment"):
         assert pytest.approx([0.0, 0.0, 0.5, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]) == prob.get_val(
-            "hydrogen_curtailed"
+            "hydrogen_excess_resource"
         )
 
     with subtests.test("Check soc"):
@@ -136,7 +136,7 @@ def test_demand_controller(subtests):
 
     with subtests.test("Check missed load"):
         assert pytest.approx([0.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]) == prob.get_val(
-            "hydrogen_missed_load"
+            "hydrogen_unmet_demand"
         )
 
 
@@ -216,14 +216,14 @@ def test_demand_controller_round_trip_efficiency(subtests):
         assert pytest.approx(prob_ioe.get_val("hydrogen_out")) == prob_rte.get_val("hydrogen_out")
 
     with subtests.test("Check curtailment"):
-        assert pytest.approx(prob_ioe.get_val("hydrogen_curtailed")) == prob_rte.get_val(
-            "hydrogen_curtailed"
+        assert pytest.approx(prob_ioe.get_val("hydrogen_excess_resource")) == prob_rte.get_val(
+            "hydrogen_excess_resource"
         )
 
     with subtests.test("Check soc"):
         assert pytest.approx(prob_ioe.get_val("hydrogen_soc")) == prob_rte.get_val("hydrogen_soc")
 
     with subtests.test("Check missed load"):
-        assert pytest.approx(prob_ioe.get_val("hydrogen_missed_load")) == prob_rte.get_val(
-            "hydrogen_missed_load"
+        assert pytest.approx(prob_ioe.get_val("hydrogen_unmet_demand")) == prob_rte.get_val(
+            "hydrogen_unmet_demand"
         )

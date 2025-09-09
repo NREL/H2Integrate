@@ -188,13 +188,13 @@ class DemandOpenLoopController(ControllerBaseClass):
             - Units: Defined in `resource_rate_units` (e.g., "kg/h").
         {resource_name}_soc (float): State of charge (SOC) timeseries for the storage system.
             - Units: "unitless" (percentage of maximum capacity given as a ratio between 0 and 1).
-        {resource_name}_curtailed (float): Curtailment timeseries for unused input resource.
+        {resource_name}_excess_resource (float): Curtailment timeseries for unused input resource.
             - Units: Defined in `resource_rate_units` (e.g., "kg/h").
             - Note: curtailment in this case does not reduce what the converter produces, but
                 rather the system just does not use it (throws it away) because this controller is
                 specific to the storage technology and has no influence on other technologies in
                 the system.
-        {resource_name}_missed_load (float): Missed load timeseries when demand exceeds supply.
+        {resource_name}_unmet_demand (float): Missed load timeseries when demand exceeds supply.
             - Units: Defined in `resource_rate_units` (e.g., "kg/h").
 
     """
@@ -239,7 +239,7 @@ class DemandOpenLoopController(ControllerBaseClass):
         )
 
         self.add_output(
-            f"{resource_name}_curtailed",
+            f"{resource_name}_excess_resource",
             copy_shape=f"{resource_name}_in",
             units=self.config.resource_rate_units,
             desc=f"{resource_name} curtailment timeseries for inflow resource at \
@@ -247,7 +247,7 @@ class DemandOpenLoopController(ControllerBaseClass):
         )
 
         self.add_output(
-            f"{resource_name}_missed_load",
+            f"{resource_name}_unmet_demand",
             copy_shape=f"{resource_name}_in",
             units=self.config.resource_rate_units,
             desc=f"{resource_name} missed load timeseries",
@@ -276,9 +276,9 @@ class DemandOpenLoopController(ControllerBaseClass):
 
         # initialize outputs
         soc_array = outputs[f"{resource_name}_soc"]
-        curtailment_array = outputs[f"{resource_name}_curtailed"]
+        excess_resource_array = outputs[f"{resource_name}_excess_resource"]
         output_array = outputs[f"{resource_name}_out"]
-        missed_load_array = outputs[f"{resource_name}_missed_load"]
+        unmet_demand_array = outputs[f"{resource_name}_unmet_demand"]
 
         # Loop through each time step
         for t, demand_t in enumerate(demand_profile):
@@ -329,18 +329,18 @@ class DemandOpenLoopController(ControllerBaseClass):
 
             # Record the curtailment at the current time step. Adjust `charge` from storage view to
             # outside view for curtailment
-            curtailment_array[t] = max(0, float(excess_input - charge / charge_efficiency))
+            excess_resource_array[t] = max(0, float(excess_input - charge / charge_efficiency))
 
             # Record the missed load at the current time step
-            missed_load_array[t] = max(0, (demand_t - output_array[t]))
+            unmet_demand_array[t] = max(0, (demand_t - output_array[t]))
 
         outputs[f"{resource_name}_out"] = output_array
 
         # Return the SOC
         outputs[f"{resource_name}_soc"] = soc_array
 
-        # Return the curtailment
-        outputs[f"{resource_name}_curtailed"] = curtailment_array
+        # Return the excess resource
+        outputs[f"{resource_name}_excess_resource"] = excess_resource_array
 
-        # Return the missed load
-        outputs[f"{resource_name}_missed_load"] = missed_load_array
+        # Return the unmet load demand
+        outputs[f"{resource_name}_unmet_demand"] = unmet_demand_array

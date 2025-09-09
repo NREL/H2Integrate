@@ -105,7 +105,6 @@ technologies:
         max_discharge_rate: 10000.0  # kg/time step
         charge_efficiency: 1.0 # percent as decimal
         discharge_efficiency: 1.0 # percent as decimal
-        demand_profile: 5000  # Example: 10 time steps with 50 kg/time step demand. Scalar indicates constant demand, array-like indicates dynamic demand
         dt: 1.0
         n_control_window: 24
         n_horizon_window: 48
