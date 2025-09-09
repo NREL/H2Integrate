@@ -307,6 +307,7 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass, CostModelBaseCla
             # Set to 0.0 for each loop start
             self.unmet_demand = 0.0
             self.excess_resource = 0.0
+            self.requested_discharge = electricity_in[t]
 
             # Grab the available charge/discharge capacity of the battery
             P_chargeable = self.system_model.value("P_chargeable")
@@ -314,8 +315,9 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass, CostModelBaseCla
 
             # If discharging...
             if electricity_in[t] > 0.0:
-                # If the battery has been discharge to its minimum SOC level (with a tolerance)
+                # If the battery has been discharged to its minimum SOC level (with a tolerance)
                 if (self.system_model.value("SOC") - self.system_model.value("minimum_SOC")) < 0.05:
+                    self.unmet_demand = demand_in[t]
                     # Avoid trickle power by setting to 0.0
                     electricity_in[t] = 0.0
 
@@ -343,7 +345,7 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass, CostModelBaseCla
             # the full amount of power required by the demand. It determines the remaining unmet
             # demand after the battery has discharged what is possible before hitting the battery's
             # minimum SOC level.
-            if electricity_in[t] >= 0.0:
+            if self.requested_discharge >= 0.0:
                 # If the desired discharge power is greater than the available power in the battery
                 if (self.system_model.value("SOC") - self.system_model.value("minimum_SOC")) < 0.05:
                     # Unmet demand equals the demand minus the discharged power
