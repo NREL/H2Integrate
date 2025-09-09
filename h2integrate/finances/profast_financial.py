@@ -442,6 +442,7 @@ class ProFastComp(om.ExplicitComponent):
             if desc_str == "":
                 self.LCO_str = LCO_base_str
             else:
+                self.output_txt = f"{self.options['commodity_type'].lower()}_{desc_str}"
                 self.LCO_str = f"{LCO_base_str}_{desc_str}"
 
         self.add_output(self.LCO_str, val=0.0, units=lco_units)
