@@ -37,14 +37,20 @@ class PyomoRuleStorageBaseclass(PyomoRuleBaseClass):
         #     units=pyo.units.USD / pyo.units.MWh,
         # )
         pyomo_model.minimum_storage = pyo.Param(
-            doc=pyomo_model.name + " minimum storage rating [" + self.config.resource_storage_units + "]",
+            doc=pyomo_model.name
+            + " minimum storage rating ["
+            + self.config.resource_storage_units
+            + "]",
             default=0.0,
             within=pyo.NonNegativeReals,
             mutable=True,
             units=eval("pyo.units." + self.config.resource_storage_units),
         )
         pyomo_model.maximum_storage = pyo.Param(
-            doc=pyomo_model.name + " maximum storage rating [" + self.config.resource_storage_units + "]",
+            doc=pyomo_model.name
+            + " maximum storage rating ["
+            + self.config.resource_storage_units
+            + "]",
             within=pyo.NonNegativeReals,
             mutable=True,
             units=eval("pyo.units." + self.config.resource_storage_units),
