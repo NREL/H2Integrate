@@ -16,6 +16,7 @@ from h2integrate.storage.hydrogen.tank_baseclass import (
 )
 from h2integrate.converters.hydrogen.wombat_model import WOMBATElectrolyzerModel
 from h2integrate.converters.wind.wind_plant_pysam import PYSAMWindPlantPerformanceModel
+from h2integrate.storage.battery.atb_battery_cost import ATBBatteryCostModel
 from h2integrate.transporters.electricity_combiner import CombinerPerformanceModel
 from h2integrate.transporters.electricity_splitter import SplitterPerformanceModel
 from h2integrate.converters.ammonia.ammonia_synloop import (
@@ -34,6 +35,7 @@ from h2integrate.converters.hydrogen.pem_electrolyzer import (
 from h2integrate.converters.solar.atb_res_com_pv_cost import ATBResComPVCostModel
 from h2integrate.converters.solar.atb_utility_pv_cost import ATBUtilityPVCostModel
 from h2integrate.control.control_rules.converters.wind import PyomoDispatchWind
+from h2integrate.control.control_rules.storage.battery import PyomoDispatchBattery
 from h2integrate.converters.methanol.smr_methanol_plant import (
     SMRMethanolPlantCostModel,
     SMRMethanolPlantFinanceModel,
@@ -49,7 +51,6 @@ from h2integrate.converters.methanol.co2h_methanol_plant import (
     CO2HMethanolPlantPerformanceModel,
 )
 from h2integrate.control.control_rules.storage.h2_storage import PyomoDispatchH2Storage
-from h2integrate.control.control_rules.storage.battery import PyomoDispatchBattery
 from h2integrate.converters.natural_gas.natural_gas_cc_ct import (
     NaturalGasCostModel,
     NaturalGasPerformanceModel,
@@ -151,6 +152,7 @@ supported_models = {
     "h2_storage": H2Storage,
     "hydrogen_tank_performance": HydrogenTankPerformanceModel,
     "hydrogen_tank_cost": HydrogenTankCostModel,
+    "atb_battery_cost": ATBBatteryCostModel,
     # Control
     "pass_through_controller": PassThroughOpenLoopController,
     "demand_open_loop_controller": DemandOpenLoopController,
