@@ -64,7 +64,6 @@ technologies:
       performance_parameters:
         cost_year: 2019
       control_parameters:
-        grid_limit: 500000
         resource_name: "electricity"
         resource_storage_units: "kW"
         tech_name: "battery"
