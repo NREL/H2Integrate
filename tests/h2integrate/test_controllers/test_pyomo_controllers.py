@@ -126,6 +126,33 @@ def test_heuristic_load_following_battery_dispatch(subtests):
         5984.7496388,
         5983.41717191,
         5981.839478,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+    ]
+
+    expected_battery_electricity_out = [
+        5999.99995059,
+        5990.56676743,
+        5990.138959,
+        5989.64831176,
+        5989.08548217,
+        5988.44193888,
+        5987.70577962,
+        5986.86071125,
+        5985.88493352,
+        5984.7496388,
+        5983.41717191,
+        5981.839478,
         -3988.62235554,
         -3989.2357847,
         -3989.76832626,
@@ -174,6 +201,13 @@ def test_heuristic_load_following_battery_dispatch(subtests):
         assert (
             pytest.approx(expected_electricity_out) == prob.get_val("battery.electricity_out")[0:24]
         )
+    
+    with subtests.test("Check battery_electricity_out"):
+        assert (
+            pytest.approx(expected_battery_electricity_out) == prob.get_val(
+                "battery.battery_electricity_out"
+            )[0:24]
+        )
 
     with subtests.test("Check SOC"):
         assert pytest.approx(expected_SOC) == prob.get_val("battery.SOC")[0:24]
@@ -204,6 +238,7 @@ def test_heuristic_load_following_battery_dispatch(subtests):
     prob.run_model()
 
     expected_electricity_out = [29999.99999999, 29930.56014218, 24790.59770946, 0., 0.]
+    expected_battery_electricity_out = expected_electricity_out
     expected_SOC = [37.69010284, 22.89921133, 10.01660975, 10.01660975, 10.01660975]
     expected_unmet_demand_out = [0., 0., 5209.40229054, 30000., 30000.]
     expected_excess_resource_out = np.zeros(5)
@@ -211,6 +246,13 @@ def test_heuristic_load_following_battery_dispatch(subtests):
     with subtests.test("Check electricity_out for min SOC"):
         assert (
             pytest.approx(expected_electricity_out) == prob.get_val("battery.electricity_out")[:5]
+        )
+
+    with subtests.test("Check battery_electricity_out for min SOC"):
+        assert (
+            pytest.approx(expected_battery_electricity_out) == prob.get_val(
+                "battery.battery_electricity_out"
+            )[:5]
         )
 
     with subtests.test("Check SOC for min SOC"):
@@ -241,7 +283,8 @@ def test_heuristic_load_following_battery_dispatch(subtests):
     # Run the model
     prob.run_model()
 
-    expected_electricity_out = [-30000.00847705, -29973.58679681, -23310.54620182, 0., 0.]
+    expected_electricity_out = [0., 0., 6150.14483911, 30000., 30000.]
+    expected_battery_electricity_out = [-30000.00847705, -29973.58679681, -23310.54620182, 0., 0.]
     expected_SOC = [66.00200558, 79.43840635, 90., 90., 90.]
     expected_unmet_demand_out = np.zeros(5)
     expected_excess_resource_out = [0., 0., 6150.14483911, 30000., 30000.]
@@ -249,6 +292,13 @@ def test_heuristic_load_following_battery_dispatch(subtests):
     with subtests.test("Check electricity_out for max SOC"):
         assert (
             pytest.approx(expected_electricity_out) == prob.get_val("battery.electricity_out")[:5]
+        )
+
+    with subtests.test("Check battery_electricity_out for max SOC"):
+        assert (
+            pytest.approx(expected_battery_electricity_out) == prob.get_val(
+                "battery.battery_electricity_out"
+            )[:5]
         )
 
     with subtests.test("Check SOC for max SOC"):

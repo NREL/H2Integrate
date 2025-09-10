@@ -1,6 +1,7 @@
 from dataclasses import asdict, dataclass
 from collections.abc import Sequence
 
+import numpy as np
 import PySAM.BatteryStateful as BatteryStateful
 from attrs import field, define
 from hopp.utilities.validators import gt_zero, contains, range_val
@@ -273,14 +274,19 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass, CostModelBaseCla
                 time_step_duration=self.config.dt,
                 control_variable=discrete_inputs["control_variable"],
             )
-
         # Store outputs from the battery model
-        outputs["electricity_out"] = self.outputs.P
+        outputs["electricity_out"] = (
+            list(
+                np.array([P if P > 0.0 else 0.0 for P in self.outputs.P])
+                + np.array(self.outputs.excess_resource)
+            )
+        )
         outputs["SOC"] = self.outputs.SOC
         outputs["P_chargeable"] = self.outputs.P_chargeable
         outputs["P_dischargeable"] = self.outputs.P_dischargeable
         outputs["unmet_demand_out"] = self.outputs.unmet_demand
         outputs["excess_resource_out"] = self.outputs.excess_resource
+        outputs["battery_electricity_out"] = self.outputs.P
 
     def simulate(
         self,
