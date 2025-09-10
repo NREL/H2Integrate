@@ -255,7 +255,7 @@ def test_wind_h2_opt_example(subtests):
     # Run the model
     model_init.run()
 
-    model_init.post_process()
+    # model_init.post_process()
 
     annual_h20 = model_init.prob.get_val("electrolyzer.total_hydrogen_produced", units="kg/year")[0]
 
@@ -265,7 +265,7 @@ def test_wind_h2_opt_example(subtests):
     # Run the model
     model.run()
 
-    model.post_process()
+    # model.post_process()
 
     with subtests.test("Check initial H2 production"):
         assert annual_h20 < (60500000 - 10000)

@@ -65,7 +65,11 @@ class WTKNRELDeveloperAPIWindResource(WindResourceBaseAPIModel):
 
         # NOTE: add any upsampling or downsampling, this should be done here
         data = roll_timeseries_data(self.resource_time_profile, data["time"], data, self.dt)
-        self.data = data
+        time_str = [
+            data["time"][i].strftime("%m/%d/%Y %H:%M:%S (%z)") for i in range(len(data["time"]))
+        ]
+        data["time"] = time_str
+        # self.data = data
         self.add_discrete_output("wind_resource_data", val=data, desc="Dict of wind resource data")
 
     def create_filename(self):
@@ -117,7 +121,8 @@ class WTKNRELDeveloperAPIWindResource(WindResourceBaseAPIModel):
             for k, v in data_units.items()
         }
         data, data_units = self.compare_units_and_correct(data, data_units)
-        timeseries_data = {c: data[c].values for c in data.columns.to_list()}
+        time_cols = ["Year", "Month", "Day", "Hour", "Minute"]
+        timeseries_data = {c: data[c].values for c in data.columns.to_list() if c not in time_cols}
         timeseries_data.update({"time": data_time_profile})
         timeseries_data.update(site_data)
         return timeseries_data

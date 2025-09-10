@@ -36,3 +36,4 @@ recorder:
   flag: True
   file: "wind_h2_opt.sql"
   includes: ["*"]
+  excludes: ["wind_resource.wind_resource_data"]

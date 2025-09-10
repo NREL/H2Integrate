@@ -1,3 +1,7 @@
+import operator
+import functools
+
+import numpy as np
 from attrs import field, define
 from hopp.simulation.technologies.sites import SiteInfo, flatirons_site
 from hopp.simulation.technologies.wind.wind_plant import WindPlant
@@ -48,13 +52,106 @@ class WindPlantPerformanceModel(WindPerformanceBaseClass):
         self.plant_config = WindPlantPerformanceModelPlantConfig.from_dict(
             self.options["plant_config"]["plant"], strict=False
         )
-        self.site = SiteInfo(flatirons_site)
-        self.wind_plant = WindPlant(self.site, self.config)
 
-    def compute(self, inputs, outputs):
+        self.data_to_field_number = {
+            "temperature": 1,
+            "pressure": 2,
+            "wind_speed": 3,
+            "wind_direction": 4,
+        }
+
+    def format_resource_data(self, hub_height, wind_resource_data):
+        bounding_heights = self.calculate_bounding_heights_from_resource_data(
+            hub_height,
+            wind_resource_data,
+            resource_vars=["wind_speed", "wind_direction", "temperature"],
+        )
+        heights = np.repeat(bounding_heights, len(self.data_to_field_number))
+        field_number_to_data = {v: k for k, v in self.data_to_field_number.items()}
+        fields = np.tile(list(field_number_to_data.keys()), len(bounding_heights))
+        n_timesteps = int(self.options["plant_config"]["plant"]["simulation"]["n_timesteps"])
+
+        resource_data = np.zeros((n_timesteps, len(fields)))
+        cnt = 0
+        for height, field_num in zip(heights, fields):
+            resource_key = f"{field_number_to_data[field_num]}_{int(height)}m"
+            if resource_key in wind_resource_data:
+                resource_data[:, cnt] = wind_resource_data[resource_key].round(1)
+            else:
+                if any(
+                    field_number_to_data[field_num] in c for c in list(wind_resource_data.keys())
+                ):
+                    data_heights = [
+                        float(c.split("_")[-1].replace("m", "").strip())
+                        for c in list(wind_resource_data.keys())
+                        if field_number_to_data[field_num] in c
+                    ]
+                    if len(data_heights) > 1:
+                        nearby_heights = [
+                            self.calculate_bounding_heights_from_resource_data(
+                                hub_ht,
+                                wind_resource_data,
+                                resource_vars=[field_number_to_data[field_num]],
+                            )
+                            for hub_ht in data_heights
+                        ]
+                        nearby_heights = functools.reduce(operator.iadd, nearby_heights, [])
+                        nearby_heights = list(set(nearby_heights))
+                        if len(nearby_heights) > 1:
+                            height_diff = [
+                                np.abs(valid_height - height) for valid_height in nearby_heights
+                            ]
+                            closest_height = nearby_heights[np.argmin(height_diff).flatten()[0]]
+                            resource_key = (
+                                f"{field_number_to_data[field_num]}_{int(closest_height)}m"
+                            )
+
+                        else:
+                            resource_key = (
+                                f"{field_number_to_data[field_num]}_{int(nearby_heights[0])}m"
+                            )
+
+                    else:
+                        resource_key = f"{field_number_to_data[field_num]}_{int(data_heights[0])}m"
+                    if resource_key in wind_resource_data:
+                        resource_data[:, cnt] = wind_resource_data[resource_key].round(1)
+            cnt += 1
+        data = {
+            "heights": heights.astype(float).tolist(),
+            "fields": fields.tolist(),
+            "data": resource_data.tolist(),
+        }
+        return data
+
+    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
+        resource_data = self.format_resource_data(
+            self.config.hub_height, discrete_inputs["wind_resource_data"]
+        )
+        boundaries = flatirons_site["site_boundaries"]["verts"]
+        site_data = {
+            "lat": discrete_inputs["wind_resource_data"].get("site_lat", 35.2018863),
+            "lon": discrete_inputs["wind_resource_data"].get("site_lon", -101.945027),
+            "tz": discrete_inputs["wind_resource_data"].get("site_tz", -6),
+            "elev": discrete_inputs["wind_resource_data"].get("elevation", 1099),
+            "wind_year": 2012,
+            "site_boundaries": {"verts": boundaries},
+        }
+        site_info = {
+            "data": site_data,
+            "hub_height": self.config.hub_height,
+            "wind_resource": resource_data,
+        }
+
+        self.site = SiteInfo.from_dict(site_info)
+        self.wind_plant = WindPlant(self.site, self.config)
         # Assumes the WindPlant instance has a method to simulate and return power output
         self.wind_plant.simulate_power(self.plant_config.plant_life)
         outputs["electricity_out"] = self.wind_plant._system_model.value("gen")
+
+    # def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
+    #     # Assumes the WindPlant instance has a method to simulate and return power output
+    #     self.wind_plant.simulate_power(self.plant_config.plant_life)
+    #     outputs["electricity_out"] = self.wind_plant._system_model.value("gen")
 
 
 @define
