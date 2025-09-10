@@ -5,9 +5,8 @@ import yaml
 import numpy as np
 import openmdao.api as om
 
-from h2integrate.core.finances import ProFastComp, AdjustedCapexOpexComp
+from h2integrate.core.finances import AdjustedCapexOpexComp
 from h2integrate.core.utilities import create_xdsm_from_config
-from h2integrate.core.feedstocks import FeedstockComponent
 from h2integrate.core.resource_summer import ElectricitySumComp
 from h2integrate.core.supported_models import supported_models, electricity_producing_techs
 from h2integrate.core.inputs.validation import load_tech_yaml, load_plant_yaml, load_driver_yaml
@@ -189,9 +188,15 @@ class H2IntegrateModel:
 
         # Create a technology group for each technology
         for tech_name, individual_tech_config in self.technology_config["technologies"].items():
-            if "feedstocks" in tech_name:
-                feedstock_component = FeedstockComponent(feedstocks_config=individual_tech_config)
-                self.plant.add_subsystem(tech_name, feedstock_component)
+            perf_model = individual_tech_config.get("performance_model", {}).get("model")
+
+            if perf_model is not None and "feedstock" in perf_model:
+                comp = self.supported_models[perf_model](
+                    driver_config=self.driver_config,
+                    plant_config=self.plant_config,
+                    tech_config=individual_tech_config,
+                )
+                self.plant.add_subsystem(f"{tech_name}_source", comp)
             else:
                 tech_group = self.plant.add_subsystem(tech_name, om.Group())
                 self.tech_names.append(tech_name)
@@ -252,6 +257,16 @@ class H2IntegrateModel:
                             promotes=["*"],
                         )
                         self.financial_models.append(financial_object)
+
+        for tech_name, individual_tech_config in self.technology_config["technologies"].items():
+            cost_model = individual_tech_config.get("cost_model", {}).get("model")
+            if cost_model is not None and "feedstock" in cost_model:
+                comp = self.supported_models[cost_model](
+                    driver_config=self.driver_config,
+                    plant_config=self.plant_config,
+                    tech_config=individual_tech_config,
+                )
+                self.plant.add_subsystem(tech_name, comp)
 
     def _process_model(self, model_type, individual_tech_config, tech_group):
         # Generalized function to process model definitions
@@ -318,10 +333,12 @@ class H2IntegrateModel:
                 commodity_types.append("hydrogen")
             if "doc" in tech_configs:
                 commodity_types.append("co2")
+            if "oae" in tech_configs:
+                commodity_types.append("co2")
             for tech in electricity_producing_techs:
                 if tech in tech_configs:
                     commodity_types.append("electricity")
-                    continue
+                    break
 
             # Steel, methanol provides their own financials
             if any(c in commodity_types for c in ("steel", "methanol")):
@@ -378,13 +395,30 @@ class H2IntegrateModel:
                     tech: config for tech, config in tech_configs.items() if tech in included_techs
                 }
 
-                profast_comp = ProFastComp(
-                    driver_config=self.driver_config,
-                    tech_config=filtered_tech_configs,
-                    plant_config=self.plant_config,
-                    commodity_type=commodity_type,
-                )
-                financial_group.add_subsystem(f"profast_comp_{idx}", profast_comp, promotes=["*"])
+                fin_model_name = self.plant_config["finance_parameters"].get("finance_model")
+                if isinstance(fin_model_name, list):
+                    for model_name in fin_model_name:
+                        fin_model = self.supported_models.get(model_name)
+                        fin_comp = fin_model(
+                            driver_config=self.driver_config,
+                            tech_config=filtered_tech_configs,
+                            plant_config=self.plant_config,
+                            commodity_type=commodity_type,
+                        )
+                        financial_group.add_subsystem(
+                            f"{model_name}_{idx}", fin_comp, promotes=["*"]
+                        )
+                else:
+                    fin_model = self.supported_models.get(fin_model_name)
+                    fin_comp = fin_model(
+                        driver_config=self.driver_config,
+                        tech_config=filtered_tech_configs,
+                        plant_config=self.plant_config,
+                        commodity_type=commodity_type,
+                    )
+                    financial_group.add_subsystem(
+                        f"{fin_model_name}_{idx}", fin_comp, promotes=["*"]
+                    )
 
             self.plant.add_subsystem(f"financials_group_{group_id}", financial_group)
 
@@ -405,13 +439,8 @@ class H2IntegrateModel:
         # Check if the user defined specific technologies to include in the metrics.
         # If provided, only include those technologies in the stackup.
         # If not provided, include all technologies in the financial group in the stackup.
-        metrics_map = {
-            "hydrogen": "LCOH",
-            "electricity": "LCOE",
-            "ammonia": "LCOA",
-            "nitrogen": "LCON",
-        }
-        metric_key = metrics_map.get(commodity_type)
+        metric_key = f"LCO{commodity_type[0].upper()}"
+
         included_techs = (
             plant_config["finance_parameters"]
             .get("technologies_included_in_metrics", {})
@@ -437,6 +466,7 @@ class H2IntegrateModel:
         technology_interconnections = self.plant_config.get("technology_interconnections", [])
 
         combiner_counts = {}
+        splitter_counts = {}
 
         # loop through each linkage and instantiate an OpenMDAO object (assume it exists) for
         # the connection type (e.g. cable, pipeline, etc)
@@ -447,13 +477,46 @@ class H2IntegrateModel:
                 # make the connection_name based on source, dest, item, type
                 connection_name = f"{source_tech}_to_{dest_tech}_{transport_type}"
 
+                # Get the performance model of the source_tech
+                source_tech_config = self.technology_config["technologies"].get(source_tech, {})
+                perf_model_name = source_tech_config.get("performance_model", {}).get("model")
+                cost_model_name = source_tech_config.get("cost_model", {}).get("model")
+
+                # If the source is a feedstock, make sure to connect the amount of
+                # feedstock consumed from the technology back to the feedstock cost model
+                if cost_model_name is not None and "feedstock" in cost_model_name:
+                    self.plant.connect(
+                        f"{dest_tech}.{transport_item}_consumed",
+                        f"{source_tech}.{transport_item}_consumed",
+                    )
+
+                if perf_model_name is not None and "feedstock" in perf_model_name:
+                    source_tech = f"{source_tech}_source"
+
                 # Create the transport object
-                connection_component = self.supported_models[transport_type]()
+                connection_component = self.supported_models[transport_type](
+                    transport_item=transport_item
+                )
 
                 # Add the connection component to the model
                 self.plant.add_subsystem(connection_name, connection_component)
 
-                if "storage" in source_tech:
+                # Check if the source technology is a splitter
+                if "splitter" in source_tech:
+                    # Connect the source technology to the connection component
+                    # with specific output names
+                    if source_tech not in splitter_counts:
+                        splitter_counts[source_tech] = 1
+                    else:
+                        splitter_counts[source_tech] += 1
+
+                    # Connect the splitter output to the connection component
+                    self.plant.connect(
+                        f"{source_tech}.electricity_out{splitter_counts[source_tech]}",
+                        f"{connection_name}.{transport_item}_in",
+                    )
+
+                elif "storage" in source_tech:
                     # Connect the source technology to the connection component
                     self.plant.connect(
                         f"{source_tech}.{transport_item}_out",
@@ -498,10 +561,15 @@ class H2IntegrateModel:
             elif len(connection) == 3:
                 # connect directly from source to dest
                 source_tech, dest_tech, connected_parameter = connection
-
-                self.plant.connect(
-                    f"{source_tech}.{connected_parameter}", f"{dest_tech}.{connected_parameter}"
-                )
+                if isinstance(connected_parameter, (tuple, list)):
+                    source_parameter, dest_parameter = connected_parameter
+                    self.plant.connect(
+                        f"{source_tech}.{source_parameter}", f"{dest_tech}.{dest_parameter}"
+                    )
+                else:
+                    self.plant.connect(
+                        f"{source_tech}.{connected_parameter}", f"{dest_tech}.{connected_parameter}"
+                    )
 
             else:
                 err_msg = f"Invalid connection: {connection}"
@@ -546,6 +614,8 @@ class H2IntegrateModel:
                     commodity_types.append("co2")
                 if "air_separator" in tech_configs:
                     commodity_types.append("nitrogen")
+                if "oae" in tech_configs:
+                    commodity_types.append("co2")
                 for tech in electricity_producing_techs:
                     if tech in tech_configs:
                         commodity_types.append("electricity")
@@ -583,12 +653,20 @@ class H2IntegrateModel:
 
                 # Only connect technologies that are included in the financial stackup
                 for tech_name in tech_configs.keys():
+                    # For now, assume splitters and combiners do not add any costs
+                    if "splitter" in tech_name or "combiner" in tech_name:
+                        continue
+
                     if tech_name in all_included_techs:
                         self.plant.connect(
                             f"{tech_name}.CapEx", f"financials_group_{group_id}.capex_{tech_name}"
                         )
                         self.plant.connect(
                             f"{tech_name}.OpEx", f"financials_group_{group_id}.opex_{tech_name}"
+                        )
+                        self.plant.connect(
+                            f"{tech_name}.cost_year",
+                            f"financials_group_{group_id}.cost_year_{tech_name}",
                         )
 
                         if "electrolyzer" in tech_name:
@@ -598,7 +676,7 @@ class H2IntegrateModel:
                             )
                             self.plant.connect(
                                 f"{tech_name}.time_until_replacement",
-                                f"financials_group_{group_id}.time_until_replacement",
+                                f"financials_group_{group_id}.{tech_name}_time_until_replacement",
                             )
 
                         if "ammonia" in tech_name:
@@ -612,6 +690,13 @@ class H2IntegrateModel:
                                 f"{tech_name}.co2_capture_mtpy",
                                 f"financials_group_{group_id}.co2_capture_kgpy",
                             )
+
+                        if "oae" in tech_name:
+                            self.plant.connect(
+                                f"{tech_name}.co2_capture_mtpy",
+                                f"financials_group_{group_id}.co2_capture_kgpy",
+                            )
+
                         if "air_separator" in tech_name:
                             self.plant.connect(
                                 f"{tech_name}.total_nitrogen_produced",

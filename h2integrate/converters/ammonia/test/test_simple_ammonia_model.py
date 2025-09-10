@@ -7,6 +7,15 @@ from h2integrate.converters.ammonia.simple_ammonia_model import (
 )
 
 
+plant_config = {
+    "plant": {
+        "plant_life": 30,
+        "simulation": {
+            "n_timesteps": 8760,
+        },
+    },
+}
+
 tech_config_dict = {
     "model_inputs": {
         "shared_parameters": {
@@ -25,21 +34,29 @@ tech_config_dict = {
             "iron_based_catalyst_consumption": 0.000091295354067341,
             "oxygen_byproduct": 0.29405077250145,
             "capex_scaling_exponent": 0.6,
+            "cost_year": 2022,
         },
     }
 }
 
 
 def test_simple_ammonia_performance_model():
+    plant_info = {
+        "simulation": {
+            "n_timesteps": 2,
+            "dt": 3600,
+        }
+    }
+
     prob = om.Problem()
     comp = SimpleAmmoniaPerformanceModel(
-        plant_config={},
+        plant_config={"plant": plant_info},
         tech_config=tech_config_dict,
     )
     prob.model.add_subsystem("ammonia_perf", comp)
     prob.setup()
-    # Set dummy hydrogen input (array of 2 for shape test)
-    prob.set_val("ammonia_perf.hydrogen_in", [10.0, 10.0], units="kg/h")
+    # Set dummy hydrogen input (array of n_timesteps for shape test)
+    prob.set_val("ammonia_perf.hydrogen_in", [10.0] * 2, units="kg/h")
     prob.run_model()
     # Dummy expected values
     expected_total = 1000000.0 * 0.9
@@ -49,9 +66,16 @@ def test_simple_ammonia_performance_model():
 
 
 def test_simple_ammonia_cost_model(subtests):
+    plant_info = {
+        "simulation": {
+            "n_timesteps": 8760,
+            "dt": 3600,
+        }
+    }
+
     prob = om.Problem()
     comp = SimpleAmmoniaCostModel(
-        plant_config={},
+        plant_config={"plant": plant_info},
         tech_config=tech_config_dict,
     )
 

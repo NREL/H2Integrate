@@ -2,11 +2,9 @@ from attrs import field, define
 from hopp.simulation.technologies.sites import SiteInfo, flatirons_site
 from hopp.simulation.technologies.wind.wind_plant import WindPlant
 
-from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
-from h2integrate.converters.wind.wind_plant_baseclass import (
-    WindCostBaseClass,
-    WindPerformanceBaseClass,
-)
+from h2integrate.core.utilities import BaseConfig, CostModelBaseConfig, merge_shared_inputs
+from h2integrate.core.model_baseclasses import CostModelBaseClass
+from h2integrate.converters.wind.wind_plant_baseclass import WindPerformanceBaseClass
 
 
 @define
@@ -60,29 +58,26 @@ class WindPlantPerformanceModel(WindPerformanceBaseClass):
 
 
 @define
-class WindPlantCostModelConfig(BaseConfig):
+class WindPlantCostModelConfig(CostModelBaseConfig):
     num_turbines: int = field()
     turbine_rating_kw: float = field()
     cost_per_kw: float = field()
 
 
-class WindPlantCostModel(WindCostBaseClass):
+class WindPlantCostModel(CostModelBaseClass):
     """
     An OpenMDAO component that calculates the capital expenditure (CapEx) for a wind plant.
 
     Just a placeholder for now, but can be extended with more detailed cost models.
     """
 
-    def initialize(self):
-        super().initialize()
-
     def setup(self):
-        super().setup()
         self.config = WindPlantCostModelConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost")
         )
+        super().setup()
 
-    def compute(self, inputs, outputs):
+    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         num_turbines = self.config.num_turbines
         turbine_rating_kw = self.config.turbine_rating_kw
         cost_per_kw = self.config.cost_per_kw

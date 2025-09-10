@@ -6,6 +6,7 @@
 - Added *_out/ to .gitignore to avoid clutter
 - Added methanol production base class
 - Added steam methane reforming methanol production technology
+- Added CO2 hydrogenation methanol production technology
 - Added a new optimization example with a wind plant and electrolyzer to showcase how to define design variables, constraints, and objective functions
 - Added capability for user-defined technologies in the H2Integrate framework, allowing for custom models to be integrated into the system.
 - Added an example of a user-defined technology in the `examples` directory, demonstrating an extremely simple paper mill model.
@@ -37,6 +38,18 @@
 - Added two ATB-compatible solar-PV cost models.
 - Changed electrolyzer capacity to be specified as `n_clusters` rather than `rating` in electrolyzer performance model config
 - Changed electrolyzer capacity to be an input to the electrolyzer cost models rather than pulled from the cost model config.
+- Updated finance parameter organization naming in `plant_config`.
+- Added cost model base class and removed `plant_config['finance_parameters']['discount_years']['tech']`. Some cost models require user-input cost year (`tech_config[tech]['model_inputs']['cost_parameters']['cost_year']`) others do not. Cost year is output from cost models as a discrete output.
+- Add ocean alkalinity enhancement technology model.
+- Added ability to export ProFAST object to yaml file in `ProFastComp`
+- Added `natural_gas_performance` and `natural_gas_cost` models, allowing for natural gas power plant modeling.
+- Revamped the feedstocks technology group to allow for more precise modeling of feedstock supply chains, including capacity constraints and feedstock amount consumed.
+- Refactored `ProFastComp` and put in a new file (`h2integrate/core/profast_financial.py`). Added flexibility to allow users to specify different financial models.
+- Bugfix on `h2integrate/transporters/power_combiner.py` and enabled usage of multiple electricity producing technologies.
+- Updated option to pass variables in technology interconnections to allow for different variable names from source to destination in the format `[source_tech, dest_tech, (source_tech_variable, dest_tech_variable)]`
+- Added `simulation` section under `plant_config['plant']` that has information such as number of timesteps in the simulation, time step interval in seconds, simulation start time, and time zone.
+- Added `"custom_electrolyzer_cost"` model, an electrolyzer cost model that allows for user-defined capex and opex values
+- Made `pipe` and `cable` substance-agnostic rather than hard-coded for `hydrogen` and `electricity`
 
 ## 0.3.0 [May 2 2025]
 

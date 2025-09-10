@@ -6,21 +6,26 @@ class CablePerformanceModel(om.ExplicitComponent):
     Pass-through cable with no losses.
     """
 
+    def initialize(self):
+        self.options.declare("transport_item", values=["electricity"])
+
     def setup(self):
+        self.input_name = self.options["transport_item"] + "_in"
+        self.output_name = self.options["transport_item"] + "_out"
         self.add_input(
-            "electricity_in",
+            self.input_name,
             val=0.0,
             shape_by_conn=True,
-            copy_shape="electricity_out",
+            copy_shape=self.output_name,
             units="kW",
         )
         self.add_output(
-            "electricity_out",
+            self.output_name,
             val=0.0,
             shape_by_conn=True,
-            copy_shape="electricity_in",
+            copy_shape=self.input_name,
             units="kW",
         )
 
     def compute(self, inputs, outputs):
-        outputs["electricity_out"] = inputs["electricity_in"]
+        outputs[self.output_name] = inputs[self.input_name]

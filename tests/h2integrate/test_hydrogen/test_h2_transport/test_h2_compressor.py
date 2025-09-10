@@ -19,7 +19,7 @@ class TestH2Compressor:
         )
         comp.compressor_power()
         total_capex, total_OM = comp.compressor_costs()
-        assert total_capex == 680590.3412708649
+        assert total_capex == approx(680590.3412708649)
 
     def test_opex(self):
         comp = Compressor(
@@ -30,7 +30,7 @@ class TestH2Compressor:
         )
         comp.compressor_power()
         total_capex, total_OM = comp.compressor_costs()
-        assert total_OM == 200014.00244504173
+        assert total_OM == approx(200014.00244504173)
 
     def test_system_power(self):
         comp = Compressor(
@@ -41,7 +41,7 @@ class TestH2Compressor:
         )
         comp.compressor_power()
         _motor_rating, total_system_power = comp.compressor_system_power()
-        assert total_system_power == 246.27314443197918
+        assert total_system_power == approx(246.27314443197918)
 
     def test_system_power_report(self):
         """

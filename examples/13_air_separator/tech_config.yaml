@@ -8,6 +8,9 @@ technologies:
       config: !include tech_inputs/hopp_config_tx.yaml
     cost_model:
       model: "hopp"
+    model_inputs:
+      cost_parameters:
+        cost_year: 2019
   air_separator:
     performance_model:
       model: "simple_ASU_performance"
@@ -23,3 +26,4 @@ technologies:
         capex_unit: "mw"
         opex_usd_per_unit_per_year: 5.0
         opex_unit: "mw"
+        cost_year: 2022

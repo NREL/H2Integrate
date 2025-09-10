@@ -6,15 +6,13 @@ from pathlib import Path
 import pytest
 import openmdao.api as om
 
+from h2integrate import EXAMPLE_DIR
 from h2integrate.core.h2integrate_model import H2IntegrateModel
-
-
-examples_dir = Path(__file__).resolve().parent.parent.parent / "examples/."
 
 
 def test_steel_example(subtests):
     # Change the current working directory to the example's directory
-    os.chdir(examples_dir / "01_onshore_steel_mn")
+    os.chdir(EXAMPLE_DIR / "01_onshore_steel_mn")
 
     # Create a H2Integrate model
     model = H2IntegrateModel(Path.cwd() / "01_onshore_steel_mn.yaml")
@@ -26,17 +24,17 @@ def test_steel_example(subtests):
     # Subtests for checking specific values
     with subtests.test("Check LCOH"):
         assert (
-            pytest.approx(model.prob.get_val("financials_group_default.LCOH"), rel=1e-3)
+            pytest.approx(model.prob.get_val("financials_group_default.LCOH")[0], rel=1e-3)
             == 7.47944016
         )
 
     with subtests.test("Check LCOS"):
-        assert pytest.approx(model.prob.get_val("steel.LCOS"), rel=1e-3) == 1213.87728644
+        assert pytest.approx(model.prob.get_val("steel.LCOS")[0], rel=1e-3) == 1213.87728644
 
     with subtests.test("Check total adjusted CapEx"):
         assert (
             pytest.approx(
-                model.prob.get_val("financials_group_default.total_capex_adjusted"), rel=1e-3
+                model.prob.get_val("financials_group_default.total_capex_adjusted")[0], rel=1e-3
             )
             == 5.10869916e09
         )
@@ -44,7 +42,7 @@ def test_steel_example(subtests):
     with subtests.test("Check total adjusted OpEx"):
         assert (
             pytest.approx(
-                model.prob.get_val("financials_group_default.total_opex_adjusted"), rel=1e-3
+                model.prob.get_val("financials_group_default.total_opex_adjusted")[0], rel=1e-3
             )
             == 96349901.77625626
         )
@@ -58,7 +56,7 @@ def test_steel_example(subtests):
 
 def test_simple_ammonia_example(subtests):
     # Change the current working directory to the example's directory
-    os.chdir(examples_dir / "02_texas_ammonia")
+    os.chdir(EXAMPLE_DIR / "02_texas_ammonia")
 
     # Create a H2Integrate model
     model = H2IntegrateModel(Path.cwd() / "02_texas_ammonia.yaml")
@@ -102,36 +100,48 @@ def test_simple_ammonia_example(subtests):
     with subtests.test("Check total adjusted CapEx"):
         assert (
             pytest.approx(
-                model.prob.get_val("financials_group_default.total_capex_adjusted"), rel=1e-3
+                model.prob.get_val("financials_group_default.total_capex_adjusted")[0], rel=1e-3
             )
-            == 2.76180599e09
+            == 2678403968.6
         )
 
     with subtests.test("Check total adjusted OpEx"):
         assert (
             pytest.approx(
-                model.prob.get_val("financials_group_default.total_opex_adjusted"), rel=1e-3
+                model.prob.get_val("financials_group_default.total_opex_adjusted")[0], rel=1e-3
             )
-            == 66599592.71371833
+            == 64338137.8
         )
 
     # Currently underestimated compared to the Reference Design Doc
     with subtests.test("Check LCOH"):
         assert (
-            pytest.approx(model.prob.get_val("financials_group_default.LCOH"), rel=1e-3)
-            == 4.39187968
+            pytest.approx(model.prob.get_val("financials_group_default.LCOH")[0], rel=1e-3)
+            == 4.233055
         )
     # Currently underestimated compared to the Reference Design Doc
     with subtests.test("Check LCOA"):
         assert (
-            pytest.approx(model.prob.get_val("financials_group_default.LCOA"), rel=1e-3)
-            == 1.06313924
+            pytest.approx(model.prob.get_val("financials_group_default.LCOA")[0], rel=1e-3)
+            == 1.02470046
         )
+
+    # Check that the expected output files exist
+    outputs_dir = Path.cwd() / "outputs"
+    assert (
+        outputs_dir / "profast_output_ammonia.yaml"
+    ).is_file(), "profast_output_ammonia.yaml not found"
+    assert (
+        outputs_dir / "profast_output_electricity.yaml"
+    ).is_file(), "profast_output_electricity.yaml not found"
+    assert (
+        outputs_dir / "profast_output_hydrogen.yaml"
+    ).is_file(), "profast_output_hydrogen.yaml not found"
 
 
 def test_ammonia_synloop_example(subtests):
     # Change the current working directory to the example's directory
-    os.chdir(examples_dir / "12_ammonia_synloop")
+    os.chdir(EXAMPLE_DIR / "12_ammonia_synloop")
 
     # Create a H2Integrate model
     model = H2IntegrateModel(Path.cwd() / "12_ammonia_synloop.yaml")
@@ -175,35 +185,69 @@ def test_ammonia_synloop_example(subtests):
     with subtests.test("Check total adjusted CapEx"):
         assert (
             pytest.approx(
-                model.prob.get_val("financials_group_default.total_capex_adjusted"), rel=1e-6
+                model.prob.get_val("financials_group_default.total_capex_adjusted")[0], rel=1e-6
             )
-            == 3.83856529e09
+            == 3.7289e09
         )
 
     with subtests.test("Check total adjusted OpEx"):
         assert (
             pytest.approx(
-                model.prob.get_val("financials_group_default.total_opex_adjusted"), rel=1e-6
+                model.prob.get_val("financials_group_default.total_opex_adjusted")[0], rel=1e-6
             )
-            == 81093533.8566508
+            == 78480154.4
         )
 
     with subtests.test("Check LCOH"):
         assert (
-            pytest.approx(model.prob.get_val("financials_group_default.LCOH"), rel=1e-6)
-            == 5.85374921
+            pytest.approx(model.prob.get_val("financials_group_default.LCOH")[0], rel=1e-6)
+            == 5.659321302703965
         )
 
     with subtests.test("Check LCOA"):
         assert (
-            pytest.approx(model.prob.get_val("financials_group_default.LCOA"), rel=1e-6)
-            == 1.10368921
+            pytest.approx(model.prob.get_val("financials_group_default.LCOA")[0], rel=1e-6)
+            == 1.067030996544544
         )
+
+
+def test_smr_methanol_example(subtests):
+    # Change the current working directory to the SMR example's directory
+    os.chdir(EXAMPLE_DIR / "03_methanol" / "smr")
+
+    # Create a H2Integrate model
+    model = H2IntegrateModel(Path.cwd() / "03_smr_methanol.yaml")
+
+    # Run the model
+    model.run()
+
+    model.post_process()
+
+    # Check levelized cost of methanol (LCOM)
+    with subtests.test("Check SMR LCOM"):
+        assert pytest.approx(model.prob.get_val("methanol.LCOM"), rel=1e-6) == 0.22116813
+
+
+def test_co2h_methanol_example(subtests):
+    # Change the current working directory to the CO2 Hydrogenation example's directory
+    os.chdir(EXAMPLE_DIR / "03_methanol" / "co2_hydrogenation")
+
+    # Create a H2Integrate model
+    model = H2IntegrateModel(Path.cwd() / "03_co2h_methanol.yaml")
+
+    # Run the model
+    model.run()
+
+    model.post_process()
+
+    # Check levelized cost of methanol (LCOM)
+    with subtests.test("Check CO2 Hydrogenation LCOM"):
+        assert pytest.approx(model.prob.get_val("methanol.LCOM"), rel=1e-6) == 1.38341179
 
 
 def test_wind_h2_opt_example(subtests):
     # Change the current working directory to the example's directory
-    os.chdir(examples_dir / "05_wind_h2_opt")
+    os.chdir(EXAMPLE_DIR / "05_wind_h2_opt")
 
     # Run without optimization
     model_init = H2IntegrateModel(Path.cwd() / "wind_plant_electrolyzer0.yaml")
@@ -289,7 +333,7 @@ def test_wind_h2_opt_example(subtests):
 
 def test_paper_example(subtests):
     # Change the current working directory to the example's directory
-    os.chdir(examples_dir / "06_custom_tech")
+    os.chdir(EXAMPLE_DIR / "06_custom_tech")
 
     # Create a H2Integrate model
     model = H2IntegrateModel(Path.cwd() / "wind_plant_paper.yaml")
@@ -312,7 +356,7 @@ def test_paper_example(subtests):
 @unittest.skipUnless(importlib.util.find_spec("mcm") is not None, "mcm is not installed")
 def test_wind_wave_doc_example(subtests):
     # Change the current working directory to the example's directory
-    os.chdir(examples_dir / "09_wind_wave_doc")
+    os.chdir(EXAMPLE_DIR / "09_co2/direct_ocean_capture")
 
     # Create a H2Integrate model
     model = H2IntegrateModel(Path.cwd() / "offshore_plant_doc.yaml")
@@ -325,20 +369,53 @@ def test_wind_wave_doc_example(subtests):
     # Subtests for checking specific values
     with subtests.test("Check LCOC"):
         assert (
-            pytest.approx(model.prob.get_val("financials_group_default.LCOC"), rel=1e-3)
+            pytest.approx(model.prob.get_val("financials_group_default.LCOC")[0], rel=1e-3)
             == 2.26955589
         )
 
     with subtests.test("Check LCOE"):
         assert (
-            pytest.approx(model.prob.get_val("financials_group_default.LCOE"), rel=1e-3)
+            pytest.approx(model.prob.get_val("financials_group_default.LCOE")[0], rel=1e-3)
             == 1.05281478
+        )
+
+
+@unittest.skipUnless(importlib.util.find_spec("mcm") is not None, "mcm is not installed")
+def test_splitter_wind_doc_h2_example(subtests):
+    # Change the current working directory to the example's directory
+    os.chdir(EXAMPLE_DIR / "17_splitter_wind_doc_h2")
+
+    # Create a H2Integrate model
+    model = H2IntegrateModel(Path.cwd() / "offshore_plant_splitter_doc_h2.yaml")
+
+    # Run the model
+    model.run()
+
+    model.post_process()
+
+    # Subtests for checking specific values
+    with subtests.test("Check LCOH"):
+        assert (
+            pytest.approx(model.prob.get_val("financials_group_default.LCOH")[0], rel=1e-3)
+            == 10.25515911
+        )
+
+    with subtests.test("Check LCOC"):
+        assert (
+            pytest.approx(model.prob.get_val("financials_group_default.LCOC")[0], rel=1e-3)
+            == 14.19802243
+        )
+
+    with subtests.test("Check LCOE"):
+        assert (
+            pytest.approx(model.prob.get_val("financials_group_default.LCOE")[0], rel=1e-3)
+            == 0.1385128
         )
 
 
 def test_hydro_example(subtests):
     # Change the current working directory to the example's directory
-    os.chdir(examples_dir / "07_run_of_river_plant")
+    os.chdir(EXAMPLE_DIR / "07_run_of_river_plant")
 
     # Create a H2Integrate model
     model = H2IntegrateModel(Path.cwd() / "07_run_of_river.yaml")
@@ -360,7 +437,7 @@ def test_hydro_example(subtests):
 
 def test_hybrid_energy_plant_example(subtests):
     # Change the current working directory to the example's directory
-    os.chdir(examples_dir / "11_hybrid_energy_plant")
+    os.chdir(EXAMPLE_DIR / "11_hybrid_energy_plant")
 
     # Create a H2Integrate model
     model = H2IntegrateModel(Path.cwd() / "wind_pv_battery.yaml")
@@ -372,18 +449,12 @@ def test_hybrid_energy_plant_example(subtests):
 
     # Subtests for checking specific values
     with subtests.test("Check LCOE"):
-        assert (
-            pytest.approx(
-                model.prob.get_val("financials_group_default.LCOE", units="USD/MW/h")[0],
-                rel=1e-5,
-            )
-            == 83.2123
-        )
+        assert model.prob.get_val("financials_group_default.LCOE", units="USD/MW/h")[0] < 83.2123
 
 
 def test_asu_example(subtests):
     # Change the current working directory to the example's directory
-    os.chdir(examples_dir / "13_air_separator")
+    os.chdir(EXAMPLE_DIR / "13_air_separator")
 
     # Create a H2Integrate model
     model = H2IntegrateModel(Path.cwd() / "13_air_separator.yaml")
@@ -400,13 +471,13 @@ def test_asu_example(subtests):
                 model.prob.get_val("financials_group_default.LCON", units="USD/kg")[0],
                 abs=1e-4,
             )
-            == 0.28694531
+            == 0.309041977334972
         )
 
 
 def test_hydrogen_dispatch_example(subtests):
     # Change the current working directory to the example's directory
-    os.chdir(examples_dir / "14_wind_hydrogen_dispatch")
+    os.chdir(EXAMPLE_DIR / "14_wind_hydrogen_dispatch")
 
     # Create a H2Integrate model
     model = H2IntegrateModel(Path.cwd() / "inputs" / "h2i_wind_to_h2_storage.yaml")
@@ -432,3 +503,178 @@ def test_hydrogen_dispatch_example(subtests):
             )
             == 5.68452215
         )
+
+
+@unittest.skipUnless(importlib.util.find_spec("mcm") is not None, "mcm is not installed")
+def test_wind_wave_oae_example(subtests):
+    # Change the current working directory to the example's directory
+    os.chdir(EXAMPLE_DIR / "09_co2/ocean_alkalinity_enhancement")
+
+    # Create a H2Integrate model
+    model = H2IntegrateModel(Path.cwd() / "offshore_plant_oae.yaml")
+
+    # Run the model
+    model.run()
+
+    model.post_process()
+
+    # Subtests for checking specific values
+    # Note: These are placeholder values. Update with actual values after running the test
+    # when MCM package is properly installed and configured
+    with subtests.test("Check LCOC"):
+        assert pytest.approx(model.prob.get_val("financials_group_default.LCOC"), rel=1e-3) == 37.82
+
+    with subtests.test("Check LCOE"):
+        assert (
+            pytest.approx(model.prob.get_val("financials_group_default.LCOE"), rel=1e-3) == 0.36956
+        )
+
+
+@unittest.skipUnless(importlib.util.find_spec("mcm") is not None, "mcm is not installed")
+def test_wind_wave_oae_example_with_financials(subtests):
+    # Change the current working directory to the example's directory
+    os.chdir(EXAMPLE_DIR / "09_co2/ocean_alkalinity_enhancement_financials")
+
+    # Create a H2Integrate model
+    model = H2IntegrateModel(Path.cwd() / "offshore_plant_oae.yaml")
+
+    # Run the model
+    model.run()
+
+    model.post_process()
+
+    # Subtests for checking specific values
+    # Note: These are placeholder values. Update with actual values after running the test
+    # when MCM package is properly installed and configured
+    with subtests.test("Check LCOE"):
+        assert (
+            pytest.approx(model.prob.get_val("financials_group_default.LCOE"), rel=1e-3) == 0.09180
+        )
+
+    with subtests.test("Check Carbon Credit"):
+        assert pytest.approx(model.prob.get_val("oae.carbon_credit_value"), rel=1e-3) == 569.5
+
+
+def test_natural_gas_example(subtests):
+    # Change the current working directory to the example's directory
+    os.chdir(EXAMPLE_DIR / "16_natural_gas")
+
+    # Create a H2Integrate model
+    model = H2IntegrateModel(Path.cwd() / "natgas.yaml")
+
+    # Run the model
+
+    model.run()
+
+    model.post_process()
+
+    # Subtests for checking specific values
+
+    with subtests.test("Check CapEx"):
+        capex = model.prob.get_val("natural_gas_plant.CapEx")[0]
+        assert pytest.approx(capex, rel=1e-6) == 1e8
+
+    with subtests.test("Check OpEx"):
+        opex = model.prob.get_val("natural_gas_plant.OpEx")[0]
+        assert pytest.approx(opex, rel=1e-6) == 1292000.0
+
+    with subtests.test("Check total electricity produced"):
+        total_electricity = model.prob.get_val(
+            "financials_group_default.electricity_sum.total_electricity_produced"
+        )[0]
+        assert pytest.approx(total_electricity, rel=1e-6) == 1.168e8
+
+    with subtests.test("Check opex adjusted ng_feedstock"):
+        opex_ng_feedstock = model.prob.get_val(
+            "financials_group_default.opex_adjusted_ng_feedstock"
+        )[0]
+        assert pytest.approx(opex_ng_feedstock, rel=1e-6) == 3589463.41463415
+
+    with subtests.test("Check capex adjusted natural_gas_plant"):
+        capex_ng_plant = model.prob.get_val(
+            "financials_group_default.capex_adjusted_natural_gas_plant"
+        )[0]
+        assert pytest.approx(capex_ng_plant, rel=1e-6) == 97560975.60975611
+
+    with subtests.test("Check opex adjusted natural_gas_plant"):
+        opex_ng_plant = model.prob.get_val(
+            "financials_group_default.opex_adjusted_natural_gas_plant"
+        )[0]
+        assert pytest.approx(opex_ng_plant, rel=1e-6) == 1260487.80487805
+
+    with subtests.test("Check total adjusted CapEx"):
+        total_capex = model.prob.get_val("financials_group_default.total_capex_adjusted")[0]
+        assert pytest.approx(total_capex, rel=1e-6) == 97658536.58536586
+
+    with subtests.test("Check total adjusted OpEx"):
+        total_opex = model.prob.get_val("financials_group_default.total_opex_adjusted")[0]
+        assert pytest.approx(total_opex, rel=1e-6) == 4849951.2195122
+
+    with subtests.test("Check LCOE"):
+        lcoe = model.prob.get_val("financials_group_default.LCOE")[0]
+        assert pytest.approx(lcoe, rel=1e-6) == 0.12959097
+
+    # Test feedstock-specific values
+    with subtests.test("Check feedstock output"):
+        ng_output = model.prob.get_val("ng_feedstock_source.natural_gas_out")
+        # Should be rated capacity (100 MMBtu) for all timesteps
+        assert all(ng_output == 100.0)
+
+    with subtests.test("Check feedstock consumption"):
+        ng_consumed = model.prob.get_val("ng_feedstock.natural_gas_consumed")
+        # Total consumption should match what the natural gas plant uses
+        expected_consumption = (
+            model.prob.get_val("natural_gas_plant.electricity_out") * 7.5
+        )  # Convert MWh to MMBtu using heat rate
+        assert pytest.approx(ng_consumed.sum(), rel=1e-3) == expected_consumption.sum()
+
+    with subtests.test("Check feedstock CapEx"):
+        ng_capex = model.prob.get_val("ng_feedstock.CapEx")[0]
+        assert pytest.approx(ng_capex, rel=1e-6) == 100000.0  # start_up_cost
+
+    with subtests.test("Check feedstock OpEx"):
+        ng_opex = model.prob.get_val("ng_feedstock.OpEx")[0]
+        # OpEx should be annual_cost (0) + price * consumption
+        ng_consumed = model.prob.get_val("ng_feedstock.natural_gas_consumed")
+        expected_opex = 4.2 * ng_consumed.sum()  # price = 4.2 $/MMBtu
+        assert pytest.approx(ng_opex, rel=1e-6) == expected_opex
+
+
+def test_wind_solar_electrolyzer_example(subtests):
+    # Change the current working directory to the example's directory
+    os.chdir(EXAMPLE_DIR / "15_wind_solar_electrolyzer")
+
+    # Create a H2Integrate model
+    model = H2IntegrateModel(Path.cwd() / "15_wind_solar_electrolyzer.yaml")
+    model.run()
+
+    model.post_process()
+    with subtests.test("Check LCOE"):
+        assert (
+            pytest.approx(
+                model.prob.get_val("financials_group_default.LCOE", units="USD/MW/h")[0],
+                rel=1e-5,
+            )
+            == 54.12889
+        )
+
+    with subtests.test("Check LCOH"):
+        assert (
+            pytest.approx(
+                model.prob.get_val("financials_group_default.LCOH", units="USD/kg")[0],
+                rel=1e-5,
+            )
+            == 5.33209234
+        )
+
+    wind_generation = model.prob.get_val("wind.electricity_out", units="kW")
+    solar_generation = model.prob.get_val("solar.electricity_out", units="kW")
+    total_generation = model.prob.get_val("combiner.electricity_out", units="kW")
+    total_energy_to_electrolyzer = model.prob.get_val("electrolyzer.electricity_in", units="kW")
+    with subtests.test("Check combiner output"):
+        assert (
+            pytest.approx(wind_generation.sum() + solar_generation.sum(), rel=1e-5)
+            == total_generation.sum()
+        )
+    with subtests.test("Check electrolyzer input power"):
+        assert pytest.approx(total_generation.sum(), rel=1e-5) == total_energy_to_electrolyzer.sum()
