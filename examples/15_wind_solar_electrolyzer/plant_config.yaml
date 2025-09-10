@@ -63,7 +63,9 @@ plant:
     n_timesteps: 8760
     dt: 3600
     start_time: '01/01 00:30:00'
-    timezone: 0
+    timezone: 0 # this used to cause error with filename, fixed
+    # timezone: 0 #this works without filename
+    # timezone: -6 #this works with filename
 finance_parameters:
   finance_model: "ProFastComp"
   model_inputs:

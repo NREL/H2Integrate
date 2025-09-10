@@ -1,8 +1,12 @@
+from datetime import datetime
+
+import numpy as np
 import PySAM.Pvwattsv8 as Pvwatts
 from attrs import field, define
 
 from h2integrate.core.utilities import BaseConfig, merge_shared_inputs, check_pysam_input_params
 from h2integrate.core.validators import contains, range_val_or_none
+from h2integrate.resource.utilities.time_tools import make_time_profile, roll_timeseries_data
 from h2integrate.converters.solar.solar_baseclass import SolarPerformanceBaseClass
 
 
@@ -269,6 +273,8 @@ class PYSAMSolarPlantPerformanceModel(SolarPerformanceBaseClass):
             "snow_depth": "snow",
         }
         tz = float(self.options["plant_config"]["plant"]["simulation"]["timezone"])
+        # if tz != float(solar_resource_data['data_tz']):
+        #     print("solar resource data has been rolled")
         reformatted_data = {"tz": tz}
         for old_key, values in solar_resource_data.items():
             if old_key in resource_name_mapper:
@@ -280,18 +286,56 @@ class PYSAMSolarPlantPerformanceModel(SolarPerformanceBaseClass):
         return reformatted_data
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
+        # NOTE: this does not work well if the time is rolled. Throws an error to get "ac_annual"
         tilt = self.calc_tilt_angle(discrete_inputs["solar_resource_data"]["site_lat"])
         tilt_angle = self.design_dict.get("SystemDesign", {}).get("tilt", tilt)
         self.system_model.value("tilt", tilt_angle)
 
         self.system_model.value("system_capacity", inputs["capacity_kWdc"][0])
 
-        solar_resource = self.format_resource_data(discrete_inputs["solar_resource_data"])
+        data_rolled = False
+
+        sim_tz = float(self.options["plant_config"]["plant"]["simulation"]["timezone"])
+        # resource data rolled so start start is at start of year (Jan 1 at midnight)
+        if sim_tz != float(discrete_inputs["solar_resource_data"]["data_tz"]):
+            # data was rolled
+            n_timesteps = self.options["plant_config"]["plant"]["simulation"]["n_timesteps"]
+            dt = self.options["plant_config"]["plant"]["simulation"]["dt"]
+            tz = float(discrete_inputs["solar_resource_data"]["data_tz"])
+            start_time = "01/01 00:30:00"
+            year = int(discrete_inputs["solar_resource_data"]["year"][0])
+
+            desired_time_list = make_time_profile(start_time, dt, n_timesteps, tz, year)
+            data_time_str_list = discrete_inputs["solar_resource_data"]["time"]
+            data_time_list = [
+                datetime.strptime(i, "%m/%d/%Y %H:%M:%S (%z)") for i in data_time_str_list
+            ]
+
+            solar_resource_data = roll_timeseries_data(
+                desired_time_list, data_time_list, discrete_inputs["solar_resource_data"], dt
+            )
+            data_rolled = True
+            print("\n DATA HAS BEEN ROLLED \n")
+        else:
+            solar_resource_data = discrete_inputs["solar_resource_data"]
+        solar_resource = self.format_resource_data(solar_resource_data)
         self.system_model.value("solar_resource_data", solar_resource)
 
         self.system_model.execute(0)
-        outputs["electricity_out"] = self.system_model.Outputs.gen  # kW-dc
+        if data_rolled:
+            # roll outputs to user-specified start time
+            ts_outputs = {"gen": np.array(self.system_model.Outputs.gen)}
+            ts_rolled_outputs = roll_timeseries_data(
+                data_time_list, desired_time_list, ts_outputs, dt
+            )
+            outputs["electricity_out"] = ts_rolled_outputs["gen"]
+        else:
+            outputs["electricity_out"] = self.system_model.Outputs.gen  # kW-dc
         pv_capacity_kWdc = self.system_model.value("system_capacity")
         dc_ac_ratio = self.system_model.value("dc_ac_ratio")
         outputs["capacity_kWac"] = pv_capacity_kWdc / dc_ac_ratio
-        # outputs["annual_energy"] = self.system_model.value("ac_annual")
+        # TODO: check if error is thrown if using non-rolled data in UTC -> it isnt
+        # TODO: then, make changes such that
+        # resource data rolled so start start is at start of year (Jan 1 at midnight)
+        # then roll outputs to match the timeseries
+        outputs["annual_energy"] = self.system_model.value("ac_annual")
