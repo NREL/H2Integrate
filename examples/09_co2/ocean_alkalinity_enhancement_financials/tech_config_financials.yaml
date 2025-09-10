@@ -8,8 +8,6 @@ technologies:
       config: !include tech_inputs/hopp_config.yaml
     cost_model:
       model: "hopp"
-    financial_model:
-      group: "default"
     model_inputs:
       cost_parameters:
         cost_year: 2022
