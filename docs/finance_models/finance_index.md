@@ -15,7 +15,7 @@ The `commodity_type` and `description` are used in the finance model naming conv
 ```
 
 ```{note}
-The `tech_config` and `plant_config` may be reformatted from their original format within `H2IntegrateModel` when creating the finance models.
+The `tech_config` and `plant_config` are reformatted from their original format within `H2IntegrateModel` when creating the finance models as a preprocessing step.
 ```
 
 (finance:supportedmodels)=
