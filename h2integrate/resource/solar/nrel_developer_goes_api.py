@@ -65,7 +65,11 @@ class GOESNRELDeveloperAPISolarResource(SolarResourceBaseAPIModel):
 
         # NOTE: add any upsampling or downsampling, this should be done here
         data = roll_timeseries_data(self.resource_time_profile, data["time"], data, self.dt)
-        self.data = data
+        time_str = [
+            data["time"][i].strftime("%m/%d/%Y %H:%M:%S (%z)") for i in range(len(data["time"]))
+        ]
+        data["time"] = time_str
+        # self.data = data
         self.add_discrete_output(
             "solar_resource_data", val=data, desc="Dict of solar resource data"
         )
