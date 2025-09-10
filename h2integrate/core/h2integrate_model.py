@@ -361,6 +361,8 @@ class H2IntegrateModel:
             and "model_inputs" in self.plant_config["finance_parameters"]
         ):
             if default_finance_model_nickname in self.plant_config["finance_parameters"]:
+                # create a default finance model nickname if user has an unused finance
+                # group nicknamed "default".
                 default_finance_model_nickname = [
                     f"default_{i}"
                     for i in range(5)
@@ -391,7 +393,6 @@ class H2IntegrateModel:
                     "if no subgroups are provided."
                 )
 
-            # NOTE: should we group all the technologies no?
             # Collect all technologies into one subgroup
             all_techs = list(self.technology_config["technologies"].keys())
             subgroup = {
@@ -400,11 +401,7 @@ class H2IntegrateModel:
                 "technologies": all_techs,
             }
             subgroups = {default_finance_model_nickname: subgroup}
-        # for tech_name, tech_config in self.technology_config["technologies"].items():
-        #         if tech_name not in all_grouped_techs:
-        #             if "default" not in financial_groups:
-        #                 financial_groups["default"] = {}
-        #             financial_groups["default"][tech_name] = tech_config
+
         # --- Normal subgroup handling ---
         for subgroup_name, subgroup_params in subgroups.items():
             commodity = subgroup_params.get("commodity", None)
@@ -443,7 +440,6 @@ class H2IntegrateModel:
             )
             financial_group = om.Group()
 
-            # any(k in electricity_producing_techs for k in self.technology_config["technologies"])
             # TODO: dont add this subsystem unless required
             financial_group.add_subsystem(
                 "electricity_sum", ElectricitySumComp(tech_configs=tech_configs)
@@ -462,7 +458,6 @@ class H2IntegrateModel:
 
             for finance_model_nickname in finance_model_nicknames:
                 # check if using tech-specific finance model
-                skip_model = False
                 if any(
                     tech_name == finance_model_nickname
                     for tech_name, tech_params in tech_configs.items()
@@ -475,63 +470,86 @@ class H2IntegrateModel:
 
                     # this is created in create_technologies()
                     if tech_finance_model_name is not None:
-                        skip_model = True
-                else:
-                    finance_model_config = self.plant_config["finance_parameters"].get(
-                        finance_model_nickname
-                    )
-                    model_name = finance_model_config.get("finance_model")
-                    fin_model_inputs = finance_model_config.get("model_inputs")
+                        # tech specific finance models are created in create_technologies()
+                        # and do not need to be included in the general finance models
+                        continue
 
-                    # Add financial model component
-                    fin_model = self.supported_models.get(model_name)
+                # if not using a tech-specific finance model, get the finance model and inputs for
+                # the finance model group specified by finance_model_nickname
+                finance_model_config = self.plant_config["finance_parameters"].get(
+                    finance_model_nickname
+                )
+                model_name = finance_model_config.get("finance_model")  # finance model
+                fin_model_inputs = finance_model_config.get(
+                    "model_inputs"
+                )  # inputs to finance model
 
-                    if fin_model is None:
-                        raise ValueError(f"Financial model '{model_name}' not found.")
+                # Add financial model component
+                fin_model = self.supported_models.get(model_name)
 
-                    filtered_plant_config = {
-                        k: v for k, v in self.plant_config.items() if k != "finance_parameters"
-                    }
+                if fin_model is None:
+                    raise ValueError(f"Financial model '{model_name}' not found.")
 
-                    filtered_plant_config.update(
-                        {
-                            "finance_parameters": {
-                                "model_inputs": fin_model_inputs,
-                            }
+                # filter the plant_config so the finance_parameters only includes data for
+                # this finance model group
+
+                # first, grab information from the plant config, except the finance paramters
+                filtered_plant_config = {
+                    k: v for k, v in self.plant_config.items() if k != "finance_parameters"
+                }
+
+                # then, reformat the finance_parameters to only include inputs for the
+                # finance group specified by finance_model_nickname
+                filtered_plant_config.update(
+                    {
+                        "finance_parameters": {
+                            "finance_model": model_name,  # unused by the finance model
+                            "model_inputs": fin_model_inputs,  # inputs for finance model
                         }
-                    )
+                    }
+                )
 
-                    commodity_desc = subgroup_params.get("commodity_desc", "")
-                    commodity_output_desc = subgroup_params.get("commodity_desc", "")
+                commodity_desc = subgroup_params.get("commodity_desc", "")
+                commodity_output_desc = subgroup_params.get("commodity_desc", "")
 
-                    if len(finance_model_nicknames) > 1:
-                        non_tech_financials = [
-                            k
-                            for k in finance_model_nicknames
-                            if k in self.plant_config["finance_parameters"]
-                        ]
-                        if len(non_tech_financials) > 1:
-                            commodity_output_desc = (
-                                commodity_output_desc + f"_{finance_model_nickname}"
-                            )
+                # check if multiple finance model groups are specified for the subgroup
+                if len(finance_model_nicknames) > 1:
+                    # check that the finance model groups do not include tech-specific finances
+                    non_tech_financials = [
+                        k
+                        for k in finance_model_nicknames
+                        if k in self.plant_config["finance_parameters"]
+                    ]
 
-                    fin_comp = fin_model(
-                        driver_config=self.driver_config,
-                        tech_config=tech_configs,
-                        plant_config=filtered_plant_config,
-                        commodity_type=commodity,
-                        description=commodity_output_desc,
-                    )
+                    # if multiple non-tech specific finance model groups are specified for the
+                    # subgroup, the outputs of the finance model must have unique names to
+                    # avoid errors.
+                    if len(non_tech_financials) > 1:
+                        # finance models name their outputs based on the description and commodity
+                        # update the description to include the finance model nickname to ensure
+                        # uniquely named outputs
+                        commodity_output_desc = commodity_output_desc + f"_{finance_model_nickname}"
 
-                if not skip_model:
-                    finance_subsystem_name = (
-                        f"{finance_model_nickname}_{commodity}"
-                        if commodity_desc == ""
-                        else f"{finance_model_nickname}_{commodity}_{commodity_desc}"
-                    )
+                # create the finance component
+                fin_comp = fin_model(
+                    driver_config=self.driver_config,
+                    tech_config=tech_configs,
+                    plant_config=filtered_plant_config,
+                    commodity_type=commodity,
+                    description=commodity_output_desc,
+                )
 
-                    financial_group.add_subsystem(finance_subsystem_name, fin_comp, promotes=["*"])
+                # name the finance component based on the commodity and description
+                finance_subsystem_name = (
+                    f"{finance_model_nickname}_{commodity}"
+                    if commodity_desc == ""
+                    else f"{finance_model_nickname}_{commodity}_{commodity_desc}"
+                )
 
+                # add the finance component to the finance group
+                financial_group.add_subsystem(finance_subsystem_name, fin_comp, promotes=["*"])
+
+            # add the finance group to the subgroup
             self.plant.add_subsystem(f"financials_subgroup_{subgroup_name}", financial_group)
 
         self.financial_groups = financial_groups

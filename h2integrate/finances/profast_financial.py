@@ -608,9 +608,6 @@ class ProFastComp(om.ExplicitComponent):
                 "profast_output_description", "ProFastComp"
             )
 
-            # if self.options["description"] == "":
-            #     fbasename = f"{fdesc}_{self.options['commodity_type']}"
-            # else:
             fbasename = f"{fdesc}_{self.output_txt}"
 
             output_dir = Path(output_dir)
