@@ -764,7 +764,7 @@ class H2IntegrateModel:
             myopt.set_design_variables(self.prob)
             myopt.set_constraints(self.prob)
 
-    def run(self):
+    def run(self, demand_profile):
         # do model setup based on the driver config
         # might add a recorder, driver, set solver tolerances, etc
 
@@ -775,6 +775,8 @@ class H2IntegrateModel:
             self.model.add_recorder(recorder)
 
         self.prob.setup()
+
+        self.prob.set_val("battery.demand_in", demand_profile)
 
         self.prob.run_driver()
 
