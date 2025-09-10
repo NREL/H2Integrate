@@ -14,24 +14,6 @@ class PYSAMWindPlantPerformanceModelConfig(BaseConfig):
     hub_height: float = field()
 
 
-# @define
-# class PYSAMWindPlantPerformanceModelSiteConfig(BaseConfig):
-#     """Configuration class for the location of the wind plant
-#         PYSAMWindPlantPerformanceComponentSite.
-
-#     Args:
-#         latitude (float): Latitude of wind plant location.
-#         longitude (float): Longitude of wind plant location.
-#         year (float): Year for resource.
-#         wind_resource_filepath (str): Path to wind resource file. Defaults to "".
-#     """
-
-#     latitude: float = field()
-#     longitude: float = field()
-#     year: float = field()
-#     wind_resource_filepath: str = field(default="")
-
-
 class PYSAMWindPlantPerformanceModel(WindPerformanceBaseClass):
     """
     An OpenMDAO component that wraps a WindPlant model.
@@ -62,6 +44,12 @@ class PYSAMWindPlantPerformanceModel(WindPerformanceBaseClass):
         }
 
     def format_resource_data(self, hub_height, wind_resource_data):
+        data_to_precision = {
+            "temperature": 1,
+            "pressure": 2,
+            "wind_speed": 2,
+            "wind_direction": 1,
+        }
         bounding_heights = self.calculate_bounding_heights_from_resource_data(
             hub_height,
             wind_resource_data,
@@ -75,9 +63,10 @@ class PYSAMWindPlantPerformanceModel(WindPerformanceBaseClass):
         resource_data = np.zeros((n_timesteps, len(fields)))
         cnt = 0
         for height, field_num in zip(heights, fields):
+            rounding_precision = data_to_precision[field_number_to_data[field_num]]
             resource_key = f"{field_number_to_data[field_num]}_{int(height)}m"
             if resource_key in wind_resource_data:
-                resource_data[:, cnt] = wind_resource_data[resource_key].round(1)
+                resource_data[:, cnt] = wind_resource_data[resource_key].round(rounding_precision)
             else:
                 if any(
                     field_number_to_data[field_num] in c for c in list(wind_resource_data.keys())
@@ -115,7 +104,9 @@ class PYSAMWindPlantPerformanceModel(WindPerformanceBaseClass):
                     else:
                         resource_key = f"{field_number_to_data[field_num]}_{int(data_heights[0])}m"
                     if resource_key in wind_resource_data:
-                        resource_data[:, cnt] = wind_resource_data[resource_key].round(1)
+                        resource_data[:, cnt] = wind_resource_data[resource_key].round(
+                            rounding_precision
+                        )
             cnt += 1
         data = {
             "heights": heights.astype(float).tolist(),
@@ -125,9 +116,8 @@ class PYSAMWindPlantPerformanceModel(WindPerformanceBaseClass):
         return data
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
-        data = self.format_resource_data(
-            self.config.hub_height, discrete_inputs["wind_resource_data"]
-        )
+        resource_height = 97.0  # TODO: update this with self.config.hub_height
+        data = self.format_resource_data(resource_height, discrete_inputs["wind_resource_data"])
         self.system_model.value("wind_resource_data", data)
 
         self.system_model.execute(0)

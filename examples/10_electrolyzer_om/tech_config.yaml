@@ -7,9 +7,9 @@ technologies:
       model: "wind_plant_performance"
     cost_model:
       model: "wind_plant_cost"
-    resource:
-      type: "pysam_wind"
-      wind_speed: 9.
+    # resource:
+    #   type: "pysam_wind"
+    #   wind_speed: 9.
     model_inputs:
       shared_parameters:
         num_turbines: 2

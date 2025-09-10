@@ -37,7 +37,7 @@ plant:
     dt: 3600
     n_timesteps: 8760
     start_time: '01/01 00:30:00'
-    timezone: -6
+    timezone: 0
 # array of arrays containing left-to-right technology
 # interconnections; can support bidirectional connections
 # with the reverse definition.
