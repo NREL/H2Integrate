@@ -93,7 +93,30 @@ def residential_pv_performance_params():
     return tech_params
 
 
-def test_utility_pv_cost(utility_scale_pv_performance_params, solar_resource_dict, subtests):
+@fixture
+def plant_config():
+    pv_resource_dir = EXAMPLE_DIR / "11_hybrid_energy_plant" / "tech_inputs" / "weather" / "solar"
+    pv_filename = "30.6617_-101.7096_psmv3_60_2013.csv"
+    pv_resource_dict = {
+        "latitude": 30.6617,
+        "longitude": -101.7096,
+        "year": 2013,
+        "solar_resource_filepath": pv_resource_dir / pv_filename,
+    }
+    return {
+        "plant": {
+            "plant_life": 30,
+            "simulation": {
+                "n_timesteps": 8760,
+            },
+        },
+        "site": pv_resource_dict,
+    }
+
+
+def test_utility_pv_cost(
+    utility_scale_pv_performance_params, solar_resource_dict, plant_config, subtests
+):
     # costs from 2024_v3 ATB workbook using Solar - Utility PV costs
     # 2035 class 1 moderate
     cost_dict = {
@@ -122,7 +145,7 @@ def test_utility_pv_cost(utility_scale_pv_performance_params, solar_resource_dic
         tech_config=tech_config_dict,
     )
     cost_comp = ATBUtilityPVCostModel(
-        plant_config={"plant": {"plant_life": 30}},
+        plant_config=plant_config,
         tech_config=tech_config_dict,
     )
 
@@ -146,7 +169,9 @@ def test_utility_pv_cost(utility_scale_pv_performance_params, solar_resource_dic
         )
 
 
-def test_commercial_pv_cost(commercial_pv_performance_params, solar_resource_dict, subtests):
+def test_commercial_pv_cost(
+    commercial_pv_performance_params, solar_resource_dict, plant_config, subtests
+):
     # costs from 2024_v3 ATB workbook using Solar - PV Dist. Comm costs
     # 2030 class 1 moderate
     cost_dict = {
@@ -178,7 +203,7 @@ def test_commercial_pv_cost(commercial_pv_performance_params, solar_resource_dic
         tech_config=tech_config_dict,
     )
     cost_comp = ATBResComPVCostModel(
-        plant_config={"plant": {"plant_life": 30}},
+        plant_config=plant_config,
         tech_config=tech_config_dict,
     )
 
@@ -199,7 +224,9 @@ def test_commercial_pv_cost(commercial_pv_performance_params, solar_resource_dic
         )
 
 
-def test_residential_pv_cost(residential_pv_performance_params, solar_resource_dict, subtests):
+def test_residential_pv_cost(
+    residential_pv_performance_params, solar_resource_dict, plant_config, subtests
+):
     # costs from 2024_v3 ATB workbook using Solar - PV Dist. Res costs
     # 2030 class 1 moderate
     cost_dict = {
@@ -231,7 +258,7 @@ def test_residential_pv_cost(residential_pv_performance_params, solar_resource_d
         tech_config=tech_config_dict,
     )
     cost_comp = ATBResComPVCostModel(
-        plant_config={"plant": {"plant_life": 30}},
+        plant_config=plant_config,
         tech_config=tech_config_dict,
     )
 
