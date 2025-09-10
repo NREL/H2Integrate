@@ -575,7 +575,9 @@ def test_natural_gas_example(subtests):
         assert pytest.approx(capex, rel=1e-6) == 1e8
 
     with subtests.test("Check OpEx"):
-        opex = model.prob.get_val("natural_gas_plant.OpEx")[0]
+        fopex = model.prob.get_val("natural_gas_plant.OpEx")[0]
+        vopex = model.prob.get_val("natural_gas_plant.VarOpEx")[0]
+        opex = fopex + vopex
         assert pytest.approx(opex, rel=1e-6) == 1292000.0
 
     with subtests.test("Check total electricity produced"):
@@ -586,7 +588,7 @@ def test_natural_gas_example(subtests):
 
     with subtests.test("Check opex adjusted ng_feedstock"):
         opex_ng_feedstock = model.prob.get_val(
-            "financials_group_default.opex_adjusted_ng_feedstock"
+            "financials_group_default.varopex_adjusted_ng_feedstock"
         )[0]
         assert pytest.approx(opex_ng_feedstock, rel=1e-6) == 3589463.41463415
 
@@ -597,9 +599,13 @@ def test_natural_gas_example(subtests):
         assert pytest.approx(capex_ng_plant, rel=1e-6) == 97560975.60975611
 
     with subtests.test("Check opex adjusted natural_gas_plant"):
-        opex_ng_plant = model.prob.get_val(
+        fopex_ng_plant = model.prob.get_val(
             "financials_group_default.opex_adjusted_natural_gas_plant"
         )[0]
+        vopex_ng_plant = model.prob.get_val(
+            "financials_group_default.varopex_adjusted_natural_gas_plant"
+        )[0]
+        opex_ng_plant = vopex_ng_plant + fopex_ng_plant
         assert pytest.approx(opex_ng_plant, rel=1e-6) == 1260487.80487805
 
     with subtests.test("Check total adjusted CapEx"):
@@ -607,7 +613,9 @@ def test_natural_gas_example(subtests):
         assert pytest.approx(total_capex, rel=1e-6) == 97658536.58536586
 
     with subtests.test("Check total adjusted OpEx"):
-        total_opex = model.prob.get_val("financials_group_default.total_opex_adjusted")[0]
+        total_fopex = model.prob.get_val("financials_group_default.total_opex_adjusted")[0]
+        total_vopex = model.prob.get_val("financials_group_default.total_varopex_adjusted")[0]
+        total_opex = total_fopex + total_vopex
         assert pytest.approx(total_opex, rel=1e-6) == 4849951.2195122
 
     with subtests.test("Check LCOE"):
@@ -633,7 +641,7 @@ def test_natural_gas_example(subtests):
         assert pytest.approx(ng_capex, rel=1e-6) == 100000.0  # start_up_cost
 
     with subtests.test("Check feedstock OpEx"):
-        ng_opex = model.prob.get_val("ng_feedstock.OpEx")[0]
+        ng_opex = model.prob.get_val("ng_feedstock.VarOpEx")[0]
         # OpEx should be annual_cost (0) + price * consumption
         ng_consumed = model.prob.get_val("ng_feedstock.natural_gas_consumed")
         expected_opex = 4.2 * ng_consumed.sum()  # price = 4.2 $/MMBtu
