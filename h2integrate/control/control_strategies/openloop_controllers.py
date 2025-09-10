@@ -118,7 +118,6 @@ class DemandOpenLoopControllerConfig(BaseConfig):
             Optional if `charge_efficiency` and `discharge_efficiency` are provided.
         demand_profile (scalar or list): The demand values for each time step (in the same units
             as `resource_rate_units`) or a scalar for a constant demand.
-        n_timesteps (int): Number of time steps in the simulation. Defaults to 8760.
     """
 
     resource_name: str = field()
@@ -130,7 +129,6 @@ class DemandOpenLoopControllerConfig(BaseConfig):
     max_charge_rate: float = field()
     max_discharge_rate: float = field()
     demand_profile: int | float | list = field()
-    n_timesteps: int = field(default=8760)
     charge_efficiency: float | None = field(default=None, validator=range_val_or_none(0, 1))
     discharge_efficiency: float | None = field(default=None, validator=range_val_or_none(0, 1))
     round_trip_efficiency: float | None = field(default=None, validator=range_val_or_none(0, 1))
@@ -204,6 +202,8 @@ class DemandOpenLoopController(ControllerBaseClass):
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "control")
         )
 
+        self.n_timesteps = self.options["plant_config"]["plant"]["simulation"]["n_timesteps"]
+
         resource_name = self.config.resource_name
 
         self.add_input(
@@ -214,13 +214,13 @@ class DemandOpenLoopController(ControllerBaseClass):
         )
 
         if isinstance(self.config.demand_profile, int | float):
-            self.config.demand_profile = [self.config.demand_profile] * self.config.n_timesteps
+            self.config.demand_profile = [self.config.demand_profile] * self.n_timesteps
 
         self.add_input(
             f"{resource_name}_demand_profile",
             units=f"{self.config.resource_rate_units}/h",
             val=self.config.demand_profile,
-            shape=self.config.n_timesteps,
+            shape=self.n_timesteps,
             desc=f"{resource_name} demand profile timeseries",
         )
 

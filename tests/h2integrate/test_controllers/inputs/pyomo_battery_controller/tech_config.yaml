@@ -54,8 +54,6 @@ technologies:
       shared_parameters:
         rated_resource_capacity: 50000
         max_capacity: 200000
-        n_timesteps: 8760
-        dt: 1.0
         n_control_window: 24
         n_horizon_window: 48
         init_charge_percent: 0.5

@@ -21,7 +21,6 @@ class PyomoControllerBaseConfig(BaseConfig):
     Attributes:
         resource_name (str): Name of the resource being controlled (e.g., "hydrogen").
         resource_units (str): Units of the resource (e.g., "kg/h").
-        n_timesteps (int): Number of time steps in the simulation.
         max_capacity (float): Maximum storage capacity of the resource (in non-rate units,
             e.g., "kg" if `resource_units` is "kg/h").
         max_charge_percent (float): Maximum allowable state of charge (SOC) as a percentage
@@ -40,12 +39,10 @@ class PyomoControllerBaseConfig(BaseConfig):
             decimal between 0 and 1 (e.g., 0.9 for 90% efficiency).
     """
 
-    n_timesteps: int = field()
     max_capacity: float = field()
     max_charge_percent: float = field()
     min_charge_percent: float = field()
     init_charge_percent: float = field()
-    dt: float = field()
     n_control_window: int = field()
     n_horizon_window: int = field()
     resource_name: str = field()
@@ -124,7 +121,7 @@ class PyomoControllerBaseClass(ControllerBaseClass):
         ):
             self.initialize_parameters()
 
-            ti = list(range(0, self.config.n_timesteps, self.config.n_control_window))
+            ti = list(range(0, self.n_timesteps, self.config.n_control_window))
 
             for t in ti:
                 self.update_time_series_parameters()
@@ -707,6 +704,8 @@ class HeuristicLoadFollowingController(SimpleBatteryControllerHeuristic):
         self.config = HeuristicLoadFollowingControllerConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "control")
         )
+
+        self.n_timesteps = self.options["plant_config"]["plant"]["simulation"]["n_timesteps"]
 
         super().setup()
 
