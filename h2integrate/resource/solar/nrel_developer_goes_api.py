@@ -17,7 +17,7 @@ from h2integrate.resource.utilities.nrel_developer_api_keys import (
 
 @define
 class GOESNRELDeveloperAPIConfig(ResourceBaseAPIConfig):
-    resource_year: int = field(converter=int, validator=range_val(1998, 2004))
+    resource_year: int = field(converter=int, validator=range_val(1998, 2024))
     dataset_desc: str = "goes_aggregated_v4"
     resource_type: str = "solar"
     valid_intervals: ClassVar = [30, 60]
@@ -70,6 +70,7 @@ class GOESNRELDeveloperAPISolarResource(SolarResourceBaseAPIModel):
         ]
         data["time"] = time_str
         # self.data = data
+        # TODO: remove ["Year", "Month", "Day", "Hour", "Minute"] from outputs
         self.add_discrete_output(
             "solar_resource_data", val=data, desc="Dict of solar resource data"
         )
@@ -117,12 +118,12 @@ class GOESNRELDeveloperAPISolarResource(SolarResourceBaseAPIModel):
         colname_mapper = {c: f"{c} ({v})" for c, v in colnames_to_units.items()}
 
         site_data = {
-            "id": header_dict["Location ID"],
-            "site_tz": header_dict["Local Time Zone"],
-            "data_tz": header_dict["Time Zone"],
-            "site_lat": header_dict["Latitude"],
-            "site_lon": header_dict["Longitude"],
-            "elevation": header_dict["Elevation"],
+            "id": int(header_dict["Location ID"]),
+            "site_tz": float(header_dict["Local Time Zone"]),
+            "data_tz": float(header_dict["Time Zone"]),
+            "site_lat": float(header_dict["Latitude"]),
+            "site_lon": float(header_dict["Longitude"]),
+            "elevation": float(header_dict["Elevation"]),
         }
 
         data = data.dropna(axis=1, how="all")
@@ -171,7 +172,7 @@ class GOESNRELDeveloperAPISolarResource(SolarResourceBaseAPIModel):
                 units = "W/m**2"
             if units == "nan" or units == "%":
                 units = "percent"
-            if units == "Degree":
+            if units == "Degree" or units == "Degrees":
                 units = "deg"
 
             data_rename_mapper.update({c: new_c})

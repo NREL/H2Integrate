@@ -26,8 +26,8 @@ class SolarResourceBaseAPIModel(ResourceBaseAPIModel):
             "clearsky_dni": "W/m**2",
             "clearsky_dhi": "W/m**2",
             "dew_point": "C",
-            "albedo": "percent",
-            "zenith_angle": "deg",
+            "surface_albedo": "percent",
+            "solar_zenith_angle": "deg",
             "snow_depth": "cm",
             "precipitable_water": "cm",
             # 'ozone': 'unitless', #unsure
@@ -42,7 +42,7 @@ class SolarResourceBaseAPIModel(ResourceBaseAPIModel):
 
     def compare_units_and_correct(self, data, data_units):
         for data_col, orig_units in data_units.items():
-            output_var = [k for k, v in self.output_vars_to_units.items() if k in data_col]
+            output_var = [k for k, v in self.output_vars_to_units.items() if data_col == k]
             if len(output_var) == 1:
                 desired_units = self.output_vars_to_units[output_var[0]]
                 if desired_units != orig_units:
@@ -52,7 +52,7 @@ class SolarResourceBaseAPIModel(ResourceBaseAPIModel):
                     data_units[data_col] = desired_units
             else:
                 if len(output_var) < 1:
-                    raise Warning(f"{output_var} not found as common variable.")
+                    raise Warning(f"{data_col} not found as common variable.")
                 else:
                     raise Warning(f"{output_var} not found as a unique common variable.")
         return data, data_units
