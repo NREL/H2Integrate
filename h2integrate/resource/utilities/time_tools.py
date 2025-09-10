@@ -72,6 +72,8 @@ def roll_timeseries_data(desired_time_profile, data_time_profile, data, dt):
     roll_by = int(start_time_offset_in_dt)
     rolled_data = {}
     for var, values in data.items():
+        if isinstance(values, (str, float, int, bool)):
+            rolled_data[var] = values
         if var != "time" and not isinstance(values, (str, float, int, bool)):
             vals_rolled = np.roll(values, roll_by)
             rolled_data[var] = vals_rolled
@@ -81,3 +83,30 @@ def roll_timeseries_data(desired_time_profile, data_time_profile, data, dt):
             time_rolled = [values[i] for i in index_rolled]
             rolled_data[var] = time_rolled
     return rolled_data
+
+
+def convert_time_list_to_dict(time_list_str):
+    years = np.array(len(time_list_str))
+    months = np.array(len(time_list_str))
+    days = np.array(len(time_list_str))
+    hours = np.array(len(time_list_str))
+    minutes = np.array(len(time_list_str))
+    for i, time_str in enumerate(time_list_str):
+        date = datetime.strptime(time_str, "%m/%d/%Y %H:%M:%S (%z)")
+        years[i] = date.year
+        months[i] = date.month
+        days[i] = date.day
+        hours[i] = date.hour
+        minutes[i] = date.minute
+    tz = str(date.tzinfo).replace("UTC", "").replace(":", "")
+    if tz == "":
+        tz = 0
+    time_dict = {
+        "Year": years,
+        "Month": months,
+        "Day": days,
+        "Hour": hours,
+        "Minute": minutes,
+        "tz": float(tz),
+    }
+    return time_dict

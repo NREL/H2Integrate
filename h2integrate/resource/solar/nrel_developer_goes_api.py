@@ -70,7 +70,7 @@ class GOESNRELDeveloperAPISolarResource(SolarResourceBaseAPIModel):
         ]
         data["time"] = time_str
         # self.data = data
-        # TODO: remove ["Year", "Month", "Day", "Hour", "Minute"] from outputs
+
         self.add_discrete_output(
             "solar_resource_data", val=data, desc="Dict of solar resource data"
         )
@@ -178,6 +178,8 @@ class GOESNRELDeveloperAPISolarResource(SolarResourceBaseAPIModel):
             data_rename_mapper.update({c: new_c})
             data_units.update({new_c: units})
         data = data.rename(columns=data_rename_mapper)
+        time_cols_mapper = {t: t.lower() for t in time_cols}
+        data = data.rename(columns=time_cols_mapper)
         return data, data_units
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):

@@ -1,28 +1,30 @@
 import PySAM.Pvwattsv8 as Pvwatts
 from attrs import field, define
-from hopp.simulation.technologies.resource import SolarResource
 
 from h2integrate.core.utilities import BaseConfig, merge_shared_inputs, check_pysam_input_params
 from h2integrate.core.validators import contains, range_val_or_none
 from h2integrate.converters.solar.solar_baseclass import SolarPerformanceBaseClass
 
 
-@define
-class PYSAMSolarPlantPerformanceModelSiteConfig(BaseConfig):
-    """Configuration class for the location of the solar pv plant
-        PYSAMSolarPlantPerformanceComponentSite.
+# from hopp.simulation.technologies.resource import SolarResource
 
-    Attributes:
-        latitude (float): Latitude of wind plant location.
-        longitude (float): Longitude of wind plant location.
-        year (float): Year for resource.
-        solar_resource_filepath (str): Path to solar resource file. Defaults to "".
-    """
 
-    latitude: float = field()
-    longitude: float = field()
-    year: float = field()
-    solar_resource_filepath: str = field(default="")
+# @define
+# class PYSAMSolarPlantPerformanceModelSiteConfig(BaseConfig):
+#     """Configuration class for the location of the solar pv plant
+#         PYSAMSolarPlantPerformanceComponentSite.
+
+#     Attributes:
+#         latitude (float): Latitude of wind plant location.
+#         longitude (float): Longitude of wind plant location.
+#         year (float): Year for resource.
+#         solar_resource_filepath (str): Path to solar resource file. Defaults to "".
+#     """
+
+#     latitude: float = field()
+#     longitude: float = field()
+#     year: float = field()
+#     solar_resource_filepath: str = field(default="")
 
 
 @define
@@ -162,9 +164,7 @@ class PYSAMSolarPlantPerformanceModel(SolarPerformanceBaseClass):
 
     def setup(self):
         super().setup()
-        self.config = PYSAMSolarPlantPerformanceModelSiteConfig.from_dict(
-            self.options["plant_config"]["site"], strict=False
-        )
+
         self.design_config = PYSAMSolarPlantPerformanceModelDesignConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance"),
             strict=False,
@@ -189,8 +189,6 @@ class PYSAMSolarPlantPerformanceModel(SolarPerformanceBaseClass):
             self.system_model = Pvwatts.new(self.design_config.config_name)
 
         design_dict = self.design_config.create_input_dict()
-        tilt = self.calc_tilt_angle()
-        design_dict["SystemDesign"].update({"tilt": tilt})
 
         # update design_dict if user provides non-empty design information
         if bool(self.design_config.pysam_options):
@@ -201,19 +199,10 @@ class PYSAMSolarPlantPerformanceModel(SolarPerformanceBaseClass):
                     design_dict[group].update(group_parameters)
                 else:
                     design_dict.update({group: group_parameters})
-
+        self.design_dict = design_dict
         self.system_model.assign(design_dict)
 
-        solar_resource = SolarResource(
-            lat=self.config.latitude,
-            lon=self.config.longitude,
-            year=self.config.year,
-            filepath=self.config.solar_resource_filepath,
-        )
-
-        self.system_model.value("solar_resource_data", solar_resource.data)
-
-    def calc_tilt_angle(self):
+    def calc_tilt_angle(self, latitude):
         """
         Calculates the tilt angle of the PV panel based on the tilt option described by
         design_config.tilt_angle_func.
@@ -243,25 +232,66 @@ class PYSAMSolarPlantPerformanceModel(SolarPerformanceBaseClass):
 
         # If tilt angle function is 'lat', use the latitude as the tilt
         if self.design_config.tilt_angle_func == "lat":
-            return self.config.latitude
+            return latitude
 
         # If tilt angle function is 'lat-func', use empirical formulas based on latitude
         if self.design_config.tilt_angle_func == "lat-func":
-            if self.config.latitude <= 25:
+            if latitude <= 25:
                 # For latitudes <= 25, use 0.87 * latitude
-                return self.config.latitude * 0.87
-            if 25 < self.config.latitude <= 50:
+                return latitude * 0.87
+            if 25 < latitude <= 50:
                 # For latitudes between 25 and 50, use 0.76 * latitude + 3.1
-                return (self.config.latitude * 0.76) + 3.1
+                return (latitude * 0.76) + 3.1
             # For latitudes > 50, use latitude directly
-            return self.config.latitude
+            return latitude
 
-    def compute(self, inputs, outputs):
+    def format_resource_data(self, solar_resource_data):
+        # unsure if timezone has to be
+        resource_name_mapper = {
+            "elevation": "elev",
+            "site_lat": "lat",
+            "site_lon": "lon",
+            "year": "year",
+            "month": "month",
+            "day": "day",
+            "hour": "hour",
+            "minute": "minute",
+            "dni": "dn",
+            "dhi": "df",
+            "ghi": "gh",
+            "wind_speed": "wspd",
+            "temperature": "tdry",
+            "wind_direction": "wdir",
+            "pressure": "pres",
+            "dew_point": "tdew",
+            "relative_humidity": "rhum",
+            "surface_albedo": "alb",
+            "snow_depth": "snow",
+        }
+        tz = float(self.options["plant_config"]["plant"]["simulation"]["timezone"])
+        reformatted_data = {"tz": tz}
+        for old_key, values in solar_resource_data.items():
+            if old_key in resource_name_mapper:
+                new_key = resource_name_mapper[old_key]
+                if not isinstance(values, (float, int, str, bool)):
+                    reformatted_data.update({new_key: values.astype(float).tolist()})
+                else:
+                    reformatted_data.update({new_key: values})
+        return reformatted_data
+
+    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
+        tilt = self.calc_tilt_angle(discrete_inputs["solar_resource_data"]["site_lat"])
+        tilt_angle = self.design_dict.get("SystemDesign", {}).get("tilt", tilt)
+        self.system_model.value("tilt", tilt_angle)
+
         self.system_model.value("system_capacity", inputs["capacity_kWdc"][0])
+
+        solar_resource = self.format_resource_data(discrete_inputs["solar_resource_data"])
+        self.system_model.value("solar_resource_data", solar_resource)
 
         self.system_model.execute(0)
         outputs["electricity_out"] = self.system_model.Outputs.gen  # kW-dc
         pv_capacity_kWdc = self.system_model.value("system_capacity")
         dc_ac_ratio = self.system_model.value("dc_ac_ratio")
         outputs["capacity_kWac"] = pv_capacity_kWdc / dc_ac_ratio
-        outputs["annual_energy"] = self.system_model.value("ac_annual")
+        # outputs["annual_energy"] = self.system_model.value("ac_annual")
