@@ -134,9 +134,8 @@ class WindPlantPerformanceModel(WindPerformanceBaseClass):
         return data
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
-        resource_height = 97.0  # TODO: update this with self.config.hub_height
         resource_data = self.format_resource_data(
-            resource_height, discrete_inputs["wind_resource_data"]
+            self.config.hub_height, discrete_inputs["wind_resource_data"]
         )
         boundaries = flatirons_site["site_boundaries"]["verts"]
         site_data = {
