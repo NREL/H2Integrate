@@ -85,7 +85,7 @@ class PySAMBatteryPerformanceModelConfig(BaseConfig):
     Args:
         tracking: default True -> `Battery`
         max_capacity: Battery energy capacity [kWh]
-        system_capacity_kw: Battery rated power capacity [kW]
+        rated_resource_capacity: Battery rated power capacity [kW]
         system_model_source: software source for the system model, can by 'pysam' or 'hopp'
         chemistry: Battery chemistry option
 
@@ -104,7 +104,7 @@ class PySAMBatteryPerformanceModelConfig(BaseConfig):
     """
 
     max_capacity: float = field(validator=gt_zero)
-    system_capacity_kw: float = field(validator=gt_zero)
+    rated_resource_capacity: float = field(validator=gt_zero)
     cost_year: int = field()
     system_model_source: str = field(default="pysam", validator=contains(["pysam", "hopp"]))
     chemistry: str = field(
@@ -137,8 +137,8 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass, CostModelBaseCla
 
         self.add_input(
             "charge_rate",
-            val=self.config.system_capacity_kw,
-            units="kW",
+            val=self.config.rated_resource_capacity,
+            units="kW/h",
             desc="Battery charge rate",
         )
 
@@ -162,7 +162,7 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass, CostModelBaseCla
             "demand_in",
             val=0.0,
             copy_shape="electricity_in",
-            units="kW",
+            units="kW/h",
             desc="Power demand",
         )
 
@@ -186,7 +186,7 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass, CostModelBaseCla
             "unmet_demand_out",
             val=0.0,
             copy_shape="electricity_in",
-            units="kW",
+            units="kW/h",
             desc="Unmet power demand",
         )
 
@@ -194,7 +194,7 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass, CostModelBaseCla
             "excess_resource_out",
             val=0.0,
             copy_shape="electricity_in",
-            units="kW",
+            units="kW/h",
             desc="Excess generated resource",
         )
 
@@ -245,7 +245,6 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass, CostModelBaseCla
         self._set_control_mode()
 
         self.system_model.value("dt_hr", self.config.dt)
-        # TODO: Make sure this should be multiplied by 100
         self.system_model.value("minimum_SOC", self.config.min_charge_percent * 100)
         self.system_model.value("maximum_SOC", self.config.max_charge_percent * 100)
         self.system_model.value("initial_SOC", self.config.init_charge_percent * 100)

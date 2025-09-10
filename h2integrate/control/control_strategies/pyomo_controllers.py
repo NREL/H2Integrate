@@ -126,20 +126,23 @@ class PyomoControllerBaseClass(ControllerBaseClass):
 
             ti = list(range(0, self.config.n_timesteps, self.config.n_control_window))
 
-            for _i, t in enumerate(ti):
+            for t in ti:
                 self.update_time_series_parameters()
                 if "heuristic" in self.options["tech_config"]["control_strategy"]["model"]:
                     self.set_fixed_dispatch(
                         inputs[self.config.resource_name + "_in"][
                             t : t + self.config.n_control_window
                         ],
-                        self.config.grid_limit,
+                        self.config.max_charge_rate,
+                        self.config.max_discharge_rate,
                         inputs["demand_in"][t : t + self.config.n_control_window],
                     )
                 else:
                     # TODO: implement optimized solutions; this is where pyomo_model would be used
                     # self.solve_dispatch_model(start_time, n_days)
                     pass
+
+                # self.enforce_SOC_limits_pre_sim()
 
                 performance_model(
                     self.storage_amount,
@@ -149,6 +152,30 @@ class PyomoControllerBaseClass(ControllerBaseClass):
                 )
 
         return pyomo_dispatch_solver
+
+    # def enforce_SOC_limits_pre_sim(self, resource_in, resource_chargeable, SOC, demand_in):
+    #     # If discharging...
+    #     if resource_in[t] > 0.0:
+    #         # If the battery has been discharged to its minimum SOC level (with a tolerance)
+    #         if (self.system_model.value("SOC") - self.system_model.value("minimum_SOC")) < 0.05:
+    #             self.unmet_demand = demand_in[t]
+    #             # Avoid trickle power by setting to 0.0
+    #             resource_in[t] = 0.0
+
+    #     # If charging...
+    #     elif resource_in[t] < 0.0:
+    #         # If the input electricity magnitude is greater than the battery chargeable capacity
+    #         if resource_in[t] < P_chargeable:
+    #             # Eliminates trickle power (~10-15 kW) when battery is fully charged
+    #             if P_chargeable > 0.0:
+    #                 P_chargeable = 0.0
+
+    #             # Change the sign to indicate that a positive amount of power is being
+    #             # passed through the battery model
+    #             self.excess_resource = -1 * (resource_in[t] - P_chargeable)
+    #             # Limit the charging power to the availabile capacity of the battery
+    #             resource_in[t] = P_chargeable
+        
 
     @staticmethod
     def dispatch_block_rule(block, t):
@@ -326,56 +353,77 @@ class SimpleBatteryControllerHeuristic(PyomoControllerBaseClass):
             self._system_model.setup()  # TODO: Do I need to re-setup stateful battery?
         self.initial_soc = self._system_model.value("SOC")
 
-    def set_fixed_dispatch(self, gen: list, grid_limit: list, goal_power: list):
+    def set_fixed_dispatch(
+            self,
+            resource_in: list,
+            max_charge_rate: list,
+            max_discharge_rate: list,
+        ):
         """Sets charge and discharge amount of storage dispatch using fixed_dispatch attribute
-            and enforces available generation and grid limits.
+            and enforces available generation and charge/discharge limits.
 
         Args:
-            gen (list): Generation blocks.
-            grid_limit (list): Grid capacity.
+            resource_in (list): Resource blocks.
+            max_charge_rate (list): Max charge capacity.
+            max_discharge_rate (list): Max discharge capacity.
 
         Raises:
-            ValueError: If gen or grid_limit length does not match fixed_dispatch length.
+            ValueError: If resource_in or max_charge_rate or max_discharge_rate length does not
+                match fixed_dispatch length.
 
         """
-        self.check_gen_grid_limit(gen, grid_limit)
-        self._set_power_fraction_limits(gen, grid_limit)
-        self._heuristic_method(gen)
+        self.check_resource_in_discharge_limit(resource_in, max_charge_rate, max_discharge_rate)
+        self._set_resource_fraction_limits(resource_in, max_charge_rate, max_discharge_rate)
+        self._heuristic_method(resource_in)
         self._fix_dispatch_model_variables()
 
-    def check_gen_grid_limit(self, gen: list, grid_limit: list):
-        """Checks if generation and grid limit lengths match fixed_dispatch length.
+    def check_resource_in_discharge_limit(
+            self,
+            resource_in: list,
+            max_charge_rate: list,
+            max_discharge_rate: list
+        ):
+        """Checks if resource in and discharge limit lengths match fixed_dispatch length.
 
         Args:
-            gen (list): Generation blocks.
-            grid_limit (list): Grid capacity.
+            resource_in (list): Resource blocks.
+            max_charge_rate (list): Maximum charge capacity.
+            max_discharge_rate (list): Maximum discharge capacity.
 
         Raises:
-            ValueError: If gen or grid_limit length does not match fixed_dispatch length.
+            ValueError: If gen or max_discharge_rate length does not match fixed_dispatch length.
 
         """
-        if len(gen) != len(self.fixed_dispatch):
+        if len(resource_in) != len(self.fixed_dispatch):
             raise ValueError("gen must be the same length as fixed_dispatch.")
-        elif len(grid_limit) != len(self.fixed_dispatch):
-            raise ValueError("grid_limit must be the same length as fixed_dispatch.")
+        elif len(max_charge_rate) != len(self.fixed_dispatch):
+            raise ValueError("max_charge_rate must be the same length as fixed_dispatch.")
+        elif len(max_discharge_rate) != len(self.fixed_dispatch):
+            raise ValueError("max_discharge_rate must be the same length as fixed_dispatch.")
 
-    def _set_power_fraction_limits(self, gen: list, grid_limit: list):
+    def _set_resource_fraction_limits(
+            self,
+            resource_in: list,
+            max_charge_rate: list,
+            max_discharge_rate: list
+        ):
         """Set storage charge and discharge fraction limits based on
         available generation and grid capacity, respectively.
 
         Args:
-            gen (list): Generation blocks.
-            grid_limit (list): Grid capacity.
+            resource_in (list): Resource blocks.
+            max_charge_rate (list): Maximum charge capacity.
+            max_discharge_rate (list): Maximum discharge capacity.
 
         NOTE: This method assumes that storage cannot be charged by the grid.
 
         """
         for t in self.blocks.index_set():
             self.max_charge_fraction[t] = self.enforce_power_fraction_simple_bounds(
-                gen[t] / self.maximum_storage
+                (max_charge_rate[t] - resource_in[t]) / self.maximum_storage
             )
             self.max_discharge_fraction[t] = self.enforce_power_fraction_simple_bounds(
-                (grid_limit[t] - gen[t]) / self.maximum_storage
+                (max_discharge_rate[t] - resource_in[t]) / self.maximum_storage
             )
 
     @staticmethod
@@ -619,14 +667,19 @@ class SimpleBatteryControllerHeuristic(PyomoControllerBaseClass):
 
 @define
 class HeuristicLoadFollowingControllerConfig(PyomoControllerBaseConfig):
-    system_capacity_kw: int = field()
-    grid_limit: float = field(default=1e12)
+    rated_resource_capacity: int = field()
+    max_discharge_rate: float = field(default=1e12)
+    max_charge_rate: float = field(default=1e12)
+    charge_efficiency: float = field(default=None)
+    discharge_efficiency: float = field(default=None)
     include_lifecycle_count: bool = field(default=False)
 
     def __attrs_post_init__(self):
-        # TODO: Is this the best way to handle scalar demand?
-        if isinstance(self.grid_limit, (float, int)):
-            self.grid_limit = [self.grid_limit] * self.n_control_window
+        # TODO: Is this the best way to handle scalar charge/discharge rates?
+        if isinstance(self.max_charge_rate, (float, int)):
+            self.max_charge_rate = [self.max_charge_rate] * self.n_control_window
+        if isinstance(self.max_discharge_rate, (float, int)):
+            self.max_discharge_rate = [self.max_discharge_rate] * self.n_control_window
 
 
 class HeuristicLoadFollowingController(SimpleBatteryControllerHeuristic):
@@ -657,22 +710,35 @@ class HeuristicLoadFollowingController(SimpleBatteryControllerHeuristic):
 
         super().setup()
 
-    def set_fixed_dispatch(self, gen: list, grid_limit: list, goal_power: list):
+        if self.config.charge_efficiency is not None:
+            self.charge_efficiency = self.config.charge_efficiency
+        if self.config.discharge_efficiency is not None:
+            self.discharge_efficiency = self.config.discharge_efficiency
+
+    def set_fixed_dispatch(
+            self,
+            resource_in: list,
+            max_charge_rate: list,
+            max_discharge_rate: list,
+            resource_demand: list
+        ):
         """Sets charge and discharge power of battery dispatch using fixed_dispatch attribute
-            and enforces available generation and grid limits.
+            and enforces available generation and charge/discharge limits.
 
         Args:
-            gen (list): List of power generation.
-            grid_limit (list): List of grid limits.
+            resource_in (list): List of generated resource in.
+            max_charge_rate (list): List of max charge rates.
+            max_discharge_rate (list): List of max discharge rates.
+            resource_demand (list): The demanded resource.
 
         """
 
-        self.check_gen_grid_limit(gen, grid_limit)
-        self._set_power_fraction_limits(gen, grid_limit)
-        self._heuristic_method(gen, goal_power)
+        self.check_resource_in_discharge_limit(resource_in, max_charge_rate, max_discharge_rate)
+        self._set_resource_fraction_limits(resource_in, max_charge_rate, max_discharge_rate)
+        self._heuristic_method(resource_in, resource_demand)
         self._fix_dispatch_model_variables()
 
-    def _heuristic_method(self, generated_resource, goal_resource):
+    def _heuristic_method(self, resource_in, goal_resource):
         """Enforces storage fraction limits and sets _fixed_dispatch attribute.
         Sets the _fixed_dispatch based on goal_resource and gen.
 
@@ -682,7 +748,7 @@ class HeuristicLoadFollowingController(SimpleBatteryControllerHeuristic):
 
         """
         for t in self.blocks.index_set():
-            fd = (goal_resource[t] - generated_resource[t]) / self.maximum_storage
+            fd = (goal_resource[t] - resource_in[t]) / self.maximum_storage
             if fd > 0.0:  # Discharging
                 if fd > self.max_discharge_fraction[t]:
                     fd = self.max_discharge_fraction[t]

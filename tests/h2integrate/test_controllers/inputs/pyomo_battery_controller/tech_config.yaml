@@ -52,7 +52,7 @@ technologies:
       model: "pysam_battery"
     model_inputs:
       shared_parameters:
-        system_capacity_kw: 50000
+        rated_resource_capacity: 50000
         max_capacity: 200000
         n_timesteps: 8760
         dt: 1.0
