@@ -75,7 +75,7 @@ class ResourceBaseAPIModel(om.ExplicitComponent):
             provided_dir = False if self.config.resource_dir is None else True
             if (
                 provided_dir
-                and Path(self.config.resource_data).parts[-1] == self.config.resource_type
+                and Path(self.config.resource_dir).parts[-1] == self.config.resource_type
             ):
                 resource_dir = check_resource_dir(resource_dir=self.config.resource_dir)
             else:
