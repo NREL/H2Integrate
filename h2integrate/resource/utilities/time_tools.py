@@ -52,6 +52,18 @@ def make_time_profile(
 
 
 def roll_timeseries_data(desired_time_profile, data_time_profile, data, dt):
+    """Roll timeseries data from its time profile (`data_time_profile`)
+    to the `desired_time_profile`.
+
+    Args:
+        desired_time_profile (list[datetime.datetime]): time profile to roll data too.
+        data_time_profile (list[datetime.datetime]: time profile that data is currently in.
+        data (dict): dictionary of data to roll.
+        dt (int): length of time step in seconds.
+
+    Returns:
+        dict: data rolled to `desired_time_profile`
+    """
     # 1) align timezones
     t0_desired = desired_time_profile[0]
     t0_actual_in_desired_tz = data_time_profile[0].astimezone(tz=t0_desired.tzinfo)
@@ -86,6 +98,23 @@ def roll_timeseries_data(desired_time_profile, data_time_profile, data, dt):
 
 
 def convert_time_list_to_dict(time_list_str):
+    """Create a dictionary representing the time from a list of time-represented strings
+    with keys of:
+
+        - **Year** (*array*): Year with century (1999, 2000, ..., 2024).
+        - **Month** (*array*): Month as zero-padded number (01, 02, ..., 12).
+        - **Day** (*array*): Day of the month as a zero-padded number (01, 02, ..., 31).
+        - **Hour** (*array*): Hour (24-hour clock) as a zero-padded number (00, 01, ..., 23).
+        - **Minute** (*array*): Minute as a zero-padded number (00, 01, ..., 59).
+        - **tz** (*float | int*): timezone of the time profile
+
+    Args:
+        time_list_str (list[str]): list of strings representing the time,
+            formatted as "%m/%d/%Y %H:%M:%S (%z)".
+
+    Returns:
+        dict: dictionary of data representing the time profile.
+    """
     years = np.array(len(time_list_str))
     months = np.array(len(time_list_str))
     days = np.array(len(time_list_str))

@@ -6,13 +6,14 @@ import requests
 
 
 def download_from_api(url, filename):
-    """
+    """Download data from `url` and save it to `filename`.
+
     Args:
-        url (str): The API endpoint to return data from
-        filename (str): The filename where data should be written
+        url (str): The API endpoint to return data from.
+        filename (str): The filename where data should be written.
 
     Returns:
-        True if downloaded file successfully, False if encountered error in downloading
+        bool: True if data was downloaded file successfully, False if encountered error.
 
     """
     n_tries = 0
