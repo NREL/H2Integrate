@@ -8,11 +8,6 @@ class SolarPerformanceBaseClass(om.ExplicitComponent):
         self.options.declare("tech_config", types=dict)
 
     def setup(self):
-        self.add_discrete_input(
-            "solar_resource_data",
-            val={},
-            desc="Solar resource data dictionary",
-        )
         n_timesteps = self.options["plant_config"]["plant"]["simulation"]["n_timesteps"]
         self.add_output(
             "electricity_out",
@@ -22,7 +17,7 @@ class SolarPerformanceBaseClass(om.ExplicitComponent):
             desc="Power output from SolarPlant",
         )
 
-    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
+    def compute(self, inputs, outputs):
         """
         Computation for the OM component.
 
