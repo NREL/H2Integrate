@@ -1,20 +1,20 @@
 import numpy as np
 from matplotlib import pyplot as plt
+
 from h2integrate.core.h2integrate_model import H2IntegrateModel
 
 
 # Create an H2Integrate model
 model = H2IntegrateModel("h2i_wind_to_battery_storage.yaml")
 
-demand_profile = np.ones(8760) * 100000.
+demand_profile = np.ones(8760) * 100000.0
 
 # TODO: Update with demand module once it is developed
-# model.prob.setup()
-# model.prob.set_val("battery.demand_in", demand_profile)
+model.setup()
+model.prob.set_val("battery.demand_in", demand_profile)
 
 # Run the model
-model.run(demand_profile=demand_profile)
-
+model.run()
 
 
 # Plot the results
@@ -89,4 +89,4 @@ ax[1].set_xlabel("Timestep (hr)")
 
 plt.legend(ncol=2, frameon=False)
 plt.show()
-plt.savefig('plot.png')
+plt.savefig("plot.png")

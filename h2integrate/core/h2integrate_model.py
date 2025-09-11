@@ -30,8 +30,12 @@ class H2IntegrateModel:
         # load custom models
         self.collect_custom_models()
 
+        # instantiate OpenMDAO problem
         self.prob = om.Problem()
         self.model = self.prob.model
+
+        # track if setup has been called via boolean
+        self.setup_has_been_called = False
 
         # create site-level model
         # this is an OpenMDAO group that contains all the site information
@@ -764,19 +768,25 @@ class H2IntegrateModel:
             myopt.set_design_variables(self.prob)
             myopt.set_constraints(self.prob)
 
-    def run(self, demand_profile):
-        # do model setup based on the driver config
-        # might add a recorder, driver, set solver tolerances, etc
-
         # Add a recorder if specified in the driver config
         if "recorder" in self.driver_config:
             recorder_config = self.driver_config["recorder"]
             recorder = om.SqliteRecorder(recorder_config["file"])
             self.model.add_recorder(recorder)
 
+    def setup(self):
+        """
+        Extremely light wrapper to setup the OpenMDAO problem and track setup status.
+        """
+        self.setup_has_been_called = True
         self.prob.setup()
 
-        self.prob.set_val("battery.demand_in", demand_profile)
+    def run(self):
+        # do model setup based on the driver config
+        # might add a recorder, driver, set solver tolerances, etc
+        if not self.setup_has_been_called:
+            self.prob.setup()
+            self.setup_has_been_called = True
 
         self.prob.run_driver()
 
