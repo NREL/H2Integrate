@@ -342,7 +342,7 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass, CostModelBaseCla
                     # Change the sign to indicate that a positive amount of power is being
                     # passed through the battery model
                     self.excess_resource = -1 * (electricity_in[t] - P_chargeable)
-                    # Limit the charging power to the availabile capacity of the battery
+                    # Limit the charging power to the available capacity of the battery
                     electricity_in[t] = P_chargeable
 
             # Set the input variable to the desired value
