@@ -91,16 +91,19 @@ def roll_timeseries_data(desired_time_profile, data_time_profile, data, dt):
     roll_by = int(start_time_offset_in_dt)
     rolled_data = {}
     for var, values in data.items():
+        # check if values are non-iterables and don't roll
         if isinstance(values, (str, float, int, bool)):
             rolled_data[var] = values
-        if var != "time" and not isinstance(values, (str, float, int, bool)):
+            continue
+        # if values are iterable, check if they should be rolled by their index
+        if isinstance(values[0], (str, bool, object)):
+            vals_index = list(range(len(values)))
+            index_rolled = np.roll(vals_index, roll_by)
+            vals_rolled = [values[i] for i in index_rolled]
+            rolled_data[var] = vals_rolled
+        else:
             vals_rolled = np.roll(values, roll_by)
             rolled_data[var] = vals_rolled
-        if var == "time":
-            time_index = list(range(len(values)))
-            index_rolled = np.roll(time_index, roll_by)
-            time_rolled = [values[i] for i in index_rolled]
-            rolled_data[var] = time_rolled
     return rolled_data
 
 
@@ -122,11 +125,11 @@ def convert_time_list_to_dict(time_list_str):
     Returns:
         dict: dictionary of data representing the time profile.
     """
-    years = np.array(len(time_list_str))
-    months = np.array(len(time_list_str))
-    days = np.array(len(time_list_str))
-    hours = np.array(len(time_list_str))
-    minutes = np.array(len(time_list_str))
+    years = np.zeros(len(time_list_str))
+    months = np.zeros(len(time_list_str))
+    days = np.zeros(len(time_list_str))
+    hours = np.zeros(len(time_list_str))
+    minutes = np.zeros(len(time_list_str))
     for i, time_str in enumerate(time_list_str):
         date = datetime.strptime(time_str, "%m/%d/%Y %H:%M:%S (%z)")
         years[i] = date.year
