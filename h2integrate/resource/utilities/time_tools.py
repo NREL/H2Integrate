@@ -19,8 +19,10 @@ def make_time_profile(
         dt (float | int): time step interval in seconds.
         n_timesteps (int): number of timesteps in a simulation.
         time_zone (int | float): timezone offset from UTC in hours.
-        start_year (int | None, optional): year to use for start-time if start-time is formatted
-            as 'mm/dd HH:MM:SS'. If None, the year will default to 1900. Defaults to None.
+        start_year (int | None, optional): year to use for start-time. if start-time
+            is formatted as 'mm/dd/yyyy HH:MM:SS' then will overwrite original year.
+            If None, the year will default to 1900 if start-time is formatted as 'mm/dd HH:MM:SS'.
+            Defaults to None.
 
     Returns:
         list[datetime]: list of datetime objects that represents the time profile
@@ -34,6 +36,11 @@ def make_time_profile(
     # timezone formatted as ±HHMM[SS[.ffffff]]
     start_time_w_tz = f"{start_time} ({tz_str})"
     if len(start_time.split("/")) == 3:
+        if start_year is not None:
+            start_time_month_day_year, start_time_time = start_time.split(" ")
+            start_time_month_day = "/".join(i for i in start_time_month_day_year.split("/")[:-1])
+            start_time_w_tz = f"{start_time_month_day}/{start_year} {start_time_time} ({tz_str})"
+
         t = datetime.strptime(start_time_w_tz, "%m/%d/%Y %H:%M:%S (%z)")
     elif len(start_time.split("/")) == 2:
         if start_year is not None:
