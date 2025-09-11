@@ -13,7 +13,7 @@ from h2integrate.storage.battery.battery_baseclass import BatteryPerformanceBase
 
 @dataclass
 class BatteryOutputs:
-    # I: Sequence #TODO rename, remove, or otherwise figure out how to get this pass the liner
+    I: Sequence  # noqa: E741
     P: Sequence
     Q: Sequence
     SOC: Sequence
