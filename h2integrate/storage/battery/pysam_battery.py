@@ -321,11 +321,6 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass, CostModelBaseCla
                     self.unmet_demand = electricity_in[t]
                     # Avoid trickle power by setting to 0.0
                     electricity_in[t] = 0.0
-            
-            # elif electricity_in[t] < 0.0:
-            #     if (self.system_model.value("SOC") - self.system_model.value("minimum_SOC")) > -0.05:
-            #         self.excess_resource = -1 * electricity_in[t]
-            #         electricity_in[t] = 0.0
 
             # If charging...
             elif electricity_in[t] < 0.0:
@@ -356,9 +351,6 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass, CostModelBaseCla
                 if (self.system_model.value("SOC") - self.system_model.value("minimum_SOC")) < 0.05:
                     # Unmet demand equals the demand minus the discharged power
                     self.unmet_demand = self.requested_electricity - self.system_model.value("P")
-            # elif self.requested_electricity < 0.0:
-            #     if (self.system_model.value("SOC") - self.system_model.value("minimum_SOC")) > -0.05:
-            #         self.excess_resource = -1 * electricity_in[t]
 
             # Store outputs based on the outputs defined in `BatteryOutputs` above. The values are
             # scraped from the PySAM model modules `StatePack` and `StateCell`.

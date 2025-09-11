@@ -67,25 +67,9 @@ ax[1].plot(
     linestyle="--",
     label="Eletrical Demand (kW)",
 )
-ax[1].set_ylim([-1e5, 6e5])
+ax[1].set_ylim([-1e5, 7e5])
 ax[1].set_ylabel("Electricity Hourly (kW)")
 ax[1].set_xlabel("Timestep (hr)")
-
-# ax[2].plot(
-#     range(start_hour, end_hour),
-#     model.prob.get_val("battery.P_chargeable")[start_hour:end_hour],
-#     linestyle="-.",
-#     label="P_chargeable (kW)",
-# )
-# ax[2].plot(
-#     range(start_hour, end_hour),
-#     model.prob.get_val("battery.P_dischargeable")[start_hour:end_hour],
-#     linestyle=":",
-#     label="P_dischargeable (kW)",
-# )
-# ax[2].set_ylim([-6e5, 12e5])
-# ax[2].set_ylabel("Electricity Hourly (kW)")
-# ax[2].set_xlabel("Timestep (hr)")
 
 plt.legend(ncol=2, frameon=False)
 plt.savefig("plot.png")
