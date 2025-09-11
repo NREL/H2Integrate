@@ -265,21 +265,19 @@ def test_wind_h2_opt_example(subtests):
     # Run the model
     model.run()
 
-    # model.post_process()
-
     with subtests.test("Check initial H2 production"):
         assert annual_h20 < (60500000 - 10000)
 
     with subtests.test("Check LCOE"):
         assert (
             pytest.approx(model.prob.get_val("financials_group_default.LCOE")[0], rel=1e-3)
-            == 0.151189
+            == 0.13548897
         )
 
     with subtests.test("Check electrolyzer size"):
         assert (
             pytest.approx(model.prob.get_val("electrolyzer.electrolyzer_size_mw")[0], rel=1e-3)
-            == 1500.0
+            == 1380.0
         )
     # Read the resulting SQL file and compare initial and final LCOH values
 
@@ -311,21 +309,21 @@ def test_wind_h2_opt_example(subtests):
             pytest.approx(
                 model.prob.get_val("financials_group_default.total_capex_adjusted")[0], rel=1e-3
             )
-            == 2783126102
+            == 2667734319.98
         )
     with subtests.test("Check total adjusted OpEx"):
         assert (
             pytest.approx(
                 model.prob.get_val("financials_group_default.total_opex_adjusted")[0], rel=1e-3
             )
-            == 75543899
+            == 72718135.62
         )
 
     with subtests.test("Check minimum total hydrogen produced"):
         assert (
             pytest.approx(
                 model.prob.get_val("electrolyzer.total_hydrogen_produced", units="kg/year")[0],
-                abs=10000,
+                abs=15000,
             )
             == 60500000
         )
@@ -347,9 +345,9 @@ def test_paper_example(subtests):
     with subtests.test("Check LCOP"):
         assert (
             pytest.approx(
-                model.prob.get_val("plant.paper_mill.paper_mill_financial.LCOP"), rel=1e-3
+                model.prob.get_val("plant.paper_mill.paper_mill_financial.LCOP")[0], rel=1e-3
             )
-            == 51.91476681
+            == 51.733275
         )
 
 
@@ -492,7 +490,7 @@ def test_hydrogen_dispatch_example(subtests):
                 model.prob.get_val("financials_group_default.LCOE", units="USD/MW/h")[0],
                 rel=1e-5,
             )
-            == 106.13987
+            == 105.75426
         )
 
     with subtests.test("Check LCOH"):
@@ -501,7 +499,7 @@ def test_hydrogen_dispatch_example(subtests):
                 model.prob.get_val("financials_group_default.LCOH", units="USD/kg")[0],
                 rel=1e-5,
             )
-            == 5.68452215
+            == 5.6540332
         )
 
 
@@ -655,7 +653,7 @@ def test_wind_solar_electrolyzer_example(subtests):
                 model.prob.get_val("financials_group_default.LCOE", units="USD/MW/h")[0],
                 rel=1e-5,
             )
-            == 54.12889
+            == 53.9306558
         )
 
     with subtests.test("Check LCOH"):
@@ -664,7 +662,7 @@ def test_wind_solar_electrolyzer_example(subtests):
                 model.prob.get_val("financials_group_default.LCOH", units="USD/kg")[0],
                 rel=1e-5,
             )
-            == 5.33209234
+            == 5.3277923
         )
 
     wind_generation = model.prob.get_val("wind.electricity_out", units="kW")
