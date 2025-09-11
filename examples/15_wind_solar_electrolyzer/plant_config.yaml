@@ -27,17 +27,8 @@ site:
         latitude: 35.2018863
         longitude: -101.945027
         resource_year: 2012
-    solar_resource:
-      resource_model: "goes_v4_api"
-      resource_parameters:
-        latitude: 30.6617
-        longitude: -101.7096
-        resource_year: 2013
-        resource_dir: "../11_hybrid_energy_plant/tech_inputs/weather/solar"
-        resource_filename: "30.6617_-101.7096_psmv3_60_2013.csv"
 
-  #TODO: delete this filepath and replace with
-  # solar_resource_filepath: "../11_hybrid_energy_plant/tech_inputs/weather/solar/30.6617_-101.7096_psmv3_60_2013.csv"
+  solar_resource_filepath: "../11_hybrid_energy_plant/tech_inputs/weather/solar/30.6617_-101.7096_psmv3_60_2013.csv"
 
 # array of arrays containing left-to-right technology
 # interconnections; can support bidirectional connections
