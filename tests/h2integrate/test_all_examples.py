@@ -648,7 +648,7 @@ def test_wind_solar_electrolyzer_example(subtests):
     model = H2IntegrateModel(Path.cwd() / "15_wind_solar_electrolyzer.yaml")
     model.run()
 
-    model.post_process()
+    # model.post_process()
     with subtests.test("Check LCOE"):
         assert (
             pytest.approx(

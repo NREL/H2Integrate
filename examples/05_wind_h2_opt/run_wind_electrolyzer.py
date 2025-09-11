@@ -7,4 +7,4 @@ gh = H2IntegrateModel("wind_plant_electrolyzer.yaml")
 # Run the model
 gh.run()
 
-gh.post_process()
+# gh.post_process()

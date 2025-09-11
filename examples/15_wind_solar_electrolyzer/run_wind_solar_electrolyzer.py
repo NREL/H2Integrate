@@ -7,4 +7,4 @@ model = H2IntegrateModel("15_wind_solar_electrolyzer.yaml")
 # Run the model
 model.run()
 
-model.post_process()
+# model.post_process()
