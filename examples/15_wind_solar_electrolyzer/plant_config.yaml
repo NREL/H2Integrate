@@ -6,7 +6,7 @@ site:
   longitude: -101.7096
   # elevation_m: 0.0 #unsure
   # time_zone: -5 #unsure
-  # year: 2013
+  year: 2013
 
   # array of polygons defining boundaries with x/y coords
   boundaries: [
@@ -44,7 +44,6 @@ technology_interconnections: [
 resource_to_tech_connections: [
   # connect the wind resource to the run-of-river hydro technology
   ['wind_resource', 'wind', 'wind_resource_data'],
-  ['solar_resource', 'solar', 'solar_resource_data'],
 ]
 
 plant:
