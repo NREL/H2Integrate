@@ -746,8 +746,8 @@ class H2IntegrateModel:
             else:
                 # Connect the dispatch rules output to the dispatching_tech_name input
                 self.model.connect(
-                    f"{tech_name}.{'dispatch_block_rule_function'}",
-                    f"{dispatching_tech_name}.{'dispatch_block_rule_function'}_{tech_name}",
+                    f"{tech_name}.dispatch_block_rule_function",
+                    f"{dispatching_tech_name}.dispatch_block_rule_function_{tech_name}",
                 )
 
         if (pyxdsm is not None) and (len(technology_interconnections) > 0):
