@@ -193,6 +193,7 @@ class WTKNRELDeveloperAPIWindResource(WindResourceBaseAPIModel):
             "data_tz": header_dict["Data Timezone"],
             "site_lat": header_dict["Latitude"],
             "site_lon": header_dict["Longitude"],
+            "filepath": str(fpath),
         }
 
         data = data.dropna(axis=1, how="all")
@@ -208,6 +209,7 @@ class WTKNRELDeveloperAPIWindResource(WindResourceBaseAPIModel):
         timeseries_data = {c: data[c].values for c in data.columns.to_list() if c not in time_cols}
         timeseries_data.update({"time": data_time_profile})
         timeseries_data.update(site_data)
+
         return timeseries_data
 
     def make_data_time_profile(self, data, data_tz):
