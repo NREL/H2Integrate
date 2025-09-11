@@ -22,13 +22,13 @@ def test_check_resource_dir_relative_dir_exists(subtests):
     expected_dir = EXAMPLE_DIR / "11_hybrid_energy_plant" / "tech_inputs" / "weather"
     output_dir = check_resource_dir(resource_dir=relative_dir)
     with subtests.test("Relative resource_dir, no resource_subdir"):
-        assert output_dir.absolute() == expected_dir
+        assert output_dir == expected_dir
 
     relative_dir = "tech_inputs/weather"
     expected_dir = EXAMPLE_DIR / "11_hybrid_energy_plant" / "tech_inputs" / "weather" / "wind"
     output_dir = check_resource_dir(resource_dir=relative_dir, resource_subdir="wind")
     with subtests.test("Relative resource_dir, with resource_subdir"):
-        assert output_dir.absolute() == expected_dir
+        assert output_dir == expected_dir
 
 
 def test_check_resource_dir_full_dir_exists(subtests):
