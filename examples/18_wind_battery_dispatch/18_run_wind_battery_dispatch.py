@@ -88,5 +88,4 @@ ax[1].set_xlabel("Timestep (hr)")
 # ax[2].set_xlabel("Timestep (hr)")
 
 plt.legend(ncol=2, frameon=False)
-plt.show()
 plt.savefig("plot.png")

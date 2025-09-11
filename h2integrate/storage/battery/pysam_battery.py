@@ -276,10 +276,7 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass, CostModelBaseCla
             )
         # Store outputs from the battery model
         outputs["electricity_out"] = (
-            list(
-                np.array([P if P > 0.0 else 0.0 for P in self.outputs.P])
-                + np.array(self.outputs.excess_resource)
-            )
+            np.minimum(inputs["demand_in"], inputs["electricity_in"] + self.outputs.P)
         )
         outputs["SOC"] = self.outputs.SOC
         outputs["P_chargeable"] = self.outputs.P_chargeable
@@ -316,13 +313,12 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass, CostModelBaseCla
 
             # Grab the available charge/discharge capacity of the battery
             P_chargeable = self.system_model.value("P_chargeable")
-            self.system_model.value("P_dischargeable")
 
-            # If discharging...
+            # If discharging... electricity_in is the commanded electricity from dispatch, accounting for demand, positive is charge and negative is discharge
             if electricity_in[t] > 0.0:
                 # If the battery has been discharged to its minimum SOC level (with a tolerance)
                 if (self.system_model.value("SOC") - self.system_model.value("minimum_SOC")) < 0.05:
-                    self.unmet_demand = demand_in[t]
+                    self.unmet_demand = electricity_in[t]
                     # Avoid trickle power by setting to 0.0
                     electricity_in[t] = 0.0
             
@@ -359,7 +355,7 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass, CostModelBaseCla
                 # If the desired discharge power is greater than the available power in the battery
                 if (self.system_model.value("SOC") - self.system_model.value("minimum_SOC")) < 0.05:
                     # Unmet demand equals the demand minus the discharged power
-                    self.unmet_demand = demand_in[t] - self.system_model.value("P")
+                    self.unmet_demand = self.requested_electricity - self.system_model.value("P")
             # elif self.requested_electricity < 0.0:
             #     if (self.system_model.value("SOC") - self.system_model.value("minimum_SOC")) > -0.05:
             #         self.excess_resource = -1 * electricity_in[t]
