@@ -17,6 +17,29 @@ from h2integrate.resource.utilities.nrel_developer_api_keys import (
 
 @define
 class WTKNRELDeveloperAPIConfig(ResourceBaseAPIConfig):
+    """Configuration class to download wind resoure data from
+    `Wind Toolkit Data V2 <https://developer.nrel.gov/docs/wind/wind-toolkit/wtk-download/>`_.
+
+    Args:
+        resource_year (int): Year to use for resource data.
+            Must been between 2007 and 2014 (inclusive).
+        resource_data (dict | object, optional): Dictionary of user-input resource data.
+            Defaults to an empty dictionary.
+        resource_dir (str | Path, optional): Folder to save resource files to or
+            load resource files from. Defaults to "".
+        resource_filename (str, optional): Filename to save resource data to or load
+            resource data from. Defaults to None.
+
+    Attributes:
+        dataset_desc (str): description of the dataset, used in file naming.
+            For this dataset, the `dataset_desc` is "wtk_v2".
+        resource_type (str): type of resource data downloaded, used in folder naming.
+            For this dataset, the `resource_type` is "wind".
+        valid_intervals (list[int]): time interval(s) in minutes that resource data can be
+            downloaded in. For this dataset, `valid_intervals` are 5, 15, 30, and 60 minutes.
+
+    """
+
     resource_year: int = field(converter=int, validator=range_val(2007, 2014))
     dataset_desc: str = "wtk_v2"
     resource_type: str = "wind"
@@ -30,20 +53,38 @@ class WTKNRELDeveloperAPIWindResource(WindResourceBaseAPIModel):
     def setup(self):
         super().setup()
 
+        # create the input dictionary for WTKNRELDeveloperAPIConfig
         resource_specs = self.options["resource_config"]
+        # set the default latitude, longitude, and resource_year from the site_config
         resource_specs.setdefault("latitude", self.site_config["latitude"])
         resource_specs.setdefault("longitude", self.site_config["longitude"])
         resource_specs.setdefault("resource_year", self.site_config.get("year", None))
+
+        # set the default resource_dir from a directory that can be
+        # specified in site_config['resources']['resource_dir']
         resource_specs.setdefault(
             "resource_dir", self.site_config["resources"].get("resource_dir", None)
         )
+
+        # set the timezone as the simulation config timezone
+        if "timezone" in resource_specs:
+            msg = (
+                "The timezone cannot be specified for a specific resource. "
+                "The timezone is set in the plant_config['plant']['simulation']['timezone']."
+            )
+
+            raise ValueError(msg)
         resource_specs.setdefault("timezone", self.sim_config.get("timezone"))
+
+        # create the resource config
         self.config = WTKNRELDeveloperAPIConfig.from_dict(resource_specs)
 
+        # set UTC variable depending on timezone, used for filenaming
         self.utc = False
         if float(self.config.timezone) == 0.0:
             self.utc = True
 
+        # check interval to use for data download/load based on simulation timestep
         interval = self.dt / 60
         if any(float(v) == float(interval) for v in self.config.valid_intervals):
             self.interval = int(interval)
@@ -53,6 +94,7 @@ class WTKNRELDeveloperAPIWindResource(WindResourceBaseAPIModel):
             else:
                 self.interval = int(min(self.config.valid_intervals))
 
+        # create the desired time profile for the resource data
         self.resource_time_profile = make_time_profile(
             self.start_time,
             self.dt,
@@ -60,19 +102,32 @@ class WTKNRELDeveloperAPIWindResource(WindResourceBaseAPIModel):
             self.config.timezone,
             self.config.resource_year,
         )
-        # check what steps to do
+
+        # get the data dictionary
         data = self.get_data()
 
         # NOTE: add any upsampling or downsampling, this should be done here
+
+        # roll the data to the resource_time_profile
         data = roll_timeseries_data(self.resource_time_profile, data["time"], data, self.dt)
+
+        # convert the time profile to a list of strings to be JSON-compatible
         time_str = [
             data["time"][i].strftime("%m/%d/%Y %H:%M:%S (%z)") for i in range(len(data["time"]))
         ]
         data["time"] = time_str
-        # self.data = data
+
+        # add resource data dictionary as an out
         self.add_discrete_output("wind_resource_data", val=data, desc="Dict of wind resource data")
 
     def create_filename(self):
+        """Create default filename to save downloaded data to. Filename is formatted as
+        "{latitude}_{longitude}_{resource_year}_wtk_v2_{interval}min_{tz_desc}_tz.csv"
+        where "tz_desc" is "utc" if the timezone is zero, or "local" otherwise.
+
+        Returns:
+            str: filename for resource data to be saved to or loaded from.
+        """
         # TODO: update to handle multiple years
         # TODO: update to handle nonstandard time intervals
         if self.utc:
@@ -86,6 +141,11 @@ class WTKNRELDeveloperAPIWindResource(WindResourceBaseAPIModel):
         return filename
 
     def create_url(self):
+        """Create url for data download.
+
+        Returns:
+            str: url to use for API call.
+        """
         input_data = {
             "wkt": f"POINT({self.config.longitude} {self.config.latitude})",
             "names": [str(self.config.resource_year)],  # TODO: update to handle multiple years
@@ -99,6 +159,29 @@ class WTKNRELDeveloperAPIWindResource(WindResourceBaseAPIModel):
         return url
 
     def load_data(self, fpath):
+        """Load data from a file and format as a dictionary that:
+
+        1) follows naming convention described in WindResourceBaseAPIModel.
+        2) is converted to standardized units described in WindResourceBaseAPIModel.
+
+        This method does the following steps:
+
+        1) load the data, separate out scalar data and timeseries data
+        2) remove unused data
+        3) make a time profile for the data, set as the 'time' key for the output data.
+            Calls `make_data_time_profile()` method.
+        4) Rename the data columns to standardized naming convention and create dictionary of
+            OpenMDAO compatible units for the data. Calls `format_timeseries_data()` method.
+        5) Convert data to stadardized units. Calls `compare_units_and_correct()` method
+
+        Args:
+            fpath (str | Path): filepath to file containing the data
+
+        Returns:
+            dict: dictionary of data in standardized units and naming convention.
+            Time information is found in the 'time' key.
+        """
+
         data = pd.read_csv(fpath, header=1)
         header = pd.read_csv(fpath, nrows=1, header=None).values[0]
         header_keys = header[0 : len(header) : 2]
@@ -128,6 +211,17 @@ class WTKNRELDeveloperAPIWindResource(WindResourceBaseAPIModel):
         return timeseries_data
 
     def make_data_time_profile(self, data, data_tz):
+        """Create time profile corresponding the data.
+
+        Args:
+            data (pd.DataFrame): Dataframe of timeseries data.
+                Must have columns of "Year", "Month", "Day", "Hour", and "Minute".
+
+            data_tz (int | float): timezone that the data is in.
+
+        Returns:
+            list[datetime.datetime]: time profile of data.
+        """
         data_start_time_dict = data.iloc[0][["Year", "Month", "Day", "Hour", "Minute"]].to_dict()
         data_t0 = {k: int(v) for k, v in data_start_time_dict.items()}
         data_time_profile = pd.to_datetime(data[["Year", "Month", "Day", "Hour", "Minute"]])
@@ -142,6 +236,20 @@ class WTKNRELDeveloperAPIWindResource(WindResourceBaseAPIModel):
         return data_time_profile
 
     def format_timeseries_data(self, data):
+        """Convert data to a dictionary with keys that follow the standardized naming convention and
+        create a dictionary containing the units for the data.
+
+        Args:
+            data (pd.DataFrame): Dataframe of timeseries data.
+
+        Returns:
+            2-element tuple containing
+
+            - **data** (*dict*): data dictionary with keys following the standardized naming
+                convention.
+            - **data_units** (*dict*): dictionary with same keys as `data` and values as the
+                data units in OpenMDAO compatible format.
+        """
         time_cols = ["Year", "Month", "Day", "Hour", "Minute"]
         data_cols_init = [c for c in data.columns.to_list() if c not in time_cols]
         data_rename_mapper = {}
