@@ -177,7 +177,7 @@ def test_convert_time_list_to_dict(subtests):
     time_dict = convert_time_list_to_dict(time_str)
 
     with subtests.test("timezone is the same"):
-        assert time_dict["tz"] == float(tz_init)
+        assert time_dict["tz"] == "-0400"
 
     time_dict.pop("tz")
     input_time_profile = pd.to_datetime(time_profile_datetime)

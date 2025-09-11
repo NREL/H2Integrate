@@ -139,13 +139,13 @@ def convert_time_list_to_dict(time_list_str):
         minutes[i] = date.minute
     tz = str(date.tzinfo).replace("UTC", "").replace(":", "")
     if tz == "":
-        tz = 0
+        tz = "+0000"
     time_dict = {
         "Year": years,
         "Month": months,
         "Day": days,
         "Hour": hours,
         "Minute": minutes,
-        "tz": float(tz),
+        "tz": tz,
     }
     return time_dict
