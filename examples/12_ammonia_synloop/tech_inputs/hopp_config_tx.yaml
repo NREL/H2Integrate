@@ -31,9 +31,9 @@ technologies:
     num_turbines: 148 # 175
     turbine_rating_kw: 6000.0
     operational_losses: 10.49
-    model_name: floris
+    model_name: pysam #floris
     timestep: [0, 8760]
-    floris_config: tech_inputs/floris_input_lbw_6MW.yaml
+    # floris_config: tech_inputs/floris_input_lbw_6MW.yaml
     fin_model:
       battery_system:
         batt_replacement_schedule_percent: [0]
@@ -118,8 +118,8 @@ technologies:
         ppa_price_input: [0.0] # cents/kWh
         ppa_escalation: 0 # %
   battery:
-    system_capacity_kwh: 96 # 375750
-    system_capacity_kw: 96 # 375750
+    system_capacity_kwh: 2000000
+    system_capacity_kw: 500000
     minimum_SOC: 20.0
     maximum_SOC: 100.0
     initial_SOC: 90.0

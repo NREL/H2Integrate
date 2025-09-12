@@ -66,6 +66,15 @@ class HOPPComponent(CostModelBaseClass):
         self.add_output("curtailment_percent", units="percent", val=0.0)
         self.add_output("aep", units="kW*h", val=0.0)
         self.add_output(
+            "wind_electricity_out", val=np.zeros(n_timesteps), units="kW", desc="Power output"
+        )
+        self.add_output(
+            "solar_electricity_out", val=np.zeros(n_timesteps), units="kW", desc="Power output"
+        )
+        self.add_output(
+            "battery_electricity_out", val=np.zeros(n_timesteps), units="kW", desc="Power output"
+        )
+        self.add_output(
             "electricity_out", val=np.zeros(n_timesteps), units="kW", desc="Power output"
         )
         self.add_output("battery_duration", val=0.0, units="h", desc="Battery duration")
@@ -87,6 +96,9 @@ class HOPPComponent(CostModelBaseClass):
         keys_of_interest = [
             "percent_load_missed",
             "curtailment_percent",
+            "wind_out",
+            "solar_out",
+            "battery_out",
             "combined_hybrid_power_production_hopp",
             "annual_energies",
             "capex",
@@ -171,6 +183,9 @@ class HOPPComponent(CostModelBaseClass):
         outputs["percent_load_missed"] = subset_of_hopp_results["percent_load_missed"]
         outputs["curtailment_percent"] = subset_of_hopp_results["curtailment_percent"]
         outputs["aep"] = subset_of_hopp_results["annual_energies"]["hybrid"]
+        outputs["wind_electricity_out"] = subset_of_hopp_results["wind_out"]
+        outputs["solar_electricity_out"] = subset_of_hopp_results["solar_out"]
+        outputs["battery_electricity_out"] = subset_of_hopp_results["battery_out"]
         outputs["electricity_out"] = subset_of_hopp_results["combined_hybrid_power_production_hopp"]
         outputs["CapEx"] = subset_of_hopp_results["capex"]
         outputs["OpEx"] = subset_of_hopp_results["opex"]

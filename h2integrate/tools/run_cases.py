@@ -1,6 +1,7 @@
 import operator
 from functools import reduce
 
+import numpy as np
 import pandas as pd
 
 
@@ -74,7 +75,10 @@ Output: h2i_model: H2IntegrateModel that is modified with the new tech_config va
 
 
 def mod_tech_config(h2i_model, tech_config_case):
-    for index_list, value in tech_config_case.items():
+    for index_tup, value in tech_config_case.items():
+        index_list = list(index_tup)
+        while np.nan in index_list:
+            index_list.remove(np.nan)
         setInDict(h2i_model.technology_config, index_list, float(value))
 
     return h2i_model
