@@ -347,7 +347,7 @@ class H2IntegrateModel:
             # attaches a ProFAST financial model component to the plant.
 
         """
-
+        # if there aren't any finance parameters don't setup a financial model
         if "finance_parameters" not in self.plant_config:
             return
 
@@ -361,13 +361,11 @@ class H2IntegrateModel:
             and "model_inputs" in self.plant_config["finance_parameters"]
         ):
             if default_finance_model_name in self.plant_config["finance_parameters"]:
-                # create a default finance model name if user has an unused finance
-                # group named "default".
-                default_finance_model_name = [
-                    f"default_{i}"
-                    for i in range(5)
-                    if f"default_{i}" not in self.plant_config["finance_parameters"]
-                ][0]
+                # treat "default" as a protected key
+                raise ValueError(
+                    "`default` is a protected finance group name, please change the "
+                    "name of the finance group to something else."
+                )
             default_model_name = self.plant_config["finance_parameters"].pop("finance_model")
             default_model_inputs = self.plant_config["finance_parameters"].pop("model_inputs")
             default_model_dict = {
@@ -418,17 +416,17 @@ class H2IntegrateModel:
             if commodity is None:
                 raise ValueError(f"Missing ``commodity`` provided in subgroup {subgroup_name}")
 
-            tech_configs = {
-                tech: self.technology_config["technologies"][tech]
-                for tech in tech_names
-                if tech in self.technology_config["technologies"]
-            }
-
-            if not tech_configs:
-                raise ValueError(
-                    f"Subgroup {subgroup} contains no valid technologies. "
-                    f"Available techs: {list(self.technology_config['technologies'].keys())}"
-                )
+            tech_configs = {}
+            for tech in tech_names:
+                if tech in self.technology_config["technologies"]:
+                    tech_configs[tech] = self.technology_config["technologies"][tech]
+                else:
+                    raise KeyError(
+                        f"Technology '{tech}' not found in the technology configuration, "
+                        f"but is listed in subgroup '{subgroup_name}', "
+                        "Available "
+                        f"technologies: {list(self.technology_config['technologies'].keys())}"
+                    )
 
             financial_groups.update(
                 {
