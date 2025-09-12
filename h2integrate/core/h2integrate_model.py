@@ -359,11 +359,13 @@ class H2IntegrateModel:
             and "model_inputs" in self.plant_config["finance_parameters"]
         ):
             if default_finance_model_name in self.plant_config["finance_parameters"]:
-                # treat "default" as a protected key
-                raise ValueError(
-                    "`default` is a protected finance group name, please change the "
-                    "name of the finance group to something else."
+                # throw an error if the user has an unused finance group named "default".
+                msg = (
+                    "Invalid key `default` in plant_config['finance_parameters']. "
+                    "Please rename the `default` key to something else or remove it. "
+                    "The name `default` will be used to reference the finance model group."
                 )
+                raise ValueError(msg)
             default_model_name = self.plant_config["finance_parameters"].pop("finance_model")
             default_model_inputs = self.plant_config["finance_parameters"].pop("model_inputs")
             default_model_dict = {
