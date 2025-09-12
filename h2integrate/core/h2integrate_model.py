@@ -331,7 +331,7 @@ class H2IntegrateModel:
             * Constructs and attaches OpenMDAO financial subsystem groups to the
             plant model under names ``financials_subgroup_<subgroup_name>``.
             * Stores processed subgroup configurations in
-            ``self.financial_groups``.
+            ``self.financial_subgroups``.
 
         Example:
             Suppose ``plant_config["finance_parameters"]`` defines a single finance
@@ -352,7 +352,8 @@ class H2IntegrateModel:
             return
 
         subgroups = self.plant_config["finance_parameters"].get("subgroups", None)
-        financial_groups = {}
+
+        financial_subgroups = {}
 
         default_finance_model_name = "default"
         # only one finance model is being used with subgroups
@@ -428,7 +429,7 @@ class H2IntegrateModel:
                         f"technologies: {list(self.technology_config['technologies'].keys())}"
                     )
 
-            financial_groups.update(
+            financial_subgroups.update(
                 {
                     subgroup_name: {
                         "tech_configs": tech_configs,
@@ -436,12 +437,12 @@ class H2IntegrateModel:
                     }
                 }
             )
-            financial_group = om.Group()
+            financial_subgroup = om.Group()
 
-            # TODO: dont add this subsystem unless required
-            financial_group.add_subsystem(
-                "electricity_sum", ElectricitySumComp(tech_configs=tech_configs)
-            )
+            if commodity == "electricity":
+                financial_subgroup.add_subsystem(
+                    "electricity_sum", ElectricitySumComp(tech_configs=tech_configs)
+                )
 
             # Add adjusted capex/opex
             adjusted_capex_opex_comp = AdjustedCapexOpexComp(
@@ -450,7 +451,7 @@ class H2IntegrateModel:
                 plant_config=self.plant_config,
             )
 
-            financial_group.add_subsystem(
+            financial_subgroup.add_subsystem(
                 "adjusted_capex_opex_comp", adjusted_capex_opex_comp, promotes=["*"]
             )
 
@@ -543,12 +544,12 @@ class H2IntegrateModel:
                 )
 
                 # add the finance component to the finance group
-                financial_group.add_subsystem(finance_subsystem_name, fin_comp, promotes=["*"])
+                financial_subgroup.add_subsystem(finance_subsystem_name, fin_comp, promotes=["*"])
 
             # add the finance group to the subgroup
-            self.plant.add_subsystem(f"financials_subgroup_{subgroup_name}", financial_group)
+            self.plant.add_subsystem(f"financials_subgroup_{subgroup_name}", financial_subgroup)
 
-        self.financial_groups = financial_groups
+        self.financial_subgroups = financial_subgroups
 
     def get_included_technologies(self, tech_config, commodity_type, plant_config):
         """
@@ -715,7 +716,7 @@ class H2IntegrateModel:
         # same name if the cost and financial models are not None
         if "finance_parameters" in self.plant_config:
             # Connect the outputs of the technology models to the appropriate financial groups
-            for group_id, group_configs in self.financial_groups.items():
+            for group_id, group_configs in self.financial_subgroups.items():
                 tech_configs = group_configs.get("tech_configs")
                 primary_commodity_type = group_configs.get("commodity")
                 # Skip steel financials; it provides its own financials
@@ -745,7 +746,11 @@ class H2IntegrateModel:
                 # Only connect if the technology is included in at least one commodity's stackup
                 # and in this financial group
                 for tech_name in tech_configs.keys():
-                    if tech_name in electricity_producing_techs and tech_name in all_included_techs:
+                    if (
+                        tech_name in electricity_producing_techs
+                        and tech_name in all_included_techs
+                        and primary_commodity_type == "electricity"
+                    ):
                         self.plant.connect(
                             f"{tech_name}.electricity_out",
                             f"financials_subgroup_{group_id}.electricity_sum.electricity_{tech_name}",
