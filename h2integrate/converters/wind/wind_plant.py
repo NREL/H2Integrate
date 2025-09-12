@@ -150,6 +150,8 @@ class WindPlantPerformanceModel(WindPerformanceBaseClass):
             "data": site_data,
             "hub_height": self.config.hub_height,
             "wind_resource": resource_data,
+            "solar": False,
+            "wind": True,
         }
 
         self.site = SiteInfo.from_dict(site_info)
