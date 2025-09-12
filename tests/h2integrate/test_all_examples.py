@@ -245,6 +245,7 @@ def test_co2h_methanol_example(subtests):
         assert pytest.approx(model.prob.get_val("methanol.LCOM"), rel=1e-6) == 1.38341179
 
 
+@unittest.skipUnless(importlib.util.find_spec("mcm") is not None, "mcm is not installed")
 def test_doc_methanol_example(subtests):
     # Change the current working directory to the CO2 Hydrogenation example's directory
     os.chdir(EXAMPLE_DIR / "03_methanol" / "co2_hydrogenation_doc")
