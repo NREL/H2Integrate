@@ -285,32 +285,3 @@ def dict_to_yaml_formatting(orig_dict):
                 else:
                     orig_dict[key] = float(val)
     return orig_dict
-
-
-def determine_commodity_types_from_technology_names(tech_configs, electricity_producing_techs):
-    """Determines the commodity types present in a plant based on the technology names."""
-
-    commodity_types = []
-
-    if "steel" in tech_configs:
-        commodity_types.append("steel")
-    if "electrolyzer" in tech_configs:
-        commodity_types.append("hydrogen")
-    if "methanol" in tech_configs:
-        commodity_types.append("methanol")
-    if "ammonia" in tech_configs:
-        commodity_types.append("ammonia")
-    if "geoh2" in tech_configs:
-        commodity_types.append("hydrogen")
-    if "doc" in tech_configs:
-        commodity_types.append("co2")
-    if "air_separator" in tech_configs:
-        commodity_types.append("nitrogen")
-    if "oae" in tech_configs:
-        commodity_types.append("co2")
-    for tech in electricity_producing_techs:
-        if tech in tech_configs:
-            commodity_types.append("electricity")
-            break
-
-    return commodity_types
