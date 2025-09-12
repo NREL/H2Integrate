@@ -52,3 +52,7 @@ def test_check_resource_dir_environment_var(subtests):
     output_dir = check_resource_dir(resource_subdir="wind")
     with subtests.test("Environment variable resource_dir, with resource_subdir"):
         assert str(output_dir) == str(Path(resource_dir) / "wind")
+
+    # unset environment variable for other tests
+    os.environ.pop("RESOURCE_DIR", None)
+    assert os.getenv("RESOURCE_DIR") is None

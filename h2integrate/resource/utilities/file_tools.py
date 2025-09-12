@@ -40,16 +40,16 @@ def check_resource_dir(resource_dir=None, resource_subdir=None):
         if not Path(resource_dir).is_dir():
             Path.mkdir(resource_dir, exist_ok=True)
         if resource_subdir is None:
-            if os.getenv("GITHUB_ACTIONS") == "true":
-                return Path(resource_dir)
-            else:
-                return Path(resource_dir).absolute()
+            # if os.getenv("GITHUB_ACTIONS") == "true":
+            #     return Path(resource_dir)
+            # else:
+            return Path(resource_dir).absolute()
         resource_full_dir = Path(resource_dir) / resource_subdir
         resource_full_dir = check_resource_dir(resource_dir=resource_full_dir)
-        if os.getenv("GITHUB_ACTIONS") == "true":
-            return resource_full_dir
-        else:
-            return resource_full_dir.absolute()
+        # if os.getenv("GITHUB_ACTIONS") == "true":
+        #     return resource_full_dir
+        # else:
+        return resource_full_dir.absolute()
 
     # Check for user-defined environment variable with resource subdir
     resource_dir = os.getenv("RESOURCE_DIR")
@@ -57,23 +57,23 @@ def check_resource_dir(resource_dir=None, resource_subdir=None):
         if not Path(resource_dir).is_dir():
             Path.mkdir(resource_dir, exist_ok=True)
         if resource_subdir is None:
-            if os.getenv("GITHUB_ACTIONS") == "true":
-                return Path(resource_dir)
-            else:
-                return Path(resource_dir).absolute()
+            # if os.getenv("GITHUB_ACTIONS") == "true":
+            #     return Path(resource_dir)
+            # else:
+            return Path(resource_dir).absolute()
         resource_full_dir = Path(resource_dir) / resource_subdir
         resource_full_dir = check_resource_dir(resource_dir=resource_full_dir)
-        if os.getenv("GITHUB_ACTIONS") == "true":
-            return resource_full_dir
-        else:
-            return resource_full_dir.absolute()
+        # if os.getenv("GITHUB_ACTIONS") == "true":
+        #     return resource_full_dir
+        # else:
+        return resource_full_dir.absolute()
 
     # use default resource directory
     if resource_subdir is None:
         return RESOURCE_DEFAULT_DIR
     resource_full_dir = RESOURCE_DEFAULT_DIR / resource_subdir
     resource_full_dir = check_resource_dir(resource_dir=resource_full_dir)
-    if os.getenv("GITHUB_ACTIONS") == "true":
-        return resource_full_dir
-    else:
-        return resource_full_dir.absolute()
+    # if os.getenv("GITHUB_ACTIONS") == "true":
+    #     return resource_full_dir
+    # else:
+    return resource_full_dir.absolute()
