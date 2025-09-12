@@ -1,7 +1,7 @@
 site: #!include flatirons_site.yaml
   data:
-    lat: 32.31714
-    lon: -100.18
+    lat: 31.54017
+    lon: -104.043088
     elev: 762
     year: 2013
     tz: -6
@@ -16,8 +16,8 @@ site: #!include flatirons_site.yaml
         - [0.0, 20000.0]
         - [20000.0, 20000.0]
         - [20000.0, 0.0]
-  solar_resource_file: "tech_inputs/weather/solar/32.31714_-100.18_psmv3_60_2013.csv"
-  wind_resource_file: "tech_inputs/weather/wind/32.31714_-100.18_windtoolkit_2013_60min_100m_120m.srw"
+  solar_resource_file: ""
+  wind_resource_file: ""
   wave_resource_file: ""
   grid_resource_file: ""
   hub_height: 115.0
@@ -28,7 +28,7 @@ site: #!include flatirons_site.yaml
   wind_resource_origin: "WTK"
 technologies:
   wind:
-    num_turbines: 148 # 175
+    num_turbines: 300 # 175
     turbine_rating_kw: 6000.0
     operational_losses: 10.49
     model_name: pysam #floris
@@ -75,7 +75,7 @@ technologies:
         ppa_price_input: [0.0] # cents/kWh
         ppa_escalation: 0 # %
   pv:
-    system_capacity_kw: 400000 # 750500
+    system_capacity_kw: 600001 # 750500
     dc_degradation: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     fin_model:
       battery_system:
@@ -118,8 +118,8 @@ technologies:
         ppa_price_input: [0.0] # cents/kWh
         ppa_escalation: 0 # %
   battery:
-    system_capacity_kwh: 2000000
-    system_capacity_kw: 500000
+    system_capacity_kwh: 4000000
+    system_capacity_kw: 1000000
     minimum_SOC: 20.0
     maximum_SOC: 100.0
     initial_SOC: 90.0
