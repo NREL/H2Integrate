@@ -354,16 +354,16 @@ class H2IntegrateModel:
         subgroups = self.plant_config["finance_parameters"].get("subgroups", None)
         financial_groups = {}
 
-        default_finance_model_nickname = "default"
+        default_finance_model_name = "default"
         # only one finance model is being used with subgroups
         if (
             "finance_model" in self.plant_config["finance_parameters"]
             and "model_inputs" in self.plant_config["finance_parameters"]
         ):
-            if default_finance_model_nickname in self.plant_config["finance_parameters"]:
-                # create a default finance model nickname if user has an unused finance
-                # group nicknamed "default".
-                default_finance_model_nickname = [
+            if default_finance_model_name in self.plant_config["finance_parameters"]:
+                # create a default finance model name if user has an unused finance
+                # group named "default".
+                default_finance_model_name = [
                     f"default_{i}"
                     for i in range(5)
                     if f"default_{i}" not in self.plant_config["finance_parameters"]
@@ -371,7 +371,7 @@ class H2IntegrateModel:
             default_model_name = self.plant_config["finance_parameters"].pop("finance_model")
             default_model_inputs = self.plant_config["finance_parameters"].pop("model_inputs")
             default_model_dict = {
-                default_finance_model_nickname: {
+                default_finance_model_name: {
                     "finance_model": default_model_name,
                     "model_inputs": default_model_inputs,
                 }
@@ -383,7 +383,7 @@ class H2IntegrateModel:
             commodity = self.plant_config["finance_parameters"].get("commodity")
             finance_model_name = (
                 self.plant_config["finance_parameters"]
-                .get(default_finance_model_nickname, {})
+                .get(default_finance_model_name, {})
                 .get("finance_model")
             )
 
@@ -397,22 +397,22 @@ class H2IntegrateModel:
             all_techs = list(self.technology_config["technologies"].keys())
             subgroup = {
                 "commodity": commodity,
-                "finance_groups": [default_finance_model_nickname],
+                "finance_groups": [default_finance_model_name],
                 "technologies": all_techs,
             }
-            subgroups = {default_finance_model_nickname: subgroup}
+            subgroups = {default_finance_model_name: subgroup}
 
         # --- Normal subgroup handling ---
         for subgroup_name, subgroup_params in subgroups.items():
             commodity = subgroup_params.get("commodity", None)
             commodity_desc = subgroup_params.get("commodity_desc", "")
-            finance_model_nicknames = subgroup_params.get(
-                "finance_groups", [default_finance_model_nickname]
+            finance_model_names = subgroup_params.get(
+                "finance_groups", [default_finance_model_name]
             )
             tech_names = subgroup_params.get("technologies")
 
-            if isinstance(finance_model_nicknames, str):
-                finance_model_nicknames = [finance_model_nicknames]
+            if isinstance(finance_model_names, str):
+                finance_model_names = [finance_model_names]
 
             # check commodity type
             if commodity is None:
@@ -456,16 +456,14 @@ class H2IntegrateModel:
                 "adjusted_capex_opex_comp", adjusted_capex_opex_comp, promotes=["*"]
             )
 
-            for finance_model_nickname in finance_model_nicknames:
+            for finance_model_name in finance_model_names:
                 # check if using tech-specific finance model
                 if any(
-                    tech_name == finance_model_nickname
+                    tech_name == finance_model_name
                     for tech_name, tech_params in tech_configs.items()
                 ):
                     tech_finance_model_name = (
-                        tech_configs.get(finance_model_nickname)
-                        .get("financial_model", {})
-                        .get("model")
+                        tech_configs.get(finance_model_name).get("financial_model", {}).get("model")
                     )
 
                     # this is created in create_technologies()
@@ -475,9 +473,9 @@ class H2IntegrateModel:
                         continue
 
                 # if not using a tech-specific finance model, get the finance model and inputs for
-                # the finance model group specified by finance_model_nickname
+                # the finance model group specified by finance_model_name
                 finance_model_config = self.plant_config["finance_parameters"].get(
-                    finance_model_nickname
+                    finance_model_name
                 )
                 model_name = finance_model_config.get("finance_model")  # finance model
                 fin_model_inputs = finance_model_config.get(
@@ -499,7 +497,7 @@ class H2IntegrateModel:
                 }
 
                 # then, reformat the finance_parameters to only include inputs for the
-                # finance group specified by finance_model_nickname
+                # finance group specified by finance_model_name
                 filtered_plant_config.update(
                     {
                         "finance_parameters": {
@@ -513,11 +511,11 @@ class H2IntegrateModel:
                 commodity_output_desc = subgroup_params.get("commodity_desc", "")
 
                 # check if multiple finance model groups are specified for the subgroup
-                if len(finance_model_nicknames) > 1:
+                if len(finance_model_names) > 1:
                     # check that the finance model groups do not include tech-specific finances
                     non_tech_financials = [
                         k
-                        for k in finance_model_nicknames
+                        for k in finance_model_names
                         if k in self.plant_config["finance_parameters"]
                     ]
 
@@ -526,9 +524,9 @@ class H2IntegrateModel:
                     # avoid errors.
                     if len(non_tech_financials) > 1:
                         # finance models name their outputs based on the description and commodity
-                        # update the description to include the finance model nickname to ensure
+                        # update the description to include the finance model name to ensure
                         # uniquely named outputs
-                        commodity_output_desc = commodity_output_desc + f"_{finance_model_nickname}"
+                        commodity_output_desc = commodity_output_desc + f"_{finance_model_name}"
 
                 # create the finance component
                 fin_comp = fin_model(
@@ -541,9 +539,9 @@ class H2IntegrateModel:
 
                 # name the finance component based on the commodity and description
                 finance_subsystem_name = (
-                    f"{finance_model_nickname}_{commodity}"
+                    f"{finance_model_name}_{commodity}"
                     if commodity_desc == ""
-                    else f"{finance_model_nickname}_{commodity}_{commodity_desc}"
+                    else f"{finance_model_name}_{commodity}_{commodity_desc}"
                 )
 
                 # add the finance component to the finance group
