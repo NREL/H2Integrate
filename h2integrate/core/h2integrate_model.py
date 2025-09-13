@@ -500,7 +500,7 @@ class H2IntegrateModel:
                     "model_inputs"
                 )  # inputs to finance model
 
-                # Add finance model component
+                # get finance model component definition
                 fin_model = self.supported_models.get(model_name)
 
                 if fin_model is None:
