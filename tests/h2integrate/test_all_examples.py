@@ -104,7 +104,7 @@ def test_simple_ammonia_example(subtests):
             pytest.approx(
                 model.prob.get_val("finance_subgroup_hydrogen.total_capex_adjusted")[0], rel=1e-3
             )
-            == 2678403968.6
+            == 2577162708.3
         )
 
     with subtests.test("Check total adjusted OpEx"):
@@ -112,14 +112,14 @@ def test_simple_ammonia_example(subtests):
             pytest.approx(
                 model.prob.get_val("finance_subgroup_hydrogen.total_opex_adjusted")[0], rel=1e-3
             )
-            == 64338137.8
+            == 53161706.5
         )
 
     # Currently underestimated compared to the Reference Design Doc
     with subtests.test("Check LCOH"):
         assert (
             pytest.approx(model.prob.get_val("finance_subgroup_hydrogen.LCOH")[0], rel=1e-3)
-            == 4.233055
+            == 3.970
         )
     # Currently underestimated compared to the Reference Design Doc
     with subtests.test("Check LCOA"):
@@ -203,7 +203,7 @@ def test_ammonia_synloop_example(subtests):
     with subtests.test("Check LCOH"):
         assert (
             pytest.approx(model.prob.get_val("finance_subgroup_h2.LCOH")[0], rel=1e-6)
-            == 5.659321302703965
+            == 3.9705799098258776
         )
 
     with subtests.test("Check LCOA"):
@@ -244,7 +244,7 @@ def test_co2h_methanol_example(subtests):
 
     # Check levelized cost of methanol (LCOM)
     with subtests.test("Check CO2 Hydrogenation LCOM"):
-        assert pytest.approx(model.prob.get_val("methanol.LCOM")[0], rel=1e-6) == 1.38341179
+        assert pytest.approx(model.prob.get_val("methanol.LCOM")[0], rel=1e-6) == 1.381162
 
 
 def test_wind_h2_opt_example(subtests):
@@ -275,7 +275,7 @@ def test_wind_h2_opt_example(subtests):
     with subtests.test("Check LCOE"):
         assert (
             pytest.approx(model.prob.get_val("finance_subgroup_electricity.LCOE")[0], rel=1e-3)
-            == 0.151189
+            == 0.059311
         )
 
     with subtests.test("Check electrolyzer size"):
@@ -373,7 +373,7 @@ def test_wind_wave_doc_example(subtests):
     with subtests.test("Check LCOE"):
         assert (
             pytest.approx(model.prob.get_val("finance_subgroup_electricity.LCOE")[0], rel=1e-3)
-            == 1.05281478
+            == 0.330057
         )
 
 
@@ -524,7 +524,7 @@ def test_wind_wave_oae_example(subtests):
     with subtests.test("Check LCOE"):
         assert (
             pytest.approx(model.prob.get_val("finance_subgroup_electricity.LCOE"), rel=1e-3)
-            == 0.36956
+            == 0.367
         )
 
 

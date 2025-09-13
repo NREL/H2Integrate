@@ -68,7 +68,7 @@ finance_parameters:
       technologies: ["hopp"]
     hydrogen:
       commodity: "hydrogen"
-      technologies: ["hopp", "electrolyzer", "h2_storage", "ammonia"]
+      technologies: ["hopp", "electrolyzer", "h2_storage"]
     ammonia:
       commodity: "ammonia"
       technologies: ["hopp", "electrolyzer", "h2_storage", "ammonia"]
