@@ -1,3 +1,4 @@
+(financeparameters:specifiyingfinanceparameters)=
 # Finance Parameters
 ## Overview
 The `finance_parameters` section of the `plant_config` defines the financial subsystems of the plant. These parameters configure how costs, revenues, and investment metrics are calculated across all or parts of the modeled system.
@@ -137,8 +138,9 @@ finance_parameters:
 Output naming:
 - If multiple finance groups are in the same subgroup, output names include the subgroup, commodity, description (if provided), and finance group name to avoid collisions in the OpenMDAO framework:
 ```
-finance_subgroup_subgroup_a.price_hydrogen_group_a
-finance_subgroup_subgroup_b.price_hydrogen_delivered_group_a
+finance_subgroup_<subgroup_name>.<financial_model_output>_<commodity_desc>_<financial_group>
+finance_subgroup_subgroup_a.LCOH_group_a
+finance_subgroup_subgroup_b.LCOH_delivered_group_a
 finance_subgroup_subgroup_b.NPV_hydrogen_delivered_group_b
 ```
 

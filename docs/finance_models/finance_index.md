@@ -6,16 +6,12 @@
 
 - `driver_config` (dict): the `folder_outputs` specified here may be used by the finance model if the finance model outputs data to a file.
 - `tech_config` (dict): the technology configs for the technologies to include in the finance calculations
-- `plant_config` (dict): contains the `model_inputs` for the finance model.
+- `plant_config` (dict): contains the `finance_parameters` for the finance model (see [Finance Parameters](financeparameters:specifiyingfinanceparameters)).
 - `commodity_type` (str): the name of the commodity to use in the finance calculation.
 - `description` (str, optional): an additional description to use for naming outputs of the finance model.
 
 ```{note}
 The `commodity_type` and `description` are used in the finance model naming convention. Specifics on the output naming convention for each finance model can be found in their docs.
-```
-
-```{note}
-The `tech_config` and `plant_config` are reformatted from their original format within `H2IntegrateModel` when creating the finance models as a preprocessing step.
 ```
 
 (finance:supportedmodels)=
