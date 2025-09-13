@@ -143,7 +143,6 @@ class PyomoControllerBaseClass(ControllerBaseClass):
 
                 performance_model(
                     self.storage_amount,
-                    inputs["demand_in"][t : t + self.config.n_control_window],
                     **performance_model_kwargs,
                     sim_start_index=t,
                 )
@@ -172,7 +171,6 @@ class PyomoControllerBaseClass(ControllerBaseClass):
     #             self.excess_resource = -1 * (resource_in[t] - P_chargeable)
     #             # Limit the charging power to the availabile capacity of the battery
     #             resource_in[t] = P_chargeable
-        
 
     @staticmethod
     def dispatch_block_rule(block, t):
@@ -351,11 +349,11 @@ class SimpleBatteryControllerHeuristic(PyomoControllerBaseClass):
         self.initial_soc = self._system_model.value("SOC")
 
     def set_fixed_dispatch(
-            self,
-            resource_in: list,
-            max_charge_rate: list,
-            max_discharge_rate: list,
-        ):
+        self,
+        resource_in: list,
+        max_charge_rate: list,
+        max_discharge_rate: list,
+    ):
         """Sets charge and discharge amount of storage dispatch using fixed_dispatch attribute
             and enforces available generation and charge/discharge limits.
 
@@ -375,11 +373,8 @@ class SimpleBatteryControllerHeuristic(PyomoControllerBaseClass):
         self._fix_dispatch_model_variables()
 
     def check_resource_in_discharge_limit(
-            self,
-            resource_in: list,
-            max_charge_rate: list,
-            max_discharge_rate: list
-        ):
+        self, resource_in: list, max_charge_rate: list, max_discharge_rate: list
+    ):
         """Checks if resource in and discharge limit lengths match fixed_dispatch length.
 
         Args:
@@ -399,11 +394,8 @@ class SimpleBatteryControllerHeuristic(PyomoControllerBaseClass):
             raise ValueError("max_discharge_rate must be the same length as fixed_dispatch.")
 
     def _set_resource_fraction_limits(
-            self,
-            resource_in: list,
-            max_charge_rate: list,
-            max_discharge_rate: list
-        ):
+        self, resource_in: list, max_charge_rate: list, max_discharge_rate: list
+    ):
         """Set storage charge and discharge fraction limits based on
         available generation and grid capacity, respectively.
 
@@ -715,12 +707,12 @@ class HeuristicLoadFollowingController(SimpleBatteryControllerHeuristic):
             self.discharge_efficiency = self.config.discharge_efficiency
 
     def set_fixed_dispatch(
-            self,
-            resource_in: list,
-            max_charge_rate: list,
-            max_discharge_rate: list,
-            resource_demand: list
-        ):
+        self,
+        resource_in: list,
+        max_charge_rate: list,
+        max_discharge_rate: list,
+        resource_demand: list,
+    ):
         """Sets charge and discharge power of battery dispatch using fixed_dispatch attribute
             and enforces available generation and charge/discharge limits.
 

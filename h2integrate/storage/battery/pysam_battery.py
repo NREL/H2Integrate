@@ -269,8 +269,7 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass, CostModelBaseCla
         else:
             # Simulate the battery with provided inputs
             self.simulate(
-                electricity_in=inputs["electricity_in"],
-                demand_in=inputs["demand_in"],
+                storage_dispatch_commands=inputs["electricity_in"],
                 time_step_duration=self.config.dt,
                 control_variable=discrete_inputs["control_variable"],
             )
@@ -288,8 +287,7 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass, CostModelBaseCla
 
     def simulate(
         self,
-        electricity_in: list,
-        demand_in: list,
+        storage_dispatch_commands: list,
         time_step_duration: list,
         control_variable: str,
         sim_start_index: int = 0,
@@ -306,40 +304,40 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass, CostModelBaseCla
         # Loop through the provided input power/current (decided by control_variable)
         self.system_model.value("dt_hr", time_step_duration)
 
-        for t in range(len(electricity_in)):
+        for t in range(len(storage_dispatch_commands)):
             # Set to 0.0 for each loop start
             self.unmet_demand = 0.0
             self.excess_resource = 0.0
-            self.requested_electricity = electricity_in[t]
+            self.requested_electricity = storage_dispatch_commands[t]
 
             # Grab the available charge/discharge capacity of the battery
             P_chargeable = self.system_model.value("P_chargeable")
 
             # If discharging... electricity_in is the commanded electricity from dispatch,
             # accounting for demand, positive is charge and negative is discharge
-            if electricity_in[t] > 0.0:
+            if storage_dispatch_commands[t] > 0.0:
                 # If the battery has been discharged to its minimum SOC level (with a tolerance)
                 if (self.system_model.value("SOC") - self.system_model.value("minimum_SOC")) < 0.05:
-                    self.unmet_demand = electricity_in[t]
+                    self.unmet_demand = storage_dispatch_commands[t]
                     # Avoid trickle power by setting to 0.0
-                    electricity_in[t] = 0.0
+                    storage_dispatch_commands[t] = 0.0
 
             # If charging...
-            elif electricity_in[t] < 0.0:
+            elif storage_dispatch_commands[t] < 0.0:
                 # If the input electricity magnitude is greater than the battery chargeable capacity
-                if electricity_in[t] < P_chargeable:
+                if storage_dispatch_commands[t] < P_chargeable:
                     # Eliminates trickle power (~10-15 kW) when battery is fully charged
                     if P_chargeable > 0.0:
                         P_chargeable = 0.0
 
                     # Change the sign to indicate that a positive amount of power is being
                     # passed through the battery model
-                    self.excess_resource = -1 * (electricity_in[t] - P_chargeable)
+                    self.excess_resource = -1 * (storage_dispatch_commands[t] - P_chargeable)
                     # Limit the charging power to the available capacity of the battery
-                    electricity_in[t] = P_chargeable
+                    storage_dispatch_commands[t] = P_chargeable
 
             # Set the input variable to the desired value
-            self.system_model.value(control_variable, electricity_in[t])
+            self.system_model.value(control_variable, storage_dispatch_commands[t])
 
             # Simulate the PySAM BatteryStateful model
             self.system_model.execute(0)
