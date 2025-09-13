@@ -82,7 +82,7 @@ class H2IntegrateModel:
         """
 
         for tech_name, tech_config in self.technology_config["technologies"].items():
-            for model_type in ["performance_model", "cost_model", "financial_model"]:
+            for model_type in ["performance_model", "cost_model", "finance_model"]:
                 if model_type in tech_config:
                     model_name = tech_config[model_type].get("model")
                     if (model_name not in self.supported_models) and (model_name is not None):
