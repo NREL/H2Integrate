@@ -79,9 +79,12 @@ def test_demand_controller(subtests):
     with tech_config_path.open() as file:
         tech_config = yaml.safe_load(file)
 
+    plant_config = {"plant": {"simulation": {"n_timesteps": 10}}}
+
     tech_config["technologies"]["h2_storage"]["control_strategy"]["model"] = (
         "demand_openloop_controller"
     )
+
     tech_config["technologies"]["h2_storage"]["model_inputs"]["control_parameters"] = {
         "resource_name": "hydrogen",
         "resource_rate_units": "kg/h",
@@ -94,7 +97,6 @@ def test_demand_controller(subtests):
         "charge_efficiency": 1.0,
         "discharge_efficiency": 1.0,
         "demand_profile": [1.0] * 10,  # Example: 10 time steps with 10 kg/time step demand
-        "n_timesteps": 10,
     }
 
     # Set up the OpenMDAO problem
@@ -109,7 +111,7 @@ def test_demand_controller(subtests):
     prob.model.add_subsystem(
         "demand_openloop_controller",
         DemandOpenLoopController(
-            plant_config={}, tech_config=tech_config["technologies"]["h2_storage"]
+            plant_config=plant_config, tech_config=tech_config["technologies"]["h2_storage"]
         ),
         promotes=["*"],
     )
@@ -151,6 +153,8 @@ def test_demand_controller_round_trip_efficiency(subtests):
     with tech_config_path.open() as file:
         tech_config = yaml.safe_load(file)
 
+    plant_config = {"plant": {"simulation": {"n_timesteps": 10}}}
+
     tech_config["technologies"]["h2_storage"]["control_strategy"]["model"] = (
         "demand_openloop_controller"
     )
@@ -166,7 +170,6 @@ def test_demand_controller_round_trip_efficiency(subtests):
         "charge_efficiency": 1.0,
         "discharge_efficiency": 1.0,
         "demand_profile": [1.0] * 10,  # Example: 10 time steps with 10 kg/time step demand
-        "n_timesteps": 10,
     }
 
     tech_config_rte = deepcopy(tech_config)
@@ -181,7 +184,6 @@ def test_demand_controller_round_trip_efficiency(subtests):
         "max_discharge_rate": 0.5,  # kg/time step
         "round_trip_efficiency": 1.0,
         "demand_profile": [1.0] * 10,  # Example: 10 time steps with 10 kg/time step demand
-        "n_timesteps": 10,
     }
 
     def set_up_and_run_problem(config):
@@ -197,7 +199,7 @@ def test_demand_controller_round_trip_efficiency(subtests):
         prob.model.add_subsystem(
             "demand_openloop_controller",
             DemandOpenLoopController(
-                plant_config={}, tech_config=config["technologies"]["h2_storage"]
+                plant_config=plant_config, tech_config=config["technologies"]["h2_storage"]
             ),
             promotes=["*"],
         )

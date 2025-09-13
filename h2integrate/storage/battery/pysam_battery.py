@@ -275,8 +275,9 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass, CostModelBaseCla
                 control_variable=discrete_inputs["control_variable"],
             )
         # Store outputs from the battery model
-        outputs["electricity_out"] = (
-            np.minimum(inputs["demand_in"], inputs["electricity_in"] + self.outputs.P)
+        # TODO I'm not sure we should allow negative values here, but right now we do
+        outputs["electricity_out"] = np.minimum(
+            inputs["demand_in"], inputs["electricity_in"] + self.outputs.P
         )
         outputs["SOC"] = self.outputs.SOC
         outputs["P_chargeable"] = self.outputs.P_chargeable
@@ -314,7 +315,8 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass, CostModelBaseCla
             # Grab the available charge/discharge capacity of the battery
             P_chargeable = self.system_model.value("P_chargeable")
 
-            # If discharging... electricity_in is the commanded electricity from dispatch, accounting for demand, positive is charge and negative is discharge
+            # If discharging... electricity_in is the commanded electricity from dispatch,
+            # accounting for demand, positive is charge and negative is discharge
             if electricity_in[t] > 0.0:
                 # If the battery has been discharged to its minimum SOC level (with a tolerance)
                 if (self.system_model.value("SOC") - self.system_model.value("minimum_SOC")) < 0.05:

@@ -109,7 +109,7 @@ class H2Storage(CostModelBaseClass):
         if "pyomo_dispatch_solver" in discrete_inputs:
             dispatch = discrete_inputs["pyomo_dispatch_solver"]
             kwargs = {}
-            dispatch(self.simulate, kwargs, inputs)
+            dispatch(self.simulate, inputs, outputs, kwargs)
         else:
             self.simulate(inputs, outputs)
 
@@ -117,7 +117,10 @@ class H2Storage(CostModelBaseClass):
         ########### initialize output dictionary ###########
         h2_storage_results = {}
 
-        storage_max_fill_rate = np.max(inputs["hydrogen_in"])
+        import pdb
+
+        pdb.set_trace()
+        storage_max_fill_rate = np.maximum(inputs["hydrogen_in"])
 
         ########### get hydrogen storage size in kilograms ###########
         ##################### no hydrogen storage
