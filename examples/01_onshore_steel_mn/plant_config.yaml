@@ -25,7 +25,7 @@ technology_interconnections: [
   ["hopp", "electrolyzer", "electricity", "cable"],
   ["electrolyzer", "h2_storage", "efficiency"],
   ["electrolyzer", "h2_storage", "hydrogen", "pipe"],
-  ["financials_subgroup_hydrogen", "steel", ["LCOH_delivered", "LCOH"]],
+  ["finance_subgroup_hydrogen", "steel", ["LCOH_delivered", "LCOH"]],
   ["hopp", "steel", "electricity", "cable"],
   # etc
 ]

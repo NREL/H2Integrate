@@ -7,7 +7,7 @@ technologies:
       model: "natural_geoh2_performance"
     cost_model:
       model: "natural_geoh2_cost"
-    financial_model:
+    finance_model:
       model: "natural_geoh2"
     model_inputs:
       shared_parameters:

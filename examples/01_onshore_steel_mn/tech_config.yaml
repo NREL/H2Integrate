@@ -61,7 +61,7 @@ technologies:
       model: "steel_performance"
     cost_model:
       model: "steel_cost"
-    financial_model:
+    finance_model:
       model: "steel_cost"
     model_inputs:
       shared_parameters:

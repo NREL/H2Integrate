@@ -14,7 +14,7 @@ technologies:
   oae:
     performance_model:
       model: "ocean_alkalinity_enhancement_performance"
-    financial_model:
+    finance_model:
       model: "ocean_alkalinity_enhancement_cost_financial"
     model_inputs:
       performance_parameters:

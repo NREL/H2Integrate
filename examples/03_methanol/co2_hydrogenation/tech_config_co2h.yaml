@@ -42,7 +42,7 @@ technologies:
       model: "co2h_methanol_plant_performance"
     cost_model:
       model: "co2h_methanol_plant_cost"
-    financial_model:
+    finance_model:
       model: "co2h_methanol_plant_financial"
     model_inputs:
       shared_parameters:
