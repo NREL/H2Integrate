@@ -2,7 +2,8 @@
 (finance:overview)=
 # Finance Models Overview
 
-**General finance models** are not technology specific finance models. These models live in the `h2integrate/finances/` folder. These models accept `driver_config`, `tech_config`, `plant_config`, `commodity_type`, and a `description` as the inputs and options.
+**General finance models** compute finance metrics and are not specific to individual technologies.
+These models live in the `h2integrate/finances/` folder and accept `driver_config`, `tech_config`, `plant_config`, `commodity_type`, and a `description` as the inputs and options.
 
 - `driver_config` (dict): the `folder_outputs` specified here may be used by the finance model if the finance model outputs data to a file.
 - `tech_config` (dict): the technology configs for the technologies to include in the finance calculations
@@ -17,4 +18,4 @@ The `commodity_type` and `description` are used in the finance model naming conv
 (finance:supportedmodels)=
 ## Currently supported general finance models
 
-- [``"ProFastComp"``](profastcomp:profastcompmodel): calculates levelized cost of commodity using ProFAST.
+- [``ProFastComp``](profastcomp:profastcompmodel): calculates levelized cost of commodity using ProFAST.

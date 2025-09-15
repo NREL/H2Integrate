@@ -13,11 +13,10 @@ from h2integrate.core.inputs.validation import load_tech_yaml, load_plant_yaml, 
 from h2integrate.core.pose_optimization import PoseOptimization
 
 
-# try:
-#     import pyxdsm
-# except ImportError:
-#     pyxdsm = None
-pyxdsm = None
+try:
+    import pyxdsm
+except ImportError:
+    pyxdsm = None
 
 
 class H2IntegrateModel:
@@ -406,7 +405,7 @@ class H2IntegrateModel:
 
             if not commodity or not finance_model_name:
                 raise ValueError(
-                    "plant_config['finance_parameters']['finance_groups']"
+                    "plant_config['finance_parameters']['finance_groups'] "
                     "must define 'commodity' and 'finance_model' "
                     "if no finance_subgroups are provided."
                 )
@@ -434,7 +433,9 @@ class H2IntegrateModel:
 
             # check commodity type
             if commodity is None:
-                raise ValueError(f"Missing ``commodity`` provided in subgroup {subgroup_name}")
+                raise ValueError(
+                    f"Required parameter ``commodity`` not provided in subgroup {subgroup_name}."
+                )
 
             tech_configs = {}
             for tech in tech_names:

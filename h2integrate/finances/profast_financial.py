@@ -401,8 +401,6 @@ class ProFastComp(om.ExplicitComponent):
             recovered in years.
         price_<commodity> (float): first year price of commodity in same units as `LCOx`
 
-
-
     Methods:
         initialize(): Declares component options.
         setup(): Defines inputs and outputs based on user configuration and validates

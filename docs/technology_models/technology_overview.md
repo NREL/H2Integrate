@@ -89,13 +89,13 @@ Below summarizes the available performance, cost, and financial models for each 
 - [Storage](#storage-models)
 
 (resource-models)=
-### Resource models
+## Resource models
 - `river`:
     - performance models:
         + `river_resource`
 
 (converter-models)=
-### Converter models
+## Converter models
 - `wind`: wind turbine
     - performance models:
         + `'wind_plant_performance'`
@@ -179,7 +179,7 @@ Below summarizes the available performance, cost, and financial models for each 
         + `'reverse_osmosis_desalination_cost'`
 
 (transport-models)=
-### Transport Models
+## Transport Models
 - `cable`
     - performance models:
         + `'cable'`
@@ -191,7 +191,7 @@ Below summarizes the available performance, cost, and financial models for each 
         + `'combiner_performance'`
 
 (storage-models)=
-### Storage Models
+## Storage Models
 - `h2_storage`: hydrogen storage
     - combined performance and cost
         + `'h2_storage'`
@@ -200,6 +200,6 @@ Below summarizes the available performance, cost, and financial models for each 
     - cost models:
         + `'hydrogen_tank_cost'`
 
-### Controller Models
+## Controller Models
 - `pass_through_controller`
 - `demand_open_loop_controller`

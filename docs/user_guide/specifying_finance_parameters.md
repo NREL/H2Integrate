@@ -16,7 +16,7 @@ Other variables in finance_parameters vary depending on the financial analysis s
 - **Subgroup mode**: Technologies are split into one or more subgroups, each with its own commodity and one or more finance models.
 
 ### Finance Groups vs. Finance Subgroups
-Within this framework, there are two distinct layers:
+Within this framework, there are two distinct layers, **finance groups** and **finance subgroups**:
 
 #### Finance groups
   A finance group contains the attributes needed to run one finance model:
@@ -24,32 +24,36 @@ Within this framework, there are two distinct layers:
     The name of the financial model to use (e.g., `ProFastComp`). Must correspond to one of the available models in `self.supported_models`.
   - `model_inputs`:
     A dictionary of parameters passed into the chosen finance model. These provide customization of assumptions such as discount rate, debt fraction, or cost escalation.
-  - `commodity`:
+  - `commodity` (conditionally required):
     The product or service whose financial performance is being analyzed (e.g., hydrogen, electricity). Required if `finance_subgroups` are not used, otherwise defined within `finance_subgroups`.
 
 #### Finance subgroups
   Subgroups are flexible collections of technologies that map to one or more finance groups. They allow you to:
   - Calculate financial metrics for only part of the system.
-  - Compare different views of the same system (e.g., delivered vs. produced cost of hydrogen).
+  - Compare different metrics of the same system (e.g., delivered vs. produced cost of hydrogen).
   - Run multiple models (e.g., LCOH, LCOE, LCOS, or NPV) on overlapping or distinct sets of technologies.
   - Model distributed or multi-location systems finances within a single plant configuration.
 
   Subgroups contain information on how to construct the specific subgroup:
   - `commodity`:
     The product or service whose financial performance is being analyzed (e.g., hydrogen, electricity). Each finance subgroup is tied to a single commodity.
-    - `technologies`:
-    Technologies to be include in the specific subgroup calculation (e.g., you might only want electricity producing technologies in the levelized cost of energy calculation).
+  - `technologies`:
+    Technologies to include in the specific subgroup calculation (e.g., you might only want to include technologies that produce electricity in the levelized cost of energy calculation).
   - `finance_groups`:
-    Refers to the `finance_groups` that contain the `finance_model` and `model_inputs`. Required if multiple `finance_groups` are being used. Technology-specific `finance_groups` can be called by using the technology name listed in the `tech_config` (e.g., `steel` to use the steel specific finance model).
-  - `commodity_desc (optional)`:
+    List of `finance_groups` that contain the `finance_model` and `model_inputs`. Required if multiple `finance_groups` are being used. Technology-specific `finance_groups` can be called by using the technology name listed in the `tech_config` (e.g., `steel` to use the steel specific finance model).
+  - `commodity_desc` (optional):
     A text label to further distinguish outputs for a commodity. This is particularly useful when multiple finance models or subgroups reference the same commodity but need to produce separate outputs.
 
 ```{important}
 If no subgroups are defined, a **default subgroup** is created that contains *all technologies* and references the default finance model and commodity defined in `finance_groups`.
 ```
 
+## Example finance configurations
+
+We'll now walk through three common configurations, highlighting the differences in the `plant_config` files and showcasing examples that use each approach.
+
 (finparam:nosubgroups)=
-## Single-Model (No Subgroups)
+### Single-model (no subgroups)
 If no `finance_subgroups` are specified, all technologies are automatically grouped into a single default subgroup. In this case:
   - `commodity` and `finance_model` must be defined directly in `finance_groups`.
   - A default subgroup named `default` is created internally.
@@ -74,7 +78,7 @@ Examples:
 
 
 (finparams:singlemodelsubgroups)=
-## Single Finance Model With Subgroups
+### Single finance model with subgroups
 If `finance_groups` contains a single model definition, you may split technologies into multiple subgroups. Each subgroup defines its own `commodity` and list of `technologies` but uses the shared finance model.
 
 In this case you see that the commodity is not defined within the `finance_groups` and is instead defined within the `finance_subgroups`. In this example there are two separate financial calculations one for `subgroup_a`, which is for the hydrogen commodity and one for `subgroup_b`, which is for the ammonia commodity and includes the "electrolyzer" and "asu". If you had additional technologies in your `tech_config` besides those, they would have to be included in the `finance_subgroups` to be included in the financial calculations.
@@ -111,7 +115,7 @@ Within `finance_groups`, the `commodity`, `finance_model`, and `model_inputs` ma
 ```
 
 (finparams:multimodelsubgroups)=
-## Multiple financial models with subgroups
+### Multiple financial models with subgroups
 When multiple finance models are needed (e.g., to calculate both NPV and LCOH, or to compare multiple finance cases), multiple finance groups can be defined and assigned to subgroups.
 
 General format:
@@ -147,7 +151,7 @@ finance_subgroup_subgroup_b.NPV_hydrogen_delivered_group_b
 Examples:
 - [Example 10](https://github.com/NREL/H2Integrate/blob/develop/examples/10_electrolyzer_om/plant_config.yaml)
 
-### Key Behaviors
+#### Key Behaviors
 - If `finance_parameters` is missing --> no finance model is created.
 - If no `finance_subgroups` are defined → a default subgroup containing all technologies is created automatically.
 - Finance groups must not include a key named "default", as this is reserved for internal use.
