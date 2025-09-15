@@ -135,7 +135,6 @@ class H2IntegrateModel:
         site_component.add_output("latitude", val=site_config.get("latitude", 0.0))
         site_component.add_output("longitude", val=site_config.get("longitude", 0.0))
         site_component.add_output("elevation_m", val=site_config.get("elevation_m", 0.0))
-        site_component.add_output("time_zone", val=site_config.get("time_zone", 0))
 
         # Add boundaries if they exist
         site_config = self.plant_config.get("site", {})

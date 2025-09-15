@@ -5,7 +5,6 @@ site:
   latitude: 43.807
   longitude: -124.816
   elevation_m: 439.0
-  time_zone: -6
 
   # array of polygons defining boundaries with x/y coords
   boundaries: [
