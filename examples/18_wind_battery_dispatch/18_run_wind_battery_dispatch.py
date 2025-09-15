@@ -30,6 +30,8 @@ ax[0].plot(
 )
 ax[0].set_ylabel("SOC (%)")
 ax[0].set_ylim([0, 110])
+ax[0].axhline(y=90.0, linestyle=":", color="k", alpha=0.5, label="Max Charge")
+ax[0].legend()
 
 ax[1].plot(
     range(start_hour, end_hour),
@@ -67,7 +69,7 @@ ax[1].plot(
     linestyle="--",
     label="Eletrical Demand (kW)",
 )
-ax[1].set_ylim([-1e5, 7e5])
+ax[1].set_ylim([-7e5, 7e5])
 ax[1].set_ylabel("Electricity Hourly (kW)")
 ax[1].set_xlabel("Timestep (hr)")
 

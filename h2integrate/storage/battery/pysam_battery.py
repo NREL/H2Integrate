@@ -2,6 +2,7 @@ from dataclasses import asdict, dataclass
 from collections.abc import Sequence
 
 import numpy as np
+import PySAM.BatteryTools as BatteryTools
 import PySAM.BatteryStateful as BatteryStateful
 from attrs import field, define
 from hopp.utilities.validators import gt_zero, contains, range_val
@@ -139,7 +140,7 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass, CostModelBaseCla
         self.add_input(
             "charge_rate",
             val=self.config.rated_resource_capacity,
-            units="kW/h",
+            units="kW",
             desc="Battery charge rate",
         )
 
@@ -230,8 +231,15 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass, CostModelBaseCla
             "surface_area": self.config.ref_module_surface_area,
         }
 
-        self.size_batterystateful(
-            inputs["storage_capacity"][0],
+        # self.size_batterystateful(
+        #     inputs["storage_capacity"][0],
+        #     self.system_model.ParamsPack.nominal_voltage,
+        #     module_specs=module_specs,
+        # )
+        BatteryTools.battery_model_sizing(
+            self.system_model,
+            self.config.rated_resource_capacity,
+            self.config.max_capacity,
             self.system_model.ParamsPack.nominal_voltage,
             module_specs=module_specs,
         )
@@ -265,7 +273,9 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass, CostModelBaseCla
                 "time_step_duration": self.config.dt,
                 "control_variable": discrete_inputs["control_variable"],
             }
-            power_out, unmet_demand, excess_resource, soc = dispatch(self.simulate, kwargs, inputs)
+            total_power_out, battery_power_out, unmet_demand, excess_resource, soc = dispatch(
+                self.simulate, kwargs, inputs
+            )
         else:
             # Simulate the battery with provided inputs
             self.simulate(
@@ -275,16 +285,13 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass, CostModelBaseCla
             )
         # Store outputs from the battery model
         # TODO I'm not sure we should allow negative values here, but right now we do
-        outputs["electricity_out"] = np.minimum(
-            inputs["demand_in"],
-            inputs["electricity_in"] + power_out,  # self.outputs.P
-        )
+        outputs["electricity_out"] = total_power_out
         outputs["SOC"] = soc  # self.outputs.SOC
         outputs["P_chargeable"] = self.outputs.P_chargeable
         outputs["P_dischargeable"] = self.outputs.P_dischargeable
         outputs["unmet_demand_out"] = unmet_demand  # self.outputs.unmet_demand
         outputs["excess_resource_out"] = excess_resource  # self.outputs.excess_resource
-        outputs["battery_electricity_out"] = power_out  # self.outputs.P
+        outputs["battery_electricity_out"] = battery_power_out  # self.outputs.P
 
     def simulate(
         self,
@@ -306,8 +313,9 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass, CostModelBaseCla
         self.system_model.value("dt_hr", time_step_duration)
 
         # initialize outputs
-        total_power_out_timesteps = np.zeros(self.config.n_control_window)
+        storage_power_out_timesteps = np.zeros(self.config.n_control_window)
         soc_timesteps = np.zeros(self.config.n_control_window)
+        t_val = np.zeros(self.config.n_control_window)
 
         for t in range(len(storage_dispatch_commands)):
             # Set to 0.0 for each loop start
@@ -316,7 +324,7 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass, CostModelBaseCla
             self.requested_electricity = storage_dispatch_commands[t]
 
             # Grab the available charge/discharge capacity of the battery
-            P_chargeable = self.system_model.value("P_chargeable")
+            self.system_model.value("P_chargeable")
 
             # If discharging... electricity_in is the commanded electricity from dispatch,
             # accounting for demand, positive is charge and negative is discharge
@@ -328,28 +336,30 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass, CostModelBaseCla
             #         storage_dispatch_commands[t] = 0.0
 
             # If charging...
-            if storage_dispatch_commands[t] < 0.0:
-                # If the input electricity magnitude is greater than the battery chargeable capacity
-                if storage_dispatch_commands[t] < P_chargeable:
-                    # Eliminates trickle power (~10-15 kW) when battery is fully charged
-                    if P_chargeable > 0.0:
-                        P_chargeable = 0.0
+            # if storage_dispatch_commands[t] < 0.0:
+            #     # If the input electricity magnitude is greater than battery chargeable capacity
+            #     if storage_dispatch_commands[t] < P_chargeable:
+            #         # Eliminates trickle power (~10-15 kW) when battery is fully charged
+            #         if P_chargeable > 0.0:
+            #             # import pdb; pdb.set_trace()
+            #             P_chargeable = 0.0
 
-                    # Change the sign to indicate that a positive amount of power is being
-                    # passed through the battery model
-                    self.excess_resource = -1 * (storage_dispatch_commands[t] - P_chargeable)
-                    # Limit the charging power to the available capacity of the battery
-                    storage_dispatch_commands[t] = P_chargeable
+            #         # Change the sign to indicate that a positive amount of power is being
+            #         # passed through the battery model
+            #         self.excess_resource = -1 * (storage_dispatch_commands[t] - P_chargeable)
+            #         # Limit the charging power to the available capacity of the battery
+            #         storage_dispatch_commands[t] = P_chargeable
 
             # Set the input variable to the desired value
             # import pdb; pdb.set_trace()
+            t_val[t] = t
             self.system_model.value(control_variable, storage_dispatch_commands[t])
 
             # Simulate the PySAM BatteryStateful model
             self.system_model.execute(0)
 
             # save outputs
-            total_power_out_timesteps[t] = self.system_model.value("P")
+            storage_power_out_timesteps[t] = self.system_model.value("P")
             soc_timesteps[t] = self.system_model.value("SOC")
 
             # This if statement is true when the battery is discharging and is unable to dispatch
@@ -373,7 +383,7 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass, CostModelBaseCla
             for attr in self.outputs.component_attributes:
                 getattr(self.outputs, attr)[sim_start_index + t] = getattr(self, attr)
 
-        return total_power_out_timesteps, soc_timesteps
+        return storage_power_out_timesteps, soc_timesteps
 
         # self.stateful_attributes = [
         #     "I",

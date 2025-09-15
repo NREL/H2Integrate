@@ -124,7 +124,8 @@ class PyomoControllerBaseClass(ControllerBaseClass):
 
             # initialize outputs
             unmet_demand = np.zeros(self.n_timesteps)
-            resource_out = np.zeros(self.n_timesteps)
+            storage_resource_out = np.zeros(self.n_timesteps)
+            total_resource_out = np.zeros(self.n_timesteps)
             excess_resource = np.zeros(self.n_timesteps)
             soc = np.zeros(self.n_timesteps)
 
@@ -145,6 +146,7 @@ class PyomoControllerBaseClass(ControllerBaseClass):
                         self.config.max_discharge_rate,
                         demand_in,
                     )
+
                 else:
                     # TODO: implement optimized solutions; this is where pyomo_model would be used
                     # self.solve_dispatch_model(start_time, n_days)
@@ -152,7 +154,7 @@ class PyomoControllerBaseClass(ControllerBaseClass):
 
                 # self.enforce_SOC_limits_pre_sim()
 
-                resource_out_control_window, soc_control_window = performance_model(
+                storage_resource_out_control_window, soc_control_window = performance_model(
                     self.storage_dispatch_commands,
                     **performance_model_kwargs,
                     sim_start_index=t,
@@ -161,18 +163,15 @@ class PyomoControllerBaseClass(ControllerBaseClass):
                 # store output values for every timestep
                 tj = list(range(t, t + self.config.n_control_window))
                 for j in tj:
-                    resource_out[j] = resource_out_control_window[j - t]
+                    storage_resource_out[j] = storage_resource_out_control_window[j - t]
                     soc[j] = soc_control_window[j - t]
+                    total_resource_out[j] = np.minimum(
+                        demand_in[j - t], storage_resource_out[j] + resource_in[j - t]
+                    )
+                    unmet_demand[j] = np.maximum(0, demand_in[j - t] - total_resource_out[j])
+                    excess_resource[j] = np.maximum(0, resource_in[j - t] - total_resource_out[j])
 
-                    if j == 0:
-                        unmet_demand[0] = np.maximum(0, demand_in[0] - resource_out[0])
-                        excess_resource[0] = np.maximum(0, resource_out[0] - demand_in[0])
-                    else:
-                        unmet_demand[j] = np.maximum(0, demand_in[j - t] - resource_out[j])
-                        # import pdb; pdb.set_trace()
-                        excess_resource[j] = np.maximum(0, resource_out[j] - demand_in[j - t])
-
-            return resource_out, unmet_demand, excess_resource, soc
+            return total_resource_out, storage_resource_out, unmet_demand, excess_resource, soc
 
         return pyomo_dispatch_solver
 
