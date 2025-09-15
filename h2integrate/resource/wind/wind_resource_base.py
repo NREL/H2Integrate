@@ -51,9 +51,7 @@ class WindResourceBaseAPIModel(ResourceBaseAPIModel):
             if len(output_var) == 1:
                 desired_units = self.output_vars_to_units[output_var[0]]
                 if desired_units != orig_units:
-                    data[data_col] = units.convert_units(
-                        data[data_col].values, orig_units, desired_units
-                    )
+                    data[data_col] = units.convert_units(data[data_col], orig_units, desired_units)
                     data_units[data_col] = desired_units
             else:
                 if len(output_var) < 1:

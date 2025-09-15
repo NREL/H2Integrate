@@ -66,14 +66,6 @@ class WTKNRELDeveloperAPIWindResource(WindResourceBaseAPIModel):
             "resource_dir", self.site_config["resources"].get("resource_dir", None)
         )
 
-        # set the timezone as the simulation config timezone
-        if "timezone" in resource_specs:
-            msg = (
-                "The timezone cannot be specified for a specific resource. "
-                "The timezone is set in the plant_config['plant']['simulation']['timezone']."
-            )
-
-            raise ValueError(msg)
         resource_specs.setdefault("timezone", self.sim_config.get("timezone"))
 
         # create the resource config
@@ -205,9 +197,9 @@ class WTKNRELDeveloperAPIWindResource(WindResourceBaseAPIModel):
             for k, v in data_units.items()
         }
         data, data_units = self.compare_units_and_correct(data, data_units)
-        time_cols = ["Year", "Month", "Day", "Hour", "Minute"]
-        timeseries_data = {c: data[c].values for c in data.columns.to_list() if c not in time_cols}
-        timeseries_data.update({"time": data_time_profile})
+
+        timeseries_data = {"time": data_time_profile}
+        timeseries_data.update(data)
         timeseries_data.update(site_data)
 
         return timeseries_data
@@ -267,7 +259,10 @@ class WTKNRELDeveloperAPIWindResource(WindResourceBaseAPIModel):
             data_rename_mapper.update({c: new_c})
             data_units.update({new_c: units})
         data = data.rename(columns=data_rename_mapper)
-        return data, data_units
+        data_dict = {c: data[c].astype(float).values for x, c in data_rename_mapper.items()}
+        data_time_dict = {c: data[c].astype(float).values for c in time_cols}
+        data_dict.update(data_time_dict)
+        return data_dict, data_units
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         pass

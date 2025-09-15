@@ -1,4 +1,3 @@
-from typing import ClassVar
 from pathlib import Path
 
 import openmdao.api as om
@@ -23,6 +22,8 @@ class ResourceBaseAPIConfig(BaseConfig):
             load resource files from. Defaults to "".
         - **resource_filename** (*str*, optional): Filename to save resource data to or load
             resource data from. Defaults to None.
+        - **valid_intervals** (*list[int]*): time interval(s) in minutes that resource data can be
+            downloaded in.
 
     Note:
         Attributes should be updated in subclasses and should not be modifiable by the user.
@@ -40,8 +41,7 @@ class ResourceBaseAPIConfig(BaseConfig):
             Should be updated in a subclass.
         resource_type (str): type of resource data downloaded, used in folder naming.
             Should be updated in a subclass.
-        valid_intervals (list[int]): time interval(s) in minutes that resource data can be
-            downloaded in. Should be updated in a subclass.
+
 
 
     """
@@ -53,7 +53,6 @@ class ResourceBaseAPIConfig(BaseConfig):
 
     dataset_desc: str = field(default="default", init=False)
     resource_type: str = field(default="none", init=False)
-    valid_intervals: ClassVar = field(default=[60], init=False)
 
 
 class ResourceBaseAPIModel(om.ExplicitComponent):
