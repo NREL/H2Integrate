@@ -1,3 +1,5 @@
+import copy
+
 import pandas as pd
 import matplotlib.pyplot as plt
 
@@ -9,7 +11,7 @@ def plot_ammonia(model):
 
     # HOPP Electricity Generation
     plt.subplot(3, 2, 1)
-    plt.title("HOPP for Electrolyzer")
+    plt.title("Electricity Generation")
     wind_elec_out = model.plant.hopp.hopp.get_val("wind_electricity_out")
     pv_elec_out = model.plant.hopp.hopp.get_val("solar_electricity_out")
     elec_out = wind_elec_out + pv_elec_out
@@ -21,7 +23,7 @@ def plot_ammonia(model):
 
     # HOPP Battery Dispatch
     plt.subplot(3, 2, 3)
-    plt.title("HOPP for Electrolyzer")
+    plt.title("Electricity to/from Storage")
     elec_in = elec_out
     batt_elec_out = model.plant.hopp.hopp.get_val("battery_electricity_out")
     total_elec_out = model.plant.hopp.hopp.get_val("electricity_out")
@@ -40,8 +42,8 @@ def plot_ammonia(model):
     elyzer_h2_out = model.plant.electrolyzer.eco_pem_electrolyzer_performance.get_val(
         "hydrogen_out"
     )
-    plt.plot(times, elyzer_elec_in, label="electricity_in [kW]", color=[0, 0, 1])
-    plt.plot(times, elyzer_h2_out, label="hydrogen_out [kg/hr]", color=[1, 0, 0])
+    plt.plot(times, elyzer_elec_in / 1000, label="electricity_in [MW]", color=[0, 0, 1])
+    plt.plot(times, elyzer_h2_out * 24 / 1000, label="hydrogen_out [tpd]", color=[1, 0, 0])
     # plt.yscale("log")
     plt.legend()
 
@@ -62,6 +64,26 @@ def plot_ammonia(model):
     nh3_out = model.plant.ammonia.synloop_ammonia_performance.get_val("ammonia_out")
     plt.plot(times, nh3_h2_in, label="hydrogen_in [kg/hr]", color=[1, 0.5, 0])
     plt.plot(times, nh3_out, label="ammonia_out [kg/hr]", color=[0, 0.5, 1])
+    # plt.yscale("log")
+    plt.legend()
+
+    # H2 and Storage
+    plt.subplot(3, 2, 6)
+    plt.title("H2 Storage")
+    batt_kwh = model.plant.hopp.hopp.hopp_config["technologies"]["battery"]["system_capacity_kwh"]
+    soc = model.plant.hopp.hopp.hopp_config["technologies"]["battery"]["initial_SOC"]
+    batt_soc_change = -batt_elec_out / batt_kwh
+    batt_storage_soc = []
+    for _i, SOC_change in enumerate(batt_soc_change):
+        soc += SOC_change * 100
+        batt_storage_soc.append(copy.deepcopy(soc))
+    h2_storage_soc = model.plant.h2_storage.h2_storage.get_val("hydrogen_storage_soc")
+    max_kg = model.plant.h2_storage.h2_storage.options["tech_config"]["model_inputs"][
+        "control_parameters"
+    ]["max_capacity"]
+    h2_storage_soc = h2_storage_soc / max_kg * 100
+    plt.plot(times, batt_storage_soc, label="battery_soc [%]", color=[0, 1, 0])
+    plt.plot(times, h2_storage_soc, label="hydrogen_storage_soc [%]", color=[1, 0, 0])
     # plt.yscale("log")
     plt.legend()
 
