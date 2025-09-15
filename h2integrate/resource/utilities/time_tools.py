@@ -1,4 +1,5 @@
 from datetime import datetime, timezone, timedelta
+from collections.abc import Iterable
 
 import numpy as np
 
@@ -71,6 +72,8 @@ def roll_timeseries_data(desired_time_profile, data_time_profile, data, dt):
     Returns:
         dict: data rolled to `desired_time_profile`
     """
+    # TODO: update so that desired time profile doesnt have to be a list
+
     # 1) align timezones
     t0_desired = desired_time_profile[0]
     t0_actual_in_desired_tz = data_time_profile[0].astimezone(tz=t0_desired.tzinfo)
@@ -78,6 +81,8 @@ def roll_timeseries_data(desired_time_profile, data_time_profile, data, dt):
     # 2) calculate time difference
     start_time_offset = t0_actual_in_desired_tz - t0_desired
     seconds_per_day = 24 * 3600
+
+    n_timesteps = len(data_time_profile)
 
     # 3) calculate time different in units of dt
     start_time_offset_in_dt = (
@@ -92,18 +97,22 @@ def roll_timeseries_data(desired_time_profile, data_time_profile, data, dt):
     rolled_data = {}
     for var, values in data.items():
         # check if values are non-iterables and don't roll
-        if isinstance(values, (str, float, int, bool)):
+        # if isinstance(values, (str, float, int, bool)):
+        if not isinstance(values, Iterable):
             rolled_data[var] = values
             continue
-        # if values are iterable, check if they should be rolled by their index
-        if isinstance(values[0], (str, bool, object)):
-            vals_index = list(range(len(values)))
-            index_rolled = np.roll(vals_index, roll_by)
-            vals_rolled = [values[i] for i in index_rolled]
-            rolled_data[var] = vals_rolled
-        else:
-            vals_rolled = np.roll(values, roll_by)
-            rolled_data[var] = vals_rolled
+        if len(values) == n_timesteps:
+            # if values are iterable, check if they should be rolled by their index
+            if isinstance(values[0], (float, np.floating, int, np.integer)):
+                vals_rolled = np.roll(values, roll_by)
+                rolled_data[var] = vals_rolled
+            else:
+                # if isinstance(values[0], (str, bool, object)):
+                vals_index = list(range(len(values)))
+                index_rolled = np.roll(vals_index, roll_by)
+                vals_rolled = [values[i] for i in index_rolled]
+                rolled_data[var] = vals_rolled
+
     return rolled_data
 
 
