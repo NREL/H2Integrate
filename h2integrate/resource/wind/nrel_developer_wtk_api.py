@@ -173,8 +173,10 @@ class WTKNRELDeveloperAPIWindResource(WindResourceBaseAPIModel):
             k: v.replace("%", "percent").replace("degrees", "deg").replace("hour", "h")
             for k, v in data_units.items()
         }
+        # convert data to standardized units
         data, data_units = self.compare_units_and_correct(data, data_units)
 
+        # include site data with data
         data.update(site_data)
 
         return data

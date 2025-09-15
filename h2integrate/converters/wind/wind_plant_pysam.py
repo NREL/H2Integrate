@@ -25,17 +25,10 @@ class PYSAMWindPlantPerformanceModel(WindPerformanceBaseClass):
         self.config = PYSAMWindPlantPerformanceModelConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance")
         )
-        # self.site_config = PYSAMWindPlantPerformanceModelSiteConfig.from_dict(
-        #     self.options["plant_config"]["site"], strict=False
-        # )
+
         self.config_name = "WindPowerSingleOwner"
         self.system_model = Windpower.default(self.config_name)
 
-        # lat = self.site_config.latitude
-        # lon = self.site_config.longitude
-        # year = self.site_config.year
-        # resource_filepath = self.site_config.wind_resource_filepath
-        # hub_height = self.config.hub_height
         self.data_to_field_number = {
             "temperature": 1,
             "pressure": 2,
