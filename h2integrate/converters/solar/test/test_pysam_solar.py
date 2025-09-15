@@ -63,9 +63,16 @@ def test_pvwatts_singleowner_notilt(basic_pysam_options, solar_resource_dict, su
         }
     }
 
+    plant_info = {
+        "simulation": {
+            "n_timesteps": 8760,
+            "dt": 3600,
+        }
+    }
+
     prob = om.Problem()
     comp = PYSAMSolarPlantPerformanceModel(
-        plant_config={"site": solar_resource_dict},
+        plant_config={"site": solar_resource_dict, "plant": plant_info},
         tech_config=tech_config_dict,
     )
     prob.model.add_subsystem("pv_perf", comp)
@@ -108,9 +115,16 @@ def test_pvwatts_singleowner_withtilt(basic_pysam_options, solar_resource_dict, 
         }
     }
 
+    plant_info = {
+        "simulation": {
+            "n_timesteps": 8760,
+            "dt": 3600,
+        }
+    }
+
     prob = om.Problem()
     comp = PYSAMSolarPlantPerformanceModel(
-        plant_config={"site": solar_resource_dict},
+        plant_config={"site": solar_resource_dict, "plant": plant_info},
         tech_config=tech_config_dict,
     )
     prob.model.add_subsystem("pv_perf", comp)

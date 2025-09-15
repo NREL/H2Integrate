@@ -1,9 +1,6 @@
 import openmdao.api as om
 
 
-n_timesteps = 8760
-
-
 class HydroPerformanceBaseClass(om.ExplicitComponent):
     def initialize(self):
         self.options.declare("driver_config", types=dict)
@@ -11,6 +8,7 @@ class HydroPerformanceBaseClass(om.ExplicitComponent):
         self.options.declare("tech_config", types=dict)
 
     def setup(self):
+        n_timesteps = self.options["plant_config"]["plant"]["simulation"]["n_timesteps"]
         self.add_output(
             "electricity_out",
             val=0.0,
@@ -18,27 +16,6 @@ class HydroPerformanceBaseClass(om.ExplicitComponent):
             units="kW",
             desc="Power output from HydroPlant",
         )
-
-    def compute(self, inputs, outputs):
-        """
-        Computation for the OM component.
-
-        For a template class this is not implemented and raises an error.
-        """
-
-        raise NotImplementedError("This method should be implemented in a subclass.")
-
-
-class HydroCostBaseClass(om.ExplicitComponent):
-    def initialize(self):
-        self.options.declare("driver_config", types=dict)
-        self.options.declare("plant_config", types=dict)
-        self.options.declare("tech_config", types=dict)
-
-    def setup(self):
-        # Define outputs: CapEx and OpEx costs
-        self.add_output("CapEx", val=0.0, units="USD", desc="Capital expenditure")
-        self.add_output("OpEx", val=0.0, units="USD/year", desc="Operational expenditure")
 
     def compute(self, inputs, outputs):
         """
