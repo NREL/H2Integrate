@@ -77,7 +77,7 @@ Examples:
 ## Single Finance Model With Subgroups
 If `finance_groups` contains a single model definition, you may split technologies into multiple subgroups. Each subgroup defines its own `commodity` and list of `technologies` but uses the shared finance model.
 
-In this case you see that the commodity is not defined within the `finance_groups` and is instead defined within the `finance_subgroups`.
+In this case you see that the commodity is not defined within the `finance_groups` and is instead defined within the `finance_subgroups`. In this example there are two separate financial calculations one for `subgroup_a`, which is for the hydrogen commodity and one for `subgroup_b`, which is for the ammonia commodity and includes the "electrolyzer" and "asu". If you had additional technologies in your `tech_config` besides those, they would have to be included in the `finance_subgroups` to be included in the financial calculations.
 
 General format:
 ```yaml
