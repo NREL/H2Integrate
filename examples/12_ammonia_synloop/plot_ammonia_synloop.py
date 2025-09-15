@@ -1,5 +1,6 @@
 import copy
 
+import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
@@ -69,14 +70,17 @@ def plot_ammonia(model):
 
     # H2 and Storage
     plt.subplot(3, 2, 6)
-    plt.title("H2 Storage")
+    plt.title("Storage")
     batt_kwh = model.plant.hopp.hopp.hopp_config["technologies"]["battery"]["system_capacity_kwh"]
+    min_soc = model.plant.hopp.hopp.hopp_config["technologies"]["battery"]["minimum_SOC"]
     soc = model.plant.hopp.hopp.hopp_config["technologies"]["battery"]["initial_SOC"]
     batt_soc_change = -batt_elec_out / batt_kwh
     batt_storage_soc = []
     for _i, SOC_change in enumerate(batt_soc_change):
         soc += SOC_change * 100
         batt_storage_soc.append(copy.deepcopy(soc))
+    soc_adjust = np.linspace(0, (soc - min_soc), len(batt_storage_soc))
+    batt_storage_soc = batt_storage_soc - soc_adjust
     h2_storage_soc = model.plant.h2_storage.h2_storage.get_val("hydrogen_storage_soc")
     max_kg = model.plant.h2_storage.h2_storage.options["tech_config"]["model_inputs"][
         "control_parameters"

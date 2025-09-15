@@ -75,7 +75,7 @@ technologies:
         ppa_price_input: [0.0] # cents/kWh
         ppa_escalation: 0 # %
   pv:
-    system_capacity_kw: 600005 # 750500
+    system_capacity_kw: 600000 # 750500
     dc_degradation: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     fin_model:
       battery_system:
