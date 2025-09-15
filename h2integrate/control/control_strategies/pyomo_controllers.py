@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING
 
+import numpy as np
 import pyomo.environ as pyomo
 from attrs import field, define
 
@@ -121,18 +122,28 @@ class PyomoControllerBaseClass(ControllerBaseClass):
         ):
             self.initialize_parameters()
 
+            # initialize outputs
+            unmet_demand = np.zeros(self.n_timesteps)
+            resource_out = np.zeros(self.n_timesteps)
+            excess_resource = np.zeros(self.n_timesteps)
+            soc = np.zeros(self.n_timesteps)
+
             ti = list(range(0, self.n_timesteps, self.config.n_control_window))
 
             for t in ti:
                 self.update_time_series_parameters()
+
+                resource_in = inputs[self.config.resource_name + "_in"][
+                    t : t + self.config.n_control_window
+                ]
+                demand_in = inputs["demand_in"][t : t + self.config.n_control_window]
+
                 if "heuristic" in self.options["tech_config"]["control_strategy"]["model"]:
                     self.set_fixed_dispatch(
-                        inputs[self.config.resource_name + "_in"][
-                            t : t + self.config.n_control_window
-                        ],
+                        resource_in,
                         self.config.max_charge_rate,
                         self.config.max_discharge_rate,
-                        inputs["demand_in"][t : t + self.config.n_control_window],
+                        demand_in,
                     )
                 else:
                     # TODO: implement optimized solutions; this is where pyomo_model would be used
@@ -141,11 +152,27 @@ class PyomoControllerBaseClass(ControllerBaseClass):
 
                 # self.enforce_SOC_limits_pre_sim()
 
-                performance_model(
-                    self.storage_amount,
+                resource_out_control_window, soc_control_window = performance_model(
+                    self.storage_dispatch_commands,
                     **performance_model_kwargs,
                     sim_start_index=t,
                 )
+
+                # store output values for every timestep
+                tj = list(range(t, t + self.config.n_control_window))
+                for j in tj:
+                    resource_out[j] = resource_out_control_window[j - t]
+                    soc[j] = soc_control_window[j - t]
+
+                    if j == 0:
+                        unmet_demand[0] = np.maximum(0, demand_in[0] - resource_out[0])
+                        excess_resource[0] = np.maximum(0, resource_out[0] - demand_in[0])
+                    else:
+                        unmet_demand[j] = np.maximum(0, demand_in[j - t] - resource_out[j])
+                        # import pdb; pdb.set_trace()
+                        excess_resource[j] = np.maximum(0, resource_out[j] - demand_in[j - t])
+
+            return resource_out, unmet_demand, excess_resource, soc
 
         return pyomo_dispatch_solver
 
@@ -552,8 +579,11 @@ class SimpleBatteryControllerHeuristic(PyomoControllerBaseClass):
             self._user_fixed_dispatch = fixed_dispatch
 
     @property
-    def storage_amount(self) -> list:
-        """Storage amount."""
+    def storage_dispatch_commands(self) -> list:
+        """
+        Commanded dispatch including available resource at current time step that has not
+        been used to charge the battery.
+        """
         return [
             (self.blocks[t].discharge_resource.value - self.blocks[t].charge_resource.value)
             for t in self.blocks.index_set()
@@ -567,7 +597,7 @@ class SimpleBatteryControllerHeuristic(PyomoControllerBaseClass):
     # @property
     # def generation(self) -> list:
     #     """Generation."""
-    #     return self.storage_amount
+    #     return self.storage_dispatch_commands
 
     @property
     def soc(self) -> list:
