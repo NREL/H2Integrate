@@ -65,7 +65,8 @@ class WTKNRELDeveloperAPIWindResource(WindResourceBaseAPIModel):
             "resource_dir", self.site_config["resources"].get("resource_dir", None)
         )
 
-        resource_specs.setdefault("timezone", self.sim_config.get("timezone"))
+        # default timezone to UTC because 'timezone' was removed from the plant config schema
+        resource_specs.setdefault("timezone", self.sim_config.get("timezone", 0))
 
         # create the resource config
         self.config = WTKNRELDeveloperAPIConfig.from_dict(resource_specs)
