@@ -60,7 +60,7 @@ def plot_ammonia(model):
 
     # H2 and N2 to Ammonia
     plt.subplot(3, 2, 4)
-    plt.title("Methanol")
+    plt.title("Ammonia")
     nh3_h2_in = model.plant.ammonia.synloop_ammonia_performance.get_val("hydrogen_in")
     nh3_out = model.plant.ammonia.synloop_ammonia_performance.get_val("ammonia_out")
     plt.plot(times, nh3_h2_in, label="hydrogen_in [kg/hr]", color=[1, 0.5, 0])
