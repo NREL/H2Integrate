@@ -7,7 +7,6 @@ from attrs import field, define
 
 from h2integrate.core.validators import range_val
 from h2integrate.resource.resource_base import ResourceBaseAPIConfig
-from h2integrate.resource.utilities.time_tools import make_time_profile, roll_timeseries_data
 from h2integrate.resource.wind.wind_resource_base import WindResourceBaseAPIModel
 from h2integrate.resource.utilities.nrel_developer_api_keys import (
     get_nrel_developer_api_key,
@@ -86,28 +85,8 @@ class WTKNRELDeveloperAPIWindResource(WindResourceBaseAPIModel):
             else:
                 self.interval = int(min(self.config.valid_intervals))
 
-        # create the desired time profile for the resource data
-        self.resource_time_profile = make_time_profile(
-            self.start_time,
-            self.dt,
-            self.n_timesteps,
-            self.config.timezone,
-            self.config.resource_year,
-        )
-
         # get the data dictionary
         data = self.get_data()
-
-        # NOTE: add any upsampling or downsampling, this should be done here
-
-        # roll the data to the resource_time_profile
-        data = roll_timeseries_data(self.resource_time_profile, data["time"], data, self.dt)
-
-        # convert the time profile to a list of strings to be JSON-compatible
-        time_str = [
-            data["time"][i].strftime("%m/%d/%Y %H:%M:%S (%z)") for i in range(len(data["time"]))
-        ]
-        data["time"] = time_str
 
         # add resource data dictionary as an out
         self.add_discrete_output("wind_resource_data", val=data, desc="Dict of wind resource data")
@@ -160,11 +139,9 @@ class WTKNRELDeveloperAPIWindResource(WindResourceBaseAPIModel):
 
         1) load the data, separate out scalar data and timeseries data
         2) remove unused data
-        3) make a time profile for the data, set as the 'time' key for the output data.
-            Calls `make_data_time_profile()` method.
-        4) Rename the data columns to standardized naming convention and create dictionary of
+        3) Rename the data columns to standardized naming convention and create dictionary of
             OpenMDAO compatible units for the data. Calls `format_timeseries_data()` method.
-        5) Convert data to stadardized units. Calls `compare_units_and_correct()` method
+        4) Convert data to stadardized units. Calls `compare_units_and_correct()` method
 
         Args:
             fpath (str | Path): filepath to file containing the data
@@ -189,7 +166,7 @@ class WTKNRELDeveloperAPIWindResource(WindResourceBaseAPIModel):
         }
 
         data = data.dropna(axis=1, how="all")
-        data_time_profile = self.make_data_time_profile(data, site_data["data_tz"])
+
         data, data_units = self.format_timeseries_data(data)
         # make units for data in openmdao-compatible units
         data_units = {
@@ -198,36 +175,9 @@ class WTKNRELDeveloperAPIWindResource(WindResourceBaseAPIModel):
         }
         data, data_units = self.compare_units_and_correct(data, data_units)
 
-        timeseries_data = {"time": data_time_profile}
-        timeseries_data.update(data)
-        timeseries_data.update(site_data)
+        data.update(site_data)
 
-        return timeseries_data
-
-    def make_data_time_profile(self, data, data_tz):
-        """Create time profile corresponding the data.
-
-        Args:
-            data (pd.DataFrame): Dataframe of timeseries data.
-                Must have columns of "Year", "Month", "Day", "Hour", and "Minute".
-
-            data_tz (int | float): timezone that the data is in.
-
-        Returns:
-            list[datetime.datetime]: time profile of data.
-        """
-        data_start_time_dict = data.iloc[0][["Year", "Month", "Day", "Hour", "Minute"]].to_dict()
-        data_t0 = {k: int(v) for k, v in data_start_time_dict.items()}
-        data_time_profile = pd.to_datetime(data[["Year", "Month", "Day", "Hour", "Minute"]])
-        data_ntimesteps = len(data)
-        data_start_dmy = f"{data_t0['Month']:02d}/{data_t0['Day']:02d}/{data_t0['Year']:02d}"
-        data_start_hms = f"{data_t0['Hour']:02d}:{data_t0['Minute']:02d}:00"
-        data_start_time = f"{data_start_dmy} {data_start_hms}"
-        data_dt = data_time_profile[1] - data_time_profile[0]
-        data_time_profile = make_time_profile(
-            data_start_time, data_dt.seconds, data_ntimesteps, data_tz, start_year=None
-        )
-        return data_time_profile
+        return data
 
     def format_timeseries_data(self, data):
         """Convert data to a dictionary with keys that follow the standardized naming convention and
