@@ -24,7 +24,8 @@ class SimpleGenericStorage(om.ExplicitComponent):
         super().setup()
         n_timesteps = self.options["plant_config"]["plant"]["simulation"]["n_timesteps"]
         self.config = SimpleGenericStorageConfig.from_dict(
-            merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance")
+            merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance"),
+            strict=False,
         )
         resource_name = self.config.resource_name
         resource_rate_units = self.config.resource_rate_units
