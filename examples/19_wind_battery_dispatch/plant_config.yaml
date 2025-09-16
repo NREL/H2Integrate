@@ -58,4 +58,4 @@ finance_parameters:
   finance_subgroups:
     electricity:
       commodity: "electricity"
-      technologies: ["wind"]
+      technologies: ["wind","battery"]
