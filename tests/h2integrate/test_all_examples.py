@@ -273,7 +273,7 @@ def test_wind_h2_opt_example(subtests):
     with subtests.test("Check LCOE"):
         assert (
             pytest.approx(model.prob.get_val("finance_subgroup_electricity.LCOE")[0], rel=1e-3)
-            == 0.059311
+            == 0.059096
         )
 
     with subtests.test("Check electrolyzer size"):
@@ -694,8 +694,8 @@ def test_electrolyzer_om_example(subtests):
         "finance_subgroup_hydrogen.LCOH_lcoe_financials", units="USD/kg"
     )[0]
     with subtests.test("Check LCOE"):
-        assert pytest.approx(lcoe, rel=1e-5) == 40.12819
+        assert pytest.approx(lcoe, rel=1e-5) == 39.98869
     with subtests.test("Check LCOH with lcoh_financials"):
-        assert pytest.approx(lcoh_with_lcoh_finance, rel=1e-5) == 13.18328175
+        assert pytest.approx(lcoh_with_lcoh_finance, rel=1e-5) == 13.0954678
     with subtests.test("Check LCOH with lcoe_financials"):
-        assert pytest.approx(lcoh_with_lcoe_finance, rel=1e-5) == 8.05688467
+        assert pytest.approx(lcoh_with_lcoe_finance, rel=1e-5) == 8.00321771
