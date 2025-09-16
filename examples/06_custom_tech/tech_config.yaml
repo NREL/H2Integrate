@@ -45,7 +45,7 @@ technologies:
       model: paper_mill_cost
       model_class_name: PaperMillCost
       model_location: user_defined_model/paper_mill.py
-    financial_model:
+    finance_model:
       model: paper_mill_finance
       model_class_name: PaperMillFinance
       model_location: user_defined_model/paper_mill.py

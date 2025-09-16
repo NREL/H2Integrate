@@ -28,6 +28,7 @@ technologies:
 
 ```
 
+(performance-parameters)=
 ## Performance Parameters
 - `pv_capacity_kWdc` (required): capacity of the PV system in kW-DC
 - `dc_ac_ratio`: the ratio of DC capacity to AC capacity, equal to `pv_capacity_kWdc/pv_capacity_kWac` is used to calculate the PV capacity in kW-AC and is equivalent as the inverter rated power. An inverter is used in PV systems to convert DC power (output from panels) to AC power (input to AC microgrid). The PV capacity in kW-AC is `pv_capacity_kWdc/dc_ac_ratio`. A general default `dc_ac_ratio` is between 1.2 and 1.3. **This is required if** `dc_ac_ratio` is not either loaded from a default Pvwattsv8 config OR not included in the `pysam_options` dictionary under the `SystemDesign` group.
@@ -70,6 +71,7 @@ $$
     - [Shading](https://nrel-pysam.readthedocs.io/en/main/modules/Pvwattsv8.html#shading-group)
     - [AdjustmentFactors](https://nrel-pysam.readthedocs.io/en/main/modules/Pvwattsv8.html#adjustmentfactors-group)
 
+(systemdesign-group)=
 ### SystemDesign group
 ```{note}
 Do not include the `system_capacity` parameter of the `SystemDesign` group. The system capacity should be set in the performance parameters with the variable `pv_capacity_kWdc`.
@@ -106,6 +108,7 @@ Some common design parameters that a user may want to specify within the [System
     - `tilt_angle_func` is set to "none" and `tilt` is specified under the performance parameters.
     ```
 
+(solarresource-group)=
 ### SolarResource group
 Solar resource data is downloaded from the [National Solar Resource Database](https://developer.nrel.gov/docs/solar/nsrdb/psm3-2-2-download/) and input as the `solar_resource_data` variable in the Pvwattsv8 SolarResource Group. Some other common resource parameters that a user may want to specify within the [SolarResource Group](https://nrel-pysam.readthedocs.io/en/main/modules/Pvwattsv8.html#solarresource-group) are:
 - `use_wf_albedo` (bool): if True, use albedo from weather file (if valid). If False, use value for `albedo_default`. Defaults to True.

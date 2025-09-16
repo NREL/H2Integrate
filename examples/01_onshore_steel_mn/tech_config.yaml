@@ -8,8 +8,6 @@ technologies:
       config: !include tech_inputs/hopp_config.yaml
     cost_model:
       model: "hopp"
-    financial_model:
-      group: default
     electrolyzer_rating: 720. # MW
     model_inputs:
       cost_parameters:
@@ -19,8 +17,6 @@ technologies:
       model: "eco_pem_electrolyzer_performance"
     cost_model:
       model: "singlitico_electrolyzer_cost"
-    financial_model:
-      group: default
     model_inputs:
       shared_parameters:
         location: "onshore"
@@ -49,8 +45,6 @@ technologies:
       model: "pass_through_controller"
     cost_model:
       model: "h2_storage"
-    financial_model:
-      group: default
     model_inputs:
       performance_parameters:
         rating: 720.
@@ -67,8 +61,8 @@ technologies:
       model: "steel_performance"
     cost_model:
       model: "steel_cost"
-    financial_model:
-      group: steel
+    finance_model:
+      model: "steel_cost"
     model_inputs:
       shared_parameters:
         capacity_factor: 0.9

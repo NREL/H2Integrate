@@ -8,8 +8,6 @@ technologies:
       config: !include tech_inputs/hopp_config.yaml
     cost_model:
       model: "hopp"
-    financial_model:
-      group: "1"
     electrolyzer_rating: 156. # MW
     model_inputs:
       cost_parameters:
@@ -19,8 +17,6 @@ technologies:
       model: "eco_pem_electrolyzer_performance"
     cost_model:
       model: "singlitico_electrolyzer_cost"
-    financial_model:
-      group: "1"
     model_inputs:
       shared_parameters:
         location: "onshore"
@@ -46,9 +42,8 @@ technologies:
       model: "co2h_methanol_plant_performance"
     cost_model:
       model: "co2h_methanol_plant_cost"
-    financial_model:
+    finance_model:
       model: "co2h_methanol_plant_financial"
-      group: "2"
     model_inputs:
       shared_parameters:
         plant_capacity_kgpy: 127893196.8

@@ -70,8 +70,6 @@ technologies:
       model: "eco_pem_electrolyzer_performance"
     cost_model:
       model: "singlitico_electrolyzer_cost"
-    financial_model:
-      group: default
     model_inputs:
       shared_parameters:
         location: "onshore"
