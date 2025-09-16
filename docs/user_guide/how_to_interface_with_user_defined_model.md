@@ -13,19 +13,31 @@ Users may want to:
 
 This feature allows any custom model that conforms to OpenMDAO standards and uses the appropriate configuration interfaces to be used within the H2Integrate ecosystem.
 
-## Example: paper mill model
+## Examples
 
-To demonstrate this capability, we include a minimal example of a custom model: a **paper mill**. This example includes:
-
-- A `PaperMillPerformance` model that converts electricity input to paper output.
-- A `PaperMillCost` model that estimates capital and operational expenditures.
-- A `PaperMillFinance` model that computes the levelized cost of paper production (LCOP).
-
-These models use standard H2Integrate configuration utilities and OpenMDAO components.
+The models in the following two examples use standard H2Integrate configuration utilities and OpenMDAO components.
 
 ```{note}
 You can combine an H2Integrate model and a custom model for the same technology within a single analysis.
 ```
+
+### Custom General Finance Model Example: simple lco finance model
+
+To demonstrate this capability, we include an example of a custom general finance model: a **simple lco calculation** found in [Example 08: Wind Electrolyzer Example](https://github.com/NREL/H2Integrate/tree/develop/examples/08_wind_electrolyzer/). This example includes:
+- A `SimpleLCOFinanceConfig`: configuration class that is populated with inputs specific to that finance model.
+- A `SimpleLCOFinance` general finance model that computes the levelized cost of a commodity
+
+
+### Custom Technology Model Example: paper mill model
+
+To demonstrate this capability, we include a minimal example of a custom technology model: a **paper mill**. This example includes:
+
+- A `PaperMillPerformance` model that converts electricity input to paper output.
+- A `PaperMillCost` model that estimates capital and operational expenditures.
+- A `PaperMillFinance` technology finance model that computes the levelized cost of paper production (LCOP).
+
+Refer to the [Paper Mill Model Example](https://github.com/NREL/H2Integrate/tree/develop/examples/06_custom_tech/) for a complete walkthrough.
+
 
 ## Key benefits
 
@@ -64,8 +76,6 @@ After learning the basic structure from those models, you can follow these steps
 ```{note}
 Your custom model cannot have the same name as an existing H2Integrate model. To remove ambiguity of which model would be used, an error will be raised if a custom model shares a name with an existing H2Integrate model.
 ```
-
-Refer to the [Paper Mill Model Example](https://github.com/NREL/H2Integrate/tree/develop/examples/06_custom_tech/) for a complete walkthrough.
 
 This feature supports broader adoption of H2I by allowing integration with the tools and models users already trust.
 
