@@ -63,13 +63,13 @@ def test_variable_om_no_escalation(subtests):
 
     with subtests.test("Check original LCOH with zero escalation"):
         assert (
-            pytest.approx(model.prob.get_val("financials_group_default.LCOH")[0], rel=1e-3)
-            == 4.233055
+            pytest.approx(model.prob.get_val("finance_subgroup_hydrogen.LCOH")[0], rel=1e-3)
+            == 3.9705799099
         )
 
     outputs_dir = Path.cwd() / "outputs"
 
-    yaml_fpath = outputs_dir / "profast_output_hydrogen.yaml"
+    yaml_fpath = outputs_dir / "profast_output_hydrogen_config.yaml"
 
     pf_dict = load_yaml(yaml_fpath)
 
@@ -109,10 +109,10 @@ def test_variable_om_no_escalation(subtests):
     with subtests.test(
         "Check variable o&m as scalar LCOH against original LCOH with zero escalation"
     ):
-        assert sol_scalar["price"] > model.prob.get_val("financials_group_default.LCOH")[0]
+        assert sol_scalar["price"] > model.prob.get_val("finance_subgroup_hydrogen.LCOH")[0]
 
     with subtests.test("Check variable o&m as scalar LCOH with zero escalation value"):
-        assert pytest.approx(sol_scalar["price"], rel=1e-3) == 4.244547509506111
+        assert pytest.approx(sol_scalar["price"], rel=1e-3) == 3.98205152215
 
     # create water cost entry as array
     annual_water_cost_USD_per_year = [annual_water_cost_USD_per_kg] * plant_life
@@ -136,10 +136,10 @@ def test_variable_om_no_escalation(subtests):
     with subtests.test(
         "Check variable o&m as array LCOH against original LCOH with zero escalation"
     ):
-        assert sol_list["price"] > model.prob.get_val("financials_group_default.LCOH")[0]
+        assert sol_list["price"] > model.prob.get_val("finance_subgroup_hydrogen.LCOH")[0]
 
     with subtests.test("Check variable o&m as array LCOH with zero escalation value"):
-        assert pytest.approx(sol_list["price"], rel=1e-3) == 4.244547509506111
+        assert pytest.approx(sol_list["price"], rel=1e-3) == 3.98205152215
 
     with subtests.test(
         "Check variable o&m as scalar and as array have same LCOH with zero escalation"
@@ -159,7 +159,7 @@ def test_variable_om_with_escalation(subtests):
 
     outputs_dir = Path.cwd() / "outputs"
 
-    yaml_fpath = outputs_dir / "profast_output_hydrogen.yaml"
+    yaml_fpath = outputs_dir / "profast_output_hydrogen_config.yaml"
 
     # load the profast dictionary
     pf_dict = load_yaml(yaml_fpath)
@@ -180,7 +180,7 @@ def test_variable_om_with_escalation(subtests):
     sol_init, summary_init, price_breakdown_init = run_profast(pf)
 
     with subtests.test("Check original LCOH with escalation"):
-        assert pytest.approx(sol_init["price"], rel=1e-3) == 3.2252044
+        assert pytest.approx(sol_init["price"], rel=1e-3) == 2.9981730
 
     # calculate annual water cost
     water_cost_per_gal = 0.003  # [$/gal]
@@ -210,7 +210,7 @@ def test_variable_om_with_escalation(subtests):
         assert sol_scalar["price"] > sol_init["price"]
 
     with subtests.test("Check variable o&m as scalar LCOH with escalation value"):
-        assert pytest.approx(sol_scalar["price"], rel=1e-3) == 3.2366755610647453
+        assert pytest.approx(sol_scalar["price"], rel=1e-3) == 3.00964412171
 
     # calculate water cost per kg-H2 and format for costs per year
     annual_water_cost_USD_per_year = [annual_water_cost_USD_per_kg] * plant_life
@@ -236,7 +236,7 @@ def test_variable_om_with_escalation(subtests):
         assert sol_list["price"] > sol_init["price"]
 
     with subtests.test("Check variable o&m as array LCOH with escalation value"):
-        assert pytest.approx(sol_list["price"], rel=1e-3) == 3.23328899520
+        assert pytest.approx(sol_list["price"], rel=1e-3) == 3.0062575558
 
     with subtests.test("Check variable o&m as array LCOH is less than variable o&m as scalar LCOH"):
         assert sol_scalar["price"] > sol_list["price"]
