@@ -52,8 +52,8 @@ technologies:
       model: "pysam_battery"
     model_inputs:
       shared_parameters:
-        rated_resource_capacity: 50000
-        max_capacity: 1000000
+        rated_resource_capacity: 25000 #50000
+        max_capacity: 50000 #1000000
         n_control_window: 24
         n_horizon_window: 48
         init_charge_percent: 0.5

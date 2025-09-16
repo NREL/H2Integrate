@@ -130,7 +130,6 @@ class PyomoControllerBaseClass(ControllerBaseClass):
             soc = np.zeros(self.n_timesteps)
 
             ti = list(range(0, self.n_timesteps, self.config.n_control_window))
-
             for t in ti:
                 self.update_time_series_parameters()
 
@@ -168,8 +167,11 @@ class PyomoControllerBaseClass(ControllerBaseClass):
                     total_resource_out[j] = np.minimum(
                         demand_in[j - t], storage_resource_out[j] + resource_in[j - t]
                     )
+
                     unmet_demand[j] = np.maximum(0, demand_in[j - t] - total_resource_out[j])
-                    excess_resource[j] = np.maximum(0, resource_in[j - t] - total_resource_out[j])
+                    excess_resource[j] = np.maximum(
+                        0, storage_resource_out[j] + resource_in[j - t] - demand_in[j - t]
+                    )
 
             return total_resource_out, storage_resource_out, unmet_demand, excess_resource, soc
 
