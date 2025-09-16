@@ -317,48 +317,56 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass, CostModelBaseCla
         # initialize outputs
         storage_power_out_timesteps = np.zeros(self.config.n_control_window)
         soc_timesteps = np.zeros(self.config.n_control_window)
-        t_val = np.zeros(self.config.n_control_window)
+        np.zeros(self.config.n_control_window)
 
         for t in range(len(storage_dispatch_commands)):
             # Set to 0.0 for each loop start
             # self.unmet_demand = 0.0
             # self.excess_resource = 0.0
-            # self.requested_electricity = storage_dispatch_commands[t]
+            self.requested_electricity = storage_dispatch_commands[t]
 
             # Grab the available charge/discharge capacity of the battery
-            # self.system_model.value("P_chargeable")
+            P_chargeable = self.system_model.value("P_chargeable")
+            if P_chargeable > self.config.rated_resource_capacity:
+                self.system_model.value("P_chargeable", self.config.rated_resource_capacity)
+                # storage_dispatch_commands[t] = self.config.rated_resource_capacity
 
             # If discharging... electricity_in is the commanded electricity from dispatch,
             # accounting for demand, positive is charge and negative is discharge
-            # if storage_dispatch_commands[t] > 0.0:
-            #     # If the battery has been discharged to its minimum SOC level (with a tolerance)
-            #     if (self.system_model.value("SOC") - self.system_model.value("minimum_SOC"))<0.05:
-            #         # self.unmet_demand = storage_dispatch_commands[t]
-            #         # Avoid trickle power by setting to 0.0
-            #         storage_dispatch_commands[t] = 0.0
+            if storage_dispatch_commands[t] > 0.0:
+                # If the battery has been discharged to its minimum SOC level (with a tolerance)
+                if (self.system_model.value("SOC") - self.system_model.value("minimum_SOC")) < 0.05:
+                    #         # self.unmet_demand = storage_dispatch_commands[t]
+                    #         # Avoid trickle power by setting to 0.0
+                    storage_dispatch_commands[t] = 0.0
+
+            # added by Jared, may not be needed
+            if storage_dispatch_commands[t] < 0.0:
+                # If the battery has been discharged to its minimum SOC level (with a tolerance)
+                if (self.system_model.value("maximum_SOC") - self.system_model.value("SOC")) < 0.05:
+                    #         # self.unmet_demand = storage_dispatch_commands[t]
+                    #         # Avoid trickle power by setting to 0.0
+                    storage_dispatch_commands[t] = 0.0
 
             # If charging...
             # if storage_dispatch_commands[t] < 0.0:
-            #     # If the input electricity magnitude is greater than battery chargeable capacity
+            # #     # If the input electricity magnitude is greater than battery chargeable capacity
             #     if storage_dispatch_commands[t] < P_chargeable:
-            #         # Eliminates trickle power (~10-15 kW) when battery is fully charged
+            # #         # Eliminates trickle power (~10-15 kW) when battery is fully charged
             #         if P_chargeable > 0.0:
-            #             # import pdb; pdb.set_trace()
             #             P_chargeable = 0.0
 
-            #         # Change the sign to indicate that a positive amount of power is being
-            #         # passed through the battery model
-            #         self.excess_resource = -1 * (storage_dispatch_commands[t] - P_chargeable)
-            #         # Limit the charging power to the available capacity of the battery
+            # #         # Change the sign to indicate that a positive amount of power is being
+            # #         # passed through the battery model
+            # #         self.excess_resource = -1 * (storage_dispatch_commands[t] - P_chargeable)
+            # #         # Limit the charging power to the available capacity of the battery
             #         storage_dispatch_commands[t] = P_chargeable
-            # if storage_dispatch_commands[t] < 0:
-            #     self.system_model.value("P_chargeable", self.config.rated_resource_capacity)
 
             # Set the input variable to the desired value
-            t_val[t] = t
+            # t_val[t] = t
             self.system_model.value(control_variable, storage_dispatch_commands[t])
 
-            self.system_model.export()
+            # self.system_model.export()
             # keys = list(battery_dictionary.keys())
             # rows = zip(*[battery_dictionary[k] for k in keys])
             # import csv
@@ -367,9 +375,6 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass, CostModelBaseCla
             #     writer.writerow(keys)
             #     writer.writerows(rows)
 
-            import pdb
-
-            pdb.set_trace()
             # Simulate the PySAM BatteryStateful model
             self.system_model.execute(0)
 

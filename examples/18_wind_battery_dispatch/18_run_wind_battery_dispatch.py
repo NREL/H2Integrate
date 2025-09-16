@@ -8,10 +8,7 @@ from h2integrate.core.h2integrate_model import H2IntegrateModel
 model = H2IntegrateModel("h2i_wind_to_battery_storage.yaml")
 
 demand_profile = np.ones(8760) * 100.0
-import pdb
 
-
-pdb.set_trace()
 
 # TODO: Update with demand module once it is developed
 model.setup()
