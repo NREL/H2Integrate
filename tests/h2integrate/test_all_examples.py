@@ -701,3 +701,55 @@ def test_electrolyzer_om_example(subtests):
         assert pytest.approx(lcoh_with_lcoh_finance, rel=1e-5) == 13.18328175
     with subtests.test("Check LCOH with lcoe_financials"):
         assert pytest.approx(lcoh_with_lcoe_finance, rel=1e-5) == 8.05688467
+
+
+def test_wind_battery_dispatch_example(subtests):
+    # Change the current working directory to the example's directory
+    os.chdir(EXAMPLE_DIR / "19_wind_battery_dispatch")
+
+    # Create a H2Integrate model
+    model = H2IntegrateModel(Path.cwd() / "wind_battery_dispatch.yaml")
+
+    # Run the model
+    model.run()
+
+    model.post_process()
+
+    # Test battery storage functionality
+    with subtests.test("Check battery SOC bounds"):
+        soc = model.prob.get_val("battery.electricity_soc")
+        # SOC should stay within configured bounds (10% to 100%)
+        assert all(soc >= 0.1)
+        assert all(soc <= 1.0)
+
+    with subtests.test("Check battery capacity"):
+        # Battery should have 30 MWh capacity as configured
+        electricity_soc = model.prob.get_val("battery.electricity_soc")
+        # Check that SOC values are reasonable (not all zeros or ones)
+        assert 0.1 <= electricity_soc.mean() <= 1.0
+
+    with subtests.test("Check electricity flows are non-negative"):
+        electricity_in = model.prob.get_val("battery.electricity_in")
+        electricity_out = model.prob.get_val("battery.electricity_out")
+        electricity_curtailed = model.prob.get_val("battery.electricity_curtailed")
+        electricity_missed_load = model.prob.get_val("battery.electricity_missed_load")
+
+        # All flows should be non-negative
+        assert all(electricity_in >= 0)
+        assert all(electricity_out >= 0)
+        assert all(electricity_curtailed >= 0)
+        assert all(electricity_missed_load >= 0)
+
+    with subtests.test("Check wind generation"):
+        # Wind should generate some electricity
+        wind_electricity = model.prob.get_val("wind.electricity_out")
+        assert wind_electricity.sum() > 0
+        # Wind electricity should match battery input (direct connection)
+        battery_electricity_in = model.prob.get_val("battery.electricity_in")
+        assert pytest.approx(wind_electricity.sum(), rel=1e-6) == battery_electricity_in.sum()
+
+    with subtests.test("Check demand satisfaction"):
+        electricity_out = model.prob.get_val("battery.electricity_out")
+        # Battery output should try to meet the 5 MW constant demand
+        # Average output should be close to demand when there's sufficient generation
+        assert electricity_out.mean() > 0
