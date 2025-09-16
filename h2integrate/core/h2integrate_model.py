@@ -71,6 +71,7 @@ class H2IntegrateModel:
         self.tech_config_path = config_path.parent / config.get("technology_config")
         self.technology_config = load_tech_yaml(self.tech_config_path)
         self.plant_config = load_plant_yaml(config_path.parent / config.get("plant_config"))
+        self.plant_config_path = config_path.parent / config.get("plant_config")
 
     def create_custom_models(self, model_config, config_parent_path, model_types, prefix=""):
         """This method loads custom models from the specified directory and adds them to the
@@ -142,32 +143,28 @@ class H2IntegrateModel:
         self.create_custom_models(
             self.technology_config["technologies"],
             self.tech_config_path.parent,
-            ["performance_model", "cost_model", "financial_model"],
+            ["performance_model", "cost_model", "finance_model"],
         )
 
         # check for custom finance models
         if "finance_parameters" in self.plant_config:
+            finance_groups = self.plant_config["finance_parameters"]["finance_groups"]
+
             # check for single custom finance models
-            if "model_inputs" in self.plant_config["finance_parameters"]["finance_groups"]:
+            if "model_inputs" in finance_groups:
                 self.create_custom_models(
                     self.plant_config,
                     self.plant_config_path.parent,
-                    ["finance_parameters"],
+                    ["finance_groups"],
                     prefix="finance_",
                 )
 
             # check for named finance models
-            if any("model_inputs" in v for k, v in self.plant_config["finance_parameters"].items()):
-                finance_model_names = [
-                    k
-                    for k, v in self.plant_config["finance_parameters"].items()
-                    if "model_inputs" in v
-                ]
-                finance_params_config = {
-                    "finance_parameters": self.plant_config["finance_parameters"]
-                }
+            if any("model_inputs" in v for k, v in finance_groups.items()):
+                finance_model_names = [k for k, v in finance_groups.items() if "model_inputs" in v]
+                finance_groups_config = {"finance_groups": finance_groups}
                 self.create_custom_models(
-                    finance_params_config,
+                    finance_groups_config,
                     self.plant_config_path.parent,
                     finance_model_names,
                     prefix="finance_",

@@ -701,3 +701,36 @@ def test_electrolyzer_om_example(subtests):
         assert pytest.approx(lcoh_with_lcoh_finance, rel=1e-5) == 13.18328175
     with subtests.test("Check LCOH with lcoe_financials"):
         assert pytest.approx(lcoh_with_lcoe_finance, rel=1e-5) == 8.05688467
+
+
+def test_wombat_electrolyzer_example(subtests):
+    # Change the current working directory to the example's directory
+    os.chdir(EXAMPLE_DIR / "08_wind_electrolyzer")
+
+    # Create a H2Integrate model
+    model = H2IntegrateModel(Path.cwd() / "wind_plant_electrolyzer.yaml")
+
+    model.run()
+
+    lcoe_with_profast_model = model.prob.get_val(
+        "finance_subgroup_electricity_profast.LCOE", units="USD/MW/h"
+    )[0]
+    lcoe_with_custom_model = model.prob.get_val(
+        "finance_subgroup_electricity_custom.LCOE", units="USD/MW/h"
+    )[0]
+
+    lcoh_with_custom_model = model.prob.get_val(
+        "finance_subgroup_hydrogen.LCOH_produced_custom_model", units="USD/kg"
+    )[0]
+    lcoh_with_profast_model = model.prob.get_val(
+        "finance_subgroup_hydrogen.LCOH_produced_profast_model", units="USD/kg"
+    )[0]
+
+    with subtests.test("Check LCOH from custom  model"):
+        assert pytest.approx(lcoh_with_custom_model, rel=1e-5) == 4.49202378
+    with subtests.test("Check LCOH from ProFAST model"):
+        assert pytest.approx(lcoh_with_profast_model, rel=1e-5) == 5.34208563
+    with subtests.test("Check LCOE from custom model"):
+        assert pytest.approx(lcoe_with_custom_model, rel=1e-5) == 51.36276
+    with subtests.test("Check LCOE from ProFAST model"):
+        assert pytest.approx(lcoe_with_profast_model, rel=1e-5) == 59.31169
