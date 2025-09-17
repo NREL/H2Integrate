@@ -21,13 +21,6 @@ The models in the following two examples use standard H2Integrate configuration 
 You can combine an H2Integrate model and a custom model for the same technology within a single analysis.
 ```
 
-### Custom General Finance Model Example: simple lco finance model
-
-To demonstrate this capability, we include an example of a custom general finance model: a **simple lco calculation** found in [Example 08: Wind Electrolyzer Example](https://github.com/NREL/H2Integrate/tree/develop/examples/08_wind_electrolyzer/). This example includes:
-- A `SimpleLCOFinanceConfig`: configuration class that is populated with inputs specific to that finance model.
-- A `SimpleLCOFinance` general finance model that computes the levelized cost of a commodity
-
-
 ### Custom Technology Model Example: paper mill model
 
 To demonstrate this capability, we include a minimal example of a custom technology model: a **paper mill**. This example includes:
@@ -38,6 +31,11 @@ To demonstrate this capability, we include a minimal example of a custom technol
 
 Refer to the [Paper Mill Model Example](https://github.com/NREL/H2Integrate/tree/develop/examples/06_custom_tech/) for a complete walkthrough.
 
+### Custom General Finance Model Example: simple LCO finance model
+
+To demonstrate this capability, we include an example of a custom general finance model: a **simple LCO (levelized cost of) calculation** found in [Example 08: Wind Electrolyzer Example](https://github.com/NREL/H2Integrate/tree/develop/examples/08_wind_electrolyzer/). This example includes:
+- A `SimpleLCOFinanceConfig`: configuration class that is populated with inputs specific to that finance model.
+- A `SimpleLCOFinance` general finance model that computes the levelized cost of a commodity
 
 ## Key benefits
 
