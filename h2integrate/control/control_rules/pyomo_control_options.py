@@ -1,148 +1,80 @@
 import numpy as np
+from attrs import field, define
 
-from h2integrate.control.control_strategies.pyomo_controllers import (
-    HeuristicLoadFollowingController,
-    SimpleBatteryControllerHeuristic,
-)
+from h2integrate.core.utilities import BaseConfig
+from h2integrate.core.validators import gt_zero, contains, gte_zero, range_val
 
 
-class PyomoControlOptions:
+@define
+class PyomoControlOptions(BaseConfig):
     """
-    Class for setting dispatch options.
+    Configuration class for setting dispatch options.
 
-    Args:
-        control_options (dict): Contains attribute key-value pairs to change default options.
+    This class inherits from BaseConfig and uses attrs for field definition and validation.
+    Configuration can be set by passing a dictionary to the from_dict() class method or by
+    providing values directly to the constructor.
 
-            - **solver** (str, default='cbc'): MILP solver used for dispatch optimization problem.
-            Options are `('glpk', 'cbc', 'xpress', 'xpress_persistent', 'gurobi_ampl', 'gurobi')`.
+    Attributes:
+        - **solver** (str, default='cbc'): MILP solver used for dispatch optimization problem.
+        Options are `('glpk', 'cbc', 'xpress', 'xpress_persistent', 'gurobi_ampl', 'gurobi')`.
 
-            - **solver_options** (dict): Dispatch solver options.
+        - **solver_options** (dict): Dispatch solver options.
 
-            - **battery_dispatch** (str, default='simple'): Sets the battery dispatch model to use
-            for dispatch. Options are:
-                `('simple', 'one_cycle_heuristic', 'heuristic', 'non_convex_LV', 'convex_LV')`.
+        - **include_lifecycle_count** (bool, default=True): Should battery lifecycle counting
+        be included.
 
-            - **grid_charging** (bool, default=True): Can the battery charge from the grid.
+        - **lifecycle_cost_per_kWh_cycle** (float, default=0.0265): If include_lifecycle_count,
+        cost per kWh cycle.
 
-            - **pv_charging_only** (bool, default=False): Whether restricted to only charge from PV
-            (ITC qualification).
+        - **max_lifecycle_per_day** (int, default=None): If include_lifecycle_count, how many
+        cycles allowed per day.
 
-            - **include_lifecycle_count** (bool, default=True): Should battery lifecycle counting
-            be included.
+        - **n_look_ahead_periods** (int, default=48): Number of time periods dispatch
+        looks ahead.
 
-            - **lifecycle_cost_per_kWh_cycle** (float, default=0.0265): If include_lifecycle_count,
-            cost per kWh cycle.
+        - **n_roll_periods** (int, default=24): Number of time periods simulation rolls forward
+        after each dispatch.
 
-            - **max_lifecycle_per_day** (int, default=None): If include_lifecycle_count, how many
-            cycles allowed per day.
+        - **time_weighting_factor** (float, default=0.995): Discount factor for the time periods
+        in the look ahead period.
 
-            - **n_look_ahead_periods** (int, default=48): Number of time periods dispatch
-            looks ahead.
+        - **log_name** (str, default=''): Dispatch log file name, empty str will result in no
+        log (for development).
 
-            - **n_roll_periods** (int, default=24): Number of time periods simulation rolls forward
-            after each dispatch.
+        - **use_clustering** (bool, default=False): If True, the simulation will be run for a
+        selected set of "exemplar" days.
 
-            - **time_weighting_factor** (float, default=0.995): Discount factor for the time periods
-            in the look ahead period.
+        - **n_clusters** (int, default=30).
 
-            - **log_name** (str, default=''): Dispatch log file name, empty str will result in no
-            log (for development).
+        - **clustering_weights** (dict, default={}): Custom weights used for classification
+        metrics for data clustering. If empty, default weights will be used.
 
-            - **is_test_start_year** (bool, default=False): If True, simulation solves for first 5
-            days of the year.
+        - **clustering_divisions** (dict, default={}): Custom number of averaging periods for
+        classification metrics for data clustering. If empty, default values will be used.
 
-            - **is_test_end_year** (bool, default=False): If True, simulation solves for last 5
-            days of the year.
+        - **use_higher_hours** bool (default = False): if True, the simulation will run extra
+        hours analysis (must be used with load following)
 
-            - **use_clustering** (bool, default=False): If True, the simulation will be run for a
-            selected set of "exemplar" days.
-
-            - **n_clusters** (int, default=30).
-
-            - **clustering_weights** (dict, default={}): Custom weights used for classification
-            metrics for data clustering. If empty, default weights will be used.
-
-            - **clustering_divisions** (dict, default={}): Custom number of averaging periods for
-            classification metrics for data clustering. If empty, default values will be used.
-
-            - **use_higher_hours** bool (default = False): if True, the simulation will run extra
-            hours analysis (must be used with load following)
-
-            - **higher_hours** (dict, default = {}): Higher hour count parameters: the value of
-            power that must be available above the schedule and the number of hours in a row
+        - **higher_hours** (dict, default = {}): Higher hour count parameters: the value of
+        power that must be available above the schedule and the number of hours in a row
 
     """
 
-    def __init__(self, control_options: dict | None = None):
-        self.solver: str = "cbc"
-        self.solver_options: dict = {}  # used to update solver options, see solver for options
-        self.battery_dispatch: str = "simple"
-        self.include_lifecycle_count: bool = True
-        self.lifecycle_cost_per_kWh_cycle: float = (
-            0.0265  # Estimated using SAM output (lithium-ion battery)
-        )
-        self.max_lifecycle_per_day: int = np.inf
-        self.grid_charging: bool = True
-        self.pv_charging_only: bool = False
-        self.n_look_ahead_periods: int = 48
-        self.time_weighting_factor: float = 0.995
-        self.n_roll_periods: int = 24
-        self.log_name: str = ""  # NOTE: Logging is not thread safe
-        self.is_test_start_year: bool = False
-        self.is_test_end_year: bool = False
-
-        self.use_clustering: bool = False
-        self.n_clusters: int = 30
-        self.clustering_weights: dict = {}
-        self.clustering_divisions: dict = {}
-
-        self.use_higher_hours: bool = False
-        self.higher_hours: dict = {}
-
-        if control_options is not None:
-            for key, value in control_options.items():
-                if hasattr(self, key):
-                    if type(getattr(self, key)) is type(value):
-                        setattr(self, key, value)
-                    else:
-                        try:
-                            value = type(getattr(self, key))(value)
-                            setattr(self, key, value)
-                        except TypeError as e:
-                            raise TypeError(
-                                f"'{key}' has wrong data type. Should be {type(getattr(self, key))}"
-                            ) from e
-                else:
-                    raise NameError(f"'{key}' is not an attribute in {type(self).__name__}")
-
-        if self.is_test_start_year and self.is_test_end_year:
-            print("WARNING: Dispatch optimization START and END of year testing is enabled!")
-        elif self.is_test_start_year:
-            print("WARNING: Dispatch optimization START of year testing is enabled!")
-        elif self.is_test_end_year:
-            print("WARNING: Dispatch optimization END of year testing is enabled!")
-
-        if self.pv_charging_only and self.grid_charging:
-            raise ValueError(
-                "Battery cannot be restricted to charge from PV only if grid_charging is enabled"
-            )
-
-        self._battery_dispatch_model_options = {
-            "heuristic": SimpleBatteryControllerHeuristic,
-            "load_following_heuristic": HeuristicLoadFollowingController,
-        }
-        if self.battery_dispatch in self._battery_dispatch_model_options:
-            self.battery_dispatch_class = self._battery_dispatch_model_options[
-                self.battery_dispatch
-            ]
-            if "heuristic" in self.battery_dispatch:
-                # FIXME: This should be set to the number of time steps within a day.
-                #  Dispatch time duration is not set as of now...
-                self.n_roll_periods = 24
-                self.n_look_ahead_periods = self.n_roll_periods
-                # dispatch cycle counting is not available in heuristics
-                self.include_lifecycle_count = False
-        else:
-            raise ValueError(
-                f"'{self.battery_dispatch}' is not currently a battery dispatch class."
-            )
+    solver: str = field(
+        default="cbc",
+        validator=contains(["glpk", "cbc", "xpress", "xpress_persistent", "gurobi_ampl", "gurobi"]),
+    )
+    solver_options: dict = field(default_factory=dict)
+    include_lifecycle_count: bool = field(default=True)
+    lifecycle_cost_per_kWh_cycle: float = field(default=0.0265, validator=gte_zero)
+    max_lifecycle_per_day: int | float = field(default=np.inf, validator=gt_zero)
+    n_look_ahead_periods: int = field(default=48, validator=gt_zero)
+    time_weighting_factor: float = field(default=0.995, validator=range_val(0, 1))
+    n_roll_periods: int = field(default=24, validator=gt_zero)
+    log_name: str = field(default="")
+    use_clustering: bool = field(default=False)
+    n_clusters: int = field(default=30, validator=gt_zero)
+    clustering_weights: dict = field(default_factory=dict)
+    clustering_divisions: dict = field(default_factory=dict)
+    use_higher_hours: bool = field(default=False)
+    higher_hours: dict = field(default_factory=dict)
