@@ -23,7 +23,7 @@ class PyomoDispatchWind(PyomoRuleBaseClass):
             pyo.Var(
                 doc="Electricity generation from wind turbines [MW]",
                 domain=pyo.NonNegativeReals,
-                units=eval("pyo.units." + self.config.resource_storage_units),
+                units=eval("pyo.units." + self.config.commodity_storage_units),
                 initialize=0.0,
             ),
         )

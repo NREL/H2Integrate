@@ -8,8 +8,6 @@ technologies:
       config: !include tech_inputs/hopp_config.yaml
     cost_model:
       model: "hopp"
-    financial_model:
-      group: default
     electrolyzer_rating: 720. # MW
     model_inputs:
       cost_parameters:
@@ -19,8 +17,6 @@ technologies:
       model: "eco_pem_electrolyzer_performance"
     cost_model:
       model: "singlitico_electrolyzer_cost"
-    financial_model:
-      group: default
     model_inputs:
       shared_parameters:
         location: "onshore"
@@ -49,26 +45,24 @@ technologies:
       model: "pass_through_controller"
     cost_model:
       model: "h2_storage"
-    financial_model:
-      group: default
     model_inputs:
       performance_parameters:
-        rating: 720.
+        rated_commodity_capacity: 720.
         size_capacity_from_demand:
           flag: True # If True, then storage is sized to provide steady-state storage
         capacity_from_max_on_turbine_storage: False # if True, then days of storage is ignored and storage capacity is based on how much h2 storage fits on the turbines in the plant using Kottenstete 2003.
         type: "lined_rock_cavern" # can be one of ["none", "pipe", "turbine", "pressure_vessel", "salt_cavern", "lined_rock_cavern"]
         days: 0 #how many days worth of production we should be able to store (this is ignored if `capacity_from_max_on_turbine_storage` is set to True)
       control_parameters:
-        resource_name: "hydrogen"
-        resource_rate_units: "kg/h"
+        commodity_name: "hydrogen"
+        commodity_rate_units: "kg/h"
   steel:
     performance_model:
       model: "steel_performance"
     cost_model:
       model: "steel_cost"
-    financial_model:
-      group: steel
+    finance_model:
+      model: "steel_cost"
     model_inputs:
       shared_parameters:
         capacity_factor: 0.9

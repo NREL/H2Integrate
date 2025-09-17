@@ -39,8 +39,8 @@ technologies:
         cost_per_kw: 1500.0
         cost_year: 2019
       dispatch_rule_parameters:
-        resource_name: "electricity"
-        resource_storage_units: "kW"
+        commodity_name: "electricity"
+        commodity_storage_units: "kW"
   electrolyzer:
     performance_model:
       model: "eco_pem_electrolyzer_performance"
@@ -65,8 +65,8 @@ technologies:
         include_degradation_penalty: True #include degradation
         turndown_ratio: 0.1 #turndown_ratio = minimum_cluster_power/cluster_rating_MW
       dispatch_rule_parameters:
-        resource_name: "hydrogen"
-        resource_storage_units: "kg"
+        commodity_name: "hydrogen"
+        commodity_storage_units: "kg"
       cost_parameters:
         cost_year: 2021
       financial_parameters:
@@ -85,8 +85,8 @@ technologies:
       model: "h2_storage"
     model_inputs:
       shared_parameters:
-        resource_name: "hydrogen"
-        rated_resource_capacity: 720. # electrolyzer rating for sizing
+        commodity_name: "hydrogen"
+        rated_commodity_capacity: 720. # electrolyzer rating for sizing
       performance_parameters:
         size_capacity_from_demand:
           flag: False # If True, then storage is sized to provide steady-state storage
@@ -107,7 +107,7 @@ technologies:
         n_control_window: 24
         n_horizon_window: 48
         tech_name: "h2_storage"
-        resource_storage_units: "kg"
+        commodity_storage_units: "kg"
       dispatch_rule_parameters:
-        resource_name: "hydrogen"
-        resource_storage_units: "kg"
+        commodity_name: "hydrogen"
+        commodity_storage_units: "kg"

@@ -10,8 +10,8 @@ from h2integrate.control.control_strategies.controller_baseclass import Controll
 
 @define
 class PassThroughOpenLoopControllerConfig(BaseConfig):
-    resource_name: str = field()
-    resource_rate_units: str = field()
+    commodity_name: str = field()
+    commodity_rate_units: str = field()
 
 
 class PassThroughOpenLoopController(ControllerBaseClass):
@@ -30,17 +30,17 @@ class PassThroughOpenLoopController(ControllerBaseClass):
         )
 
         self.add_input(
-            f"{self.config.resource_name}_in",
+            f"{self.config.commodity_name}_in",
             shape_by_conn=True,
-            units=self.config.resource_rate_units,
-            desc=f"{self.config.resource_name} input timeseries from production to storage",
+            units=self.config.commodity_rate_units,
+            desc=f"{self.config.commodity_name} input timeseries from production to storage",
         )
 
         self.add_output(
-            f"{self.config.resource_name}_out",
-            copy_shape=f"{self.config.resource_name}_in",
-            units=self.config.resource_rate_units,
-            desc=f"{self.config.resource_name} output timeseries from plant after storage",
+            f"{self.config.commodity_name}_out",
+            copy_shape=f"{self.config.commodity_name}_in",
+            units=self.config.commodity_rate_units,
+            desc=f"{self.config.commodity_name} output timeseries from plant after storage",
         )
 
     def compute(self, inputs, outputs):
@@ -49,13 +49,13 @@ class PassThroughOpenLoopController(ControllerBaseClass):
 
         Args:
             inputs (dict): Dictionary of input values.
-                - {resource_name}_in: Input resource flow.
+                - {commodity_name}_in: Input resource flow.
             outputs (dict): Dictionary of output values.
-                - {resource_name}_out: Output resource flow, equal to the input flow.
+                - {commodity_name}_out: Output resource flow, equal to the input flow.
         """
 
         # Assign the input to the output
-        outputs[f"{self.config.resource_name}_out"] = inputs[f"{self.config.resource_name}_in"]
+        outputs[f"{self.config.commodity_name}_out"] = inputs[f"{self.config.commodity_name}_in"]
 
     def setup_partials(self):
         """
@@ -71,13 +71,13 @@ class PassThroughOpenLoopController(ControllerBaseClass):
         """
 
         # Get the size of the input/output array
-        size = self._get_var_meta(f"{self.config.resource_name}_in", "size")
+        size = self._get_var_meta(f"{self.config.commodity_name}_in", "size")
 
         # Declare partials sparsely for all elements as an identity matrix
         # (diagonal elements are 1.0, others are 0.0)
         self.declare_partials(
-            of=f"{self.config.resource_name}_out",
-            wrt=f"{self.config.resource_name}_in",
+            of=f"{self.config.commodity_name}_out",
+            wrt=f"{self.config.commodity_name}_in",
             rows=np.arange(size),
             cols=np.arange(size),
             val=np.ones(size),  # Diagonal elements are 1.0
@@ -92,10 +92,10 @@ class DemandOpenLoopControllerConfig(BaseConfig):
     This class defines the parameters required to configure the `DemandOpenLoopController`.
 
     Attributes:
-        resource_name (str): Name of the resource being controlled (e.g., "hydrogen").
-        resource_rate_units (str): Units of the resource (e.g., "kg/h").
+        commodity_name (str): Name of the resource being controlled (e.g., "hydrogen").
+        commodity_rate_units (str): Units of the resource (e.g., "kg/h").
         max_capacity (float): Maximum storage capacity of the resource (in non-rate units,
-            e.g., "kg" if `resource_rate_units` is "kg/h").
+            e.g., "kg" if `commodity_rate_units` is "kg/h").
         max_charge_percent (float): Maximum allowable state of charge (SOC) as a percentage
             of `max_capacity`, represented as a decimal between 0 and 1.
         min_charge_percent (float): Minimum allowable SOC as a percentage of `max_capacity`,
@@ -117,11 +117,11 @@ class DemandOpenLoopControllerConfig(BaseConfig):
             the storage, represented as a decimal between 0 and 1 (e.g., 0.81 for 81% efficiency).
             Optional if `charge_efficiency` and `discharge_efficiency` are provided.
         demand_profile (scalar or list): The demand values for each time step (in the same units
-            as `resource_rate_units`) or a scalar for a constant demand.
+            as `commodity_rate_units`) or a scalar for a constant demand.
     """
 
-    resource_name: str = field()
-    resource_rate_units: str = field()
+    commodity_name: str = field()
+    commodity_rate_units: str = field()
     max_capacity: float = field()
     max_charge_percent: float = field(validator=range_val(0, 1))
     min_charge_percent: float = field(validator=range_val(0, 1))
@@ -178,22 +178,22 @@ class DemandOpenLoopController(ControllerBaseClass):
             efficiencies, and demand profile.
 
     Inputs:
-        {resource_name}_in (float): Input resource flow timeseries (e.g., hydrogen production).
-            - Units: Defined in `resource_rate_units` (e.g., "kg/h").
+        {commodity_name}_in (float): Input resource flow timeseries (e.g., hydrogen production).
+            - Units: Defined in `commodity_rate_units` (e.g., "kg/h").
 
     Outputs:
-        {resource_name}_out (float): Output resource flow timeseries after storage.
-            - Units: Defined in `resource_rate_units` (e.g., "kg/h").
-        {resource_name}_soc (float): State of charge (SOC) timeseries for the storage system.
+        {commodity_name}_out (float): Output resource flow timeseries after storage.
+            - Units: Defined in `commodity_rate_units` (e.g., "kg/h").
+        {commodity_name}_soc (float): State of charge (SOC) timeseries for the storage system.
             - Units: "unitless" (percentage of maximum capacity given as a ratio between 0 and 1).
-        {resource_name}_excess_resource (float): Curtailment timeseries for unused input resource.
-            - Units: Defined in `resource_rate_units` (e.g., "kg/h").
+        {commodity_name}_excess_resource (float): Curtailment timeseries for unused input resource.
+            - Units: Defined in `commodity_rate_units` (e.g., "kg/h").
             - Note: curtailment in this case does not reduce what the converter produces, but
                 rather the system just does not use it (throws it away) because this controller is
                 specific to the storage technology and has no influence on other technologies in
                 the system.
-        {resource_name}_unmet_demand (float): Missed load timeseries when demand exceeds supply.
-            - Units: Defined in `resource_rate_units` (e.g., "kg/h").
+        {commodity_name}_unmet_demand (float): Missed load timeseries when demand exceeds supply.
+            - Units: Defined in `commodity_rate_units` (e.g., "kg/h").
 
     """
 
@@ -204,53 +204,53 @@ class DemandOpenLoopController(ControllerBaseClass):
 
         self.n_timesteps = self.options["plant_config"]["plant"]["simulation"]["n_timesteps"]
 
-        resource_name = self.config.resource_name
+        commodity_name = self.config.commodity_name
 
         self.add_input(
-            f"{resource_name}_in",
+            f"{commodity_name}_in",
             shape_by_conn=True,
-            units=self.config.resource_rate_units,
-            desc=f"{resource_name} input timeseries from production to storage",
+            units=self.config.commodity_rate_units,
+            desc=f"{commodity_name} input timeseries from production to storage",
         )
 
         if isinstance(self.config.demand_profile, int | float):
             self.config.demand_profile = [self.config.demand_profile] * self.n_timesteps
 
         self.add_input(
-            f"{resource_name}_demand_profile",
-            units=f"{self.config.resource_rate_units}/h",
+            f"{commodity_name}_demand_profile",
+            units=f"{self.config.commodity_rate_units}/h",
             val=self.config.demand_profile,
             shape=self.n_timesteps,
-            desc=f"{resource_name} demand profile timeseries",
+            desc=f"{commodity_name} demand profile timeseries",
         )
 
         self.add_output(
-            f"{resource_name}_out",
-            copy_shape=f"{resource_name}_in",
-            units=self.config.resource_rate_units,
-            desc=f"{resource_name} output timeseries from plant after storage",
+            f"{commodity_name}_out",
+            copy_shape=f"{commodity_name}_in",
+            units=self.config.commodity_rate_units,
+            desc=f"{commodity_name} output timeseries from plant after storage",
         )
 
         self.add_output(
-            f"{resource_name}_soc",
-            copy_shape=f"{resource_name}_in",
+            f"{commodity_name}_soc",
+            copy_shape=f"{commodity_name}_in",
             units="unitless",
-            desc=f"{resource_name} state of charge timeseries for storage",
+            desc=f"{commodity_name} state of charge timeseries for storage",
         )
 
         self.add_output(
-            f"{resource_name}_excess_resource",
-            copy_shape=f"{resource_name}_in",
-            units=self.config.resource_rate_units,
-            desc=f"{resource_name} curtailment timeseries for inflow resource at \
+            f"{commodity_name}_excess_resource",
+            copy_shape=f"{commodity_name}_in",
+            units=self.config.commodity_rate_units,
+            desc=f"{commodity_name} curtailment timeseries for inflow resource at \
                 storage point",
         )
 
         self.add_output(
-            f"{resource_name}_unmet_demand",
-            copy_shape=f"{resource_name}_in",
-            units=self.config.resource_rate_units,
-            desc=f"{resource_name} missed load timeseries",
+            f"{commodity_name}_unmet_demand",
+            copy_shape=f"{commodity_name}_in",
+            units=self.config.commodity_rate_units,
+            desc=f"{commodity_name} missed load timeseries",
         )
 
     def compute(self, inputs, outputs):
@@ -258,7 +258,7 @@ class DemandOpenLoopController(ControllerBaseClass):
         Compute the state of charge (SOC) and output flow based on demand and storage constraints.
 
         """
-        resource_name = self.config.resource_name
+        commodity_name = self.config.commodity_name
         max_capacity = self.config.max_capacity
         max_charge_percent = self.config.max_charge_percent
         min_charge_percent = self.config.min_charge_percent
@@ -272,18 +272,18 @@ class DemandOpenLoopController(ControllerBaseClass):
         # the previous time step's value
         soc = deepcopy(init_charge_percent)
 
-        demand_profile = inputs[f"{resource_name}_demand_profile"]
+        demand_profile = inputs[f"{commodity_name}_demand_profile"]
 
         # initialize outputs
-        soc_array = outputs[f"{resource_name}_soc"]
-        excess_resource_array = outputs[f"{resource_name}_excess_resource"]
-        output_array = outputs[f"{resource_name}_out"]
-        unmet_demand_array = outputs[f"{resource_name}_unmet_demand"]
+        soc_array = outputs[f"{commodity_name}_soc"]
+        excess_resource_array = outputs[f"{commodity_name}_excess_resource"]
+        output_array = outputs[f"{commodity_name}_out"]
+        unmet_demand_array = outputs[f"{commodity_name}_unmet_demand"]
 
         # Loop through each time step
         for t, demand_t in enumerate(demand_profile):
             # Get the input flow at the current time step
-            input_flow = inputs[f"{resource_name}_in"][t]
+            input_flow = inputs[f"{commodity_name}_in"][t]
 
             # Calculate the available charge/discharge capacity
             available_charge = (max_charge_percent - soc) * max_capacity
@@ -334,13 +334,13 @@ class DemandOpenLoopController(ControllerBaseClass):
             # Record the missed load at the current time step
             unmet_demand_array[t] = max(0, (demand_t - output_array[t]))
 
-        outputs[f"{resource_name}_out"] = output_array
+        outputs[f"{commodity_name}_out"] = output_array
 
         # Return the SOC
-        outputs[f"{resource_name}_soc"] = soc_array
+        outputs[f"{commodity_name}_soc"] = soc_array
 
         # Return the excess resource
-        outputs[f"{resource_name}_excess_resource"] = excess_resource_array
+        outputs[f"{commodity_name}_excess_resource"] = excess_resource_array
 
         # Return the unmet load demand
-        outputs[f"{resource_name}_unmet_demand"] = unmet_demand_array
+        outputs[f"{commodity_name}_unmet_demand"] = unmet_demand_array

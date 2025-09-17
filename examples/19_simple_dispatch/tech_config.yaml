@@ -1,5 +1,5 @@
 name: "technology_config"
-description: "This hybrid plant produces hydrogen"
+description: "This plant has wind feeding into an electrolyzer with optimization"
 
 technologies:
   wind:
@@ -7,14 +7,12 @@ technologies:
       model: "wind_plant_performance"
     cost_model:
       model: "wind_plant_cost"
-    dispatch_rule_set:
-      model: "pyomo_dispatch_wind"
     resource:
       type: "pysam_wind"
       wind_speed: 9.
     model_inputs:
       shared_parameters:
-        num_turbines: 100
+        num_turbines: 2
         turbine_rating_kw: 8300
       performance_parameters:
         rotor_diameter: 196.
@@ -25,7 +23,7 @@ technologies:
         layout_params:
           row_D_spacing: 10.
           turbine_D_spacing: 10.
-        rating_range_kw: [1000, 5000]
+        rating_range_kw: [1000, 9000]
         floris_config: null
         operational_losses: 10.0
         timestep: [1, 60]
@@ -37,34 +35,30 @@ technologies:
         adjust_air_density_for_elevation: True
       cost_parameters:
         cost_per_kw: 1500.0
-        cost_year: 2024
-      dispatch_rule_parameters:
-        commodity_name: "electricity"
-        commodity_storage_units: "kW"
+        cost_year: 2019
   battery:
-    dispatch_rule_set:
-      model: "pyomo_dispatch_battery"
-    control_strategy:
-      model: "heuristic_load_following_controller"
     performance_model:
-      model: "pysam_battery"
+      model: "simple_generic_storage"
     cost_model:
-      model: "pysam_battery"
+      model: "atb_battery_cost"
+    control_strategy:
+      model: "demand_open_loop_controller"
     model_inputs:
       shared_parameters:
-        rated_commodity_capacity: 50000
-        max_capacity: 1000000
-        n_control_window: 24
-        n_horizon_window: 48
-        init_charge_percent: 0.5
-        max_charge_percent: 0.9
-        min_charge_percent: 0.1
-      performance_parameters:
-        cost_year: 2019
+        commodity_name: "electricity"
+        commodity_rate_units: "kW"
+        max_charge_rate: 5000.0  # kW/time step
+        max_capacity: 30000.0  # kWh
       control_parameters:
-        commodity_name: "electricity"
-        commodity_storage_units: "kW"
-        tech_name: "battery"
-      dispatch_rule_parameters:
-        commodity_name: "electricity"
-        commodity_storage_units: "kW"
+        max_charge_percent: 1.0  # percent as decimal
+        min_charge_percent: 0.1  # percent as decimal
+        init_charge_percent: 0.25  # percent as decimal
+        max_discharge_rate: 5000.0  # kW/time step
+        charge_efficiency: 1.0 # percent as decimal
+        discharge_efficiency: 1.0 # percent as decimal
+        demand_profile: 5000
+      cost_parameters:
+        cost_year: 2022
+        energy_capex: 300 # $/kWh
+        power_capex: 100 # $/kW
+        opex_fraction: 0.02 # percent of capex

@@ -3,13 +3,14 @@ from h2integrate.core.feedstocks import FeedstockCostModel, FeedstockPerformance
 from h2integrate.transporters.pipe import PipePerformanceModel
 from h2integrate.transporters.cable import CablePerformanceModel
 from h2integrate.converters.steel.steel import SteelPerformanceModel, SteelCostAndFinancialModel
-from h2integrate.core.profast_financial import ProFastComp
 from h2integrate.converters.wind.wind_plant import WindPlantCostModel, WindPlantPerformanceModel
+from h2integrate.finances.profast_financial import ProFastComp
 from h2integrate.converters.hopp.hopp_wrapper import HOPPComponent
 from h2integrate.converters.solar.solar_pysam import PYSAMSolarPlantPerformanceModel
 from h2integrate.storage.hydrogen.eco_storage import H2Storage
 from h2integrate.storage.battery.pysam_battery import PySAMBatteryPerformanceModel
 from h2integrate.converters.nitrogen.simple_ASU import SimpleASUCostModel, SimpleASUPerformanceModel
+from h2integrate.storage.simple_generic_storage import SimpleGenericStorage
 from h2integrate.storage.hydrogen.tank_baseclass import (
     HydrogenTankCostModel,
     HydrogenTankPerformanceModel,
@@ -153,6 +154,7 @@ supported_models = {
     "hydrogen_tank_performance": HydrogenTankPerformanceModel,
     "hydrogen_tank_cost": HydrogenTankCostModel,
     "atb_battery_cost": ATBBatteryCostModel,
+    "simple_generic_storage": SimpleGenericStorage,
     # Control
     "pass_through_controller": PassThroughOpenLoopController,
     "demand_open_loop_controller": DemandOpenLoopController,

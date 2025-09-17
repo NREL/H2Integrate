@@ -17,7 +17,7 @@ technologies:
         n_control_window: 24
         n_horizon_window: 48
       control_parameters:
-        resource_name: "power"
+        commodity_name: "power"
         resource_units: "kW"
       performance_parameters:
         system_capacity_kwh: 200000
