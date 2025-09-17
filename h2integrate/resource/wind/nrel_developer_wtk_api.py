@@ -158,7 +158,7 @@ class WTKNRELDeveloperAPIWindResource(WindResourceBaseAPIModel):
         header_vals = header[1 : len(header) : 2]
         header_dict = dict(zip(header_keys, header_vals))
         site_data = {
-            "id": header_dict["SiteID"],
+            "site_id": header_dict["SiteID"],
             "site_tz": header_dict["Site Timezone"],
             "data_tz": header_dict["Data Timezone"],
             "site_lat": header_dict["Latitude"],
@@ -213,7 +213,7 @@ class WTKNRELDeveloperAPIWindResource(WindResourceBaseAPIModel):
             data_units.update({new_c: units})
         data = data.rename(columns=data_rename_mapper)
         data_dict = {c: data[c].astype(float).values for x, c in data_rename_mapper.items()}
-        data_time_dict = {c: data[c].astype(float).values for c in time_cols}
+        data_time_dict = {c.lower(): data[c].astype(float).values for c in time_cols}
         data_dict.update(data_time_dict)
         return data_dict, data_units
 
