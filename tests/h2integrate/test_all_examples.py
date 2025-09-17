@@ -732,15 +732,15 @@ def test_wind_battery_dispatch_example(subtests):
         assert pytest.approx(wind_electricity.sum(), rel=1e-6) == battery_electricity_in.sum()
 
     with subtests.test("Check demand satisfaction"):
-        electricity_out = model.prob.get_val("battery.electricity_out")
+        electricity_out = model.prob.get_val("battery.electricity_out", units="MW")
         # Battery output should try to meet the 5 MW constant demand
         # Average output should be close to demand when there's sufficient generation
-        assert electricity_out.mean() > 0
+        assert electricity_out.mean() > 4.25  # MW
 
     # Subtest for LCOE
     with subtests.test("Check LCOE value"):
         lcoe = model.prob.get_val("finance_subgroup_electricity.LCOE")[0]
-        assert pytest.approx(lcoe, rel=1e-6) == 0.05903001
+        assert pytest.approx(lcoe, rel=1e-6) == 0.07828939985420173
 
     # Subtest for total electricity produced
     with subtests.test("Check total electricity produced"):
