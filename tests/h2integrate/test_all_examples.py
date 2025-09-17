@@ -3,6 +3,7 @@ import unittest
 import importlib
 from pathlib import Path
 
+import numpy as np
 import pytest
 import openmdao.api as om
 
@@ -722,24 +723,6 @@ def test_wind_battery_dispatch_example(subtests):
         assert all(soc >= 0.1)
         assert all(soc <= 1.0)
 
-    with subtests.test("Check battery capacity"):
-        # Battery should have 30 MWh capacity as configured
-        electricity_soc = model.prob.get_val("battery.electricity_soc")
-        # Check that SOC values are reasonable (not all zeros or ones)
-        assert 0.1 <= electricity_soc.mean() <= 1.0
-
-    with subtests.test("Check electricity flows are non-negative"):
-        electricity_in = model.prob.get_val("battery.electricity_in")
-        electricity_out = model.prob.get_val("battery.electricity_out")
-        electricity_curtailed = model.prob.get_val("battery.electricity_curtailed")
-        electricity_missed_load = model.prob.get_val("battery.electricity_missed_load")
-
-        # All flows should be non-negative
-        assert all(electricity_in >= 0)
-        assert all(electricity_out >= 0)
-        assert all(electricity_curtailed >= 0)
-        assert all(electricity_missed_load >= 0)
-
     with subtests.test("Check wind generation"):
         # Wind should generate some electricity
         wind_electricity = model.prob.get_val("wind.electricity_out")
@@ -753,3 +736,27 @@ def test_wind_battery_dispatch_example(subtests):
         # Battery output should try to meet the 5 MW constant demand
         # Average output should be close to demand when there's sufficient generation
         assert electricity_out.mean() > 0
+
+    # Subtest for LCOE
+    with subtests.test("Check LCOE value"):
+        lcoe = model.prob.get_val("finance_subgroup_electricity.LCOE")[0]
+        assert pytest.approx(lcoe, rel=1e-6) == 0.05903001
+
+    # Subtest for total electricity produced
+    with subtests.test("Check total electricity produced"):
+        total_electricity = model.prob.get_val(
+            "finance_subgroup_electricity.electricity_sum.total_electricity_produced"
+        )[0]
+        assert pytest.approx(total_electricity, rel=1e-6) == 62578956.60011571
+
+    # Subtest for electricity curtailed
+    with subtests.test("Check electricity curtailed"):
+        electricity_curtailed = np.linalg.norm(model.prob.get_val("battery.electricity_curtailed"))
+        assert pytest.approx(electricity_curtailed, rel=1e-6) == 408341.14618821
+
+    # Subtest for missed load
+    with subtests.test("Check electricity missed load"):
+        electricity_missed_load = np.linalg.norm(
+            model.prob.get_val("battery.electricity_missed_load")
+        )
+        assert pytest.approx(electricity_missed_load, rel=1e-6) == 164187.1653177
