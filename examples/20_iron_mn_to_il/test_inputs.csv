@@ -1,0 +1,10 @@
+Index 0,Index 1,Index 2,Index 3,Index 4,Baseline,Location,Ore Grade,Mine,Tranport,LCOE 50,LCOH 6,LCOH 3,NG 8,Capex
+technologies,iron,model_inputs,shared_parameters,dri_latitude,41.717,41.2,41.717,41.717,41.717,41.717,41.717,41.717,41.717,41.717
+technologies,iron,model_inputs,shared_parameters,dri_longitude,-8.84E+01,-8.17E+01,-88.398,-88.398,-88.398,-88.398,-88.398,-88.398,-88.398,-88.398
+technologies,iron,model_inputs,shared_parameters,ore_grade,DRI Pellets,DRI Pellets,BF Pellets,DRI Pellets,DRI Pellets,DRI Pellets,DRI Pellets,DRI Pellets,DRI Pellets,DRI Pellets
+technologies,iron,model_inputs,shared_parameters,ore_location,Northshore,Northshore,Northshore,Hibbing,Northshore,Northshore,Northshore,Northshore,Northshore,Northshore
+technologies,iron,model_inputs,shared_parameters,transport_cost_included,TRUE,TRUE,TRUE,TRUE,FALSE,TRUE,TRUE,TRUE,TRUE,TRUE
+technologies,iron,model_inputs,shared_parameters,lcoe,58.02,60.48,58.02,58.02,58.02,50,58.02,58.02,58.02,58.02
+technologies,iron,model_inputs,shared_parameters,lcoh,7.1,8.86,7.1,7.1,7.1,7.1,6,3,7.1,7.1
+technologies,iron,model_inputs,shared_parameters,ng_price,4,4,4,4,4,4,4,4,8,4
+technologies,iron,model_inputs,shared_parameters,capex_mod_pct,0,0,0,0,0,0,0,0,0,-0.5
