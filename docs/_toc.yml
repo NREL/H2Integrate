@@ -8,6 +8,7 @@ parts:
   chapters:
     - file: getting_started/install
     - file: getting_started/expected_user_knowledge
+    - file: getting_started/environment_variables
 
 - caption: User Guide
   chapters:
