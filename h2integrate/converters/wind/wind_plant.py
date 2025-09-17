@@ -61,6 +61,32 @@ class WindPlantPerformanceModel(WindPerformanceBaseClass):
         }
 
     def format_resource_data(self, hub_height, wind_resource_data):
+        """Format wind resource data into the format required for the
+        PySAM Windpower module. The data is formatted as:
+
+        - **fields** (*list[int]*): integers corresponding to data type,
+            ex: [1, 2, 3, 4, 1, 2, 3, 4]. Ror each field (int) the corresponding data is:
+            - 1: Ambient temperature in degrees Celsius
+            - 2: Atmospheric pressure in in atmospheres.
+            - 3: Wind speed in meters per second (m/s)
+            - 4: Wind direction in degrees east of north (degrees).
+        - **heights** (*list[int | float]*): floats corresponding to the resource height.
+            ex: [100, 100, 100, 100, 120, 120, 120, 120]
+        - **data** (*list[list]*): list of length equal to `n_timesteps` with data of
+            corresponding field and resource height.
+            ex. if `data[t]` is [-23.5, 0.65, 7.6, 261.2, -23.7, 0.65, 7.58, 261.1] then:
+            - 23.5 is temperature at 100m at timestep
+            - 7.6 is wind speed at 100m at timestep
+            - 7.58 is wind speed at 120m at timestep
+
+        Args:
+            hub_height (int | float): turbine hub-height in meters.
+            wind_resource_data (dict): wind resource data dictionary.
+
+        Returns:
+            dict: PySAM formatted wind resource data.
+        """
+
         data_to_precision = {
             "temperature": 1,
             "pressure": 2,
