@@ -37,6 +37,13 @@ parts:
   - file: technology_models/co2.md
   - file: technology_models/simple_generic_storage.md
 
+- caption: Resource Models
+  chapters:
+  - file: resource/resource_index
+    sections:
+      - file: resource/wind_index
+      - file: resource/wind_toolkit_v2_api
+
 - caption: Examples
   chapters:
   - file: examples/01-green-hydrogen
