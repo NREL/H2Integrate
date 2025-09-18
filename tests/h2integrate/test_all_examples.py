@@ -703,6 +703,7 @@ def test_electrolyzer_om_example(subtests):
     with subtests.test("Check LCOH with lcoe_financials"):
         assert pytest.approx(lcoh_with_lcoe_finance, rel=1e-5) == 8.05688467
 
+
 def test_wombat_electrolyzer_example(subtests):
     # Change the current working directory to the example's directory
     os.chdir(EXAMPLE_DIR / "08_wind_electrolyzer")
@@ -734,6 +735,7 @@ def test_wombat_electrolyzer_example(subtests):
         assert pytest.approx(lcoe_with_custom_model, rel=1e-5) == 51.36276
     with subtests.test("Check LCOE from ProFAST model"):
         assert pytest.approx(lcoe_with_profast_model, rel=1e-5) == 59.31169
+
 
 def test_wind_battery_dispatch_example(subtests):
     # Change the current working directory to the example's directory
