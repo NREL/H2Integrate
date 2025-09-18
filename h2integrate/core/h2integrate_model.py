@@ -280,7 +280,11 @@ class H2IntegrateModel:
                         model_object = self._process_model(
                             model_type, individual_tech_config, tech_group
                         )
-                        getattr(self, model_type + "s").append(model_object)
+                        if "control_strategy" in model_type:
+                            plural_model_type_name = "control_strategies"
+                        else:
+                            plural_model_type_name = model_type + "s"
+                        getattr(self, plural_model_type_name).append(model_object)
                     elif model_type == "performance_model":
                         raise KeyError("Model definition requires 'performance_model'.")
 

@@ -3,6 +3,7 @@ import unittest
 import importlib
 from pathlib import Path
 
+import numpy as np
 import pytest
 import openmdao.api as om
 
@@ -702,7 +703,6 @@ def test_electrolyzer_om_example(subtests):
     with subtests.test("Check LCOH with lcoe_financials"):
         assert pytest.approx(lcoh_with_lcoe_finance, rel=1e-5) == 8.05688467
 
-
 def test_wombat_electrolyzer_example(subtests):
     # Change the current working directory to the example's directory
     os.chdir(EXAMPLE_DIR / "08_wind_electrolyzer")
@@ -734,3 +734,60 @@ def test_wombat_electrolyzer_example(subtests):
         assert pytest.approx(lcoe_with_custom_model, rel=1e-5) == 51.36276
     with subtests.test("Check LCOE from ProFAST model"):
         assert pytest.approx(lcoe_with_profast_model, rel=1e-5) == 59.31169
+
+def test_wind_battery_dispatch_example(subtests):
+    # Change the current working directory to the example's directory
+    os.chdir(EXAMPLE_DIR / "19_wind_battery_dispatch")
+
+    # Create a H2Integrate model
+    model = H2IntegrateModel(Path.cwd() / "wind_battery_dispatch.yaml")
+
+    # Run the model
+    model.run()
+
+    model.post_process()
+
+    # Test battery storage functionality
+    with subtests.test("Check battery SOC bounds"):
+        soc = model.prob.get_val("battery.electricity_soc")
+        # SOC should stay within configured bounds (10% to 100%)
+        assert all(soc >= 0.1)
+        assert all(soc <= 1.0)
+
+    with subtests.test("Check wind generation"):
+        # Wind should generate some electricity
+        wind_electricity = model.prob.get_val("wind.electricity_out")
+        assert wind_electricity.sum() > 0
+        # Wind electricity should match battery input (direct connection)
+        battery_electricity_in = model.prob.get_val("battery.electricity_in")
+        assert pytest.approx(wind_electricity.sum(), rel=1e-6) == battery_electricity_in.sum()
+
+    with subtests.test("Check demand satisfaction"):
+        electricity_out = model.prob.get_val("battery.electricity_out", units="MW")
+        # Battery output should try to meet the 5 MW constant demand
+        # Average output should be close to demand when there's sufficient generation
+        assert electricity_out.mean() > 4.25  # MW
+
+    # Subtest for LCOE
+    with subtests.test("Check LCOE value"):
+        lcoe = model.prob.get_val("finance_subgroup_electricity.LCOE")[0]
+        assert pytest.approx(lcoe, rel=1e-6) == 0.07828939985420173
+
+    # Subtest for total electricity produced
+    with subtests.test("Check total electricity produced"):
+        total_electricity = model.prob.get_val(
+            "finance_subgroup_electricity.electricity_sum.total_electricity_produced"
+        )[0]
+        assert pytest.approx(total_electricity, rel=1e-6) == 62578956.60011571
+
+    # Subtest for electricity curtailed
+    with subtests.test("Check electricity curtailed"):
+        electricity_curtailed = np.linalg.norm(model.prob.get_val("battery.electricity_curtailed"))
+        assert pytest.approx(electricity_curtailed, rel=1e-6) == 408341.14618821
+
+    # Subtest for missed load
+    with subtests.test("Check electricity missed load"):
+        electricity_missed_load = np.linalg.norm(
+            model.prob.get_val("battery.electricity_missed_load")
+        )
+        assert pytest.approx(electricity_missed_load, rel=1e-6) == 164187.1653177
