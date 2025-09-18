@@ -35,6 +35,6 @@ technology_interconnections: [
   # etc
 ]
 resource_to_tech_connections: [
-  # connect the wind resource to the run-of-river hydro technology
+  # connect the wind resource to the wind technology
   ['wind_resource', 'wind', 'wind_resource_data'],
 ]

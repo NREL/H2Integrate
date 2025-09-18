@@ -829,5 +829,12 @@ class H2IntegrateModel:
         self.prob.run_driver()
 
     def post_process(self):
-        self.prob.model.list_inputs(units=True)
-        self.prob.model.list_outputs(units=True)
+        """
+        Post-process the results of the OpenMDAO model.
+
+        Right now, this just means printing the inputs and outputs to all systems in the model.
+        We currently exclude any variables with "resource_data" in the name, since those
+        are large dictionary variables that are not correctly formatted when printing.
+        """
+        self.prob.model.list_inputs(units=True, print_mean=True, excludes=["*resource_data"])
+        self.prob.model.list_outputs(units=True, print_mean=True, excludes=["*resource_data"])

@@ -8,4 +8,4 @@ h2i_model = H2IntegrateModel("wind_plant_electrolyzer.yaml")
 h2i_model.run()
 
 # Post-process the results
-# h2i_model.post_process()
+h2i_model.post_process()

@@ -1,5 +1,6 @@
 # Setting Environment Variables
 
+H2Integrate can pull weather resource datasets (e.g. data needed for wind or solar generation) automatically for a user-provided location.
 To use resource datasets from the NREL developer network, you will need an NREL API key, which can be obtained from:
     [https://developer.nrel.gov/signup/](https://developer.nrel.gov/signup/).
 
@@ -16,12 +17,13 @@ The remaining sections outline different options for setting environment variabl
 
 ## Save Environment Variables with Conda (Preferred)
 
-After creating the conda environment for h2integrate, you can [save environment variables with conda](https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#saving-environment-variables) within that environment.
+After creating the conda environment for H2Integrate, you can [save environment variables with conda](https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#saving-environment-variables) within that environment.
+This is the preferred method for setting environment variables for H2Integrate.
 
 ### Windows Instructions
 
 If you are using a Windows machine, please follow the steps documented for conda on [saving environment variables on Windows](https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#win-save-env-variables).
-
+The specific variable names and values to set are listed below; use these for steps 3 and 4 from the conda installation instructions..
 
 The `.\etc\conda\activate.d\env_vars.bat` file may look like below:
 ```bash
@@ -62,8 +64,8 @@ unset RESOURCE_DIR
 ## Set Environment Variables with .yaml file
 
 1. In `environment.yml`, add the following lines to the bottom of the file, and replace the
-    items in angle brackets (`<>`), including the brackets with your information. Be sure that
-    "variables" has no leading spaces
+    environment variable values with your information. Be sure that
+    "variables" has no leading spaces.
 
     ```yaml
     variables:
@@ -72,7 +74,7 @@ unset RESOURCE_DIR
         RESOURCE_DIR='/path/to/my/resource/folder/'
     ```
 
-2. Create a conda environment and install H2Integrate and all its dependencies
+2. After that, create a conda environment and install H2Integrate and all its dependencies using the modified `environment.yml` file with the command:
 
     ```bash
     conda env create -f environment.yml
@@ -81,7 +83,7 @@ unset RESOURCE_DIR
 ## Set Environment Variables with .env file
 
 ```{note}
-This method only works for setting the `NREL_API_KEY` and `NREL_API_EMAIL` environment variables, this method should not be used to set the `RESOURCE_DIR` environment variable.
+This method only works for setting the `NREL_API_KEY` and `NREL_API_EMAIL` environment variables; this method should not be used to set the `RESOURCE_DIR` environment variable.
 ```
 
 The ".env" file will be looked for in all of the following locations:
