@@ -14,6 +14,7 @@ def ngcc_performance_params():
     """Natural Gas Combined Cycle performance parameters."""
     tech_params = {
         "heat_rate_mmbtu_per_mwh": 7.5,  # MMBtu/MWh - typical for NGCC
+        "plant_capacity_mw": 100,
     }
     return tech_params
 
@@ -23,6 +24,7 @@ def ngct_performance_params():
     """Natural Gas Combustion Turbine performance parameters."""
     tech_params = {
         "heat_rate_mmbtu_per_mwh": 11.5,  # MMBtu/MWh - typical for NGCT
+        "plant_capacity_mw": 50,
     }
     return tech_params
 
