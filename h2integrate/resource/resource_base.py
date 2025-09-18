@@ -41,9 +41,6 @@ class ResourceBaseAPIConfig(BaseConfig):
             Should be updated in a subclass.
         resource_type (str): type of resource data downloaded, used in folder naming.
             Should be updated in a subclass.
-
-
-
     """
 
     latitude: float = field()

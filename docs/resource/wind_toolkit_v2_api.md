@@ -5,10 +5,10 @@ This resource class downloads wind resoure data from [Wind Toolkit Data V2](http
 and requires an NREL API key to use.
 
 This dataset allows for resource data to be downloaded for:
-- **resource years** from 2007 to 2014
-- **locations** within the continental United States
+- **resource years** from 2007 to 2014.
+- **locations** within the continental United States.
 - **resource heights** from 10 to 200 meters.
-
+- **time intervals** of 5, 15, 30, and 60 minutes.
 
 ## Available Data
 
