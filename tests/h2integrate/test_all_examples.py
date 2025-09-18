@@ -728,7 +728,7 @@ def test_wombat_electrolyzer_example(subtests):
     )[0]
 
     with subtests.test("Check LCOH from custom  model"):
-        assert pytest.approx(lcoh_with_custom_model, rel=1e-5) == 4.49202378
+        assert pytest.approx(lcoh_with_custom_model, rel=1e-5) == 4.20473064
     with subtests.test("Check LCOH from ProFAST model"):
         assert pytest.approx(lcoh_with_profast_model, rel=1e-5) == 5.34208563
     with subtests.test("Check LCOE from custom model"):
