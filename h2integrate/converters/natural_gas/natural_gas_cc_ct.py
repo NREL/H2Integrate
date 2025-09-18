@@ -16,7 +16,7 @@ class NaturalGasPerformanceConfig(BaseConfig):
     combustion turbines (NGCT) and natural gas combined cycle (NGCC) plants.
 
     Attributes:
-        rated_capacity_MW (float): rated capacity of the natural gas plant in MW
+        plant_capacity_mw (float): rated capacity of the natural gas plant in MW
         heat_rate_mmbtu_per_mwh (float): Heat rate of the natural gas plant in MMBtu/MWh.
             This represents the amount of fuel energy required to produce
             one MWh of electricity. Lower values indicate higher efficiency.
@@ -25,7 +25,7 @@ class NaturalGasPerformanceConfig(BaseConfig):
             - NGCC: 6-8 MMBtu/MWh
     """
 
-    rated_capacity_MW: float = field(validator=gte_zero)
+    plant_capacity_mw: float = field(validator=gte_zero)
     heat_rate_mmbtu_per_mwh: float = field(validator=gt_zero)
 
 
@@ -91,7 +91,7 @@ class NaturalGasPerformanceModel(om.ExplicitComponent):
         # Add rated capacity as an input with config value as default
         self.add_input(
             "rated_capacity_electricity",
-            val=self.config.rated_capacity_MW,
+            val=self.config.plant_capacity_mw,
             units="MW",
             desc="Plant rated capacity in MW",
         )
@@ -99,13 +99,13 @@ class NaturalGasPerformanceModel(om.ExplicitComponent):
         # Default the electricity demand input as the rated capacity
         self.add_input(
             "electricity_demand",
-            val=self.config.rated_capacity_MW,
+            val=self.config.plant_capacity_mw,
             shape=n_timesteps,
             units="MW",
             desc="Electricity demand for natural gas plant",
         )
 
-        max_ng_in_mmbtu = self.config.rated_capacity_MW * self.config.heat_rate_mmbtu_per_mwh
+        max_ng_in_mmbtu = self.config.plant_capacity_mw * self.config.heat_rate_mmbtu_per_mwh
         # Add natural gas input, defaulting to rated capacity
         self.add_input(
             "natural_gas_in",
