@@ -90,7 +90,7 @@ class NaturalGasPerformanceModel(om.ExplicitComponent):
 
         # Add rated capacity as an input with config value as default
         self.add_input(
-            "rated_capacity_electricity",
+            "plant_capacity_mw",
             val=self.config.plant_capacity_mw,
             units="MW",
             desc="Plant rated capacity in MW",
@@ -125,12 +125,12 @@ class NaturalGasPerformanceModel(om.ExplicitComponent):
 
         Args:
             inputs: OpenMDAO inputs object containing natural_gas_in, heat_rate_mmbtu_per_mwh,
-                rated_capacity_electricity, and electricity_demand.
+                plant_capacity_mw, and electricity_demand.
             outputs: OpenMDAO outputs object for electricity_out and natural_gas_consumed
         """
 
         # calculate max input and output
-        max_electricity_demand = inputs["rated_capacity_electricity"][0]
+        max_electricity_demand = inputs["plant_capacity_mw"][0]
         heat_rate_mmbtu_per_mwh = inputs["heat_rate_mmbtu_per_mwh"][0]
         max_natural_gas_in = max_electricity_demand * heat_rate_mmbtu_per_mwh
 
