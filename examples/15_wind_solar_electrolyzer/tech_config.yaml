@@ -67,7 +67,7 @@ technologies:
         cost_year: 2024
   combiner:
     performance_model:
-      model: "combiner_performance"
+      model: "power_combiner_performance"
   electrolyzer:
     performance_model:
       model: "eco_pem_electrolyzer_performance"

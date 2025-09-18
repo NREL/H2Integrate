@@ -14,7 +14,7 @@ technologies:
 
   electricity_splitter:
     performance_model:
-      model: "splitter_performance"
+      model: "power_splitter_performance"
       config:
         split_mode: "fraction"
         fraction_to_priority_tech: 0.25
