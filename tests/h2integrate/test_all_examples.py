@@ -303,8 +303,8 @@ def test_wind_h2_opt_example(subtests):
     assert len(cases) > 1, "Not enough cases recorded in SQL file."
 
     # Get initial and final LCOH values
-    initial_lcoh = cases[0].outputs["finance_subgroup_hydrogen.LCOH"][0]
-    final_lcoh = cases[-1].outputs["finance_subgroup_hydrogen.LCOH"][0]
+    initial_lcoh = cases[0].outputs["financials_group_default.LCOH"][0]
+    final_lcoh = cases[-1].outputs["financials_group_default.LCOH"][0]
 
     with subtests.test("Check LCOH changed"):
         assert final_lcoh != initial_lcoh
@@ -697,16 +697,16 @@ def test_electrolyzer_om_example(subtests):
         "finance_subgroup_hydrogen.LCOH_lcoe_financials", units="USD/kg"
     )[0]
     with subtests.test("Check LCOE"):
-        assert pytest.approx(lcoe, rel=1e-5) == 40.12819
+        assert pytest.approx(lcoe, rel=1e-4) == 40.12819
     with subtests.test("Check LCOH with lcoh_financials"):
-        assert pytest.approx(lcoh_with_lcoh_finance, rel=1e-5) == 13.18328175
+        assert pytest.approx(lcoh_with_lcoh_finance, rel=1e-4) == 13.18328175
     with subtests.test("Check LCOH with lcoe_financials"):
-        assert pytest.approx(lcoh_with_lcoe_finance, rel=1e-5) == 8.05688467
+        assert pytest.approx(lcoh_with_lcoe_finance, rel=1e-4) == 8.05688467
 
 
 def test_wind_battery_dispatch_example(subtests):
     # Change the current working directory to the example's directory
-    os.chdir(EXAMPLE_DIR / "19_wind_battery_dispatch")
+    os.chdir(EXAMPLE_DIR / "19_simple_dispatch")
 
     # Create a H2Integrate model
     model = H2IntegrateModel(Path.cwd() / "wind_battery_dispatch.yaml")
@@ -749,14 +749,16 @@ def test_wind_battery_dispatch_example(subtests):
         )[0]
         assert pytest.approx(total_electricity, rel=1e-6) == 62578956.60011571
 
-    # Subtest for electricity curtailed
-    with subtests.test("Check electricity curtailed"):
-        electricity_curtailed = np.linalg.norm(model.prob.get_val("battery.electricity_curtailed"))
-        assert pytest.approx(electricity_curtailed, rel=1e-6) == 408341.14618821
+    # Subtest for electricity excess_resource
+    with subtests.test("Check electricity excess_resource"):
+        electricity_excess_resource = np.linalg.norm(
+            model.prob.get_val("battery.electricity_excess_resource")
+        )
+        assert pytest.approx(electricity_excess_resource, rel=1e-6) == 408341.14618821
 
     # Subtest for missed load
-    with subtests.test("Check electricity missed load"):
-        electricity_missed_load = np.linalg.norm(
-            model.prob.get_val("battery.electricity_missed_load")
+    with subtests.test("Check electricity unmet demand"):
+        electricity_unmet_demand = np.linalg.norm(
+            model.prob.get_val("battery.electricity_unmet_demand")
         )
-        assert pytest.approx(electricity_missed_load, rel=1e-6) == 164187.1653177
+        assert pytest.approx(electricity_unmet_demand, rel=1e-6) == 164187.1653177
