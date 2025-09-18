@@ -567,58 +567,118 @@ def test_natural_gas_example(subtests):
     model.run()
 
     model.post_process()
+    solar_aep = sum(model.prob.get_val("solar.electricity_out", units="kW"))
+    solar_bat_out_total = sum(model.prob.get_val("battery.electricity_out", units="kW"))
+    solar_curtailed_total = sum(model.prob.get_val("battery.electricity_curtailed", units="kW"))
+
+    renewable_subgroup_total_electricity = model.prob.get_val(
+        "finance_subgroup_renewables.electricity_sum.total_electricity_produced", units="kW*h/year"
+    )[0]
+    electricity_subgroup_total_electricity = model.prob.get_val(
+        "finance_subgroup_electricity.electricity_sum.total_electricity_produced", units="kW*h/year"
+    )[0]
+    natural_gas_subgroup_total_electricity = model.prob.get_val(
+        "finance_subgroup_natural_gas.electricity_sum.total_electricity_produced", units="kW*h/year"
+    )[0]
+
+    # NOTE: battery output power is not included in any of the financials
+
+    pre_ng_missed_load = model.prob.get_val("battery.electricity_missed_load", units="kW")
+    ng_electricity_demand = model.prob.get_val("natural_gas_plant.electricity_demand", units="kW")
+    ng_electricity_production = model.prob.get_val("natural_gas_plant.electricity_out", units="kW")
+    bat_init_charge = 200000.0 * 0.1  # max capacity in kW and initial charge rate percentage
+
+    with subtests.test(
+        "Check solar AEP is greater than battery output (solar oversized relative to demand"
+    ):
+        assert solar_aep > solar_bat_out_total
+
+    with subtests.test(
+        "Check battery outputs against battery inputs (solar oversized relative to demand"
+    ):
+        assert (
+            pytest.approx(solar_bat_out_total + solar_curtailed_total, abs=bat_init_charge)
+            == solar_aep
+        )
+
+    with subtests.test("Check solar AEP equals total electricity for renewables subgroup"):
+        assert pytest.approx(solar_aep, rel=1e-6) == renewable_subgroup_total_electricity
+
+    with subtests.test("Check natural gas AEP equals total electricity for natural_gas subgroup"):
+        assert (
+            pytest.approx(sum(ng_electricity_production), rel=1e-6)
+            == natural_gas_subgroup_total_electricity
+        )
+
+    with subtests.test(
+        "Check natural gas + solar AEP equals total electricity for electricity subgroup"
+    ):
+        assert (
+            pytest.approx(electricity_subgroup_total_electricity, rel=1e-6)
+            == sum(ng_electricity_production) + solar_aep
+        )
+
+    with subtests.test("Check missed load is natural gas plant electricity demand"):
+        assert pytest.approx(ng_electricity_demand, rel=1e-6) == pre_ng_missed_load
+
+    with subtests.test("Check natural_gas_plant electricity out equals demand"):
+        assert pytest.approx(ng_electricity_demand, rel=1e-6) == ng_electricity_production
 
     # Subtests for checking specific values
-
-    with subtests.test("Check CapEx"):
+    with subtests.test("Check Natural Gas CapEx"):
         capex = model.prob.get_val("natural_gas_plant.CapEx")[0]
         assert pytest.approx(capex, rel=1e-6) == 1e8
 
-    with subtests.test("Check OpEx"):
+    with subtests.test("Check Natural Gas OpEx"):
         opex = model.prob.get_val("natural_gas_plant.OpEx")[0]
-        assert pytest.approx(opex, rel=1e-6) == 1292000.0
+        assert pytest.approx(opex, rel=1e-6) == 2243167.24525
 
     with subtests.test("Check total electricity produced"):
-        total_electricity = model.prob.get_val(
-            "finance_subgroup_default.electricity_sum.total_electricity_produced"
-        )[0]
-        assert pytest.approx(total_electricity, rel=1e-6) == 1.168e8
+        assert pytest.approx(natural_gas_subgroup_total_electricity, rel=1e-6) == 497266898.10354495
 
     with subtests.test("Check opex adjusted ng_feedstock"):
         opex_ng_feedstock = model.prob.get_val(
-            "finance_subgroup_default.opex_adjusted_ng_feedstock"
+            "finance_subgroup_natural_gas.opex_adjusted_ng_feedstock"
         )[0]
-        assert pytest.approx(opex_ng_feedstock, rel=1e-6) == 3589463.41463415
+        assert pytest.approx(opex_ng_feedstock, rel=1e-6) == 15281860.770986987
 
     with subtests.test("Check capex adjusted natural_gas_plant"):
         capex_ng_plant = model.prob.get_val(
-            "finance_subgroup_default.capex_adjusted_natural_gas_plant"
+            "finance_subgroup_natural_gas.capex_adjusted_natural_gas_plant"
         )[0]
         assert pytest.approx(capex_ng_plant, rel=1e-6) == 97560975.60975611
 
     with subtests.test("Check opex adjusted natural_gas_plant"):
         opex_ng_plant = model.prob.get_val(
-            "finance_subgroup_default.opex_adjusted_natural_gas_plant"
+            "finance_subgroup_natural_gas.opex_adjusted_natural_gas_plant"
         )[0]
-        assert pytest.approx(opex_ng_plant, rel=1e-6) == 1260487.80487805
+        assert pytest.approx(opex_ng_plant, rel=1e-6) == 2188455.8490330363
 
-    with subtests.test("Check total adjusted CapEx"):
-        total_capex = model.prob.get_val("finance_subgroup_default.total_capex_adjusted")[0]
+    with subtests.test("Check total adjusted CapEx for natural gas subgroup"):
+        total_capex = model.prob.get_val("finance_subgroup_natural_gas.total_capex_adjusted")[0]
         assert pytest.approx(total_capex, rel=1e-6) == 97658536.58536586
 
     with subtests.test("Check total adjusted OpEx"):
-        total_opex = model.prob.get_val("finance_subgroup_default.total_opex_adjusted")[0]
-        assert pytest.approx(total_opex, rel=1e-6) == 4849951.2195122
+        total_opex = model.prob.get_val("finance_subgroup_natural_gas.total_opex_adjusted")[0]
+        assert pytest.approx(total_opex, rel=1e-6) == 17470316.620020024
 
-    with subtests.test("Check LCOE"):
-        lcoe = model.prob.get_val("finance_subgroup_default.LCOE")[0]
-        assert pytest.approx(lcoe, rel=1e-6) == 0.12959097
+    with subtests.test("Check LCOE (natural gas plant)"):
+        lcoe_ng = model.prob.get_val("finance_subgroup_natural_gas.LCOE")[0]
+        assert pytest.approx(lcoe_ng, rel=1e-6) == 0.05811033466
+
+    with subtests.test("Check LCOE (renewables plant)"):
+        lcoe_re = model.prob.get_val("finance_subgroup_renewables.LCOE")[0]
+        assert pytest.approx(lcoe_re, rel=1e-6) == 0.07102560120
+
+    with subtests.test("Check LCOE (renewables and natural gas plant)"):
+        lcoe_tot = model.prob.get_val("finance_subgroup_electricity.LCOE")[0]
+        assert pytest.approx(lcoe_tot, rel=1e-6) == 0.063997927290
 
     # Test feedstock-specific values
     with subtests.test("Check feedstock output"):
         ng_output = model.prob.get_val("ng_feedstock_source.natural_gas_out")
         # Should be rated capacity (100 MMBtu) for all timesteps
-        assert all(ng_output == 100.0)
+        assert all(ng_output == 750.0)
 
     with subtests.test("Check feedstock consumption"):
         ng_consumed = model.prob.get_val("ng_feedstock.natural_gas_consumed")
@@ -649,6 +709,16 @@ def test_wind_solar_electrolyzer_example(subtests):
     model.run()
 
     model.post_process()
+
+    wind_aep = sum(model.prob.get_val("wind.electricity_out", units="kW"))
+    solar_aep = sum(model.prob.get_val("solar.electricity_out", units="kW"))
+    total_aep = model.prob.get_val(
+        "finance_subgroup_electricity.electricity_sum.total_electricity_produced", units="kW*h/year"
+    )[0]
+
+    with subtests.test("Check total energy production"):
+        assert pytest.approx(wind_aep + solar_aep, rel=1e-6) == total_aep
+
     with subtests.test("Check LCOE"):
         assert (
             pytest.approx(
@@ -715,6 +785,15 @@ def test_wind_battery_dispatch_example(subtests):
     model.run()
 
     model.post_process()
+
+    wind_aep = sum(model.prob.get_val("wind.electricity_out", units="kW"))
+    aep_for_finance = model.prob.get_val(
+        "finance_subgroup_electricity.total_electricity_produced", units="kW*h/year"
+    )[0]
+    battery_init_energy = 30000.0 * 0.25  # max capacity in kW and initial charge rate percentage
+
+    with subtests.test("Check electricity is not double counted"):
+        assert aep_for_finance <= wind_aep + battery_init_energy
 
     # Test battery storage functionality
     with subtests.test("Check battery SOC bounds"):
