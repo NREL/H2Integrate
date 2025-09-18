@@ -238,3 +238,53 @@ def test_ngct_cost(ngct_cost_params, subtests):
 
     with subtests.test("NGCT Cost Year"):
         assert cost_year == ngct_cost_params["cost_year"]
+
+
+def test_ngcc_performance_demand(ngcc_performance_params, subtests):
+    """Test NGCC performance model with typical operating conditions."""
+    tech_config_dict = {
+        "model_inputs": {
+            "performance_parameters": ngcc_performance_params,
+        }
+    }
+
+    # Create a simple natural gas input profile (constant 750 MMBtu/h for 100 MW plant)
+    natural_gas_input = np.full(8760, 750.0)  # MMBtu
+    electricity_demand_section = np.linspace(
+        0, 1.2 * ngcc_performance_params["plant_capacity_mw"], 12
+    )
+    electricity_demand_MW = np.tile(electricity_demand_section, 730)
+
+    prob = om.Problem()
+    perf_comp = NaturalGasPerformanceModel(
+        plant_config=get_plant_config(),
+        tech_config=tech_config_dict,
+    )
+
+    prob.model.add_subsystem("ng_perf", perf_comp, promotes=["*"])
+    prob.setup()
+
+    # Set the natural gas input
+    prob.set_val("natural_gas_in", natural_gas_input)
+    prob.set_val("electricity_demand", electricity_demand_MW)
+    prob.run_model()
+
+    electricity_out = prob.get_val("electricity_out")
+
+    with subtests.test("NGCC Electricity Output"):
+        # Expected: 750 MMBtu / 7.5 MMBtu/MWh = 100 MW
+        expected_output_ng = natural_gas_input / ngcc_performance_params["heat_rate_mmbtu_per_mwh"]
+        expected_output_elec = np.where(
+            electricity_demand_MW > ngcc_performance_params["plant_capacity_mw"],
+            ngcc_performance_params["plant_capacity_mw"],
+            electricity_demand_MW,
+        )
+        expected_output = np.minimum.reduce([expected_output_ng, expected_output_elec])
+        assert pytest.approx(electricity_out, rel=1e-6) == expected_output
+
+    with subtests.test("NGCC Max Output"):
+        # Check average output is 100 MW
+        assert (
+            pytest.approx(np.max(electricity_out), rel=1e-6)
+            == ngcc_performance_params["plant_capacity_mw"]
+        )
