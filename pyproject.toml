@@ -46,7 +46,7 @@ dependencies = [
     "multiprocessing-on-dill",
     "numpy",
     "numpy-financial",
-    "openmdao",
+    "openmdao>=3.40.0",
     "openpyxl",
     "orbit-nrel",
     "pandas>=2.0.3",

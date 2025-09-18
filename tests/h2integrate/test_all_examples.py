@@ -258,7 +258,7 @@ def test_wind_h2_opt_example(subtests):
     # Run the model
     model_init.run()
 
-    # model_init.post_process()
+    model_init.post_process()
 
     annual_h20 = model_init.prob.get_val("electrolyzer.total_hydrogen_produced", units="kg/year")[0]
 
@@ -646,7 +646,7 @@ def test_wind_solar_electrolyzer_example(subtests):
     model = H2IntegrateModel(Path.cwd() / "15_wind_solar_electrolyzer.yaml")
     model.run()
 
-    # model.post_process()
+    model.post_process()
     with subtests.test("Check LCOE"):
         assert (
             pytest.approx(

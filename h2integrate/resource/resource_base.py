@@ -62,7 +62,7 @@ class ResourceBaseAPIModel(om.ExplicitComponent):
         self.options.declare("driver_config", types=dict)
 
     def setup(self):
-        # create atributes that will be commonly used for resource classes.
+        # create attributes that will be commonly used for resource classes.
         self.site_config = self.options["plant_config"]["site"]
         self.sim_config = self.options["plant_config"]["plant"]["simulation"]
         self.n_timesteps = int(self.sim_config["n_timesteps"])

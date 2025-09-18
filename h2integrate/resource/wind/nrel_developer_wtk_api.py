@@ -16,7 +16,7 @@ from h2integrate.resource.utilities.nrel_developer_api_keys import (
 
 @define
 class WTKNRELDeveloperAPIConfig(ResourceBaseAPIConfig):
-    """Configuration class to download wind resoure data from
+    """Configuration class to download wind resource data from
     `Wind Toolkit Data V2 <https://developer.nrel.gov/docs/wind/wind-toolkit/wtk-download/>`_.
 
     Args:
@@ -142,7 +142,7 @@ class WTKNRELDeveloperAPIWindResource(WindResourceBaseAPIModel):
         2) remove unused data
         3) Rename the data columns to standardized naming convention and create dictionary of
             OpenMDAO compatible units for the data. Calls `format_timeseries_data()` method.
-        4) Convert data to stadardized units. Calls `compare_units_and_correct()` method
+        4) Convert data to standardized units. Calls `compare_units_and_correct()` method
 
         Args:
             fpath (str | Path): filepath to file containing the data
