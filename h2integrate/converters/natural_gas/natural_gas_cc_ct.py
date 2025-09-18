@@ -136,7 +136,9 @@ class NaturalGasPerformanceModel(om.ExplicitComponent):
 
         # product demand, saturated at maximum product capacity
         electricity_demand = np.where(
-            inputs["electricity_demand"] > max_electricity_demand, max_electricity_demand, 0
+            inputs["electricity_demand"] > max_electricity_demand,
+            max_electricity_demand,
+            inputs["electricity_demand"],
         )
         natural_gas_demand = electricity_demand * heat_rate_mmbtu_per_mwh
 
