@@ -1,3 +1,4 @@
+import numpy as np
 import openmdao.api as om
 from attrs import field, define
 
@@ -15,6 +16,7 @@ class NaturalGasPerformanceConfig(BaseConfig):
     combustion turbines (NGCT) and natural gas combined cycle (NGCC) plants.
 
     Attributes:
+        rated_capacity_MW (float): rated capacity of the natural gas plant in MW
         heat_rate_mmbtu_per_mwh (float): Heat rate of the natural gas plant in MMBtu/MWh.
             This represents the amount of fuel energy required to produce
             one MWh of electricity. Lower values indicate higher efficiency.
@@ -23,6 +25,7 @@ class NaturalGasPerformanceConfig(BaseConfig):
             - NGCC: 6-8 MMBtu/MWh
     """
 
+    rated_capacity_MW: float = field(validator=gte_zero)
     heat_rate_mmbtu_per_mwh: float = field(validator=gt_zero)
 
 
@@ -59,15 +62,6 @@ class NaturalGasPerformanceModel(om.ExplicitComponent):
         )
         n_timesteps = self.options["plant_config"]["plant"]["simulation"]["n_timesteps"]
 
-        # Add natural gas input
-        self.add_input(
-            "natural_gas_in",
-            val=0.0,
-            shape=n_timesteps,
-            units="MMBtu",
-            desc="Natural gas input energy",
-        )
-
         # Add natural gas consumed output
         self.add_output(
             "natural_gas_consumed",
@@ -94,6 +88,33 @@ class NaturalGasPerformanceModel(om.ExplicitComponent):
             desc="Plant heat rate in MMBtu/MWh",
         )
 
+        # Add rated capacity as an input with config value as default
+        self.add_input(
+            "rated_capacity_electricity",
+            val=self.config.rated_capacity_MW,
+            units="MW",
+            desc="Plant rated capacity in MW",
+        )
+
+        # Default the electricity demand input as the rated capacity
+        self.add_input(
+            "electricity_demand",
+            val=self.config.rated_capacity_MW,
+            shape=n_timesteps,
+            units="MW",
+            desc="Electricity demand for natural gas plant",
+        )
+
+        max_ng_in_mmbtu = self.config.rated_capacity_MW * self.config.heat_rate_mmbtu_per_mwh
+        # Add natural gas input, defaulting to rated capacity
+        self.add_input(
+            "natural_gas_in",
+            val=max_ng_in_mmbtu,
+            shape=n_timesteps,
+            units="MMBtu",
+            desc="Natural gas input energy",
+        )
+
     def compute(self, inputs, outputs):
         """
         Compute electricity output from natural gas input.
@@ -103,17 +124,37 @@ class NaturalGasPerformanceModel(om.ExplicitComponent):
         required per unit of electrical energy produced.
 
         Args:
-            inputs: OpenMDAO inputs object containing natural_gas_in and heat_rate
-            outputs: OpenMDAO outputs object for electricity_out
+            inputs: OpenMDAO inputs object containing natural_gas_in, heat_rate_mmbtu_per_mwh,
+                rated_capacity_electricity, and electricity_demand.
+            outputs: OpenMDAO outputs object for electricity_out and natural_gas_consumed
         """
-        natural_gas_in = inputs["natural_gas_in"]
-        heat_rate_mmbtu_per_mwh = inputs["heat_rate_mmbtu_per_mwh"]
 
-        # Convert natural gas input to electricity output using heat rate
-        electricity_out = natural_gas_in / heat_rate_mmbtu_per_mwh
+        # calculate max input and output
+        max_electricity_demand = inputs["rated_capacity_electricity"][0]
+        heat_rate_mmbtu_per_mwh = inputs["heat_rate_mmbtu_per_mwh"][0]
+        max_natural_gas_in = max_electricity_demand * heat_rate_mmbtu_per_mwh
+
+        # product demand, saturated at maximum product capacity
+        electricity_demand = np.where(
+            inputs["electricity_demand"] > max_electricity_demand, max_electricity_demand, 0
+        )
+        natural_gas_demand = electricity_demand * heat_rate_mmbtu_per_mwh
+
+        # available feedstock, saturated at maximum feedstock capacity
+        natural_gas_available = np.where(
+            inputs["natural_gas_in"] > max_natural_gas_in,
+            max_natural_gas_in,
+            inputs["natural_gas_in"],
+        )
+
+        # natural gas consumed is minimum between available feedstock and output demand
+        natural_gas_consumed = np.minimum.reduce([natural_gas_demand, natural_gas_available])
+
+        # Convert natural gas consumption to electricity output using heat rate
+        electricity_out = natural_gas_consumed / heat_rate_mmbtu_per_mwh
 
         outputs["electricity_out"] = electricity_out
-        outputs["natural_gas_consumed"] = natural_gas_in
+        outputs["natural_gas_consumed"] = natural_gas_consumed
 
 
 @define
