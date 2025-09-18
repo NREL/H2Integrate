@@ -672,7 +672,7 @@ class H2IntegrateModel:
 
                     # Connect the splitter output to the connection component
                     self.plant.connect(
-                        f"{source_tech}.electricity_out{splitter_counts[source_tech]}",
+                        f"{source_tech}.{transport_item}_out{splitter_counts[source_tech]}",
                         f"{connection_name}.{transport_item}_in",
                     )
 
@@ -701,7 +701,7 @@ class H2IntegrateModel:
                     # Connect the connection component to the destination technology
                     self.plant.connect(
                         f"{connection_name}.{transport_item}_out",
-                        f"{dest_tech}.electricity_in{combiner_counts[dest_tech]}",
+                        f"{dest_tech}.{transport_item}_in{combiner_counts[dest_tech]}",
                     )
 
                 elif "storage" in dest_tech:

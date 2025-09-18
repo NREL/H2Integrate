@@ -100,7 +100,7 @@ Add the combiner to your `tech_config.yaml`:
 technologies:
   electricity_combiner:
     performance_model:
-      model: "combiner_performance"
+      model: "power_combiner_performance"
 ```
 
 No additional configuration parameters are needed - the combiner simply adds the two input streams.
@@ -139,7 +139,7 @@ Add the splitter to your `tech_config.yaml`:
 technologies:
   electricity_splitter:
     performance_model:
-      model: "splitter_performance"
+      model: "power_splitter_performance"
       config:
         split_mode: "fraction"  # or "prescribed_electricity"
         fraction_to_priority_tech: 0.7  # for fraction mode

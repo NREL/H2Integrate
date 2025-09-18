@@ -56,9 +56,9 @@ The inputs, outputs, and corresponding technology that are currently available i
 | Technology        | Transport Commodity |
 | :---------------- | :---------------: |
 | `cable`         |  electricity      |
-| `pipe`      |  hydrogen         |
-| `combiner`      |  Any    |
-| `splitter` | electricity |
+| `pipe`      |  most mass-based commodities         |
+| `combiner`      | electricity or Any    |
+| `splitter` | electricity or Any|
 
 Connection: `[source_tech, dest_tech, transport_commodity, transport_technology]`
 
@@ -88,6 +88,8 @@ Below summarizes the available performance, cost, and financial models for each 
 - [Converters](#converter-models)
 - [Transport](#transport-models)
 - [Storage](#storage-models)
+- [Basic Operations](#basic-operations)
+- [Controllers](#controller-models)
 
 (resource-models)=
 ## Resource models
@@ -183,13 +185,18 @@ Below summarizes the available performance, cost, and financial models for each 
 ## Transport Models
 - `cable`
     - performance models:
-        + `'cable'`
+        + `'cable'`: specific to `electricity` commodity
 - `pipe`:
     - performance models:
-        + `'pipe'`
+        + `'pipe'`: generally compatible with most mass-based commodities
 - `combiner`:
     - performance models:
-        + `'combiner_performance'`
+        + `'power_combiner_performance'`: specific to `electricity` commodity
+        + `'combiner_performance'`: can be used for any commodity
+- `splitter`:
+    - performance models:
+        + `'power_splitter_performance'`: specific to `electricity` commodity
+        + `'splitter_performance'`: can be used for any commodity
 
 (storage-models)=
 ## Storage Models
@@ -205,6 +212,13 @@ Below summarizes the available performance, cost, and financial models for each 
     - cost models:
         + `'atb_battery_cost'`
 
+(basic-operations)=
+## Basic Operations
+- `production_summer`: sums the production profile of any commodity
+- `consumption_summer`: sums the consumption profile of any feedstock
+
+
+(control-models)=
 ## Controller Models
 - `pass_through_controller`
 - `demand_open_loop_controller`

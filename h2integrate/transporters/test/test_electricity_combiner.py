@@ -8,7 +8,7 @@ from h2integrate.transporters.electricity_combiner import CombinerPerformanceMod
 rng = np.random.default_rng(seed=0)
 
 
-def test_combiner_performance():
+def test_power_combiner_performance():
     prob = om.Problem()
     comp = CombinerPerformanceModel()
     prob.model.add_subsystem("comp", comp, promotes=["*"])
