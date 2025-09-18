@@ -18,7 +18,7 @@ This feature allows any custom model that conforms to OpenMDAO standards and use
 The models in the following two examples use standard H2Integrate configuration utilities and OpenMDAO components.
 
 ```{note}
-You can combine an H2Integrate model and a custom model for the same technology within a single analysis.
+You can combine an existing H2Integrate model and a custom model for the same technology within a single analysis. For example, you can use a built-in performance model and a custom finance model for a given technology.
 ```
 
 ### Custom Technology Model Example: paper mill model
