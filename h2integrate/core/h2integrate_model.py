@@ -836,5 +836,5 @@ class H2IntegrateModel:
         We currently exclude any variables with "resource_data" in the name, since those
         are large dictionary variables that are not correctly formatted when printing.
         """
-        self.prob.model.list_inputs(units=True, excludes=["*resource_data"])
-        self.prob.model.list_outputs(units=True, excludes=["*resource_data"])
+        self.prob.model.list_inputs(units=True, print_mean=True, excludes=["*resource_data"])
+        self.prob.model.list_outputs(units=True, print_mean=True, excludes=["*resource_data"])
