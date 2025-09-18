@@ -52,6 +52,7 @@
 - Made `pipe` and `cable` substance-agnostic rather than hard-coded for `hydrogen` and `electricity`
 - Change finance handling to use `finance_subgroups` and `finance_groups` defined in the `plant_config` rather than previous `financial_groups` in the `tech_config` and `technologies_to_include_in_metrics` in `plant_config`
 - Added variable O&M to `CostModelBaseClass` and integrated into finance-related models
+- Added generic storage model, useful for battery, hydrogen, CO2, or other resource storage.
 
 ## 0.3.0 [May 2 2025]
 

@@ -70,6 +70,7 @@ Connection: `[source_tech, dest_tech, transport_commodity, transport_technology]
 | :---------------- | :---------------: |
 | `h2_storage`      |  hydrogen         |
 | `battery`         |  electricity      |
+| `generic_storage` |  Any              |
 
 (controller)=
 ## Controller
@@ -199,6 +200,10 @@ Below summarizes the available performance, cost, and financial models for each 
         + `'hydrogen_tank_performance'`
     - cost models:
         + `'hydrogen_tank_cost'`
+- `generic_storage`: any resource storage
+- `battery`: battery storage
+    - cost models:
+        + `'atb_battery_cost'`
 
 ## Controller Models
 - `pass_through_controller`

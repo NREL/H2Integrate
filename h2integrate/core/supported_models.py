@@ -9,6 +9,7 @@ from h2integrate.converters.hopp.hopp_wrapper import HOPPComponent
 from h2integrate.converters.solar.solar_pysam import PYSAMSolarPlantPerformanceModel
 from h2integrate.storage.hydrogen.eco_storage import H2Storage
 from h2integrate.converters.nitrogen.simple_ASU import SimpleASUCostModel, SimpleASUPerformanceModel
+from h2integrate.storage.simple_generic_storage import SimpleGenericStorage
 from h2integrate.storage.hydrogen.tank_baseclass import (
     HydrogenTankCostModel,
     HydrogenTankPerformanceModel,
@@ -19,6 +20,7 @@ from h2integrate.controllers.openloop_controllers import (
 )
 from h2integrate.converters.hydrogen.wombat_model import WOMBATElectrolyzerModel
 from h2integrate.converters.wind.wind_plant_pysam import PYSAMWindPlantPerformanceModel
+from h2integrate.storage.battery.atb_battery_cost import ATBBatteryCostModel
 from h2integrate.transporters.electricity_combiner import CombinerPerformanceModel
 from h2integrate.transporters.electricity_splitter import SplitterPerformanceModel
 from h2integrate.converters.ammonia.ammonia_synloop import (
@@ -137,16 +139,18 @@ supported_models = {
     "pipe": PipePerformanceModel,
     "combiner_performance": CombinerPerformanceModel,
     "splitter_performance": SplitterPerformanceModel,
+    # Storage
+    "h2_storage": H2Storage,
+    "hydrogen_tank_performance": HydrogenTankPerformanceModel,
+    "hydrogen_tank_cost": HydrogenTankCostModel,
+    "atb_battery_cost": ATBBatteryCostModel,
+    "simple_generic_storage": SimpleGenericStorage,
     # Control
     "pass_through_controller": PassThroughOpenLoopController,
     "demand_open_loop_controller": DemandOpenLoopController,
-    # Storage
-    "hydrogen_tank_performance": HydrogenTankPerformanceModel,
-    "hydrogen_tank_cost": HydrogenTankCostModel,
     # Feedstock
     "feedstock_performance": FeedstockPerformanceModel,
     "feedstock_cost": FeedstockCostModel,
-    "h2_storage": H2Storage,
     # Finance
     "ProFastComp": ProFastComp,
 }
