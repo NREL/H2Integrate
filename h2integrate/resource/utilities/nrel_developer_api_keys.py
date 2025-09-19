@@ -49,7 +49,7 @@ def load_file_with_variables(fpath, variables=["NREL_API_KEY", "NREL_API_EMAIL"]
     if isinstance(variables, str):
         variables = [variables]
 
-    # interate through each variable
+    # iterate through each variable
     for var in variables:
         # find a line containing the environment variable
         line_w_var = [line for line in lines if var in line]
