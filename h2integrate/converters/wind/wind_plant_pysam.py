@@ -78,7 +78,6 @@ class PYSAMWindPlantPerformanceModel(WindPerformanceBaseClass):
         field_number_to_data = {v: k for k, v in self.data_to_field_number.items()}
         fields = np.tile(list(field_number_to_data.keys()), len(bounding_heights))
         n_timesteps = int(self.options["plant_config"]["plant"]["simulation"]["n_timesteps"])
-        # resource_data = np.zeros((len(fields),n_timesteps))
         resource_data = np.zeros((n_timesteps, len(fields)))
         cnt = 0
         for height, field_num in zip(heights, fields):

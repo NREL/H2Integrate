@@ -145,7 +145,7 @@ class H2IntegrateModel:
 
         site_group.add_subsystem("site_component", site_component, promotes=["*"])
 
-        # Add the site resource component
+        # Add the site resource components
         if "resources" in site_config:
             for resource_name, resource_config in site_config["resources"].items():
                 resource_model = resource_config.get("resource_model")
@@ -156,7 +156,6 @@ class H2IntegrateModel:
                         plant_config=self.plant_config,
                         resource_config=resource_inputs,
                         driver_config=self.driver_config,
-                        # filename=resource_config.get("filename"),
                     )
                     site_group.add_subsystem(resource_name, resource_component)
 
