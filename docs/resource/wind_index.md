@@ -5,13 +5,13 @@
 
 
 ```{note}
-Please refer to `Setting Environment Variables` for information on setting up an NREL API key if needed.
+Please refer to the `Setting Environment Variables` doc page for information on setting up an NREL API key if you haven't yet.
 ```
 
 (windresource:overview)=
 # Wind Resource: Output Data
 
-Wind resource models may output wind resource data, site information, information about the data source, and time information. This information is output as a dictionary. The following sections detail the naming convention for the dictionary keys, standardized units, and descriptions of all the output data that may be output from a wind resource model.
+Wind resource models may output wind resource data, site information, information about the data source, and time information. This information is outputted as a dictionary. The following sections detail the naming convention for the dictionary keys, standardized units, and descriptions of all the output data that may be output from a wind resource model.
 
 - [Wind Resource Data](#primary-data-wind-resource-timeseries)
 - [Site Information](#additional-data-site-information)
@@ -20,11 +20,11 @@ Wind resource models may output wind resource data, site information, informatio
 
 
 ```{note}
-Not all wind resource models will output all the data keys listed below. Please check the documentation on each wind resource model and wind performance model to ensure compatibility.
+Not all wind resource models will output all the data keys listed below. Please check the documentation for each wind resource model and wind performance model to ensure compatibility.
 ```
 
-### Primary Data: Wind Resource Timeseries
-The below variables are output as arrays, with a length equal to the simulation duration. In the variabled listed below, `<height>` is used to indicate the height (in meters) above the ground for the resource parameter. `<height>` should be 0 for surface level wind resource data. The naming convention and standardized units of wind resource variables are listed below:
+## Primary Data: Wind Resource Timeseries
+The below variables are outputted as arrays, with a length equal to the simulation duration. In the variables listed below, `<height>` is used to indicate the height (in meters) above the ground for the resource parameter. `<height>` should be 0 for surface level wind resource data. The naming convention and standardized units of wind resource variables are listed below:
 - `wind_direction_<height>m`: wind direction in degrees (units are 'deg')
 - `wind_speed_<height>m`: wind speed in meters per second (units are 'm/s')
 - `temperature_<height>m`: air temperature in Celsius (units are 'C')
@@ -32,22 +32,19 @@ The below variables are output as arrays, with a length equal to the simulation 
 - `precipitation_rate_<height>m`: precipitation rate in millimeters per hour (units are 'mm/h')
 - `relative_humidity_<height>`: relative humidity represented as a percentage (units are 'percent')
 
-
-
-### Additional Data: Site Information
+## Additional Data: Site Information
 - `site_id` (int): site id
 - `site_tz` (int | float): local timezone for the site
 - `site_lat` (float): latitude of the site
 - `site_lon` (float): longitude of the site
 - `elevation` (float | int): elevation of the site in meters
 
-### Additional Data: Data source
+## Additional Data: Data source
 - `data_tz` (int | float): timezone the data is in represented as an hour offset from UTC
 - `filepath` (str): filepath where the resource data was loaded from
 
-
-### Additional Data: Time profile
-Time data may be output as arrays to represent the time profile of the resource data. These times should be represented in the timezone of `data_tz` (if output).
+## Additional Data: Time profile
+Time data may be outputted as arrays to represent the time profile of the resource data. These times should be represented in the timezone of `data_tz` (if outputted).
 - `year`: year as 4-digit value (i.e., 2019)
 - `month`: month of year (1-12)
 - `day`: day of month (1-31)
