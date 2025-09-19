@@ -57,8 +57,8 @@ The inputs, outputs, and corresponding technology that are currently available i
 | :---------------- | :---------------: |
 | `cable`         |  electricity      |
 | `pipe`      |  most mass-based commodities         |
-| `combiner`      | electricity or Any    |
-| `splitter` | electricity or Any|
+| `combiner`      | Any    |
+| `splitter` |  Any|
 
 Connection: `[source_tech, dest_tech, transport_commodity, transport_technology]`
 
@@ -191,11 +191,9 @@ Below summarizes the available performance, cost, and financial models for each 
         + `'pipe'`: generally compatible with most mass-based commodities
 - `combiner`:
     - performance models:
-        + `'power_combiner_performance'`: specific to `electricity` commodity
         + `'combiner_performance'`: can be used for any commodity
 - `splitter`:
     - performance models:
-        + `'power_splitter_performance'`: specific to `electricity` commodity
         + `'splitter_performance'`: can be used for any commodity
 
 (storage-models)=
