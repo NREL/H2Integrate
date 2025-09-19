@@ -38,17 +38,12 @@ class GenericSplitterPerformanceConfig(BaseConfig):
                 raise ValueError(
                     "fraction_to_priority_tech is required" " when split_mode is 'fraction'"
                 )
-        elif self.split_mode == "prescribed_commodity":
+        if self.split_mode == "prescribed_commodity":
             if self.prescribed_commodity_to_priority_tech is None:
                 raise ValueError(
                     "prescribed_commodity_to_priority_tech is required"
                     " when split_mode is 'prescribed_commodity'"
                 )
-        else:
-            raise ValueError(
-                f"Invalid split_mode: {self.split_mode}."
-                " Must be 'fraction' or 'prescribed_commodity'"
-            )
 
         # Set default values for unused fields
         if self.split_mode == "fraction" and self.prescribed_commodity_to_priority_tech is None:

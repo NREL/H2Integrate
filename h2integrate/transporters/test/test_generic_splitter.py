@@ -167,7 +167,7 @@ def test_splitter_invalid_mode(splitter_tech_config_electricity):
 
     with pytest.raises(
         ValueError,
-        match="Invalid split_mode: invalid_mode. Must be 'fraction' or 'prescribed_commodity'",
+        match="Item invalid_mode not found in list",
     ):
         prob = om.Problem()
         comp = GenericSplitterPerformanceModel(tech_config=tech_config)
