@@ -7,8 +7,8 @@ from attrs import field, define
 
 from h2integrate.core.utilities import (
     BaseConfig,
+    attr_filter,
     attr_serializer,
-    attr_hopp_filter,
     dict_to_yaml_formatting,
     check_plant_config_and_profast_params,
 )
@@ -265,9 +265,7 @@ class BasicProFASTParameterConfig(BaseConfig):
         Returns:
             dict: All key, value pairs required for class re-creation.
         """
-        pf_params_init = attrs.asdict(
-            self, filter=attr_hopp_filter, value_serializer=attr_serializer
-        )
+        pf_params_init = attrs.asdict(self, filter=attr_filter, value_serializer=attr_serializer)
 
         # rename keys to profast format
         pf_params = {k.replace("_", " "): v for k, v in pf_params_init.items()}
