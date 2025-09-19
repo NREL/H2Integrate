@@ -1,5 +1,4 @@
 import urllib.parse
-from typing import ClassVar
 from pathlib import Path
 
 import pandas as pd
@@ -42,7 +41,7 @@ class WTKNRELDeveloperAPIConfig(ResourceBaseAPIConfig):
     resource_year: int = field(converter=int, validator=range_val(2007, 2014))
     dataset_desc: str = "wtk_v2"
     resource_type: str = "wind"
-    valid_intervals: ClassVar = [5, 15, 30, 60]
+    valid_intervals: list[int] = field(factory=lambda: [5, 15, 30, 60])
     resource_data: dict | object = field(default={})
     resource_filename: Path | str = field(default="")
     resource_dir: Path | str | None = field(default=None)
