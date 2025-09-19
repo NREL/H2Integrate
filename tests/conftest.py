@@ -4,7 +4,7 @@ Pytest configuration file.
 
 import os
 
-from h2integrate.resource.utilities import set_nrel_key_dot_env
+from h2integrate.resource.utilities.nrel_developer_api_keys import set_nrel_key_dot_env
 
 
 def pytest_sessionstart(session):
