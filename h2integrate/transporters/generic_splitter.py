@@ -3,14 +3,32 @@ import openmdao.api as om
 from attrs import field, define
 
 from h2integrate.core.utilities import BaseConfig
+from h2integrate.core.validators import contains, range_val_or_none
 
 
 @define
 class GenericSplitterPerformanceConfig(BaseConfig):
-    split_mode: str = field()
+    """Configuration class for the GenericSplitterPerformanceModel.
+
+    Attributes:
+        split_mode (str): what method to use to split input commodity stream.
+            Must be either "prescribed_commodity" or "fraction" to split commodity stream.
+        commodity (str): name of commodity
+        commodity_units (str): units of commodity production profile
+        fraction_to_priority_tech (float, optional): fraction of input commodity to
+            send to first output stream. Only used if `split_mode` is "fraction".
+            Defaults to None.
+        prescribed_commodity_to_priority_tech (float, optional): constant amount
+            of input commodity to send to first output stream in same units as ``commodity_units``.
+            Only used if `split_mode` is "prescribed_commodity". Defaults to None.
+    """
+
+    split_mode: str = field(
+        converter=(str.lower, str.strip), validator=contains(["prescribed_commodity", "fraction"])
+    )
     commodity: str = field(converter=(str.lower, str.strip))
     commodity_units: str = field()
-    fraction_to_priority_tech: float = field(default=None)
+    fraction_to_priority_tech: float = field(default=None, validator=range_val_or_none(0, 1))
     prescribed_commodity_to_priority_tech: float = field(default=None)
 
     def __attrs_post_init__(self):
@@ -63,10 +81,7 @@ class GenericSplitterPerformanceModel(om.ExplicitComponent):
         self.options.declare("tech_config", types=dict, default={})
 
     def setup(self):
-        # Initialize config from tech_config
-        # self.config = GenericSplitterPerformanceConfig.from_dict(
-        #     self.options["tech_config"].get("performance_model", {}).get("config", {})
-        # )
+        # Initialize config from tech config
         self.config = GenericSplitterPerformanceConfig.from_dict(
             self.options["tech_config"]["model_inputs"]["performance_parameters"]
         )

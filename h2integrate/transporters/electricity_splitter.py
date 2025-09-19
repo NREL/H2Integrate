@@ -63,7 +63,7 @@ class SplitterPerformanceModel(om.ExplicitComponent):
     def setup(self):
         # Initialize config from tech_config
         self.config = SplitterPerformanceConfig.from_dict(
-            self.options["tech_config"].get("performance_model", {}).get("config", {})
+            self.options["tech_config"]["model_inputs"]["performance_parameters"]
         )
 
         self.add_input("electricity_in", val=0.0, shape_by_conn=True, units="kW")

@@ -27,8 +27,6 @@ from h2integrate.controllers.openloop_controllers import (
 from h2integrate.converters.hydrogen.wombat_model import WOMBATElectrolyzerModel
 from h2integrate.converters.wind.wind_plant_pysam import PYSAMWindPlantPerformanceModel
 from h2integrate.storage.battery.atb_battery_cost import ATBBatteryCostModel
-from h2integrate.transporters.electricity_combiner import CombinerPerformanceModel
-from h2integrate.transporters.electricity_splitter import SplitterPerformanceModel
 from h2integrate.converters.ammonia.ammonia_synloop import (
     AmmoniaSynLoopCostModel,
     AmmoniaSynLoopPerformanceModel,
@@ -145,8 +143,6 @@ supported_models = {
     # Transport
     "cable": CablePerformanceModel,
     "pipe": PipePerformanceModel,
-    "power_combiner_performance": CombinerPerformanceModel,
-    "power_splitter_performance": SplitterPerformanceModel,
     "combiner_performance": GenericCombinerPerformanceModel,
     "splitter_performance": GenericSplitterPerformanceModel,
     # Simple Summers
