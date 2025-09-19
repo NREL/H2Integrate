@@ -530,9 +530,9 @@ class ProFastComp(om.ExplicitComponent):
         mass_commodities = ["hydrogen", "ammonia", "co2", "nitrogen"]
 
         years_of_operation = create_years_of_operation(
+            self.params.plant_life,
             self.params.analysis_start_year,
             self.params.installation_time,
-            self.params.plant_life,
         )
 
         # update parameters with commodity, capacity, and utilization

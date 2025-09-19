@@ -80,9 +80,9 @@ def test_variable_om_no_escalation(subtests):
     plant_life = int(pf_dict["params"]["operating life"])
 
     years_of_operation = create_years_of_operation(
+        plant_life,
         pf_dict["params"]["analysis start year"],
         pf_dict["params"]["installation months"],
-        plant_life,
     )
 
     pf_dict = update_defaults(pf_dict, "escalation", inflation_rate)
@@ -172,9 +172,9 @@ def test_variable_om_with_escalation(subtests):
     plant_life = int(pf_dict["params"]["operating life"])
 
     years_of_operation = create_years_of_operation(
+        plant_life,
         pf_dict["params"]["analysis start year"],
         pf_dict["params"]["installation months"],
-        plant_life,
     )
 
     # update the inflation rate
