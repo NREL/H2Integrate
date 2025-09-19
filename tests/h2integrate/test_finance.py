@@ -6,7 +6,11 @@ from pytest import approx
 
 from h2integrate import EXAMPLE_DIR
 from h2integrate.core.dict_utils import update_defaults
-from h2integrate.tools.profast_tools import run_profast, create_and_populate_profast
+from h2integrate.tools.profast_tools import (
+    run_profast,
+    create_years_of_operation,
+    create_and_populate_profast,
+)
 from h2integrate.core.h2integrate_model import H2IntegrateModel
 from h2integrate.core.inputs.validation import load_yaml
 
@@ -73,12 +77,13 @@ def test_variable_om_no_escalation(subtests):
 
     pf_dict = load_yaml(yaml_fpath)
 
-    # calculate years of operation
     plant_life = int(pf_dict["params"]["operating life"])
-    operation_start_year = int(
-        pf_dict["params"]["analysis start year"] + pf_dict["params"]["installation months"] / 12
+
+    years_of_operation = create_years_of_operation(
+        pf_dict["params"]["analysis start year"],
+        pf_dict["params"]["installation months"],
+        plant_life,
     )
-    years_of_operation = [str(int(operation_start_year + y)) for y in range(plant_life)]
 
     pf_dict = update_defaults(pf_dict, "escalation", inflation_rate)
     pf_dict["params"].update({"general inflation rate": inflation_rate})
@@ -164,12 +169,13 @@ def test_variable_om_with_escalation(subtests):
     # load the profast dictionary
     pf_dict = load_yaml(yaml_fpath)
 
-    # calculate years of operation
     plant_life = int(pf_dict["params"]["operating life"])
-    operation_start_year = int(
-        pf_dict["params"]["analysis start year"] + pf_dict["params"]["installation months"] / 12
+
+    years_of_operation = create_years_of_operation(
+        pf_dict["params"]["analysis start year"],
+        pf_dict["params"]["installation months"],
+        plant_life,
     )
-    years_of_operation = [str(int(operation_start_year + y)) for y in range(plant_life)]
 
     # update the inflation rate
     pf_dict = update_defaults(pf_dict, "escalation", inflation_rate)

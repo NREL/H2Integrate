@@ -17,6 +17,7 @@ from h2integrate.core.validators import gt_zero, contains, gte_zero, range_val
 from h2integrate.tools.profast_tools import (
     run_profast,
     make_price_breakdown,
+    create_years_of_operation,
     create_and_populate_profast,
     format_profast_price_breakdown_per_year,
 )
@@ -283,14 +284,6 @@ class BasicProFASTParameterConfig(BaseConfig):
                 params[keyname] = vals
         return params
 
-    def create_years_of_operation(self):
-        operation_start_year = self.analysis_start_year + (self.installation_time / 12)
-        years_of_operation = np.arange(
-            int(operation_start_year), int(operation_start_year + self.plant_life), 1
-        )
-        year_keys = [f"{y}" for y in years_of_operation]
-        return year_keys
-
 
 @define
 class ProFASTDefaultCapitalItem(BaseConfig):
@@ -538,7 +531,11 @@ class ProFastComp(om.ExplicitComponent):
     def compute(self, inputs, outputs):
         mass_commodities = ["hydrogen", "ammonia", "co2", "nitrogen"]
 
-        years_of_operation = self.params.create_years_of_operation()
+        years_of_operation = create_years_of_operation(
+            self.params.analysis_start_year,
+            self.params.installation_time,
+            self.params.plant_life,
+        )
 
         # update parameters with commodity, capacity, and utilization
         profast_params = self.params.as_dict()
