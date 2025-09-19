@@ -340,10 +340,8 @@ class ProFASTDefaultVariableCost(BaseConfig):
             Defaults to 0.
         unit (str): unit of the cost, only used for reporting. The cost should be input in
             USD/unit of commodity.
-        usage (float, optional): Usage of feedstock per unit of commondity.
+        usage (float, optional): Usage of feedstock per unit of commodity.
             Defaults to 1.0.
-
-
     """
 
     escalation: float | int = field()
@@ -625,10 +623,11 @@ class ProFastComp(om.ExplicitComponent):
             )
 
             # add CapEx cost to tech-specific variable cost entry
-            varom_cost_per_unit_commodity = inputs[f"varopex_adjusted_{tech}"] / total_production
-            if not all(v == 0.0 for v in varom_cost_per_unit_commodity):
-                varom_dict = dict(zip(years_of_operation, varom_cost_per_unit_commodity))
-                tech_varopex_info.update({"cost": varom_dict})
+            varopex_adjusted_tech = inputs[f"varopex_adjusted_{tech}"]
+            if np.any(varopex_adjusted_tech) > 0:
+                varopex_cost_per_unit_commodity = varopex_adjusted_tech / total_production
+                varopex_dict = dict(zip(years_of_operation, varopex_cost_per_unit_commodity))
+                tech_varopex_info.update({"cost": varopex_dict})
 
                 # update any unset variable cost parameters with the default values
                 for var_cost_key, var_cost_val in variable_cost_defaults.items():

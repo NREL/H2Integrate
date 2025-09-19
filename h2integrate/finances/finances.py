@@ -67,9 +67,9 @@ class AdjustedCapexOpexComp(om.ExplicitComponent):
         total_opex_adjusted = 0.0
         total_varopex_adjusted = np.zeros(self.plant_life)
         for tech in self.options["tech_configs"]:
-            capex = float(inputs[f"capex_{tech}"][0])
-            opex = float(inputs[f"opex_{tech}"][0])
-            varopex = inputs[f"varopex_{tech}"][0]
+            capex = float(inputs[f"capex_{tech}"])
+            opex = float(inputs[f"opex_{tech}"])
+            varopex = inputs[f"varopex_{tech}"]
             cost_year = int(discrete_inputs[f"cost_year_{tech}"])
             periods = self.target_dollar_year - cost_year
             adjusted_capex = -npf.fv(self.inflation_rate, periods, 0.0, capex)
