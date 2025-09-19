@@ -90,10 +90,10 @@ class NaturalGasPerformanceModel(om.ExplicitComponent):
 
         # Add rated capacity as an input with config value as default
         self.add_input(
-            "plant_capacity_mw",
+            "system_capacity",
             val=self.config.plant_capacity_mw,
             units="MW",
-            desc="Plant rated capacity in MW",
+            desc="Natural gas plant rated capacity in MW",
         )
 
         # Default the electricity demand input as the rated capacity
@@ -105,11 +105,10 @@ class NaturalGasPerformanceModel(om.ExplicitComponent):
             desc="Electricity demand for natural gas plant",
         )
 
-        max_ng_in_mmbtu = self.config.plant_capacity_mw * self.config.heat_rate_mmbtu_per_mwh
-        # Add natural gas input, defaulting to rated capacity
+        # Add natural gas input, default to 0 --> set using feedstock component
         self.add_input(
             "natural_gas_in",
-            val=max_ng_in_mmbtu,
+            val=0.0,
             shape=n_timesteps,
             units="MMBtu",
             desc="Natural gas input energy",
@@ -130,22 +129,22 @@ class NaturalGasPerformanceModel(om.ExplicitComponent):
         """
 
         # calculate max input and output
-        max_electricity_demand = inputs["plant_capacity_mw"][0]
-        heat_rate_mmbtu_per_mwh = inputs["heat_rate_mmbtu_per_mwh"][0]
-        max_natural_gas_in = max_electricity_demand * heat_rate_mmbtu_per_mwh
+        system_capacity = inputs["system_capacity"]  # plant capacity in MW
+        heat_rate_mmbtu_per_mwh = inputs["heat_rate_mmbtu_per_mwh"]
+        max_natural_gas_consumption = system_capacity * heat_rate_mmbtu_per_mwh
 
-        # product demand, saturated at maximum product capacity
+        # electrical demand, saturated at maximum rated system capacity
         electricity_demand = np.where(
-            inputs["electricity_demand"] > max_electricity_demand,
-            max_electricity_demand,
+            inputs["electricity_demand"] > system_capacity,
+            system_capacity,
             inputs["electricity_demand"],
         )
         natural_gas_demand = electricity_demand * heat_rate_mmbtu_per_mwh
 
-        # available feedstock, saturated at maximum feedstock capacity
+        # available feedstock, saturated at maximum system feedstock consumption
         natural_gas_available = np.where(
-            inputs["natural_gas_in"] > max_natural_gas_in,
-            max_natural_gas_in,
+            inputs["natural_gas_in"] > max_natural_gas_consumption,
+            max_natural_gas_consumption,
             inputs["natural_gas_in"],
         )
 
@@ -214,7 +213,7 @@ class NaturalGasCostModel(CostModelBaseClass):
     3. Variable O&M: variable_opex_per_mwh * delivered_electricity_MWh
 
     Inputs:
-        plant_capacity_mw (float): Plant capacity in MW
+        system_capacity (float): Natural gas plant capacity in MW
         electricity_out (array): Hourly electricity output in MW from performance model
         capex_per_kw (float): Capital cost per unit capacity in $/kW
         fixed_opex_per_kw_per_year (float): Fixed operating expenses per unit capacity in $/kW/year
@@ -237,7 +236,7 @@ class NaturalGasCostModel(CostModelBaseClass):
 
         # Add inputs specific to the cost model with config values as defaults
         self.add_input(
-            "plant_capacity_mw",
+            "system_capacity",
             val=self.config.plant_capacity_mw,
             units="MW",
             desc="Natural gas plant capacity",
@@ -278,11 +277,11 @@ class NaturalGasCostModel(CostModelBaseClass):
         """
         Compute capital and operating costs for the natural gas plant.
         """
-        plant_capacity_kw = inputs["plant_capacity_mw"][0] * 1000  # Convert MW to kW
+        plant_capacity_kw = inputs["system_capacity"] * 1000  # Convert MW to kW
         electricity_out = inputs["electricity_out"]  # MW hourly profile
-        capex_per_kw = inputs["capex_per_kw"][0]
-        fixed_opex_per_kw_per_year = inputs["fixed_opex_per_kw_per_year"][0]
-        variable_opex_per_mwh = inputs["variable_opex_per_mwh"][0]
+        capex_per_kw = inputs["capex_per_kw"]
+        fixed_opex_per_kw_per_year = inputs["fixed_opex_per_kw_per_year"]
+        variable_opex_per_mwh = inputs["variable_opex_per_mwh"]
 
         # Sum hourly electricity output to get annual generation
         # electricity_out is in MW, so sum gives MWh for hourly data

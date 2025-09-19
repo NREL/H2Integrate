@@ -70,14 +70,14 @@ finance_parameters:
       commodity: "electricity"
       # commodity_desc: "renewables"
       finance_groups: ["profast_model"]
-      technologies: ["solar","battery"] #THOUGHT: this may use total electricity produced
+      technologies: ["solar", "battery"] #THOUGHT: this may use total electricity produced
     natural_gas:
       commodity: "electricity"
       # commodity_desc: "natural_gas"
       finance_groups: ["profast_model"]
-      technologies: ["natural_gas_plant","ng_feedstock"]
+      technologies: ["natural_gas_plant", "ng_feedstock"]
     electricity:
       commodity: "electricity"
       # commodity_desc: "total"
       finance_groups: ["profast_model"]
-      technologies: ["solar","battery","natural_gas_plant","ng_feedstock"] #THOUGHT: this may use total electricity produced
+      technologies: ["solar","battery", "natural_gas_plant", "ng_feedstock"] #THOUGHT: this may use total electricity produced
