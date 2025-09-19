@@ -14,7 +14,7 @@ def ngcc_performance_params():
     """Natural Gas Combined Cycle performance parameters."""
     tech_params = {
         "heat_rate_mmbtu_per_mwh": 7.5,  # MMBtu/MWh - typical for NGCC
-        "plant_capacity_mw": 100,
+        "system_capacity": 100,
     }
     return tech_params
 
@@ -24,7 +24,7 @@ def ngct_performance_params():
     """Natural Gas Combustion Turbine performance parameters."""
     tech_params = {
         "heat_rate_mmbtu_per_mwh": 11.5,  # MMBtu/MWh - typical for NGCT
-        "plant_capacity_mw": 50,
+        "system_capacity": 50,
     }
     return tech_params
 
@@ -37,7 +37,7 @@ def ngcc_cost_params():
         "fixed_opex_per_kw_per_year": 10.0,  # $/kW/year
         "variable_opex_per_mwh": 2.5,  # $/MWh
         "heat_rate_mmbtu_per_mwh": 7.5,  # MMBtu/MWh
-        "plant_capacity_mw": 100,  # MW
+        "system_capacity": 100,  # MW
         "cost_year": 2023,
     }
     return cost_params
@@ -51,7 +51,7 @@ def ngct_cost_params():
         "fixed_opex_per_kw_per_year": 8.0,  # $/kW/year
         "variable_opex_per_mwh": 3.0,  # $/MWh
         "heat_rate_mmbtu_per_mwh": 11.5,  # MMBtu/MWh
-        "plant_capacity_mw": 100,  # MW
+        "system_capacity": 100,  # MW
         "cost_year": 2023,
     }
     return cost_params
@@ -151,7 +151,7 @@ def test_ngcc_cost(ngcc_cost_params, subtests):
     }
 
     # Plant parameters for a 100 MW NGCC plant
-    plant_capacity_mw = 100_000  # 100 MW
+    system_capacity = 100_000  # 100 MW
     annual_generation_MWh = 700_000  # ~80% capacity factor
 
     # Create hourly electricity output that sums to annual generation
@@ -167,7 +167,7 @@ def test_ngcc_cost(ngcc_cost_params, subtests):
     prob.setup()
 
     # Set inputs
-    prob.set_val("plant_capacity_mw", plant_capacity_mw)
+    prob.set_val("system_capacity", system_capacity)
     prob.set_val("electricity_out", electricity_out)
     prob.run_model()
 
@@ -176,8 +176,8 @@ def test_ngcc_cost(ngcc_cost_params, subtests):
     cost_year = prob.get_val("cost_year")
 
     # Calculate expected values
-    expected_capex = ngcc_cost_params["capex_per_kw"] * plant_capacity_mw * 1000.0
-    expected_fixed_om = ngcc_cost_params["fixed_opex_per_kw_per_year"] * plant_capacity_mw * 1000.0
+    expected_capex = ngcc_cost_params["capex_per_kw"] * system_capacity * 1000.0
+    expected_fixed_om = ngcc_cost_params["fixed_opex_per_kw_per_year"] * system_capacity * 1000.0
     expected_variable_om = ngcc_cost_params["variable_opex_per_mwh"] * annual_generation_MWh
     expected_opex = expected_fixed_om + expected_variable_om
 
@@ -200,7 +200,7 @@ def test_ngct_cost(ngct_cost_params, subtests):
     }
 
     # Plant parameters for a 50 MW NGCT plant
-    plant_capacity_mw = 50_000  # 50 MW
+    system_capacity = 50_000  # 50 MW
     annual_generation_MWh = 100_000  # ~23% capacity factor (peaking plant)
 
     # Create hourly electricity output that sums to annual generation
@@ -216,7 +216,7 @@ def test_ngct_cost(ngct_cost_params, subtests):
     prob.setup()
 
     # Set inputs
-    prob.set_val("plant_capacity_mw", plant_capacity_mw)
+    prob.set_val("system_capacity", system_capacity)
     prob.set_val("electricity_out", electricity_out)
     prob.run_model()
 
@@ -225,8 +225,8 @@ def test_ngct_cost(ngct_cost_params, subtests):
     cost_year = prob.get_val("cost_year")
 
     # Calculate expected values
-    expected_capex = ngct_cost_params["capex_per_kw"] * plant_capacity_mw * 1000.0
-    expected_fixed_om = ngct_cost_params["fixed_opex_per_kw_per_year"] * plant_capacity_mw * 1000.0
+    expected_capex = ngct_cost_params["capex_per_kw"] * system_capacity * 1000.0
+    expected_fixed_om = ngct_cost_params["fixed_opex_per_kw_per_year"] * system_capacity * 1000.0
     expected_variable_om = ngct_cost_params["variable_opex_per_mwh"] * annual_generation_MWh
     expected_opex = expected_fixed_om + expected_variable_om
 
@@ -251,7 +251,7 @@ def test_ngcc_performance_demand(ngcc_performance_params, subtests):
     # Create a simple natural gas input profile (constant 750 MMBtu/h for 100 MW plant)
     natural_gas_input = np.full(8760, 750.0)  # MMBtu
     electricity_demand_section = np.linspace(
-        0, 1.2 * ngcc_performance_params["plant_capacity_mw"], 12
+        0, 1.2 * ngcc_performance_params["system_capacity"], 12
     )
     electricity_demand_MW = np.tile(electricity_demand_section, 730)
 
@@ -275,8 +275,8 @@ def test_ngcc_performance_demand(ngcc_performance_params, subtests):
         # Expected: 750 MMBtu / 7.5 MMBtu/MWh = 100 MW
         expected_output_ng = natural_gas_input / ngcc_performance_params["heat_rate_mmbtu_per_mwh"]
         expected_output_elec = np.where(
-            electricity_demand_MW > ngcc_performance_params["plant_capacity_mw"],
-            ngcc_performance_params["plant_capacity_mw"],
+            electricity_demand_MW > ngcc_performance_params["system_capacity"],
+            ngcc_performance_params["system_capacity"],
             electricity_demand_MW,
         )
         expected_output = np.minimum.reduce([expected_output_ng, expected_output_elec])
@@ -286,5 +286,5 @@ def test_ngcc_performance_demand(ngcc_performance_params, subtests):
         # Check average output is 100 MW
         assert (
             pytest.approx(np.max(electricity_out), rel=1e-6)
-            == ngcc_performance_params["plant_capacity_mw"]
+            == ngcc_performance_params["system_capacity"]
         )

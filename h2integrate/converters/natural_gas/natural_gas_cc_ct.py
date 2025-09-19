@@ -16,7 +16,7 @@ class NaturalGasPerformanceConfig(BaseConfig):
     combustion turbines (NGCT) and natural gas combined cycle (NGCC) plants.
 
     Attributes:
-        plant_capacity_mw (float): rated capacity of the natural gas plant in MW
+        system_capacity (float): rated capacity of the natural gas plant in MW
         heat_rate_mmbtu_per_mwh (float): Heat rate of the natural gas plant in MMBtu/MWh.
             This represents the amount of fuel energy required to produce
             one MWh of electricity. Lower values indicate higher efficiency.
@@ -25,7 +25,7 @@ class NaturalGasPerformanceConfig(BaseConfig):
             - NGCC: 6-8 MMBtu/MWh
     """
 
-    plant_capacity_mw: float = field(validator=gte_zero)
+    system_capacity: float = field(validator=gte_zero)
     heat_rate_mmbtu_per_mwh: float = field(validator=gt_zero)
 
 
@@ -91,7 +91,7 @@ class NaturalGasPerformanceModel(om.ExplicitComponent):
         # Add rated capacity as an input with config value as default
         self.add_input(
             "system_capacity",
-            val=self.config.plant_capacity_mw,
+            val=self.config.system_capacity,
             units="MW",
             desc="Natural gas plant rated capacity in MW",
         )
@@ -99,7 +99,7 @@ class NaturalGasPerformanceModel(om.ExplicitComponent):
         # Default the electricity demand input as the rated capacity
         self.add_input(
             "electricity_demand",
-            val=self.config.plant_capacity_mw,
+            val=self.config.system_capacity,
             shape=n_timesteps,
             units="MW",
             desc="Electricity demand for natural gas plant",
@@ -124,7 +124,7 @@ class NaturalGasPerformanceModel(om.ExplicitComponent):
 
         Args:
             inputs: OpenMDAO inputs object containing natural_gas_in, heat_rate_mmbtu_per_mwh,
-                plant_capacity_mw, and electricity_demand.
+                system_capacity, and electricity_demand.
             outputs: OpenMDAO outputs object for electricity_out and natural_gas_consumed
         """
 
@@ -167,7 +167,7 @@ class NaturalGasCostModelConfig(CostModelBaseConfig):
     turbines (NGCT) and natural gas combined cycle (NGCC) plants.
 
     Attributes:
-        plant_capacity_mw (float | int): Plant capacity in MW.
+        system_capacity (float | int): Plant capacity in MW.
 
         capex_per_kw (float|int): Capital cost per unit capacity in $/kW. This includes
             all equipment, installation, and construction costs.
@@ -189,7 +189,7 @@ class NaturalGasCostModelConfig(CostModelBaseConfig):
         cost_year (int): Dollar year corresponding to input costs.
     """
 
-    plant_capacity_mw: float | int = field(validator=gt_zero)
+    system_capacity: float | int = field(validator=gt_zero)
     capex_per_kw: float | int = field(validator=gte_zero)
     fixed_opex_per_kw_per_year: float | int = field(validator=gte_zero)
     variable_opex_per_mwh: float | int = field(validator=gte_zero)
@@ -237,7 +237,7 @@ class NaturalGasCostModel(CostModelBaseClass):
         # Add inputs specific to the cost model with config values as defaults
         self.add_input(
             "system_capacity",
-            val=self.config.plant_capacity_mw,
+            val=self.config.system_capacity,
             units="MW",
             desc="Natural gas plant capacity",
         )
