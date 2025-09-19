@@ -23,7 +23,7 @@ class WindPerformanceBaseClass(om.ExplicitComponent):
         )
 
     def calculate_bounding_heights_from_resource_data(
-        self, hub_height_meters, resource_data, resource_vars=["wind_speed", "wind_direction"]
+        self, hub_height_meters, resource_data, resource_vars=["wind_speed"]
     ):
         """This method finds the wind resource heights that bound the turbine hub-height.
         This method returns resource heights (`height_1` and/or `height_2`) that are closest
@@ -39,7 +39,7 @@ class WindPerformanceBaseClass(om.ExplicitComponent):
             resource_data (dict): wind resource data dictionary.
             resource_vars (list[str], optional): Wind resource data types
                 used to find the bounding resource heights. Defaults to
-                ["wind_speed", "wind_direction"].
+                ["wind_speed"].
 
         Returns:
             list[int]: list of resource heights in meters that most closely bound

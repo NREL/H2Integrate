@@ -126,7 +126,7 @@ class ResourceBaseAPIModel(om.ExplicitComponent):
     def get_data(self):
         """Get resource data to handle any of the expected inputs. This method does the following:
 
-        1) check if resource data was input. If not, continue to Step 2.
+        1) Check if resource data was input. If not, continue to Step 2.
         2) Get valid resource_dir with the method `check_resource_dir()`
         3) Create a filename if resource_filename was not input with the method `create_filename()`.
             Otherwise, use resource_filename as the filename.
@@ -152,10 +152,12 @@ class ResourceBaseAPIModel(om.ExplicitComponent):
             data = self.config.resource_data
             return data
 
-        # 2) check if user provided directory or filename
         if data is None:
+            # check if user provided directory or filename
             provided_filename = False if self.config.resource_filename == "" else True
             provided_dir = False if self.config.resource_dir is None else True
+
+            # 2) Get valid resource_dir with the method `check_resource_dir()`
             if (
                 provided_dir
                 and Path(self.config.resource_dir).parts[-1] == self.config.resource_type
@@ -165,23 +167,32 @@ class ResourceBaseAPIModel(om.ExplicitComponent):
                 resource_dir = check_resource_dir(
                     resource_dir=self.config.resource_dir, resource_subdir=self.config.resource_type
                 )
+            # 3) Create a filename if resource_filename was input
             if provided_filename:
+                # If a filename was input, use resource_filename as the filename.
                 filepath = resource_dir / self.config.resource_filename
+            # Otherwise, create a filename with the method `create_filename()`.
             else:
                 filename = self.create_filename()
                 filepath = resource_dir / filename
+            # 4) If the resulting resource_dir and filename from Steps 2 and 3 make a valid
+            # filepath, load data using `load_data()`
             if filepath.is_file():
                 self.filepath = filepath
                 data = self.load_data(filepath)
                 return data
 
-        # 3) download data if not found in file or not provided
+        # If the filepath (resource_dir/filename) does not exist, download data
         if data is None:
             self.filepath = filepath
+            # 5) Create the url to download data using `create_url()` and continue to Step 6.
             url = self.create_url()
+            # 6) Download data from the url created in Step 5 and save to a filepath created from
+            # the resulting resource_dir and filename from Steps 2 and 3.
             success = self.download_data(url, filepath)
             if not success:
                 raise ValueError("Did not successfully download data")
+            # 7) Load data from the file created in Step 6 using `load_data()`
             data = self.load_data(filepath)
             return data
 
