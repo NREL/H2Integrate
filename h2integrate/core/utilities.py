@@ -44,19 +44,24 @@ def create_xdsm_from_config(config, output_file="connections_xdsm"):
     for conn in config["technology_interconnections"]:
         if len(conn) == 3:
             source, destination, data = conn
-            connection_label = data
         else:
             source, destination, data, label = conn
 
-        source.replace("_", r"\_")
-        destination.replace("_", r"\_")
-        connection_label = rf"\text{{{data} {'via'} {label}}}"
+        if isinstance(data, (list, tuple)) and len(data) >= 2:
+            data = f"{data[0]} as {data[1]}"
+
+        if len(conn) == 3:
+            connection_label = rf"\text{{{data}}}"
+        else:
+            connection_label = rf"\text{{{data} {'via'} {label}}}"
+
+        connection_label = connection_label.replace("_", r"\_")
 
         x.connect(source, destination, connection_label)
 
     # Write the diagram to a file
     x.write(output_file, quiet=True)
-    print(f"XDSM diagram written to {output_file}.tex")
+    print(f"XDSM diagram written to {output_file}.pdf")
 
 
 def merge_shared_inputs(config, input_type):
