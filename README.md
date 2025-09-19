@@ -195,26 +195,6 @@ pip install -e ".[all]"
     pytest
     ```
 
-## Parallel processing for H2Integrate finite differences and design of experiments
-
-H2Integrate is set up to run in parallel using MPI and PETSc for finite differencing and for design
-of experiments runs through OpenMDAO. To use this capability you will need to follow the additional
-installation
-instruction below:
-
-```bash
-conda install -c conda-forge mpi4py petsc4py
-```
-
-For more details on implementation and installation, reference the documentation for OpenMDAO.
-
-To check that your installation is working, do the following:
-
-```bash
-cd tests/h2integrate/
-mpirun -n 2 pytest test_openmdao_mpi.py
-```
-
 ## Getting Started
 
 The [Examples](./examples/) contain Jupyter notebooks and sample YAML files for common usage
