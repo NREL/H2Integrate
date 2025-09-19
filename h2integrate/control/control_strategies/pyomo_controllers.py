@@ -153,10 +153,12 @@ class PyomoControllerBaseClass(ControllerBaseClass):
 
                 # self.enforce_SOC_limits_pre_sim()
 
-                storage_resource_out_control_window, soc_control_window = performance_model(
-                    self.storage_dispatch_commands,
-                    **performance_model_kwargs,
-                    sim_start_index=t,
+                storage_resource_out_control_window, soc_control_window, dispatch_hist_perf = (
+                    performance_model(
+                        self.storage_dispatch_commands,
+                        **performance_model_kwargs,
+                        sim_start_index=t,
+                    )
                 )
 
                 # store output values for every timestep
@@ -173,7 +175,14 @@ class PyomoControllerBaseClass(ControllerBaseClass):
                         0, storage_resource_out[j] + resource_in[j - t] - demand_in[j - t]
                     )
 
-            return total_resource_out, storage_resource_out, unmet_demand, excess_resource, soc
+            return (
+                total_resource_out,
+                storage_resource_out,
+                unmet_demand,
+                excess_resource,
+                soc,
+                dispatch_hist_perf,
+            )
 
         return pyomo_dispatch_solver
 
