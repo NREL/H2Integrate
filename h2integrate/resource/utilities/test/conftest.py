@@ -1,18 +1,11 @@
-"""
-Pytest configuration file.
-"""
-
 import os
 
-from h2integrate.resource.utilities.nrel_developer_api_keys import set_nrel_key_dot_env
+from hopp import TEST_ENV_VAR
 
 
 def pytest_sessionstart(session):
-    # Set a dummy API key
-    os.environ["NREL_API_KEY"] = "a" * 40
-    set_nrel_key_dot_env()
+    os.environ["ENV"] = TEST_ENV_VAR
 
-    # Set RESOURCE_DIR to None so pulls example files from default DIR
     initial_resource_dir = os.getenv("RESOURCE_DIR")
     # if user provided a resource directory, save it to a temp variable
     # this allows tests to run as expected while not causing

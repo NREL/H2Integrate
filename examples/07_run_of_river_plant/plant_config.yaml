@@ -19,7 +19,9 @@ site:
 
   resources:
     river_resource:
-      filename: "river_data.csv"
+      resource_model: "river_resource"
+      resource_parameters:
+        filename: "river_data.csv"
 
 # array of arrays containing left-to-right technology
 # interconnections; can support bidirectional connections

@@ -8,6 +8,7 @@ parts:
   chapters:
     - file: getting_started/install
     - file: getting_started/expected_user_knowledge
+    - file: getting_started/environment_variables
 
 - caption: User Guide
   chapters:
@@ -35,6 +36,13 @@ parts:
   - file: technology_models/atb_costs_pv.md
   - file: technology_models/co2.md
   - file: technology_models/simple_generic_storage.md
+
+- caption: Resource Models
+  chapters:
+  - file: resource/resource_index
+    sections:
+      - file: resource/wind_index
+      - file: resource/wind_toolkit_v2_api
 
 - caption: Examples
   chapters:
