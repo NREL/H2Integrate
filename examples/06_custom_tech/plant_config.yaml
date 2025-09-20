@@ -1,9 +1,9 @@
 name: "plant_config"
-description: "This plant models a wind plant with a custom paper mill model in MN."
+description: "This plant models a wind plant with a custom paper mill model in CO."
 
 site:
-  latitude: 47.5233
-  longitude: -92.5366
+  latitude: 35.2018863
+  longitude: -101.945027
 
   # array of polygons defining boundaries with x/y coords
   boundaries: [
@@ -17,6 +17,12 @@ site:
     }
   ]
 
+  resources:
+    wind_resource:
+      resource_model: "wind_toolkit_v2_api"
+      resource_parameters:
+        resource_year: 2012
+
 plant:
   plant_life: 30
 
@@ -27,4 +33,8 @@ plant:
 technology_interconnections: [
   ["wind", "paper_mill", "electricity", "cable"],
   # etc
+]
+resource_to_tech_connections: [
+  # connect the wind resource to the wind technology
+  ['wind_resource', 'wind', 'wind_resource_data'],
 ]

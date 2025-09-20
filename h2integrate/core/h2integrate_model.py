@@ -145,13 +145,17 @@ class H2IntegrateModel:
 
         site_group.add_subsystem("site_component", site_component, promotes=["*"])
 
-        # Add the site resource component
+        # Add the site resource components
         if "resources" in site_config:
             for resource_name, resource_config in site_config["resources"].items():
-                resource_class = self.supported_models.get(resource_name)
+                resource_model = resource_config.get("resource_model")
+                resource_inputs = resource_config.get("resource_parameters")
+                resource_class = self.supported_models.get(resource_model)
                 if resource_class:
                     resource_component = resource_class(
-                        filename=resource_config.get("filename"),
+                        plant_config=self.plant_config,
+                        resource_config=resource_inputs,
+                        driver_config=self.driver_config,
                     )
                     site_group.add_subsystem(resource_name, resource_component)
 
@@ -824,5 +828,12 @@ class H2IntegrateModel:
         self.prob.run_driver()
 
     def post_process(self):
-        self.prob.model.list_inputs(units=True)
-        self.prob.model.list_outputs(units=True)
+        """
+        Post-process the results of the OpenMDAO model.
+
+        Right now, this just means printing the inputs and outputs to all systems in the model.
+        We currently exclude any variables with "resource_data" in the name, since those
+        are large dictionary variables that are not correctly formatted when printing.
+        """
+        self.prob.model.list_inputs(units=True, print_mean=True, excludes=["*resource_data"])
+        self.prob.model.list_outputs(units=True, print_mean=True, excludes=["*resource_data"])
