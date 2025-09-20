@@ -40,10 +40,17 @@ class WOMBATElectrolyzerModel(ECOElectrolyzerPerformanceModel):
         self.config = WOMBATModelConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance")
         )
-
+        plant_life = int(self.options["plant_config"]["plant"]["plant_life"])
         self.add_output("capacity_factor", val=0.0, units=None)
         self.add_output("CapEx", val=0.0, units="USD", desc="Capital expenditure")
         self.add_output("OpEx", val=0.0, units="USD/year", desc="Operational expenditure")
+        self.add_output(
+            "VarOpEx",
+            val=0.0,
+            shape=plant_life,
+            units="USD/year",
+            desc="Variable operational expenditure",
+        )
         self.add_discrete_output("cost_year", val=0, desc="Dollar year for costs")
         self.add_output(
             "percent_hydrogen_lost",

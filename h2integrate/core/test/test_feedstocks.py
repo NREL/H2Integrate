@@ -100,7 +100,7 @@ class TestFeedstocks(unittest.TestCase):
 
         # Check outputs
         capex = prob_cost.get_val("feedstock_cost.CapEx")[0]
-        opex = prob_cost.get_val("feedstock_cost.OpEx")[0]
+        opex = prob_cost.get_val("feedstock_cost.VarOpEx")[0]
 
         self.assertEqual(capex, 100000.0)  # start_up_cost
         expected_opex = 0.0 + 4.2 * consumption.sum()  # annual_cost + price * consumption
@@ -235,7 +235,7 @@ class TestFeedstocks(unittest.TestCase):
         prob.run_model()
 
         # Check that OpEx reflects variable pricing
-        opex = prob.get_val("feedstock_cost.OpEx")[0]
+        opex = prob.get_val("feedstock_cost.VarOpEx")[0]
         expected_opex = 0.0 + np.sum(hourly_prices * consumption)
         self.assertAlmostEqual(opex, expected_opex, places=5)
 
