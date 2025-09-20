@@ -160,7 +160,7 @@ class BaseConfig:
         Returns:
             dict: All key, value pairs required for class re-creation.
         """
-        return attrs.asdict(self, filter=attr_hopp_filter, value_serializer=attr_serializer)
+        return attrs.asdict(self, filter=attr_filter, value_serializer=attr_serializer)
 
 
 @define
@@ -174,7 +174,7 @@ def attr_serializer(inst: type, field: Attribute, value: Any):
     return value
 
 
-def attr_hopp_filter(inst: Attribute, value: Any) -> bool:
+def attr_filter(inst: Attribute, value: Any) -> bool:
     if inst.init is False:
         return False
     if value is None:
