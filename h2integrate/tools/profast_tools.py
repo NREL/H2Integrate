@@ -115,6 +115,7 @@ def make_price_breakdown(price_breakdown, pf_config):
     price_breakdown_feedstocks = {}
     price_breakdown_capex = {}
     price_breakdown_fixed_cost = {}
+    price_breakdown_coproducts = {}
     full_price_breakdown = {}
     lco_str = "LCO{}".format(pf_config["params"]["commodity"]["name"][0].upper())
     lco_units = "$/{}".format(pf_config["params"]["commodity"]["unit"])
@@ -179,6 +180,15 @@ def make_price_breakdown(price_breakdown, pf_config):
                 price_breakdown["Name"] == item, "NPV"
             ].tolist()[0]
         full_price_breakdown.update(price_breakdown_feedstocks)
+
+    if "coproducts" in config_keys:
+        coproduct_items = pf_config["coproducts"]
+        for item in coproduct_items:
+            key_name = f"{lco_str}: {item} ({lco_units})"
+            price_breakdown_coproducts[key_name] = price_breakdown.loc[
+                price_breakdown["Name"] == item, "NPV"
+            ].tolist()[0]
+        full_price_breakdown.update(price_breakdown_coproducts)
 
     price_breakdown_taxes = (
         price_breakdown.loc[price_breakdown["Name"] == "Income taxes payable", "NPV"].tolist()[0]
