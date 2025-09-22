@@ -29,7 +29,6 @@ technology_interconnections: [
   ["ng_feedstock", "natural_gas_plant", "natural_gas", "pipe"], #connect NG feedstock to NG plant
   ["solar","electrical_load_demand",["electricity_out","electricity_in"]], # subtract solar from demand
   ["electrical_load_demand", "natural_gas_plant", ["electricity_missed_load", "electricity_demand"]], #give remaining load demand to natural gas plant
-  # ["electrical_load_demand", "natural_gas_plant", "electricity_demand"], #connect electricity demand to NG feedstock
 ]
 
 plant:
