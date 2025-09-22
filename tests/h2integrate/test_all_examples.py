@@ -627,7 +627,7 @@ def test_natural_gas_example(subtests):
         capex = model.prob.get_val("natural_gas_plant.CapEx")[0]
         assert pytest.approx(capex, rel=1e-6) == 1e8
 
-    with subtests.test("Check natural gas OpEx"):
+    with subtests.test("Check Natural Gas OpEx"):
         fopex = model.prob.get_val("natural_gas_plant.OpEx")[0]
         vopex = model.prob.get_val("natural_gas_plant.VarOpEx")[0]
         opex = fopex + vopex
@@ -662,11 +662,11 @@ def test_natural_gas_example(subtests):
         total_capex = model.prob.get_val("finance_subgroup_natural_gas.total_capex_adjusted")[0]
         assert pytest.approx(total_capex, rel=1e-6) == 97658536.58536586
 
-    with subtests.test("Check total adjusted OpEx"):
-        total_fopex = model.prob.get_val("finance_subgroup_electricity.total_opex_adjusted")[0]
-        total_vopex = model.prob.get_val("finance_subgroup_electricity.total_varopex_adjusted")[0]
+    with subtests.test("Check total adjusted OpEx for natural gas subgroup"):
+        total_fopex = model.prob.get_val("finance_subgroup_natural_gas.total_opex_adjusted")[0]
+        total_vopex = model.prob.get_val("finance_subgroup_natural_gas.total_varopex_adjusted")[0]
         total_opex = total_fopex + total_vopex
-        assert pytest.approx(total_opex, rel=1e-6) == 23152429.923224404
+        assert pytest.approx(total_opex, rel=1e-6) == 17470316.62
 
     with subtests.test("Check LCOE (natural gas plant)"):
         lcoe_ng = model.prob.get_val("finance_subgroup_natural_gas.LCOE")[0]
