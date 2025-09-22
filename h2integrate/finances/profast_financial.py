@@ -658,7 +658,7 @@ class ProFastComp(om.ExplicitComponent):
 
             # if VarOpEx is positive, treat as a feedstock
             varopex_adjusted_tech = inputs[f"varopex_adjusted_{tech}"]
-            if np.any(varopex_adjusted_tech) > 0:
+            if np.any(varopex_adjusted_tech > 0):
                 varopex_cost_per_unit_commodity = varopex_adjusted_tech / total_production
                 varopex_dict = dict(zip(years_of_operation, varopex_cost_per_unit_commodity))
                 tech_varopex_info.update({"cost": varopex_dict})
@@ -669,7 +669,7 @@ class ProFastComp(om.ExplicitComponent):
                 variable_costs[tech] = tech_varopex_info
 
             # if VarOpEx is negative, treat as a coproduct
-            if np.any(varopex_adjusted_tech) < 0:
+            else:
                 tech_coproduct_info = (
                     self.tech_config[tech]["model_inputs"]
                     .get("financial_parameters", {})
@@ -690,8 +690,8 @@ class ProFastComp(om.ExplicitComponent):
         pf_dict["fixed_costs"] = fixed_costs
         pf_dict["feedstocks"] = variable_costs
         pf_dict["coproducts"] = coproduct_costs
-        # create ProFAST object
 
+        # create ProFAST object
         pf = create_and_populate_profast(pf_dict)
         # simulate ProFAST
         sol, summary, price_breakdown = run_profast(pf)
