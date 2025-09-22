@@ -37,15 +37,30 @@ class NPVFinancialConfig(BaseConfig):
 
 
 class NPVFinancial(om.ExplicitComponent):
-    """_summary_
+    """OpenMDAO component for calculating Net Present Value (NPV) of a plant or technology.
 
-    Args:
-        om (_type_): _description_
+    This component computes the NPV of a given commodity-producing plant over its
+    operational lifetime, accounting for capital expenditures (CAPEX), operating
+    expenditures (OPEX), refurbishment/replacement costs, and commodity revenues.
 
-        https://numpy.org/numpy-financial/latest/npv.html#numpy_financial.npv:
-        "By convention, investments or “deposits” are negative,
-        income or “withdrawals” are positive; values must begin with the
-        initial investment, thus values[0] will typically be negative."
+    NPV is calculated using the discount rate and plant life defined in the
+    `plant_config`. By convention, investments (CAPEX, OPEX, refurbishment) are
+    treated as negative cash flows, while revenues from commodity sales are
+    positive. This follows the NumPy Financial convention:
+
+    Reference:
+        https://numpy.org/numpy-financial/latest/npv.html#numpy_financial.npv
+
+        * "By convention, investments or 'deposits' are negative, income or
+        'withdrawals' are positive; values must begin with the initial
+        investment, thus values[0] will typically be negative."
+
+    Attributes:
+        NPV_str (str): The dynamically generated name of the NPV output variable,
+            based on `commodity_type` and optional `description`.
+        tech_config (dict): Technology-specific configuration dictionary.
+        config (NPVFinancialConfig): Parsed financial configuration parameters
+            (e.g., discount rate, plant life, save options).
     """
 
     def initialize(self):
@@ -110,6 +125,34 @@ class NPVFinancial(om.ExplicitComponent):
         self.config = NPVFinancialConfig.from_dict(finance_params)
 
     def compute(self, inputs, outputs):
+        """Compute the Net Present Value (NPV).
+
+        Calculates discounted cash flows over the plant lifetime, accounting for:
+            * Revenue from annual commodity production and sale.
+            * CAPEX and OPEX for all technologies.
+            * Replacement or refurbishment costs if provided.
+
+        Optionally saves cost breakdowns and NPV breakdowns to CSV files if
+        enabled in configuration.
+
+        Args:
+            inputs (dict-like): Dictionary of input values, including production,
+                CAPEX, OPEX, and optional replacement periods.
+            outputs (dict-like): Dictionary for storing computed outputs, including
+                the NPV result.
+
+        Produces:
+            * `outputs[self.NPV_str]`: The total NPV in USD.
+
+        Side Effects:
+            * Writes annual cost breakdown and NPV breakdown CSVs to the configured
+              output directory if `save_cost_breakdown` or `save_npv_breakdown`
+              is enabled.
+
+        Raises:
+            FileNotFoundError: If the specified output directory cannot be created.
+            ValueError: If refurbishment schedules cannot be derived from inputs.
+        """
         sign_of_costs = -1
 
         # TODO: update below for standardized naming and also variable simulation lengths
