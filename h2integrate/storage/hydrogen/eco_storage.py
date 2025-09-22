@@ -117,10 +117,7 @@ class H2Storage(CostModelBaseClass):
         ########### initialize output dictionary ###########
         h2_storage_results = {}
 
-        import pdb
-
-        pdb.set_trace()
-        storage_max_fill_rate = np.maximum(inputs["hydrogen_in"])
+        storage_max_fill_rate = np.max(inputs["hydrogen_in"])
 
         ########### get hydrogen storage size in kilograms ###########
         ##################### no hydrogen storage

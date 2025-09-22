@@ -130,7 +130,6 @@ class PyomoControllerBaseClass(ControllerBaseClass):
             soc = np.zeros(self.n_timesteps)
 
             ti = list(range(0, self.n_timesteps, self.config.n_control_window))
-
             control_strategy = self.options["tech_config"]["control_strategy"]["model"]
 
             for t in ti:
@@ -172,35 +171,15 @@ class PyomoControllerBaseClass(ControllerBaseClass):
                     total_commodity_out[j] = np.minimum(
                         demand_in[j - t], storage_commodity_out[j] + commodity_in[j - t]
                     )
+
                     unmet_demand[j] = np.maximum(0, demand_in[j - t] - total_commodity_out[j])
-                    excess_resource[j] = np.maximum(0, commodity_in[j - t] - total_commodity_out[j])
+                    excess_resource[j] = np.maximum(
+                        0, storage_commodity_out[j] + commodity_in[j - t] - demand_in[j - t]
+                    )
 
             return total_commodity_out, storage_commodity_out, unmet_demand, excess_resource, soc
 
         return pyomo_dispatch_solver
-
-    # def enforce_SOC_limits_pre_sim(self, resource_in, resource_chargeable, SOC, demand_in):
-    #     # If discharging...
-    #     if resource_in[t] > 0.0:
-    #         # If the battery has been discharged to its minimum SOC level (with a tolerance)
-    #         if (self.system_model.value("SOC") - self.system_model.value("minimum_SOC")) < 0.05:
-    #             self.unmet_demand = demand_in[t]
-    #             # Avoid trickle power by setting to 0.0
-    #             resource_in[t] = 0.0
-
-    #     # If charging...
-    #     elif resource_in[t] < 0.0:
-    #         # If the input electricity magnitude is greater than the battery chargeable capacity
-    #         if resource_in[t] < P_chargeable:
-    #             # Eliminates trickle power (~10-15 kW) when battery is fully charged
-    #             if P_chargeable > 0.0:
-    #                 P_chargeable = 0.0
-
-    #             # Change the sign to indicate that a positive amount of power is being
-    #             # passed through the battery model
-    #             self.excess_resource = -1 * (resource_in[t] - P_chargeable)
-    #             # Limit the charging power to the availabile capacity of the battery
-    #             resource_in[t] = P_chargeable
 
     @staticmethod
     def dispatch_block_rule(block, t):
