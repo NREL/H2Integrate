@@ -17,12 +17,12 @@ class NPVFinancialConfig(BaseConfig):
     Attributes:
         plant_life (int): operating life of plant in years
         discount_rate (float): leverage after tax nominal discount rate
-        commodity_sell_price (int | float, optiona;): sell price of commodity in
+        commodity_sell_price (int | float, optional): sell price of commodity in
             USD/unit of commodity. Defaults to 0.0
         save_cost_breakdown (bool, optional): whether to save the cost breakdown per year.
-            Defalts to False.
+            Defaults to False.
         save_npv_breakdown (bool, optional): whether to save the npv breakdown per technology.
-            Defalts to False.
+            Defaults to False.
         cost_breakdown_file_description (str, optional): description to include in filename of
             cost breakdown file or npv breakdown file if either ``save_cost_breakdown`` or
             ``save_npv_breakdown`` is True. Defaults to 'default'.
