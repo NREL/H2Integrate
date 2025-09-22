@@ -78,8 +78,8 @@ class GridSellCostModelConfig(CostModelBaseConfig):
 
     # Grid connections typically have minimal CapEx and OpEx
     # Most revenue is operational (electricity sales) handled in performance model
-    connection_capex: float = field(default=0.0)  # USD
-    annual_connection_fee: float = field(default=0.0)  # USD/year
+    start_up_cost: float = field(default=0.0)  # USD
+    annual_cost: float = field(default=0.0)  # USD/year
     electricity_sell_price: float = field(default=0.05)  # $/kWh
 
 
@@ -122,10 +122,10 @@ class GridSellCostModel(CostModelBaseClass):
         sell_price = inputs["electricity_sell_price"]
 
         # Basic connection costs
-        outputs["CapEx"] = self.config.connection_capex
+        outputs["CapEx"] = self.config.start_up_cost
 
         # Variable operating expenses - negative costs (revenue) for selling
         # electricity_consumed is negative for selling, so multiply by sell_price
         # to get negative cost (revenue)
-        outputs["OpEx"] = self.config.annual_connection_fee
+        outputs["OpEx"] = self.config.annual_cost
         outputs["VarOpEx"] = np.sum(electricity_consumed * sell_price)

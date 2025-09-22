@@ -72,3 +72,16 @@ technologies:
         price: 0.10 # $/kWh
         annual_cost: 0.
         start_up_cost: 0.
+  grid_selling:
+    performance_model:
+      model: "grid_sell_performance"
+    cost_model:
+      model: "grid_sell_cost"
+    model_inputs:
+      performance_parameters:
+        interconnect_limit: 1000000. #kW
+      cost_parameters:
+        cost_year: 2022
+        electricity_sell_price: 0.05 # $/kWh
+        annual_cost: 0.
+        start_up_cost: 0.

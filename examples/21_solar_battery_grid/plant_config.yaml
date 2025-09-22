@@ -29,6 +29,7 @@ site:
 technology_interconnections: [
     ["solar", "battery", "electricity", "cable"], #connect solar to battery
     ["battery", "grid_feedstock", ["electricity_missed_load", "electricity_consumed"]], #connect electricity demand to grid
+    ["battery", "grid_selling", ["electricity_curtailed", "electricity_in"]] #connect electricity surplus to grid selling
 ]
 
 plant:
@@ -68,4 +69,4 @@ finance_parameters:
     renewables:
       commodity: "electricity"
       finance_groups: ["profast_model"]
-      technologies: ["solar", "battery", "grid_feedstock"]
+      technologies: ["solar", "battery", "grid_selling"]
