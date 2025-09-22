@@ -65,6 +65,10 @@ technologies:
   combiner:
     performance_model:
       model: "combiner_performance"
+    model_inputs:
+      performance_parameters:
+        commodity: "electricity"
+        commodity_units: "kW"
   electrolyzer:
     performance_model:
       model: "eco_pem_electrolyzer_performance"
