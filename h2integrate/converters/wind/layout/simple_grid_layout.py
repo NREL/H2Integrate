@@ -105,7 +105,7 @@ def find_rectangular_layout_dimensions_by_nturbs(n_turbs, aspect_ratio):
 def make_basic_grid_turbine_layout(
     rotor_diameter, n_turbines, layout_config: BasicGridLayoutConfig
 ):
-    """_summary_
+    """Makes a turbine layout for a basic gridded layout config.
 
     Args:
         rotor_diameter (float): turbine rotor diameter in meters
