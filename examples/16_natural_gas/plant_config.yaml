@@ -4,6 +4,7 @@ description: "This plant is located in Texas"
 site:
   latitude: 32.34
   longitude: -98.27
+  year: 2013
 
   # array of polygons defining boundaries with x/y coords
   boundaries: [
@@ -16,6 +17,8 @@ site:
       y: [2000.0, 2000.0, 2500.0],
     }
   ]
+  solar_resource_filepath: "../11_hybrid_energy_plant/tech_inputs/weather/solar/30.6617_-101.7096_psmv3_60_2013.csv"
+
 
 # array of arrays containing left-to-right technology
 # interconnections; can support bidirectional connections
@@ -24,7 +27,9 @@ site:
 # and not connected to additional technologies.
 # hence the empty array.
 technology_interconnections: [
-    ["ng_feedstock", "natural_gas_plant", "natural_gas", "pipe"],
+    ["solar", "battery", "electricity", "cable"], #connect solar to battery
+    ["ng_feedstock", "natural_gas_plant", "natural_gas", "pipe"], #connect NG feedstock to NG plant
+    ["battery", "natural_gas_plant", ["electricity_missed_load","electricity_demand"]], #connect electricity demand to NG feedstock
 ]
 
 plant:
@@ -34,28 +39,42 @@ plant:
 
 finance_parameters:
   finance_groups:
-    commodity: "electricity"
-    finance_model: "ProFastComp"
-    model_inputs:
-      params:
-        analysis_start_year: 2032
-        installation_time: 36
-        inflation_rate: 0.0
-        discount_rate: 0.09
-        debt_equity_ratio: 2.62
-        property_tax_and_insurance: 0.03
-        total_income_tax_rate: 0.308
-        capital_gains_tax_rate: 0.15
-        sales_tax_rate: 0.07375
-        debt_interest_rate: 0.07
-        debt_type: "Revolving debt"
-        loan_period_if_used: 0
-        cash_onhand_months: 1
-        admin_expense: 0.00
-      capital_items:
-          depr_type: "MACRS"
-          depr_period: 5
-          refurb: [0.]
+    profast_model:
+      commodity: "electricity"
+      finance_model: "ProFastComp"
+      model_inputs:
+        params:
+          analysis_start_year: 2032
+          installation_time: 36
+          inflation_rate: 0.0
+          discount_rate: 0.09
+          debt_equity_ratio: 2.62
+          property_tax_and_insurance: 0.03
+          total_income_tax_rate: 0.308
+          capital_gains_tax_rate: 0.15
+          sales_tax_rate: 0.07375
+          debt_interest_rate: 0.07
+          debt_type: "Revolving debt"
+          loan_period_if_used: 0
+          cash_onhand_months: 1
+          admin_expense: 0.00
+        capital_items:
+            depr_type: "MACRS"
+            depr_period: 5
+            refurb: [0.]
   cost_adjustment_parameters:
     cost_year_adjustment_inflation: 0.025
     target_dollar_year: 2022
+  finance_subgroups:
+    renewables:
+      commodity: "electricity"
+      finance_groups: ["profast_model"]
+      technologies: ["solar", "battery"]
+    natural_gas:
+      commodity: "electricity"
+      finance_groups: ["profast_model"]
+      technologies: ["natural_gas_plant", "ng_feedstock"]
+    electricity:
+      commodity: "electricity"
+      finance_groups: ["profast_model"]
+      technologies: ["solar","battery", "natural_gas_plant", "ng_feedstock"]
