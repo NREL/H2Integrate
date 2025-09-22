@@ -106,15 +106,6 @@ class NPVFinancial(om.ExplicitComponent):
                 units=commodity_units,
             )
 
-        tech_config = self.tech_config = self.options["tech_config"]
-        for tech in tech_config:
-            self.add_input(f"capex_adjusted_{tech}", val=0.0, units="USD")
-            self.add_input(f"opex_adjusted_{tech}", val=0.0, units="USD/year")
-
-        # TODO: update below with standardized naming
-        if "electrolyzer" in tech_config:
-            self.add_input("electrolyzer_time_until_replacement", units="h")
-
         plant_config = self.options["plant_config"]
         finance_params = plant_config["finance_parameters"]["model_inputs"]
         if "plant_life" in finance_params:
@@ -122,6 +113,22 @@ class NPVFinancial(om.ExplicitComponent):
                 plant_config["plant"], finance_params, "plant_life", "plant_life"
             )
         finance_params.update({"plant_life": plant_config["plant"]["plant_life"]})
+
+        tech_config = self.tech_config = self.options["tech_config"]
+        for tech in tech_config:
+            self.add_input(f"capex_adjusted_{tech}", val=0.0, units="USD")
+            self.add_input(f"opex_adjusted_{tech}", val=0.0, units="USD/year")
+            self.add_input(
+                f"varopex_adjusted_{tech}",
+                val=0.0,
+                shape=plant_config["plant"]["plant_life"],
+                units="USD/year",
+            )
+
+        # TODO: update below with standardized naming
+        if "electrolyzer" in tech_config:
+            self.add_input("electrolyzer_time_until_replacement", units="h")
+
         self.config = NPVFinancialConfig.from_dict(finance_params)
 
     def compute(self, inputs, outputs):
@@ -166,8 +173,9 @@ class NPVFinancial(om.ExplicitComponent):
         cost_breakdown = {f"Cash Inflow of Selling {self.options['commodity_type']}": cash_inflow}
         initial_investment_cost = 0
         for tech in self.tech_config:
-            capex = sign_of_costs * float(inputs[f"capex_adjusted_{tech}"][0])
-            fixed_om = sign_of_costs * float(inputs[f"opex_adjusted_{tech}"][0])
+            capex = sign_of_costs * float(inputs[f"capex_adjusted_{tech}"])
+            fixed_om = sign_of_costs * float(inputs[f"opex_adjusted_{tech}"])
+            var_om = sign_of_costs * inputs[f"varopex_adjusted_{tech}"]
 
             capex_per_year = np.zeros(int(self.config.plant_life + 1))
             capex_per_year[0] = capex
@@ -177,6 +185,7 @@ class NPVFinancial(om.ExplicitComponent):
             cost_breakdown[f"{tech}: fixed o&m"] = np.concatenate(
                 ([0], fixed_om * np.ones(self.config.plant_life))
             )
+            cost_breakdown[f"{tech}: variable o&m"] = np.concatenate(([0], var_om))
 
             # get tech-specific capital item parameters
             tech_capex_info = (
