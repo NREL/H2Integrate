@@ -8,6 +8,7 @@ Currently, H2I recognizes four types of models:
 - [Storage](#storage)
 - [Controllers](#controller)
 
+(resource)=
 ## Resource
 `Resource` models process resource data that is usually passed to a technology model.
 
@@ -19,6 +20,7 @@ Currently, H2I recognizes four types of models:
 The `Resource` models are under development. Many of the resources are currently integrated into the `Converter` model directly, notably this is true for the wind resource used in the `wind` converter and solar resource used in the `solar` converter.
 ```
 
+(converters)=
 ## Converters
 `Converter` models are technologies that:
 - converts energy available in the 'Primary Input' to another form of energy ('Primary Commodity') OR
@@ -42,7 +44,7 @@ The inputs, outputs, and corresponding technology that are currently available i
 | `air_separator`   |  nitrogen     | electricity |
 | `desal`   |  water     | electricity |
 
-
+(transport)=
 ## Transport
 `Transport` models are used to either:
 - connect the 'Transport Commodity' from a technology that produces the 'Transport Commodity' to a technology that consumes or stores the 'Transport Commodity' OR
@@ -60,6 +62,7 @@ The inputs, outputs, and corresponding technology that are currently available i
 
 Connection: `[source_tech, dest_tech, transport_commodity, transport_technology]`
 
+(storage)=
 ## Storage
 `Storage` technologies input and output the 'Storage Commodity' at different times. These technologies can be filled or charged, then unfilled or discharged at some later time. These models are usually constrained by two key model parameters: storage capacity and charge/discharge rate.
 
@@ -67,7 +70,9 @@ Connection: `[source_tech, dest_tech, transport_commodity, transport_technology]
 | :---------------- | :---------------: |
 | `h2_storage`      |  hydrogen         |
 | `battery`         |  electricity      |
+| `generic_storage` |  Any              |
 
+(controller)=
 ## Controller
 `Controller` models are used to control the `Storage` models and resource flows.
 
@@ -84,13 +89,14 @@ Below summarizes the available performance, cost, and financial models for each 
 - [Transport](#transport-models)
 - [Storage](#storage-models)
 
-
-### Resource models
+(resource-models)=
+## Resource models
 - `river`:
     - performance models:
         + `river_resource`
 
-### Converter models
+(converter-models)=
+## Converter models
 - `wind`: wind turbine
     - performance models:
         + `'wind_plant_performance'`
@@ -173,8 +179,8 @@ Below summarizes the available performance, cost, and financial models for each 
     - cost models:
         + `'reverse_osmosis_desalination_cost'`
 
-
-### Transport Models
+(transport-models)=
+## Transport Models
 - `cable`
     - performance models:
         + `'cable'`
@@ -185,8 +191,8 @@ Below summarizes the available performance, cost, and financial models for each 
     - performance models:
         + `'combiner_performance'`
 
-
-### Storage Models
+(storage-models)=
+## Storage Models
 - `h2_storage`: hydrogen storage
     - combined performance and cost
         + `'h2_storage'`
@@ -194,7 +200,11 @@ Below summarizes the available performance, cost, and financial models for each 
         + `'hydrogen_tank_performance'`
     - cost models:
         + `'hydrogen_tank_cost'`
+- `generic_storage`: any resource storage
+- `battery`: battery storage
+    - cost models:
+        + `'atb_battery_cost'`
 
-### Controller Models
+## Controller Models
 - `pass_through_controller`
 - `demand_open_loop_controller`

@@ -18,7 +18,7 @@ def main(config):
     Args:
         config (object): Configuration object containing:
             product_selection (str): The selected technology
-            (e.g., "ng_dri", "h2_dri","ng_eaf", "h2_eaf").
+            (e.g., "ng_dri", "h2_dri", "ng_eaf", "h2_eaf").
             performance (object): Contains plant performance data as a dataframe.
             cost (object): Contains cost data as a dataframe.
             params (dict): Key financial and operational parameters, including:
