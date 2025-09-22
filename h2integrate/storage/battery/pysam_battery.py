@@ -273,7 +273,6 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass, CostModelBaseCla
                 "time_step_duration": self.config.dt,
                 "control_variable": discrete_inputs["control_variable"],
             }
-            # import pdb; pdb.set_trace()
             (
                 total_power_out,
                 battery_power_out,
