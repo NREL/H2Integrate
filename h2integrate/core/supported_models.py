@@ -1,5 +1,6 @@
 from h2integrate.resource.river import RiverResource
 from h2integrate.core.feedstocks import FeedstockCostModel, FeedstockPerformanceModel
+from h2integrate.core.load_demand import DemandPerformanceModelComponent
 from h2integrate.transporters.pipe import PipePerformanceModel
 from h2integrate.transporters.cable import CablePerformanceModel
 from h2integrate.converters.steel.steel import SteelPerformanceModel, SteelCostAndFinancialModel
@@ -150,6 +151,7 @@ supported_models = {
     # Control
     "pass_through_controller": PassThroughOpenLoopController,
     "demand_open_loop_controller": DemandOpenLoopController,
+    "load_demand": DemandPerformanceModelComponent,
     # Feedstock
     "feedstock_performance": FeedstockPerformanceModel,
     "feedstock_cost": FeedstockCostModel,
