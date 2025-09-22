@@ -1,0 +1,85 @@
+import os
+from pathlib import Path
+
+import numpy as np
+import pytest
+
+from h2integrate import EXAMPLE_DIR
+from h2integrate.core.h2integrate_model import H2IntegrateModel
+
+
+def test_example_22_solar_ng_generic_load_example(subtests):
+    os.chdir(EXAMPLE_DIR / "22_solar_ng_demand")
+
+    model = H2IntegrateModel(Path.cwd() / "solar_ng_demand.yaml")
+
+    model.run()
+
+    model.post_process()
+
+    solar_aep = sum(model.prob.get_val("solar.electricity_out", units="kW"))
+    ng_aep = sum(model.prob.get_val("natural_gas_plant.electricity_out", units="kW"))
+    excess_power = model.prob.get_val("electrical_load_demand.electricity_curtailed", units="kW")
+    hourly_demand_kW = 100000.0
+
+    elec_fin_subgroup_aep = model.prob.get_val(
+        "finance_subgroup_electricity.electricity_sum.total_electricity_produced", units="kW*h/year"
+    )[0]
+    renewable_fin_subgroup_aep = model.prob.get_val(
+        "finance_subgroup_renewables.electricity_sum.total_electricity_produced", units="kW*h/year"
+    )[0]
+    ng_fin_subgroup_aep = model.prob.get_val(
+        "finance_subgroup_natural_gas.electricity_sum.total_electricity_produced", units="kW*h/year"
+    )[0]
+    solar_to_load = np.where(
+        model.prob.get_val("solar.electricity_out", units="kW") > hourly_demand_kW,
+        hourly_demand_kW,
+        model.prob.get_val("solar.electricity_out", units="kW"),
+    )
+
+    with subtests.test("Behavior check solar AEP is same as renewables subgroup AEP"):
+        assert pytest.approx(renewable_fin_subgroup_aep, rel=1e-6) == solar_aep
+
+    with subtests.test("Behavior check missed load is natural gas demand"):
+        assert pytest.approx(
+            model.prob.get_val("electrical_load_demand.electricity_missed_load", units="kW"), 1e-6
+        ) == model.prob.get_val("natural_gas_plant.electricity_demand", units="kW")
+
+    with subtests.test("Behavior check natural_gas finance subgroup AEP"):
+        assert (
+            pytest.approx(
+                sum(model.prob.get_val("natural_gas_plant.electricity_demand", units="kW")), 1e-6
+            )
+            == ng_fin_subgroup_aep
+        )
+
+    with subtests.test("Behavior check on curtailed energy"):
+        solar_excess = np.sum(
+            model.prob.get_val("solar.electricity_out", units="kW") - solar_to_load
+        )
+        assert pytest.approx(np.sum(excess_power), rel=1e-6) == solar_excess
+
+    with subtests.test("Behavior check electricity finance subgroup AEP against expected"):
+        expected_aep = solar_aep + ng_aep
+        # NOTE: ideally this would not include the excess power,
+        # this will be done in the flexible finance streams PR
+        # expected_aep = solar_aep + ng_aep - sum(excess_power)
+        assert pytest.approx(elec_fin_subgroup_aep, rel=1e-6) == expected_aep
+
+    with subtests.test("Behavior check electricity out from demand does not exceed demand"):
+        assert all(
+            model.prob.get_val("electrical_load_demand.electricity_out", units="kW")
+            <= hourly_demand_kW
+        )
+
+    with subtests.test("Value check: renewables subgroup LCOE"):
+        re_lcoe = model.prob.get_val("finance_subgroup_renewables.LCOE", units="USD/MW/h")[0]
+        assert pytest.approx(re_lcoe, rel=1e-6) == 49.43456
+
+    with subtests.test("Value check: natural gas subgroup LCOE"):
+        ng_lcoe = model.prob.get_val("finance_subgroup_natural_gas.LCOE", units="USD/MW/h")[0]
+        assert pytest.approx(ng_lcoe, rel=1e-6) == 54.23308
+
+    with subtests.test("Value check: electricity subgroup LCOE"):
+        tot_lcoe = model.prob.get_val("finance_subgroup_electricity.LCOE", units="USD/MW/h")[0]
+        assert pytest.approx(tot_lcoe, rel=1e-6) == 52.15484
