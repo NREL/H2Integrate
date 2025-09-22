@@ -132,10 +132,11 @@ def test_utility_pv_cost(
     }
 
     plant_info = {
+        "plant_life": 30,
         "simulation": {
             "n_timesteps": 8760,
             "dt": 3600,
-        }
+        },
     }
 
     prob = om.Problem()
@@ -189,10 +190,11 @@ def test_commercial_pv_cost(
     }
 
     plant_info = {
+        "plant_life": 30,
         "simulation": {
             "n_timesteps": 8760,
             "dt": 3600,
-        }
+        },
     }
 
     prob = om.Problem()
@@ -243,10 +245,11 @@ def test_residential_pv_cost(
     }
 
     plant_info = {
+        "plant_life": 30,
         "simulation": {
             "n_timesteps": 8760,
             "dt": 3600,
-        }
+        },
     }
 
     prob = om.Problem()
