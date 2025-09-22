@@ -250,10 +250,8 @@ class NPVFinancial(om.ExplicitComponent):
                 annual_cost_breakdown.loc["Total cost per year (USD/year)"] = (
                     annual_cost_breakdown.sum(axis=0)
                 )
-                new_colnames = {f"Year {i}" for i in annual_cost_breakdown.columns.to_list()}
-                annual_cost_breakdown = annual_cost_breakdown.rename(
-                    columns=dict(zip(annual_cost_breakdown.columns.to_list(), new_colnames))
-                )
+                new_colnames = {i: f"Year {i}" for i in annual_cost_breakdown.columns.to_list()}
+                annual_cost_breakdown = annual_cost_breakdown.rename(columns=new_colnames)
                 annual_cost_breakdown.to_csv(cost_fpath)
 
             outputs[self.NPV_str] = npv_item_check
