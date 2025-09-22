@@ -33,7 +33,7 @@ class BasicGridLayoutConfig(BaseConfig):
     layout_shape: str = field(
         default="square",
         converter=(str.lower, str.strip),
-        validator=contains["square", "rectangle"],
+        validator=contains(["square", "rectangle"]),
     )
     turbine_aspect_ratio: float = field(default=1.0, validator=gte_zero)
 

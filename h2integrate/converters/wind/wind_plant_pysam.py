@@ -44,9 +44,6 @@ class PYSAMWindPlantPerformanceModelConfig(BaseConfig):
         default="new", validator=contains(["default", "new"]), converter=(str.strip, str.lower)
     )
 
-    create_model_from: str = field(
-        default="new", validator=contains(["default", "new"]), converter=(str.strip, str.lower)
-    )
     config_name: str = field(
         default="WindPowerSingleOwner",
         validator=contains(
@@ -149,8 +146,9 @@ class PYSAMWindPlantPerformanceModel(WindPerformanceBaseClass):
     def setup(self):
         super().setup()
 
-        # initialize layout config
         performance_inputs = self.options["tech_config"]["model_inputs"]["performance_parameters"]
+
+        # initialize layout config
         layout_options = {}
         if "layout" in performance_inputs:
             layout_params = self.options["tech_config"]["model_inputs"][
@@ -200,7 +198,9 @@ class PYSAMWindPlantPerformanceModel(WindPerformanceBaseClass):
             units="kW*h/year",
             desc="Annual energy production from WindPlant in kW",
         )
-        self.add_output("capacity_kW", val=0.0, units="kW", desc="Wind farm rated capacity in kW")
+        self.add_output(
+            "total_capacity", val=0.0, units="kW", desc="Wind farm rated capacity in kW"
+        )
 
         if self.config.create_model_from == "default":
             self.system_model = Windpower.default(self.config.config_name)
@@ -357,7 +357,7 @@ class PYSAMWindPlantPerformanceModel(WindPerformanceBaseClass):
         wind_default_drive_train = 0
         self.system_model.Turbine.calculate_powercurve(
             turbine_rating_kw,
-            rotor_diameter,
+            int(rotor_diameter),
             elevation,
             wind_default_max_cp,
             wind_default_max_tip_speed,
@@ -385,11 +385,21 @@ class PYSAMWindPlantPerformanceModel(WindPerformanceBaseClass):
         self.system_model.value("wind_resource_data", data)
 
         # recalculate power curve based on rotor diameter and turbine rating
-        self.recalculate_power_curve(rotor_diameter, turbine_rating_kw)
+        success = self.recalculate_power_curve(rotor_diameter, turbine_rating_kw)
+        # if power-curve could not be adjusted to match input values
+        if not success:
+            msg = (
+                "Could not adjust turbine powercurve to match turbine rating of ",
+                f"{turbine_rating_kw} kW with a rotor diameter of {rotor_diameter} meters",
+            )
+            raise ValueError(msg)
 
         # assign new turbine specs to the model
+        turbine_rated_power_kW = max(self.system_model.value("wind_turbine_powercurve_powerout"))
+        farm_capacity = turbine_rated_power_kW * n_turbs
         self.system_model.value("wind_turbine_rotor_diameter", rotor_diameter)
         self.system_model.value("wind_turbine_hub_ht", inputs["hub_height"][0])
+        self.system_model.value("system_capacity", farm_capacity)
 
         # make layout for number of turbines
         x_pos, y_pos = make_basic_grid_turbine_layout(
@@ -403,5 +413,5 @@ class PYSAMWindPlantPerformanceModel(WindPerformanceBaseClass):
         self.system_model.execute(0)
 
         outputs["electricity_out"] = self.system_model.Outputs.gen
-        outputs["capacity_kW"] = self.system_model.Farm.system_capacity
+        outputs["total_capacity"] = self.system_model.Farm.system_capacity
         outputs["annual_energy"] = self.system_model.Outputs.annual_energy
