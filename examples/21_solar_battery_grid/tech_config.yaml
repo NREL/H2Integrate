@@ -78,6 +78,9 @@ technologies:
     cost_model:
       model: "grid_sell_cost"
     model_inputs:
+      shared_parameters:
+        feedstock_type: "electricity"
+        units: "kW"
       performance_parameters:
         interconnect_limit: 1000000. #kW
       cost_parameters:

@@ -192,4 +192,11 @@ supported_models = {
     "ProFastComp": ProFastComp,
 }
 
-electricity_producing_techs = ["wind", "solar", "pv", "river", "hopp", "natural_gas_plant"]
+electricity_producing_techs = [
+    "wind",
+    "solar",
+    "pv",
+    "river",
+    "hopp",
+    "natural_gas_plant",
+]

@@ -893,6 +893,46 @@ class H2IntegrateModel:
                     for tech_name in tech_configs.keys():
                         if (
                             tech_name in electricity_producing_techs
+                            # and tech_name in all_included_techs
+                            and primary_commodity_type == "electricity"
+                        ):
+                            # Special handling for feedstock naming
+                            if "feedstock" in tech_name:
+                                self.plant.connect(
+                                    f"{tech_name}_source.electricity_out",
+                                    f"finance_subgroup_{group_id}.electricity_sum.electricity_{tech_name}",
+                                )
+                            else:
+                                self.plant.connect(
+                                    f"{tech_name}.electricity_out",
+                                    f"finance_subgroup_{group_id}.electricity_sum.electricity_{tech_name}",
+                                )
+                            plant_producing_electricity = True
+
+                    if plant_producing_electricity and primary_commodity_type == "electricity":
+                        # Connect total electricity produced to the finance group
+                        self.plant.connect(
+                            f"{commodity_stream}.{primary_commodity_type}_out",
+                            f"finance_subgroup_{group_id}.{primary_commodity_type}_sum.{primary_commodity_type}_in",
+                        )
+                        # NOTE: this wont be compatible with co2 in the finance models
+                        # because its expected to have a different name
+                        # connect summer output to finance model
+                        self.plant.connect(
+                            f"finance_subgroup_{group_id}.{primary_commodity_type}_sum.total_{primary_commodity_type}_produced",
+                            f"finance_subgroup_{group_id}.total_{primary_commodity_type}_produced",
+                        )
+
+                    # if commodity stream was not specified, follow existing logic
+                    else:
+                        plant_producing_electricity = False
+
+                    # Loop through technologies and connect electricity outputs to the ExecComp
+                    # Only connect if the technology is included in at least one commodity's stackup
+                    # and in this finance group
+                    for tech_name in tech_configs.keys():
+                        if (
+                            tech_name in electricity_producing_techs
                             and primary_commodity_type == "electricity"
                         ):
                             self.plant.connect(
