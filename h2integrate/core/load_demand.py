@@ -40,7 +40,15 @@ class DemandPerformanceModelComponent(om.ExplicitComponent):
             val=self.config.demand,
             shape=(n_timesteps,),
             units=f"{self.config.units}/h",  # NOTE: hardcoded to align with controllers
-            desc=f"Full demand profile of {self.config.commodity}",
+            desc=f"Demand profile of {self.config.commodity}",
+        )
+
+        self.add_input(
+            f"{self.config.commodity}_in",
+            val=0.0,
+            shape=(n_timesteps,),
+            units=self.config.units,
+            desc=f"Amount of {self.config.commodity} demand that has already been supplied",
         )
 
         self.add_output(
@@ -59,12 +67,12 @@ class DemandPerformanceModelComponent(om.ExplicitComponent):
             desc=f"Excess production of {self.config.commodity}",
         )
 
-        self.add_input(
-            f"{self.config.commodity}_in",
+        self.add_output(
+            f"{self.config.commodity}_out",
             val=0.0,
             shape=(n_timesteps,),
             units=self.config.units,
-            desc=f"Amount of {self.config.commodity} demand that has already been supplied",
+            desc=f"Production profile of {self.config.commodity}",
         )
 
     def compute(self, inputs, outputs):
@@ -72,7 +80,11 @@ class DemandPerformanceModelComponent(om.ExplicitComponent):
             inputs[f"{self.config.commodity}_demand_profile"]
             - inputs[f"{self.config.commodity}_in"]
         )
+
         current_demand = np.where(remaining_demand > 0, remaining_demand, 0)
         curtailed_demand = np.where(remaining_demand < 0, -1 * remaining_demand, 0)
         outputs[f"{self.config.commodity}_missed_load"] = current_demand
         outputs[f"{self.config.commodity}_curtailed"] = curtailed_demand
+
+        production = inputs[f"{self.config.commodity}_in"] - curtailed_demand
+        outputs[f"{self.config.commodity}_out"] = production
