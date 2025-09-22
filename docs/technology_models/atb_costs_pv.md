@@ -11,6 +11,7 @@ As mentioned on the [Utility-Scale PV ATB page](https://atb.nrel.gov/electricity
 - The `"atb_utility_pv_cost"` model has costs input in `$/kW-AC` to match the ATB and the outputted capacity in kW-AC from the PV performance model. Example usage of this cost model in the `tech_config.yaml` file is shown [in the first section below](#utility-scale-pv-cost-model).
 - The `"atb_comm_res_pv_cost"` model has costs input in `$/kW-DC` and the PV capacity is input in kW-DC from the **shared input parameter** of the PV performance model. Example usage of this cost model in the `tech_config.yaml` file is shown [in the second section below](#commercial-and-residential-pv-cost-model).
 
+(utility-scale-pv-cost-model)=
 ## Utility-Scale PV Cost Model
 
 The inputs for `cost_parameters` are `capex_per_kWac` and `opex_per_kWac_per_year`. From the ATB workbook, a value for `capex_per_kWac` can be found on the `Solar - Utility PV` sheet under the "Overnight Capital Cost" section or the "CAPEX" section. The values in the "CAPEX" section include overnight capital costs, construction finance factor, and grid connection costs. A value for `opex_per_kWac_per_year` can be found on the `Solar - Utility PV` sheet under the "Fixed Operation and Maintenance Expenses" section.
@@ -34,6 +35,7 @@ technologies:
             opex_per_kWac_per_year: 18
 ```
 
+(commercial-and-residential-pv-cost-model)=
 ## Commercial and Residential PV Cost Model
 
 The inputs for `cost_parameters` are `capex_per_kWdc` and `opex_per_kWdc_per_year`. From the ATB workbook, a value for `capex_per_kWdc` can be found on the `Solar - PV Dist. Comm` or `Solar - PV Dist. Res` sheet under the "Overnight Capital Cost" section or the "CAPEX" section. The values in the "CAPEX" section include overnight capital costs, construction finance factor, and grid connection costs. A value for `opex_per_kWdc_per_year` can be found on the `Solar - PV Dist. Comm` or `Solar - PV Dist. Res` sheet under the "Fixed Operation and Maintenance Expenses" section.

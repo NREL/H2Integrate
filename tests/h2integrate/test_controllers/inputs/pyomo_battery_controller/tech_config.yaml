@@ -39,8 +39,8 @@ technologies:
         cost_per_kw: 1500.0
         cost_year: 2024
       dispatch_rule_parameters:
-        resource_name: "electricity"
-        resource_storage_units: "kW"
+        commodity_name: "electricity"
+        commodity_storage_units: "kW"
   battery:
     dispatch_rule_set:
       model: "pyomo_dispatch_battery"
@@ -52,7 +52,7 @@ technologies:
       model: "pysam_battery"
     model_inputs:
       shared_parameters:
-        rated_resource_capacity: 50000
+        rated_commodity_capacity: 50000
         max_capacity: 200000
         n_control_window: 24
         n_horizon_window: 48
@@ -62,9 +62,9 @@ technologies:
       performance_parameters:
         cost_year: 2019
       control_parameters:
-        resource_name: "electricity"
-        resource_storage_units: "kW"
+        commodity_name: "electricity"
+        commodity_storage_units: "kW"
         tech_name: "battery"
       dispatch_rule_parameters:
-        resource_name: "electricity"
-        resource_storage_units: "kW"
+        commodity_name: "electricity"
+        commodity_storage_units: "kW"

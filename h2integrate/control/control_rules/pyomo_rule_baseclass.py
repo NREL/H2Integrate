@@ -13,7 +13,7 @@ class PyomoRuleBaseConfig(BaseConfig):
     This class defines the parameters required to configure the `DemandOpenLoopController`.
 
     Attributes:
-        resource_name (str): Name of the resource being controlled (e.g., "hydrogen").
+        commodity_name (str): Name of the resource being controlled (e.g., "hydrogen").
         resource_units (str): Units of the resource (e.g., "kg/h").
         time_steps (int): Number of time steps in the simulation.
         max_capacity (float): Maximum storage capacity of the resource (in non-rate units,
@@ -36,9 +36,9 @@ class PyomoRuleBaseConfig(BaseConfig):
             as `resource_units`) or a scalar for a constant demand.
     """
 
-    resource_name: str = field()
-    # resource_rate_units: str = field()
-    resource_storage_units: str = field()
+    commodity_name: str = field()
+    # commodity_rate_units: str = field()
+    commodity_storage_units: str = field()
     # time_steps: int = field()
     # max_capacity: float = field()
     # max_charge_percent: float = field()

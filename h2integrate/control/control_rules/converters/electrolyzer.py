@@ -23,7 +23,7 @@ class PyomoDispatchElectrolyzer(PyomoRuleBaseClass):
             pyo.Var(
                 doc="Hydrogen generation from electrolysis [kg]",
                 domain=pyo.NonNegativeReals,
-                units=eval("pyo.units." + self.config.resource_storage_units),
+                units=eval("pyo.units." + self.config.commodity_storage_units),
                 initialize=0.0,
             ),
         )

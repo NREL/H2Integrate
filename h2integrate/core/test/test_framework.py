@@ -44,7 +44,7 @@ def test_custom_model_name_clash(subtests):
         highlevel_data = yaml.safe_load(f)
 
     # Modify the high-level YAML to point to the temp tech_config file
-    highlevel_data["technology_config"] = str(temp_tech_config.name)
+    highlevel_data["technology_config"] = temp_tech_config.name
 
     # Save the modified high-level YAML back
     with temp_highlevel_yaml.open("w") as f:
@@ -83,7 +83,7 @@ def test_custom_financial_model_grouping(subtests):
     tech_config_data = load_tech_yaml(temp_tech_config)
 
     # Modify the financial_model entry for one of the technologies
-    tech_config_data["technologies"]["steel"]["financial_model"]["group"] = "test_financial_group"
+    tech_config_data["technologies"]["steel"]["finance_model"]["group"] = "test_financial_group"
     tech_config_data["technologies"]["electrolyzer"].pop("financial_model", None)
 
     # Save the modified tech_config YAML back
@@ -95,7 +95,7 @@ def test_custom_financial_model_grouping(subtests):
         highlevel_data = yaml.safe_load(f)
 
     # Modify the high-level YAML to point to the temp tech_config file
-    highlevel_data["technology_config"] = str(temp_tech_config.name)
+    highlevel_data["technology_config"] = temp_tech_config.name
 
     # Save the modified high-level YAML back
     with temp_highlevel_yaml.open("w") as f:
@@ -108,60 +108,6 @@ def test_custom_financial_model_grouping(subtests):
     # Clean up temporary YAML files
     temp_tech_config.unlink(missing_ok=True)
     temp_highlevel_yaml.unlink(missing_ok=True)
-
-
-def test_get_included_technologies():
-    # Create a mock model instance
-    model = H2IntegrateModel.__new__(H2IntegrateModel)
-
-    # Test case 1: No specific technologies defined (should include all)
-    tech_config = {
-        "wind": {"performance_model": {"model": "test"}},
-        "electrolyzer": {"performance_model": {"model": "test"}},
-        "storage": {"performance_model": {"model": "test"}},
-    }
-    plant_config = {"finance_parameters": {}}
-
-    included_techs = model.get_included_technologies(tech_config, "hydrogen", plant_config)
-    expected = ["wind", "electrolyzer", "storage"]
-    assert set(included_techs) == set(expected), f"Expected {expected}, got {included_techs}"
-
-    # Test case 2: Specific technologies defined for LCOH
-    plant_config_with_specific = {
-        "finance_parameters": {
-            "technologies_included_in_metrics": {"LCOH": ["electrolyzer", "wind"]}
-        }
-    }
-
-    included_techs = model.get_included_technologies(
-        tech_config, "hydrogen", plant_config_with_specific
-    )
-    expected = ["electrolyzer", "wind"]
-    assert set(included_techs) == set(expected), f"Expected {expected}, got {included_techs}"
-
-    # Test case 3: Test different commodity type (electricity)
-    plant_config_with_lcoe = {
-        "finance_parameters": {"technologies_included_in_metrics": {"LCOE": ["wind"]}}
-    }
-
-    included_techs = model.get_included_technologies(
-        tech_config, "electricity", plant_config_with_lcoe
-    )
-    expected = ["wind"]
-    assert set(included_techs) == set(expected), f"Expected {expected}, got {included_techs}"
-
-    # Test case 4: Invalid technology should raise error
-    plant_config_invalid = {
-        "finance_parameters": {
-            "technologies_included_in_metrics": {"LCOH": ["electrolyzer", "invalid_tech"]}
-        }
-    }
-
-    try:
-        model.get_included_technologies(tech_config, "hydrogen", plant_config_invalid)
-        raise AssertionError("Should have raised ValueError for invalid technology")
-    except ValueError as e:
-        assert "invalid_tech" in str(e), f"Error message should mention invalid_tech: {e}"
 
 
 def test_unsupported_simulation_parameters():
@@ -215,7 +161,7 @@ def test_technology_connections():
     # Load the plant_config YAML content
     plant_config_data = load_plant_yaml(temp_plant_config)
 
-    new_connection = (["financials_group_default", "steel", ("LCOE", "electricity_cost")],)
+    new_connection = (["finance_subgroup_electricity", "steel", ("LCOE", "electricity_cost")],)
     new_tech_interconnections = (
         plant_config_data["technology_interconnections"][0:4]
         + list(new_connection)
@@ -232,7 +178,7 @@ def test_technology_connections():
         highlevel_data = yaml.safe_load(f)
 
     # Modify the high-level YAML to point to the temp tech_config file
-    highlevel_data["plant_config"] = str(temp_plant_config.name)
+    highlevel_data["plant_config"] = temp_plant_config.name
 
     # Save the modified high-level YAML back
     with temp_highlevel_yaml.open("w") as f:

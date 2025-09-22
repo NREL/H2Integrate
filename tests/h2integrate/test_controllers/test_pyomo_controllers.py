@@ -39,8 +39,8 @@ def test_pyomo_h2storage_controller(subtests):
     #     )
 
     # with subtests.test("Check soc"):
-    #     assert pytest.approx([0.95, 0.95, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]) ==
-    # prob.get_val(
+    #     assert pytest.approx([0.95, 0.95, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]) == \
+    #     prob.get_val(
     #         "h2_storage.hydrogen_soc"
     #     )
 

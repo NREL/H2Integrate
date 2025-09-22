@@ -1,282 +1,159 @@
+(financeparameters:specifiyingfinanceparameters)=
 # Finance Parameters
-
-The finance model, finance model specific inputs, and cost adjustment information (regardless of the finance model) are required in the `finance_parameters` of the `plant_config`.
-
+## Overview
+The `finance_parameters` section of the `plant_config` defines the financial subsystems of the plant. These parameters configure how costs, revenues, and investment metrics are calculated across all or parts of the modeled system.
 ```{note}
 The `plant_life` parameter from the `plant` section of the `plant_config` is also used in finance calculations as the operating life of the plant.
 ```
 
-The finance parameters section requires the following information:
-- `finance_model`: name of the finance model. Current finance model options include:
-  - [`'ProFastComp'`](finance:profastcompmodel): calculates levelized cost of commodity using ProFAST
-- `model_inputs`: inputs that are specific to the finance model
+At minimum, `finance_parameters` must include:
 - `cost_adjustment_parameters`:
   - `target_dollar_year`: dollar-year to convert costs to.
-  - `cost_year_adjustment_inflation` is used to adjust costs for each technology from the cost year of the technology model (see [details on cost years and cost models here](#cost-year-of-cost-models)) to the `target_dollar_year`
+  - `cost_year_adjustment_inflation`: used to adjust costs for each technology from its native cost year to the `target_dollar_year` (see [details on cost years and cost models here](cost:cost_years))
 
-(finance:profastcompmodel)
-# Finance Parameters: ProFastComp
-The inputs for the `ProFastComp` model are outlined in this section:
+Other variables in finance_parameters vary depending on the financial analysis structure. There are two major modes of operation:
+- **Single-model mode (default)**: All technologies are grouped together into a single financial calculation.
+- **Subgroup mode**: Technologies are split into one or more subgroups, each with its own commodity and one or more finance models.
 
-(finance:overview)=
-## Finance parameters overview
-The main inputs for `ProFastComp` model include:
-- optional: information to export the ProFAST config to a .yaml file
-- required: financial parameters (`params` section). These can be input in the `ProFastComp` format or the `ProFAST` format. These two formats are described in the following sections:
-  - [ProFastComp format](finance:direct_opt)
-  - [ProFAST format](finance:pf_params_opt)
-- required: default capital item parameters (`capital_items` section). These parameters can be over-written for specific technologies if specified in the `tech_config`. Example usage of over-writing values in the `tech_config` is outlined [here](finance:tech_specific_finance)
+### Finance Groups vs. Finance Subgroups
+Within this framework, there are two distinct layers, **finance groups** and **finance subgroups**:
 
-```yaml
-finance_parameters:
-  finance_model: "ProFastComp"
-  model_inputs: #inputs for the finance_model
-    save_profast_to_file: True #optional, will save ProFAST entries to .yaml file in the folder specified in the driver_config (`driver_config["general"]["folder_output"]`)
-    profast_output_description: "profast_config" #required if `save_profast_to_file` is True, used to name the output file.
-    params: #Financial parameters section
-    capital_items: #Required: section for default parameters for capital items
-      depr_type: "MACRS" #Required: depreciation method for capital items, can be "MACRS" or "Straight line"
-      depr_period: 5 #Required: depreciation period for capital items
-      refurb: [0.] #Optional: replacement schedule as a fraction of the capital cost. Defaults to [0.]
-    fixed_costs: #Optional section for default parameters for fixed cost items
-      escalation: #escalation rate for fixed costs, will default to `inflation_rate` specific in the params section
-      unit: "$/year" #optional unit of the cost. Defaults to $/year
-      usage: 1.0 #usage multiplier, most commonly is set to 1 and defaults to 1.0
+#### Finance groups
+  A finance group contains the attributes needed to run one finance model:
+  - `finance_model`:
+    The name of the financial model to use (e.g., `ProFastComp`). Must correspond to one of the available models in `self.supported_models`.
+  - `model_inputs`:
+    A dictionary of parameters passed into the chosen finance model. These provide customization of assumptions such as discount rate, debt fraction, or cost escalation.
+  - `commodity` (conditionally required):
+    The product or service whose financial performance is being analyzed (e.g., hydrogen, electricity). Required if `finance_subgroups` are not used, otherwise defined within `finance_subgroups`.
 
+#### Finance subgroups
+  Subgroups are flexible collections of technologies that map to one or more finance groups. They allow you to:
+  - Calculate financial metrics for only part of the system.
+  - Compare different metrics of the same system (e.g., delivered vs. produced cost of hydrogen).
+  - Run multiple models (e.g., LCOH, LCOE, LCOS, or NPV) on overlapping or distinct sets of technologies.
+  - Model distributed or multi-location systems finances within a single plant configuration.
+
+  Subgroups contain information on how to construct the specific subgroup:
+  - `commodity`:
+    The product or service whose financial performance is being analyzed (e.g., hydrogen, electricity). Each finance subgroup is tied to a single commodity.
+  - `technologies`:
+    Technologies to include in the specific subgroup calculation (e.g., you might only want to include technologies that produce electricity in the levelized cost of energy calculation).
+  - `finance_groups`:
+    List of `finance_groups` that contain the `finance_model` and `model_inputs`. Required if multiple `finance_groups` are being used. Technology-specific `finance_groups` can be called by using the technology name listed in the `tech_config` (e.g., `steel` to use the steel specific finance model).
+  - `commodity_desc` (optional):
+    A text label to further distinguish outputs for a commodity. This is particularly useful when multiple finance models or subgroups reference the same commodity but need to produce separate outputs.
+
+```{important}
+If no subgroups are defined, a **default subgroup** is created that contains *all technologies* and references the default finance model and commodity defined in `finance_groups`.
 ```
 
-(finance:direct_opt)=
-## Providing Finance Parameters: ProFastComp Format
-Below is an example inputting financial parameters directly in the `finance_parameters` section of `plant_config`:
+## Example finance configurations
 
+We'll now walk through three common configurations, highlighting the differences in the `plant_config` files and showcasing examples that use each approach.
+
+(finparam:nosubgroups)=
+### Single-model (no subgroups)
+If no `finance_subgroups` are specified, all technologies are automatically grouped into a single default subgroup. In this case:
+  - `commodity` and `finance_model` must be defined directly in `finance_groups`.
+  - A default subgroup named `default` is created internally.
+
+General format:
 ```yaml
 finance_parameters:
-  finance_model: "ProFastComp" #finance model
-    model_inputs: #inputs for finance_model
-      params: #Financing parameters
-        analysis_start_year: 2032 #year that financial analysis starts
-        installation_time: 36 #installation period in months
-        # Inflation parameters
-        inflation_rate: 0.0 # 0 for nominal analysis
-        # Finance parameters
-        discount_rate: 0.09
-        debt_equity_ratio: 2.62
-        property_tax_and_insurance: 0.03
-        total_income_tax_rate: 0.257
-        capital_gains_tax_rate: 0.15
-        sales_tax_rate: 0.07375
-        debt_interest_rate: 0.07
-        debt_type: "Revolving debt" #"Revolving debt" or "One time loan"
-        loan_period_if_used: 0 #loan period if debt_type is 'One time loan'
-        cash_onhand_months: 1
-        admin_expense: 0.00 #administrative expense as a fraction of sales
-    #default parameters for capital items unless specified in tech_config
-    capital_items:
-      depr_type: "MACRS" #depreciation method for capital items, can be "MACRS" or "Straight line"
-      depr_period: 5 #depreciation period for capital items in years.
-      refurb: [0.] #refurbishment schedule, values represent the replacement cost as a fraction of the CapEx
-
-  # To adjust costs for technologies to target_dollar_year
-  cost_adjustment_parameters:
-    target_dollar_year: 2022
-    cost_year_adjustment_inflation: 0.025
+  finance_groups:
+    commodity: "hydrogen"
+    finance_model: "ProFastComp"
+    model_inputs:
+      discount_rate: 0.08
 ```
 
-This approach also relies on data from `plant_config`:
-- `plant_life`: used as the `operating life` ProFAST parameter
+Outputs are named:
+```
+finance_subgroup_default.<finance_model_output>
+```
 
+Examples:
+- [Example 7](https://github.com/NREL/H2Integrate/blob/develop/examples/07_run_of_river_plant/plant_config.yaml)
+
+
+(finparams:singlemodelsubgroups)=
+### Single finance model with subgroups
+If `finance_groups` contains a single model definition, you may split technologies into multiple subgroups. Each subgroup defines its own `commodity` and list of `technologies` but uses the shared finance model.
+
+In this case you see that the commodity is not defined within the `finance_groups` and is instead defined within the `finance_subgroups`. In this example there are two separate financial calculations one for `subgroup_a`, which is for the hydrogen commodity and one for `subgroup_b`, which is for the ammonia commodity and includes the "electrolyzer" and "asu". If you had additional technologies in your `tech_config` besides those, they would have to be included in the `finance_subgroups` to be included in the financial calculations.
+
+General format:
+```yaml
+finance_parameters:
+  finance_groups:
+    finance_model: "ProFastComp"
+    model_inputs: #dictionary of inputs for ProFastComp
+  finance_subgroups:
+    subgroup_a:
+      commodity: "hydrogen" #required
+      technologies: ["electrolyzer"]
+    subgroup_b:
+      commodity: "ammonia" #required
+      technologies: ["electrolyzer", "asu"]
+```
+
+Outputs are named:
+```
+finance_subgroup_<subgroup_name>.<finance_model_output>
+```
+
+Examples:
+- [Example 02](https://github.com/NREL/H2Integrate/tree/develop/examples/02_texas_ammonia/plant_config.yaml)
+- [Example 03 - CO2H](https://github.com/NREL/H2Integrate/tree/develop/examples/03_methanol/co2_hydrogenation/plant_config_co2h.yaml)
+- [Example 09 - DOC](https://github.com/NREL/H2Integrate/tree/develop/examples/09_co2/direct_ocean_capture/plant_config.yaml)
+  <!-- - [Example 05](/examples/)
+  - 11, 12, 13, 14, 15, 17 -->
 
 ```{note}
-`inflation_rate` is used to populate the escalation and inflation rates in ProFAST entries with a value of 0 corresponding to a *nominal analysis*.
+Within `finance_groups`, the `commodity`, `finance_model`, and `model_inputs` may be placed under a named key for the finance group and indented one level deeper. This structure is optional when only a single finance model is used, but it is supported for consistency with the format required when specifying multiple finance models (see [Specifying Multiple Finance Groups](finparams:multimodelsubgroups)).
 ```
 
-(finance:pf_params_opt)=
-## Providing Finance Parameters: ProFAST format
+(finparams:multimodelsubgroups)=
+### Multiple financial models with subgroups
+When multiple finance models are needed (e.g., to calculate both NPV and LCOH, or to compare multiple finance cases), multiple finance groups can be defined and assigned to subgroups.
 
-```{note}
-To avoid errors, please check that `plant_config['plant']['plant_life']` is equal to `plant_config['finance_parameters']['model_inputs']['params']['operating life']`. Or remove `operating life` from the finance parameter inputs.`
-
-
-| plant config parameter | equivalent `params` parameter |
-| -------- | ------- |
-| `plant['plant']['plant_life']` | `operating life` |
-```
-
-Below is an example of the `finance_parameters` section of `plant_config` if using ProFAST input format to specify financial parameters:
-
+General format:
 ```yaml
 finance_parameters:
-  finance_model: "ProFastComp"
-  model_inputs:
-    params: !include  "profast_params.yaml" #Finance information
-    capital_items: #default parameters for capital items unless specified in tech_config
-      depr_type: "MACRS" ##depreciation method for capital items, can be "MACRS" or "Straight line"
-      depr_period: 5 #depreciation period for capital items
-      refurb: [0.]
-  cost_adjustment_parameters:
-    target_dollar_year: 2022
-    cost_year_adjustment_inflation: 0.025 # used to adjust costs for technologies to target_dollar_year
+  finance_groups:
+    group_a:
+      finance_model: "ProFastComp"
+      model_inputs: {discount_rate: 0.08}
+    group_b:
+      finance_model: "NPVFinancial"
+      model_inputs: {discount_rate: 0.05}
+  finance_subgroups:
+    subgroup_a:
+      commodity: "hydrogen"
+      finance_groups: ["group_a"]
+      technologies: ["electrolyzer"]
+    subgroup_b:
+      commodity: "hydrogen"
+      commodity_desc: "delivered"
+      finance_groups: ["group_a", "group_b"]
+      technologies: ["pipeline", "storage"]
+```
+Output naming:
+- If multiple finance groups are in the same subgroup, output names include the subgroup, commodity, description (if provided), and finance group name to avoid collisions in the OpenMDAO framework:
+```
+finance_subgroup_<subgroup_name>.<financial_model_output>_<commodity_desc>_<financial_group>
+finance_subgroup_subgroup_a.LCOH_group_a
+finance_subgroup_subgroup_b.LCOH_delivered_group_a
+finance_subgroup_subgroup_b.NPV_hydrogen_delivered_group_b
 ```
 
-Below is an example of a valid ProFAST params config that may be specified in the `finance_parameters['model_inputs']['params]` section of `plant_config`:
-```yaml
-# Installation information
-maintenance:
-  value: 0.0
-  escalation: 0.0
-non depr assets: 250000 #such as land cost
-end of proj sale non depr assets: 250000 #such as land cost
-installation cost:
-  value: 0.0
-  depr type: "Straight line"
-  depr period: 4
-  depreciable: False
-# Incentives information
-incidental revenue:
-  value: 0.0
-  escalation: 0.0
-annual operating incentive:
-  value: 0.0
-  decay: 0.0
-  sunset years: 0
-  taxable: true
-one time cap inct:
-  value: 0.0
-  depr type: "MACRS"
-  depr period: 5
-  depreciable: True
-# Sales information
-analysis start year: 2032
-operating life: 30 #if included, should equal plant_config['plant']['plant_life']
-installation months: 36
-demand rampup: 0
-# Take or pay specification
-TOPC:
-  unit price: 0.0
-  decay: 0.0
-  support utilization: 0.0
-  sunset years: 0
-# Other operating expenses
-credit card fees: 0.0
-sales tax: 0.0
-road tax:
-  value: 0.0
-  escalation: 0.0
-labor:
-  value: 0.0
-  rate: 0.0
-  escalation: 0.0
-rent:
-  value: 0.0
-  escalation: 0.0
-license and permit:
-  value: 0.0
-  escalation: 0.0
-admin expense: 0.0
-property tax and insurance: 0.015
-# Financing information
-sell undepreciated cap: True
-capital gains tax rate: 0.15
-total income tax rate: 0.2574
-leverage after tax nominal discount rate: 0.0948
-debt equity ratio of initial financing: 1.72
-debt interest rate: 0.046
-debt type: "Revolving debt"
-general inflation rate: 0.0
-cash onhand: 1 # number of months with cash on-hand
-tax loss carry forward years: 0
-tax losses monetized: True
-loan period if used: 0
-```
+Examples:
+- [Example 10](https://github.com/NREL/H2Integrate/blob/develop/examples/10_electrolyzer_om/plant_config.yaml)
 
-(finance:tech_specific_finance)=
-## Over-ride defaults for specific technologies
-
-Capital item entries can be over-written for individual technologies.
-
-#### **Over-write depreciation period:**
-
-Suppose the default depreciation period for capital items is 5 years (set in the `plant_config['finance_parameters']['model_inputs]['capital_items']['depr_period']`), but we want the depreciation period for the electrolyzer to be 7 years. This can be done in the `tech_config` as shown below:
-```yaml
-technologies:
-  electrolyzer:
-    model_inputs:
-      finance_parameters:
-        capital_items:
-          depr_period: 7
-```
-
-
-#### **Custom refurbishment period:**
-
-Suppose the default refurbishment schedule for capital items is `[0.]` (set in the `plant_config['finance_parameters']['model_inputs]['capital_items']['refurb']`), but we want our battery to be replaced in 15-years and the replacement cost is equal to the capital cost. This can be accomplished in the tech_config as shown below:
-```yaml
-technologies:
-  battery:
-    model_inputs:
-      finance_parameters:
-        capital_items:
-          refurbishment_period_years: 15
-          replacement_cost_percent: 1.0
-```
-
-
-# Cost year of Cost Models
-Some cost models are derived from literature and output costs (CapEx and OpEx) in a specific dollar-year. Some cost models require users to input the key cost information, and the output costs are in the same cost year as the user-provided costs. For [cost models with a built-in cost year](#cost-models-with-inherent-cost-year), the cost year is not required as an input for the cost model. For [cost models based on user provided costs](#cost-models-with-user-input-cost-year), the `cost_year` should be included in the tech_config for that technology.
-
-## Cost models with inherent cost year
-
-### Summary of cost models that are based around a cost year
-| Cost Model              | Cost Year  |
-| :---------------------- | :---------------: |
-| `basic_electrolyzer_cost`|  2016    |
-| `pem_electrolyzer_cost`|  2021    |
-| `singlitico_electrolyzer_cost`|  2021    |
-| `h2_storage`  with `'mch'` storage type  |  2024    |
-| `h2_storage` for geologic storage or buried pipe | 2018 |
-| `simple_ammonia_cost`   |  2022    |
-| `direct_ocean_capture_cost` | 2023 |
-| `ocean_alkalinity_enhancement_cost` | 2024 |
-| `ocean_alkalinity_enhancement_cost_financial` | 2024 |
-| `steel_cost`            |  2022    |
-| `reverse_osmosis_desalination_cost` | 2013 |
-| `synloop_ammonia_cost`  |  N/A (adjusts costs to `target_dollar_year` within cost model)  |
-
-
-## Cost models with user input cost year
-
-### Summary of cost models that have user-input cost year
-| Cost Model              |
-| :---------------------- |
-| `wind_plant_cost` |
-| `atb_utility_pv_cost` |
-| `atb_comm_res_pv_cost` |
-| `simple_ASU_cost` |
-| `hopp`            |
-| `run_of_river_hydro_cost` |
-| `smr_methanol_plant_cost` |
-| `stimulated_geoh2_cost` |
-| `natural_geoh2_cost`    |
-| `wombat`                |
-| `hydrogen_tank_cost`    |
-| `custom_electrolyzer_cost` |
-
-### Example tech_config input for user-input cost year
-```yaml
-technologies:
-  solar:
-    performance_model:
-      model: "pysam_solar_plant_performance"
-    cost_model:
-      model: "atb_utility_pv_cost"
-    model_inputs:
-        performance_parameters:
-            pv_capacity_kWdc: 100000
-            dc_ac_ratio: 1.34
-            ...
-        cost_parameters:
-            capex_per_kWac: 1044
-            opex_per_kWac_per_year: 18
-            cost_year: 2022
-
-```
+#### Key Behaviors
+- If `finance_parameters` is missing --> no finance model is created.
+- If no `finance_subgroups` are defined → a default subgroup containing all technologies is created automatically.
+- Finance groups must not include a key named "default", as this is reserved for internal use.
+- Each subgroup must reference valid technology keys from technology_config['technologies']. Invalid keys raise errors.
+- Finance models must be listed in `self.supported_models`. Unknown models raise errors.

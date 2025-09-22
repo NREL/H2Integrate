@@ -87,7 +87,7 @@ class PySAMBatteryPerformanceModelConfig(BaseConfig):
     Args:
         tracking: default True -> `Battery`
         max_capacity: Battery energy capacity [kWh]
-        rated_resource_capacity: Battery rated power capacity [kW]
+        rated_commodity_capacity: Battery rated power capacity [kW]
         system_model_source: software source for the system model, can by 'pysam' or 'hopp'
         chemistry: Battery chemistry option
 
@@ -106,7 +106,7 @@ class PySAMBatteryPerformanceModelConfig(BaseConfig):
     """
 
     max_capacity: float = field(validator=gt_zero)
-    rated_resource_capacity: float = field(validator=gt_zero)
+    rated_commodity_capacity: float = field(validator=gt_zero)
     cost_year: int = field()
     system_model_source: str = field(default="pysam", validator=contains(["pysam", "hopp"]))
     chemistry: str = field(
@@ -139,7 +139,7 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass, CostModelBaseCla
 
         self.add_input(
             "charge_rate",
-            val=self.config.rated_resource_capacity,
+            val=self.config.rated_commodity_capacity,
             units="kW",
             desc="Battery charge rate",
         )
@@ -328,12 +328,6 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass, CostModelBaseCla
 
             # If discharging... electricity_in is the commanded electricity from dispatch,
             # accounting for demand, positive is charge and negative is discharge
-            # if storage_dispatch_commands[t] > 0.0:
-            #     # If the battery has been discharged to its minimum SOC level (with a tolerance)
-            #     if (self.system_model.value("SOC") - self.system_model.value("minimum_SOC"))<0.05:
-            #         # self.unmet_demand = storage_dispatch_commands[t]
-            #         # Avoid trickle power by setting to 0.0
-            #         storage_dispatch_commands[t] = 0.0
 
             # If charging...
             # if storage_dispatch_commands[t] < 0.0:

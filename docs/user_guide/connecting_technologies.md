@@ -16,6 +16,7 @@ Technology interconnections are defined as an array of arrays in your `plant_con
 technology_interconnections: [
   ["source_tech", "destination_tech", "variable_name", "transport_type"],
   ["tech_a", "tech_b", "shared_parameter"],
+  ["tech_a", "tech_b", ["tech_a_param_name", "tech_b_param_name"]],
   # ... more connections
 ]
 ```
@@ -33,6 +34,7 @@ There are two connection formats:
 - **transport_type**: The transport component to use (e.g., "cable", "pipeline")
 
 #### 3-element connections (direct connections)
+##### Same shared parameter name
 ```yaml
 ["source_tech", "destination_tech", "shared_parameter"]
 ```
@@ -40,6 +42,17 @@ There are two connection formats:
 - **source_tech**: Name of the technology providing the output
 - **destination_tech**: Name of the technology receiving the input
 - **shared_parameter**: The exact parameter name to connect (e.g., "capacity_factor", "electrolyzer_degradation")
+
+##### Different shared parameter names
+```yaml
+["source_tech", "destination_tech", ("source_parameter", "destination_parameter")]
+```
+
+- **source_tech**: Name of the technology providing the output
+- **destination_tech**: Name of the technology receiving the input
+- **source_parameter**: The name of the parameter within ``"source_tech"``
+- **destination_parameter**: The name of the parameter within ``"destination_tech"``
+
 
 ### Internal connection logic
 
@@ -95,12 +108,12 @@ No additional configuration parameters are needed - the combiner simply adds the
 ### Inputs and outputs
 
 - **Inputs**:
-  - `electricity_input1`: Power from the first source (kW)
-  - `electricity_input2`: Power from the second source (kW)
+  - `electricity_in1`: Power from the first source (kW)
+  - `electricity_in2`: Power from the second source (kW)
 - **Output**:
   - `electricity_out`: Combined power output (kW)
 
-The relationship is straightforward: `electricity_out = electricity_input1 + electricity_input2`
+The relationship is straightforward: `electricity_out = electricity_in1 + electricity_in2`
 
 ### Usage example
 

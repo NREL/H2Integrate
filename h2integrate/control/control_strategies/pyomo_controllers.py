@@ -20,10 +20,10 @@ class PyomoControllerBaseConfig(BaseConfig):
     This class defines the parameters required to configure the `DemandOpenLoopController`.
 
     Attributes:
-        resource_name (str): Name of the resource being controlled (e.g., "hydrogen").
-        resource_units (str): Units of the resource (e.g., "kg/h").
+        commodity_name (str): Name of the resource being controlled (e.g., "hydrogen").
+        commodity_storage_units (str): Units of the resource (e.g., "kg/h").
         max_capacity (float): Maximum storage capacity of the resource (in non-rate units,
-            e.g., "kg" if `resource_units` is "kg/h").
+            e.g., "kg" if `commodity_rate_units` is "kg/h").
         max_charge_percent (float): Maximum allowable state of charge (SOC) as a percentage
             of `max_capacity`, represented as a decimal between 0 and 1.
         min_charge_percent (float): Minimum allowable SOC as a percentage of `max_capacity`,
@@ -46,8 +46,8 @@ class PyomoControllerBaseConfig(BaseConfig):
     init_charge_percent: float = field()
     n_control_window: int = field()
     n_horizon_window: int = field()
-    resource_name: str = field()
-    resource_storage_units: str = field()
+    commodity_name: str = field()
+    commodity_storage_units: str = field()
     tech_name: str = field()
 
 
@@ -124,37 +124,41 @@ class PyomoControllerBaseClass(ControllerBaseClass):
 
             # initialize outputs
             unmet_demand = np.zeros(self.n_timesteps)
-            storage_resource_out = np.zeros(self.n_timesteps)
-            total_resource_out = np.zeros(self.n_timesteps)
+            storage_commodity_out = np.zeros(self.n_timesteps)
+            total_commodity_out = np.zeros(self.n_timesteps)
             excess_resource = np.zeros(self.n_timesteps)
             soc = np.zeros(self.n_timesteps)
 
             ti = list(range(0, self.n_timesteps, self.config.n_control_window))
 
+            control_strategy = self.options["tech_config"]["control_strategy"]["model"]
+
             for t in ti:
                 self.update_time_series_parameters()
 
-                resource_in = inputs[self.config.resource_name + "_in"][
+                commodity_in = inputs[self.config.commodity_name + "_in"][
                     t : t + self.config.n_control_window
                 ]
                 demand_in = inputs["demand_in"][t : t + self.config.n_control_window]
 
-                if "heuristic" in self.options["tech_config"]["control_strategy"]["model"]:
+                if "heuristic" in control_strategy:
                     self.set_fixed_dispatch(
-                        resource_in,
+                        commodity_in,
                         self.config.max_charge_rate,
                         self.config.max_discharge_rate,
                         demand_in,
                     )
 
                 else:
+                    raise (
+                        NotImplementedError(
+                            f"Control strategy '{control_strategy}' was given, \
+                            but has not been implemented yet."
+                        )
+                    )
                     # TODO: implement optimized solutions; this is where pyomo_model would be used
-                    # self.solve_dispatch_model(start_time, n_days)
-                    pass
 
-                # self.enforce_SOC_limits_pre_sim()
-
-                storage_resource_out_control_window, soc_control_window = performance_model(
+                storage_commodity_out_control_window, soc_control_window = performance_model(
                     self.storage_dispatch_commands,
                     **performance_model_kwargs,
                     sim_start_index=t,
@@ -163,15 +167,15 @@ class PyomoControllerBaseClass(ControllerBaseClass):
                 # store output values for every timestep
                 tj = list(range(t, t + self.config.n_control_window))
                 for j in tj:
-                    storage_resource_out[j] = storage_resource_out_control_window[j - t]
+                    storage_commodity_out[j] = storage_commodity_out_control_window[j - t]
                     soc[j] = soc_control_window[j - t]
-                    total_resource_out[j] = np.minimum(
-                        demand_in[j - t], storage_resource_out[j] + resource_in[j - t]
+                    total_commodity_out[j] = np.minimum(
+                        demand_in[j - t], storage_commodity_out[j] + commodity_in[j - t]
                     )
-                    unmet_demand[j] = np.maximum(0, demand_in[j - t] - total_resource_out[j])
-                    excess_resource[j] = np.maximum(0, resource_in[j - t] - total_resource_out[j])
+                    unmet_demand[j] = np.maximum(0, demand_in[j - t] - total_commodity_out[j])
+                    excess_resource[j] = np.maximum(0, commodity_in[j - t] - total_commodity_out[j])
 
-            return total_resource_out, storage_resource_out, unmet_demand, excess_resource, soc
+            return total_commodity_out, storage_commodity_out, unmet_demand, excess_resource, soc
 
         return pyomo_dispatch_solver
 
@@ -685,7 +689,7 @@ class SimpleBatteryControllerHeuristic(PyomoControllerBaseClass):
 
 @define
 class HeuristicLoadFollowingControllerConfig(PyomoControllerBaseConfig):
-    rated_resource_capacity: int = field()
+    rated_commodity_capacity: int = field()
     max_discharge_rate: float = field(default=1e12)
     max_charge_rate: float = field(default=1e12)
     charge_efficiency: float = field(default=None)

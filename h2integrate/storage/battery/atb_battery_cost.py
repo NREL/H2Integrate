@@ -25,6 +25,8 @@ class ATBBatteryCostConfig(CostModelBaseConfig):
     energy_capex: float | int = field(validator=gt_zero)
     power_capex: float | int = field(validator=gt_zero)
     opex_fraction: float = field(validator=range_val(0, 1))
+    max_charge_rate: float = field(validator=gt_zero)
+    max_capacity: float = field(validator=gt_zero)
 
 
 class ATBBatteryCostModel(CostModelBaseClass):
@@ -46,22 +48,32 @@ class ATBBatteryCostModel(CostModelBaseClass):
 
     def setup(self):
         self.config = ATBBatteryCostConfig.from_dict(
-            merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost")
+            merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost"), strict=False
         )
 
         super().setup()
 
-        self.add_input("charge_rate", val=0.0, units="kW", desc="Battery charge/discharge rate")
-        self.add_input("storage_capacity", val=0.0, units="kW*h", desc="Battery storage capacity")
+        self.add_input(
+            "charge_rate",
+            val=self.config.max_charge_rate,
+            units="kW",
+            desc="Battery charge/discharge rate",
+        )
+        self.add_input(
+            "storage_capacity",
+            val=self.config.max_capacity,
+            units="kW*h",
+            desc="Battery storage capacity",
+        )
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
-        storage_duration_hrs = inputs["storage_capacity"][0] / inputs["charge_rate"][0]
+        storage_duration_hrs = inputs["storage_capacity"] / inputs["charge_rate"]
 
         # CapEx equation from Cell E29
         total_system_cost = (
             storage_duration_hrs * self.config.energy_capex
         ) + self.config.power_capex
-        capex = total_system_cost * inputs["charge_rate"][0]
+        capex = total_system_cost * inputs["charge_rate"]
         # OpEx equation from cells in the Fixed Operation and Maintenance Expenses section
         opex = self.config.opex_fraction * capex
         outputs["CapEx"] = capex
