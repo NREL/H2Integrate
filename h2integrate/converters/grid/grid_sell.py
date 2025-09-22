@@ -10,7 +10,6 @@ from h2integrate.core.model_baseclasses import CostModelBaseClass
 class GridSellPerformanceModelConfig(BaseConfig):
     """Configuration for grid electricity selling performance model."""
 
-    electricity_sell_price: float = field(default=0.05)  # $/kWh
     interconnect_limit: float = field(default=1000000.0)  # kW
 
 
@@ -46,14 +45,6 @@ class GridSellPerformanceModel(om.ExplicitComponent):
             desc="Excess electricity available to sell to grid",
         )
 
-        # Add inputs for electricity pricing and limits
-        self.add_input(
-            "electricity_sell_price",
-            val=self.config.electricity_sell_price,
-            shape_by_conn=True,
-            units="USD/kWh",
-            desc="Price to sell electricity to grid",
-        )
         self.add_input(
             "interconnect_limit",
             val=self.config.interconnect_limit,
@@ -72,18 +63,13 @@ class GridSellPerformanceModel(om.ExplicitComponent):
 
     def compute(self, inputs, outputs):
         electricity_in = inputs["electricity_in"]
-        sell_price = inputs["electricity_sell_price"]
         interconnect_limit = inputs["interconnect_limit"]
 
         # Amount to sell to grid (limited by interconnect and available electricity)
         # Only sell positive electricity amounts
         grid_sale = np.clip(electricity_in, 0, interconnect_limit)
 
-        # Revenue calculations - negative costs (revenue) for selling
-        varopex = -np.sum(grid_sale * sell_price)
-
-        outputs["electricity_consumed"] = -grid_sale  # Negative because we're selling
-        outputs["varopex"] = varopex
+        outputs["electricity_consumed"] = -grid_sale
 
 
 @define
@@ -94,6 +80,7 @@ class GridSellCostModelConfig(CostModelBaseConfig):
     # Most revenue is operational (electricity sales) handled in performance model
     connection_capex: float = field(default=0.0)  # USD
     annual_connection_fee: float = field(default=0.0)  # USD/year
+    electricity_sell_price: float = field(default=0.05)  # $/kWh
 
 
 class GridSellCostModel(CostModelBaseClass):
@@ -122,16 +109,16 @@ class GridSellCostModel(CostModelBaseClass):
         )
         self.add_input(
             "electricity_sell_price",
-            val=0.05,
-            shape_by_conn=True,
-            units="USD/kWh",
+            val=self.config.electricity_sell_price,
+            shape=n_timesteps,
+            units="USD/(kW*h)",
             desc="Price to sell electricity to grid",
         )
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         # Simple cost model - could be made more sophisticated
         # CapEx could scale with interconnect capacity
-        electricity_consumed = inputs["electricity_consumed"]  # Negative values for selling
+        electricity_consumed = inputs["electricity_consumed"]
         sell_price = inputs["electricity_sell_price"]
 
         # Basic connection costs

@@ -10,7 +10,6 @@ from h2integrate.core.model_baseclasses import CostModelBaseClass
 class GridBuyPerformanceModelConfig(BaseConfig):
     """Configuration for grid electricity buying performance model."""
 
-    electricity_buy_price: float = field(default=0.08)  # $/kWh
     interconnect_limit: float = field(default=1000000.0)  # kW
 
 
@@ -62,14 +61,6 @@ class GridBuyPerformanceModel(om.ExplicitComponent):
             desc="Electricity consumed from grid (positive = buying)",
         )
 
-        # Add inputs for electricity pricing and limits
-        self.add_input(
-            "electricity_buy_price",
-            val=self.config.electricity_buy_price,
-            shape_by_conn=True,
-            units="USD/kWh",
-            desc="Price to buy electricity from grid",
-        )
         self.add_input(
             "interconnect_limit",
             val=self.config.interconnect_limit,
@@ -79,7 +70,6 @@ class GridBuyPerformanceModel(om.ExplicitComponent):
 
     def compute(self, inputs, outputs):
         electricity_demand = inputs["electricity_demand"]
-        inputs["electricity_buy_price"]
         interconnect_limit = inputs["interconnect_limit"]
 
         # Amount to buy from grid (limited by interconnect and demand)
@@ -100,6 +90,7 @@ class GridBuyCostModelConfig(CostModelBaseConfig):
     # Most costs are operational (electricity purchases) handled in performance model
     connection_capex: float = field(default=0.0)  # USD
     annual_connection_fee: float = field(default=0.0)  # USD/year
+    electricity_buy_price: float = field(default=0.08)  # $/kWh
 
 
 class GridBuyCostModel(CostModelBaseClass):
@@ -128,9 +119,9 @@ class GridBuyCostModel(CostModelBaseClass):
         )
         self.add_input(
             "electricity_buy_price",
-            val=0.08,
-            shape_by_conn=True,
-            units="USD/kWh",
+            val=self.config.electricity_buy_price,
+            shape=n_timesteps,
+            units="USD/(kW*h)",
             desc="Price to buy electricity from grid",
         )
 
