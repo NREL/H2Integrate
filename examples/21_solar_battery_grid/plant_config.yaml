@@ -28,7 +28,7 @@ site:
 # hence the empty array.
 technology_interconnections: [
     ["solar", "battery", "electricity", "cable"], #connect solar to battery
-    ["battery", "grid", ["electricity_missed_load", "electricity_demand"]], #connect electricity demand to grid
+    ["battery", "grid_feedstock", ["electricity_missed_load", "electricity_consumed"]], #connect electricity demand to grid
 ]
 
 plant:
@@ -68,4 +68,4 @@ finance_parameters:
     renewables:
       commodity: "electricity"
       finance_groups: ["profast_model"]
-      technologies: ["solar", "battery", "grid"]
+      technologies: ["solar", "battery", "grid_feedstock"]

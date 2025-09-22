@@ -56,16 +56,19 @@ technologies:
         energy_capex: 300 # $/kWh
         power_capex: 100 # $/kW
         opex_fraction: 0.05 # percent of capex
-  grid:
+  grid_feedstock:
     performance_model:
-      model: "grid_buy_performance"
+      model: "feedstock_performance"
     cost_model:
-      model: "grid_buy_cost"
+      model: "feedstock_cost"
     model_inputs:
+      shared_parameters:
+        feedstock_type: "electricity"
+        units: "kW"
       performance_parameters:
-        interconnect_limit: 100000.0 # kW, 100 MW
+        rated_capacity: 1000000. #kW
       cost_parameters:
-        connection_capex: 0.0
-        annual_connection_fee: 0.0
-        electricity_buy_price: 0.10 # $/kWh
         cost_year: 2022
+        price: 0.10 # $/kWh
+        annual_cost: 0.
+        start_up_cost: 0.

@@ -3,7 +3,6 @@ from h2integrate.core.feedstocks import FeedstockCostModel, FeedstockPerformance
 from h2integrate.transporters.pipe import PipePerformanceModel
 from h2integrate.transporters.cable import CablePerformanceModel
 from h2integrate.converters.steel.steel import SteelPerformanceModel, SteelCostAndFinancialModel
-from h2integrate.converters.grid.grid_buy import GridBuyCostModel, GridBuyPerformanceModel
 from h2integrate.converters.grid.grid_sell import GridSellCostModel, GridSellPerformanceModel
 from h2integrate.converters.wind.wind_plant import WindPlantCostModel, WindPlantPerformanceModel
 from h2integrate.finances.profast_financial import ProFastComp
@@ -138,8 +137,6 @@ supported_models = {
     "stimulated_geoh2": StimulatedGeoH2FinanceModel,
     "natural_gas_performance": NaturalGasPerformanceModel,
     "natural_gas_cost": NaturalGasCostModel,
-    "grid_buy_performance": GridBuyPerformanceModel,
-    "grid_buy_cost": GridBuyCostModel,
     "grid_sell_performance": GridSellPerformanceModel,
     "grid_sell_cost": GridSellCostModel,
     # Transport
@@ -163,4 +160,12 @@ supported_models = {
     "ProFastComp": ProFastComp,
 }
 
-electricity_producing_techs = ["wind", "solar", "pv", "river", "hopp", "natural_gas_plant", "grid"]
+electricity_producing_techs = [
+    "wind",
+    "solar",
+    "pv",
+    "river",
+    "hopp",
+    "natural_gas_plant",
+    "grid_feedstock",
+]

@@ -725,10 +725,17 @@ class H2IntegrateModel:
                         # and tech_name in all_included_techs
                         and primary_commodity_type == "electricity"
                     ):
-                        self.plant.connect(
-                            f"{tech_name}.electricity_out",
-                            f"finance_subgroup_{group_id}.electricity_sum.electricity_{tech_name}",
-                        )
+                        # Special handling for feedstock naming
+                        if "feedstock" in tech_name:
+                            self.plant.connect(
+                                f"{tech_name}_source.electricity_out",
+                                f"finance_subgroup_{group_id}.electricity_sum.electricity_{tech_name}",
+                            )
+                        else:
+                            self.plant.connect(
+                                f"{tech_name}.electricity_out",
+                                f"finance_subgroup_{group_id}.electricity_sum.electricity_{tech_name}",
+                            )
                         plant_producing_electricity = True
 
                 if plant_producing_electricity and primary_commodity_type == "electricity":
