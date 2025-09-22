@@ -54,7 +54,7 @@ class GenericSplitterPerformanceConfig(BaseConfig):
 
 class GenericSplitterPerformanceModel(om.ExplicitComponent):
     """
-    Split comodity from one source into two outputs.
+    Split commodity from one source into two outputs.
 
     This component supports two splitting modes:
     1. Fraction-based splitting: Split based on a specified fraction sent to the priority technology

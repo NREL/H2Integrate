@@ -19,7 +19,7 @@ class GenericCombinerPerformanceConfig(BaseConfig):
 
 class GenericCombinerPerformanceModel(om.ExplicitComponent):
     """
-    Combine any commodity or resurce from two sources into one output without losses.
+    Combine any commodity or resource from two sources into one output without losses.
 
     This component is purposefully simple; a more realistic case might include
     losses or other considerations from system components.
