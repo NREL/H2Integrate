@@ -169,4 +169,4 @@ def make_basic_grid_turbine_layout(
     x_rotated = xr_points + xc
     y_rotated = yr_points + yc
 
-    return x_rotated, y_rotated
+    return x_rotated[:n_turbs], y_rotated[:n_turbs]
