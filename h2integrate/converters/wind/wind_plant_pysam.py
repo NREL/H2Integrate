@@ -16,7 +16,7 @@ from h2integrate.converters.wind.layout.simple_grid_layout import (
 
 @define
 class PYSAMWindPlantPerformanceModelConfig(BaseConfig):
-    """_summary_
+    """Configuration class for PYSAMWindPlantPerformanceModel.
 
     Attributes:
         num_turbines (int): number of turbines in farm
@@ -60,9 +60,6 @@ class PYSAMWindPlantPerformanceModelConfig(BaseConfig):
         ),
     )
     pysam_options: dict = field(default={})
-
-    # layout_mode: str = 'basicgrid'
-    # layout_params: dict = field(default={})
 
     def __attrs_post_init__(self):
         if self.create_model_from == "new" and not bool(self.pysam_options):
@@ -158,7 +155,7 @@ class PYSAMWindPlantPerformanceModel(WindPerformanceBaseClass):
         layout_options = layout_params.get("layout_options", {})
         if layout_mode == "basicgrid":
             self.layout_config = BasicGridLayoutConfig.from_dict(layout_options)
-
+        self.layout_mode = layout_mode
         # initialize wind turbine config
         self.config = PYSAMWindPlantPerformanceModelConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance")
@@ -348,6 +345,15 @@ class PYSAMWindPlantPerformanceModel(WindPerformanceBaseClass):
         return data
 
     def recalculate_power_curve(self, rotor_diameter, turbine_rating_kw):
+        """Update the turbine power curve for a given rotor diameter and rated turbine capacity.
+
+        Args:
+            rotor_diameter (int): turbine rotor diameter in meters.
+            turbine_rating_kw (float | int): desired turbine rated capacity in kW
+
+        Returns:
+            bool: True if the new power curve has a maximum value equal to `turbine_rating_kw`
+        """
         elevation = 0
         wind_default_max_cp = 0.45
         wind_default_max_tip_speed = 60
@@ -400,9 +406,10 @@ class PYSAMWindPlantPerformanceModel(WindPerformanceBaseClass):
         self.system_model.value("system_capacity", farm_capacity)
 
         # make layout for number of turbines
-        x_pos, y_pos = make_basic_grid_turbine_layout(
-            self.system_model.value("wind_turbine_rotor_diameter"), n_turbs, self.layout_config
-        )
+        if self.layout_mode == "basicgrid":
+            x_pos, y_pos = make_basic_grid_turbine_layout(
+                self.system_model.value("wind_turbine_rotor_diameter"), n_turbs, self.layout_config
+            )
 
         self.system_model.value("wind_farm_xCoordinates", tuple(x_pos))
         self.system_model.value("wind_farm_yCoordinates", tuple(y_pos))
