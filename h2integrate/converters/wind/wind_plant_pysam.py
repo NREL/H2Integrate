@@ -140,25 +140,6 @@ class PYSAMWindPlantPerformanceModelConfig(BaseConfig):
         return design_dict
 
 
-@define
-class PYSAMWindPlantPerformanceModelSiteConfig(BaseConfig):
-    """Configuration class for the location of the wind plant
-        PYSAMWindPlantPerformanceComponentSite.
-
-    Attributes:
-        latitude (float): Latitude of wind plant location.
-        longitude (float): Longitude of wind plant location.
-        year (float): Year for resource.
-        wind_resource_filepath (str): Path to wind resource file. Defaults to "".
-    """
-
-    latitude: float = field()
-    longitude: float = field()
-    year: float = field()
-    elevation: float = field(default=0.0)
-    wind_resource_filepath: str = field(default="")
-
-
 class PYSAMWindPlantPerformanceModel(WindPerformanceBaseClass):
     """
     An OpenMDAO component that wraps a WindPlant model.
@@ -183,11 +164,6 @@ class PYSAMWindPlantPerformanceModel(WindPerformanceBaseClass):
         # initialize wind turbine config
         self.config = PYSAMWindPlantPerformanceModelConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance")
-        )
-
-        # initialize site config for resource data
-        self.site_config = PYSAMWindPlantPerformanceModelSiteConfig.from_dict(
-            self.options["plant_config"]["site"], strict=False
         )
 
         self.add_input(
@@ -402,6 +378,15 @@ class PYSAMWindPlantPerformanceModel(WindPerformanceBaseClass):
         inputs["hub_height"][0]
         turbine_rating_kw = inputs["wind_turbine_rating"][0]
         n_turbs = inputs["num_turbines"][0]
+
+        self.recalculate_power_curve(rotor_diameter, turbine_rating_kw)
+
+        x_pos, y_pos = make_basic_grid_turbine_layout(
+            self.system_model.value("wind_turbine_rotor_diameter"), n_turbs, self.layout_config
+        )
+
+        self.system_model.value("wind_farm_xCoordinates", tuple(x_pos))
+        self.system_model.value("wind_farm_yCoordinates", tuple(y_pos))
 
         self.recalculate_power_curve(rotor_diameter, turbine_rating_kw)
 
