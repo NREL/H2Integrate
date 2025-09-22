@@ -106,12 +106,11 @@ class NPVFinancial(om.ExplicitComponent):
             check_plant_config_and_profast_params(
                 plant_config["plant"], finance_params, "plant_life", "plant_life"
             )
-        finance_params.update({"plant_life": plant_config["plant_life"]})
+        finance_params.update({"plant_life": plant_config["plant"]["plant_life"]})
         self.config = NPVFinancialConfig.from_dict(finance_params)
 
-    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
+    def compute(self, inputs, outputs):
         sign_of_costs = -1
-        -1 * sign_of_costs
 
         # TODO: update below for standardized naming and also variable simulation lengths
         if self.options["commodity_type"] != "co2":
@@ -181,7 +180,7 @@ class NPVFinancial(om.ExplicitComponent):
 
             if (
                 self.options["description"] == ""
-                or self.options["description"] == self.options["commodity"]
+                or self.options["description"] == self.options["commodity_type"]
             ):
                 filename_base = f"{fdesc}_{self.options['commodity_type']}_NPVFinancial"
             else:
