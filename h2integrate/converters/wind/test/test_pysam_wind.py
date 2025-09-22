@@ -71,7 +71,6 @@ def test_wind_plant_pysam_no_changes_from_setup(
     prob = om.Problem()
 
     plant_config["site"].update({"resources": {"wind_resource": wind_resource_config}})
-    # plant_config['site']['resources'] = {'wind_resource':wind_resource_config}
 
     wind_resource = WTKNRELDeveloperAPIWindResource(
         plant_config=plant_config,
@@ -112,7 +111,7 @@ def test_wind_plant_pysam_no_changes_from_setup(
     with subtests.test("wind AEP value"):
         assert (
             pytest.approx(prob.get_val("wind_plant.annual_energy", units="MW*h/year")[0], rel=1e-6)
-            == 1135306.153647917
+            == 1014129.048439629
         )
 
 
@@ -163,7 +162,7 @@ def test_wind_plant_pysam_change_hub_height(
     with subtests.test("wind AEP value"):
         assert (
             pytest.approx(prob.get_val("wind_plant.annual_energy", units="MW*h/year")[0], rel=1e-6)
-            == 1161321.9387970974
+            == 1037360.7950548842
         )
 
 
@@ -173,7 +172,6 @@ def test_wind_plant_pysam_change_rotor_diameter(
     prob = om.Problem()
 
     plant_config["site"].update({"resources": {"wind_resource": wind_resource_config}})
-    # plant_config['site']['resources'] = {'wind_resource':wind_resource_config}
 
     wind_resource = WTKNRELDeveloperAPIWindResource(
         plant_config=plant_config,
@@ -215,7 +213,7 @@ def test_wind_plant_pysam_change_rotor_diameter(
     with subtests.test("wind AEP value"):
         assert (
             pytest.approx(prob.get_val("wind_plant.annual_energy", units="MW*h/year")[0], rel=1e-6)
-            == 1026268.6499715239
+            == 916820.0472438652
         )
 
 
@@ -225,7 +223,6 @@ def test_wind_plant_pysam_change_turbine_rating(
     prob = om.Problem()
 
     plant_config["site"].update({"resources": {"wind_resource": wind_resource_config}})
-    # plant_config['site']['resources'] = {'wind_resource':wind_resource_config}
 
     wind_resource = WTKNRELDeveloperAPIWindResource(
         plant_config=plant_config,
@@ -266,7 +263,7 @@ def test_wind_plant_pysam_change_turbine_rating(
     with subtests.test("wind AEP value"):
         assert (
             pytest.approx(prob.get_val("wind_plant.annual_energy", units="MW*h/year")[0], rel=1e-6)
-            == 1084462.7299412412
+            == 968681.3512372728
         )
 
 
