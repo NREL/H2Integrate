@@ -492,7 +492,9 @@ class H2IntegrateModel:
                 commodity_summer = commodity_summer_model(
                     driver_config=self.driver_config,
                     plant_config=self.plant_config,
-                    tech_config=commodity_summer_config,
+                    tech_config={
+                        "model_inputs": {"performance_parameters": commodity_summer_config}
+                    },
                 )
                 finance_subgroup.add_subsystem(f"{commodity}_sum", commodity_summer)
             if commodity_stream is None and commodity == "electricity":
