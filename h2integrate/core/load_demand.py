@@ -34,57 +34,55 @@ class DemandPerformanceModelComponent(om.ExplicitComponent):
         self.config = DemandProfileModelConfig.from_dict(
             self.options["tech_config"]["model_inputs"]["performance_parameters"]
         )
+        commodity = self.config.commodity
 
         self.add_input(
-            f"{self.config.commodity}_demand_profile",
+            f"{commodity}_demand_profile",
             val=self.config.demand,
-            shape=(n_timesteps,),
+            shape=(n_timesteps),
             units=f"{self.config.units}/h",  # NOTE: hardcoded to align with controllers
-            desc=f"Demand profile of {self.config.commodity}",
+            desc=f"Demand profile of {commodity}",
         )
 
         self.add_input(
-            f"{self.config.commodity}_in",
+            f"{commodity}_in",
             val=0.0,
-            shape=(n_timesteps,),
+            shape=(n_timesteps),
             units=self.config.units,
-            desc=f"Amount of {self.config.commodity} demand that has already been supplied",
+            desc=f"Amount of {commodity} demand that has already been supplied",
         )
 
         self.add_output(
-            f"{self.config.commodity}_missed_load",
+            f"{commodity}_missed_load",
             val=self.config.demand,
-            shape=(n_timesteps,),
+            shape=(n_timesteps),
             units=self.config.units,
-            desc=f"Remaining demand profile of {self.config.commodity}",
+            desc=f"Remaining demand profile of {commodity}",
         )
 
         self.add_output(
-            f"{self.config.commodity}_curtailed",
+            f"{commodity}_curtailed",
             val=0.0,
-            shape=(n_timesteps,),
+            shape=(n_timesteps),
             units=self.config.units,
-            desc=f"Excess production of {self.config.commodity}",
+            desc=f"Excess production of {commodity}",
         )
 
         self.add_output(
-            f"{self.config.commodity}_out",
+            f"{commodity}_out",
             val=0.0,
-            shape=(n_timesteps,),
+            shape=(n_timesteps),
             units=self.config.units,
-            desc=f"Production profile of {self.config.commodity}",
+            desc=f"Production profile of {commodity}",
         )
 
     def compute(self, inputs, outputs):
-        remaining_demand = (
-            inputs[f"{self.config.commodity}_demand_profile"]
-            - inputs[f"{self.config.commodity}_in"]
-        )
+        commodity = self.config.commodity
+        remaining_demand = inputs[f"{commodity}_demand_profile"] - inputs[f"{commodity}_in"]
 
-        current_demand = np.where(remaining_demand > 0, remaining_demand, 0)
-        curtailed_demand = np.where(remaining_demand < 0, -1 * remaining_demand, 0)
-        outputs[f"{self.config.commodity}_missed_load"] = current_demand
-        outputs[f"{self.config.commodity}_curtailed"] = curtailed_demand
+        # Calculate missed load and curtailed production
+        outputs[f"{commodity}_missed_load"] = np.where(remaining_demand > 0, remaining_demand, 0)
+        outputs[f"{commodity}_curtailed"] = np.where(remaining_demand < 0, -1 * remaining_demand, 0)
 
-        production = inputs[f"{self.config.commodity}_in"] - curtailed_demand
-        outputs[f"{self.config.commodity}_out"] = production
+        # Calculate actual output based on demand met and curtailment
+        outputs[f"{commodity}_out"] = inputs[f"{commodity}_in"] - outputs[f"{commodity}_curtailed"]
