@@ -140,15 +140,19 @@ def get_nrel_developer_api_key(env_path=None):
     Returns:
         str: API key for NREL Developer Network.
     """
+
+    # check if set as an environment variable
     if os.getenv("NREL_API_KEY") is not None:
         return os.getenv("NREL_API_KEY")
+
+    # check if set as a global variable
     global developer_nrel_gov_key
-    set_nrel_key_dot_env(path=env_path)
-    if developer_nrel_gov_key is None:
-        if env_path is None:
-            raise ValueError("NREL_API_KEY has not be set.")
+    if len(developer_nrel_gov_key) == 0:
+        # attempt to set the variable from a .env file
         set_nrel_key_dot_env(path=env_path)
-    if developer_nrel_gov_key is None:
+
+    if len(developer_nrel_gov_key) == 0:
+        # variable was not found
         raise ValueError("NREL_API_KEY has not been set")
     return developer_nrel_gov_key
 
@@ -176,14 +180,18 @@ def get_nrel_developer_api_email(env_path=None):
     Returns:
         str: API key for NREL Developer Network.
     """
+
+    # check if set as an environment variable
     if os.getenv("NREL_API_EMAIL") is not None:
         return os.getenv("NREL_API_EMAIL")
+
+    # check if set as a global variable
     global developer_nrel_gov_email
-    set_nrel_key_dot_env(path=env_path)
-    if developer_nrel_gov_email is None:
-        if env_path is None:
-            raise ValueError("NREL_API_EMAIL has not be set.")
+    if len(developer_nrel_gov_email) == 0:
+        # attempt to set the variable from a .env file
         set_nrel_key_dot_env(path=env_path)
-    if developer_nrel_gov_email is None:
+
+    if len(developer_nrel_gov_email) == 0:
+        # variable was not found
         raise ValueError("NREL_API_EMAIL has not been set")
     return developer_nrel_gov_email
