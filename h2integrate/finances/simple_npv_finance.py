@@ -168,6 +168,7 @@ class NPVFinance(om.ExplicitComponent):
             ValueError: If refurbishment schedules cannot be derived from inputs.
         """
         # by convention, investments (capex, opex, refurbishment) are negative cash flows
+        # have to add the correct sign convention for npf.npv function
         sign_of_costs = -1
 
         # TODO: update below for standardized naming and also variable simulation lengths
