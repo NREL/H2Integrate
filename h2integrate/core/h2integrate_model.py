@@ -478,6 +478,7 @@ class H2IntegrateModel:
                 "finance_groups", [default_finance_group_name]
             )
             tech_names = subgroup_params.get("technologies")
+            commodity_stream = subgroup_params.get("commodity_stream", None)
 
             if isinstance(finance_group_names, str):
                 finance_group_names = [finance_group_names]
@@ -499,18 +500,46 @@ class H2IntegrateModel:
                         "Available "
                         f"technologies: {list(self.technology_config['technologies'].keys())}"
                     )
+            if commodity_stream is not None:
+                if "combiner" not in commodity_stream and commodity_stream not in tech_names:
+                    raise UserWarning(
+                        f"The technology specific for the commodity_stream '{commodity_stream}' "
+                        f"is not included in subgroup '{subgroup_name}' technologies list."
+                        f" Subgroup '{subgroup_name}' includes technologies: {tech_names}."
+                    )
 
             finance_subgroups.update(
                 {
                     subgroup_name: {
                         "tech_configs": tech_configs,
                         "commodity": commodity,
+                        "commodity_stream": commodity_stream,
                     }
                 }
             )
             finance_subgroup = om.Group()
 
-            if commodity == "electricity":
+            # ESG TODO: ADD CHECK FOR COMMODITY STREAM
+            if commodity_stream is not None:
+                commodity_summer_model = self.supported_models.get("production_summer")  # FINISH
+                if "combiner" in commodity_stream or "splitter" in commodity_stream:
+                    commodity_summer_config = self.technology_config["technologies"][
+                        commodity_stream
+                    ]
+                else:
+                    commodity_summer_config = {
+                        "commodity": commodity,
+                        "commodity_units": "kW"
+                        if commodity_stream in electricity_producing_techs
+                        else "kg",
+                    }
+                commodity_summer = commodity_summer_model(
+                    driver_config=self.driver_config,
+                    plant_config=self.plant_config,
+                    tech_config=commodity_summer_config,
+                )
+                finance_subgroup.add_subsystem(f"{commodity}_sum", commodity_summer)
+            if commodity_stream is None and commodity == "electricity":
                 finance_subgroup.add_subsystem(
                     "electricity_sum", ElectricitySumComp(tech_configs=tech_configs)
                 )
@@ -789,9 +818,14 @@ class H2IntegrateModel:
             for group_id, group_configs in self.finance_subgroups.items():
                 tech_configs = group_configs.get("tech_configs")
                 primary_commodity_type = group_configs.get("commodity")
+                commodity_stream = group_configs.get("commodity_stream")
                 # Skip steel finances; it provides its own finances
                 if any(c in tech_configs for c in ("steel", "geoh2")):
                     continue
+
+                # ESG TODO: CHECK FOR COMMODITY STREAM
+                if commodity_stream is not None:
+                    self.supported_models.get("production_summer")  # FINISH
 
                 plant_producing_electricity = False
 
