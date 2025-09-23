@@ -827,6 +827,11 @@ def test_wind_battery_dispatch_example(subtests):
         lcoe = model.prob.get_val("finance_subgroup_electricity.LCOE_profast")[0]
         assert pytest.approx(lcoe, rel=1e-6) == 0.07801723344476236
 
+    # Subtest for NPV
+    with subtests.test("Check NPV value"):
+        npv = model.prob.get_val("finance_subgroup_electricity.electricity_npv_NPV")[0]
+        assert pytest.approx(npv, rel=1e-6) == 3791194.71
+
     # Subtest for total electricity produced
     with subtests.test("Check total electricity produced"):
         total_electricity = model.prob.get_val(
