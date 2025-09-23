@@ -22,7 +22,7 @@ class PYSAMWindPlantPerformanceModelConfig(BaseConfig):
         num_turbines (int): number of turbines in farm
         hub_height (float): wind turbine hub-height in meters
         rotor_diameter (float): wind turbine rotor diameter in meters.
-        turbine_rating_kW (float): wind turbined rated power in kW
+        turbine_rating_kw (float): wind turbined rated power in kW
         create_model_from (str):
             - 'default': instatiate Windpower model from the default config 'config_name'
             - 'new': instatiate new Windpower model (default). Requires pysam_options.
@@ -38,7 +38,7 @@ class PYSAMWindPlantPerformanceModelConfig(BaseConfig):
     num_turbines: int = field(converter=int, validator=gt_zero)
     hub_height: float = field(validator=gt_zero)
     rotor_diameter: float = field(validator=gt_zero)
-    turbine_rating_kW: float = field(validator=gt_zero)
+    turbine_rating_kw: float = field(validator=gt_zero)
 
     create_model_from: str = field(
         default="new", validator=contains(["default", "new"]), converter=(str.strip, str.lower)
@@ -170,7 +170,7 @@ class PYSAMWindPlantPerformanceModel(WindPerformanceBaseClass):
 
         self.add_input(
             "wind_turbine_rating",
-            val=self.config.turbine_rating_kW,
+            val=self.config.turbine_rating_kw,
             units="kW",
             desc="rating of an individual turbine in kW",
         )
