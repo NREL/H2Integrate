@@ -56,7 +56,7 @@ def wind_plant_config():
         "num_turbines": 50,
         "hub_height": 115,
         "rotor_diameter": 170,
-        "turbine_rating_kW": 6000,
+        "turbine_rating_kw": 6000,
         "create_model_from": "default",
         "config_name": "WindPowerSingleOwner",
         "pysam_options": pysam_config,
@@ -90,7 +90,7 @@ def test_wind_plant_pysam_no_changes_from_setup(
     prob.run_model()
 
     expected_farm_capacity_MW = (
-        wind_plant_config["num_turbines"] * wind_plant_config["turbine_rating_kW"] / 1e3
+        wind_plant_config["num_turbines"] * wind_plant_config["turbine_rating_kw"] / 1e3
     )
 
     prob.get_val("wind_plant.electricity_out")
@@ -141,7 +141,7 @@ def test_wind_plant_pysam_change_hub_height(
     prob.run_model()
 
     expected_farm_capacity_MW = (
-        wind_plant_config["num_turbines"] * wind_plant_config["turbine_rating_kW"] / 1e3
+        wind_plant_config["num_turbines"] * wind_plant_config["turbine_rating_kw"] / 1e3
     )
 
     prob.get_val("wind_plant.electricity_out")
@@ -192,7 +192,7 @@ def test_wind_plant_pysam_change_rotor_diameter(
     prob.run_model()
 
     expected_farm_capacity_MW = (
-        wind_plant_config["num_turbines"] * wind_plant_config["turbine_rating_kW"] / 1e3
+        wind_plant_config["num_turbines"] * wind_plant_config["turbine_rating_kw"] / 1e3
     )
 
     prob.get_val("wind_plant.electricity_out")
@@ -293,7 +293,7 @@ def test_wind_plant_pysam_change_n_turbines(
     prob.set_val("wind_plant.num_turbines", new_num_turbines)
     prob.run_model()
 
-    expected_farm_capacity_MW = new_num_turbines * wind_plant_config["turbine_rating_kW"] / 1e3
+    expected_farm_capacity_MW = new_num_turbines * wind_plant_config["turbine_rating_kw"] / 1e3
 
     prob.get_val("wind_plant.electricity_out")
     prob.get_val("wind_plant.annual_energy")
