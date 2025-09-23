@@ -14,10 +14,10 @@ class PyomoRuleBaseConfig(BaseConfig):
 
     Attributes:
         commodity_name (str): Name of the resource being controlled (e.g., "hydrogen").
-        resource_units (str): Units of the resource (e.g., "kg/h").
+        commodity_units (str): Units of the resource (e.g., "kg/h").
         time_steps (int): Number of time steps in the simulation.
         max_capacity (float): Maximum storage capacity of the resource (in non-rate units,
-            e.g., "kg" if `resource_units` is "kg/h").
+            e.g., "kg" if `commodity_units` is "kg/h").
         max_charge_percent (float): Maximum allowable state of charge (SOC) as a percentage
             of `max_capacity`, represented as a decimal between 0 and 1.
         min_charge_percent (float): Minimum allowable SOC as a percentage of `max_capacity`,
@@ -33,7 +33,7 @@ class PyomoRuleBaseConfig(BaseConfig):
         discharge_efficiency (float): Efficiency of discharging the storage, represented as a
             decimal between 0 and 1 (e.g., 0.9 for 90% efficiency).
         demand_profile (scalar or list): The demand values for each time step (in the same units
-            as `resource_units`) or a scalar for a constant demand.
+            as `commodity_units`) or a scalar for a constant demand.
     """
 
     commodity_name: str = field()
