@@ -18,6 +18,7 @@ def set_developer_nrel_gov_key(key: str):
     """
     global developer_nrel_gov_key
     developer_nrel_gov_key = key
+    return developer_nrel_gov_key
 
 
 def set_developer_nrel_gov_email(email: str):
@@ -28,6 +29,7 @@ def set_developer_nrel_gov_email(email: str):
     """
     global developer_nrel_gov_email
     developer_nrel_gov_email = email
+    return developer_nrel_gov_email
 
 
 def load_file_with_variables(fpath, variables=["NREL_API_KEY", "NREL_API_EMAIL"]):
@@ -141,6 +143,7 @@ def get_nrel_developer_api_key(env_path=None):
     if os.getenv("NREL_API_KEY") is not None:
         return os.getenv("NREL_API_KEY")
     global developer_nrel_gov_key
+    set_nrel_key_dot_env(path=env_path)
     if developer_nrel_gov_key is None:
         if env_path is None:
             raise ValueError("NREL_API_KEY has not be set.")
@@ -176,6 +179,7 @@ def get_nrel_developer_api_email(env_path=None):
     if os.getenv("NREL_API_EMAIL") is not None:
         return os.getenv("NREL_API_EMAIL")
     global developer_nrel_gov_email
+    set_nrel_key_dot_env(path=env_path)
     if developer_nrel_gov_email is None:
         if env_path is None:
             raise ValueError("NREL_API_EMAIL has not be set.")
