@@ -6,6 +6,7 @@ from h2integrate.transporters.cable import CablePerformanceModel
 from h2integrate.converters.steel.steel import SteelPerformanceModel, SteelCostAndFinancialModel
 from h2integrate.converters.wind.wind_plant import WindPlantCostModel, WindPlantPerformanceModel
 from h2integrate.finances.profast_financial import ProFastComp
+from h2integrate.finances.simple_npv_finance import NPVFinance
 from h2integrate.transporters.generic_summer import (
     GenericProductionSummerPerformanceModel,
     GenericConsumptionSummerPerformanceModel,
@@ -164,6 +165,7 @@ supported_models = {
     "feedstock_cost": FeedstockCostModel,
     # Finance
     "ProFastComp": ProFastComp,
+    "NPVFinance": NPVFinance,
 }
 
 electricity_producing_techs = ["wind", "solar", "pv", "river", "hopp", "natural_gas_plant"]
