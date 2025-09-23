@@ -223,7 +223,6 @@ class NPVFinance(om.ExplicitComponent):
 
         total_costs = [np.array(v) for k, v in cost_breakdown.items()]
         np.array(total_costs).sum(axis=0)
-        # npf.npv(self.config.discount_rate, cash_outflows)
 
         npv_item_check = 0
         npv_cost_breakdown = {}
