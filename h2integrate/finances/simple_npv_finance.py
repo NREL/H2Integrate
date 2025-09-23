@@ -11,8 +11,8 @@ from h2integrate.core.validators import gte_zero, range_val
 
 
 @define
-class NPVFinancialConfig(BaseConfig):
-    """Config of financing parameters for NPVFinancial.
+class NPVFinanceConfig(BaseConfig):
+    """Config of financing parameters for NPVFinance.
 
     Attributes:
         plant_life (int): operating life of plant in years
@@ -36,7 +36,7 @@ class NPVFinancialConfig(BaseConfig):
     cost_breakdown_file_description: str = field(default="default")
 
 
-class NPVFinancial(om.ExplicitComponent):
+class NPVFinance(om.ExplicitComponent):
     """OpenMDAO component for calculating Net Present Value (NPV) of a plant or technology.
 
     This component computes the NPV of a given commodity-producing plant over its
@@ -59,7 +59,7 @@ class NPVFinancial(om.ExplicitComponent):
         NPV_str (str): The dynamically generated name of the NPV output variable,
             based on `commodity_type` and optional `description`.
         tech_config (dict): Technology-specific configuration dictionary.
-        config (NPVFinancialConfig): Parsed financial configuration parameters
+        config (NPVFinanceConfig): Parsed financial configuration parameters
             (e.g., discount rate, plant life, save options).
     """
 
@@ -129,7 +129,7 @@ class NPVFinancial(om.ExplicitComponent):
         if "electrolyzer" in tech_config:
             self.add_input("electrolyzer_time_until_replacement", units="h")
 
-        self.config = NPVFinancialConfig.from_dict(finance_params)
+        self.config = NPVFinanceConfig.from_dict(finance_params)
 
     def compute(self, inputs, outputs):
         """Compute the Net Present Value (NPV).
@@ -141,6 +141,9 @@ class NPVFinancial(om.ExplicitComponent):
 
         Optionally saves cost breakdowns and NPV breakdowns to CSV files if
         enabled in configuration.
+
+        NPV that is positive indicates a profitable investment, while negative
+        NPV indicates a loss.
 
         Args:
             inputs (dict-like): Dictionary of input values, including production,
@@ -160,6 +163,7 @@ class NPVFinancial(om.ExplicitComponent):
             FileNotFoundError: If the specified output directory cannot be created.
             ValueError: If refurbishment schedules cannot be derived from inputs.
         """
+        # by convention, investments (capex, opex, refurbishment) are negative cash flows
         sign_of_costs = -1
 
         # TODO: update below for standardized naming and also variable simulation lengths
@@ -214,8 +218,8 @@ class NPVFinancial(om.ExplicitComponent):
                 cost_breakdown[f"{tech}: replacement cost"] = refurb_cost
 
         total_costs = [np.array(v) for k, v in cost_breakdown.items()]
-        cash_outflows = np.array(total_costs).sum(axis=0)
-        npf.npv(self.config.discount_rate, cash_outflows)
+        np.array(total_costs).sum(axis=0)
+        # npf.npv(self.config.discount_rate, cash_outflows)
 
         npv_item_check = 0
         npv_cost_breakdown = {}
@@ -223,6 +227,8 @@ class NPVFinancial(om.ExplicitComponent):
             npv_item = npf.npv(self.config.discount_rate, cost_vals)
             npv_item_check += float(npv_item)
             npv_cost_breakdown[cost_type] = float(npv_item)
+
+        outputs[self.NPV_str] = npv_item_check
 
         if self.config.save_cost_breakdown or self.config.save_npv_breakdown:
             output_dir = self.options["driver_config"]["general"]["folder_output"]
@@ -234,14 +240,14 @@ class NPVFinancial(om.ExplicitComponent):
                 self.options["description"] == ""
                 or self.options["description"] == self.options["commodity_type"]
             ):
-                filename_base = f"{fdesc}_{self.options['commodity_type']}_NPVFinancial"
+                filename_base = f"{fdesc}_{self.options['commodity_type']}_NPVFinance"
             else:
                 desc = (
                     self.NPV_str.replace("_NPV", "")
                     .replace(self.options["commodity_type"], "")
                     .strip("_")
                 )
-                filename_base = f"{fdesc}_{self.options['commodity_type']}_{desc}_NPVFinancial"
+                filename_base = f"{fdesc}_{self.options['commodity_type']}_{desc}_NPVFinance"
             if self.config.save_npv_breakdown:
                 npv_fname = f"{filename_base}_NPV_breakdown.csv"
                 npv_fpath = Path(output_dir) / npv_fname
@@ -262,5 +268,3 @@ class NPVFinancial(om.ExplicitComponent):
                 new_colnames = {i: f"Year {i}" for i in annual_cost_breakdown.columns.to_list()}
                 annual_cost_breakdown = annual_cost_breakdown.rename(columns=new_colnames)
                 annual_cost_breakdown.to_csv(cost_fpath)
-
-            outputs[self.NPV_str] = npv_item_check
