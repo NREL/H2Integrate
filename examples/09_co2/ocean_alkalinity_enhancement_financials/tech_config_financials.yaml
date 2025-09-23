@@ -8,17 +8,14 @@ technologies:
       config: !include tech_inputs/hopp_config.yaml
     cost_model:
       model: "hopp"
-    financial_model:
-      group: "default"
     model_inputs:
       cost_parameters:
         cost_year: 2022
   oae:
     performance_model:
       model: "ocean_alkalinity_enhancement_performance"
-    financial_model:
+    finance_model:
       model: "ocean_alkalinity_enhancement_cost_financial"
-      group: "oae"
     model_inputs:
       performance_parameters:
         number_ed_min: 1

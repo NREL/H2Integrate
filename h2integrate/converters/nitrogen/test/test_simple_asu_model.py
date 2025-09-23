@@ -7,6 +7,7 @@ from h2integrate.converters.nitrogen.simple_ASU import SimpleASUCostModel, Simpl
 
 plant_config = {
     "plant": {
+        "plant_life": 30,
         "simulation": {
             "n_timesteps": 8760,  # Default number of timesteps for the simulation
         },

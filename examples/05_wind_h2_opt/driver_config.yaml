@@ -9,7 +9,7 @@ driver:
     flag: True
     solver: COBYLA
     tol: 0.1
-    catol: 10000
+    catol: 15000
     max_iter: 100
     rhobeg: 10
     debug_print: True
@@ -30,9 +30,10 @@ constraints:
       units: kg/year
 
 objective:
-  name: financials_group_default.LCOH
+  name: finance_subgroup_hydrogen.LCOH
 
 recorder:
   flag: True
   file: "wind_h2_opt.sql"
   includes: ["*"]
+  excludes: ["wind_resource.wind_resource_data"]

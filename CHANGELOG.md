@@ -41,13 +41,19 @@
 - Updated finance parameter organization naming in `plant_config`.
 - Added cost model base class and removed `plant_config['finance_parameters']['discount_years']['tech']`. Some cost models require user-input cost year (`tech_config[tech]['model_inputs']['cost_parameters']['cost_year']`) others do not. Cost year is output from cost models as a discrete output.
 - Add ocean alkalinity enhancement technology model.
-- Refactored `ProFastComp` and put in a new file (`h2integrate/core/profast_financial.py`). Added flexibility to allow users to specify different financial models.
 - Added ability to export ProFAST object to yaml file in `ProFastComp`
+- Added `natural_gas_performance` and `natural_gas_cost` models, allowing for natural gas power plant modeling.
+- Revamped the feedstocks technology group to allow for more precise modeling of feedstock supply chains, including capacity constraints and feedstock amount consumed.
+- Refactored `ProFastComp` and put in a new file (`h2integrate/core/profast_financial.py`). Added flexibility to allow users to specify different financial models.
 - Bugfix on `h2integrate/transporters/power_combiner.py` and enabled usage of multiple electricity producing technologies.
 - Updated option to pass variables in technology interconnections to allow for different variable names from source to destination in the format `[source_tech, dest_tech, (source_tech_variable, dest_tech_variable)]`
 - Added `simulation` section under `plant_config['plant']` that has information such as number of timesteps in the simulation, time step interval in seconds, simulation start time, and time zone.
 - Added `"custom_electrolyzer_cost"` model, an electrolyzer cost model that allows for user-defined capex and opex values
 - Made `pipe` and `cable` substance-agnostic rather than hard-coded for `hydrogen` and `electricity`
+- Change finance handling to use `finance_subgroups` and `finance_groups` defined in the `plant_config` rather than previous `financial_groups` in the `tech_config` and `technologies_to_include_in_metrics` in `plant_config`
+- Added variable O&M to `CostModelBaseClass` and integrated into finance-related models
+- Added generic storage model, useful for battery, hydrogen, CO2, or other resource storage.
+- Added wind resource model, API baseclasses, updated examples, and documentation.
 
 ## 0.3.0 [May 2 2025]
 
