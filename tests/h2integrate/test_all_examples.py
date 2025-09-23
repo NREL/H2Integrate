@@ -303,8 +303,12 @@ def test_wind_h2_opt_example(subtests):
     assert len(cases) > 1, "Not enough cases recorded in SQL file."
 
     # Get initial and final LCOH values
-    initial_lcoh = cases[0].outputs["finance_subgroup_hydrogen.LCOH"][0]
-    final_lcoh = cases[-1].outputs["finance_subgroup_hydrogen.LCOH"][0]
+    import pdb
+
+    pdb.set_trace()
+
+    initial_lcoh = cases[0].outputs["financials_group_default.LCOH"][0]
+    final_lcoh = cases[-1].outputs["financials_group_default.LCOH"][0]
 
     with subtests.test("Check LCOH changed"):
         assert final_lcoh != initial_lcoh
@@ -312,14 +316,14 @@ def test_wind_h2_opt_example(subtests):
     with subtests.test("Check total adjusted CapEx"):
         assert (
             pytest.approx(
-                model.prob.get_val("finance_subgroup_hydrogen.total_capex_adjusted")[0], rel=1e-3
+                model.prob.get_val("financials_group_default.total_capex_adjusted")[0], rel=1e-3
             )
             == 2783126102
         )
     with subtests.test("Check total adjusted OpEx"):
         assert (
             pytest.approx(
-                model.prob.get_val("finance_subgroup_hydrogen.total_opex_adjusted")[0], rel=1e-3
+                model.prob.get_val("financials_group_default.total_opex_adjusted")[0], rel=1e-3
             )
             == 75543899
         )
