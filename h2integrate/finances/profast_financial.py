@@ -7,14 +7,20 @@ from attrs import field, define
 
 from h2integrate.core.utilities import (
     BaseConfig,
+    attr_filter,
     attr_serializer,
-    attr_hopp_filter,
     dict_to_yaml_formatting,
     check_plant_config_and_profast_params,
 )
 from h2integrate.core.dict_utils import update_defaults
 from h2integrate.core.validators import gt_zero, contains, gte_zero, range_val
-from h2integrate.tools.profast_tools import run_profast, create_and_populate_profast
+from h2integrate.tools.profast_tools import (
+    run_profast,
+    make_price_breakdown,
+    create_years_of_operation,
+    create_and_populate_profast,
+    format_profast_price_breakdown_per_year,
+)
 from h2integrate.core.inputs.validation import write_yaml
 from h2integrate.tools.profast_reverse_tools import convert_pf_to_dict
 
@@ -143,7 +149,7 @@ class BasicProFASTParameterConfig(BaseConfig):
         debt_interest_rate (float): interest rate on debt
         inflation_rate (float): escalation rate. Set to zero for a nominal analysis.
         cash_onhand_months (int): number of months with cash onhand.
-        admin_expense (float): adminstrative expense as a fraction of sales
+        admin_expense (float): administrative expense as a fraction of sales
         non_depr_assets (float, optional): cost (in `$`) of nondepreciable assets, such as land.
             Defaults to 0.
         end_of_proj_sale_non_depr_assets (float, optional): cost (in `$`) of nondepreciable assets
@@ -212,7 +218,7 @@ class BasicProFASTParameterConfig(BaseConfig):
         default={
             "name": None,
             "unit": None,
-            "inital price": 100,
+            "initial price": 100,
             "escalation": 0.0,
         }
     )
@@ -259,9 +265,7 @@ class BasicProFASTParameterConfig(BaseConfig):
         Returns:
             dict: All key, value pairs required for class re-creation.
         """
-        pf_params_init = attrs.asdict(
-            self, filter=attr_hopp_filter, value_serializer=attr_serializer
-        )
+        pf_params_init = attrs.asdict(self, filter=attr_filter, value_serializer=attr_serializer)
 
         # rename keys to profast format
         pf_params = {k.replace("_", " "): v for k, v in pf_params_init.items()}
@@ -277,14 +281,6 @@ class BasicProFASTParameterConfig(BaseConfig):
             else:
                 params[keyname] = vals
         return params
-
-    def create_years_of_operation(self):
-        operation_start_year = self.analysis_start_year + (self.installation_time / 12)
-        years_of_operation = np.arange(
-            int(operation_start_year), int(operation_start_year + self.plant_life), 1
-        )
-        year_keys = [f"{y}" for y in years_of_operation]
-        return year_keys
 
 
 @define
@@ -328,6 +324,28 @@ class ProFASTDefaultFixedCost(BaseConfig):
 
     escalation: float | int = field()
     unit: str = field(default="$/year")
+    usage: float | int = field(default=1.0)
+
+    def create_dict(self):
+        return self.as_dict()
+
+
+@define
+class ProFASTDefaultVariableCost(BaseConfig):
+    """Configuration class of default settings for ProFAST variable costs.
+    The total cost is calculated as ``usage*cost``.
+
+    Attributes:
+        escalation (float | int, optional): annual escalation of price.
+            Defaults to 0.
+        unit (str): unit of the cost, only used for reporting. The cost should be input in
+            USD/unit of commodity.
+        usage (float, optional): Usage of feedstock per unit of commodity.
+            Defaults to 1.0.
+    """
+
+    escalation: float | int = field()
+    unit: str = field()
     usage: float | int = field(default=1.0)
 
     def create_dict(self):
@@ -388,6 +406,13 @@ class ProFastComp(om.ExplicitComponent):
             of the commodity). For example, LCOH if commodity_type is "hydrogen".
             If commodity_type is "hydrogen", "ammonia", "nitrogen", or "co2", the units are USD/kg.
             If the commodity type is "electricity", the units are USD/kWh.
+        wacc_<commodity> (float): weighted average cost of capital as a fraction.
+        crf_<commodity> (float): capital recovery factor as a fraction.
+        irr_<commodity> (float): internal rate of return as a fraction.
+        profit_index_<commodity> (float):
+        investor_payback_period_<commodity> (float): time until initial investment costs are
+            recovered in years.
+        price_<commodity> (float): first year price of commodity in same units as `LCOx`
 
     Methods:
         initialize(): Declares component options.
@@ -409,6 +434,7 @@ class ProFastComp(om.ExplicitComponent):
         self.options.declare("plant_config", types=dict)
         self.options.declare("tech_config", types=dict)
         self.options.declare("commodity_type", types=str)
+        self.options.declare("description", types=str, default="")
 
     def setup(self):
         if self.options["commodity_type"] == "electricity":
@@ -418,8 +444,29 @@ class ProFastComp(om.ExplicitComponent):
             commodity_units = "kg/year"
             lco_units = "USD/kg"
 
-        self.LCO_str = f"LCO{self.options['commodity_type'][0].upper()}"
+        LCO_base_str = f"LCO{self.options['commodity_type'][0].upper()}"
+        self.output_txt = self.options["commodity_type"].lower()
+        if self.options["description"] == "":
+            self.LCO_str = LCO_base_str
+        else:
+            desc_str = self.options["description"].strip().strip("_()-")
+            if desc_str == "":
+                self.LCO_str = LCO_base_str
+            else:
+                self.output_txt = f"{self.options['commodity_type'].lower()}_{desc_str}"
+                self.LCO_str = f"{LCO_base_str}_{desc_str}"
+
         self.add_output(self.LCO_str, val=0.0, units=lco_units)
+        self.outputs_to_units = {
+            "wacc": "percent",
+            "crf": "percent",
+            "irr": "percent",
+            "profit_index": "unitless",
+            "investor_payback_period": "yr",
+            "price": lco_units,
+        }
+        for output_var, units in self.outputs_to_units.items():
+            self.add_output(f"{output_var}_{self.output_txt}", val=0.0, units=units)
 
         if self.options["commodity_type"] == "co2":
             self.add_input("co2_capture_kgpy", val=0.0, units="kg/year")
@@ -430,10 +477,12 @@ class ProFastComp(om.ExplicitComponent):
                 units=commodity_units,
             )
 
+        plant_life = int(self.options["plant_config"]["plant"]["plant_life"])
         tech_config = self.tech_config = self.options["tech_config"]
         for tech in tech_config:
             self.add_input(f"capex_adjusted_{tech}", val=0.0, units="USD")
             self.add_input(f"opex_adjusted_{tech}", val=0.0, units="USD/year")
+            self.add_input(f"varopex_adjusted_{tech}", val=0.0, shape=plant_life, units="USD/year")
 
         if "electrolyzer" in tech_config:
             self.add_input("electrolyzer_time_until_replacement", units="h")
@@ -460,6 +509,14 @@ class ProFastComp(om.ExplicitComponent):
         fixed_cost_params.setdefault("escalation", self.params.inflation_rate)
         self.fixed_cost_settings = ProFASTDefaultFixedCost.from_dict(fixed_cost_params)
 
+        # initialize default variable cost parameters (same as feedstocks)
+        variable_cost_params = plant_config["finance_parameters"]["model_inputs"].get(
+            "variable_costs", {}
+        )
+        variable_cost_params.setdefault("escalation", self.params.inflation_rate)
+        variable_cost_params.setdefault("unit", lco_units.replace("USD", "$"))
+        self.variable_cost_settings = ProFASTDefaultVariableCost.from_dict(variable_cost_params)
+
         # incentives - unused for now
         # incentive_params = plant_config["finance_parameters"]["model_inputs"].get(
         #     "incentives", {}
@@ -468,7 +525,13 @@ class ProFastComp(om.ExplicitComponent):
         # self.incentive_params_settings = ProFASTDefaultIncentive.from_dict(incentive_params)
 
     def compute(self, inputs, outputs):
-        mass_commodities = ["hydrogen", "ammonia", "co2", "nitrogen"]
+        mass_commodities = ["hydrogen", "ammonia", "co2", "nitrogen", "methanol"]
+
+        years_of_operation = create_years_of_operation(
+            self.params.plant_life,
+            self.params.analysis_start_year,
+            self.params.installation_time,
+        )
 
         # update parameters with commodity, capacity, and utilization
         profast_params = self.params.as_dict()
@@ -479,8 +542,13 @@ class ProFastComp(om.ExplicitComponent):
 
         if self.options["commodity_type"] != "co2":
             capacity = float(inputs[f"total_{self.options['commodity_type']}_produced"][0]) / 365.0
+            total_production = float(inputs[f"total_{self.options['commodity_type']}_produced"][0])
         else:
             capacity = float(inputs["co2_capture_kgpy"]) / 365.0
+            total_production = float(inputs["co2_capture_kgpy"])
+        if capacity == 0.0:
+            raise ValueError("Capacity cannot be zero")
+
         profast_params["capacity"] = capacity  # TODO: update to actual daily capacity
         profast_params["long term utilization"] = 1  # TODO: update to capacity factor
 
@@ -490,10 +558,12 @@ class ProFastComp(om.ExplicitComponent):
         # initialize dictionary of capital items and fixed costs
         capital_items = {}
         fixed_costs = {}
+        variable_costs = {}
 
         # create default capital item and fixed cost entries
         capital_item_defaults = self.capital_item_settings.create_dict()
         fixed_cost_defaults = self.fixed_cost_settings.create_dict()
+        variable_cost_defaults = self.variable_cost_settings.create_dict()
 
         # loop through technologies and create cost entries
         for tech in self.tech_config:
@@ -545,28 +615,70 @@ class ProFastComp(om.ExplicitComponent):
                 tech_opex_info.setdefault(fix_cost_key, fix_cost_val)
             fixed_costs[tech] = tech_opex_info
 
+            # get tech-specific variable cost parameters
+            tech_varopex_info = (
+                self.tech_config[tech]["model_inputs"]
+                .get("financial_parameters", {})
+                .get("variable_costs", {})
+            )
+
+            # add CapEx cost to tech-specific variable cost entry
+            varopex_adjusted_tech = inputs[f"varopex_adjusted_{tech}"]
+            if np.any(varopex_adjusted_tech) > 0:
+                varopex_cost_per_unit_commodity = varopex_adjusted_tech / total_production
+                varopex_dict = dict(zip(years_of_operation, varopex_cost_per_unit_commodity))
+                tech_varopex_info.update({"cost": varopex_dict})
+
+                # update any unset variable cost parameters with the default values
+                for var_cost_key, var_cost_val in variable_cost_defaults.items():
+                    tech_varopex_info.setdefault(var_cost_key, var_cost_val)
+                variable_costs[tech] = tech_varopex_info
+
         # add capital costs and fixed costs to pf_dict
         pf_dict["capital_items"] = capital_items
         pf_dict["fixed_costs"] = fixed_costs
+        pf_dict["feedstocks"] = variable_costs
         # create ProFAST object
+
         pf = create_and_populate_profast(pf_dict)
         # simulate ProFAST
         sol, summary, price_breakdown = run_profast(pf)
 
         # Check whether to export profast object to .yaml file
-        if self.options["plant_config"]["finance_parameters"]["model_inputs"].get(
-            "save_profast_to_file", False
-        ):
+        save_results = self.options["plant_config"]["finance_parameters"]["model_inputs"].get(
+            "save_profast_results", False
+        )
+        save_config = self.options["plant_config"]["finance_parameters"]["model_inputs"].get(
+            "save_profast_config", False
+        )
+        if save_results or save_config:
+            pf_config_dict = convert_pf_to_dict(pf)
+
             output_dir = self.options["driver_config"]["general"]["folder_output"]
-            fdesc = self.options["plant_config"]["finance_parameters"]["model_inputs"][
-                "profast_output_description"
-            ]
-            fname = f"{fdesc}_{self.options['commodity_type']}.yaml"
-            fpath = Path(output_dir) / fname
+            fdesc = self.options["plant_config"]["finance_parameters"]["model_inputs"].get(
+                "profast_output_description", "ProFastComp"
+            )
+
+            fbasename = f"{fdesc}_{self.output_txt}"
+
             output_dir = Path(output_dir)
             output_dir.mkdir(parents=True, exist_ok=True)
-            d = convert_pf_to_dict(pf)
-            d = dict_to_yaml_formatting(d)
-            write_yaml(d, fpath)
+            if save_config:
+                pf_config_dict = dict_to_yaml_formatting(pf_config_dict)
+                config_fpath = Path(output_dir) / f"{fbasename}_config.yaml"
+                write_yaml(pf_config_dict, config_fpath)
+            if save_results:
+                lco_breakdown, lco_check = make_price_breakdown(price_breakdown, pf_config_dict)
+                price_breakdown_formatted = format_profast_price_breakdown_per_year(price_breakdown)
+                pf_breakdown_fpath = Path(output_dir) / f"{fbasename}_profast_price_breakdown.csv"
+                lco_breakdown_fpath = Path(output_dir) / f"{fbasename}_LCO_breakdown.yaml"
+                price_breakdown_formatted.to_csv(pf_breakdown_fpath)
+                lco_breakdown = dict_to_yaml_formatting(lco_breakdown)
+                write_yaml(lco_breakdown, lco_breakdown_fpath)
 
-        outputs[self.LCO_str] = sol["price"]  # TODO: replace with sol['lco']
+        outputs[self.LCO_str] = sol["lco"]
+        for output_var in self.outputs_to_units.keys():
+            val = sol[output_var.replace("_", " ")]
+            if isinstance(val, (np.ndarray, list, tuple)):  # only for IRR
+                val = val[-1]
+            outputs[f"{output_var}_{self.output_txt}"] = val

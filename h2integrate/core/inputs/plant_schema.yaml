@@ -27,11 +27,6 @@ properties:
         type: number
         description: Elevation of the site in meters
         minimum: 0
-      time_zone:
-        type: number
-        description: Time zone offset from UTC in hours
-        minimum: -12
-        maximum: 14
       boundaries:
         type: array
         description: Array of polygons defining boundaries with x/y coordinates
@@ -80,8 +75,8 @@ properties:
             description: timezone as UTC offset corresponding to start_time
             minimum: -12
             maximum: 14
-        required: ["dt","n_timesteps"]
-    required: ["plant_life","simulation"]
+        required: ["dt", "n_timesteps"]
+    required: ["plant_life", "simulation"]
   technology_interconnections:
     type: array
     description: Array of arrays representing technology interconnections

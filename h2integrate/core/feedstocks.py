@@ -92,4 +92,5 @@ class FeedstockCostModel(CostModelBaseClass):
         cost_per_year = sum(price * hourly_consumption)
 
         outputs["CapEx"] = self.config.start_up_cost
-        outputs["OpEx"] = self.config.annual_cost + cost_per_year
+        outputs["OpEx"] = self.config.annual_cost
+        outputs["VarOpEx"] = cost_per_year
