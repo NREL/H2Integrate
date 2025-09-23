@@ -516,7 +516,7 @@ class ProFastComp(om.ExplicitComponent):
         variable_cost_params.setdefault("escalation", self.params.inflation_rate)
         variable_cost_params.setdefault("unit", lco_units.replace("USD", "$"))
         self.variable_cost_settings = ProFASTDefaultVariableCost.from_dict(variable_cost_params)
-
+        self.lco_units = lco_units
         # incentives - unused for now
         # incentive_params = plant_config["finance_parameters"]["model_inputs"].get(
         #     "incentives", {}
@@ -524,7 +524,7 @@ class ProFastComp(om.ExplicitComponent):
         # incentive_params.setdefault("decay", -1 * self.params.inflation_rate)
         # self.incentive_params_settings = ProFASTDefaultIncentive.from_dict(incentive_params)
 
-    def compute(self, inputs, outputs):
+    def populate_profast(self, inputs):
         mass_commodities = ["hydrogen", "ammonia", "co2", "nitrogen"]
 
         years_of_operation = create_years_of_operation(
@@ -639,8 +639,12 @@ class ProFastComp(om.ExplicitComponent):
         pf_dict["fixed_costs"] = fixed_costs
         pf_dict["feedstocks"] = variable_costs
         # create ProFAST object
-
         pf = create_and_populate_profast(pf_dict)
+        return pf
+
+    def compute(self, inputs, outputs):
+        pf = self.populate_profast(inputs)
+
         # simulate ProFAST
         sol, summary, price_breakdown = run_profast(pf)
 
