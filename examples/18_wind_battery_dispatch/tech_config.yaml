@@ -49,7 +49,7 @@ technologies:
     performance_model:
       model: "pysam_battery"
     cost_model:
-      model: "pysam_battery"
+      model: "atb_battery_cost"
     model_inputs:
       shared_parameters:
         rated_commodity_capacity: 50000
@@ -59,8 +59,15 @@ technologies:
         init_charge_percent: 0.5
         max_charge_percent: 0.9
         min_charge_percent: 0.1
+        max_charge_rate: 50000
       performance_parameters:
-        cost_year: 2019
+        system_model_source: "pysam"
+        chemistry: "LFPGraphite"
+      cost_parameters:
+        cost_year: 2022
+        energy_capex: 310 # $/kWh from 2024 ATB year 2025
+        power_capex: 311 # $/kW from 2024 ATB year 2025
+        opex_fraction: 0.25 # 0.25% of capex per year from 2024 ATB
       control_parameters:
         commodity_name: "electricity"
         commodity_storage_units: "kW"

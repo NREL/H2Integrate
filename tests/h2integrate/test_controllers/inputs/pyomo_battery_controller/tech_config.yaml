@@ -48,8 +48,6 @@ technologies:
       model: "heuristic_load_following_controller"
     performance_model:
       model: "pysam_battery"
-    cost_model:
-      model: "pysam_battery"
     model_inputs:
       shared_parameters:
         rated_commodity_capacity: 50000
@@ -60,7 +58,8 @@ technologies:
         max_charge_percent: 0.9
         min_charge_percent: 0.1
       performance_parameters:
-        cost_year: 2019
+        system_model_source: "pysam"
+        chemistry: "LFPGraphite"
       control_parameters:
         commodity_name: "electricity"
         commodity_storage_units: "kW"

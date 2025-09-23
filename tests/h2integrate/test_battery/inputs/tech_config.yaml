@@ -2,25 +2,33 @@ name: "technology_config"
 description: "This hybrid plant stores and discharges electricity"
 
 technologies:
-  battery:
-    control_model:
-      model: "load_following_heuristic"
+   battery:
+    dispatch_rule_set:
+      model: "pyomo_dispatch_battery"
+    control_strategy:
+      model: "heuristic_load_following_controller"
     performance_model:
-      model: "hopp_battery"
+      model: "pysam_battery"
     cost_model:
-      model: "hopp_battery"
+      model: "pysam_battery"
     model_inputs:
       shared_parameters:
-        system_capacity_kw: 50000
-        n_timesteps: 24
-        dt: 1.0
+        rated_commodity_capacity: 50000
+        max_capacity: 200000
         n_control_window: 24
         n_horizon_window: 48
-      control_parameters:
-        commodity_name: "power"
-        resource_units: "kW"
+        dt: 1.0
+        n_timesteps: 24
+        init_charge_percent: 0.5
+        max_charge_percent: 0.9
+        min_charge_percent: 0.1
       performance_parameters:
-        system_capacity_kwh: 200000
-        minimum_SOC: 10.0
-        maximum_SOC: 90.0
-        initial_SOC: 50.0
+        system_model_source: "pysam"
+        chemistry: "LFPGraphite"
+      control_parameters:
+        commodity_name: "electricity"
+        commodity_storage_units: "kW"
+        tech_name: "battery"
+      dispatch_rule_parameters:
+        commodity_name: "electricity"
+        commodity_storage_units: "kW"
