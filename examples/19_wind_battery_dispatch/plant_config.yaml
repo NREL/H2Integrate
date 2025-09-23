@@ -65,7 +65,7 @@ finance_parameters:
           depr_period: 5 # 5  years - for clean energy facilities as specified by the IRS MACRS schedule https://www.irs.gov/publications/p946#en_US_2020_publink1000107507
           refurb: [0.]
     npv:
-      finance_model: "NPVFinancial"
+      finance_model: "NPVFinance"
       model_inputs:
         discount_rate: 0.09 # nominal return based on 2024 ATB baseline workbook for land-based wind
         commodity_sell_price: 0.078
