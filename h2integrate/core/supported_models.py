@@ -35,6 +35,7 @@ from h2integrate.converters.hydrogen.pem_electrolyzer import (
 )
 from h2integrate.converters.solar.atb_res_com_pv_cost import ATBResComPVCostModel
 from h2integrate.converters.solar.atb_utility_pv_cost import ATBUtilityPVCostModel
+from h2integrate.resource.wind.nrel_developer_wtk_api import WTKNRELDeveloperAPIWindResource
 from h2integrate.control.control_rules.converters.wind import PyomoDispatchWind
 from h2integrate.control.control_rules.storage.battery import PyomoDispatchBattery
 from h2integrate.converters.methanol.smr_methanol_plant import (
@@ -97,6 +98,7 @@ from h2integrate.converters.hydrogen.geologic.stimulated_geoh2_plant import (
 supported_models = {
     # Resources
     "river_resource": RiverResource,
+    "wind_toolkit_v2_api": WTKNRELDeveloperAPIWindResource,
     # Converters
     "wind_plant_performance": WindPlantPerformanceModel,
     "wind_plant_cost": WindPlantCostModel,
