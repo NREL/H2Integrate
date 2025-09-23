@@ -114,6 +114,8 @@ class NPVFinancial(om.ExplicitComponent):
             )
         finance_params.update({"plant_life": plant_config["plant"]["plant_life"]})
 
+        self.config = NPVFinancialConfig.from_dict(finance_params)
+
         tech_config = self.tech_config = self.options["tech_config"]
         for tech in tech_config:
             self.add_input(f"capex_adjusted_{tech}", val=0.0, units="USD")
@@ -129,7 +131,9 @@ class NPVFinancial(om.ExplicitComponent):
         if "electrolyzer" in tech_config:
             self.add_input("electrolyzer_time_until_replacement", units="h")
 
-        self.config = NPVFinancialConfig.from_dict(finance_params)
+        self.add_input(
+            "commodity_sell_price", val=self.config.commodity_sell_price, units=commodity_units
+        )
 
     def compute(self, inputs, outputs):
         """Compute the Net Present Value (NPV).
@@ -168,7 +172,7 @@ class NPVFinancial(om.ExplicitComponent):
         else:
             annual_production = float(inputs["co2_capture_kgpy"])
 
-        income = self.config.commodity_sell_price * annual_production
+        income = float(inputs["commodity_sell_price"]) * annual_production
         cash_inflow = np.concatenate(([0], income * np.ones(self.config.plant_life)))
         cost_breakdown = {f"Cash Inflow of Selling {self.options['commodity_type']}": cash_inflow}
         initial_investment_cost = 0
