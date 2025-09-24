@@ -7,7 +7,7 @@ technologies:
       model: "iron"
     model_inputs:
       cost_parameters:
-        h2_kgpy: 1000000
-        lcoe: .05802
-        lcoh: 7.10
+        h2_kgpy: 68583942.64609979 # 68583942.64609979 64061135.899334334
+        lcoe: .05802 # .05802 .06048
+        lcoh: 7.10 # 7.10 8.86
         cost_year: 2020
