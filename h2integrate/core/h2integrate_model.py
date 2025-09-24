@@ -893,7 +893,7 @@ class H2IntegrateModel:
                             f"finance_subgroup_{group_id}.{tech_name}_time_until_replacement",
                         )
 
-                    if commodity_stream is not None:
+                    if commodity_stream is None:
                         if "electrolyzer" in tech_name:
                             if primary_commodity_type == "hydrogen":
                                 self.plant.connect(
