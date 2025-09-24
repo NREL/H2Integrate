@@ -519,7 +519,6 @@ class H2IntegrateModel:
             )
             finance_subgroup = om.Group()
 
-            # ESG TODO: ADD CHECK FOR COMMODITY STREAM
             if commodity_stream is not None:
                 commodity_summer_model = self.supported_models.get("production_summer")  # FINISH
                 if "combiner" in commodity_stream or "splitter" in commodity_stream:
@@ -528,19 +527,20 @@ class H2IntegrateModel:
                     ]
                 else:
                     commodity_summer_config = {
-                        "commodity": commodity,
-                        "commodity_units": "kW"
-                        if commodity_stream in electricity_producing_techs
-                        else "kg",
+                        "model_inputs": {
+                            "performance_parameters": {
+                                "commodity": commodity,
+                                "commodity_units": "kW" if commodity == "electricity" else "kg",
+                            }
+                        }
                     }
                 commodity_summer = commodity_summer_model(
                     driver_config=self.driver_config,
                     plant_config=self.plant_config,
-                    tech_config={
-                        "model_inputs": {"performance_parameters": commodity_summer_config}
-                    },
+                    tech_config=commodity_summer_config,
                 )
                 finance_subgroup.add_subsystem(f"{commodity}_sum", commodity_summer)
+
             if commodity_stream is None and commodity == "electricity":
                 finance_subgroup.add_subsystem(
                     "electricity_sum", ElectricitySumComp(tech_configs=tech_configs)
@@ -827,31 +827,44 @@ class H2IntegrateModel:
 
                 # ESG TODO: CHECK FOR COMMODITY STREAM
                 if commodity_stream is not None:
-                    self.supported_models.get("production_summer")  # FINISH
-
-                plant_producing_electricity = False
-
-                # Loop through technologies and connect electricity outputs to the ExecComp
-                # Only connect if the technology is included in at least one commodity's stackup
-                # and in this finance group
-                for tech_name in tech_configs.keys():
-                    if (
-                        tech_name in electricity_producing_techs
-                        # and tech_name in all_included_techs
-                        and primary_commodity_type == "electricity"
-                    ):
-                        self.plant.connect(
-                            f"{tech_name}.electricity_out",
-                            f"finance_subgroup_{group_id}.electricity_sum.electricity_{tech_name}",
-                        )
-                        plant_producing_electricity = True
-
-                if plant_producing_electricity and primary_commodity_type == "electricity":
-                    # Connect total electricity produced to the finance group
+                    # connect commodity stream output to summer input
                     self.plant.connect(
-                        f"finance_subgroup_{group_id}.electricity_sum.total_electricity_produced",
-                        f"finance_subgroup_{group_id}.total_electricity_produced",
+                        f"{commodity_stream}.{primary_commodity_type}_out",
+                        f"finance_subgroup_{group_id}.{primary_commodity_type}_sum.{primary_commodity_type}_in",
                     )
+                    # NOTE: this wont be compatible with co2 in the finance models
+                    # because its expected to have a different name
+                    # connect summer output to finance model
+                    self.plant.connect(
+                        f"finance_subgroup_{group_id}.{primary_commodity_type}_sum.total_{primary_commodity_type}_produced",
+                        f"finance_subgroup_{group_id}.total_{primary_commodity_type}_produced",
+                    )
+
+                # if commodity stream was not specified, follow existing logic
+                else:
+                    plant_producing_electricity = False
+
+                    # Loop through technologies and connect electricity outputs to the ExecComp
+                    # Only connect if the technology is included in at least one commodity's stackup
+                    # and in this finance group
+                    for tech_name in tech_configs.keys():
+                        if (
+                            tech_name in electricity_producing_techs
+                            # and tech_name in all_included_techs
+                            and primary_commodity_type == "electricity"
+                        ):
+                            self.plant.connect(
+                                f"{tech_name}.electricity_out",
+                                f"finance_subgroup_{group_id}.electricity_sum.electricity_{tech_name}",
+                            )
+                            plant_producing_electricity = True
+
+                    if plant_producing_electricity and primary_commodity_type == "electricity":
+                        # Connect total electricity produced to the finance group
+                        self.plant.connect(
+                            f"finance_subgroup_{group_id}.electricity_sum.total_electricity_produced",
+                            f"finance_subgroup_{group_id}.total_electricity_produced",
+                        )
 
                 # Only connect technologies that are included in the finance stackup
                 for tech_name in tech_configs.keys():
@@ -879,17 +892,28 @@ class H2IntegrateModel:
                             f"{tech_name}.time_until_replacement",
                             f"finance_subgroup_{group_id}.{tech_name}_time_until_replacement",
                         )
-                        if primary_commodity_type == "hydrogen":
+
+                    if commodity_stream is not None:
+                        if "electrolyzer" in tech_name:
+                            if primary_commodity_type == "hydrogen":
+                                self.plant.connect(
+                                    f"{tech_name}.total_hydrogen_produced",
+                                    f"finance_subgroup_{group_id}.total_hydrogen_produced",
+                                )
+
+                        if "ammonia" in tech_name and primary_commodity_type == "ammonia":
                             self.plant.connect(
-                                f"{tech_name}.total_hydrogen_produced",
-                                f"finance_subgroup_{group_id}.total_hydrogen_produced",
+                                f"{tech_name}.total_ammonia_produced",
+                                f"finance_subgroup_{group_id}.total_ammonia_produced",
                             )
 
-                    if "ammonia" in tech_name and primary_commodity_type == "ammonia":
-                        self.plant.connect(
-                            f"{tech_name}.total_ammonia_produced",
-                            f"finance_subgroup_{group_id}.total_ammonia_produced",
-                        )
+                        if (
+                            "doc" in tech_name or "oae" in tech_name
+                        ) and primary_commodity_type == "co2":
+                            self.plant.connect(
+                                f"{tech_name}.co2_capture_mtpy",
+                                f"finance_subgroup_{group_id}.co2_capture_kgpy",
+                            )
 
                     if "methanol" in tech_name and primary_commodity_type == "methanol":
                         self.plant.connect(
