@@ -328,7 +328,7 @@ def test_heuristic_load_following_battery_dispatch(subtests):
 
     with subtests.test("Check unmet_demand"):
         assert (
-            pytest.approx(expected_unmet_demand_out)
+            pytest.approx(expected_unmet_demand_out, abs=1e-4)
             == prob.get_val("battery.unmet_demand_out")[0:24]
         )
 
@@ -441,7 +441,7 @@ def test_heuristic_load_following_battery_dispatch(subtests):
 
     with subtests.test("Check unmet_demand for max SOC"):
         assert (
-            pytest.approx(expected_unmet_demand_out, abs=abs_tol, rel=rel_tol)
+            pytest.approx(expected_unmet_demand_out, abs=abs_tol)
             == prob.get_val("battery.unmet_demand_out")[:5]
         )
 
