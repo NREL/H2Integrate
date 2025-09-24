@@ -21,6 +21,7 @@ def test_example_22_solar_ng_generic_load_example(subtests):
     ng_aep = sum(model.prob.get_val("natural_gas_plant.electricity_out", units="kW"))
     excess_power = model.prob.get_val("electrical_load_demand.electricity_curtailed", units="kW")
     hourly_demand_kW = 100000.0
+    combiner_aep = sum(model.prob.get_val("combiner.electricity_out", units="kW"))
 
     elec_fin_subgroup_aep = model.prob.get_val(
         "finance_subgroup_electricity.electricity_sum.total_electricity_produced", units="kW*h/year"
@@ -39,6 +40,11 @@ def test_example_22_solar_ng_generic_load_example(subtests):
 
     with subtests.test("Behavior check solar AEP is same as renewables subgroup AEP"):
         assert pytest.approx(renewable_fin_subgroup_aep, rel=1e-6) == solar_aep
+
+    with subtests.test("Behavior check combiner AEP is solar + ng - curtailed"):
+        expected_aep = solar_aep + ng_aep - sum(excess_power)
+
+        assert pytest.approx(combiner_aep, rel=1e-6) == expected_aep
 
     with subtests.test("Behavior check missed load is natural gas demand"):
         assert pytest.approx(
@@ -59,12 +65,8 @@ def test_example_22_solar_ng_generic_load_example(subtests):
         )
         assert pytest.approx(np.sum(excess_power), rel=1e-6) == solar_excess
 
-    with subtests.test("Behavior check electricity finance subgroup AEP against expected"):
-        expected_aep = solar_aep + ng_aep
-        # NOTE: ideally this would not include the excess power,
-        # this will be done in the flexible finance streams PR
-        # expected_aep = solar_aep + ng_aep - sum(excess_power)
-        assert pytest.approx(elec_fin_subgroup_aep, rel=1e-6) == expected_aep
+    with subtests.test("Behavior check electricity finance subgroup AEP is from combiner AEP"):
+        assert pytest.approx(elec_fin_subgroup_aep, rel=1e-6) == combiner_aep
 
     with subtests.test("Behavior check electricity out from demand does not exceed demand"):
         assert all(
@@ -82,4 +84,4 @@ def test_example_22_solar_ng_generic_load_example(subtests):
 
     with subtests.test("Value check: electricity subgroup LCOE"):
         tot_lcoe = model.prob.get_val("finance_subgroup_electricity.LCOE", units="USD/MW/h")[0]
-        assert pytest.approx(tot_lcoe, rel=1e-6) == 52.15484
+        assert pytest.approx(tot_lcoe, rel=1e-6) == 57.268770102

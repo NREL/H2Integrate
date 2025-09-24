@@ -68,3 +68,10 @@ technologies:
           demand: 100000 #100 MW
           units: "kW"
           commodity: "electricity"
+  combiner:
+    performance_model:
+      model: "combiner_performance"
+    model_inputs:
+      performance_parameters:
+        commodity: "electricity"
+        commodity_units: "kW"

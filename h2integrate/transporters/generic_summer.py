@@ -35,10 +35,10 @@ class GenericProductionSummerPerformanceModel(om.ExplicitComponent):
         n_timesteps = int(self.options["plant_config"]["plant"]["simulation"]["n_timesteps"])
 
         if self.config.commodity == "electricity":
-            # NOTE: this should be updated in overhaul required for flexible dt
-            summed_units = f"{self.config.commodity_units}*h"
+            # NOTE: this should be updated in overhaul required for flexible dt and n_timesteps
+            summed_units = f"{self.config.commodity_units}*h/year"
         else:
-            summed_units = self.config.commodity_units
+            summed_units = f"{self.config.commodity_units}/year"
 
         self.add_input(
             f"{self.config.commodity}_in",
