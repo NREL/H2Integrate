@@ -1,10 +1,12 @@
 from h2integrate.resource.river import RiverResource
 from h2integrate.core.feedstocks import FeedstockCostModel, FeedstockPerformanceModel
+from h2integrate.core.load_demand import DemandPerformanceModelComponent
 from h2integrate.transporters.pipe import PipePerformanceModel
 from h2integrate.transporters.cable import CablePerformanceModel
 from h2integrate.converters.steel.steel import SteelPerformanceModel, SteelCostAndFinancialModel
 from h2integrate.converters.wind.wind_plant import WindPlantCostModel, WindPlantPerformanceModel
 from h2integrate.finances.profast_financial import ProFastComp
+from h2integrate.finances.simple_npv_finance import NPVFinance
 from h2integrate.transporters.generic_summer import (
     GenericProductionSummerPerformanceModel,
     GenericConsumptionSummerPerformanceModel,
@@ -157,11 +159,13 @@ supported_models = {
     # Control
     "pass_through_controller": PassThroughOpenLoopController,
     "demand_open_loop_controller": DemandOpenLoopController,
+    "load_demand": DemandPerformanceModelComponent,
     # Feedstock
     "feedstock_performance": FeedstockPerformanceModel,
     "feedstock_cost": FeedstockCostModel,
     # Finance
     "ProFastComp": ProFastComp,
+    "NPVFinance": NPVFinance,
 }
 
 electricity_producing_techs = ["wind", "solar", "pv", "river", "hopp", "natural_gas_plant"]
