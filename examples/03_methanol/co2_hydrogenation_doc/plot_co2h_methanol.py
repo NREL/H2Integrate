@@ -29,13 +29,13 @@ def plot_methanol(model):
     plt.yscale("log")
     plt.legend()
 
-    # Wind Electricity for DOC
-    plt.subplot(3, 2, 2)
-    plt.title("Wind for DOC")
-    wind_elec_out = model.plant.wind.wind_plant_performance.get_val("electricity_out")
-    plt.plot(times, wind_elec_out, label="electricity_out [kW]")
-    plt.yscale("log")
-    plt.legend()
+    # # Wind Electricity for DOC
+    # plt.subplot(3, 2, 2)
+    # plt.title("Wind for DOC")
+    # wind_elec_out = model.plant.wind.wind_plant_performance.get_val("electricity_out")
+    # plt.plot(times, wind_elec_out, label="electricity_out [kW]")
+    # plt.yscale("log")
+    # plt.legend()
 
     # Electricity to CO2 using DOC
     plt.subplot(3, 2, 4)

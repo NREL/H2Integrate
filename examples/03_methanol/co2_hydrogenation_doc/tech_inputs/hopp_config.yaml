@@ -35,12 +35,8 @@ technologies:
     timestep: [0, 8760]
     # floris_config: !include floris_input_lbw_6MW.yaml
     fin_model: !include default_fin_config.yaml
-  pv:
-    system_capacity_kw: 24000
-    dc_degradation: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-    fin_model: !include default_fin_config.yaml
   grid:
-    interconnect_kw: 312000 # Set higher than rated generation capacity
+    interconnect_kw: 300000 # Set higher than rated generation capacity
     fin_model: !include default_fin_config.yaml
 
 config:

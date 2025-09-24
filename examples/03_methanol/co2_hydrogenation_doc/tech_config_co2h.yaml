@@ -10,10 +10,16 @@ technologies:
       model: "hopp"
     financial_model:
       group: "1"
-    electrolyzer_rating: 156. # MW
+    electrolyzer_rating: 300. # MW
     model_inputs:
       cost_parameters:
         cost_year: 2019
+  electricity_splitter:
+    performance_model:
+      model: "splitter_performance"
+      config:
+        split_mode: "fraction"
+        fraction_to_priority_tech: 0.9
   electrolyzer:
     performance_model:
       model: "eco_pem_electrolyzer_performance"
@@ -31,7 +37,7 @@ technologies:
           size_for: 'BOL' #'BOL' (generous) or 'EOL' (conservative)
           hydrogen_dmd:
         n_clusters: 8
-        cluster_rating_MW: 39
+        cluster_rating_MW: 37.5
         pem_control_type: 'basic'
         eol_eff_percent_loss: 10 #eol defined as x% change in efficiency from bol
         uptime_hours_until_eol: 80000 #number of 'on' hours until electrolyzer reaches eol
@@ -52,7 +58,7 @@ technologies:
       group: default
     model_inputs:
       performance_parameters:
-        rating: 312.
+        rating: 300.
         size_capacity_from_demand:
           flag: True # If True, then storage is sized to provide steady-state storage
         capacity_from_max_on_turbine_storage: False # if True, then days of storage is ignored and storage capacity is based on how much h2 storage fits on the turbines in the plant using Kottenstete 2003.
@@ -70,39 +76,39 @@ technologies:
         charge_efficiency: 1.0 # percent as decimal
         discharge_efficiency: 1.0 # percent as decimal
         demand_profile: 2226.0274  # Example: 10 time steps with 5000 kg/time step demand. Scalar indicates constant demand, array-like indicates dynamic demand
-  wind:
-    performance_model:
-      model: "wind_plant_performance"
-    cost_model:
-      model: "wind_plant_cost"
-    financial_model:
-      group: "1"
-    model_inputs:
-      shared_parameters:
-        num_turbines: 66
-        turbine_rating_kw: 15000
-      performance_parameters:
-        rotor_diameter: 196.
-        hub_height: 130.
-        layout_mode: "basicgrid"
-        model_name: "pysam"
-        model_input_file: null
-        layout_params:
-          row_D_spacing: 10.
-          turbine_D_spacing: 10.
-        rating_range_kw: [1000, 5000]
-        floris_config: null
-        operational_losses: 10.0
-        timestep: [1, 60]
-        fin_model: "default"
-        name: "UtilityScaleWindPlant"
-        turbine_name: "2023NREL_Bespoke_8.3MW_196" #turbine model to use
-        turbine_group: "onshore"
-        override_wind_resource_height: True
-        adjust_air_density_for_elevation: True
-      cost_parameters:
-        cost_per_kw: 1500.0
-        cost_year: 2019
+  # wind:
+  #   performance_model:
+  #     model: "wind_plant_performance"
+  #   cost_model:
+  #     model: "wind_plant_cost"
+  #   financial_model:
+  #     group: "1"
+  #   model_inputs:
+  #     shared_parameters:
+  #       num_turbines: 66
+  #       turbine_rating_kw: 15000
+  #     performance_parameters:
+  #       rotor_diameter: 196.
+  #       hub_height: 130.
+  #       layout_mode: "basicgrid"
+  #       model_name: "pysam"
+  #       model_input_file: null
+  #       layout_params:
+  #         row_D_spacing: 10.
+  #         turbine_D_spacing: 10.
+  #       rating_range_kw: [1000, 5000]
+  #       floris_config: null
+  #       operational_losses: 10.0
+  #       timestep: [1, 60]
+  #       fin_model: "default"
+  #       name: "UtilityScaleWindPlant"
+  #       turbine_name: "2023NREL_Bespoke_8.3MW_196" #turbine model to use
+  #       turbine_group: "onshore"
+  #       override_wind_resource_height: True
+  #       adjust_air_density_for_elevation: True
+  #     cost_parameters:
+  #       cost_per_kw: 1500.0
+  #       cost_year: 2019
   doc:
     performance_model:
       model: "direct_ocean_capture_performance"
