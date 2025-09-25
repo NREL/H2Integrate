@@ -27,7 +27,7 @@ def test_21_solar_battery_grid_example(subtests):
     battery_missed_load = sum(model.prob.get_val("battery.electricity_missed_load", units="kW"))
 
     battery_curtailed = sum(model.prob.get_val("battery.electricity_curtailed", units="kW"))
-    electricity_sold = sum(model.prob.get_val("grid_selling.electricity_consumed", units="kW"))
+    electricity_sold = sum(model.prob.get_val("grid_selling.electricity_sold", units="kW"))
 
     solar_aep = sum(model.prob.get_val("solar.electricity_out", units="kW"))
 

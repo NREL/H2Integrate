@@ -10,7 +10,7 @@ from h2integrate.core.model_baseclasses import CostModelBaseClass
 class GridSellPerformanceModelConfig(BaseConfig):
     """Configuration for grid electricity selling performance model."""
 
-    interconnect_limit: float = field(default=1000000.0)  # kW
+    interconnect_limit: float = field()  # kW
 
 
 class GridSellPerformanceModel(om.ExplicitComponent):
@@ -54,7 +54,7 @@ class GridSellPerformanceModel(om.ExplicitComponent):
 
         # Outputs
         self.add_output(
-            "electricity_consumed",
+            "electricity_sold",
             val=0.0,
             shape=n_timesteps,
             units="kW",
@@ -69,7 +69,7 @@ class GridSellPerformanceModel(om.ExplicitComponent):
         # Only sell positive electricity amounts
         grid_sale = np.clip(electricity_in, 0, interconnect_limit)
 
-        outputs["electricity_consumed"] = -grid_sale
+        outputs["electricity_sold"] = -grid_sale
 
 
 @define
@@ -101,7 +101,7 @@ class GridSellCostModel(CostModelBaseClass):
         # Add inputs needed for VarOpEx calculation
         n_timesteps = self.options["plant_config"]["plant"]["simulation"]["n_timesteps"]
         self.add_input(
-            "electricity_consumed",
+            "electricity_sold",
             val=0.0,
             shape=n_timesteps,
             units="kW",
@@ -118,14 +118,14 @@ class GridSellCostModel(CostModelBaseClass):
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         # Simple cost model - could be made more sophisticated
         # CapEx could scale with interconnect capacity
-        electricity_consumed = inputs["electricity_consumed"]
+        electricity_sold = inputs["electricity_sold"]
         sell_price = inputs["electricity_sell_price"]
 
         # Basic connection costs
         outputs["CapEx"] = self.config.start_up_cost
 
         # Variable operating expenses - negative costs (revenue) for selling
-        # electricity_consumed is negative for selling, so multiply by sell_price
+        # electricity_sold is negative for selling, so multiply by sell_price
         # to get negative cost (revenue)
         outputs["OpEx"] = self.config.annual_cost
-        outputs["VarOpEx"] = np.sum(electricity_consumed * sell_price)
+        outputs["VarOpEx"] = np.sum(electricity_sold * sell_price)
