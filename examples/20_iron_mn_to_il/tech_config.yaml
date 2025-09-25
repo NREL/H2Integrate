@@ -7,7 +7,13 @@ technologies:
       model: "iron"
     model_inputs:
       cost_parameters:
-        h2_kgpy: 1000000
-        lcoe: .05802
-        lcoh: 7.10
+        # h2_kgpy: 68583942.6460997 #1000000 #68583942.6460997
+        lcoe: 58.02 #$/MWh
+        lcoh: 7.10 #$/kg
+        mine: 'Hibbing' #'Northshore'
+        post_type: 'eaf'
+        winning_type: 'h2'
+        taconite_pellet_type: 'drg'
         cost_year: 2020
+
+# baseline 843.37604007
