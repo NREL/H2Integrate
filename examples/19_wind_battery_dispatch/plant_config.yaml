@@ -78,4 +78,4 @@ finance_parameters:
     electricity:
       commodity: "electricity"
       finance_groups: ["profast", "npv"]
-      technologies: ["wind","battery"]
+      technologies: ["wind", "battery"]
