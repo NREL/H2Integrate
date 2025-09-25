@@ -320,8 +320,11 @@ class H2IntegrateModel:
             Each subgroup is nested under a unique name of your choice under
             ["finance_parameters"]["subgroups"] in the plant configuration.
             * Subsystems such as ``ElectricitySumComp``, ``AdjustedCapexOpexComp``,
-            and the selected finance models are added to each subgroup's
-            finance group.
+            ``GenericProductionSummerPerformanceModel``, and the selected finance
+            models are added to each subgroup's finance group.
+            * If `commodity_stream` is provided for a subgroup, the output of the
+            technology specified as the `commodity_stream` must be the same as the
+            specified commodity for that subgroup.
             * Supports both global finance models and technology-specific finance
             models. Technology-specific finance models are defined in the technology
             configuration.
@@ -475,13 +478,20 @@ class H2IntegrateModel:
             )
             finance_subgroup = om.Group()
 
+            # if commodity stream is specified, then create use the "production summer" model
+            # to sum the commodity production profile from the commodity stream
             if commodity_stream is not None:
-                commodity_summer_model = self.supported_models.get("production_summer")  # FINISH
+                # get the generic production summer model
+                commodity_summer_model = self.supported_models.get("production_summer")
                 if "combiner" in commodity_stream or "splitter" in commodity_stream:
+                    # combiners and splitters have the same tech config as the production summer,
+                    # so just use their config if the commodity stream is a combiner or splitter
                     commodity_summer_config = self.technology_config["technologies"][
                         commodity_stream
                     ]
                 else:
+                    # create the input dictionary for the production summer based
+                    # on the commodity type
                     commodity_summer_config = {
                         "model_inputs": {
                             "performance_parameters": {
@@ -490,11 +500,13 @@ class H2IntegrateModel:
                             }
                         }
                     }
+                # create the commodity production summer model
                 commodity_summer = commodity_summer_model(
                     driver_config=self.driver_config,
                     plant_config=self.plant_config,
                     tech_config=commodity_summer_config,
                 )
+                # add the production summer as a subsystem
                 finance_subgroup.add_subsystem(f"{commodity}_sum", commodity_summer)
 
             if commodity_stream is None and commodity == "electricity":
@@ -734,7 +746,7 @@ class H2IntegrateModel:
             # Connect the resource output to the technology input
             self.model.connect(f"{resource_name}.{variable}", f"{tech_name}.{variable}")
 
-        # TODO: connect outputs of the technology models to the cost and finance models of the
+        # connect outputs of the technology models to the cost and finance models of the
         # same name if the cost and finance models are not None
         if "finance_parameters" in self.plant_config:
             # Connect the outputs of the technology models to the appropriate finance groups
@@ -746,7 +758,6 @@ class H2IntegrateModel:
                 if any(c in tech_configs for c in ("steel", "methanol", "geoh2")):
                     continue
 
-                # ESG TODO: CHECK FOR COMMODITY STREAM
                 if commodity_stream is not None:
                     # connect commodity stream output to summer input
                     self.plant.connect(
@@ -771,7 +782,6 @@ class H2IntegrateModel:
                     for tech_name in tech_configs.keys():
                         if (
                             tech_name in electricity_producing_techs
-                            # and tech_name in all_included_techs
                             and primary_commodity_type == "electricity"
                         ):
                             self.plant.connect(
