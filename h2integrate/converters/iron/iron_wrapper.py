@@ -120,6 +120,9 @@ class IronComponent(CostModelBaseClass):
         iron_ore_config["iron"]["performance"]["input_capacity_factor_estimate"] = (
             self.config.ore_cf_estimate
         )
+        iron_ore_config["iron"]["product_selection"] = (
+            f"{self.config.taconite_pellet_type}_taconite_pellets"
+        )
 
         # Update win config
         iron_win_config["iron"]["product_selection"] = f"{self.config.winning_type}_dri"
@@ -139,16 +142,19 @@ class IronComponent(CostModelBaseClass):
                 self.config.iron_post_capacity
             )
         # TODO: find a way of looping the above and below
+
+        # Run iron model for iron ore
         iron_ore_performance, iron_ore_costs, iron_ore_finance = run_iron_full_model(
             iron_ore_config
         )
 
-        # iron_pre_performance, iron_pre_costs, iron_pre_finance = \
-        #     run_iron_full_model(iron_pre_config)
-
+        # Run iron transport model
+        # Determine whether to ship from "Duluth", "Chicago", "Cleveland" or "Buffalo"
+        # To electrowinning site
         iron_transport_cost_tonne, ore_profit_pct = calc_iron_ship_cost(iron_win_config)
 
         ### DRI ----------------------------------------------------------------------------
+        ### Electrowinning
         if iron_win_config["iron"]["product_selection"] not in ["ng_dri", "h2_dri"]:
             raise ValueError(
                 "The product selection for the iron win module must be either \
