@@ -36,7 +36,7 @@ class IronConfig(CostModelBaseConfig):
     )  # win
     iron_post_capacity: float | int = field(default=1000000)  # post
     iron_win_capacity: float | int = field(default=1418095)  # win
-    ore_cf_estimate: float = field(default=0.9, validator=range_val(0, 1))  # cf
+    ore_cf_estimate: float = field(default=0.9, validator=range_val(0, 1))  # ore
 
 
 class IronComponent(CostModelBaseClass):
