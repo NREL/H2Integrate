@@ -8,8 +8,8 @@ technologies:
     model_inputs:
       cost_parameters:
         # h2_kgpy: 68583942.6460997 #1000000 #68583942.6460997
-        lcoe: 58.02 #$/MWh
-        lcoh: 7.10 #$/kg
+        LCOE: 58.02 #$/MWh
+        LCOH: 7.10 #$/kg
         mine: 'Hibbing' #can be "Hibbing", "Northshore", "United", "Minorca" or "Tilden"
         post_type: 'eaf' #can be 'eaf' or 'none'
         winning_type: 'h2' #'h2' or 'ng'

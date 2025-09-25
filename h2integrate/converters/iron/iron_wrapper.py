@@ -17,8 +17,8 @@ from h2integrate.simulation.technologies.iron.martin_transport.iron_transport im
 @define
 class IronConfig(CostModelBaseConfig):
     # h2_kgpy: float = field()
-    lcoe: float = field()  # $/MWh
-    lcoh: float = field()  # $/kg
+    LCOE: float = field()  # $/MWh
+    LCOH: float = field()  # $/kg
     winning_type: str = field(
         converter=(str.lower, str.strip), validator=contains(["h2", "ng"])
     )  # win
@@ -62,8 +62,8 @@ class IronComponent(CostModelBaseClass):
 
         self.add_output("iron_out", val=0.0, shape=n_timesteps, units="kg/h")
 
-        self.add_input("lcoe", val=self.config.lcoe, units="USD/MW/h")
-        self.add_input("lcoh", val=self.config.lcoh, units="USD/kg")
+        self.add_input("LCOE", val=self.config.LCOE, units="USD/MW/h")
+        self.add_input("LCOH", val=self.config.LCOH, units="USD/kg")
 
         self.add_output("total_iron_produced", val=0.0, units="kg/year")
         self.add_output("LCOI", val=0.0, units="USD/kg")
@@ -87,10 +87,10 @@ class IronComponent(CostModelBaseClass):
             iron_win_config,
             iron_post_config,
         ]:  # ,iron_post_config]: # iron_pre_config, iron_post_config
-            sub_iron_config["iron"]["costs"]["lcoe"] = inputs["lcoe"][0] / 1e3
-            sub_iron_config["iron"]["finances"]["lcoe"] = inputs["lcoe"][0] / 1e3
-            sub_iron_config["iron"]["costs"]["lcoh"] = inputs["lcoh"][0]
-            sub_iron_config["iron"]["finances"]["lcoh"] = inputs["lcoh"][0]
+            sub_iron_config["iron"]["costs"]["lcoe"] = inputs["LCOE"][0] / 1e3
+            sub_iron_config["iron"]["finances"]["lcoe"] = inputs["LCOE"][0] / 1e3
+            sub_iron_config["iron"]["costs"]["lcoh"] = inputs["LCOH"][0]
+            sub_iron_config["iron"]["finances"]["lcoh"] = inputs["LCOH"][0]
 
         # Update ore config
         iron_ore_config["iron"]["site"]["name"] = self.config.mine
