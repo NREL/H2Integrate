@@ -4,6 +4,7 @@ from h2integrate.core.load_demand import DemandPerformanceModelComponent
 from h2integrate.transporters.pipe import PipePerformanceModel
 from h2integrate.transporters.cable import CablePerformanceModel
 from h2integrate.converters.steel.steel import SteelPerformanceModel, SteelCostAndFinancialModel
+from h2integrate.converters.grid.grid_sell import GridSellCostModel, GridSellPerformanceModel
 from h2integrate.converters.wind.wind_plant import WindPlantCostModel, WindPlantPerformanceModel
 from h2integrate.finances.profast_financial import ProFastComp
 from h2integrate.finances.simple_npv_finance import NPVFinance
@@ -14,6 +15,7 @@ from h2integrate.transporters.generic_summer import (
 from h2integrate.converters.hopp.hopp_wrapper import HOPPComponent
 from h2integrate.converters.solar.solar_pysam import PYSAMSolarPlantPerformanceModel
 from h2integrate.storage.hydrogen.eco_storage import H2Storage
+from h2integrate.converters.wind.atb_wind_cost import ATBWindPlantCostModel
 from h2integrate.transporters.generic_combiner import GenericCombinerPerformanceModel
 from h2integrate.transporters.generic_splitter import GenericSplitterPerformanceModel
 from h2integrate.converters.nitrogen.simple_ASU import SimpleASUCostModel, SimpleASUPerformanceModel
@@ -99,6 +101,7 @@ supported_models = {
     # Converters
     "wind_plant_performance": WindPlantPerformanceModel,
     "wind_plant_cost": WindPlantCostModel,
+    "atb_wind_cost": ATBWindPlantCostModel,
     "pysam_wind_plant_performance": PYSAMWindPlantPerformanceModel,
     "pysam_solar_plant_performance": PYSAMSolarPlantPerformanceModel,
     "atb_utility_pv_cost": ATBUtilityPVCostModel,
@@ -142,6 +145,8 @@ supported_models = {
     "stimulated_geoh2": StimulatedGeoH2FinanceModel,
     "natural_gas_performance": NaturalGasPerformanceModel,
     "natural_gas_cost": NaturalGasCostModel,
+    "grid_sell_performance": GridSellPerformanceModel,
+    "grid_sell_cost": GridSellCostModel,
     # Transport
     "cable": CablePerformanceModel,
     "pipe": PipePerformanceModel,
@@ -168,4 +173,11 @@ supported_models = {
     "NPVFinance": NPVFinance,
 }
 
-electricity_producing_techs = ["wind", "solar", "pv", "river", "hopp", "natural_gas_plant"]
+electricity_producing_techs = [
+    "wind",
+    "solar",
+    "pv",
+    "river",
+    "hopp",
+    "natural_gas_plant",
+]
