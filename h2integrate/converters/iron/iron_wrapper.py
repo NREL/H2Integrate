@@ -16,7 +16,30 @@ from h2integrate.simulation.technologies.iron.martin_transport.iron_transport im
 
 @define
 class IronConfig(CostModelBaseConfig):
-    # h2_kgpy: float = field()
+    """Configuration class for IronComponent.
+
+    Attributes:
+        LCOE (float): cost of electricity in USD/MW/h
+        LCOH (float): cost of hydrogen in USD/kg
+        winning_type (str): material for iron electrwinning process.
+            Must be either 'h2' or 'ng'.
+        post_type (str): iron processing method.
+            Must be either 'none' or 'eaf'.
+        mine (str): mine for Iron Ore. Options are "Hibbing", "Northshore",
+            "United", "Minorca" or "Tilden".
+        taconite_pellet_type (str): iron ore pellet type.
+            Must be either 'std' or 'drg'.
+        win_capacity_denom (str): Capacity denominator to use in iron electrowinning.
+            Must be either 'iron' or 'steel'.
+        iron_post_capacity (float, optional): Capacity of iron processing plant in
+            metric tonnes of iron per year. Defaults to 1000000.
+        iron_win_capacity (float, optional): Capacity of iron electrowinning plant in
+            metric tonnes of iron per year. Defaults to 1418095.
+        ore_cf_estimate (float, optional): Estimated capacity factor of iron ore mine.
+            Defaults to 0.9. Must be between 0 and 1.
+
+    """
+
     LCOE: float = field()  # $/MWh
     LCOH: float = field()  # $/kg
     winning_type: str = field(
