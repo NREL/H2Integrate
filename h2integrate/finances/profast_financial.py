@@ -353,6 +353,28 @@ class ProFASTDefaultVariableCost(BaseConfig):
 
 
 @define
+class ProFASTDefaultCoproduct(BaseConfig):
+    """Configuration class of default settings for ProFAST coproduct.
+    The total cost is calculated as ``usage*cost``.
+
+    Attributes:
+        escalation (float | int, optional): annual escalation of price.
+            Defaults to 0.
+        unit (str): unit of the cost, only used for reporting. The cost should be input in
+            USD/unit of commodity.
+        usage (float, optional): Usage of feedstock per unit of commodity.
+            Defaults to 1.0.
+    """
+
+    escalation: float | int = field()
+    unit: str = field()
+    usage: float | int = field(default=1.0)
+
+    def create_dict(self):
+        return self.as_dict()
+
+
+@define
 class ProFASTDefaultIncentive(BaseConfig):
     """Configuration class of default settings for ProFAST production-based incentives.
 
@@ -444,6 +466,8 @@ class ProFastComp(om.ExplicitComponent):
             commodity_units = "kg/year"
             lco_units = "USD/kg"
 
+        self.lco_units = lco_units
+
         LCO_base_str = f"LCO{self.options['commodity_type'][0].upper()}"
         self.output_txt = self.options["commodity_type"].lower()
         if self.options["description"] == "":
@@ -516,7 +540,15 @@ class ProFastComp(om.ExplicitComponent):
         variable_cost_params.setdefault("escalation", self.params.inflation_rate)
         variable_cost_params.setdefault("unit", lco_units.replace("USD", "$"))
         self.variable_cost_settings = ProFASTDefaultVariableCost.from_dict(variable_cost_params)
-        self.lco_units = lco_units
+
+        # initialize default coproduct cost parameters (same as feedstocks)
+        coproduct_cost_params = plant_config["finance_parameters"]["model_inputs"].get(
+            "coproducts", {}
+        )
+        coproduct_cost_params.setdefault("escalation", self.params.inflation_rate)
+        coproduct_cost_params.setdefault("unit", lco_units.replace("USD", "$"))
+        self.coproduct_cost_settings = ProFASTDefaultCoproduct.from_dict(coproduct_cost_params)
+
         # incentives - unused for now
         # incentive_params = plant_config["finance_parameters"]["model_inputs"].get(
         #     "incentives", {}
@@ -559,11 +591,13 @@ class ProFastComp(om.ExplicitComponent):
         capital_items = {}
         fixed_costs = {}
         variable_costs = {}
+        coproduct_costs = {}
 
         # create default capital item and fixed cost entries
         capital_item_defaults = self.capital_item_settings.create_dict()
         fixed_cost_defaults = self.fixed_cost_settings.create_dict()
         variable_cost_defaults = self.variable_cost_settings.create_dict()
+        coproduct_cost_defaults = self.coproduct_cost_settings.create_dict()
 
         # loop through technologies and create cost entries
         for tech in self.tech_config:
@@ -607,7 +641,7 @@ class ProFastComp(om.ExplicitComponent):
                 .get("fixed_costs", {})
             )
 
-            # add CapEx cost to tech-specific fixed cost entry
+            # add OpEx cost to tech-specific fixed cost entry
             tech_opex_info.update({"cost": float(inputs[f"opex_adjusted_{tech}"][0])})
 
             # update any unset fixed cost parameters with the default values
@@ -622,9 +656,11 @@ class ProFastComp(om.ExplicitComponent):
                 .get("variable_costs", {})
             )
 
-            # add CapEx cost to tech-specific variable cost entry
+            # add VarOpEx cost to tech-specific variable cost entry
+
+            # if VarOpEx is positive, treat as a feedstock
             varopex_adjusted_tech = inputs[f"varopex_adjusted_{tech}"]
-            if np.any(varopex_adjusted_tech) > 0:
+            if np.any(varopex_adjusted_tech > 0):
                 varopex_cost_per_unit_commodity = varopex_adjusted_tech / total_production
                 varopex_dict = dict(zip(years_of_operation, varopex_cost_per_unit_commodity))
                 tech_varopex_info.update({"cost": varopex_dict})
@@ -634,10 +670,29 @@ class ProFastComp(om.ExplicitComponent):
                     tech_varopex_info.setdefault(var_cost_key, var_cost_val)
                 variable_costs[tech] = tech_varopex_info
 
+            # if VarOpEx is negative, treat as a coproduct
+            else:
+                tech_coproduct_info = (
+                    self.tech_config[tech]["model_inputs"]
+                    .get("financial_parameters", {})
+                    .get("coproducts", {})
+                )
+                # make it positive
+                coproduct_cost_per_unit_commodity = -1 * varopex_adjusted_tech / total_production
+                coproduct_dict = dict(zip(years_of_operation, coproduct_cost_per_unit_commodity))
+                tech_coproduct_info.update({"cost": coproduct_dict})
+
+                # update any unset variable cost parameters with the default values
+                for coprod_cost_key, coprod_cost_val in coproduct_cost_defaults.items():
+                    tech_coproduct_info.setdefault(coprod_cost_key, coprod_cost_val)
+                coproduct_costs[tech] = tech_coproduct_info
+
         # add capital costs and fixed costs to pf_dict
         pf_dict["capital_items"] = capital_items
         pf_dict["fixed_costs"] = fixed_costs
         pf_dict["feedstocks"] = variable_costs
+        pf_dict["coproducts"] = coproduct_costs
+
         # create ProFAST object
         pf = create_and_populate_profast(pf_dict)
         return pf
