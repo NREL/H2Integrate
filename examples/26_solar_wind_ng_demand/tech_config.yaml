@@ -6,12 +6,11 @@ technologies:
     performance_model:
       model: "pysam_wind_plant_performance"
     cost_model:
-      model: "wind_plant_cost" #in the future, lets use a different wind plant cost model
+      model: "atb_wind_cost" #in the future, lets use a different wind plant cost model
     model_inputs:
-      shared_parameters:
+      performance_parameters:
         num_turbines: 20
         turbine_rating_kw: 6000
-      performance_parameters:
         hub_height: 115
         rotor_diameter: 170
         create_model_from: "default"
@@ -30,7 +29,8 @@ technologies:
             row_phase_offset: 0.0
             layout_shape: "square"
       cost_parameters:
-        cost_per_kw: 1300
+        capex_per_kW: 1300
+        opex_per_kW_per_year: 39
         cost_year: 2022
 
   solar:
