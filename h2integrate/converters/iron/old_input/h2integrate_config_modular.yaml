@@ -242,10 +242,10 @@ iron_ore:
       "debt interest rate": 0.050049
 iron_win:
   site:
-    lat: 41
-    lon: -78
+    lat: 41.717
+    lon: -88.398
     resource_dir: '/../data_library/weather/'
-    name: 'Mid WI'
+    name: 'IL'
   product_selection: 'ng_dri' # 'h2_dri' # 'ng_dri'
   performance_model:
     name: 'rosner' # 'rosner'
@@ -274,10 +274,10 @@ iron_win:
       "debt interest rate": 0.050049
 iron_post:
   site:
-    lat: 41
-    lon: -84
+    lat: 41.717
+    lon: -88.398
     resource_dir: '/../data_library/weather/'
-    name: 'Mid WI'
+    name: 'IL'
   product_selection: 'ng_eaf' #''h2_eaf' # 'ng_eaf'
   performance_model:
     name: 'rosner' # 'rosner'

@@ -14,15 +14,15 @@ cases = load_tech_config_cases(case_file)
 # Modify and run the model for different cases
 casenames = [
     "Baseline",
-    "Location",
-    "Ore Grade",
-    "Mine",
-    "Transport",
-    "LCOE 50",
-    "LCOH 6",
-    "LCOH 3",
-    "NG 8",
-    "Capex",
+    # "Location",
+    # "Ore Grade",
+    # "Mine",
+    # "Transport",
+    # "LCOE 50",
+    # "LCOH 6",
+    # "LCOH 3",
+    # "NG 8",
+    # "Capex",
 ]
 for _casename in casenames:
     # model = mod_tech_config(model, cases[casename])
