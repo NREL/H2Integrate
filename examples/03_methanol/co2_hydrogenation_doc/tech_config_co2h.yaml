@@ -19,7 +19,7 @@ technologies:
       model: "splitter_performance"
       config:
         split_mode: "fraction"
-        fraction_to_priority_tech: 0.8
+        fraction_to_priority_tech: 0.2
   electrolyzer:
     performance_model:
       model: "eco_pem_electrolyzer_performance"
@@ -36,8 +36,8 @@ technologies:
           resize_for_enduse: False
           size_for: 'BOL' #'BOL' (generous) or 'EOL' (conservative)
           hydrogen_dmd:
-        n_clusters: 8
-        cluster_rating_MW: 37.5
+        n_clusters: 9
+        cluster_rating_MW: 40
         pem_control_type: 'basic'
         eol_eff_percent_loss: 10 #eol defined as x% change in efficiency from bol
         uptime_hours_until_eol: 80000 #number of 'on' hours until electrolyzer reaches eol
@@ -67,10 +67,10 @@ technologies:
         max_discharge_rate: 5000.0  # kg/time step
         charge_efficiency: 1.0 # percent as decimal
         discharge_efficiency: 1.0 # percent as decimal
-        demand_profile: 195
+        demand_profile: 780
       cost_parameters:
         cost_year: 2022
-        energy_capex: .000001 # $/kg
+        energy_capex: 383 # $/kg
         power_capex: .000001 # $/kg/h
         opex_fraction: .000001 # percent of capex
     # performance_model:
@@ -144,7 +144,7 @@ technologies:
     model_inputs:
       shared_parameters:
         power_single_ed_w: 3000000.0  # W
-        flow_rate_single_ed_m3s: 0.6  # m^3/s
+        flow_rate_single_ed_m3s: 0.075  # m^3/s
         number_ed_min: 1
         number_ed_max: 10
         E_HCl: 0.05  # kWh/mol
@@ -174,7 +174,7 @@ technologies:
         resource_name: "co2"
         resource_rate_units: "kg/h"
         max_charge_rate: 5000.0  # kg/time step
-        max_capacity: 142300.0  # kg
+        max_capacity: 284600.0  # kg
       control_parameters:
         max_charge_percent: 1.0  # percent as decimal
         min_charge_percent: 0.1  # percent as decimal
@@ -182,10 +182,10 @@ technologies:
         max_discharge_rate: 5000.0  # kg/time step
         charge_efficiency: 1.0 # percent as decimal
         discharge_efficiency: 1.0 # percent as decimal
-        demand_profile: 1423
+        demand_profile: 5692
       cost_parameters:
         cost_year: 2022
-        energy_capex: .000001 # $/kg
+        energy_capex: 5 # $/kg
         power_capex: .000001 # $/kg/h
         opex_fraction: .000001 # percent of capex
   methanol:
@@ -197,7 +197,7 @@ technologies:
       group: "1"
     model_inputs:
       shared_parameters:
-        plant_capacity_kgpy: 8760000
+        plant_capacity_kgpy: 35040000
         plant_capacity_flow: "methanol"
       performance_parameters:
         capacity_factor: 1

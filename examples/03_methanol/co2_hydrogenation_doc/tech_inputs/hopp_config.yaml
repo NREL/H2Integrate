@@ -29,14 +29,14 @@ site: #!include flatirons_site.yaml
 
 technologies:
   wind:
-    num_turbines: 28
+    num_turbines: 24
     turbine_rating_kw: 15000.0
     model_name: pysam #floris
     timestep: [0, 8760]
     # floris_config: !include floris_input_lbw_6MW.yaml
     fin_model: !include default_fin_config.yaml
   grid:
-    interconnect_kw: 300000 # Set higher than rated generation capacity
+    interconnect_kw: 360000 # Set higher than rated generation capacity
     fin_model: !include default_fin_config.yaml
 
 config:

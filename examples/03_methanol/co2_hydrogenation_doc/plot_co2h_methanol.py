@@ -42,10 +42,10 @@ def plot_methanol(model):
     # Electricity to CO2 using DOC
     plt.subplot(3, 2, 2)
     plt.title("DOC")
-    doc_elec_in = model.plant.doc.direct_ocean_capture_performance.get_val("electricity_in") / 1000
-    doc_co2_out = model.plant.doc.direct_ocean_capture_performance.get_val("co2_out")
-    plt.plot(times, doc_elec_in, label="electricity_in [kW]")
-    plt.plot(times, doc_co2_out, label="co2_out [kg/hr]", color=[0.5, 0.25, 0])
+    doc_elec_in = model.plant.doc.direct_ocean_capture_performance.get_val("electricity_in") / 1e6
+    doc_co2_out = model.plant.doc.direct_ocean_capture_performance.get_val("co2_out") / 1000 * 24
+    plt.plot(times, doc_elec_in, label="electricity_in [MW]")
+    plt.plot(times, doc_co2_out, label="co2_out [t/d]", color=[0.5, 0.25, 0])
     # plt.yscale("log")
     plt.legend()
 
@@ -62,10 +62,10 @@ def plot_methanol(model):
     # H2 and Storage
     plt.subplot(3, 2, 4)
     plt.title("CO2 Storage")
-    model.plant.doc_to_co2_storage_pipe.get_val("co2_in") * 3600
-    model.plant.co2_storage_to_methanol_pipe.get_val("co2_out") * 3600
-    plt.plot(times, h2_storage_in, label="co2_in [kg/hr]", color=[0.5, 0.25, 0])
-    plt.plot(times, h2_storage_out, label="co2_out [kg/hr]", color=[0, 0.25, 0.5])
+    co2_storage_in = model.plant.doc_to_co2_storage_pipe.get_val("co2_in")
+    co2_storage_out = model.plant.co2_storage_to_methanol_pipe.get_val("co2_out")
+    plt.plot(times, co2_storage_in, label="co2_in [kg/hr]", color=[0.5, 0.25, 0])
+    plt.plot(times, co2_storage_out, label="co2_out [kg/hr]", color=[0, 0.25, 0.5])
     # plt.yscale("log")
     plt.legend()
 
