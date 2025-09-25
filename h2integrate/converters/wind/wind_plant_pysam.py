@@ -22,10 +22,10 @@ class PYSAMWindPlantPerformanceModelConfig(BaseConfig):
         num_turbines (int): number of turbines in farm
         hub_height (float): wind turbine hub-height in meters
         rotor_diameter (float): wind turbine rotor diameter in meters.
-        turbine_rating_kw (float): wind turbined rated power in kW
+        turbine_rating_kw (float): wind turbines rated power in kW
         create_model_from (str):
-            - 'default': instatiate Windpower model from the default config 'config_name'
-            - 'new': instatiate new Windpower model (default). Requires pysam_options.
+            - 'default': instantiate Windpower model from the default config 'config_name'
+            - 'new': instantiate new Windpower model (default). Requires pysam_options.
         config_name (str,optional): PySAM.Windpower configuration name for non-hybrid wind systems.
             Defaults to 'WindPowerSingleOwner'. Only used if create_model_from='default'.
         pysam_options (dict, optional): dictionary of Windpower input parameters with
@@ -88,7 +88,7 @@ class PYSAMWindPlantPerformanceModelConfig(BaseConfig):
             "HybridCosts",
         ]
         if bool(self.pysam_options):
-            invalid_groups = [k for k, v in self.pysam_options.items() if k not in valid_groups]
+            invalid_groups = [k for k in self.pysam_options if k not in valid_groups]
             if len(invalid_groups) > 0:
                 msg = (
                     f"Invalid group(s) found in pysam_options: {invalid_groups}. "
@@ -122,7 +122,7 @@ class PYSAMWindPlantPerformanceModelConfig(BaseConfig):
             associated with the specified Windpower configuration.
 
         Returns:
-           dict: dictionary of Turbine group pararamters from user-input.
+           dict: dictionary of Turbine group parameters from user-input.
         """
         design_dict = {
             "Turbine": {
@@ -255,7 +255,7 @@ class PYSAMWindPlantPerformanceModel(WindPerformanceBaseClass):
         }
 
         # find the resource heights that are closest to the hub-height for
-        # PySAM Windpower resoure data except pressure
+        # PySAM Windpower resource data except pressure
         bounding_heights = self.calculate_bounding_heights_from_resource_data(
             hub_height,
             wind_resource_data,
