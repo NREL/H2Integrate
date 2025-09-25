@@ -19,7 +19,7 @@ technologies:
       model: "splitter_performance"
       config:
         split_mode: "fraction"
-        fraction_to_priority_tech: 0.9
+        fraction_to_priority_tech: 0.8
   electrolyzer:
     performance_model:
       model: "eco_pem_electrolyzer_performance"
@@ -49,33 +49,58 @@ technologies:
           replacement_cost_percent: 0.15 # percent of capex - H2A default case
   h2_storage:
     performance_model:
-      model: "h2_storage"
+      model: "simple_generic_storage"
+    cost_model:
+      model: "atb_battery_cost"
     control_strategy:
       model: "demand_open_loop_controller"
-    cost_model:
-      model: "h2_storage"
-    financial_model:
-      group: default
     model_inputs:
-      performance_parameters:
-        rating: 300.
-        size_capacity_from_demand:
-          flag: True # If True, then storage is sized to provide steady-state storage
-        capacity_from_max_on_turbine_storage: False # if True, then days of storage is ignored and storage capacity is based on how much h2 storage fits on the turbines in the plant using Kottenstete 2003.
-        type: "lined_rock_cavern" # can be one of ["none", "pipe", "turbine", "pressure_vessel", "salt_cavern", "lined_rock_cavern"]
-        days: 0 #how many days worth of production we should be able to store (this is ignored if `capacity_from_max_on_turbine_storage` is set to True)
-      control_parameters:
+      shared_parameters:
         resource_name: "hydrogen"
         resource_rate_units: "kg/h"
-        max_capacity: 300000.0  # kg
+        max_charge_rate: 5000.0  # kg/time step
+        max_capacity: 19500.0  # kg
+      control_parameters:
         max_charge_percent: 1.0  # percent as decimal
         min_charge_percent: 0.1  # percent as decimal
         init_charge_percent: 0.25  # percent as decimal
-        max_charge_rate: 10000.0  # kg/time step
-        max_discharge_rate: 10000.0  # kg/time step
+        max_discharge_rate: 5000.0  # kg/time step
         charge_efficiency: 1.0 # percent as decimal
         discharge_efficiency: 1.0 # percent as decimal
-        demand_profile: 2226.0274  # Example: 10 time steps with 5000 kg/time step demand. Scalar indicates constant demand, array-like indicates dynamic demand
+        demand_profile: 195
+      cost_parameters:
+        cost_year: 2022
+        energy_capex: .000001 # $/kg
+        power_capex: .000001 # $/kg/h
+        opex_fraction: .000001 # percent of capex
+    # performance_model:
+    #   model: "h2_storage"
+    # control_strategy:
+    #   model: "demand_open_loop_controller"
+    # cost_model:
+    #   model: "h2_storage"
+    # financial_model:
+    #   group: default
+    # model_inputs:
+    #   performance_parameters:
+    #     rating: 300.
+    #     size_capacity_from_demand:
+    #       flag: True # If True, then storage is sized to provide steady-state storage
+    #     capacity_from_max_on_turbine_storage: False # if True, then days of storage is ignored and storage capacity is based on how much h2 storage fits on the turbines in the plant using Kottenstete 2003.
+    #     type: "lined_rock_cavern" # can be one of ["none", "pipe", "turbine", "pressure_vessel", "salt_cavern", "lined_rock_cavern"]
+    #     days: 0 #how many days worth of production we should be able to store (this is ignored if `capacity_from_max_on_turbine_storage` is set to True)
+    #   control_parameters:
+    #     resource_name: "hydrogen"
+    #     resource_rate_units: "kg/h"
+    #     max_capacity: 1000000.0  # kg
+    #     max_charge_percent: 1.0  # percent as decimal
+    #     min_charge_percent: 0.1  # percent as decimal
+    #     init_charge_percent: 0.25  # percent as decimal
+    #     max_charge_rate: 10000.0  # kg/time step
+    #     max_discharge_rate: 10000.0  # kg/time step
+    #     charge_efficiency: 1.0 # percent as decimal
+    #     discharge_efficiency: 1.0 # percent as decimal
+    #     demand_profile: 195  # Example: 10 time steps with 5000 kg/time step demand. Scalar indicates constant demand, array-like indicates dynamic demand
   # wind:
   #   performance_model:
   #     model: "wind_plant_performance"
@@ -137,6 +162,32 @@ technologies:
         pH_i: 8.1  # initial pH
       cost_parameters:
         infrastructure_type: "desal"
+  co2_storage:
+    performance_model:
+      model: "simple_generic_storage"
+    cost_model:
+      model: "atb_battery_cost"
+    control_strategy:
+      model: "demand_open_loop_controller"
+    model_inputs:
+      shared_parameters:
+        resource_name: "co2"
+        resource_rate_units: "kg/h"
+        max_charge_rate: 5000.0  # kg/time step
+        max_capacity: 142300.0  # kg
+      control_parameters:
+        max_charge_percent: 1.0  # percent as decimal
+        min_charge_percent: 0.1  # percent as decimal
+        init_charge_percent: 0.25  # percent as decimal
+        max_discharge_rate: 5000.0  # kg/time step
+        charge_efficiency: 1.0 # percent as decimal
+        discharge_efficiency: 1.0 # percent as decimal
+        demand_profile: 1423
+      cost_parameters:
+        cost_year: 2022
+        energy_capex: .000001 # $/kg
+        power_capex: .000001 # $/kg/h
+        opex_fraction: .000001 # percent of capex
   methanol:
     performance_model:
       model: "co2h_methanol_plant_performance"
@@ -146,10 +197,10 @@ technologies:
       group: "1"
     model_inputs:
       shared_parameters:
-        plant_capacity_kgpy: 100000000
+        plant_capacity_kgpy: 8760000
         plant_capacity_flow: "methanol"
       performance_parameters:
-        capacity_factor: 0.9
+        capacity_factor: 1
         co2e_emit_ratio: 0.020296
         h2o_consume_ratio: 0.988
         h2_consume_ratio: 0.195
