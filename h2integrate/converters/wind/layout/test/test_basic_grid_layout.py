@@ -93,3 +93,53 @@ def test_simple_square_layout_uneven_nturbs(subtests):
         coord_list = list(zip(x_coords, y_coords))
         unique_coords = list(set(coord_list))
         assert len(unique_coords) == n_turbs
+
+
+def test_simple_rectangular_layout_uneven_nturbs(subtests):
+    layout_config_dict = {
+        "row_D_spacing": 7.0,
+        "turbine_D_spacing": 5.0,
+        "rotation_angle_deg": 0.0,
+        "row_phase_offset": 0.0,
+        "layout_shape": "rectangle",
+        "turbine_aspect_ratio": 2.0,
+    }
+    layout_config = BasicGridLayoutConfig.from_dict(layout_config_dict)
+    rotor_diameter = 10
+    n_turbs = 50
+    x_coords, y_coords = make_basic_grid_turbine_layout(rotor_diameter, n_turbs, layout_config)
+
+    with subtests.test("expected number of turbines in x coordinates"):
+        assert len(x_coords) == n_turbs
+    with subtests.test("expected number of turbines in y coordinates"):
+        assert len(y_coords) == n_turbs
+    x_positions, x_position_counts = np.unique(x_coords, return_counts=True)
+    y_positions, y_position_counts = np.unique(y_coords, return_counts=True)
+
+    with subtests.test("number of rows"):
+        assert len(y_positions) == 5
+
+    with subtests.test("number of turbines per row"):
+        assert len(x_positions) == 10
+
+    with subtests.test("number of unique x positions"):
+        assert sum(x_position_counts) == n_turbs
+
+    with subtests.test("number of unique y positions"):
+        assert sum(y_position_counts) == n_turbs
+
+    with subtests.test("x_spacing"):
+        assert (
+            x_positions[1] - x_positions[0]
+            == rotor_diameter * layout_config_dict["turbine_D_spacing"]
+        )
+
+    with subtests.test("y_spacing"):
+        assert (
+            y_positions[1] - y_positions[0] == rotor_diameter * layout_config_dict["row_D_spacing"]
+        )
+
+    with subtests.test("unique coordinates"):
+        coord_list = list(zip(x_coords, y_coords))
+        unique_coords = list(set(coord_list))
+        assert len(unique_coords) == n_turbs

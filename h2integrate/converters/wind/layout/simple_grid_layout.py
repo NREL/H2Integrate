@@ -123,7 +123,7 @@ def make_basic_grid_turbine_layout(
     if layout_config.layout_shape == "square":
         n_turbs_x, n_turbs_y = find_square_layout_dimensions_by_nturbs(n_turbs)
     if layout_config.layout_shape == "rectangle":
-        n_turbs_x, n_turbs_y = find_square_layout_dimensions_by_nturbs(
+        n_turbs_x, n_turbs_y = find_rectangular_layout_dimensions_by_nturbs(
             n_turbs, layout_config.turbine_aspect_ratio
         )
 

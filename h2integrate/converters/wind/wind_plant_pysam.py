@@ -15,6 +15,40 @@ from h2integrate.converters.wind.layout.simple_grid_layout import (
 
 
 @define
+class PySAMPowerCurveCalculationInputs(BaseConfig):
+    """Inputs for the ``calculate_powercurve()`` function in the PySAM Windpower module.
+    The PySAM documentation of the inputs for this function can be found
+    `here <https://nrel-pysam.readthedocs.io/en/main/modules/Windpower.html#PySAM.Windpower.Windpower.Turbine>`_
+
+
+    Attributes:
+        elevation (float): elevation in meters. Required if using Weibull resource model,
+            otherwise should be zero. Defaults to 0.
+        wind_default_max_cp (float): max power coefficient. Defaults to 0.45.
+        wind_default_max_tip_speed (float): max tip speed in m/s. Defaults to 60.
+        wind_default_max_tip_speed_ratio (float): max tip-speed ratio. Defaults to 8.
+        wind_default_cut_in_speed (float): cut-in wind speed in m/s. Defaults to 4.
+        wind_default_cut_out_speed (float): cut-out wind speed in m/s. Defaults to 25.
+        wind_default_drive_train (int): integer representing wind turbine drive train type.
+            Defaults to 0. The mapping of drive train number to drive train type is:
+            - 0: 3 Stage Planetary
+            - 1: Single Stage - Low Speed Generator
+            - 2: Multi-Generator
+            - 3: Direct Drive
+    """
+
+    elevation: int | float = field(default=0)
+    wind_default_max_cp: int | float = field(default=0.45)
+    wind_default_max_tip_speed: int | float = field(default=60)
+    wind_default_max_tip_speed_ratio: int | float = field(default=8)
+    wind_default_cut_in_speed: int | float = field(default=4)
+    wind_default_cut_out_speed: int | float = field(default=25)
+    wind_default_drive_train: int = field(
+        default=0, converter=int, validator=contains([0, 1, 2, 3])
+    )
+
+
+@define
 class PYSAMWindPlantPerformanceModelConfig(BaseConfig):
     """Configuration class for PYSAMWindPlantPerformanceModel.
 
@@ -156,6 +190,15 @@ class PYSAMWindPlantPerformanceModel(WindPerformanceBaseClass):
         if layout_mode == "basicgrid":
             self.layout_config = BasicGridLayoutConfig.from_dict(layout_options)
         self.layout_mode = layout_mode
+
+        # initialize power-curve recalc config
+        powercurveconfig = {}
+        if "powercurve_calc_config" in performance_inputs:
+            powercurveconfig = self.options["tech_config"]["model_inputs"][
+                "performance_parameters"
+            ].pop("powercurve_calc_config")
+        self.power_curve_config = PySAMPowerCurveCalculationInputs.from_dict(powercurveconfig)
+
         # initialize wind turbine config
         self.config = PYSAMWindPlantPerformanceModelConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance")
@@ -354,23 +397,17 @@ class PYSAMWindPlantPerformanceModel(WindPerformanceBaseClass):
         Returns:
             bool: True if the new power curve has a maximum value equal to `turbine_rating_kw`
         """
-        elevation = 0
-        wind_default_max_cp = 0.45
-        wind_default_max_tip_speed = 60
-        wind_default_max_tip_speed_ratio = 8
-        wind_default_cut_in_speed = 4
-        wind_default_cut_out_speed = 25
-        wind_default_drive_train = 0
+
         self.system_model.Turbine.calculate_powercurve(
             turbine_rating_kw,
             int(rotor_diameter),
-            elevation,
-            wind_default_max_cp,
-            wind_default_max_tip_speed,
-            wind_default_max_tip_speed_ratio,
-            wind_default_cut_in_speed,
-            wind_default_cut_out_speed,
-            wind_default_drive_train,
+            self.power_curve_config.elevation,
+            self.power_curve_config.wind_default_max_cp,
+            self.power_curve_config.wind_default_max_tip_speed,
+            self.power_curve_config.wind_default_max_tip_speed_ratio,
+            self.power_curve_config.wind_default_cut_in_speed,
+            self.power_curve_config.wind_default_cut_out_speed,
+            self.power_curve_config.wind_default_drive_train,
         )
         success = False
         if max(self.system_model.value("wind_turbine_powercurve_powerout")) == float(
