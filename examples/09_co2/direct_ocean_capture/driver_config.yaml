@@ -1,0 +1,5 @@
+name: "driver_config"
+description: "This analysis runs a wind and wave plant connected to a direct ocean capture device"
+
+general:
+  folder_output: wind_wave_doc

@@ -70,6 +70,7 @@ class StimulatedGeoH2PerformanceModel(GeoH2PerformanceBaseClass):
     """
 
     def setup(self):
+        n_timesteps = self.options["plant_config"]["plant"]["simulation"]["n_timesteps"]
         self.config = StimulatedGeoH2PerformanceConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance")
         )
@@ -84,9 +85,10 @@ class StimulatedGeoH2PerformanceModel(GeoH2PerformanceBaseClass):
         self.add_input("bulk_density", units="kg/m**3", val=self.config.bulk_density)
         self.add_input("water_temp", units="C", val=self.config.water_temp)
 
-        self.add_output("hydrogen_produced", units="kg/h", shape=(8760,))
+        self.add_output("hydrogen_produced", units="kg/h", shape=n_timesteps)
 
     def compute(self, inputs, outputs):
+        n_timesteps = self.options["plant_config"]["plant"]["simulation"]["n_timesteps"]
         lifetime = int(inputs["well_lifetime"][0])
 
         if self.config.rock_type == "peridotite":  # TODO: sub-models for different rock types
@@ -106,7 +108,7 @@ class StimulatedGeoH2PerformanceModel(GeoH2PerformanceBaseClass):
 
         # Model shrinking reactive particle
         years = np.linspace(1, lifetime, lifetime)
-        sec_elapsed = years * 3600 * 8760
+        sec_elapsed = years * 3600 * n_timesteps
         core_diameter = np.maximum(
             np.zeros(len(sec_elapsed)), grain_size - 2 * pen_rate * sec_elapsed
         )
@@ -115,7 +117,7 @@ class StimulatedGeoH2PerformanceModel(GeoH2PerformanceBaseClass):
         h2_produced = reacted_mass * M_H2 / M_Fe
 
         # Parse outputs
-        h2_prod_avg = h2_produced[-1] / lifetime / 8760
+        h2_prod_avg = h2_produced[-1] / lifetime / n_timesteps
         outputs["hydrogen_produced"] = h2_prod_avg
         outputs["hydrogen_out"] = h2_prod_avg
 
@@ -128,10 +130,12 @@ class StimulatedGeoH2CostConfig(GeoH2CostConfig):
         technologies/geoh2/model_inputs/shared_parameters for parameters marked with *asterisks*
         technologies/geoh2/model_inputs/cost_parameters all other parameters
 
-    Currently no parameters other than those in geoh2_baseclass.GeoH2CostConfig
+    Args:
+        cost_year (int): dollar year corresponding to costs provided in
+            geoh2_baseclass.GeoH2CostConfig
     """
 
-    pass
+    cost_year: int = field(converter=int)
 
 
 class StimulatedGeoH2CostModel(GeoH2CostBaseClass):
@@ -153,7 +157,7 @@ class StimulatedGeoH2CostModel(GeoH2CostBaseClass):
         )
         super().setup()
 
-    def compute(self, inputs, outputs):
+    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         # Calculate total capital cost per well (successful or unsuccessful)
         drill = inputs["test_drill_cost"]
         permit = inputs["permit_fees"]

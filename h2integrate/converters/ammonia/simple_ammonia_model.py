@@ -1,7 +1,9 @@
 import openmdao.api as om
 from attrs import field, define
 
-from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
+from h2integrate.core.utilities import BaseConfig, CostModelBaseConfig, merge_shared_inputs
+from h2integrate.core.validators import must_equal
+from h2integrate.core.model_baseclasses import CostModelBaseClass
 
 
 @define
@@ -31,15 +33,12 @@ class SimpleAmmoniaPerformanceModel(om.ExplicitComponent):
         self.options.declare("driver_config", types=dict)
 
     def setup(self):
+        n_timesteps = self.options["plant_config"]["plant"]["simulation"]["n_timesteps"]
         self.config = AmmoniaPerformanceModelConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance")
         )
-        self.add_input(
-            "hydrogen_in", val=0.0, shape_by_conn=True, copy_shape="ammonia_out", units="kg/h"
-        )
-        self.add_output(
-            "ammonia_out", val=0.0, shape_by_conn=True, copy_shape="hydrogen_in", units="kg/h"
-        )
+        self.add_input("hydrogen_in", val=0.0, shape=n_timesteps, units="kg/h")
+        self.add_output("ammonia_out", val=0.0, shape=n_timesteps, units="kg/h")
         self.add_output("total_ammonia_produced", val=0.0, units="kg/year")
 
     def compute(self, inputs, outputs):
@@ -51,7 +50,7 @@ class SimpleAmmoniaPerformanceModel(om.ExplicitComponent):
 
 
 @define
-class AmmoniaCostModelConfig(BaseConfig):
+class AmmoniaCostModelConfig(CostModelBaseConfig):
     """
     Configuration inputs for the ammonia cost model, including plant capacity and
     feedstock details.
@@ -75,6 +74,7 @@ class AmmoniaCostModelConfig(BaseConfig):
         oxygen_byproduct (float): Oxygen byproduct in kg per kg of ammonia production.
         capex_scaling_exponent (float): Power applied to ratio of capacities when calculating CAPEX
             from a baseline value at a different capacity.
+        cost_year (int): dollar year for costs.
     """
 
     plant_capacity_kgpy: float = field()
@@ -89,24 +89,20 @@ class AmmoniaCostModelConfig(BaseConfig):
     iron_based_catalyst_consumption: float = field()
     oxygen_byproduct: float = field()
     capex_scaling_exponent: float = field()
+    cost_year: int = field(default=2022, converter=int, validator=must_equal(2022))
 
 
-class SimpleAmmoniaCostModel(om.ExplicitComponent):
+class SimpleAmmoniaCostModel(CostModelBaseClass):
     """
     An OpenMDAO component for calculating the costs associated with ammonia production.
     Includes CapEx, OpEx, and byproduct credits, and exposes all detailed cost outputs.
     """
 
-    def initialize(self):
-        self.options.declare("plant_config", types=dict)
-        self.options.declare("tech_config", types=dict)
-        self.options.declare("driver_config", types=dict)
-
     def setup(self):
-        super().setup()
         self.config = AmmoniaCostModelConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost")
         )
+        super().setup()
         # Inputs for cost model configuration
         self.add_input(
             "plant_capacity_kgpy", val=0.0, units="kg/year", desc="Annual plant capacity"
@@ -138,7 +134,6 @@ class SimpleAmmoniaCostModel(om.ExplicitComponent):
             units="USD",
             desc="Depreciable non-equipment capital costs",
         )
-        self.add_output("CapEx", val=0.0, units="USD", desc="Total capital expenditures")
         self.add_output("land_cost", val=0.0, units="USD", desc="Cost of land")
 
         self.add_output("labor_cost", val=0.0, units="USD/year", desc="Annual labor cost")
@@ -157,7 +152,6 @@ class SimpleAmmoniaCostModel(om.ExplicitComponent):
         self.add_output(
             "maintenance_cost", val=0.0, units="USD/year", desc="Annual maintenance cost"
         )
-        self.add_output("OpEx", val=0.0, units="USD/year", desc="Total annual fixed operating cost")
 
         self.add_output(
             "H2_cost_in_startup_year",
@@ -185,7 +179,7 @@ class SimpleAmmoniaCostModel(om.ExplicitComponent):
         )
         self.add_output("credits_byproduct", val=0.0, units="USD", desc="Credits from byproducts")
 
-    def compute(self, inputs, outputs):
+    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         # Prepare config object
         config = self.config
 

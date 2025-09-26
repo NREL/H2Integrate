@@ -5,8 +5,9 @@ from pathlib import Path
 import yaml
 import pytest
 
+from h2integrate import EXAMPLE_DIR
 from h2integrate.core.h2integrate_model import H2IntegrateModel
-from h2integrate.core.inputs.validation import load_tech_yaml
+from h2integrate.core.inputs.validation import load_tech_yaml, load_plant_yaml
 
 
 examples_dir = Path(__file__).resolve().parent.parent.parent.parent / "examples/."
@@ -82,7 +83,7 @@ def test_custom_financial_model_grouping(subtests):
     tech_config_data = load_tech_yaml(temp_tech_config)
 
     # Modify the financial_model entry for one of the technologies
-    tech_config_data["technologies"]["steel"]["financial_model"]["group"] = "test_financial_group"
+    tech_config_data["technologies"]["steel"]["finance_model"]["group"] = "test_financial_group"
     tech_config_data["technologies"]["electrolyzer"].pop("financial_model", None)
 
     # Save the modified tech_config YAML back
@@ -109,55 +110,84 @@ def test_custom_financial_model_grouping(subtests):
     temp_highlevel_yaml.unlink(missing_ok=True)
 
 
-def test_get_included_technologies():
-    # Create a mock model instance
-    model = H2IntegrateModel.__new__(H2IntegrateModel)
+def test_unsupported_simulation_parameters():
+    orig_plant_config = EXAMPLE_DIR / "01_onshore_steel_mn" / "plant_config.yaml"
+    temp_plant_config_ntimesteps = Path.cwd() / "temp_plant_config_ntimesteps.yaml"
+    temp_plant_config_dt = Path.cwd() / "temp_plant_config_dt.yaml"
 
-    # Test case 1: No specific technologies defined (should include all)
-    tech_config = {
-        "wind": {"performance_model": {"model": "test"}},
-        "electrolyzer": {"performance_model": {"model": "test"}},
-        "storage": {"performance_model": {"model": "test"}},
-    }
-    plant_config = {"finance_parameters": {}}
+    shutil.copy(orig_plant_config, temp_plant_config_ntimesteps)
+    shutil.copy(orig_plant_config, temp_plant_config_dt)
 
-    included_techs = model.get_included_technologies(tech_config, "hydrogen", plant_config)
-    expected = ["wind", "electrolyzer", "storage"]
-    assert set(included_techs) == set(expected), f"Expected {expected}, got {included_techs}"
+    # Load the plant_config YAML content
+    plant_config_data_ntimesteps = load_plant_yaml(temp_plant_config_ntimesteps)
+    plant_config_data_dt = load_plant_yaml(temp_plant_config_dt)
 
-    # Test case 2: Specific technologies defined for LCOH
-    plant_config_with_specific = {
-        "finance_parameters": {
-            "technologies_included_in_metrics": {"LCOH": ["electrolyzer", "wind"]}
-        }
-    }
+    # Modify the n_timesteps entry for the temp_plant_config_ntimesteps
+    plant_config_data_ntimesteps["plant"]["simulation"]["n_timesteps"] = 8759
+    # Modify the dt entry for the temp_plant_config_dt
+    plant_config_data_dt["plant"]["simulation"]["dt"] = 3601
 
-    included_techs = model.get_included_technologies(
-        tech_config, "hydrogen", plant_config_with_specific
+    # Save the modified plant_configs YAML back
+    with temp_plant_config_ntimesteps.open("w") as f:
+        yaml.safe_dump(plant_config_data_ntimesteps, f)
+    with temp_plant_config_dt.open("w") as f:
+        yaml.safe_dump(plant_config_data_dt, f)
+
+    # check that error is thrown when loading config with invalid number of timesteps
+    with pytest.raises(ValueError, match="greater than 1-year"):
+        load_plant_yaml(plant_config_data_ntimesteps)
+
+    # check that error is thrown when loading config with invalid time interval
+    with pytest.raises(ValueError, match="with a time step that"):
+        load_plant_yaml(plant_config_data_dt)
+
+    # Clean up temporary YAML files
+    temp_plant_config_ntimesteps.unlink(missing_ok=True)
+    temp_plant_config_dt.unlink(missing_ok=True)
+
+
+def test_technology_connections():
+    os.chdir(examples_dir / "01_onshore_steel_mn")
+
+    # Path to the original plant_config.yaml and high-level yaml in the example directory
+    orig_plant_config = Path.cwd() / "plant_config.yaml"
+    temp_plant_config = Path.cwd() / "temp_plant_config.yaml"
+    orig_highlevel_yaml = Path.cwd() / "01_onshore_steel_mn.yaml"
+    temp_highlevel_yaml = Path.cwd() / "temp_01_onshore_steel_mn.yaml"
+
+    shutil.copy(orig_plant_config, temp_plant_config)
+    shutil.copy(orig_highlevel_yaml, temp_highlevel_yaml)
+
+    # Load the plant_config YAML content
+    plant_config_data = load_plant_yaml(temp_plant_config)
+
+    new_connection = (["finance_subgroup_electricity", "steel", ("LCOE", "electricity_cost")],)
+    new_tech_interconnections = (
+        plant_config_data["technology_interconnections"][0:4]
+        + list(new_connection)
+        + [plant_config_data["technology_interconnections"][4]]
     )
-    expected = ["electrolyzer", "wind"]
-    assert set(included_techs) == set(expected), f"Expected {expected}, got {included_techs}"
+    plant_config_data["technology_interconnections"] = new_tech_interconnections
 
-    # Test case 3: Test different commodity type (electricity)
-    plant_config_with_lcoe = {
-        "finance_parameters": {"technologies_included_in_metrics": {"LCOE": ["wind"]}}
-    }
+    # Save the modified tech_config YAML back
+    with temp_plant_config.open("w") as f:
+        yaml.safe_dump(plant_config_data, f)
 
-    included_techs = model.get_included_technologies(
-        tech_config, "electricity", plant_config_with_lcoe
-    )
-    expected = ["wind"]
-    assert set(included_techs) == set(expected), f"Expected {expected}, got {included_techs}"
+    # Load the high-level YAML content
+    with temp_highlevel_yaml.open() as f:
+        highlevel_data = yaml.safe_load(f)
 
-    # Test case 4: Invalid technology should raise error
-    plant_config_invalid = {
-        "finance_parameters": {
-            "technologies_included_in_metrics": {"LCOH": ["electrolyzer", "invalid_tech"]}
-        }
-    }
+    # Modify the high-level YAML to point to the temp tech_config file
+    highlevel_data["plant_config"] = str(temp_plant_config.name)
 
-    try:
-        model.get_included_technologies(tech_config, "hydrogen", plant_config_invalid)
-        raise AssertionError("Should have raised ValueError for invalid technology")
-    except ValueError as e:
-        assert "invalid_tech" in str(e), f"Error message should mention invalid_tech: {e}"
+    # Save the modified high-level YAML back
+    with temp_highlevel_yaml.open("w") as f:
+        yaml.safe_dump(highlevel_data, f)
+
+    h2i_model = H2IntegrateModel(temp_highlevel_yaml)
+
+    h2i_model.run()
+
+    # Clean up temporary YAML files
+    temp_plant_config.unlink(missing_ok=True)
+    temp_highlevel_yaml.unlink(missing_ok=True)

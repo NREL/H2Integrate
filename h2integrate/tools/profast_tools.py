@@ -1,48 +1,6 @@
 import numpy as np
+import pandas as pd
 import ProFAST
-import numpy_financial as npf
-
-
-def adjust_dollar_year(init_cost, init_dollar_year, adj_cost_year, costing_general_inflation):
-    periods = adj_cost_year - init_dollar_year
-    adj_cost = -npf.fv(costing_general_inflation, periods, 0.0, init_cost)
-    return adj_cost
-
-
-def update_defaults(orig_dict, new_key, new_val):
-    for key, val in orig_dict.items():
-        if isinstance(val, dict):
-            # go deeper
-            tmp = update_defaults(orig_dict.get(key, {}), new_key, new_val)
-            orig_dict[key] = tmp
-        else:
-            if isinstance(key, list):
-                for i, k in enumerate(key):
-                    if k == new_key:
-                        orig_dict[k] = new_val
-                    else:
-                        orig_dict[k] = orig_dict.get(key, []) + val[i]
-            elif isinstance(key, str):
-                if key == new_key:
-                    orig_dict[key] = new_val
-    return orig_dict
-
-
-def update_params_based_on_defaults(pf_config, update_config):
-    # TODO: update this
-    if update_config["escalation"]["replace all"]:
-        escalation_val = update_config["escalation"]["escalation"]
-        pf_config = update_defaults(pf_config, "escalation", escalation_val)
-    if update_config["depreciation type"]["replace all"]:
-        depr_type = update_config["depreciation type"]["depr type"]
-        pf_config = update_defaults(pf_config, "depr_type", depr_type)
-    if update_config["depreciation period"]["replace all"]:
-        depr_prd = update_config["depreciation period"]["period"]
-        pf_config = update_defaults(pf_config, "depr_period", depr_prd)
-    if update_config["refurbishment period"]["replace all"]:
-        refurb_prd = update_config["refurbishment period"]["refurb"]
-        pf_config = update_defaults(pf_config, "refurb", refurb_prd)
-    return pf_config
 
 
 def create_and_populate_profast(pf_config):
@@ -58,7 +16,6 @@ def create_and_populate_profast(pf_config):
     config_keys = list(pf_config.keys())
     if "params" in config_keys:
         params = pf_config["params"]
-        params["general inflation rate"]
         for i in params:
             pf.set_params(i, params[i])
 
@@ -159,7 +116,7 @@ def make_price_breakdown(price_breakdown, pf_config):
     price_breakdown_capex = {}
     price_breakdown_fixed_cost = {}
     full_price_breakdown = {}
-    lco_str = "LCO{}".format(pf_config["params"]["commodity"]["name"][0])
+    lco_str = "LCO{}".format(pf_config["params"]["commodity"]["name"][0].upper())
     lco_units = "$/{}".format(pf_config["params"]["commodity"]["unit"])
     config_keys = list(pf_config.keys())
     if "capital_items" in config_keys:
@@ -263,3 +220,29 @@ def create_years_of_operation(
     )
     year_keys = [f"{y}" for y in years_of_operation]
     return year_keys
+
+
+def format_profast_price_breakdown_per_year(price_breakdown):
+    """
+    Formats a price breakdown DataFrame to expand yearly amounts into separate columns.
+
+    Args:
+        price_breakdown (pd.DataFrame): A DataFrame containing "Type", "Name", "Amount", and "NPV"
+            - "Amount" should be an array-like object per row, representing values for each year.
+    Returns:
+        pd.DataFrame: A formatted DataFrame with columns:
+            - "Type"
+            - "Name"
+            - "Year {i} Amount" for each year (e.g., "Year 0 Amount", "Year 1 Amount", ...)
+            - "NPV"
+        Each row corresponds to an entry in the input DataFrame,
+        with yearly amounts expanded into separate columns.
+    """
+    n_years = len(price_breakdown.iloc[0]["Amount"])
+    year_cols = [f"Year {i} Amount" for i in range(n_years)]
+
+    amount_df = pd.DataFrame(np.array(price_breakdown["Amount"].to_list()), columns=year_cols)
+    formatted_df = pd.concat(
+        [price_breakdown[["Type", "Name"]], amount_df, price_breakdown["NPV"]], axis=1
+    )
+    return formatted_df

@@ -6,3 +6,6 @@ technologies:
     performance_model:
       model: hopp
       config: !include tech_inputs/hopp_config.yaml
+    model_inputs:
+      cost_parameters:
+        cost_year: 2024

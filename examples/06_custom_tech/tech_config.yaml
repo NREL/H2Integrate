@@ -7,9 +7,6 @@ technologies:
       model: wind_plant_performance
     cost_model:
       model: wind_plant_cost
-    resource:
-      type: pysam_wind
-      wind_speed: 9.
     model_inputs:
       shared_parameters:
         num_turbines: 4
@@ -35,6 +32,7 @@ technologies:
         adjust_air_density_for_elevation: True
       cost_parameters:
         cost_per_kw: 1500.0
+        cost_year: 2019
   paper_mill:
     performance_model:
       model: paper_mill_performance
@@ -44,7 +42,7 @@ technologies:
       model: paper_mill_cost
       model_class_name: PaperMillCost
       model_location: user_defined_model/paper_mill.py
-    financial_model:
+    finance_model:
       model: paper_mill_finance
       model_class_name: PaperMillFinance
       model_location: user_defined_model/paper_mill.py
@@ -55,3 +53,6 @@ technologies:
         plant_capacity: 10.0  # tonnes/day
         cost_per_tonne: 4000000.  # $/tonne
         opex_rate: 0.05  # 5% of CAPEX
+        cost_year: 2024
+      finance_parameters:
+        discount_rate: 0.09 # nominal return based on 2024 ATB baseline workbook for land-based wind

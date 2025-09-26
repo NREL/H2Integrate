@@ -8,7 +8,7 @@ driver:
   optimization:
     flag: True
     tol: 0.1
-    max_iter: 1
+    max_iter: 0
     solver: COBYLA
     rhobeg: 1000.
     debug_print: False
@@ -60,4 +60,4 @@ constraints:
       units: unitless
 
 objective:
-  name: financials_group_default.LCOE
+  name: finance_subgroup_default.LCOE
