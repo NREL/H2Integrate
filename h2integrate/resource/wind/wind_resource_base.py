@@ -47,7 +47,7 @@ class WindResourceBaseAPIModel(ResourceBaseAPIModel):
             - **data_units** (*dict*): updated units of data in ``data``.
         """
         for data_col, orig_units in data_units.items():
-            output_var = [k for k in self.output_vars_to_units if k in data_col]
+            output_var = [k for k, v in self.output_vars_to_units.items() if k in data_col]
             if len(output_var) == 1:
                 desired_units = self.output_vars_to_units[output_var[0]]
                 if desired_units != orig_units:

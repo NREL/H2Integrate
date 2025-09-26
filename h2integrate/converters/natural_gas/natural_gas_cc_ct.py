@@ -1,4 +1,3 @@
-import numpy as np
 import openmdao.api as om
 from attrs import field, define
 
@@ -16,7 +15,6 @@ class NaturalGasPerformanceConfig(BaseConfig):
     combustion turbines (NGCT) and natural gas combined cycle (NGCC) plants.
 
     Attributes:
-        system_capacity (float): rated capacity of the natural gas plant in MW
         heat_rate_mmbtu_per_mwh (float): Heat rate of the natural gas plant in MMBtu/MWh.
             This represents the amount of fuel energy required to produce
             one MWh of electricity. Lower values indicate higher efficiency.
@@ -25,7 +23,6 @@ class NaturalGasPerformanceConfig(BaseConfig):
             - NGCC: 6-8 MMBtu/MWh
     """
 
-    system_capacity: float = field(validator=gte_zero)
     heat_rate_mmbtu_per_mwh: float = field(validator=gt_zero)
 
 
@@ -62,6 +59,15 @@ class NaturalGasPerformanceModel(om.ExplicitComponent):
         )
         n_timesteps = self.options["plant_config"]["plant"]["simulation"]["n_timesteps"]
 
+        # Add natural gas input
+        self.add_input(
+            "natural_gas_in",
+            val=0.0,
+            shape=n_timesteps,
+            units="MMBtu",
+            desc="Natural gas input energy",
+        )
+
         # Add natural gas consumed output
         self.add_output(
             "natural_gas_consumed",
@@ -88,32 +94,6 @@ class NaturalGasPerformanceModel(om.ExplicitComponent):
             desc="Plant heat rate in MMBtu/MWh",
         )
 
-        # Add rated capacity as an input with config value as default
-        self.add_input(
-            "system_capacity",
-            val=self.config.system_capacity,
-            units="MW",
-            desc="Natural gas plant rated capacity in MW",
-        )
-
-        # Default the electricity demand input as the rated capacity
-        self.add_input(
-            "electricity_demand",
-            val=self.config.system_capacity,
-            shape=n_timesteps,
-            units="MW",
-            desc="Electricity demand for natural gas plant",
-        )
-
-        # Add natural gas input, default to 0 --> set using feedstock component
-        self.add_input(
-            "natural_gas_in",
-            val=0.0,
-            shape=n_timesteps,
-            units="MMBtu",
-            desc="Natural gas input energy",
-        )
-
     def compute(self, inputs, outputs):
         """
         Compute electricity output from natural gas input.
@@ -123,39 +103,17 @@ class NaturalGasPerformanceModel(om.ExplicitComponent):
         required per unit of electrical energy produced.
 
         Args:
-            inputs: OpenMDAO inputs object containing natural_gas_in, heat_rate_mmbtu_per_mwh,
-                system_capacity, and electricity_demand.
-            outputs: OpenMDAO outputs object for electricity_out and natural_gas_consumed
+            inputs: OpenMDAO inputs object containing natural_gas_in and heat_rate
+            outputs: OpenMDAO outputs object for electricity_out
         """
-
-        # calculate max input and output
-        system_capacity = inputs["system_capacity"]  # plant capacity in MW
+        natural_gas_in = inputs["natural_gas_in"]
         heat_rate_mmbtu_per_mwh = inputs["heat_rate_mmbtu_per_mwh"]
-        max_natural_gas_consumption = system_capacity * heat_rate_mmbtu_per_mwh
 
-        # electrical demand, saturated at maximum rated system capacity
-        electricity_demand = np.where(
-            inputs["electricity_demand"] > system_capacity,
-            system_capacity,
-            inputs["electricity_demand"],
-        )
-        natural_gas_demand = electricity_demand * heat_rate_mmbtu_per_mwh
-
-        # available feedstock, saturated at maximum system feedstock consumption
-        natural_gas_available = np.where(
-            inputs["natural_gas_in"] > max_natural_gas_consumption,
-            max_natural_gas_consumption,
-            inputs["natural_gas_in"],
-        )
-
-        # natural gas consumed is minimum between available feedstock and output demand
-        natural_gas_consumed = np.minimum.reduce([natural_gas_demand, natural_gas_available])
-
-        # Convert natural gas consumption to electricity output using heat rate
-        electricity_out = natural_gas_consumed / heat_rate_mmbtu_per_mwh
+        # Convert natural gas input to electricity output using heat rate
+        electricity_out = natural_gas_in / heat_rate_mmbtu_per_mwh
 
         outputs["electricity_out"] = electricity_out
-        outputs["natural_gas_consumed"] = natural_gas_consumed
+        outputs["natural_gas_consumed"] = natural_gas_in
 
 
 @define
@@ -167,7 +125,7 @@ class NaturalGasCostModelConfig(CostModelBaseConfig):
     turbines (NGCT) and natural gas combined cycle (NGCC) plants.
 
     Attributes:
-        system_capacity (float | int): Plant capacity in MW.
+        plant_capacity_mw (float | int): Plant capacity in MW.
 
         capex_per_kw (float|int): Capital cost per unit capacity in $/kW. This includes
             all equipment, installation, and construction costs.
@@ -189,7 +147,7 @@ class NaturalGasCostModelConfig(CostModelBaseConfig):
         cost_year (int): Dollar year corresponding to input costs.
     """
 
-    system_capacity: float | int = field(validator=gt_zero)
+    plant_capacity_mw: float | int = field(validator=gt_zero)
     capex_per_kw: float | int = field(validator=gte_zero)
     fixed_opex_per_kw_per_year: float | int = field(validator=gte_zero)
     variable_opex_per_mwh: float | int = field(validator=gte_zero)
@@ -213,7 +171,7 @@ class NaturalGasCostModel(CostModelBaseClass):
     3. Variable O&M: variable_opex_per_mwh * delivered_electricity_MWh
 
     Inputs:
-        system_capacity (float): Natural gas plant capacity in MW
+        plant_capacity_mw (float): Plant capacity in MW
         electricity_out (array): Hourly electricity output in MW from performance model
         capex_per_kw (float): Capital cost per unit capacity in $/kW
         fixed_opex_per_kw_per_year (float): Fixed operating expenses per unit capacity in $/kW/year
@@ -236,8 +194,8 @@ class NaturalGasCostModel(CostModelBaseClass):
 
         # Add inputs specific to the cost model with config values as defaults
         self.add_input(
-            "system_capacity",
-            val=self.config.system_capacity,
+            "plant_capacity_mw",
+            val=self.config.plant_capacity_mw,
             units="MW",
             desc="Natural gas plant capacity",
         )
@@ -277,11 +235,11 @@ class NaturalGasCostModel(CostModelBaseClass):
         """
         Compute capital and operating costs for the natural gas plant.
         """
-        plant_capacity_kw = inputs["system_capacity"] * 1000  # Convert MW to kW
+        plant_capacity_kw = inputs["plant_capacity_mw"][0] * 1000  # Convert MW to kW
         electricity_out = inputs["electricity_out"]  # MW hourly profile
-        capex_per_kw = inputs["capex_per_kw"]
-        fixed_opex_per_kw_per_year = inputs["fixed_opex_per_kw_per_year"]
-        variable_opex_per_mwh = inputs["variable_opex_per_mwh"]
+        capex_per_kw = inputs["capex_per_kw"][0]
+        fixed_opex_per_kw_per_year = inputs["fixed_opex_per_kw_per_year"][0]
+        variable_opex_per_mwh = inputs["variable_opex_per_mwh"][0]
 
         # Sum hourly electricity output to get annual generation
         # electricity_out is in MW, so sum gives MWh for hourly data

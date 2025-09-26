@@ -43,8 +43,6 @@ Within this framework, there are two distinct layers, **finance groups** and **f
     List of `finance_groups` that contain the `finance_model` and `model_inputs`. Required if multiple `finance_groups` are being used. Technology-specific `finance_groups` can be called by using the technology name listed in the `tech_config` (e.g., `steel` to use the steel specific finance model).
   - `commodity_desc` (optional):
     A text label to further distinguish outputs for a commodity. This is particularly useful when multiple finance models or subgroups reference the same commodity but need to produce separate outputs.
-  - `commodity_stream` (optional):
-    A text label of a technology that outputs the specified ``commodity`` to use as the commodity production stream in finance calculations. This is particularly useful when wanting to choose a specific commodity stream to use in finance calculations (such as the outputs of combiners or splitters)
 
 ```{important}
 If no subgroups are defined, a **default subgroup** is created that contains *all technologies* and references the default finance model and commodity defined in `finance_groups`.
