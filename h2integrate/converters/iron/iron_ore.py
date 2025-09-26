@@ -24,18 +24,12 @@ from h2integrate.simulation.technologies.iron.rosner_ore.variable_om_cost import
 
 @define
 class IronOreBaseConfig(BaseConfig):
-    # site['name']
-    mine: str = field(
-        validator=contains(["Hibbing", "Northshore", "United", "Minorca", "Tilden"])
-    )  # ore
+    mine: str = field(validator=contains(["Hibbing", "Northshore", "United", "Minorca", "Tilden"]))
 
     # product_selection
     taconite_pellet_type: str = field(
         converter=(str.lower, str.strip), validator=contains(["std", "drg"])
-    )  # ore
-
-    # performance['input_capacity_factor_estimate']
-    # ore_cf_estimate: float = field(default=0.9, validator=range_val(0, 1))  # ore
+    )
 
     model_name: str = field(default="martine_ore")  # only option at the moment
     model_fp: str = field(default="")
@@ -83,7 +77,6 @@ class IronOrePerformanceComponent(om.ExplicitComponent):
         self.add_output("total_iron_ore_produced", val=0.0, units="t/year")
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
-        # iron_ore_site = {'name': self.config.mine}
         ore_performance_inputs = {"input_capacity_factor_estimate": self.config.ore_cf_estimate}
         ore_model_inputs = self.config.make_model_dict()
         iron_ore_site = self.config.make_site_dict()
@@ -98,7 +91,6 @@ class IronOrePerformanceComponent(om.ExplicitComponent):
         ore_produced_wltpy = iron_ore_performance.performances_df.set_index("Name").loc[
             "Ore pellets produced"
         ][self.config.mine]
-        # ore_produced_wltpy = iron_ore_cost.costs_df.loc["Ore pellets produced"]
         ore_produced_wmtpy = ore_produced_wltpy * 1.016047  # wmtpy = wet metric tonnes per year
         ore_produced_mtpy = ore_produced_wmtpy * 0.98  # mtpy = dry metric tonnes per year
         discrete_outputs["iron_ore_performance"] = iron_ore_performance.performances_df
@@ -112,9 +104,9 @@ class IronOreCostConfig(IronOreBaseConfig):
     varom_model_name: str = field(
         default="martine_ore", validator=contains(["martin_ore", "rosner_ore"])
     )
-    operational_year: int = field(converter=int, kw_only=True)  # also used in finance
-    installation_years: int | float = field(kw_only=True)  # 3 #also used in finance
-    plant_life: int = field(converter=int, kw_only=True)  # also used in finance
+    operational_year: int = field(converter=int, kw_only=True)
+    installation_years: int | float = field(kw_only=True)
+    plant_life: int = field(converter=int, kw_only=True)
     cost_year: int = field(converter=int, kw_only=True)
 
     def make_model_dict(self):
@@ -151,7 +143,6 @@ class IronOreCostComponent(CostModelBaseClass):
             "iron_ore_performance", val=pd.DataFrame, desc="iron ore performance results"
         )
         self.add_discrete_output("iron_ore_cost", val=pd.DataFrame, desc="iron ore cost results")
-        # self.add_discrete_output("iron_ore_cost")
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         ore_performance = IronPerformanceModelOutputs(discrete_inputs["iron_ore_performance"])
@@ -173,9 +164,9 @@ class IronOreCostComponent(CostModelBaseClass):
             performance=ore_performance,
         )
         iron_ore_cost = run_iron_cost_model(cost_config)
-        # discrete_outputs['iron_ore_cost'] = iron_ore_cost.costs_df
 
         discrete_outputs["iron_ore_cost"] = iron_ore_cost.costs_df
+
         # Now taking some stuff from finance
         cost_df = iron_ore_cost.costs_df.set_index("Name")
         cost_ds = cost_df.loc[:, self.config.mine]
@@ -215,19 +206,18 @@ class IronOreCostComponent(CostModelBaseClass):
             cost = inflate_cpi(source_year_cost, source_year, self.config.cost_year)
             variable_om += cost
 
-        # below is for rosner finance model
         analysis_start = self.config.operational_year - self.config.installation_years
         var_om_td = 0
+        # below is for rosner finance model
         if "rosner" in self.config.varom_model_name:
             var_om_td = rosner_ore_variable_om_cost(
                 self.config.mine, cost_df, analysis_start, self.config.cost_year, self.plant_life
             )
         else:
-            #  'martin' in self.config.varom_model_name:
             var_om_td = martin_ore_variable_om_cost(
                 self.config.mine, cost_df, analysis_start, self.config.cost_year, self.plant_life
             )
-            # discrete_outputs["varom_td_dict"] = varom_td_dict
+
         variable_om += var_om_td
 
         outputs["CapEx"] = capex

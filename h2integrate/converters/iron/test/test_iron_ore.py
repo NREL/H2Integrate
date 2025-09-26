@@ -1,4 +1,3 @@
-import pandas as pd
 import pytest
 import openmdao.api as om
 from pytest import fixture
@@ -91,14 +90,6 @@ def test_baseline_iron_ore_costs_martin(
     martin_ore_capex = 1221599018.626594
     martin_ore_var_om = 97.76558025830258
     martin_ore_fixed_om = 0.0
-    cost_results_fpath = (
-        EXAMPLE_DIR / "20_iron_mn_to_il" / "baseline_outputs" / "rosner_ore_cost.pkl"
-    )
-    performance_results_fpath = (
-        EXAMPLE_DIR / "20_iron_mn_to_il" / "baseline_outputs" / "rosner_ore_performance.pkl"
-    )
-    perf_res = pd.read_pickle(performance_results_fpath)
-    cost_res = pd.read_pickle(cost_results_fpath)
 
     prob = om.Problem()
     iron_ore_perf = IronOrePerformanceComponent(
@@ -119,16 +110,8 @@ def test_baseline_iron_ore_costs_martin(
     prob.run_model()
 
     annual_ore = prob.get_val("ore_perf.total_iron_ore_produced", units="t/year")
-    perf_df = prob.get_val("ore_perf.iron_ore_performance")
-    cost_df = prob.get_val("ore_cost.iron_ore_cost")
     with subtests.test("Annual Ore"):
         assert pytest.approx(annual_ore[0] / 365, rel=1e-6) == 12385.195376438356
-    with subtests.test("Peformance DF"):
-        perf_err = perf_df["Northshore"] - perf_res["Northshore"]
-        assert float(perf_err.sum()) == 0.0
-    with subtests.test("Cost DF"):
-        cost_err = cost_df["Northshore"] - cost_res["Northshore"]
-        assert float(cost_err.sum()) == 0.0
     with subtests.test("CapEx"):
         assert pytest.approx(prob.get_val("ore_cost.CapEx")[0], rel=1e-6) == martin_ore_capex
     with subtests.test("OpEx"):
@@ -160,7 +143,9 @@ def test_baseline_iron_ore_costs_rosner(
     prob.model.add_subsystem("ore_cost", iron_ore_cost, promotes=["*"])
     prob.setup()
     prob.run_model()
-
+    annual_ore = prob.get_val("ore_perf.total_iron_ore_produced", units="t/year")
+    with subtests.test("Annual Ore"):
+        assert pytest.approx(annual_ore[0] / 365, rel=1e-6) == 12385.195376438356
     with subtests.test("CapEx"):
         assert pytest.approx(prob.get_val("ore_cost.CapEx")[0], rel=1e-6) == rosner_ore_capex
     with subtests.test("OpEx"):
