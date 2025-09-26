@@ -4,8 +4,8 @@ from h2integrate.finances.profast_financial import ProFastComp
 class ProFASTNPV(ProFastComp):
     def setup(self):
         self.commodity_sell_price = self.options["plant_config"]["finance_parameters"][
-            "finance_groups"
-        ]["model_inputs"].get("commodity_sell_price", None)
+            "model_inputs"
+        ].get("commodity_sell_price", None)
 
         if self.commodity_sell_price is None:
             raise ValueError("commodity_sell_price is missing as an input")
