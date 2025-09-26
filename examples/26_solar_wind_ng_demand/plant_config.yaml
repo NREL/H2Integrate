@@ -1,5 +1,5 @@
 name: "plant_config"
-description: "This plant is located in MN, USA..."
+description: "This plant is located in Texas, USA..."
 
 site:
   latitude: 30.6617
@@ -18,6 +18,14 @@ site:
     }
   ]
 
+  resources:
+    wind_resource:
+      resource_model: "wind_toolkit_v2_api"
+      resource_parameters:
+        latitude: 35.2018863
+        longitude: -101.945027
+        resource_year: 2012
+
 
   solar_resource_filepath: "../11_hybrid_energy_plant/tech_inputs/weather/solar/30.6617_-101.7096_psmv3_60_2013.csv"
 
@@ -26,12 +34,18 @@ site:
 # with the reverse definition.
 # this will naturally grow as we mature the interconnected tech
 technology_interconnections: [
+  ["wind", "combiner", "electricity", "cable"], #source_tech, dest_tech, transport_item, transport_type = connection
+  ["solar", "combiner", "electricity", "cable"],
   ["ng_feedstock", "natural_gas_plant", "natural_gas", "pipe"], #connect NG feedstock to NG plant
-  ["solar", "electrical_load_demand",["electricity_out", "electricity_in"]], # subtract solar from demand
+  ["combiner", "electrical_load_demand", ["electricity_out", "electricity_in"]], # subtract wind and solar from demand
   ["electrical_load_demand", "natural_gas_plant", ["electricity_missed_load", "electricity_demand"]], #give remaining load demand to natural gas plant
-  ["electrical_load_demand", "combiner", "electricity", "cable"], #electricity that isnt curtailed
-  ["natural_gas_plant", "combiner", "electricity", "cable"], #electricity from NG
 ]
+
+resource_to_tech_connections: [
+  # connect the wind resource to the wind technology
+  ['wind_resource', 'wind', 'wind_resource_data'],
+]
+
 
 plant:
   plant_life: 30
@@ -64,14 +78,13 @@ finance_parameters:
   finance_subgroups:
     renewables:
       commodity: "electricity"
-      technologies: ["solar"]
+      technologies: ["solar", "wind"]
     natural_gas:
       commodity: "electricity"
       technologies: ["natural_gas_plant", "ng_feedstock"]
     electricity:
       commodity: "electricity"
-      commodity_stream: "combiner"
-      technologies: ["solar", "natural_gas_plant", "ng_feedstock"]
+      technologies: ["solar", "wind", "natural_gas_plant", "ng_feedstock"]
   cost_adjustment_parameters:
     cost_year_adjustment_inflation: 0.025 # used to adjust modeled costs to target_dollar_year
     target_dollar_year: 2022
