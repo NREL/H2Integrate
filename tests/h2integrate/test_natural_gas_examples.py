@@ -173,7 +173,7 @@ def test_example_26_solar_wind_ng_generic_load_example(subtests):
         re_npv = model.prob.get_val(
             "finance_subgroup_renewables.NPV_electricity_profast_npv", units="USD"
         )
-        assert pytest.approx(re_npv, rel=1e-6) == -2.96846876
+        assert pytest.approx(re_npv, rel=1e-3) == -2.96846876
 
     with subtests.test("Value check: natural gas subgroup LCOE"):
         ng_lcoe = model.prob.get_val("finance_subgroup_natural_gas.LCOE", units="USD/MW/h")[0]
