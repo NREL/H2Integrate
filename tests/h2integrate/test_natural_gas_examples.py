@@ -298,6 +298,7 @@ def test_example_22_solar_ng_generic_load(subtests):
         tot_lcoe = model.prob.get_val("finance_subgroup_electricity.LCOE", units="USD/MW/h")[0]
         assert pytest.approx(tot_lcoe, rel=1e-6) == 57.268770102
 
+
 def test_example_26_solar_wind_ng_generic_load_example(subtests):
     """Integration test for adding in pysam wind plant model."""
     os.chdir(EXAMPLE_DIR / "26_solar_wind_ng_demand")
