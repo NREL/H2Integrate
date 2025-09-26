@@ -1,11 +1,6 @@
 from h2integrate.finances.profast_financial import ProFastComp
 
 
-# @define
-# class ProFASTNPVParameterConfig(BasicProFASTParameterConfig):
-#     commodity_sell_price: int | float = field(validator=gte_zero, kw_only=True)
-
-
 class ProFASTNPV(ProFastComp):
     def setup(self):
         self.commodity_sell_price = self.options["plant_config"]["finance_parameters"][
