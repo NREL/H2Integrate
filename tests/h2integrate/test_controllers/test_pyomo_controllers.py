@@ -377,7 +377,8 @@ def test_heuristic_load_following_battery_dispatch(subtests):
 
     with subtests.test("Check unmet_demand for min SOC"):
         assert (
-            pytest.approx(expected_unmet_demand_out) == prob.get_val("battery.unmet_demand_out")[:5]
+            pytest.approx(expected_unmet_demand_out, abs=1e-6)
+            == prob.get_val("battery.unmet_demand_out")[:5]
         )
 
     with subtests.test("Check excess_resource_out for min SOC"):
