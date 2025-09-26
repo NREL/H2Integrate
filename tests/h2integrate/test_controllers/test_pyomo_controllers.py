@@ -357,7 +357,13 @@ def test_heuristic_load_following_battery_dispatch(subtests):
     expected_battery_electricity_out = expected_electricity_out
     expected_SOC = np.array([37.69010284, 22.89921133, 10.00249593, 10.01524461, 10.03556385])
     expected_unmet_demand_out = np.array(
-        [9.43691703e-09, 6.94398578e01, 5.18549025e03, 2.99950210e04, 2.99695935e04]
+        [
+            9.43691703e-09,
+            6.94398578e01,
+            5.18549025244965e03,
+            2.999502098378662e04,
+            2.9969593461021406e04,
+        ]
     )
     expected_excess_resource_out = np.zeros(5)
 
