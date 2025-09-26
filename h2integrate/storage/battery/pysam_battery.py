@@ -409,6 +409,7 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass):
                 time_step_duration=self.config.dt,
                 control_variable=discrete_inputs["control_variable"],
             )
+            # TODO how to calculate? these are not being calculated
             unmet_demand = self.outputs.unmet_demand
             excess_resource = self.outputs.excess_resource
             battery_power_out = self.outputs.P
@@ -465,15 +466,26 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass):
             dispatch_command_t = storage_dispatch_commands[t]
 
             # manually adjust the dispatch command based on SOC
-            # TODO find a less intrusive way to get correct dispatch out from pysam battery (see PR #)
-            max_chargeable = np.minimum(
-                self.config.rated_commodity_capacity,
-                np.maximum(0, (soc_max - soc) * self.config.max_capacity / self.config.dt),
+            max_chargeable_0 = self.config.rated_commodity_capacity  # according to specs
+            max_chargeable_1 = np.maximum(
+                0, -self.system_model.value("P_chargeable")
+            )  # according to simulation
+            max_chargeable_2 = (
+                (soc_max - soc) * self.config.max_capacity / self.config.dt
+            )  # according to soc
+            max_chargeable = np.min([max_chargeable_0, max_chargeable_1, max_chargeable_2])
+
+            max_dischargeable_0 = self.config.rated_commodity_capacity  # according to specs
+            max_dischargeable_1 = np.maximum(
+                0, self.system_model.value("P_dischargeable")
+            )  # according to simulation
+            max_dischargeable_2 = (
+                (soc - soc_min) * self.config.max_capacity / self.config.dt
+            )  # according to soc
+            max_dischargeable = np.min(
+                [max_dischargeable_0, max_dischargeable_1, max_dischargeable_2]
             )
-            max_dischargeable = np.minimum(
-                self.config.rated_commodity_capacity,
-                np.maximum(0, (soc - soc_min) * self.config.max_capacity / self.config.dt),
-            )
+
             if dispatch_command_t < -max_chargeable:
                 dispatch_command_t = -max_chargeable
 
