@@ -466,6 +466,8 @@ class ProFastComp(om.ExplicitComponent):
             commodity_units = "kg/year"
             lco_units = "USD/kg"
 
+        self.lco_units = lco_units
+
         LCO_base_str = f"LCO{self.options['commodity_type'][0].upper()}"
         self.output_txt = self.options["commodity_type"].lower()
         if self.options["description"] == "":
@@ -554,7 +556,7 @@ class ProFastComp(om.ExplicitComponent):
         # incentive_params.setdefault("decay", -1 * self.params.inflation_rate)
         # self.incentive_params_settings = ProFASTDefaultIncentive.from_dict(incentive_params)
 
-    def compute(self, inputs, outputs):
+    def populate_profast(self, inputs):
         mass_commodities = ["hydrogen", "ammonia", "co2", "nitrogen"]
 
         years_of_operation = create_years_of_operation(
@@ -693,6 +695,11 @@ class ProFastComp(om.ExplicitComponent):
 
         # create ProFAST object
         pf = create_and_populate_profast(pf_dict)
+        return pf
+
+    def compute(self, inputs, outputs):
+        pf = self.populate_profast(inputs)
+
         # simulate ProFAST
         sol, summary, price_breakdown = run_profast(pf)
 
