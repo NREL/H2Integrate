@@ -6,12 +6,166 @@ import PySAM.Windpower as Windpower
 from attrs import field, define
 
 from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
+from h2integrate.core.validators import gt_zero, contains
 from h2integrate.converters.wind.wind_plant_baseclass import WindPerformanceBaseClass
+from h2integrate.converters.wind.layout.simple_grid_layout import (
+    BasicGridLayoutConfig,
+    make_basic_grid_turbine_layout,
+)
+
+
+@define
+class PySAMPowerCurveCalculationInputs(BaseConfig):
+    """Inputs for the ``calculate_powercurve()`` function in the PySAM Windpower module.
+    The PySAM documentation of the inputs for this function can be found
+    `here <https://nrel-pysam.readthedocs.io/en/main/modules/Windpower.html#PySAM.Windpower.Windpower.Turbine>`_
+
+
+    Attributes:
+        elevation (float): elevation in meters. Required if using Weibull resource model,
+            otherwise should be zero. Defaults to 0.
+        wind_default_max_cp (float): max power coefficient. Defaults to 0.45.
+        wind_default_max_tip_speed (float): max tip speed in m/s. Defaults to 60.
+        wind_default_max_tip_speed_ratio (float): max tip-speed ratio. Defaults to 8.
+        wind_default_cut_in_speed (float): cut-in wind speed in m/s. Defaults to 4.
+        wind_default_cut_out_speed (float): cut-out wind speed in m/s. Defaults to 25.
+        wind_default_drive_train (int): integer representing wind turbine drive train type.
+            Defaults to 0. The mapping of drive train number to drive train type is:
+            - 0: 3 Stage Planetary
+            - 1: Single Stage - Low Speed Generator
+            - 2: Multi-Generator
+            - 3: Direct Drive
+    """
+
+    elevation: int | float = field(default=0)
+    wind_default_max_cp: int | float = field(default=0.45)
+    wind_default_max_tip_speed: int | float = field(default=60)
+    wind_default_max_tip_speed_ratio: int | float = field(default=8)
+    wind_default_cut_in_speed: int | float = field(default=4)
+    wind_default_cut_out_speed: int | float = field(default=25)
+    wind_default_drive_train: int = field(
+        default=0, converter=int, validator=contains([0, 1, 2, 3])
+    )
 
 
 @define
 class PYSAMWindPlantPerformanceModelConfig(BaseConfig):
-    hub_height: float = field()
+    """Configuration class for PYSAMWindPlantPerformanceModel.
+
+    Attributes:
+        num_turbines (int): number of turbines in farm
+        hub_height (float): wind turbine hub-height in meters
+        rotor_diameter (float): wind turbine rotor diameter in meters.
+        turbine_rating_kw (float): wind turbines rated power in kW
+        create_model_from (str):
+            - 'default': instantiate Windpower model from the default config 'config_name'
+            - 'new': instantiate new Windpower model (default). Requires pysam_options.
+        config_name (str,optional): PySAM.Windpower configuration name for non-hybrid wind systems.
+            Defaults to 'WindPowerSingleOwner'. Only used if create_model_from='default'.
+        pysam_options (dict, optional): dictionary of Windpower input parameters with
+            top-level keys corresponding to the different Windpower variable groups.
+            (please refer to Windpower documentation
+            `here <https://nrel-pysam.readthedocs.io/en/main/modules/Windpower.html>`__
+            )
+    """
+
+    num_turbines: int = field(converter=int, validator=gt_zero)
+    hub_height: float = field(validator=gt_zero)
+    rotor_diameter: float = field(validator=gt_zero)
+    turbine_rating_kw: float = field(validator=gt_zero)
+
+    create_model_from: str = field(
+        default="new", validator=contains(["default", "new"]), converter=(str.strip, str.lower)
+    )
+
+    config_name: str = field(
+        default="WindPowerSingleOwner",
+        validator=contains(
+            [
+                "WindPowerAllEquityPartnershipFlip",
+                "WindPowerCommercial",
+                "WindPowerLeveragedPartnershipFlip",
+                "WindPowerMerchantPlant",
+                "WindPowerNone",
+                "WindPowerResidential",
+                "WindPowerSaleLeaseback",
+                "WindPowerSingleOwner",
+            ]
+        ),
+    )
+    pysam_options: dict = field(default={})
+
+    def __attrs_post_init__(self):
+        if self.create_model_from == "new" and not bool(self.pysam_options):
+            msg = (
+                "To create a new Windpower object, please provide a dictionary "
+                "of Windpower design variables for the 'pysam_options' key."
+            )
+            raise ValueError(msg)
+
+        self.check_pysam_options()
+
+    def check_pysam_options(self):
+        """Checks that top-level keys of pysam_options dictionary are valid and that
+        system capacity is not given in pysam_options.
+
+        Raises:
+           ValueError: if top-level keys of pysam_options are not valid.
+           ValueError: if wind_turbine_hub_ht is provided in pysam_options["Turbine"]
+        """
+        valid_groups = [
+            "Turbine",
+            "Farm",
+            "Resource",
+            "Losses",
+            "AdjustmentFactors",
+            "HybridCosts",
+        ]
+        if bool(self.pysam_options):
+            invalid_groups = [k for k in self.pysam_options if k not in valid_groups]
+            if len(invalid_groups) > 0:
+                msg = (
+                    f"Invalid group(s) found in pysam_options: {invalid_groups}. "
+                    f"Valid groups are: {valid_groups}."
+                )
+                raise ValueError(msg)
+
+            if self.pysam_options.get("Turbine", {}).get("hub_height", None) is not None:
+                msg = (
+                    "Please do not specify wind_turbine_hub_ht in the pysam_options dictionary. "
+                    "The wind turbine hub height should be set with the 'hub_height' "
+                    "performance parameter."
+                )
+                raise ValueError(msg)
+
+            if (
+                self.pysam_options.get("Turbine", {}).get("wind_turbine_rotor_diameter", None)
+                is not None
+            ):
+                msg = (
+                    "Please do not specify wind_turbine_rotor_diameter in the pysam_options "
+                    "dictionary. The wind turbine rotor diameter should be set with the "
+                    "'rotor_diameter' performance parameter."
+                )
+                raise ValueError(msg)
+
+        return
+
+    def create_input_dict(self):
+        """Create dictionary of inputs to over-write the default values
+            associated with the specified Windpower configuration.
+
+        Returns:
+           dict: dictionary of Turbine group parameters from user-input.
+        """
+        design_dict = {
+            "Turbine": {
+                "wind_turbine_hub_ht": self.hub_height,
+                "wind_turbine_rotor_diameter": self.rotor_diameter,
+            },
+        }
+
+        return design_dict
 
 
 class PYSAMWindPlantPerformanceModel(WindPerformanceBaseClass):
@@ -22,12 +176,85 @@ class PYSAMWindPlantPerformanceModel(WindPerformanceBaseClass):
 
     def setup(self):
         super().setup()
+
+        performance_inputs = self.options["tech_config"]["model_inputs"]["performance_parameters"]
+
+        # initialize layout config
+        layout_options = {}
+        if "layout" in performance_inputs:
+            layout_params = self.options["tech_config"]["model_inputs"][
+                "performance_parameters"
+            ].pop("layout")
+        layout_mode = layout_params.get("layout_mode", "basicgrid")
+        layout_options = layout_params.get("layout_options", {})
+        if layout_mode == "basicgrid":
+            self.layout_config = BasicGridLayoutConfig.from_dict(layout_options)
+        self.layout_mode = layout_mode
+
+        # initialize power-curve recalc config
+        powercurveconfig = {}
+        if "powercurve_calc_config" in performance_inputs:
+            powercurveconfig = self.options["tech_config"]["model_inputs"][
+                "performance_parameters"
+            ].pop("powercurve_calc_config")
+        self.power_curve_config = PySAMPowerCurveCalculationInputs.from_dict(powercurveconfig)
+
+        # initialize wind turbine config
         self.config = PYSAMWindPlantPerformanceModelConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance")
         )
 
-        self.config_name = "WindPowerSingleOwner"
-        self.system_model = Windpower.default(self.config_name)
+        self.add_input(
+            "num_turbines",
+            val=self.config.num_turbines,
+            units="unitless",
+            desc="number of turbines in farm",
+        )
+
+        self.add_input(
+            "wind_turbine_rating",
+            val=self.config.turbine_rating_kw,
+            units="kW",
+            desc="rating of an individual turbine in kW",
+        )
+
+        self.add_input(
+            "rotor_diameter",
+            val=self.config.rotor_diameter,
+            units="m",
+            desc="turbine rotor diameter",
+        )
+
+        self.add_input(
+            "hub_height",
+            val=self.config.hub_height,
+            units="m",
+            desc="turbine hub-height in meters",
+        )
+
+        self.add_output(
+            "annual_energy",
+            val=0.0,
+            units="kW*h/year",
+            desc="Annual energy production from WindPlant in kW",
+        )
+        self.add_output(
+            "total_capacity", val=0.0, units="kW", desc="Wind farm rated capacity in kW"
+        )
+
+        if self.config.create_model_from == "default":
+            self.system_model = Windpower.default(self.config.config_name)
+        elif self.config.create_model_from == "new":
+            self.system_model = Windpower.new(self.config.config_name)
+
+        design_dict = self.config.create_input_dict()
+        if bool(self.config.pysam_options):
+            for group, group_parameters in self.config.pysam_options.items():
+                if group in design_dict:
+                    design_dict[group].update(group_parameters)
+                else:
+                    design_dict.update({group: group_parameters})
+        self.system_model.assign(design_dict)
 
         self.data_to_field_number = {
             "temperature": 1,
@@ -71,7 +298,7 @@ class PYSAMWindPlantPerformanceModel(WindPerformanceBaseClass):
         }
 
         # find the resource heights that are closest to the hub-height for
-        # PySAM Windpower resoure data except pressure
+        # PySAM Windpower resource data except pressure
         bounding_heights = self.calculate_bounding_heights_from_resource_data(
             hub_height,
             wind_resource_data,
@@ -160,11 +387,75 @@ class PYSAMWindPlantPerformanceModel(WindPerformanceBaseClass):
         }
         return data
 
+    def recalculate_power_curve(self, rotor_diameter, turbine_rating_kw):
+        """Update the turbine power curve for a given rotor diameter and rated turbine capacity.
+
+        Args:
+            rotor_diameter (int): turbine rotor diameter in meters.
+            turbine_rating_kw (float | int): desired turbine rated capacity in kW
+
+        Returns:
+            bool: True if the new power curve has a maximum value equal to `turbine_rating_kw`
+        """
+
+        self.system_model.Turbine.calculate_powercurve(
+            turbine_rating_kw,
+            int(rotor_diameter),
+            self.power_curve_config.elevation,
+            self.power_curve_config.wind_default_max_cp,
+            self.power_curve_config.wind_default_max_tip_speed,
+            self.power_curve_config.wind_default_max_tip_speed_ratio,
+            self.power_curve_config.wind_default_cut_in_speed,
+            self.power_curve_config.wind_default_cut_out_speed,
+            self.power_curve_config.wind_default_drive_train,
+        )
+        success = False
+        if max(self.system_model.value("wind_turbine_powercurve_powerout")) == float(
+            turbine_rating_kw
+        ):
+            success = True
+        return success
+
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
+        rotor_diameter = inputs["rotor_diameter"][0]
+        turbine_rating_kw = inputs["wind_turbine_rating"][0]
+        n_turbs = int(np.round(inputs["num_turbines"][0]))
+
+        # format resource data and input into model
         data = self.format_resource_data(
-            self.config.hub_height, discrete_inputs["wind_resource_data"]
+            inputs["hub_height"][0], discrete_inputs["wind_resource_data"]
         )
         self.system_model.value("wind_resource_data", data)
 
+        # recalculate power curve based on rotor diameter and turbine rating
+        success = self.recalculate_power_curve(rotor_diameter, turbine_rating_kw)
+        # if power-curve could not be adjusted to match input values
+        if not success:
+            msg = (
+                "Could not adjust turbine powercurve to match turbine rating of ",
+                f"{turbine_rating_kw} kW with a rotor diameter of {rotor_diameter} meters",
+            )
+            raise ValueError(msg)
+
+        # assign new turbine specs to the model
+        turbine_rated_power_kW = max(self.system_model.value("wind_turbine_powercurve_powerout"))
+        farm_capacity = turbine_rated_power_kW * n_turbs
+        self.system_model.value("wind_turbine_rotor_diameter", rotor_diameter)
+        self.system_model.value("wind_turbine_hub_ht", inputs["hub_height"][0])
+        self.system_model.value("system_capacity", farm_capacity)
+
+        # make layout for number of turbines
+        if self.layout_mode == "basicgrid":
+            x_pos, y_pos = make_basic_grid_turbine_layout(
+                self.system_model.value("wind_turbine_rotor_diameter"), n_turbs, self.layout_config
+            )
+
+        self.system_model.value("wind_farm_xCoordinates", tuple(x_pos))
+        self.system_model.value("wind_farm_yCoordinates", tuple(y_pos))
+
+        # run the model
         self.system_model.execute(0)
+
         outputs["electricity_out"] = self.system_model.Outputs.gen
+        outputs["total_capacity"] = self.system_model.Farm.system_capacity
+        outputs["annual_energy"] = self.system_model.Outputs.annual_energy

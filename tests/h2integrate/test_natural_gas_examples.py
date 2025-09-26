@@ -49,6 +49,7 @@ def test_21_solar_battery_grid_example(subtests):
 
 
 def test_example_22_solar_ng_generic_load(subtests):
+    """Integration test for adding in demand component without battery."""
     os.chdir(EXAMPLE_DIR / "22_solar_ng_demand")
 
     model = H2IntegrateModel(Path.cwd() / "solar_ng_demand.yaml")
@@ -123,3 +124,53 @@ def test_example_22_solar_ng_generic_load(subtests):
     with subtests.test("Value check: electricity subgroup LCOE"):
         tot_lcoe = model.prob.get_val("finance_subgroup_electricity.LCOE", units="USD/MW/h")[0]
         assert pytest.approx(tot_lcoe, rel=1e-6) == 52.15484
+
+
+def test_example_26_solar_wind_ng_generic_load_example(subtests):
+    """Integration test for adding in pysam wind plant model."""
+    os.chdir(EXAMPLE_DIR / "26_solar_wind_ng_demand")
+
+    model = H2IntegrateModel(Path.cwd() / "solar_wind_ng_demand.yaml")
+
+    model.run()
+
+    model.post_process()
+
+    solar_aep = sum(model.prob.get_val("solar.electricity_out", units="kW"))
+    wind_aep = sum(model.prob.get_val("wind.electricity_out", units="kW"))
+    wind_solar_aep = sum(model.prob.get_val("combiner.electricity_out", units="kW"))
+    ng_aep = sum(model.prob.get_val("natural_gas_plant.electricity_out", units="kW"))
+
+    with subtests.test("Behavior check on wind and solar to combiner"):
+        assert pytest.approx(wind_solar_aep, rel=1e-6) == wind_aep + solar_aep
+
+    with subtests.test("Behavior check missed load is natural gas demand"):
+        assert pytest.approx(
+            model.prob.get_val("electrical_load_demand.electricity_missed_load", units="kW"), 1e-6
+        ) == model.prob.get_val("natural_gas_plant.electricity_demand", units="kW")
+
+    with subtests.test("Value check wind aep"):
+        assert pytest.approx(wind_aep, rel=1e-3) == 4.06908034 * 1e8
+
+    with subtests.test("Value check wind capacity"):
+        assert (
+            pytest.approx(model.prob.get_val("wind.total_capacity", units="MW"), rel=1e-6) == 6 * 20
+        )
+
+    with subtests.test("Value check solar aep"):
+        assert pytest.approx(solar_aep, rel=1e-3) == 2.08298595 * 1e8
+
+    with subtests.test("Value check natural gas aep"):
+        assert pytest.approx(ng_aep, rel=1e-3) == 328566259.35675
+
+    with subtests.test("Value check: renewables subgroup LCOE"):
+        re_lcoe = model.prob.get_val("finance_subgroup_renewables.LCOE", units="USD/MW/h")[0]
+        assert pytest.approx(re_lcoe, rel=1e-6) == 51.67052
+
+    with subtests.test("Value check: natural gas subgroup LCOE"):
+        ng_lcoe = model.prob.get_val("finance_subgroup_natural_gas.LCOE", units="USD/MW/h")[0]
+        assert pytest.approx(ng_lcoe, rel=1e-6) == 67.91951
+
+    with subtests.test("Value check: electricity subgroup LCOE"):
+        tot_lcoe = model.prob.get_val("finance_subgroup_electricity.LCOE", units="USD/MW/h")[0]
+        assert pytest.approx(tot_lcoe, rel=1e-6) == 57.32746

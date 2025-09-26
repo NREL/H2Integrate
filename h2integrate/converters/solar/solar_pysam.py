@@ -124,7 +124,7 @@ class PYSAMSolarPlantPerformanceModelDesignConfig(BaseConfig):
             "HybridCosts",
         ]
         if bool(self.pysam_options):
-            invalid_groups = [k for k, v in self.pysam_options.items() if k not in valid_groups]
+            invalid_groups = [k for k in self.pysam_options if k not in valid_groups]
             if len(invalid_groups) > 0:
                 msg = (
                     f"Invalid group(s) found in pysam_options: {invalid_groups}. "
