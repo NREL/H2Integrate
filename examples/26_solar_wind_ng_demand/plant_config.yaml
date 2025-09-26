@@ -79,7 +79,7 @@ finance_parameters:
     profast_npv:
       finance_model: "ProFastNPV"
       model_inputs:
-        commodity_sell_price: 50.0
+        commodity_sell_price: 0.05167052
         params:
           analysis_start_year: 2032
           installation_time: 36 # months
