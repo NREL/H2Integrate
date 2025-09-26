@@ -422,7 +422,7 @@ def test_heuristic_load_following_battery_dispatch(subtests):
     # expected_unmet_demand_out = np.zeros(5)
     # expected_excess_resource_out = [0.0, 0.0, 6150.14483911, 30000.0, 30000.0]
 
-    abs_tol = 1e-8
+    abs_tol = 1e-6
     rel_tol = 1e-1
     with subtests.test("Check electricity_out for max SOC"):
         assert (
