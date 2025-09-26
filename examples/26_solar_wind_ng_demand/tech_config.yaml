@@ -2,6 +2,37 @@ name: "technology_config"
 description: "This plant produces electricity from natural gas using a combined cycle turbine"
 
 technologies:
+  wind:
+    performance_model:
+      model: "pysam_wind_plant_performance"
+    cost_model:
+      model: "atb_wind_cost" #in the future, lets use a different wind plant cost model
+    model_inputs:
+      performance_parameters:
+        num_turbines: 20
+        turbine_rating_kw: 6000
+        hub_height: 115
+        rotor_diameter: 170
+        create_model_from: "default"
+        config_name: "WindPowerSingleOwner"
+        pysam_options:
+          Farm:
+            wind_farm_wake_model: 0
+          Losses:
+            ops_strategies_loss: 10.0
+        layout:
+          layout_mode: "basicgrid"
+          layout_options:
+            row_D_spacing: 5.0
+            turbine_D_spacing: 5.0
+            rotation_angle_deg: 0.0
+            row_phase_offset: 0.0
+            layout_shape: "square"
+      cost_parameters:
+        capex_per_kW: 1300
+        opex_per_kW_per_year: 39
+        cost_year: 2022
+
   solar:
     performance_model:
       model: "pysam_solar_plant_performance"
@@ -9,7 +40,7 @@ technologies:
       model: "atb_utility_pv_cost"
     model_inputs:
       performance_parameters:
-        pv_capacity_kWdc: 200000 #200 MWdc
+        pv_capacity_kWdc: 100000 #100 MWdc
         dc_ac_ratio: 1.34
         create_model_from: "new"
         tilt_angle_func: "none"
@@ -30,32 +61,6 @@ technologies:
         capex_per_kWac: 1193
         opex_per_kWac_per_year: 18
         cost_year: 2024
-  battery:
-    performance_model:
-      model: "simple_generic_storage"
-    cost_model:
-      model: "atb_battery_cost"
-    control_strategy:
-      model: "demand_open_loop_controller"
-    model_inputs:
-      shared_parameters:
-        resource_name: "electricity"
-        resource_rate_units: "kW"
-        max_charge_rate: 25000.0  # kW/time step, 25 MW
-        max_capacity: 200000.0  # kWh, 200 MWh
-      control_parameters:
-        max_charge_percent: 1.0  # percent as decimal
-        min_charge_percent: 0.1  # percent as decimal
-        init_charge_percent: 0.1  # percent as decimal
-        max_discharge_rate: 25000.0  # kW/time step
-        charge_efficiency: 1.0 # percent as decimal
-        discharge_efficiency: 1.0 # percent as decimal
-        demand_profile: 100000 #kW, 100 MW
-      cost_parameters:
-        cost_year: 2022
-        energy_capex: 300 # $/kWh
-        power_capex: 100 # $/kW
-        opex_fraction: 0.05 # percent of capex
   ng_feedstock:
     performance_model:
       model: "feedstock_performance"
@@ -69,9 +74,9 @@ technologies:
         rated_capacity: 750. #MMBtu
       cost_parameters:
         cost_year: 2023
-        price: 4.2
+        price: 4.2 #USD/MMBtu
         annual_cost: 0.
-        start_up_cost: 100000.
+        start_up_cost: 0.
   natural_gas_plant:
     performance_model:
       model: "natural_gas_performance"
@@ -84,5 +89,20 @@ technologies:
       cost_parameters:
         capex_per_kw: 1000  # $/kW - typical for NGCC
         fixed_opex_per_kw_per_year: 10.0  # $/kW/year
-        variable_opex_per_mwh: 2.5  # $/MWh
+        variable_opex_per_mwh: 0.0  # $/MWh
         cost_year: 2023
+  electrical_load_demand:
+      performance_model:
+        model: load_demand
+      model_inputs:
+        performance_parameters:
+          demand: 100000 #100 MW
+          units: "kW"
+          commodity: "electricity"
+  combiner:
+    performance_model:
+      model: "combiner_performance"
+    model_inputs:
+      performance_parameters:
+        commodity: "electricity"
+        commodity_units: "kW"
