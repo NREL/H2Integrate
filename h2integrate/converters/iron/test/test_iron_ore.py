@@ -1,3 +1,4 @@
+import pandas as pd
 import pytest
 import openmdao.api as om
 from pytest import fixture
@@ -70,7 +71,7 @@ def plant_config():
         "finance_parameters": {
             "cost_adjustment_parameters": {
                 "cost_year_adjustment_inflation": 0.025,
-                "target_dollar_year": 2020,
+                "target_dollar_year": 2022,
             }
         },
     }
@@ -84,10 +85,21 @@ def driver_config():
 
 
 # baseline case
-def test_baseline_iron_ore_martin(plant_config, driver_config, iron_ore_config_martin_om, subtests):
+def test_baseline_iron_ore_costs_martin(
+    plant_config, driver_config, iron_ore_config_martin_om, subtests
+):
     martin_ore_capex = 1221599018.626594
     martin_ore_var_om = 97.76558025830258
     martin_ore_fixed_om = 0.0
+    cost_results_fpath = (
+        EXAMPLE_DIR / "20_iron_mn_to_il" / "baseline_outputs" / "rosner_ore_cost.pkl"
+    )
+    performance_results_fpath = (
+        EXAMPLE_DIR / "20_iron_mn_to_il" / "baseline_outputs" / "rosner_ore_performance.pkl"
+    )
+    perf_res = pd.read_pickle(performance_results_fpath)
+    cost_res = pd.read_pickle(cost_results_fpath)
+
     prob = om.Problem()
     iron_ore_perf = IronOrePerformanceComponent(
         plant_config=plant_config,
@@ -101,19 +113,33 @@ def test_baseline_iron_ore_martin(plant_config, driver_config, iron_ore_config_m
         driver_config=driver_config,
     )
 
-    prob.model.add_subsystem("ore_perf", iron_ore_cost, promotes=["*"])
-    prob.model.add_subsystem("ore_cost", iron_ore_perf, promotes=["*"])
+    prob.model.add_subsystem("ore_perf", iron_ore_perf, promotes=["*"])
+    prob.model.add_subsystem("ore_cost", iron_ore_cost, promotes=["*"])
     prob.setup()
     prob.run_model()
+
+    annual_ore = prob.get_val("ore_perf.total_iron_ore_produced", units="t/year")
+    perf_df = prob.get_val("ore_perf.iron_ore_performance")
+    cost_df = prob.get_val("ore_cost.iron_ore_cost")
+    with subtests.test("Annual Ore"):
+        assert pytest.approx(annual_ore[0] / 365, rel=1e-6) == 12385.195376438356
+    with subtests.test("Peformance DF"):
+        perf_err = perf_df["Northshore"] - perf_res["Northshore"]
+        assert float(perf_err.sum()) == 0.0
+    with subtests.test("Cost DF"):
+        cost_err = cost_df["Northshore"] - cost_res["Northshore"]
+        assert float(cost_err.sum()) == 0.0
     with subtests.test("CapEx"):
-        assert pytest.approx(prob.get_val("iron_cost.CapEx")[0], rel=1e-6) == martin_ore_capex
+        assert pytest.approx(prob.get_val("ore_cost.CapEx")[0], rel=1e-6) == martin_ore_capex
     with subtests.test("OpEx"):
-        assert pytest.approx(prob.get_val("iron_cost.OpEx")[0], rel=1e-6) == martin_ore_fixed_om
+        assert pytest.approx(prob.get_val("ore_cost.OpEx")[0], rel=1e-6) == martin_ore_fixed_om
     with subtests.test("VarOpEx"):
-        assert pytest.approx(prob.get_val("iron_cost.VarOpEx")[0], rel=1e-6) == martin_ore_var_om
+        assert pytest.approx(prob.get_val("ore_cost.VarOpEx")[0], rel=1e-6) == martin_ore_var_om
 
 
-def test_baseline_iron_ore_rosner(plant_config, driver_config, iron_ore_config_rosner_om, subtests):
+def test_baseline_iron_ore_costs_rosner(
+    plant_config, driver_config, iron_ore_config_rosner_om, subtests
+):
     rosner_ore_capex = 1221599018.626594
     rosner_ore_var_om = 97.76558025830258
     rosner_ore_fixed_om = 0.0
@@ -130,13 +156,14 @@ def test_baseline_iron_ore_rosner(plant_config, driver_config, iron_ore_config_r
         driver_config=driver_config,
     )
 
-    prob.model.add_subsystem("ore_perf", iron_ore_cost, promotes=["*"])
-    prob.model.add_subsystem("ore_cost", iron_ore_perf, promotes=["*"])
+    prob.model.add_subsystem("ore_perf", iron_ore_perf, promotes=["*"])
+    prob.model.add_subsystem("ore_cost", iron_ore_cost, promotes=["*"])
     prob.setup()
     prob.run_model()
+
     with subtests.test("CapEx"):
-        assert pytest.approx(prob.get_val("iron_cost.CapEx")[0], rel=1e-6) == rosner_ore_capex
+        assert pytest.approx(prob.get_val("ore_cost.CapEx")[0], rel=1e-6) == rosner_ore_capex
     with subtests.test("OpEx"):
-        assert pytest.approx(prob.get_val("iron_cost.OpEx")[0], rel=1e-6) == rosner_ore_fixed_om
+        assert pytest.approx(prob.get_val("ore_cost.OpEx")[0], rel=1e-6) == rosner_ore_fixed_om
     with subtests.test("VarOpEx"):
-        assert pytest.approx(prob.get_val("iron_cost.VarOpEx")[0], rel=1e-6) == rosner_ore_var_om
+        assert pytest.approx(prob.get_val("ore_cost.VarOpEx")[0], rel=1e-6) == rosner_ore_var_om

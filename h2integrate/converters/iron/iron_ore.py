@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import openmdao.api as om
 from attrs import field, define
 
@@ -76,7 +77,9 @@ class IronOrePerformanceComponent(om.ExplicitComponent):
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance"),
             strict=False,
         )
-        self.add_discrete_output("iron_ore_performance")
+        self.add_discrete_output(
+            "iron_ore_performance", val=pd.DataFrame, desc="iron ore performance results"
+        )
         self.add_output("total_iron_ore_produced", val=0.0, units="t/year")
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
@@ -107,7 +110,7 @@ class IronOreCostConfig(IronOreBaseConfig):
     LCOE: float = field(kw_only=True)  # $/MWh
     LCOH: float = field(kw_only=True)  # $/kg
     varom_model_name: str = field(
-        default="martine_ore", validator=contains["martin_ore", "rosner_ore"]
+        default="martine_ore", validator=contains(["martin_ore", "rosner_ore"])
     )
     operational_year: int = field(converter=int, kw_only=True)  # also used in finance
     installation_years: int | float = field(kw_only=True)  # 3 #also used in finance
@@ -144,7 +147,10 @@ class IronOreCostComponent(CostModelBaseClass):
         super().setup()
         self.add_input("LCOE", val=self.config.LCOE, units="USD/MW/h")
         self.add_input("LCOH", val=self.config.LCOH, units="USD/kg")
-        self.add_discrete_input("iron_ore_performance")
+        self.add_discrete_input(
+            "iron_ore_performance", val=pd.DataFrame, desc="iron ore performance results"
+        )
+        self.add_discrete_output("iron_ore_cost", val=pd.DataFrame, desc="iron ore cost results")
         # self.add_discrete_output("iron_ore_cost")
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
@@ -152,7 +158,7 @@ class IronOreCostComponent(CostModelBaseClass):
 
         ore_cost_inputs = {
             "lcoe": inputs["LCOE"][0] / 1e3,
-            "lcoh": inputs["LCOH"][0] / 1e3,
+            "lcoh": inputs["LCOH"][0],
         }
         cost_dict = self.config.make_cost_dict()
         ore_cost_inputs.update(cost_dict)
@@ -169,6 +175,7 @@ class IronOreCostComponent(CostModelBaseClass):
         iron_ore_cost = run_iron_cost_model(cost_config)
         # discrete_outputs['iron_ore_cost'] = iron_ore_cost.costs_df
 
+        discrete_outputs["iron_ore_cost"] = iron_ore_cost.costs_df
         # Now taking some stuff from finance
         cost_df = iron_ore_cost.costs_df.set_index("Name")
         cost_ds = cost_df.loc[:, self.config.mine]
@@ -202,7 +209,6 @@ class IronOreCostComponent(CostModelBaseClass):
 
         var_idxs = np.where(cost_types == "variable opex")[0]
         for idx in var_idxs:
-            cost_names[idx]
             unit = cost_units[idx]  # Should be "<YYYY> $ per <unit plant output>"
             source_year = int(unit[:4])
             source_year_cost = cost_ds.iloc[idx]
@@ -213,14 +219,17 @@ class IronOreCostComponent(CostModelBaseClass):
         analysis_start = self.config.operational_year - self.config.installation_years
         var_om_td = 0
         if "rosner" in self.config.varom_model_name:
-            var_om_td = rosner_ore_variable_om_cost()
+            var_om_td = rosner_ore_variable_om_cost(
+                self.config.mine, cost_df, analysis_start, self.config.cost_year, self.plant_life
+            )
         else:
             #  'martin' in self.config.varom_model_name:
             var_om_td = martin_ore_variable_om_cost(
                 self.config.mine, cost_df, analysis_start, self.config.cost_year, self.plant_life
             )
-        var_om_td += cost
+            # discrete_outputs["varom_td_dict"] = varom_td_dict
+        variable_om += var_om_td
 
         outputs["CapEx"] = capex
         outputs["OpEx"] = fixed_om
-        outputs["VarOpEx"] = var_om_td
+        outputs["VarOpEx"] = variable_om

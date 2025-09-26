@@ -3,6 +3,7 @@ from h2integrate.core.feedstocks import FeedstockCostModel, FeedstockPerformance
 from h2integrate.transporters.pipe import PipePerformanceModel
 from h2integrate.transporters.cable import CablePerformanceModel
 from h2integrate.converters.steel.steel import SteelPerformanceModel, SteelCostAndFinancialModel
+from h2integrate.converters.iron.iron_ore import IronOreCostComponent, IronOrePerformanceComponent
 from h2integrate.converters.wind.wind_plant import WindPlantCostModel, WindPlantPerformanceModel
 from h2integrate.finances.profast_financial import ProFastComp
 from h2integrate.converters.hopp.hopp_wrapper import HOPPComponent
@@ -111,6 +112,8 @@ supported_models = {
     "simple_ASU_performance": SimpleASUPerformanceModel,
     "hopp": HOPPComponent,
     "iron": IronComponent,
+    "iron_ore_performance": IronOrePerformanceComponent,
+    "iron_ore_cost": IronOreCostComponent,
     "reverse_osmosis_desalination_performance": ReverseOsmosisPerformanceModel,
     "reverse_osmosis_desalination_cost": ReverseOsmosisCostModel,
     "simple_ammonia_performance": SimpleAmmoniaPerformanceModel,
