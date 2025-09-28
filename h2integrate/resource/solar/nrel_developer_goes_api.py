@@ -1,5 +1,4 @@
 import urllib.parse
-from typing import ClassVar
 from pathlib import Path
 
 import pandas as pd
@@ -7,7 +6,6 @@ from attrs import field, define
 
 from h2integrate.core.validators import range_val
 from h2integrate.resource.resource_base import ResourceBaseAPIConfig
-from h2integrate.resource.utilities.time_tools import make_time_profile, roll_timeseries_data
 from h2integrate.resource.solar.solar_resource_base import SolarResourceBaseAPIModel
 from h2integrate.resource.utilities.nrel_developer_api_keys import (
     get_nrel_developer_api_key,
@@ -17,10 +15,33 @@ from h2integrate.resource.utilities.nrel_developer_api_keys import (
 
 @define
 class GOESNRELDeveloperAPIConfig(ResourceBaseAPIConfig):
+    """Configuration class to download wind resource data from
+    `GOES Aggregated PSM v4 <https://developer.nrel.gov/docs/solar/nsrdb/nsrdb-GOES-aggregated-v4-0-0-download/>`_.
+
+    Args:
+        resource_year (int): Year to use for resource data.
+            Must been between 1998 and 2024 (inclusive).
+        resource_data (dict | object, optional): Dictionary of user-input resource data.
+            Defaults to an empty dictionary.
+        resource_dir (str | Path, optional): Folder to save resource files to or
+            load resource files from. Defaults to "".
+        resource_filename (str, optional): Filename to save resource data to or load
+            resource data from. Defaults to None.
+
+    Attributes:
+        dataset_desc (str): description of the dataset, used in file naming.
+            For this dataset, the `dataset_desc` is "goes_aggregated_v2".
+        resource_type (str): type of resource data downloaded, used in folder naming.
+            For this dataset, the `resource_type` is "solar".
+        valid_intervals (list[int]): time interval(s) in minutes that resource data can be
+            downloaded in. For this dataset, `valid_intervals` are 30 and 60 minutes.
+
+    """
+
     resource_year: int = field(converter=int, validator=range_val(1998, 2024))
     dataset_desc: str = "goes_aggregated_v4"
     resource_type: str = "solar"
-    valid_intervals: ClassVar = [30, 60]
+    valid_intervals: list[int] = field(factory=lambda: [30, 60])
     resource_data: dict | object = field(default={})
     resource_filename: Path | str = field(default="")
     resource_dir: Path | str | None = field(default=None)
@@ -37,7 +58,7 @@ class GOESNRELDeveloperAPISolarResource(SolarResourceBaseAPIModel):
         resource_specs.setdefault(
             "resource_dir", self.site_config["resources"].get("resource_dir", None)
         )
-        resource_specs.setdefault("timezone", self.sim_config.get("timezone"))
+        resource_specs.setdefault("timezone", self.sim_config.get("timezone", 0))
         self.config = GOESNRELDeveloperAPIConfig.from_dict(resource_specs)
 
         self.utc = False
@@ -53,29 +74,22 @@ class GOESNRELDeveloperAPISolarResource(SolarResourceBaseAPIModel):
             else:
                 self.interval = int(min(self.config.valid_intervals))
 
-        self.resource_time_profile = make_time_profile(
-            self.start_time,
-            self.dt,
-            self.n_timesteps,
-            self.config.timezone,
-            self.config.resource_year,
-        )
         # check what steps to do
         data = self.get_data()
 
         # NOTE: add any upsampling or downsampling, this should be done here
-        data = roll_timeseries_data(self.resource_time_profile, data["time"], data, self.dt)
-        time_str = [
-            data["time"][i].strftime("%m/%d/%Y %H:%M:%S (%z)") for i in range(len(data["time"]))
-        ]
-        data["time"] = time_str
-        # self.data = data
-
         self.add_discrete_output(
             "solar_resource_data", val=data, desc="Dict of solar resource data"
         )
 
     def create_filename(self):
+        """Create default filename to save downloaded data to. Filename is formatted as
+        "{latitude}_{longitude}_{resource_year}_goes_aggregated_v4_{interval}min_{tz_desc}_tz.csv"
+        where "tz_desc" is "utc" if the timezone is zero, or "local" otherwise.
+
+        Returns:
+            str: filename for resource data to be saved to or loaded from.
+        """
         # TODO: update to handle multiple years
         # TODO: update to handle nonstandard time intervals
         if self.utc:
@@ -128,31 +142,16 @@ class GOESNRELDeveloperAPISolarResource(SolarResourceBaseAPIModel):
 
         data = data.dropna(axis=1, how="all")
         data = data.rename(columns=colname_mapper)  # add units to colnames
-        data_time_profile = self.make_data_time_profile(data, site_data["data_tz"])
+
         # dont include data that doesnt have units
         data_main_cols = time_cols + list(colname_mapper.values())
         # make units for data in openmdao-compatible units
         data, data_units = self.format_timeseries_data(data[data_main_cols])
         # convert units to standard units
         data, data_units = self.compare_units_and_correct(data, data_units)
-        timeseries_data = {c: data[c].values for c in data.columns.to_list()}
-        timeseries_data.update({"time": data_time_profile})
-        timeseries_data.update(site_data)
-        return timeseries_data
 
-    def make_data_time_profile(self, data, data_tz):
-        data_start_time_dict = data.iloc[0][["Year", "Month", "Day", "Hour", "Minute"]].to_dict()
-        data_t0 = {k: int(v) for k, v in data_start_time_dict.items()}
-        data_time_profile = pd.to_datetime(data[["Year", "Month", "Day", "Hour", "Minute"]])
-        data_ntimesteps = len(data)
-        data_start_dmy = f"{data_t0['Month']:02d}/{data_t0['Day']:02d}/{data_t0['Year']:02d}"
-        data_start_hms = f"{data_t0['Hour']:02d}:{data_t0['Minute']:02d}:00"
-        data_start_time = f"{data_start_dmy} {data_start_hms}"
-        data_dt = data_time_profile[1] - data_time_profile[0]
-        data_time_profile = make_time_profile(
-            data_start_time, data_dt.seconds, data_ntimesteps, data_tz, start_year=None
-        )
-        return data_time_profile
+        data.update(site_data)
+        return data
 
     def format_timeseries_data(self, data):
         time_cols = ["Year", "Month", "Day", "Hour", "Minute"]
@@ -178,9 +177,12 @@ class GOESNRELDeveloperAPISolarResource(SolarResourceBaseAPIModel):
             data_rename_mapper.update({c: new_c})
             data_units.update({new_c: units})
         data = data.rename(columns=data_rename_mapper)
-        time_cols_mapper = {t: t.lower() for t in time_cols}
-        data = data.rename(columns=time_cols_mapper)
-        return data, data_units
+        # time_cols_mapper = {t: t.lower() for t in time_cols}
+        # data = data.rename(columns=time_cols_mapper)
+        data_dict = {c: data[c].astype(float).values for x, c in data_rename_mapper.items()}
+        data_time_dict = {c.lower(): data[c].astype(float).values for c in time_cols}
+        data_dict.update(data_time_dict)
+        return data_dict, data_units
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         pass

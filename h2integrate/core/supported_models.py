@@ -44,6 +44,7 @@ from h2integrate.converters.methanol.smr_methanol_plant import (
     SMRMethanolPlantFinanceModel,
     SMRMethanolPlantPerformanceModel,
 )
+from h2integrate.resource.solar.nrel_developer_goes_api import GOESNRELDeveloperAPISolarResource
 from h2integrate.converters.ammonia.simple_ammonia_model import (
     SimpleAmmoniaCostModel,
     SimpleAmmoniaPerformanceModel,
@@ -90,6 +91,7 @@ supported_models = {
     # Resources
     "river_resource": RiverResource,
     "wind_toolkit_v2_api": WTKNRELDeveloperAPIWindResource,
+    "goes_solar_v4_api": GOESNRELDeveloperAPISolarResource,
     # Converters
     "wind_plant_performance": WindPlantPerformanceModel,
     "wind_plant_cost": WindPlantCostModel,
