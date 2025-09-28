@@ -6,6 +6,7 @@ from h2integrate import EXAMPLE_DIR
 from h2integrate.converters.solar.solar_pysam import PYSAMSolarPlantPerformanceModel
 from h2integrate.converters.solar.atb_res_com_pv_cost import ATBResComPVCostModel
 from h2integrate.converters.solar.atb_utility_pv_cost import ATBUtilityPVCostModel
+from h2integrate.resource.solar.nrel_developer_goes_api import GOESNRELDeveloperAPISolarResource
 
 
 @fixture
@@ -13,10 +14,9 @@ def solar_resource_dict():
     pv_resource_dir = EXAMPLE_DIR / "11_hybrid_energy_plant" / "tech_inputs" / "weather" / "solar"
     pv_filename = "30.6617_-101.7096_psmv3_60_2013.csv"
     pv_resource_dict = {
-        "latitude": 30.6617,
-        "longitude": -101.7096,
-        "year": 2013,
-        "solar_resource_filepath": pv_resource_dir / pv_filename,
+        "resource_year": 2013,
+        "resource_dir": pv_resource_dir,
+        "resource_filename": pv_filename,
     }
     return pv_resource_dict
 
@@ -47,6 +47,21 @@ def utility_scale_pv_performance_params():
         "pysam_options": pysam_options,
     }
     return tech_params
+
+
+@fixture
+def plant_config():
+    plant = {
+        "plant_life": 30,
+        "simulation": {
+            "dt": 3600,
+            "n_timesteps": 8760,
+            "start_time": "01/01/1900 00:30:00",
+            "timezone": 0,
+        },
+    }
+
+    return {"plant": plant, "site": {"latitude": 30.6617, "longitude": -101.7096, "resources": {}}}
 
 
 @fixture
@@ -93,25 +108,25 @@ def residential_pv_performance_params():
     return tech_params
 
 
-@fixture
-def plant_config():
-    pv_resource_dir = EXAMPLE_DIR / "11_hybrid_energy_plant" / "tech_inputs" / "weather" / "solar"
-    pv_filename = "30.6617_-101.7096_psmv3_60_2013.csv"
-    pv_resource_dict = {
-        "latitude": 30.6617,
-        "longitude": -101.7096,
-        "year": 2013,
-        "solar_resource_filepath": pv_resource_dir / pv_filename,
-    }
-    return {
-        "plant": {
-            "plant_life": 30,
-            "simulation": {
-                "n_timesteps": 8760,
-            },
-        },
-        "site": pv_resource_dict,
-    }
+# @fixture
+# def plant_config():
+#     pv_resource_dir = EXAMPLE_DIR / "11_hybrid_energy_plant" / "tech_inputs" / "weather" / "solar"
+#     pv_filename = "30.6617_-101.7096_psmv3_60_2013.csv"
+#     pv_resource_dict = {
+#         "latitude": 30.6617,
+#         "longitude": -101.7096,
+#         "year": 2013,
+#         "solar_resource_filepath": pv_resource_dir / pv_filename,
+#     }
+#     return {
+#         "plant": {
+#             "plant_life": 30,
+#             "simulation": {
+#                 "n_timesteps": 8760,
+#             },
+#         },
+#         "site": pv_resource_dict,
+#     }
 
 
 def test_utility_pv_cost(
@@ -131,24 +146,24 @@ def test_utility_pv_cost(
         }
     }
 
-    plant_info = {
-        "plant_life": 30,
-        "simulation": {
-            "n_timesteps": 8760,
-            "dt": 3600,
-        },
-    }
-
     prob = om.Problem()
+    solar_resource = GOESNRELDeveloperAPISolarResource(
+        plant_config=plant_config,
+        resource_config=solar_resource_dict,
+        driver_config={},
+    )
     perf_comp = PYSAMSolarPlantPerformanceModel(
-        plant_config={"site": solar_resource_dict, "plant": plant_info},
+        plant_config=plant_config,
         tech_config=tech_config_dict,
+        driver_config={},
     )
     cost_comp = ATBUtilityPVCostModel(
         plant_config=plant_config,
         tech_config=tech_config_dict,
+        driver_config={},
     )
 
+    prob.model.add_subsystem("solar_resource", solar_resource, promotes=["*"])
     prob.model.add_subsystem("pv_perf", perf_comp, promotes=["*"])
     prob.model.add_subsystem("pv_cost", cost_comp, promotes=["*"])
     prob.setup()
@@ -189,24 +204,21 @@ def test_commercial_pv_cost(
         }
     }
 
-    plant_info = {
-        "plant_life": 30,
-        "simulation": {
-            "n_timesteps": 8760,
-            "dt": 3600,
-        },
-    }
-
     prob = om.Problem()
+    solar_resource = GOESNRELDeveloperAPISolarResource(
+        plant_config=plant_config,
+        resource_config=solar_resource_dict,
+        driver_config={},
+    )
+
     perf_comp = PYSAMSolarPlantPerformanceModel(
-        plant_config={"site": solar_resource_dict, "plant": plant_info},
-        tech_config=tech_config_dict,
+        plant_config=plant_config, tech_config=tech_config_dict, driver_config={}
     )
     cost_comp = ATBResComPVCostModel(
-        plant_config=plant_config,
-        tech_config=tech_config_dict,
+        plant_config=plant_config, tech_config=tech_config_dict, driver_config={}
     )
 
+    prob.model.add_subsystem("solar_resource", solar_resource, promotes=["*"])
     prob.model.add_subsystem("pv_perf", perf_comp, promotes=["*"])
     prob.model.add_subsystem("pv_cost", cost_comp, promotes=["*"])
     prob.setup()
@@ -244,24 +256,21 @@ def test_residential_pv_cost(
         }
     }
 
-    plant_info = {
-        "plant_life": 30,
-        "simulation": {
-            "n_timesteps": 8760,
-            "dt": 3600,
-        },
-    }
-
     prob = om.Problem()
-    perf_comp = PYSAMSolarPlantPerformanceModel(
-        plant_config={"site": solar_resource_dict, "plant": plant_info},
-        tech_config=tech_config_dict,
+    solar_resource = GOESNRELDeveloperAPISolarResource(
+        plant_config=plant_config,
+        resource_config=solar_resource_dict,
+        driver_config={},
     )
-    cost_comp = ATBResComPVCostModel(
+    perf_comp = PYSAMSolarPlantPerformanceModel(
         plant_config=plant_config,
         tech_config=tech_config_dict,
+        driver_config={},
     )
-
+    cost_comp = ATBResComPVCostModel(
+        plant_config=plant_config, tech_config=tech_config_dict, driver_config={}
+    )
+    prob.model.add_subsystem("solar_resource", solar_resource, promotes=["*"])
     prob.model.add_subsystem("pv_perf", perf_comp, promotes=["*"])
     prob.model.add_subsystem("pv_cost", cost_comp, promotes=["*"])
     prob.setup()

@@ -12,7 +12,6 @@ class SolarResourceBaseAPIModel(ResourceBaseAPIModel):
             "wind_speed": "m/s",
             "temperature": "C",
             "pressure": "mbar",
-            # 'precipitation_rate': 'mm/h',
             "relative_humidity": "percent",
             "ghi": "W/m**2",
             "dni": "W/m**2",
@@ -25,14 +24,6 @@ class SolarResourceBaseAPIModel(ResourceBaseAPIModel):
             "solar_zenith_angle": "deg",
             "snow_depth": "cm",
             "precipitable_water": "cm",
-            # 'ozone': 'unitless', #unsure
-            # 'alpha': 'unitless', #unsure
-            # 'asymmetry': 'unitless', #unsure
-            # 'cloud_type': 'obj',
-            # 'fill_flag': 'obj',
-            # 'SSA': '', #unsure,
-            # 'Global Horizontal UV Irradiance (280-400nm)': 'W/m**2', #unsure,
-            # 'Global Horizontal UV Irradiance (295-385nm)': 'W/m**2', #unsure,
         }
 
     def compare_units_and_correct(self, data, data_units):
