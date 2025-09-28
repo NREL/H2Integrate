@@ -138,6 +138,7 @@ class GOESNRELDeveloperAPISolarResource(SolarResourceBaseAPIModel):
             "site_lat": float(header_dict["Latitude"]),
             "site_lon": float(header_dict["Longitude"]),
             "elevation": float(header_dict["Elevation"]),
+            "filepath": str(fpath),
         }
 
         data = data.dropna(axis=1, how="all")
