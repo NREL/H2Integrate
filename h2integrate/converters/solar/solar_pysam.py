@@ -6,24 +6,6 @@ from h2integrate.core.validators import contains, range_val_or_none
 from h2integrate.converters.solar.solar_baseclass import SolarPerformanceBaseClass
 
 
-# @define
-# class PYSAMSolarPlantPerformanceModelSiteConfig(BaseConfig):
-#     """Configuration class for the location of the solar pv plant
-#         PYSAMSolarPlantPerformanceComponentSite.
-
-#     Attributes:
-#         latitude (float): Latitude of wind plant location.
-#         longitude (float): Longitude of wind plant location.
-#         year (float): Year for resource.
-#         solar_resource_filepath (str): Path to solar resource file. Defaults to "".
-#     """
-
-#     latitude: float = field()
-#     longitude: float = field()
-#     year: float = field()
-#     solar_resource_filepath: str = field(default="")
-
-
 @define
 class PYSAMSolarPlantPerformanceModelDesignConfig(BaseConfig):
     """Configuration class for design parameters of the solar pv plant.
@@ -161,9 +143,7 @@ class PYSAMSolarPlantPerformanceModel(SolarPerformanceBaseClass):
 
     def setup(self):
         super().setup()
-        # self.config = PYSAMSolarPlantPerformanceModelSiteConfig.from_dict(
-        #     self.options["plant_config"]["site"], strict=False
-        # )
+
         self.design_config = PYSAMSolarPlantPerformanceModelDesignConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance"),
             strict=False,
@@ -188,8 +168,6 @@ class PYSAMSolarPlantPerformanceModel(SolarPerformanceBaseClass):
             self.system_model = Pvwatts.new(self.design_config.config_name)
 
         design_dict = self.design_config.create_input_dict()
-        # tilt = self.calc_tilt_angle()
-        # design_dict["SystemDesign"].update({"tilt": tilt})
 
         # update design_dict if user provides non-empty design information
         if bool(self.design_config.pysam_options):
@@ -203,15 +181,6 @@ class PYSAMSolarPlantPerformanceModel(SolarPerformanceBaseClass):
 
         self.design_dict = design_dict
         self.system_model.assign(design_dict)
-
-        # solar_resource = SolarResource(
-        #     lat=latitude,
-        #     lon=self.config.longitude,
-        #     year=self.config.year,
-        #     filepath=self.config.solar_resource_filepath,
-        # )
-
-        # self.system_model.value("solar_resource_data", solar_resource.data)
 
     def calc_tilt_angle(self, latitude):
         """
@@ -257,7 +226,20 @@ class PYSAMSolarPlantPerformanceModel(SolarPerformanceBaseClass):
             return latitude
 
     def format_resource_data(self, solar_resource_data):
-        # unsure if timezone has to be
+        """Format solar resource data into the format required for the
+        PySAM PvWattsv8 module. This method includes:
+
+        1. Renaming solar resource data keys to the keynames
+        expected by the PvWattsv8 modules
+        2. Remove any solar resource data that PvWattsv8 does not use.
+
+        Args:
+            solar_resource_data (dict): solar resource data dictionary
+
+        Returns:
+            dict: PySAM formatted solar resource data
+        """
+
         resource_name_mapper = {
             "elevation": "elev",
             "site_lat": "lat",
@@ -292,17 +274,25 @@ class PYSAMSolarPlantPerformanceModel(SolarPerformanceBaseClass):
         return reformatted_data
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
-        tilt = self.calc_tilt_angle(discrete_inputs["solar_resource_data"]["site_lat"])
+        # calculate the tilt angle based on site latitude (use 0 if site latitude is not input)
+        tilt = self.calc_tilt_angle(discrete_inputs["solar_resource_data"].get("site_lat", 0))
+        # over-write the tilt angle if it was specified in the design dict
         tilt_angle = self.design_dict.get("SystemDesign", {}).get("tilt", tilt)
+        # assign the tilt angle
         self.system_model.value("tilt", tilt_angle)
 
+        # set the system capacity
         self.system_model.value("system_capacity", inputs["capacity_kWdc"][0])
 
         solar_resource_data = discrete_inputs["solar_resource_data"]
+        # format solar resource data into the necessary format for PySAM
         solar_resource = self.format_resource_data(solar_resource_data)
         self.system_model.value("solar_resource_data", solar_resource)
 
+        # run the model
         self.system_model.execute(0)
+
+        # assign outputs
         outputs["electricity_out"] = self.system_model.Outputs.gen  # kW-dc
         pv_capacity_kWdc = self.system_model.value("system_capacity")
         dc_ac_ratio = self.system_model.value("dc_ac_ratio")

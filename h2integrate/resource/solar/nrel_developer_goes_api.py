@@ -15,7 +15,7 @@ from h2integrate.resource.utilities.nrel_developer_api_keys import (
 
 @define
 class GOESNRELDeveloperAPIConfig(ResourceBaseAPIConfig):
-    """Configuration class to download wind resource data from
+    """Configuration class to downloadsolar resource data from
     `GOES Aggregated PSM v4 <https://developer.nrel.gov/docs/solar/nsrdb/nsrdb-GOES-aggregated-v4-0-0-download/>`_.
 
     Args:
@@ -51,20 +51,30 @@ class GOESNRELDeveloperAPISolarResource(SolarResourceBaseAPIModel):
     def setup(self):
         super().setup()
 
+        # create the input dictionary for GOESNRELDeveloperAPIConfig
         resource_specs = self.options["resource_config"]
+        # set the default latitude, longitude, and resource_year from the site_config
         resource_specs.setdefault("latitude", self.site_config["latitude"])
         resource_specs.setdefault("longitude", self.site_config["longitude"])
         resource_specs.setdefault("resource_year", self.site_config.get("year", None))
+        # set the default resource_dir from a directory that can be
+        # specified in site_config['resources']['resource_dir']
         resource_specs.setdefault(
-            "resource_dir", self.site_config["resources"].get("resource_dir", None)
+            "resource_dir", self.site_config.get("resources", {}).get("resource_dir", None)
         )
+
+        # default timezone to UTC because 'timezone' was removed from the plant config schema
         resource_specs.setdefault("timezone", self.sim_config.get("timezone", 0))
+
+        # create the resource config
         self.config = GOESNRELDeveloperAPIConfig.from_dict(resource_specs)
 
+        # set UTC variable depending on timezone, used for filenaming
         self.utc = False
         if float(self.config.timezone) == 0.0:
             self.utc = True
 
+        # check interval to use for data download/load based on simulation timestep
         interval = self.dt / 60
         if any(float(v) == float(interval) for v in self.config.valid_intervals):
             self.interval = int(interval)
@@ -74,10 +84,10 @@ class GOESNRELDeveloperAPISolarResource(SolarResourceBaseAPIModel):
             else:
                 self.interval = int(min(self.config.valid_intervals))
 
-        # check what steps to do
+        # get the data dictionary
         data = self.get_data()
 
-        # NOTE: add any upsampling or downsampling, this should be done here
+        # add resource data dictionary as an out
         self.add_discrete_output(
             "solar_resource_data", val=data, desc="Dict of solar resource data"
         )
@@ -103,6 +113,11 @@ class GOESNRELDeveloperAPISolarResource(SolarResourceBaseAPIModel):
         return filename
 
     def create_url(self):
+        """Create url for data download.
+
+        Returns:
+            str: url to use for API call.
+        """
         input_data = {
             "wkt": f"POINT({self.config.longitude} {self.config.latitude})",
             "names": [str(self.config.resource_year)],  # TODO: update to handle multiple years
@@ -116,6 +131,25 @@ class GOESNRELDeveloperAPISolarResource(SolarResourceBaseAPIModel):
         return url
 
     def load_data(self, fpath):
+        """Load data from a file and format as a dictionary that:
+
+        1) follows naming convention described in SolarResourceBaseAPIModel.
+        2) is converted to standardized units described in SolarResourceBaseAPIModel.
+
+        This method does the following steps:
+
+        1) load the data, separate out scalar data and timeseries data
+        2) remove unused data
+        3) Rename the data columns to standardized naming convention and create dictionary of
+            OpenMDAO compatible units for the data. Calls `format_timeseries_data()` method.
+        4) Convert data to standardized units. Calls `compare_units_and_correct()` method
+
+        Args:
+            fpath (str | Path): filepath to file containing the data
+
+        Returns:
+            dict: dictionary of data in standardized units and naming convention.
+        """
         data = pd.read_csv(fpath, header=2)
         header = pd.read_csv(fpath, nrows=2, header=None)
         header_keys = header.iloc[0].to_list()
@@ -155,6 +189,20 @@ class GOESNRELDeveloperAPISolarResource(SolarResourceBaseAPIModel):
         return data
 
     def format_timeseries_data(self, data):
+        """Convert data to a dictionary with keys that follow the standardized naming convention and
+        create a dictionary containing the units for the data.
+
+        Args:
+            data (pd.DataFrame): Dataframe of timeseries data.
+
+        Returns:
+            2-element tuple containing
+
+            - **data** (*dict*): data dictionary with keys following the standardized naming
+                convention.
+            - **data_units** (*dict*): dictionary with same keys as `data` and values as the
+                data units in OpenMDAO compatible format.
+        """
         time_cols = ["Year", "Month", "Day", "Hour", "Minute"]
         data_cols_init = [c for c in data.columns.to_list() if c not in time_cols]
         data_rename_mapper = {}
