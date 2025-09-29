@@ -6,6 +6,7 @@ from hopp.utilities import load_yaml
 
 import h2integrate.tools.profast_reverse_tools as rev_pf_tools
 from h2integrate.core.utilities import CostModelBaseConfig, merge_shared_inputs
+from h2integrate.core.validators import contains, range_val
 from h2integrate.core.model_baseclasses import CostModelBaseClass
 from h2integrate.simulation.technologies.iron.iron import run_iron_full_model
 from h2integrate.simulation.technologies.iron.martin_transport.iron_transport import (
@@ -15,9 +16,53 @@ from h2integrate.simulation.technologies.iron.martin_transport.iron_transport im
 
 @define
 class IronConfig(CostModelBaseConfig):
-    h2_kgpy: float = field()
-    lcoe: float = field()
-    lcoh: float = field()
+    """Configuration class for IronComponent.
+
+    Attributes:
+        LCOE (float): cost of electricity in USD/MW/h
+        LCOH (float): cost of hydrogen in USD/kg
+        ROM_iron_site_name (str): mine for Iron Ore.
+            Options are "Hibbing", "Northshore", "United", "Minorca" or "Tilden".
+        iron_ore_product_selection (str): iron ore pellet type.
+            Options are "drg_taconite_pellets" or "std_taconite_pellets".
+        reduced_iron_product_selection (str): material for iron electrwinning process.
+            Options are "h2_dri" or "ng_dri"
+        structural_iron_product_selection (str): iron processing method.
+            Options are "eaf_steel" or "none".
+        iron_capacity_denom (str): Capacity denominator to use in iron modeling.
+            Options are "iron" or "steel".
+        eaf_capacity (float, optional): Capacity of electric arc furnace in
+            metric tonnes of iron per year. Defaults to 1000000.
+        dri_capacity (float, optional): Capacity of direct reduced iron plant in
+            metric tonnes of iron per year. Defaults to 1418095.
+        iron_ore_cf_estimate (float, optional): Estimated capacity factor of iron ore mine.
+            Defaults to 0.9. Must be between 0 and 1.
+
+    """
+
+    # Comments below denote which step each config variable applies to in run_iron_full_model
+
+    LCOE: float = field()  # $/MWh
+    LCOH: float = field()  # $/kg
+    ROM_iron_site_name: str = field(
+        validator=contains(["Hibbing", "Northshore", "United", "Minorca", "Tilden"])
+    )  # ore
+    iron_ore_product_selection: str = field(
+        converter=(str.lower, str.strip),
+        validator=contains(["drg_taconite_pellets", "std_taconite_pellets"]),
+    )  # ore
+    reduced_iron_product_selection: str = field(
+        converter=(str.lower, str.strip), validator=contains(["h2_dri", "ng_dri"])
+    )  # win
+    structural_iron_product_selection: str = field(
+        converter=(str.lower, str.strip), validator=contains(["eaf_steel", "none"])
+    )  # post
+    iron_capacity_denom: str = field(
+        default="iron", converter=(str.lower, str.strip), validator=contains(["iron", "steel"])
+    )  # win
+    eaf_capacity: float | int = field(default=1000000)  # post
+    dri_capacity: float | int = field(default=1418095)  # win
+    iron_ore_cf_estimate: float = field(default=0.9, validator=range_val(0, 1))  # ore
 
 
 class IronComponent(CostModelBaseClass):
@@ -42,23 +87,35 @@ class IronComponent(CostModelBaseClass):
         self.h2i_config_old = load_yaml(old_input_path / h2i_config_old_fn)
 
         self.add_output("iron_out", val=0.0, shape=n_timesteps, units="kg/h")
+
+        self.add_input("LCOE", val=self.config.LCOE, units="USD/MW/h")
+        self.add_input("LCOH", val=self.config.LCOH, units="USD/kg")
+
         self.add_output("total_iron_produced", val=0.0, units="kg/year")
         self.add_output("LCOI", val=0.0, units="USD/kg")
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
+        # Parse in values from config
+        mine_site = self.config.ROM_iron_site_name
+        ore_type = self.config.iron_ore_product_selection
+        red_iron_type = self.config.reduced_iron_product_selection
+        struct_iron_type = self.config.structural_iron_product_selection
+        denom = self.config.iron_capacity_denom
+        eaf_cap = self.config.eaf_capacity
+        dri_cap = self.config.dri_capacity
+        ore_cf = self.config.iron_ore_cf_estimate
+
         # BELOW: Copy-pasted from ye olde h2integrate_simulation.py (the 1000+ line monster)
 
         iron_config = copy.deepcopy(self.h2i_config_old)
-        cap_denom = iron_config["iron_win"]["performance"]["capacity_denominator"]
 
         # This is not the most graceful way to do this... but it avoids copied imports
         # and copying iron.py
         iron_ore_config = copy.deepcopy(iron_config)
-        copy.deepcopy(iron_config)
         iron_win_config = copy.deepcopy(iron_config)
         iron_post_config = copy.deepcopy(iron_config)
+
         iron_ore_config["iron"] = iron_config["iron_ore"]
-        # iron_pre_config["iron"] = iron_config["iron_pre"]
         iron_win_config["iron"] = iron_config["iron_win"]
         iron_post_config["iron"] = iron_config["iron_post"]
         for sub_iron_config in [
@@ -66,23 +123,46 @@ class IronComponent(CostModelBaseClass):
             iron_win_config,
             iron_post_config,
         ]:  # ,iron_post_config]: # iron_pre_config, iron_post_config
-            sub_iron_config["iron"]["performance"]["hydrogen_amount_kgpy"] = self.config.h2_kgpy
-            sub_iron_config["iron"]["costs"]["lcoe"] = self.config.lcoe
-            sub_iron_config["iron"]["finances"]["lcoe"] = self.config.lcoe
-            sub_iron_config["iron"]["costs"]["lcoh"] = self.config.lcoh
-            sub_iron_config["iron"]["finances"]["lcoh"] = self.config.lcoh
+            sub_iron_config["iron"]["costs"]["lcoe"] = inputs["LCOE"][0] / 1e3
+            sub_iron_config["iron"]["finances"]["lcoe"] = inputs["LCOE"][0] / 1e3
+            sub_iron_config["iron"]["costs"]["lcoh"] = inputs["LCOH"][0]
+            sub_iron_config["iron"]["finances"]["lcoh"] = inputs["LCOH"][0]
 
-        # TODO: find a way of looping the above and below
+        # Update ore config
+        iron_ore_config["iron"]["site"]["name"] = mine_site
+        iron_ore_config["iron"]["performance"]["input_capacity_factor_estimate"] = ore_cf
+        iron_ore_config["iron"]["product_selection"] = ore_type
+
+        # Update win config
+        iron_win_config["iron"]["product_selection"] = red_iron_type
+        iron_win_config["iron"]["performance"]["plant_capacity_mtpy"] = dri_cap
+
+        # Update post config
+        if struct_iron_type == "none":
+            iron_post_config["iron"]["product_selection"] = "none"
+        elif struct_iron_type == "eaf_steel":
+            if red_iron_type == "ng_dri":
+                iron_post_config["iron"]["product_selection"] = "ng_eaf"
+            elif red_iron_type == "h2_dri":
+                iron_post_config["iron"]["product_selection"] = "h2_eaf"
+            else:
+                msg = f"The EAF steel model cannot (yet) use {red_iron_type} as input"
+                raise NotImplementedError(msg)
+            iron_post_config["iron"]["performance"]["capacity_denominator"] = denom
+            iron_post_config["iron"]["performance"]["plant_capacity_mtpy"] = eaf_cap
+
+        # Run iron model for iron ore
         iron_ore_performance, iron_ore_costs, iron_ore_finance = run_iron_full_model(
             iron_ore_config
         )
 
-        # iron_pre_performance, iron_pre_costs, iron_pre_finance = \
-        #     run_iron_full_model(iron_pre_config)
-
+        # Run iron transport model
+        # Determine whether to ship from "Duluth", "Chicago", "Cleveland" or "Buffalo"
+        # To electrowinning site
         iron_transport_cost_tonne, ore_profit_pct = calc_iron_ship_cost(iron_win_config)
 
         ### DRI ----------------------------------------------------------------------------
+        ### Electrowinning
         if iron_win_config["iron"]["product_selection"] not in ["ng_dri", "h2_dri"]:
             raise ValueError(
                 "The product selection for the iron win module must be either \
@@ -97,7 +177,7 @@ class IronComponent(CostModelBaseClass):
         )
 
         ### EAF ----------------------------------------------------------------------------
-        if iron_config["iron_post"]["product_selection"] == "none":
+        if iron_post_config["iron"]["product_selection"] == "none":
             iron_performance = iron_win_performance
             iron_costs = iron_win_costs
             iron_finance = iron_win_finance
@@ -116,7 +196,7 @@ class IronComponent(CostModelBaseClass):
             )  # profast dictionary of values
             iron_post_config["iron"]["finances"]["pf"] = pf_dict
             iron_post_config["iron"]["costs"]["lco_iron_ore_tonne"] = iron_ore_finance.sol["lco"]
-            iron_post_config["iron"]["performance"]["capacity_denominator"] = cap_denom
+
             iron_post_performance, iron_post_costs, iron_post_finance = run_iron_full_model(
                 iron_post_config
             )
