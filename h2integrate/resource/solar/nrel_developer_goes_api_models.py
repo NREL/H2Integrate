@@ -1,0 +1,288 @@
+from pathlib import Path
+
+from attrs import field, define
+
+from h2integrate.core.validators import contains, range_val
+from h2integrate.resource.resource_base import ResourceBaseAPIConfig
+from h2integrate.resource.solar.nrel_developer_goes_api_base import (
+    GOESNRELDeveloperAPISolarResourceBase,
+)
+
+
+@define
+class GOESAggregatedNRELDeveloperAPIConfig(ResourceBaseAPIConfig):
+    """Configuration class to downloadsolar resource data from
+    `GOES Aggregated PSM v4 <https://developer.nrel.gov/docs/solar/nsrdb/nsrdb-GOES-aggregated-v4-0-0-download/>`_.
+
+    Args:
+        resource_year (int): Year to use for resource data.
+            Must been between 1998 and 2024 (inclusive).
+        resource_data (dict | object, optional): Dictionary of user-input resource data.
+            Defaults to an empty dictionary.
+        resource_dir (str | Path, optional): Folder to save resource files to or
+            load resource files from. Defaults to "".
+        resource_filename (str, optional): Filename to save resource data to or load
+            resource data from. Defaults to None.
+
+    Attributes:
+        dataset_desc (str): description of the dataset, used in file naming.
+            For this dataset, the `dataset_desc` is "goes_aggregated_v2".
+        resource_type (str): type of resource data downloaded, used in folder naming.
+            For this dataset, the `resource_type` is "solar".
+        valid_intervals (list[int]): time interval(s) in minutes that resource data can be
+            downloaded in. For this dataset, `valid_intervals` are 30 and 60 minutes.
+
+    """
+
+    resource_year: int = field(converter=int, validator=range_val(1998, 2024))
+    dataset_desc: str = "goes_aggregated_v4"
+    resource_type: str = "solar"
+    valid_intervals: list[int] = field(factory=lambda: [30, 60])
+    resource_data: dict | object = field(default={})
+    resource_filename: Path | str = field(default="")
+    resource_dir: Path | str | None = field(default=None)
+
+
+class GOESAggregatedNRELDeveloperAPISolarResource(GOESNRELDeveloperAPISolarResourceBase):
+    def setup(self):
+        self.site_config = self.options["plant_config"]["site"]
+        self.sim_config = self.options["plant_config"]["plant"]["simulation"]
+        self.n_timesteps = int(self.sim_config["n_timesteps"])
+        self.dt = self.sim_config["dt"]
+        self.start_time = self.sim_config["start_time"]
+
+        # create the input dictionary for GOESNRELDeveloperAPIConfig
+        resource_specs = self.options["resource_config"]
+        # set the default latitude, longitude, and resource_year from the site_config
+        resource_specs.setdefault("latitude", self.site_config["latitude"])
+        resource_specs.setdefault("longitude", self.site_config["longitude"])
+        resource_specs.setdefault("resource_year", self.site_config.get("year", None))
+        # set the default resource_dir from a directory that can be
+        # specified in site_config['resources']['resource_dir']
+        resource_specs.setdefault(
+            "resource_dir", self.site_config.get("resources", {}).get("resource_dir", None)
+        )
+
+        # default timezone to UTC because 'timezone' was removed from the plant config schema
+        resource_specs.setdefault("timezone", self.sim_config.get("timezone", 0))
+
+        self.base_url = "https://developer.nrel.gov/api/nsrdb/v2/solar/nsrdb-GOES-aggregated-v4-0-0-download.csv?"
+        # create the resource config
+        self.config = GOESAggregatedNRELDeveloperAPIConfig.from_dict(resource_specs)
+        super().setup()
+
+
+@define
+class GOESConusNRELDeveloperAPIConfig(ResourceBaseAPIConfig):
+    """Configuration class to downloadsolar resource data from
+    `GOES Conus PSM v4 <https://developer.nrel.gov/docs/solar/nsrdb/nsrdb-GOES-conus-v4-0-0-download/>`_.
+
+    Args:
+        resource_year (int): Year to use for resource data.
+            Must been between 2018 and 2024 (inclusive).
+        resource_data (dict | object, optional): Dictionary of user-input resource data.
+            Defaults to an empty dictionary.
+        resource_dir (str | Path, optional): Folder to save resource files to or
+            load resource files from. Defaults to "".
+        resource_filename (str, optional): Filename to save resource data to or load
+            resource data from. Defaults to None.
+
+    Attributes:
+        dataset_desc (str): description of the dataset, used in file naming.
+            For this dataset, the `dataset_desc` is "goes_aggregated_v2".
+        resource_type (str): type of resource data downloaded, used in folder naming.
+            For this dataset, the `resource_type` is "solar".
+        valid_intervals (list[int]): time interval(s) in minutes that resource data can be
+            downloaded in. For this dataset, `valid_intervals` are 5, 15, 30 and 60 minutes.
+
+    """
+
+    resource_year: int = field(converter=int, validator=range_val(2018, 2024))
+    dataset_desc: str = "goes_conus_v4"
+    resource_type: str = "solar"
+    valid_intervals: list[int] = field(factory=lambda: [5, 15, 30, 60])
+    resource_data: dict | object = field(default={})
+    resource_filename: Path | str = field(default="")
+    resource_dir: Path | str | None = field(default=None)
+
+
+class GOESConusNRELDeveloperAPISolarResource(GOESNRELDeveloperAPISolarResourceBase):
+    def setup(self):
+        self.site_config = self.options["plant_config"]["site"]
+        self.sim_config = self.options["plant_config"]["plant"]["simulation"]
+        self.n_timesteps = int(self.sim_config["n_timesteps"])
+        self.dt = self.sim_config["dt"]
+        self.start_time = self.sim_config["start_time"]
+
+        # create the input dictionary for GOESNRELDeveloperAPIConfig
+        resource_specs = self.options["resource_config"]
+        # set the default latitude, longitude, and resource_year from the site_config
+        resource_specs.setdefault("latitude", self.site_config["latitude"])
+        resource_specs.setdefault("longitude", self.site_config["longitude"])
+        resource_specs.setdefault("resource_year", self.site_config.get("year", None))
+        # set the default resource_dir from a directory that can be
+        # specified in site_config['resources']['resource_dir']
+        resource_specs.setdefault(
+            "resource_dir", self.site_config.get("resources", {}).get("resource_dir", None)
+        )
+
+        # default timezone to UTC because 'timezone' was removed from the plant config schema
+        resource_specs.setdefault("timezone", self.sim_config.get("timezone", 0))
+
+        self.base_url = (
+            "https://developer.nrel.gov/api/nsrdb/v2/solar/nsrdb-GOES-conus-v4-0-0-download.csv?"
+        )
+        # create the resource config
+        self.config = GOESConusNRELDeveloperAPIConfig.from_dict(resource_specs)
+        super().setup()
+
+
+@define
+class GOESFullDiscNRELDeveloperAPIConfig(ResourceBaseAPIConfig):
+    """Configuration class to downloadsolar resource data from
+    `GOES Full Disc PSM v4 <https://developer.nrel.gov/docs/solar/nsrdb/nsrdb-GOES-full-disc-v4-0-0-download/>`_.
+
+    Args:
+        resource_year (int): Year to use for resource data.
+            Must been between 2018 and 2024 (inclusive).
+        resource_data (dict | object, optional): Dictionary of user-input resource data.
+            Defaults to an empty dictionary.
+        resource_dir (str | Path, optional): Folder to save resource files to or
+            load resource files from. Defaults to "".
+        resource_filename (str, optional): Filename to save resource data to or load
+            resource data from. Defaults to None.
+
+    Attributes:
+        dataset_desc (str): description of the dataset, used in file naming.
+            For this dataset, the `dataset_desc` is "goes_aggregated_v2".
+        resource_type (str): type of resource data downloaded, used in folder naming.
+            For this dataset, the `resource_type` is "solar".
+        valid_intervals (list[int]): time interval(s) in minutes that resource data can be
+            downloaded in. For this dataset, `valid_intervals` are 10, 30 and 60 minutes.
+
+    """
+
+    resource_year: int = field(converter=int, validator=range_val(2018, 2024))
+    dataset_desc: str = "goes_fulldisc_v4"
+    resource_type: str = "solar"
+    valid_intervals: list[int] = field(factory=lambda: [10, 30, 60])
+    resource_data: dict | object = field(default={})
+    resource_filename: Path | str = field(default="")
+    resource_dir: Path | str | None = field(default=None)
+
+
+class GOESFullDiscNRELDeveloperAPISolarResource(GOESNRELDeveloperAPISolarResourceBase):
+    def setup(self):
+        self.site_config = self.options["plant_config"]["site"]
+        self.sim_config = self.options["plant_config"]["plant"]["simulation"]
+        self.n_timesteps = int(self.sim_config["n_timesteps"])
+        self.dt = self.sim_config["dt"]
+        self.start_time = self.sim_config["start_time"]
+
+        # create the input dictionary for GOESNRELDeveloperAPIConfig
+        resource_specs = self.options["resource_config"]
+        # set the default latitude, longitude, and resource_year from the site_config
+        resource_specs.setdefault("latitude", self.site_config["latitude"])
+        resource_specs.setdefault("longitude", self.site_config["longitude"])
+        resource_specs.setdefault("resource_year", self.site_config.get("year", None))
+        # set the default resource_dir from a directory that can be
+        # specified in site_config['resources']['resource_dir']
+        resource_specs.setdefault(
+            "resource_dir", self.site_config.get("resources", {}).get("resource_dir", None)
+        )
+
+        # default timezone to UTC because 'timezone' was removed from the plant config schema
+        resource_specs.setdefault("timezone", self.sim_config.get("timezone", 0))
+
+        self.base_url = "https://developer.nrel.gov/api/nsrdb/v2/solar/nsrdb-GOES-full-disc-v4-0-0-download.csv?"
+        # create the resource config
+        self.config = GOESFullDiscNRELDeveloperAPIConfig.from_dict(resource_specs)
+        super().setup()
+
+
+@define
+class GOESTMYNRELDeveloperAPIConfig(ResourceBaseAPIConfig):
+    """Configuration class to downloadsolar resource data from
+    `GOES Full Disc PSM v4 <https://developer.nrel.gov/docs/solar/nsrdb/nsrdb-GOES-tmy-v4-0-0-download/>`_.
+
+    Args:
+        resource_year (str): Year to use for resource data. Can be any of the following:
+            tmy-2022, tdy-2022, tgy-2022, tmy-2023, tdy-2023, tgy-2023, tmy-2024, tdy-2024,
+            or tgy-2024.
+        resource_data (dict | object, optional): Dictionary of user-input resource data.
+            Defaults to an empty dictionary.
+        resource_dir (str | Path, optional): Folder to save resource files to or
+            load resource files from. Defaults to "".
+        resource_filename (str, optional): Filename to save resource data to or load
+            resource data from. Defaults to None.
+
+    Attributes:
+        dataset_desc (str): description of the dataset, used in file naming.
+            For this dataset, the `dataset_desc` is "goes_aggregated_v2".
+        resource_type (str): type of resource data downloaded, used in folder naming.
+            For this dataset, the `resource_type` is "solar".
+        valid_intervals (list[int]): time interval(s) in minutes that resource data can be
+            downloaded in. For this dataset, `valid_intervals` is minutes.
+
+    """
+
+    resource_year: str = field(
+        converter=str.lower,
+        validator=contains(
+            [
+                "tmy-2022",
+                "tdy-2022",
+                "tgy-2022",
+                "tmy-2023",
+                "tdy-2023",
+                "tgy-2023",
+                "tmy-2024",
+                "tdy-2024",
+                "tgy-2024",
+            ]
+        ),
+    )
+    dataset_desc: str = "goes_tmy_v4"
+    resource_type: str = "solar"
+    valid_intervals: list[int] = field(factory=lambda: [60])
+    resource_data: dict | object = field(default={})
+    resource_filename: Path | str = field(default="")
+    resource_dir: Path | str | None = field(default=None)
+
+    def __attrs_post_init__(self):
+        if "tmy" in self.resource_year:
+            self.dataset_desc = "goes_tmy_v4"
+        if "tdy" in self.resource_year:
+            self.dataset_desc = "goes_tdy_v4"
+        if "tgy" in self.resource_year:
+            self.dataset_desc = "goes_tgy_v4"
+
+
+class GOESTMYNRELDeveloperAPISolarResource(GOESNRELDeveloperAPISolarResourceBase):
+    def setup(self):
+        self.site_config = self.options["plant_config"]["site"]
+        self.sim_config = self.options["plant_config"]["plant"]["simulation"]
+        self.n_timesteps = int(self.sim_config["n_timesteps"])
+        self.dt = self.sim_config["dt"]
+        self.start_time = self.sim_config["start_time"]
+
+        # create the input dictionary for GOESNRELDeveloperAPIConfig
+        resource_specs = self.options["resource_config"]
+        # set the default latitude, longitude, and resource_year from the site_config
+        resource_specs.setdefault("latitude", self.site_config["latitude"])
+        resource_specs.setdefault("longitude", self.site_config["longitude"])
+        # set the default resource_dir from a directory that can be
+        # specified in site_config['resources']['resource_dir']
+        resource_specs.setdefault(
+            "resource_dir", self.site_config.get("resources", {}).get("resource_dir", None)
+        )
+
+        # default timezone to UTC because 'timezone' was removed from the plant config schema
+        resource_specs.setdefault("timezone", self.sim_config.get("timezone", 0))
+
+        self.base_url = (
+            "https://developer.nrel.gov/api/nsrdb/v2/solar/nsrdb-GOES-tmy-v4-0-0-download.csv?"
+        )
+        # create the resource config
+        self.config = GOESTMYNRELDeveloperAPIConfig.from_dict(resource_specs)
+        super().setup()
