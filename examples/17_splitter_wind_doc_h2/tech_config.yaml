@@ -15,11 +15,8 @@ technologies:
   electricity_splitter:
     performance_model:
       model: "splitter_performance"
-    model_inputs:
-      performance_parameters:
+      config:
         split_mode: "fraction"
-        commodity: "electricity"
-        commodity_units: "kW"
         fraction_to_priority_tech: 0.25
 
   doc:
