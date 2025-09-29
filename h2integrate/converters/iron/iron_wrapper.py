@@ -21,45 +21,48 @@ class IronConfig(CostModelBaseConfig):
     Attributes:
         LCOE (float): cost of electricity in USD/MW/h
         LCOH (float): cost of hydrogen in USD/kg
-        winning_type (str): material for iron electrwinning process.
-            Must be either 'h2' or 'ng'.
-        post_type (str): iron processing method.
-            Must be either 'none' or 'eaf'.
-        mine (str): mine for Iron Ore. Options are "Hibbing", "Northshore",
-            "United", "Minorca" or "Tilden".
-        taconite_pellet_type (str): iron ore pellet type.
-            Must be either 'std' or 'drg'.
-        win_capacity_denom (str): Capacity denominator to use in iron electrowinning.
-            Must be either 'iron' or 'steel'.
-        iron_post_capacity (float, optional): Capacity of iron processing plant in
+        ROM_iron_site_name (str): mine for Iron Ore.
+            Options are "Hibbing", "Northshore", "United", "Minorca" or "Tilden".
+        iron_ore_product_selection (str): iron ore pellet type.
+            Options are "drg_taconite_pellets" or "std_taconite_pellets".
+        reduced_iron_product_selection (str): material for iron electrwinning process.
+            Options are "h2_dri" or "ng_dri"
+        structural_iron_product_selection (str): iron processing method.
+            Options are "eaf_steel" or "none".
+        iron_capacity_denom (str): Capacity denominator to use in iron modeling.
+            Options are "iron" or "steel".
+        eaf_capacity (float, optional): Capacity of electric arc furnace in
             metric tonnes of iron per year. Defaults to 1000000.
-        iron_win_capacity (float, optional): Capacity of iron electrowinning plant in
+        dri_capacity (float, optional): Capacity of direct reduced iron plant in
             metric tonnes of iron per year. Defaults to 1418095.
-        ore_cf_estimate (float, optional): Estimated capacity factor of iron ore mine.
+        iron_ore_cf_estimate (float, optional): Estimated capacity factor of iron ore mine.
             Defaults to 0.9. Must be between 0 and 1.
 
     """
 
+    # Comments below denote which step each config variable applies to in run_iron_full_model
+
     LCOE: float = field()  # $/MWh
     LCOH: float = field()  # $/kg
-    winning_type: str = field(
-        converter=(str.lower, str.strip), validator=contains(["h2", "ng"])
-    )  # win
-    post_type: str = field(
-        converter=(str.lower, str.strip), validator=contains(["eaf", "none"])
-    )  # post
-    mine: str = field(
+    ROM_iron_site_name: str = field(
         validator=contains(["Hibbing", "Northshore", "United", "Minorca", "Tilden"])
     )  # ore
-    taconite_pellet_type: str = field(
-        converter=(str.lower, str.strip), validator=contains(["std", "drg"])
+    iron_ore_product_selection: str = field(
+        converter=(str.lower, str.strip),
+        validator=contains(["drg_taconite_pellets", "std_taconite_pellets"]),
     )  # ore
-    win_capacity_demon: str = field(
+    reduced_iron_product_selection: str = field(
+        converter=(str.lower, str.strip), validator=contains(["h2_dri", "ng_dri"])
+    )  # win
+    structural_iron_product_selection: str = field(
+        converter=(str.lower, str.strip), validator=contains(["eaf_steel", "none"])
+    )  # post
+    iron_capacity_denom: str = field(
         default="iron", converter=(str.lower, str.strip), validator=contains(["iron", "steel"])
     )  # win
-    iron_post_capacity: float | int = field(default=1000000)  # post
-    iron_win_capacity: float | int = field(default=1418095)  # win
-    ore_cf_estimate: float = field(default=0.9, validator=range_val(0, 1))  # ore
+    eaf_capacity: float | int = field(default=1000000)  # post
+    dri_capacity: float | int = field(default=1418095)  # win
+    iron_ore_cf_estimate: float = field(default=0.9, validator=range_val(0, 1))  # ore
 
 
 class IronComponent(CostModelBaseClass):
@@ -92,6 +95,16 @@ class IronComponent(CostModelBaseClass):
         self.add_output("LCOI", val=0.0, units="USD/kg")
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
+        # Parse in values from config
+        mine_site = self.config.ROM_iron_site_name
+        ore_type = self.config.iron_ore_product_selection
+        red_iron_type = self.config.reduced_iron_product_selection
+        struct_iron_type = self.config.structural_iron_product_selection
+        denom = self.config.iron_capacity_denom
+        eaf_cap = self.config.eaf_capacity
+        dri_cap = self.config.dri_capacity
+        ore_cf = self.config.iron_ore_cf_estimate
+
         # BELOW: Copy-pasted from ye olde h2integrate_simulation.py (the 1000+ line monster)
 
         iron_config = copy.deepcopy(self.h2i_config_old)
@@ -116,32 +129,27 @@ class IronComponent(CostModelBaseClass):
             sub_iron_config["iron"]["finances"]["lcoh"] = inputs["LCOH"][0]
 
         # Update ore config
-        iron_ore_config["iron"]["site"]["name"] = self.config.mine
-        iron_ore_config["iron"]["performance"]["input_capacity_factor_estimate"] = (
-            self.config.ore_cf_estimate
-        )
-        iron_ore_config["iron"]["product_selection"] = (
-            f"{self.config.taconite_pellet_type}_taconite_pellets"
-        )
+        iron_ore_config["iron"]["site"]["name"] = mine_site
+        iron_ore_config["iron"]["performance"]["input_capacity_factor_estimate"] = ore_cf
+        iron_ore_config["iron"]["product_selection"] = ore_type
 
         # Update win config
-        iron_win_config["iron"]["product_selection"] = f"{self.config.winning_type}_dri"
-        iron_win_config["iron"]["performance"]["plant_capacity_mtpy"] = (
-            self.config.iron_win_capacity
-        )
+        iron_win_config["iron"]["product_selection"] = red_iron_type
+        iron_win_config["iron"]["performance"]["plant_capacity_mtpy"] = dri_cap
 
         # Update post config
-        if self.config.post_type == "none":
+        if struct_iron_type == "none":
             iron_post_config["iron"]["product_selection"] = "none"
-        if self.config.post_type == "eaf":
-            iron_post_config["iron"]["product_selection"] = f"{self.config.winning_type}_eaf"
-            iron_post_config["iron"]["performance"]["capacity_denominator"] = (
-                self.config.win_capacity_demon
-            )
-            iron_post_config["iron"]["performance"]["plant_capacity_mtpy"] = (
-                self.config.iron_post_capacity
-            )
-        # TODO: find a way of looping the above and below
+        elif struct_iron_type == "eaf_steel":
+            if red_iron_type == "ng_dri":
+                iron_post_config["iron"]["product_selection"] = "ng_eaf"
+            elif red_iron_type == "h2_dri":
+                iron_post_config["iron"]["product_selection"] = "h2_eaf"
+            else:
+                msg = f"The EAF steel model cannot (yet) use {red_iron_type} as input"
+                raise NotImplementedError(msg)
+            iron_post_config["iron"]["performance"]["capacity_denominator"] = denom
+            iron_post_config["iron"]["performance"]["plant_capacity_mtpy"] = eaf_cap
 
         # Run iron model for iron ore
         iron_ore_performance, iron_ore_costs, iron_ore_finance = run_iron_full_model(
