@@ -2,9 +2,9 @@ name: Testing
 
 on:
   push:
-    branches: [main, develop, ng_firming]
+    branches: [main, develop]
   pull_request:
-    branches: [main, develop, ng_firming]
+    branches: [main, develop]
   schedule:
     - cron: "0 0 * * MON"
 
