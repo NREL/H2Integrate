@@ -1,13 +1,26 @@
 (solar_resource:goes_v4_api)=
-# Solar Resource: GOES Aggregated PSM v4
+# Solar Resource: GOES PSM v4
 
-This resource class downloads solar resource data from [GOES Aggregated PSM v4](https://developer.nrel.gov/docs/solar/nsrdb/nsrdb-GOES-aggregated-v4-0-0-download/)
-and requires an NREL API key to use.
+There are four datasets that use the NSRDB GOES PSM v4 API calls:
+    - "goes_aggregated_solar_v4_api"
+    - "goes_conus_solar_v4_api"
+    - "goes_fulldisc_solar_v4_api"
+    - "goes_tmy_solar_v4_api"
 
-This dataset allows for resource data to be downloaded for:
-- **resource years** from 1998 to 2024.
-- **locations** within the continental United States.
-- **time intervals** of 30 and 60 minutes.
+These datasets allow for resource data to be downloaded for **locations** within the continental United States.
+
+| Model      | Temporal resolution | Spatial resolution | Years covered | Website |
+| :--------- | :---------------: | :---------------: | :---------------: | :---------------: |
+| `goes_aggregated_solar_v4_api`  | 30, 60 min  | 4km | 1998-2024  | [GOES Aggregated](https://developer.nrel.gov/docs/solar/nsrdb/nsrdb-GOES-aggregated-v4-0-0-download/) |
+| `goes_conus_solar_v4_api`  | 5, 15, 30, 60 min  | 2km | 2018-2024  | [GOES Conus](https://developer.nrel.gov/docs/solar/nsrdb/nsrdb-GOES-conus-v4-0-0-download/) |
+| `goes_fulldisc_solar_v4_api`  | 10, 30, 60 min  | 2km | 2018-2024  | [GOES Full disc](https://developer.nrel.gov/docs/solar/nsrdb/nsrdb-GOES-full-disc-v4-0-0-download/) |
+| `goes_tmy_v4_api`  | 60 min  | 2km | 2022-2024, for tmy, tdy and tgy  | [GOES TMY](https://developer.nrel.gov/docs/solar/nsrdb/nsrdb-GOES-tmy-v4-0-0-download/) |
+
+
+```{note}
+For the goes_tmy_v4_api model, the resource_year should be specified as a string formatted as `tdy-yyyy` or `tgy-yyy` or `tmy-yyyy` where yyyy is the year between 2022 and 2024.
+```
+
 
 ## Available Data
 
