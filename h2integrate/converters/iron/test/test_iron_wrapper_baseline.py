@@ -12,10 +12,10 @@ def baseline_iron_tech():
     iron_config = {
         "LCOE": 58.02,
         "LCOH": 7.10,
-        "winning_type": "ng",
-        "post_type": "none",
-        "mine": "Northshore",
-        "taconite_pellet_type": "drg",
+        "ROM_iron_site_name": "Northshore",
+        "iron_ore_product_selection": "drg_taconite_pellets",
+        "reduced_iron_product_selection": "ng_dri",
+        "structural_iron_product_selection": "none",
         "win_capacity_denom": "iron",
         "iron_post_capacity": 1000000,
         "iron_win_capacity": 1418095,
@@ -30,10 +30,10 @@ def mine_iron_tech():
     iron_config = {
         "LCOE": 58.02,
         "LCOH": 7.10,
-        "winning_type": "ng",
-        "post_type": "none",
-        "mine": "Hibbing",
-        "taconite_pellet_type": "drg",
+        "ROM_iron_site_name": "Hibbing",
+        "iron_ore_product_selection": "drg_taconite_pellets",
+        "reduced_iron_product_selection": "ng_dri",
+        "structural_iron_product_selection": "none",
         "win_capacity_denom": "iron",
         "iron_post_capacity": 1000000,
         "iron_win_capacity": 1418095,
@@ -48,10 +48,10 @@ def lcoe50_iron_tech():
     iron_config = {
         "LCOE": 50.0,
         "LCOH": 7.10,
-        "winning_type": "ng",
-        "post_type": "none",
-        "mine": "Northshore",
-        "taconite_pellet_type": "drg",
+        "ROM_iron_site_name": "Northshore",
+        "iron_ore_product_selection": "drg_taconite_pellets",
+        "reduced_iron_product_selection": "ng_dri",
+        "structural_iron_product_selection": "none",
         "win_capacity_denom": "iron",
         "iron_post_capacity": 1000000,
         "iron_win_capacity": 1418095,
@@ -66,10 +66,10 @@ def lcoh6_iron_tech():
     iron_config = {
         "LCOE": 58.02,
         "LCOH": 6.00,
-        "winning_type": "ng",
-        "post_type": "none",
-        "mine": "Northshore",
-        "taconite_pellet_type": "drg",
+        "ROM_iron_site_name": "Northshore",
+        "iron_ore_product_selection": "drg_taconite_pellets",
+        "reduced_iron_product_selection": "ng_dri",
+        "structural_iron_product_selection": "none",
         "win_capacity_denom": "iron",
         "iron_post_capacity": 1000000,
         "iron_win_capacity": 1418095,
@@ -84,10 +84,10 @@ def lcoh3_iron_tech():
     iron_config = {
         "LCOE": 58.02,
         "LCOH": 3.00,
-        "winning_type": "ng",
-        "post_type": "none",
-        "mine": "Northshore",
-        "taconite_pellet_type": "drg",
+        "ROM_iron_site_name": "Northshore",
+        "iron_ore_product_selection": "drg_taconite_pellets",
+        "reduced_iron_product_selection": "ng_dri",
+        "structural_iron_product_selection": "none",
         "win_capacity_denom": "iron",
         "iron_post_capacity": 1000000,
         "iron_win_capacity": 1418095,
@@ -111,10 +111,22 @@ def driver_config():
 
 def test_baseline_iron(plant_config, driver_config, baseline_iron_tech, subtests):
     test_cases = {
-        "ng/none": {"winning_type": "ng", "post_type": "none"},
-        "ng/eaf": {"winning_type": "ng", "post_type": "eaf"},
-        "h2/none": {"winning_type": "h2", "post_type": "none"},
-        "h2/eaf": {"winning_type": "h2", "post_type": "eaf"},
+        "ng/none": {
+            "reduced_iron_product_selection": "ng_dri",
+            "structural_iron_product_selection": "none",
+        },
+        "ng/eaf": {
+            "reduced_iron_product_selection": "ng_dri",
+            "structural_iron_product_selection": "eaf_steel",
+        },
+        "h2/none": {
+            "reduced_iron_product_selection": "h2_dri",
+            "structural_iron_product_selection": "none",
+        },
+        "h2/eaf": {
+            "reduced_iron_product_selection": "h2_dri",
+            "structural_iron_product_selection": "eaf_steel",
+        },
     }
     expected_lcoi = {
         "ng/none": 370.212189551055,  # USD/t
@@ -142,10 +154,22 @@ def test_baseline_iron(plant_config, driver_config, baseline_iron_tech, subtests
 
 def test_changing_mine_iron(plant_config, driver_config, mine_iron_tech, subtests):
     test_cases = {
-        "ng/none": {"winning_type": "ng", "post_type": "none"},
-        "ng/eaf": {"winning_type": "ng", "post_type": "eaf"},
-        "h2/none": {"winning_type": "h2", "post_type": "none"},
-        "h2/eaf": {"winning_type": "h2", "post_type": "eaf"},
+        "ng/none": {
+            "reduced_iron_product_selection": "ng_dri",
+            "structural_iron_product_selection": "none",
+        },
+        "ng/eaf": {
+            "reduced_iron_product_selection": "ng_dri",
+            "structural_iron_product_selection": "eaf_steel",
+        },
+        "h2/none": {
+            "reduced_iron_product_selection": "h2_dri",
+            "structural_iron_product_selection": "none",
+        },
+        "h2/eaf": {
+            "reduced_iron_product_selection": "h2_dri",
+            "structural_iron_product_selection": "eaf_steel",
+        },
     }
     expected_lcoi = {
         "ng/none": 354.77730320952014,
@@ -172,10 +196,22 @@ def test_changing_mine_iron(plant_config, driver_config, mine_iron_tech, subtest
 
 def test_lcoe50_iron(plant_config, driver_config, lcoe50_iron_tech, subtests):
     test_cases = {
-        "ng/none": {"winning_type": "ng", "post_type": "none"},
-        "ng/eaf": {"winning_type": "ng", "post_type": "eaf"},
-        "h2/none": {"winning_type": "h2", "post_type": "none"},
-        "h2/eaf": {"winning_type": "h2", "post_type": "eaf"},
+        "ng/none": {
+            "reduced_iron_product_selection": "ng_dri",
+            "structural_iron_product_selection": "none",
+        },
+        "ng/eaf": {
+            "reduced_iron_product_selection": "ng_dri",
+            "structural_iron_product_selection": "eaf_steel",
+        },
+        "h2/none": {
+            "reduced_iron_product_selection": "h2_dri",
+            "structural_iron_product_selection": "none",
+        },
+        "h2/eaf": {
+            "reduced_iron_product_selection": "h2_dri",
+            "structural_iron_product_selection": "eaf_steel",
+        },
     }
 
     expected_lcoi = {
@@ -203,10 +239,22 @@ def test_lcoe50_iron(plant_config, driver_config, lcoe50_iron_tech, subtests):
 
 def test_lcoh6_iron(plant_config, driver_config, lcoh6_iron_tech, subtests):
     test_cases = {
-        "ng/none": {"winning_type": "ng", "post_type": "none"},
-        "ng/eaf": {"winning_type": "ng", "post_type": "eaf"},
-        "h2/none": {"winning_type": "h2", "post_type": "none"},
-        "h2/eaf": {"winning_type": "h2", "post_type": "eaf"},
+        "ng/none": {
+            "reduced_iron_product_selection": "ng_dri",
+            "structural_iron_product_selection": "none",
+        },
+        "ng/eaf": {
+            "reduced_iron_product_selection": "ng_dri",
+            "structural_iron_product_selection": "eaf_steel",
+        },
+        "h2/none": {
+            "reduced_iron_product_selection": "h2_dri",
+            "structural_iron_product_selection": "none",
+        },
+        "h2/eaf": {
+            "reduced_iron_product_selection": "h2_dri",
+            "structural_iron_product_selection": "eaf_steel",
+        },
     }
 
     expected_lcoi = {
@@ -234,10 +282,22 @@ def test_lcoh6_iron(plant_config, driver_config, lcoh6_iron_tech, subtests):
 
 def test_lcoh3_iron(plant_config, driver_config, lcoh3_iron_tech, subtests):
     test_cases = {
-        "ng/none": {"winning_type": "ng", "post_type": "none"},
-        "ng/eaf": {"winning_type": "ng", "post_type": "eaf"},
-        "h2/none": {"winning_type": "h2", "post_type": "none"},
-        "h2/eaf": {"winning_type": "h2", "post_type": "eaf"},
+        "ng/none": {
+            "reduced_iron_product_selection": "ng_dri",
+            "structural_iron_product_selection": "none",
+        },
+        "ng/eaf": {
+            "reduced_iron_product_selection": "ng_dri",
+            "structural_iron_product_selection": "eaf_steel",
+        },
+        "h2/none": {
+            "reduced_iron_product_selection": "h2_dri",
+            "structural_iron_product_selection": "none",
+        },
+        "h2/eaf": {
+            "reduced_iron_product_selection": "h2_dri",
+            "structural_iron_product_selection": "eaf_steel",
+        },
     }
 
     expected_lcoi = {
