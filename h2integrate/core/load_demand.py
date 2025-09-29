@@ -104,10 +104,10 @@ class FlexibleDemandProfileModelConfig(BaseConfig):
     maximum_demand: list | int | float = field()
     units: str = field(converter=str.strip)
     commodity: str = field(converter=(str.strip, str.lower))
-    turndown_ratio: float = field(validator=range_val(0, 1.00005))
-    ramp_down_rate_fraction: float = field(validator=range_val(0, 1.00005))
-    ramp_up_rate_fraction: float = field(validator=range_val(0, 1.00005))
-    min_utilization: float = field(validator=range_val(0, 1.00005))
+    turndown_ratio: float = field(validator=range_val(0, 1.0))
+    ramp_down_rate_fraction: float = field(validator=range_val(0, 1.0))
+    ramp_up_rate_fraction: float = field(validator=range_val(0, 1.0))
+    min_utilization: float = field(validator=range_val(0, 1.0))
 
 
 class FlexibleDemandPerformanceModelComponent(om.ExplicitComponent):
