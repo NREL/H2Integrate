@@ -168,24 +168,31 @@ class FlexibleDemandPerformanceModelComponent(om.ExplicitComponent):
         min_demand, rated_demand = demand_bounds
         ramp_down_rate, ramp_up_rate = ramp_rate_bounds
 
+        # Instantiate the flexible demand profile array and populate the first timestep
+        # with the first value from pre_demand_met_clipped
         flexible_demand_profile = np.zeros(len(pre_demand_met_clipped))
-        for i in range(len(flexible_demand_profile)):
-            if i > 0:
-                load_change = pre_demand_met_clipped[i] - flexible_demand_profile[i - 1]
-                if load_change < -1 * ramp_down_rate:
-                    # ramp is too large
-                    new_demand = flexible_demand_profile[i - 1] - ramp_down_rate
-                    flexible_demand_profile[i] = np.clip(new_demand, min_demand, rated_demand)
-                    # continue
-                elif load_change > ramp_up_rate:
-                    new_demand = flexible_demand_profile[i - 1] + ramp_up_rate
-                    flexible_demand_profile[i] = np.clip(new_demand, min_demand, rated_demand)
-                    # continue
-                else:
-                    # ramp is fine
-                    flexible_demand_profile[i] = pre_demand_met_clipped[i]
+        flexible_demand_profile[0] = pre_demand_met_clipped[0]
+
+        # Loop through each timestep and adjust for ramping constraints
+        for i in range(1, len(flexible_demand_profile)):
+            prior_timestep_demand = flexible_demand_profile[i - 1]
+
+            # Calculate the change in load from the prior timestep
+            load_change = pre_demand_met_clipped[i] - prior_timestep_demand
+
+            # If ramp is too steep down, set new_demand accordingly
+            if load_change < (-1 * ramp_down_rate):
+                new_demand = prior_timestep_demand - ramp_down_rate
+                flexible_demand_profile[i] = np.clip(new_demand, min_demand, rated_demand)
+
+            # If ramp is too steep up, set new_demand accordingly
+            elif load_change > ramp_up_rate:
+                new_demand = prior_timestep_demand + ramp_up_rate
+                flexible_demand_profile[i] = np.clip(new_demand, min_demand, rated_demand)
+
             else:
                 flexible_demand_profile[i] = pre_demand_met_clipped[i]
+
         return flexible_demand_profile
 
     def adjust_remaining_demand_for_min_utilization_by_threshold(
