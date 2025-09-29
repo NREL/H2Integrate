@@ -55,7 +55,7 @@ properties:
       type: object
       additionalProperties:
         type: object
-        required: ["flag", "units"]
+        required: ["flag"]
         properties:
           flag:
             type: boolean
@@ -68,9 +68,6 @@ properties:
             type: number
             description: Upper bound for the variable
             default: null
-          units:
-            type: string
-            description: Units of the variable
   objective:
     type: object
     properties:

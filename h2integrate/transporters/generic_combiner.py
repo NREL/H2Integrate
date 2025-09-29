@@ -1,3 +1,4 @@
+import numpy as np
 import openmdao.api as om
 from attrs import field, define
 
@@ -55,8 +56,17 @@ class GenericCombinerPerformanceModel(om.ExplicitComponent):
             shape=n_timesteps,
             units=self.config.commodity_units,
         )
+        self.add_output(
+            f"mean_{self.config.commodity}_out",
+            val=0.0,
+            units=self.config.commodity_units,
+        )
 
     def compute(self, inputs, outputs):
         outputs[f"{self.config.commodity}_out"] = (
             inputs[f"{self.config.commodity}_in1"] + inputs[f"{self.config.commodity}_in2"]
+        )
+
+        outputs[f"mean_{self.config.commodity}_out"] = np.mean(
+            outputs[f"{self.config.commodity}_out"]
         )

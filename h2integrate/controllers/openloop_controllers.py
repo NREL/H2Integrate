@@ -169,6 +169,8 @@ class DemandOpenLoopControllerConfig(BaseConfig):
         demand_profile (scalar or list): The demand values for each time step (in the same units
             as `resource_rate_units`) or a scalar for a constant demand.
         n_time_steps (int): Number of time steps in the simulation. Defaults to 8760.
+        charge_equals_discharge (bool): If True, sets `max_charge_rate` equal to
+            `max_discharge_rate`.
     """
 
     resource_name: str = field()
@@ -180,6 +182,7 @@ class DemandOpenLoopControllerConfig(BaseConfig):
     max_charge_rate: float = field()
     max_discharge_rate: float = field()
     demand_profile: int | float | list = field()
+    charge_equals_discharge: bool = field()
     n_time_steps: int = field(default=8760)
     charge_efficiency: float | None = field(default=None, validator=range_val_or_none(0, 1))
     discharge_efficiency: float | None = field(default=None, validator=range_val_or_none(0, 1))
@@ -273,6 +276,18 @@ class DemandOpenLoopController(ControllerBaseClass):
             shape=self.config.n_time_steps,
             desc=f"{resource_name} demand profile timeseries",
         )
+        self.add_input(
+            "max_charge_rate",
+            val=self.config.max_charge_rate,
+            units=self.config.resource_rate_units,
+            desc="Storage charge/discharge rate",
+        )
+        self.add_input(
+            "max_capacity",
+            val=self.config.max_capacity,
+            units=self.config.resource_rate_units + "*h",
+            desc="Maximum storage capacity",
+        )
 
         self.add_output(
             f"{resource_name}_out",
@@ -303,6 +318,12 @@ class DemandOpenLoopController(ControllerBaseClass):
             desc=f"{resource_name} missed load timeseries",
         )
 
+        self.add_output(
+            "storage_duration",
+            units="h",
+            desc="Estimated storage duration based on max capacity and charge rate",
+        )
+
     def compute(self, inputs, outputs):
         """
         Compute the state of charge (SOC) and output flow based on demand and storage constraints.
@@ -313,10 +334,14 @@ class DemandOpenLoopController(ControllerBaseClass):
         max_charge_percent = self.config.max_charge_percent
         min_charge_percent = self.config.min_charge_percent
         init_charge_percent = self.config.init_charge_percent
-        max_charge_rate = self.config.max_charge_rate
-        max_discharge_rate = self.config.max_discharge_rate
         charge_efficiency = self.config.charge_efficiency
         discharge_efficiency = self.config.discharge_efficiency
+        max_charge_rate = inputs["max_charge_rate"]
+
+        if self.config.charge_equals_discharge:
+            max_discharge_rate = max_charge_rate
+        else:
+            max_discharge_rate = self.config.max_discharge_rate
 
         # Initialize time-step state of charge prior to loop so the loop starts with
         # the previous time step's value
@@ -383,3 +408,5 @@ class DemandOpenLoopController(ControllerBaseClass):
 
             # Record the missed load at the current time step
             missed_load_array[t] = max(0, (demand_t - output_array[t]))
+
+            outputs["storage_duration"] = max_capacity / max_charge_rate

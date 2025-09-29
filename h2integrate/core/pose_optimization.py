@@ -412,6 +412,8 @@ class PoseOptimization:
             opt_prob (openmdao problem instance): openmdao problem instance for
                 current optimization problem edited to include constraint setup
         """
+        if not self.config.get("constraints", False):
+            return
         for technology, variables in self.config["constraints"].items():
             for key, value in variables.items():
                 if value["flag"]:
