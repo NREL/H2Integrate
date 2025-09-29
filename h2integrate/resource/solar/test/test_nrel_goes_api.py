@@ -32,7 +32,7 @@ def site_config():
                 "resource_parameters": {
                     "latitude": 34.22,
                     "longitude": -102.75,
-                    "resource_year": 2013,
+                    "resource_year": 2012,
                 },
             }
         },
