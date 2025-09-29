@@ -51,6 +51,8 @@ class IronConfig(CostModelBaseConfig):
         converter=(str.lower, str.strip),
         validator=contains(["drg_taconite_pellets", "std_taconite_pellets"]),
     )  # ore
+    reduced_iron_site_latitude: float = field()
+    reduced_iron_site_longitude: float = field()
     reduced_iron_product_selection: str = field(
         converter=(str.lower, str.strip), validator=contains(["h2_dri", "ng_dri"])
     )  # win
@@ -63,6 +65,11 @@ class IronConfig(CostModelBaseConfig):
     eaf_capacity: float | int = field(default=1000000)  # post
     dri_capacity: float | int = field(default=1418095)  # win
     iron_ore_cf_estimate: float = field(default=0.9, validator=range_val(0, 1))  # ore
+    transport_cost_included: bool = field(default=True)
+    ng_mod: bool = field(default=False)
+    ng_price: float = field(default=4.00)  # $/MMBTU
+    capex_mod: bool = field(default=False)
+    capex_mod_pct: float = field(default=0.0)  # Fraction of orignal capex value to modify by
 
 
 class IronComponent(CostModelBaseClass):
@@ -98,12 +105,19 @@ class IronComponent(CostModelBaseClass):
         # Parse in values from config
         mine_site = self.config.ROM_iron_site_name
         ore_type = self.config.iron_ore_product_selection
+        red_site_lat = self.config.reduced_iron_site_latitude
+        red_site_lon = self.config.reduced_iron_site_longitude
         red_iron_type = self.config.reduced_iron_product_selection
         struct_iron_type = self.config.structural_iron_product_selection
         denom = self.config.iron_capacity_denom
         eaf_cap = self.config.eaf_capacity
         dri_cap = self.config.dri_capacity
         ore_cf = self.config.iron_ore_cf_estimate
+        trans_incl = self.config.transport_cost_included
+        ng_mod = self.config.ng_mod
+        ng_price = self.config.ng_price
+        capex_mod = self.config.capex_mod
+        capex_pct = self.config.capex_mod_pct
 
         # BELOW: Copy-pasted from ye olde h2integrate_simulation.py (the 1000+ line monster)
 
@@ -136,6 +150,8 @@ class IronComponent(CostModelBaseClass):
         # Update win config
         iron_win_config["iron"]["product_selection"] = red_iron_type
         iron_win_config["iron"]["performance"]["plant_capacity_mtpy"] = dri_cap
+        iron_win_config["iron"]["site"]["lat"] = red_site_lat
+        iron_win_config["iron"]["site"]["lon"] = red_site_lon
 
         # Update post config
         if struct_iron_type == "none":
@@ -152,6 +168,10 @@ class IronComponent(CostModelBaseClass):
             iron_post_config["iron"]["performance"]["plant_capacity_mtpy"] = eaf_cap
 
         # Run iron model for iron ore
+        iron_ore_config["iron"]["finances"]["ng_mod"] = ng_mod
+        iron_ore_config["iron"]["finances"]["ng_price"] = ng_price
+        iron_ore_config["iron"]["costs"]["capex_mod"] = capex_mod
+        iron_ore_config["iron"]["costs"]["capex_pct"] = capex_pct
         iron_ore_performance, iron_ore_costs, iron_ore_finance = run_iron_full_model(
             iron_ore_config
         )
@@ -159,7 +179,11 @@ class IronComponent(CostModelBaseClass):
         # Run iron transport model
         # Determine whether to ship from "Duluth", "Chicago", "Cleveland" or "Buffalo"
         # To electrowinning site
-        iron_transport_cost_tonne, ore_profit_pct = calc_iron_ship_cost(iron_win_config)
+        if trans_incl:
+            iron_transport_cost_tonne, ore_profit_pct = calc_iron_ship_cost(iron_win_config)
+        else:
+            iron_transport_cost_tonne = 0
+            ore_profit_pct = 6
 
         ### DRI ----------------------------------------------------------------------------
         ### Electrowinning
@@ -169,6 +193,10 @@ class IronComponent(CostModelBaseClass):
                 'ng_dri' or 'h2_dri'"
             )
 
+        iron_win_config["iron"]["finances"]["ng_mod"] = ng_mod
+        iron_win_config["iron"]["finances"]["ng_price"] = ng_price
+        iron_win_config["iron"]["costs"]["capex_mod"] = capex_mod
+        iron_win_config["iron"]["costs"]["capex_pct"] = capex_pct
         iron_win_config["iron"]["finances"]["ore_profit_pct"] = ore_profit_pct
         iron_win_config["iron"]["costs"]["iron_transport_tonne"] = iron_transport_cost_tonne
         iron_win_config["iron"]["costs"]["lco_iron_ore_tonne"] = iron_ore_finance.sol["lco"]
@@ -196,6 +224,10 @@ class IronComponent(CostModelBaseClass):
             )  # profast dictionary of values
             iron_post_config["iron"]["finances"]["pf"] = pf_dict
             iron_post_config["iron"]["costs"]["lco_iron_ore_tonne"] = iron_ore_finance.sol["lco"]
+            iron_post_config["iron"]["finances"]["ng_mod"] = ng_mod
+            iron_post_config["iron"]["finances"]["ng_price"] = ng_price
+            iron_post_config["iron"]["costs"]["capex_mod"] = capex_mod
+            iron_post_config["iron"]["costs"]["capex_pct"] = capex_pct
 
             iron_post_performance, iron_post_costs, iron_post_finance = run_iron_full_model(
                 iron_post_config

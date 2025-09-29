@@ -14,6 +14,8 @@ def baseline_iron_tech():
         "LCOH": 7.10,
         "ROM_iron_site_name": "Northshore",
         "iron_ore_product_selection": "drg_taconite_pellets",
+        "reduced_iron_site_latitude": 41.717,
+        "reduced_iron_site_longitude": -88.398,
         "reduced_iron_product_selection": "ng_dri",
         "structural_iron_product_selection": "none",
         "win_capacity_denom": "iron",
@@ -32,6 +34,8 @@ def mine_iron_tech():
         "LCOH": 7.10,
         "ROM_iron_site_name": "Hibbing",
         "iron_ore_product_selection": "drg_taconite_pellets",
+        "reduced_iron_site_latitude": 41.717,
+        "reduced_iron_site_longitude": -88.398,
         "reduced_iron_product_selection": "ng_dri",
         "structural_iron_product_selection": "none",
         "win_capacity_denom": "iron",
@@ -50,6 +54,8 @@ def lcoe50_iron_tech():
         "LCOH": 7.10,
         "ROM_iron_site_name": "Northshore",
         "iron_ore_product_selection": "drg_taconite_pellets",
+        "reduced_iron_site_latitude": 41.717,
+        "reduced_iron_site_longitude": -88.398,
         "reduced_iron_product_selection": "ng_dri",
         "structural_iron_product_selection": "none",
         "win_capacity_denom": "iron",
@@ -68,6 +74,8 @@ def lcoh6_iron_tech():
         "LCOH": 6.00,
         "ROM_iron_site_name": "Northshore",
         "iron_ore_product_selection": "drg_taconite_pellets",
+        "reduced_iron_site_latitude": 41.717,
+        "reduced_iron_site_longitude": -88.398,
         "reduced_iron_product_selection": "ng_dri",
         "structural_iron_product_selection": "none",
         "win_capacity_denom": "iron",
@@ -80,12 +88,14 @@ def lcoh6_iron_tech():
 
 
 @fixture
-def lcoh3_iron_tech():
+def location_iron_tech():
     iron_config = {
-        "LCOE": 58.02,
-        "LCOH": 3.00,
+        "LCOE": 60.48,
+        "LCOH": 8.86,
         "ROM_iron_site_name": "Northshore",
         "iron_ore_product_selection": "drg_taconite_pellets",
+        "reduced_iron_site_latitude": 41.2,
+        "reduced_iron_site_longitude": -81.7,
         "reduced_iron_product_selection": "ng_dri",
         "structural_iron_product_selection": "none",
         "win_capacity_denom": "iron",
@@ -280,7 +290,7 @@ def test_lcoh6_iron(plant_config, driver_config, lcoh6_iron_tech, subtests):
             assert pytest.approx(lcoi, abs=0.3) == expected_lcoi[test_name]
 
 
-def test_lcoh3_iron(plant_config, driver_config, lcoh3_iron_tech, subtests):
+def test_location_iron(plant_config, driver_config, location_iron_tech, subtests):
     test_cases = {
         "ng/none": {
             "reduced_iron_product_selection": "ng_dri",
@@ -301,18 +311,18 @@ def test_lcoh3_iron(plant_config, driver_config, lcoh3_iron_tech, subtests):
     }
 
     expected_lcoi = {
-        "ng/none": 370.212189551055,
-        "ng/eaf": 513.8574754088993,
-        "h2/none": 485.58526720893695,
-        "h2/eaf": 629.4564279455784,
+        "ng/none": 365.2571816,
+        "ng/eaf": 509.7708257,
+        "h2/none": 808.3401864,
+        "h2/eaf": 953.1133839,
     }
 
     for test_name, test_inputs in test_cases.items():
-        lcoh3_iron_tech.update(test_inputs)
+        location_iron_tech.update(test_inputs)
         prob = om.Problem()
         comp = IronComponent(
             plant_config=plant_config,
-            tech_config={"model_inputs": {"cost_parameters": lcoh3_iron_tech}},
+            tech_config={"model_inputs": {"cost_parameters": location_iron_tech}},
             driver_config=driver_config,
         )
         prob.model.add_subsystem("iron", comp)
