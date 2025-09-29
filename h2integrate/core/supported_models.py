@@ -6,6 +6,7 @@ from h2integrate.core.load_demand import (
 )
 from h2integrate.transporters.pipe import PipePerformanceModel
 from h2integrate.transporters.cable import CablePerformanceModel
+from h2integrate.finances.profast_npv import ProFASTNPV
 from h2integrate.converters.steel.steel import SteelPerformanceModel, SteelCostAndFinancialModel
 from h2integrate.converters.grid.grid_sell import GridSellCostModel, GridSellPerformanceModel
 from h2integrate.converters.wind.wind_plant import WindPlantCostModel, WindPlantPerformanceModel
@@ -175,6 +176,7 @@ supported_models = {
     # Finance
     "ProFastComp": ProFastComp,
     "NPVFinance": NPVFinance,
+    "ProFastNPV": ProFASTNPV,
 }
 
 electricity_producing_techs = [
