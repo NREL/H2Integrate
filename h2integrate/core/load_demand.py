@@ -252,7 +252,7 @@ class FlexibleDemandPerformanceModelComponent(om.ExplicitComponent):
         commodity = self.config.commodity
         remaining_demand = inputs[f"{commodity}_demand_profile"] - inputs[f"{commodity}_in"]
 
-        if self.config.min_utilization >= 1.0:
+        if self.config.min_utilization == 1.0:
             # Calculate missed load and curtailed production
             outputs[f"{commodity}_missed_load"] = np.where(
                 remaining_demand > 0, remaining_demand, 0
