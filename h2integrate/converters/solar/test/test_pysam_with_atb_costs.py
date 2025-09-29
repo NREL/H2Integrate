@@ -6,7 +6,9 @@ from h2integrate import EXAMPLE_DIR
 from h2integrate.converters.solar.solar_pysam import PYSAMSolarPlantPerformanceModel
 from h2integrate.converters.solar.atb_res_com_pv_cost import ATBResComPVCostModel
 from h2integrate.converters.solar.atb_utility_pv_cost import ATBUtilityPVCostModel
-from h2integrate.resource.solar.nrel_developer_goes_api import GOESNRELDeveloperAPISolarResource
+from h2integrate.resource.solar.nrel_developer_goes_api_models import (
+    GOESAggregatedNRELDeveloperAPISolarResource,
+)
 
 
 @fixture
@@ -108,27 +110,6 @@ def residential_pv_performance_params():
     return tech_params
 
 
-# @fixture
-# def plant_config():
-#     pv_resource_dir = EXAMPLE_DIR / "11_hybrid_energy_plant" / "tech_inputs" / "weather" / "solar"
-#     pv_filename = "30.6617_-101.7096_psmv3_60_2013.csv"
-#     pv_resource_dict = {
-#         "latitude": 30.6617,
-#         "longitude": -101.7096,
-#         "year": 2013,
-#         "solar_resource_filepath": pv_resource_dir / pv_filename,
-#     }
-#     return {
-#         "plant": {
-#             "plant_life": 30,
-#             "simulation": {
-#                 "n_timesteps": 8760,
-#             },
-#         },
-#         "site": pv_resource_dict,
-#     }
-
-
 def test_utility_pv_cost(
     utility_scale_pv_performance_params, solar_resource_dict, plant_config, subtests
 ):
@@ -147,7 +128,7 @@ def test_utility_pv_cost(
     }
 
     prob = om.Problem()
-    solar_resource = GOESNRELDeveloperAPISolarResource(
+    solar_resource = GOESAggregatedNRELDeveloperAPISolarResource(
         plant_config=plant_config,
         resource_config=solar_resource_dict,
         driver_config={},
@@ -205,7 +186,7 @@ def test_commercial_pv_cost(
     }
 
     prob = om.Problem()
-    solar_resource = GOESNRELDeveloperAPISolarResource(
+    solar_resource = GOESAggregatedNRELDeveloperAPISolarResource(
         plant_config=plant_config,
         resource_config=solar_resource_dict,
         driver_config={},
@@ -257,7 +238,7 @@ def test_residential_pv_cost(
     }
 
     prob = om.Problem()
-    solar_resource = GOESNRELDeveloperAPISolarResource(
+    solar_resource = GOESAggregatedNRELDeveloperAPISolarResource(
         plant_config=plant_config,
         resource_config=solar_resource_dict,
         driver_config={},

@@ -4,7 +4,9 @@ import openmdao.api as om
 from pytest import fixture
 
 from h2integrate import RESOURCE_DEFAULT_DIR
-from h2integrate.resource.solar.nrel_developer_goes_api import GOESNRELDeveloperAPISolarResource
+from h2integrate.resource.solar.nrel_developer_goes_api_models import (
+    GOESAggregatedNRELDeveloperAPISolarResource,
+)
 
 
 @fixture
@@ -47,7 +49,7 @@ def test_solar_resource_loaded_from_default_dir(plant_simulation_utc_start, site
     }
 
     prob = om.Problem()
-    comp = GOESNRELDeveloperAPISolarResource(
+    comp = GOESAggregatedNRELDeveloperAPISolarResource(
         plant_config=plant_config,
         resource_config=plant_config["site"]["resources"]["solar_resource"]["resource_parameters"],
         driver_config={},

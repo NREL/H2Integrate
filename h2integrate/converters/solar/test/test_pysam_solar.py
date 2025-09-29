@@ -4,7 +4,9 @@ from pytest import fixture
 
 from h2integrate import EXAMPLE_DIR
 from h2integrate.converters.solar.solar_pysam import PYSAMSolarPlantPerformanceModel
-from h2integrate.resource.solar.nrel_developer_goes_api import GOESNRELDeveloperAPISolarResource
+from h2integrate.resource.solar.nrel_developer_goes_api_models import (
+    GOESAggregatedNRELDeveloperAPISolarResource,
+)
 
 
 @fixture
@@ -81,7 +83,7 @@ def test_pvwatts_singleowner_notilt(
     }
 
     prob = om.Problem()
-    solar_resource = GOESNRELDeveloperAPISolarResource(
+    solar_resource = GOESAggregatedNRELDeveloperAPISolarResource(
         plant_config=plant_config,
         resource_config=solar_resource_dict,
         driver_config={},
@@ -135,7 +137,7 @@ def test_pvwatts_singleowner_withtilt(
     }
 
     prob = om.Problem()
-    solar_resource = GOESNRELDeveloperAPISolarResource(
+    solar_resource = GOESAggregatedNRELDeveloperAPISolarResource(
         plant_config=plant_config,
         resource_config=solar_resource_dict,
         driver_config={},
