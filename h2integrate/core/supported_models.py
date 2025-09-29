@@ -44,7 +44,6 @@ from h2integrate.converters.methanol.smr_methanol_plant import (
     SMRMethanolPlantFinanceModel,
     SMRMethanolPlantPerformanceModel,
 )
-from h2integrate.resource.solar.nrel_developer_goes_api import GOESNRELDeveloperAPISolarResource
 from h2integrate.converters.ammonia.simple_ammonia_model import (
     SimpleAmmoniaCostModel,
     SimpleAmmoniaPerformanceModel,
@@ -60,6 +59,12 @@ from h2integrate.converters.natural_gas.natural_gas_cc_ct import (
 )
 from h2integrate.converters.hydrogen.singlitico_cost_model import SingliticoCostModel
 from h2integrate.converters.co2.marine.direct_ocean_capture import DOCCostModel, DOCPerformanceModel
+from h2integrate.resource.solar.nrel_developer_goes_api_models import (
+    GOESTMYNRELDeveloperAPISolarResource,
+    GOESConusNRELDeveloperAPISolarResource,
+    GOESFullDiscNRELDeveloperAPISolarResource,
+    GOESAggregatedNRELDeveloperAPISolarResource,
+)
 from h2integrate.converters.hydrogen.eco_tools_pem_electrolyzer import (
     ECOElectrolyzerPerformanceModel,
 )
@@ -91,7 +96,10 @@ supported_models = {
     # Resources
     "river_resource": RiverResource,
     "wind_toolkit_v2_api": WTKNRELDeveloperAPIWindResource,
-    "goes_solar_v4_api": GOESNRELDeveloperAPISolarResource,
+    "goes_solar_v4_api": GOESAggregatedNRELDeveloperAPISolarResource,
+    "goes_conus_solar_v4_api": GOESConusNRELDeveloperAPISolarResource,
+    "goes_fulldisc_solar_v4_api": GOESFullDiscNRELDeveloperAPISolarResource,
+    "goes_tmy_solar_v4_api": GOESTMYNRELDeveloperAPISolarResource,
     # Converters
     "wind_plant_performance": WindPlantPerformanceModel,
     "wind_plant_cost": WindPlantCostModel,
