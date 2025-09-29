@@ -25,7 +25,7 @@ site:
         longitude: -101.945027
         resource_year: 2012
     solar_resource:
-      resource_model: "goes_solar_v4_api"
+      resource_model: "goes_aggregated_solar_v4_api"
       resource_parameters:
         resource_year: 2013
         resource_dir: "../11_hybrid_energy_plant/tech_inputs/weather/solar"

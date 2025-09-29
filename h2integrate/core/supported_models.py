@@ -96,7 +96,7 @@ supported_models = {
     # Resources
     "river_resource": RiverResource,
     "wind_toolkit_v2_api": WTKNRELDeveloperAPIWindResource,
-    "goes_solar_v4_api": GOESAggregatedNRELDeveloperAPISolarResource,
+    "goes_aggregated_solar_v4_api": GOESAggregatedNRELDeveloperAPISolarResource,
     "goes_conus_solar_v4_api": GOESConusNRELDeveloperAPISolarResource,
     "goes_fulldisc_solar_v4_api": GOESFullDiscNRELDeveloperAPISolarResource,
     "goes_tmy_solar_v4_api": GOESTMYNRELDeveloperAPISolarResource,
