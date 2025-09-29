@@ -209,7 +209,7 @@ class FlexibleDemandPerformanceModelComponent(om.ExplicitComponent):
         return np.clip(flexible_demand_profile, min_demand, rated_demand)
 
     def make_flexible_demand(self, maximum_demand_profile, pre_demand_met):
-        rated_demand = np.max(maximum_demand_profile)  # de
+        rated_demand = np.max(maximum_demand_profile)
         min_demand = rated_demand * self.config.turndown_ratio
         ramp_down_rate = rated_demand * self.config.ramp_down_rate_fraction
         ramp_up_rate = rated_demand * self.config.ramp_up_rate_fraction
@@ -221,7 +221,7 @@ class FlexibleDemandPerformanceModelComponent(om.ExplicitComponent):
 
         # 1) satisfy turndown constraint
         pre_demand_met_clipped = np.clip(pre_demand_met, min_demand, rated_demand)
-        # 2) satsify ramp rate constraint
+        # 2) satisfy ramp rate constraint
         flexible_demand_profile = self.adjust_demand_for_ramping(
             pre_demand_met_clipped, demand_bounds, ramp_rate_bounds
         )
@@ -234,7 +234,7 @@ class FlexibleDemandPerformanceModelComponent(om.ExplicitComponent):
                 demand_threshold = demand_threshold_percent * rated_demand
                 # 1) satisfy turndown constraint
                 pre_demand_met_clipped = np.clip(pre_demand_met, min_demand, rated_demand)
-                # 2) satsify ramp rate constraint
+                # 2) satisfy ramp rate constraint
                 flexible_demand_profile = (
                     self.adjust_remaining_demand_for_min_utilization_by_threshold(
                         flexible_demand_profile, min_total_demand, demand_bounds, demand_threshold
@@ -260,11 +260,6 @@ class FlexibleDemandPerformanceModelComponent(om.ExplicitComponent):
             outputs[f"{commodity}_curtailed"] = np.where(
                 remaining_demand < 0, -1 * remaining_demand, 0
             )
-
-            # Calculate actual output based on demand met and curtailment
-            outputs[f"{commodity}_out"] = (
-                inputs[f"{commodity}_in"] - outputs[f"{commodity}_curtailed"]
-            )
         else:
             curtailed = np.where(remaining_demand < 0, -1 * remaining_demand, 0)
             inflexible_out = inputs[f"{commodity}_in"] - curtailed
@@ -281,7 +276,5 @@ class FlexibleDemandPerformanceModelComponent(om.ExplicitComponent):
                 flexible_remaining_demand < 0, -1 * flexible_remaining_demand, 0
             )
 
-            # Calculate actual output based on demand met and curtailment
-            outputs[f"{commodity}_out"] = (
-                inputs[f"{commodity}_in"] - outputs[f"{commodity}_curtailed"]
-            )
+        # Calculate actual output based on demand met and curtailment
+        outputs[f"{commodity}_out"] = inputs[f"{commodity}_in"] - outputs[f"{commodity}_curtailed"]
