@@ -142,7 +142,7 @@ class FlexibleDemandPerformanceModelComponent(om.ExplicitComponent):
 
         self.add_output(
             f"{commodity}_missed_load",
-            val=self.config.demand,
+            val=self.config.maximum_demand,
             shape=(n_timesteps),
             units=self.config.units,
             desc=f"Remaining demand profile of {commodity}",
