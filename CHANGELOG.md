@@ -54,6 +54,7 @@
 - Added variable O&M to `CostModelBaseClass` and integrated into finance-related models
 - Added generic storage model, useful for battery, hydrogen, CO2, or other resource storage.
 - Added wind resource model, API baseclasses, updated examples, and documentation.
+- Added solar resource model for GOES PSM v3 solar resource datasets using the NREL developer API
 
 ## 0.3.0 [May 2 2025]
 
