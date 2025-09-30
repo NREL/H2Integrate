@@ -330,7 +330,7 @@ class DemandOpenLoopController(ControllerBaseClass):
 
         """
         resource_name = self.config.resource_name
-        max_capacity = self.config.max_capacity
+        max_capacity = inputs["max_capacity"]
         max_charge_percent = self.config.max_charge_percent
         min_charge_percent = self.config.min_charge_percent
         init_charge_percent = self.config.init_charge_percent

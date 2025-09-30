@@ -54,26 +54,26 @@ class ATBBatteryCostModel(CostModelBaseClass):
         super().setup()
 
         self.add_input(
-            "charge_rate",
+            "max_charge_rate",
             val=self.config.max_charge_rate,
             units="kW",
             desc="Battery charge/discharge rate",
         )
         self.add_input(
-            "storage_capacity",
+            "max_capacity",
             val=self.config.max_capacity,
             units="kW*h",
             desc="Battery storage capacity",
         )
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
-        storage_duration_hrs = inputs["storage_capacity"] / inputs["charge_rate"]
+        storage_duration_hrs = inputs["max_capacity"] / inputs["max_charge_rate"]
 
         # CapEx equation from Cell E29
         total_system_cost = (
             storage_duration_hrs * self.config.energy_capex
         ) + self.config.power_capex
-        capex = total_system_cost * inputs["charge_rate"]
+        capex = total_system_cost * inputs["max_charge_rate"]
         # OpEx equation from cells in the Fixed Operation and Maintenance Expenses section
         opex = self.config.opex_fraction * capex
         outputs["CapEx"] = capex
