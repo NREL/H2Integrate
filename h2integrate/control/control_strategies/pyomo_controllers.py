@@ -20,9 +20,9 @@ class PyomoControllerBaseConfig(BaseConfig):
     This class defines the parameters required to configure the `DemandOpenLoopController`.
 
     Attributes:
-        commodity_name (str): Name of the resource being controlled (e.g., "hydrogen").
-        commodity_storage_units (str): Units of the resource (e.g., "kg/h").
-        max_capacity (float): Maximum storage capacity of the resource (in non-rate units,
+        commodity_name (str): Name of the commodity being controlled (e.g., "hydrogen").
+        commodity_storage_units (str): Units of the commodity (e.g., "kg/h").
+        max_capacity (float): Maximum storage capacity of the commodity (in non-rate units,
             e.g., "kg" if `commodity_rate_units` is "kg/h").
         max_charge_percent (float): Maximum allowable state of charge (SOC) as a percentage
             of `max_capacity`, represented as a decimal between 0 and 1.
@@ -30,9 +30,9 @@ class PyomoControllerBaseConfig(BaseConfig):
             represented as a decimal between 0 and 1.
         init_charge_percent (float): Initial SOC as a percentage of `max_capacity`, represented
             as a decimal between 0 and 1.
-        max_charge_rate (float): Maximum rate at which the resource can be charged (in units
+        max_charge_rate (float): Maximum rate at which the commodity can be charged (in units
             per time step, e.g., "kg/time step").
-        max_discharge_rate (float): Maximum rate at which the resource can be discharged (in
+        max_discharge_rate (float): Maximum rate at which the commodity can be discharged (in
             units per time step, e.g., "kg/time step").
         charge_efficiency (float): Efficiency of charging the storage, represented as a decimal
             between 0 and 1 (e.g., 0.9 for 90% efficiency).
@@ -126,7 +126,7 @@ class PyomoControllerBaseClass(ControllerBaseClass):
             unmet_demand = np.zeros(self.n_timesteps)
             storage_commodity_out = np.zeros(self.n_timesteps)
             total_commodity_out = np.zeros(self.n_timesteps)
-            excess_resource = np.zeros(self.n_timesteps)
+            excess_commodity = np.zeros(self.n_timesteps)
             soc = np.zeros(self.n_timesteps)
 
             ti = list(range(0, self.n_timesteps, self.config.n_control_window))
@@ -173,11 +173,11 @@ class PyomoControllerBaseClass(ControllerBaseClass):
                     )
 
                     unmet_demand[j] = np.maximum(0, demand_in[j - t] - total_commodity_out[j])
-                    excess_resource[j] = np.maximum(
+                    excess_commodity[j] = np.maximum(
                         0, storage_commodity_out[j] + commodity_in[j - t] - demand_in[j - t]
                     )
 
-            return total_commodity_out, storage_commodity_out, unmet_demand, excess_resource, soc
+            return total_commodity_out, storage_commodity_out, unmet_demand, excess_commodity, soc
 
         return pyomo_dispatch_solver
 
@@ -219,9 +219,9 @@ class PyomoControllerH2StorageConfig(PyomoControllerBaseConfig):
     This class defines the parameters required to configure the `PyomoControllerH2Storage`.
 
     Attributes:
-        max_charge_rate (float): Maximum rate at which the resource can be charged (in units
+        max_charge_rate (float): Maximum rate at which the commodity can be charged (in units
             per time step, e.g., "kg/time step").
-        max_discharge_rate (float): Maximum rate at which the resource can be discharged (in
+        max_discharge_rate (float): Maximum rate at which the commodity can be discharged (in
             units per time step, e.g., "kg/time step").
         charge_efficiency (float): Efficiency of charging the storage, represented as a decimal
             between 0 and 1 (e.g., 0.9 for 90% efficiency).
@@ -359,7 +359,7 @@ class SimpleBatteryControllerHeuristic(PyomoControllerBaseClass):
 
     def set_fixed_dispatch(
         self,
-        resource_in: list,
+        commodity_in: list,
         max_charge_rate: list,
         max_discharge_rate: list,
     ):
@@ -367,27 +367,27 @@ class SimpleBatteryControllerHeuristic(PyomoControllerBaseClass):
             and enforces available generation and charge/discharge limits.
 
         Args:
-            resource_in (list): Resource blocks.
+            commodity_in (list): commodity blocks.
             max_charge_rate (list): Max charge capacity.
             max_discharge_rate (list): Max discharge capacity.
 
         Raises:
-            ValueError: If resource_in or max_charge_rate or max_discharge_rate length does not
+            ValueError: If commodity_in or max_charge_rate or max_discharge_rate length does not
                 match fixed_dispatch length.
 
         """
-        self.check_resource_in_discharge_limit(resource_in, max_charge_rate, max_discharge_rate)
-        self._set_resource_fraction_limits(resource_in, max_charge_rate, max_discharge_rate)
-        self._heuristic_method(resource_in)
+        self.check_commodity_in_discharge_limit(commodity_in, max_charge_rate, max_discharge_rate)
+        self._set_commodity_fraction_limits(commodity_in, max_charge_rate, max_discharge_rate)
+        self._heuristic_method(commodity_in)
         self._fix_dispatch_model_variables()
 
-    def check_resource_in_discharge_limit(
-        self, resource_in: list, max_charge_rate: list, max_discharge_rate: list
+    def check_commodity_in_discharge_limit(
+        self, commodity_in: list, max_charge_rate: list, max_discharge_rate: list
     ):
-        """Checks if resource in and discharge limit lengths match fixed_dispatch length.
+        """Checks if commodity in and discharge limit lengths match fixed_dispatch length.
 
         Args:
-            resource_in (list): Resource blocks.
+            commodity_in (list): commodity blocks.
             max_charge_rate (list): Maximum charge capacity.
             max_discharge_rate (list): Maximum discharge capacity.
 
@@ -395,21 +395,21 @@ class SimpleBatteryControllerHeuristic(PyomoControllerBaseClass):
             ValueError: If gen or max_discharge_rate length does not match fixed_dispatch length.
 
         """
-        if len(resource_in) != len(self.fixed_dispatch):
+        if len(commodity_in) != len(self.fixed_dispatch):
             raise ValueError("gen must be the same length as fixed_dispatch.")
         elif len(max_charge_rate) != len(self.fixed_dispatch):
             raise ValueError("max_charge_rate must be the same length as fixed_dispatch.")
         elif len(max_discharge_rate) != len(self.fixed_dispatch):
             raise ValueError("max_discharge_rate must be the same length as fixed_dispatch.")
 
-    def _set_resource_fraction_limits(
-        self, resource_in: list, max_charge_rate: list, max_discharge_rate: list
+    def _set_commodity_fraction_limits(
+        self, commodity_in: list, max_charge_rate: list, max_discharge_rate: list
     ):
         """Set storage charge and discharge fraction limits based on
         available generation and grid capacity, respectively.
 
         Args:
-            resource_in (list): Resource blocks.
+            commodity_in (list): commodity blocks.
             max_charge_rate (list): Maximum charge capacity.
             max_discharge_rate (list): Maximum discharge capacity.
 
@@ -418,10 +418,10 @@ class SimpleBatteryControllerHeuristic(PyomoControllerBaseClass):
         """
         for t in self.blocks.index_set():
             self.max_charge_fraction[t] = self.enforce_power_fraction_simple_bounds(
-                (max_charge_rate[t] - resource_in[t]) / self.maximum_storage
+                (max_charge_rate[t] - commodity_in[t]) / self.maximum_storage
             )
             self.max_discharge_fraction[t] = self.enforce_power_fraction_simple_bounds(
-                (max_discharge_rate[t] - resource_in[t]) / self.maximum_storage
+                (max_discharge_rate[t] - commodity_in[t]) / self.maximum_storage
             )
 
     @staticmethod
@@ -454,19 +454,19 @@ class SimpleBatteryControllerHeuristic(PyomoControllerBaseClass):
 
         """
         if storage_fraction > 0.0:
-            discharge_resource = storage_fraction * self.maximum_storage
+            discharge_commodity = storage_fraction * self.maximum_storage
             soc = (
                 soc0
                 - self.time_duration[0]
-                * (1 / (self.discharge_efficiency) * discharge_resource)
+                * (1 / (self.discharge_efficiency) * discharge_commodity)
                 / self.maximum_storage
             )
         elif storage_fraction < 0.0:
-            charge_resource = -storage_fraction * self.maximum_storage
+            charge_commodity = -storage_fraction * self.maximum_storage
             soc = (
                 soc0
                 + self.time_duration[0]
-                * (self.charge_efficiency * charge_resource)
+                * (self.charge_efficiency * charge_commodity)
                 / self.maximum_storage
             )
         else:
@@ -500,16 +500,16 @@ class SimpleBatteryControllerHeuristic(PyomoControllerBaseClass):
 
             if dispatch_factor == 0.0:
                 # Do nothing
-                self.blocks[t].charge_resource.fix(0.0)
-                self.blocks[t].discharge_resource.fix(0.0)
+                self.blocks[t].charge_commodity.fix(0.0)
+                self.blocks[t].discharge_commodity.fix(0.0)
             elif dispatch_factor > 0.0:
                 # Discharging
-                self.blocks[t].charge_resource.fix(0.0)
-                self.blocks[t].discharge_resource.fix(dispatch_factor * self.maximum_storage)
+                self.blocks[t].charge_commodity.fix(0.0)
+                self.blocks[t].discharge_commodity.fix(dispatch_factor * self.maximum_storage)
             elif dispatch_factor < 0.0:
                 # Charging
-                self.blocks[t].discharge_resource.fix(0.0)
-                self.blocks[t].charge_resource.fix(-dispatch_factor * self.maximum_storage)
+                self.blocks[t].discharge_commodity.fix(0.0)
+                self.blocks[t].charge_commodity.fix(-dispatch_factor * self.maximum_storage)
 
     def _check_initial_soc(self, initial_soc):
         """Checks initial state-of-charge.
@@ -563,11 +563,11 @@ class SimpleBatteryControllerHeuristic(PyomoControllerBaseClass):
     @property
     def storage_dispatch_commands(self) -> list:
         """
-        Commanded dispatch including available resource at current time step that has not
+        Commanded dispatch including available commodity at current time step that has not
         been used to charge the battery.
         """
         return [
-            (self.blocks[t].discharge_resource.value - self.blocks[t].charge_resource.value)
+            (self.blocks[t].discharge_commodity.value - self.blocks[t].charge_commodity.value)
             for t in self.blocks.index_set()
         ]
 
@@ -587,14 +587,14 @@ class SimpleBatteryControllerHeuristic(PyomoControllerBaseClass):
         return [self.blocks[t].soc.value for t in self.blocks.index_set()]
 
     @property
-    def charge_resource(self) -> list:
-        """Charge resource."""
-        return [self.blocks[t].charge_resource.value for t in self.blocks.index_set()]
+    def charge_commodity(self) -> list:
+        """Charge commodity."""
+        return [self.blocks[t].charge_commodity.value for t in self.blocks.index_set()]
 
     @property
-    def discharge_resource(self) -> list:
-        """Discharge resource."""
-        return [self.blocks[t].discharge_resource.value for t in self.blocks.index_set()]
+    def discharge_commodity(self) -> list:
+        """Discharge commodity."""
+        return [self.blocks[t].discharge_commodity.value for t in self.blocks.index_set()]
 
     @property
     def initial_soc(self) -> float:
@@ -720,38 +720,38 @@ class HeuristicLoadFollowingController(SimpleBatteryControllerHeuristic):
 
     def set_fixed_dispatch(
         self,
-        resource_in: list,
+        commodity_in: list,
         max_charge_rate: list,
         max_discharge_rate: list,
-        resource_demand: list,
+        commodity_demand: list,
     ):
         """Sets charge and discharge power of battery dispatch using fixed_dispatch attribute
             and enforces available generation and charge/discharge limits.
 
         Args:
-            resource_in (list): List of generated resource in.
+            commodity_in (list): List of generated commodity in.
             max_charge_rate (list): List of max charge rates.
             max_discharge_rate (list): List of max discharge rates.
-            resource_demand (list): The demanded resource.
+            commodity_demand (list): The demanded commodity.
 
         """
 
-        self.check_resource_in_discharge_limit(resource_in, max_charge_rate, max_discharge_rate)
-        self._set_resource_fraction_limits(resource_in, max_charge_rate, max_discharge_rate)
-        self._heuristic_method(resource_in, resource_demand)
+        self.check_commodity_in_discharge_limit(commodity_in, max_charge_rate, max_discharge_rate)
+        self._set_commodity_fraction_limits(commodity_in, max_charge_rate, max_discharge_rate)
+        self._heuristic_method(commodity_in, commodity_demand)
         self._fix_dispatch_model_variables()
 
-    def _heuristic_method(self, resource_in, goal_resource):
+    def _heuristic_method(self, commodity_in, goal_commodity):
         """Enforces storage fraction limits and sets _fixed_dispatch attribute.
-        Sets the _fixed_dispatch based on goal_resource and gen.
+        Sets the _fixed_dispatch based on goal_commodity and gen.
 
         Args:
-            generated_resource: Resource generation profile.
-            goal_resource: Goal amount of resource.
+            generated_commodity: commodity generation profile.
+            goal_commodity: Goal amount of commodity.
 
         """
         for t in self.blocks.index_set():
-            fd = (goal_resource[t] - resource_in[t]) / self.maximum_storage
+            fd = (goal_commodity[t] - commodity_in[t]) / self.maximum_storage
             if fd > 0.0:  # Discharging
                 if fd > self.max_discharge_fraction[t]:
                     fd = self.max_discharge_fraction[t]

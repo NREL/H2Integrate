@@ -841,7 +841,10 @@ class H2IntegrateModel:
                 )
 
         if (pyxdsm is not None) and (len(technology_interconnections) > 0):
-            create_xdsm_from_config(self.plant_config)
+            try:
+                create_xdsm_from_config(self.plant_config)
+            except FileNotFoundError as e:
+                print(f"Unable to create system XDSM diagram. Error: {e}")
 
     def create_driver_model(self):
         """

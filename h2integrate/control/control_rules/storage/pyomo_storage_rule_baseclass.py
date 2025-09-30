@@ -130,7 +130,7 @@ class PyomoRuleStorageBaseclass(PyomoRuleBaseClass):
             bounds=(pyomo_model.minimum_soc, pyomo_model.maximum_soc),
             units=pyo.units.dimensionless,
         )
-        pyomo_model.charge_resource = pyo.Var(
+        pyomo_model.charge_commodity = pyo.Var(
             doc=self.config.commodity_name
             + " into "
             + pyomo_model.name
@@ -140,7 +140,7 @@ class PyomoRuleStorageBaseclass(PyomoRuleBaseClass):
             domain=pyo.NonNegativeReals,
             units=eval("pyo.units." + self.config.commodity_storage_units),
         )
-        pyomo_model.discharge_resource = pyo.Var(
+        pyomo_model.discharge_commodity = pyo.Var(
             doc=self.config.commodity_name
             + " out of "
             + pyomo_model.name
@@ -155,26 +155,26 @@ class PyomoRuleStorageBaseclass(PyomoRuleBaseClass):
         ##################################
         # Charging Constraints           #
         ##################################
-        # Charge resource bounds
-        pyomo_model.charge_resource_ub = pyo.Constraint(
+        # Charge commodity bounds
+        pyomo_model.charge_commodity_ub = pyo.Constraint(
             doc=pyomo_model.name + " charging storage upper bound",
-            expr=pyomo_model.charge_resource
+            expr=pyomo_model.charge_commodity
             <= pyomo_model.maximum_storage * pyomo_model.is_charging,
         )
-        pyomo_model.charge_resource_lb = pyo.Constraint(
+        pyomo_model.charge_commodity_lb = pyo.Constraint(
             doc=pyomo_model.name + " charging storage lower bound",
-            expr=pyomo_model.charge_resource
+            expr=pyomo_model.charge_commodity
             >= pyomo_model.minimum_storage * pyomo_model.is_charging,
         )
-        # Discharge resource bounds
-        pyomo_model.discharge_resource_lb = pyo.Constraint(
+        # Discharge commodity bounds
+        pyomo_model.discharge_commodity_lb = pyo.Constraint(
             doc=pyomo_model.name + " Discharging storage lower bound",
-            expr=pyomo_model.discharge_resource
+            expr=pyomo_model.discharge_commodity
             >= pyomo_model.minimum_storage * pyomo_model.is_discharging,
         )
-        pyomo_model.discharge_resource_ub = pyo.Constraint(
+        pyomo_model.discharge_commodity_ub = pyo.Constraint(
             doc=pyomo_model.name + " Discharging storage upper bound",
-            expr=pyomo_model.discharge_resource
+            expr=pyomo_model.discharge_commodity
             <= pyomo_model.maximum_storage * pyomo_model.is_discharging,
         )
         # Storage packing constraint
@@ -192,8 +192,8 @@ class PyomoRuleStorageBaseclass(PyomoRuleBaseClass):
                 m.soc0
                 + m.time_duration
                 * (
-                    m.charge_efficiency * m.charge_resource
-                    - (1 / m.discharge_efficiency) * m.discharge_resource
+                    m.charge_efficiency * m.charge_commodity
+                    - (1 / m.discharge_efficiency) * m.discharge_commodity
                 )
                 / m.capacity
             )
@@ -232,5 +232,5 @@ class PyomoRuleStorageBaseclass(PyomoRuleBaseClass):
         # Ports                          #
         ##################################
         pyomo_model.port = Port()
-        pyomo_model.port.add(pyomo_model.charge_resource)
-        pyomo_model.port.add(pyomo_model.discharge_resource)
+        pyomo_model.port.add(pyomo_model.charge_commodity)
+        pyomo_model.port.add(pyomo_model.discharge_commodity)

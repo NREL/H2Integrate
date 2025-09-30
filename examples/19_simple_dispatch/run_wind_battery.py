@@ -42,9 +42,9 @@ ax[1].plot(
 )
 ax[1].plot(
     range(start_hour, end_hour),
-    model.prob.get_val("battery.electricity_excess_resource", units="MW")[start_hour:end_hour],
+    model.prob.get_val("battery.electricity_excess_commodity", units="MW")[start_hour:end_hour],
     linestyle=":",
-    label="Excess Electricity Resource (MW)",
+    label="Excess Electricity commodity (MW)",
     linewidth=2,
 )
 ax[1].plot(

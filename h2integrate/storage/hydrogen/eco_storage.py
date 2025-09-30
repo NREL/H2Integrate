@@ -80,11 +80,11 @@ class H2Storage(CostModelBaseClass):
         )
 
         self.add_output(
-            "excess_resource_out",
+            "excess_commodity_out",
             val=0.0,
             copy_shape="hydrogen_in",
             units="kg/h",
-            desc="Excess generated resource",
+            desc="Excess generated commodity",
         )
 
         # create inputs for pyomo control model

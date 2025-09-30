@@ -18,7 +18,7 @@ class PassThroughOpenLoopController(ControllerBaseClass):
     """
     A simple pass-through controller for open-loop systems.
 
-    This controller directly passes the input resource flow to the output without any
+    This controller directly passes the input commodity flow to the output without any
     modifications. It is useful for testing, as a placeholder for more complex controllers,
     and for maintaining consistency between controlled and uncontrolled frameworks as this
     'controller' does not alter the system output in any way.
@@ -49,9 +49,9 @@ class PassThroughOpenLoopController(ControllerBaseClass):
 
         Args:
             inputs (dict): Dictionary of input values.
-                - {commodity_name}_in: Input resource flow.
+                - {commodity_name}_in: Input commodity flow.
             outputs (dict): Dictionary of output values.
-                - {commodity_name}_out: Output resource flow, equal to the input flow.
+                - {commodity_name}_out: Output commodity flow, equal to the input flow.
         """
 
         # Assign the input to the output
@@ -92,9 +92,9 @@ class DemandOpenLoopControllerConfig(BaseConfig):
     This class defines the parameters required to configure the `DemandOpenLoopController`.
 
     Attributes:
-        commodity_name (str): Name of the resource being controlled (e.g., "hydrogen").
-        commodity_rate_units (str): Units of the resource (e.g., "kg/h").
-        max_capacity (float): Maximum storage capacity of the resource (in non-rate units,
+        commodity_name (str): Name of the commodity being controlled (e.g., "hydrogen").
+        commodity_rate_units (str): Units of the commodity (e.g., "kg/h").
+        max_capacity (float): Maximum storage capacity of the commodity (in non-rate units,
             e.g., "kg" if `commodity_rate_units` is "kg/h").
         max_charge_percent (float): Maximum allowable state of charge (SOC) as a percentage
             of `max_capacity`, represented as a decimal between 0 and 1.
@@ -102,9 +102,9 @@ class DemandOpenLoopControllerConfig(BaseConfig):
             represented as a decimal between 0 and 1.
         init_charge_percent (float): Initial SOC as a percentage of `max_capacity`, represented
             as a decimal between 0 and 1.
-        max_charge_rate (float): Maximum rate at which the resource can be charged (in units
+        max_charge_rate (float): Maximum rate at which the commodity can be charged (in units
             per time step, e.g., "kg/time step"). This rate does not include the charge_efficiency.
-        max_discharge_rate (float): Maximum rate at which the resource can be discharged (in
+        max_discharge_rate (float): Maximum rate at which the commodity can be discharged (in
             units per time step, e.g., "kg/time step"). This rate does not include the
             discharge_efficiency.
         charge_efficiency (float | None): Efficiency of charging the storage, represented as a
@@ -163,30 +163,31 @@ class DemandOpenLoopControllerConfig(BaseConfig):
 
 class DemandOpenLoopController(ControllerBaseClass):
     """
-    A controller that manages resource flow based on demand and storage constraints.
+    A controller that manages commodity flow based on demand and storage constraints.
 
     The `DemandOpenLoopController` computes the state of charge (SOC), output flow, curtailment,
-    and missed load for a resource storage system. It uses a demand profile and storage parameters
-    to determine how much of the resource to charge, discharge, or curtail at each time step.
+    and missed load for a commodity storage system. It uses a demand profile and storage parameters
+    to determine how much of the commodity to charge, discharge, or curtail at each time step.
 
-    Note: the units of the outputs are the same as the resource units, which is typically a rate
+    Note: the units of the outputs are the same as the commodity units, which is typically a rate
     in H2Integrate (e.g. kg/h)
 
     Attributes:
         config (DemandOpenLoopControllerConfig): Configuration object containing parameters
-            such as resource name, units, time steps, storage capacity, charge/discharge rates,
+            such as commodity name, units, time steps, storage capacity, charge/discharge rates,
             efficiencies, and demand profile.
 
     Inputs:
-        {commodity_name}_in (float): Input resource flow timeseries (e.g., hydrogen production).
+        {commodity_name}_in (float): Input commodity flow timeseries (e.g., hydrogen production).
             - Units: Defined in `commodity_rate_units` (e.g., "kg/h").
 
     Outputs:
-        {commodity_name}_out (float): Output resource flow timeseries after storage.
+        {commodity_name}_out (float): Output commodity flow timeseries after storage.
             - Units: Defined in `commodity_rate_units` (e.g., "kg/h").
         {commodity_name}_soc (float): State of charge (SOC) timeseries for the storage system.
             - Units: "unitless" (percentage of maximum capacity given as a ratio between 0 and 1).
-        {commodity_name}_excess_resource (float): Curtailment timeseries for unused input resource.
+        {commodity_name}_excess_commodity (float): Curtailment timeseries for unused
+        input commodity.
             - Units: Defined in `commodity_rate_units` (e.g., "kg/h").
             - Note: curtailment in this case does not reduce what the converter produces, but
                 rather the system just does not use it (throws it away) because this controller is
@@ -239,10 +240,10 @@ class DemandOpenLoopController(ControllerBaseClass):
         )
 
         self.add_output(
-            f"{commodity_name}_excess_resource",
+            f"{commodity_name}_excess_commodity",
             copy_shape=f"{commodity_name}_in",
             units=self.config.commodity_rate_units,
-            desc=f"{commodity_name} curtailment timeseries for inflow resource at \
+            desc=f"{commodity_name} curtailment timeseries for inflow commodity at \
                 storage point",
         )
 
@@ -276,7 +277,7 @@ class DemandOpenLoopController(ControllerBaseClass):
 
         # initialize outputs
         soc_array = outputs[f"{commodity_name}_soc"]
-        excess_resource_array = outputs[f"{commodity_name}_excess_resource"]
+        excess_commodity_array = outputs[f"{commodity_name}_excess_commodity"]
         output_array = outputs[f"{commodity_name}_out"]
         unmet_demand_array = outputs[f"{commodity_name}_unmet_demand"]
 
@@ -329,7 +330,7 @@ class DemandOpenLoopController(ControllerBaseClass):
 
             # Record the curtailment at the current time step. Adjust `charge` from storage view to
             # outside view for curtailment
-            excess_resource_array[t] = max(0, float(excess_input - charge / charge_efficiency))
+            excess_commodity_array[t] = max(0, float(excess_input - charge / charge_efficiency))
 
             # Record the missed load at the current time step
             unmet_demand_array[t] = max(0, (demand_t - output_array[t]))
@@ -339,8 +340,8 @@ class DemandOpenLoopController(ControllerBaseClass):
         # Return the SOC
         outputs[f"{commodity_name}_soc"] = soc_array
 
-        # Return the excess resource
-        outputs[f"{commodity_name}_excess_resource"] = excess_resource_array
+        # Return the excess commodity
+        outputs[f"{commodity_name}_excess_commodity"] = excess_commodity_array
 
         # Return the unmet load demand
         outputs[f"{commodity_name}_unmet_demand"] = unmet_demand_array

@@ -756,12 +756,12 @@ def test_wind_battery_dispatch_example(subtests):
         )[0]
         assert pytest.approx(total_electricity, rel=1e-6) == 62797265.9296355
 
-    # Subtest for electricity excess_resource
-    with subtests.test("Check electricity excess resource"):
-        electricity_excess_resource = np.linalg.norm(
-            model.prob.get_val("battery.electricity_excess_resource")
+    # Subtest for electricity excess_commodity
+    with subtests.test("Check electricity excess commodity"):
+        electricity_excess_commodity = np.linalg.norm(
+            model.prob.get_val("battery.electricity_excess_commodity")
         )
-        assert pytest.approx(electricity_excess_resource, rel=1e-6) == 412531.73840450746
+        assert pytest.approx(electricity_excess_commodity, rel=1e-6) == 412531.73840450746
 
     # Subtest for unmet demand
     with subtests.test("Check electricity unmet demand"):

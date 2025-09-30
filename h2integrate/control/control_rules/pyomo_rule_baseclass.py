@@ -13,10 +13,10 @@ class PyomoRuleBaseConfig(BaseConfig):
     This class defines the parameters required to configure the `DemandOpenLoopController`.
 
     Attributes:
-        commodity_name (str): Name of the resource being controlled (e.g., "hydrogen").
-        commodity_units (str): Units of the resource (e.g., "kg/h").
+        commodity_name (str): Name of the commodity being controlled (e.g., "hydrogen").
+        commodity_units (str): Units of the commodity (e.g., "kg/h").
         time_steps (int): Number of time steps in the simulation.
-        max_capacity (float): Maximum storage capacity of the resource (in non-rate units,
+        max_capacity (float): Maximum storage capacity of the commodity (in non-rate units,
             e.g., "kg" if `commodity_units` is "kg/h").
         max_charge_percent (float): Maximum allowable state of charge (SOC) as a percentage
             of `max_capacity`, represented as a decimal between 0 and 1.
@@ -24,9 +24,9 @@ class PyomoRuleBaseConfig(BaseConfig):
             represented as a decimal between 0 and 1.
         init_charge_percent (float): Initial SOC as a percentage of `max_capacity`, represented
             as a decimal between 0 and 1.
-        max_charge_rate (float): Maximum rate at which the resource can be charged (in units
+        max_charge_rate (float): Maximum rate at which the commodity can be charged (in units
             per time step, e.g., "kg/time step").
-        max_discharge_rate (float): Maximum rate at which the resource can be discharged (in
+        max_discharge_rate (float): Maximum rate at which the commodity can be discharged (in
             units per time step, e.g., "kg/time step").
         charge_efficiency (float): Efficiency of charging the storage, represented as a decimal
             between 0 and 1 (e.g., 0.9 for 90% efficiency).
