@@ -162,7 +162,7 @@ class PoseOptimization:
 
         folder_output = self.config["general"]["folder_output"]
 
-        if self.config["driver"]["optimization"]["flag"]:
+        if self.config["driver"].get("optimization", False):
             opt_options = self.config["driver"]["optimization"]
             step_size = self._get_step_size()
 
@@ -343,7 +343,8 @@ class PoseOptimization:
                     ]
 
                 # options
-                opt_prob.driver.options["run_parallel"] = doe_options["run_parallel"]
+                if "run_parallel" in doe_options:
+                    opt_prob.driver.options["run_parallel"] = doe_options["run_parallel"]
 
         else:
             warnings.warn(
@@ -440,13 +441,17 @@ class PoseOptimization:
             opt_prob.driver.add_recorder(recorder)
             opt_prob.add_recorder(recorder)
 
-            opt_prob.driver.recording_options["excludes"] = ["*_df"]
             opt_prob.driver.recording_options["record_constraints"] = True
             opt_prob.driver.recording_options["record_desvars"] = True
             opt_prob.driver.recording_options["record_objectives"] = True
 
-            if self.config["recorder"]["includes"]:
+            if self.config["recorder"].get("includes", False):
                 opt_prob.driver.recording_options["includes"] = self.config["recorder"]["includes"]
+                opt_prob.recording_options["includes"] = self.config["recorder"]["includes"]
+
+            if self.config["recorder"].get("excludes", False):
+                opt_prob.driver.recording_options["excludes"] = self.config["recorder"]["excludes"]
+                opt_prob.recording_options["excludes"] = self.config["recorder"]["excludes"]
 
         return opt_prob
 
