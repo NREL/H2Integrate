@@ -140,6 +140,34 @@ class FlexibleDemandPerformanceModelComponent(om.ExplicitComponent):
             desc=f"Amount of {commodity} demand that has already been supplied",
         )
 
+        self.add_input(
+            "ramp_down_rate",
+            val=self.config.ramp_down_rate_fraction,
+            units="percent",
+            desc="Maximum ramp down rate as a fraction of the maximum demand",
+        )
+
+        self.add_input(
+            "ramp_up_rate",
+            val=self.config.ramp_up_rate_fraction,
+            units="percent",
+            desc="Maximum ramp down rate as a fraction of the maximum demand",
+        )
+
+        self.add_input(
+            "min_utilization",
+            val=self.config.min_utilization,
+            units="percent",
+            desc="Minimum capacity factor based on maximum demand",
+        )
+
+        self.add_input(
+            "turndown_ratio",
+            val=self.config.turndown_ratio,
+            units="percent",
+            desc="Minimum operating point as a fraction of the maximum demand",
+        )
+
         self.add_output(
             f"{commodity}_missed_load",
             val=self.config.maximum_demand,
@@ -208,12 +236,12 @@ class FlexibleDemandPerformanceModelComponent(om.ExplicitComponent):
         )
         return np.clip(flexible_demand_profile, min_demand, rated_demand)
 
-    def make_flexible_demand(self, maximum_demand_profile, pre_demand_met):
+    def make_flexible_demand(self, maximum_demand_profile, pre_demand_met, inputs):
         rated_demand = np.max(maximum_demand_profile)
-        min_demand = rated_demand * self.config.turndown_ratio
-        ramp_down_rate = rated_demand * self.config.ramp_down_rate_fraction
-        ramp_up_rate = rated_demand * self.config.ramp_up_rate_fraction
-        min_total_demand = rated_demand * len(maximum_demand_profile) * self.config.min_utilization
+        min_demand = rated_demand * inputs["turndown_ratio"][0]
+        ramp_down_rate = rated_demand * inputs["ramp_down_rate"][0]
+        ramp_up_rate = rated_demand * inputs["ramp_up_rate"][0]
+        min_total_demand = rated_demand * len(maximum_demand_profile) * inputs["min_utilization"][0]
 
         demand_bounds = (min_demand, rated_demand)
         ramp_rate_bounds = (ramp_down_rate, ramp_up_rate)
@@ -229,7 +257,7 @@ class FlexibleDemandPerformanceModelComponent(om.ExplicitComponent):
         # 3) satisfy min utilization constraint
         if np.sum(flexible_demand_profile) < min_total_demand:
             # gradually increase power threshold in increments of 5% of rated power
-            demand_threshold_percentages = np.arange(self.config.turndown_ratio, 1.05, 0.05)
+            demand_threshold_percentages = np.arange(inputs["turndown_ratio"][0], 1.05, 0.05)
             for demand_threshold_percent in demand_threshold_percentages:
                 demand_threshold = demand_threshold_percent * rated_demand
                 # 1) satisfy turndown constraint
@@ -265,7 +293,7 @@ class FlexibleDemandPerformanceModelComponent(om.ExplicitComponent):
             inflexible_out = inputs[f"{commodity}_in"] - curtailed
 
             flexible_demand_profile = self.make_flexible_demand(
-                inputs[f"{commodity}_demand_profile"], inflexible_out
+                inputs[f"{commodity}_demand_profile"], inflexible_out, inputs
             )
             flexible_remaining_demand = flexible_demand_profile - inputs[f"{commodity}_in"]
 

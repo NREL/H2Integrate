@@ -434,26 +434,24 @@ class PoseOptimization:
         """
         folder_output = self.config["general"]["folder_output"]
 
+        if not Path(folder_output).exists():
+            Path.mkdir(folder_output, parents=True)
         # Set recorder on the OpenMDAO driver level using the `optimization_log`
-        # filename supplied in the optimization yaml
-        if self.config["recorder"]["flag"]:
-            recorder = om.SqliteRecorder(Path(folder_output) / self.config["recorder"]["file_name"])
-            opt_prob.driver.add_recorder(recorder)
-            opt_prob.add_recorder(recorder)
 
-            opt_prob.driver.recording_options["record_constraints"] = True
-            opt_prob.driver.recording_options["record_desvars"] = True
-            opt_prob.driver.recording_options["record_objectives"] = True
+        # filename supplied in the optimization yaml
+        if self.config["recorder"].get("flag", False):
+            recorder = om.SqliteRecorder(Path(folder_output) / self.config["recorder"]["file"])
+            opt_prob.model.add_recorder(recorder)
+
+            opt_prob.model.recording_options["record_inputs"] = True
+            opt_prob.model.recording_options["record_outputs"] = True
+            opt_prob.model.recording_options["record_residuals"] = True
 
             if self.config["recorder"].get("includes", False):
-                opt_prob.driver.recording_options["includes"] = self.config["recorder"]["includes"]
-                opt_prob.recording_options["includes"] = self.config["recorder"]["includes"]
+                opt_prob.model.recording_options["includes"] = self.config["recorder"]["includes"]
 
             if self.config["recorder"].get("excludes", False):
-                opt_prob.driver.recording_options["excludes"] = self.config["recorder"]["excludes"]
-                opt_prob.recording_options["excludes"] = self.config["recorder"]["excludes"]
-
-        return opt_prob
+                opt_prob.model.recording_options["excludes"] = self.config["recorder"]["excludes"]
 
     def set_restart(self, opt_prob):
         """
