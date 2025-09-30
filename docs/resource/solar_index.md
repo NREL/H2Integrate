@@ -1,7 +1,7 @@
 (solar_resource:models)=
 # Solar Resource: Model Overview
 
-- [GOES PSM v4 API](solar_resource:goes_v4_api)): these models require an API key for the NREL developer network, the available models are:
+- [GOES PSM v4 API](solar_resource:goes_v4_api): these models require an API key for the NREL developer network, the available models are:
     - "goes_aggregated_solar_v4_api"
     - "goes_conus_solar_v4_api"
     - "goes_fulldisc_solar_v4_api"
