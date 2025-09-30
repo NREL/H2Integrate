@@ -2,6 +2,7 @@ from dataclasses import asdict, dataclass
 from collections.abc import Sequence
 
 import numpy as np
+import PySAM.BatteryTools as BatteryTools
 import PySAM.BatteryStateful as BatteryStateful
 from attrs import field, define
 from hopp.utilities.validators import gt_zero, contains, range_val
@@ -29,7 +30,7 @@ class BatteryOutputs:
     excess_commodity: list[float]
 
     """
-    Container for simulated outputs from the `BatteryStateful` and HOPP dispatch models.
+    Container for simulated outputs from the `BatteryStateful` and H2I dispatch models.
 
     Attributes:
         I (Sequence): Battery current [A] per timestep.
@@ -351,18 +352,13 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass):
             "surface_area": self.config.ref_module_surface_area,
         }
 
-        self.size_batterystateful(
-            inputs["storage_capacity"][0],
+        BatteryTools.battery_model_sizing(
+            self.system_model,
+            self.config.rated_commodity_capacity,
+            self.config.max_capacity,
             self.system_model.ParamsPack.nominal_voltage,
             module_specs=module_specs,
         )
-        # BatteryTools.battery_model_sizing(
-        #     self.system_model,
-        #     self.config.rated_commodity_capacity,
-        #     self.config.max_capacity,
-        #     self.system_model.ParamsPack.nominal_voltage,
-        #     module_specs=module_specs,
-        # )
         self.system_model.ParamsPack.h = 20
         self.system_model.ParamsPack.Cp = 900
         self.system_model.ParamsCell.resistance = 0.001
@@ -514,52 +510,6 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass):
                 getattr(self.outputs, attr)[sim_start_index + t] = getattr(self, attr)
 
         return storage_power_out_timesteps, soc_timesteps
-
-    def size_batterystateful(self, desired_capacity, desired_voltage, module_specs=None):
-        """Resize the PySAM BatteryStateful model.
-
-        Updates the battery nominal voltage and energy capacity. If
-        reference module specifications are provided, thermal properties
-        (mass and surface area) are scaled accordingly.
-
-        Args:
-            desired_capacity (float):
-                Desired battery capacity (kWhAC if AC-connected, kWhDC otherwise).
-            desired_voltage (float):
-                Desired battery voltage (V).
-            module_specs (dict, optional):
-                Reference module specifications for scaling thermal properties.
-                Expected keys:
-                    - "capacity" (float): Module capacity (kWh).
-                    - "surface_area" (float): Module surface area (m²).
-
-        Returns:
-            dict: Updated sizing parameters including thermal properties.
-        """
-        # calculate size
-        if not isinstance(self.system_model, BatteryStateful.BatteryStateful):
-            raise TypeError
-
-        original_capacity = self.system_model.ParamsPack.nominal_energy
-
-        self.system_model.ParamsPack.nominal_voltage = desired_voltage
-        self.system_model.ParamsPack.nominal_energy = desired_capacity
-
-        # calculate thermal
-        thermal_inputs = {
-            "mass": self.system_model.ParamsPack.mass,
-            "surface_area": self.system_model.ParamsPack.surface_area,
-            "original_capacity": original_capacity,
-            "desired_capacity": desired_capacity,
-        }
-        if module_specs is not None:
-            module_specs = {"module_" + k: v for k, v in module_specs.items()}
-            thermal_inputs.update(module_specs)
-
-        thermal_outputs = self.calculate_thermal_params(thermal_inputs)
-
-        self.system_model.ParamsPack.mass = thermal_outputs["mass"]
-        self.system_model.ParamsPack.surface_area = thermal_outputs["surface_area"]
 
     def calculate_thermal_params(self, input_dict):
         """Calculate battery thermal parameters after resizing.
