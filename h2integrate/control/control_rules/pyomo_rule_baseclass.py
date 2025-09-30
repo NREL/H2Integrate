@@ -8,9 +8,9 @@ from h2integrate.core.utilities import BaseConfig
 @define
 class PyomoRuleBaseConfig(BaseConfig):
     """
-    Configuration class for the DemandOpenLoopController.
+    Configuration class for the PyomoRuleBaseConfig.
 
-    This class defines the parameters required to configure the `DemandOpenLoopController`.
+    This class defines the parameters required to configure the `PyomoRuleBaseConfig`.
 
     Attributes:
         commodity_name (str): Name of the commodity being controlled (e.g., "hydrogen").
