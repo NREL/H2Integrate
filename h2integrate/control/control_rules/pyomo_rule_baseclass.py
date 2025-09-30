@@ -15,42 +15,10 @@ class PyomoRuleBaseConfig(BaseConfig):
     Attributes:
         commodity_name (str): Name of the commodity being controlled (e.g., "hydrogen").
         commodity_units (str): Units of the commodity (e.g., "kg/h").
-        time_steps (int): Number of time steps in the simulation.
-        max_capacity (float): Maximum storage capacity of the commodity (in non-rate units,
-            e.g., "kg" if `commodity_units` is "kg/h").
-        max_charge_percent (float): Maximum allowable state of charge (SOC) as a percentage
-            of `max_capacity`, represented as a decimal between 0 and 1.
-        min_charge_percent (float): Minimum allowable SOC as a percentage of `max_capacity`,
-            represented as a decimal between 0 and 1.
-        init_charge_percent (float): Initial SOC as a percentage of `max_capacity`, represented
-            as a decimal between 0 and 1.
-        max_charge_rate (float): Maximum rate at which the commodity can be charged (in units
-            per time step, e.g., "kg/time step").
-        max_discharge_rate (float): Maximum rate at which the commodity can be discharged (in
-            units per time step, e.g., "kg/time step").
-        charge_efficiency (float): Efficiency of charging the storage, represented as a decimal
-            between 0 and 1 (e.g., 0.9 for 90% efficiency).
-        discharge_efficiency (float): Efficiency of discharging the storage, represented as a
-            decimal between 0 and 1 (e.g., 0.9 for 90% efficiency).
-        demand_profile (scalar or list): The demand values for each time step (in the same units
-            as `commodity_units`) or a scalar for a constant demand.
     """
 
     commodity_name: str = field()
-    # commodity_rate_units: str = field()
     commodity_storage_units: str = field()
-    # time_steps: int = field()
-    # max_capacity: float = field()
-    # max_charge_percent: float = field()
-    # min_charge_percent: float = field()
-    # init_charge_percent: float = field()
-    # max_charge_rate: float = field()
-    # max_discharge_rate: float = field()
-    # charge_efficiency: float = field()
-    # discharge_efficiency: float = field()
-    # demand_profile: int | float | list = field()
-    # # added by cbay, moved here by jthomas
-    # include_lifecycle_count: bool = field(default=False)
 
 
 class PyomoRuleBaseClass(om.ExplicitComponent):

@@ -22,10 +22,6 @@ class BatteryOutputs:
     n_cycles: Sequence
     P_chargeable: Sequence
     P_dischargeable: Sequence
-    dispatch_I: list[float]
-    dispatch_P: list[float]
-    dispatch_SOC: list[float]
-    dispatch_lifecycles_per_day: list[int | None]
     unmet_demand: list[float]
     excess_commodity: list[float]
 
@@ -42,13 +38,6 @@ class BatteryOutputs:
         n_cycles (Sequence): Cumulative rainflow cycles since start of simulation [1].
         P_chargeable (Sequence): Maximum estimated chargeable power [kW] per timestep.
         P_dischargeable (Sequence): Maximum estimated dischargeable power [kW] per timestep.
-
-        dispatch_I (list[float]): Dispatch-model battery current [A] per timestep.
-            Only applicable for dispatch models where current is modeled.
-        dispatch_P (list[float]): Dispatch-model battery power [MW] per timestep.
-        dispatch_SOC (list[float]): Dispatch-model state of charge [%] per timestep.
-        dispatch_lifecycles_per_day (list[int | None]): Number of battery cycles per
-            control window. Length is equal to the number of control windows.
 
         unmet_demand (list[float]): Unmet demand [kW] per timestep.
         excess_commodity (list[float]): Excess available commodity [kW] per timestep.
@@ -68,10 +57,6 @@ class BatteryOutputs:
         ]
         for attr in self.stateful_attributes:
             setattr(self, attr, [0.0] * n_timesteps)
-
-        dispatch_attributes = ["I", "P", "SOC"]
-        for attr in dispatch_attributes:
-            setattr(self, "dispatch_" + attr, [0.0] * n_timesteps)
 
         self.dispatch_lifecycles_per_control_window = [None] * int(n_timesteps / n_control_window)
 
