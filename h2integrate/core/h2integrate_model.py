@@ -693,6 +693,39 @@ class H2IntegrateModel:
 
         resource_to_tech_connections = self.plant_config.get("resource_to_tech_connections", [])
 
+        resource_models = self.plant_config.get("site", {}).get("resources", {})
+        resource_source_connections = [c[0] for c in resource_to_tech_connections]
+        # Check if there is a missing resource to tech connection or missing resource model
+        if len(resource_models) != len(resource_source_connections):
+            if len(resource_models) > len(resource_source_connections):
+                # more resource models than resources connected to technologies
+                non_connected_resource = [
+                    k for k in resource_models if k not in resource_source_connections
+                ]
+                # check if theres a resource model that isnt connected to a technology
+                if len(non_connected_resource) > 0:
+                    msg = (
+                        "Some resources are not connected to a technology. Resource models "
+                        f"{non_connected_resource} are not included in "
+                        "`resource_to_tech_connections`. Please connect these resources "
+                        "to their technologies under `resource_to_tech_connections`"
+                    )
+                    raise ValueError(msg)
+            if len(resource_source_connections) > len(resource_models):
+                # more more resources connected than resource models
+                missing_resource = [
+                    k for k in resource_source_connections if k not in resource_models
+                ]
+                # check if theres a resource model that isnt connected to a technology
+                if len(missing_resource) > 0:
+                    msg = (
+                        "Missing resource(s) are not defined but are connected to a technology. "
+                        f"Missing resource(s) are {missing_resource}. "
+                        "Please check ``resource_to_tech_connections`` or add the missing resources"
+                        " to plant_config['site']['resources']."
+                    )
+                    raise ValueError(msg)
+
         for connection in resource_to_tech_connections:
             if len(connection) != 3:
                 err_msg = f"Invalid resource to tech connection: {connection}"
