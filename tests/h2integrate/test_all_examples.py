@@ -263,7 +263,7 @@ def test_doc_methanol_example(subtests):
 
     # Check levelized cost of methanol (LCOM)
     with subtests.test("Check CO2 Hydrogenation LCOM"):
-        assert pytest.approx(model.prob.get_val("financials_group_1.LCOM"), rel=1e-6) == 6.79771486
+        assert pytest.approx(model.prob.get_val("finance_subgroup_default.LCOM"), rel=1e-6) == 2.58989518
 
 
 def test_wind_h2_opt_example(subtests):
