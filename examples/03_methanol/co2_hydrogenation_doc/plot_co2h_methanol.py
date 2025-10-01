@@ -7,14 +7,6 @@ def plot_methanol(model):
 
     times = pd.date_range("2013", periods=8760, freq="1h")
 
-    # # HOPP Electricity for Electrolyzer
-    # plt.subplot(3, 2, 1)
-    # plt.title("HOPP for Electrolyzer")
-    # hopp_elec_out = model.plant.hopp.hopp.get_val("electricity_out")
-    # plt.plot(times, hopp_elec_out, label="electricity_out [kW]")
-    # # plt.yscale("log")
-    # plt.legend()
-
     # Electricity to H2 using Electrolyzer
     plt.subplot(3, 2, 1)
     plt.title("Electrolyzer")
@@ -26,28 +18,24 @@ def plot_methanol(model):
         / 1000
         * 24
     )
-    plt.plot(times, elyzer_elec_in, label="electricity_in [MW]")
+    plt.plot(times, elyzer_elec_in, label="electricity_in [MW]", color=[0.5, 0.5, 1])
+    plt.plot([times[0], times[-1]], [160, 160], "--", label="electrolyzer_max_input [MW]", color=[0.5, 0.5, 1])
     plt.plot(times, elyzer_h2_out, label="hydrogen_out [t/d]", color=[1, 0.5, 0])
     # plt.yscale("log")
     plt.legend()
-
-    # # Wind Electricity for DOC
-    # plt.subplot(3, 2, 2)
-    # plt.title("Wind for DOC")
-    # wind_elec_out = model.plant.wind.wind_plant_performance.get_val("electricity_out")
-    # plt.plot(times, wind_elec_out, label="electricity_out [kW]")
-    # plt.yscale("log")
-    # plt.legend()
+    plt.xlim(pd.to_datetime("2012-12-15"),pd.to_datetime("2013-01-31"))
 
     # Electricity to CO2 using DOC
     plt.subplot(3, 2, 2)
     plt.title("DOC")
     doc_elec_in = model.plant.doc.direct_ocean_capture_performance.get_val("electricity_in") / 1e6
-    doc_co2_out = model.plant.doc.direct_ocean_capture_performance.get_val("co2_out") / 1000 * 24
+    doc_co2_out = model.plant.doc.direct_ocean_capture_performance.get_val("co2_out") / 1000
     plt.plot(times, doc_elec_in, label="electricity_in [MW]")
-    plt.plot(times, doc_co2_out, label="co2_out [t/d]", color=[0.5, 0.25, 0])
+    plt.plot([times[0], times[-1]], [43.32621908, 43.32621908], "--", label="doc_max_input [MW]", color=[0.5, 0.5, 1])
+    plt.plot(times, doc_co2_out, label="co2_out [t/hr]", color=[0.5, 0.25, 0])
     # plt.yscale("log")
     plt.legend()
+    plt.xlim(pd.to_datetime("2012-12-15"),pd.to_datetime("2013-01-31"))
 
     # H2 and Storage
     plt.subplot(3, 2, 3)
@@ -58,6 +46,7 @@ def plot_methanol(model):
     plt.plot(times, h2_storage_out, label="hydrogen_out [kg/hr]", color=[0, 0.5, 0])
     # plt.yscale("log")
     plt.legend()
+    plt.xlim(pd.to_datetime("2012-12-15"),pd.to_datetime("2013-01-31"))
 
     # H2 and Storage
     plt.subplot(3, 2, 4)
@@ -68,6 +57,7 @@ def plot_methanol(model):
     plt.plot(times, co2_storage_out, label="co2_out [kg/hr]", color=[0, 0.25, 0.5])
     # plt.yscale("log")
     plt.legend()
+    plt.xlim(pd.to_datetime("2012-12-15"),pd.to_datetime("2013-01-31"))
 
     # H2 and CO2 to Methanol
     plt.subplot(3, 2, 5)
@@ -80,6 +70,7 @@ def plot_methanol(model):
     plt.plot(times, meoh_meoh_out, label="methanol_out [kg/hr]", color=[1, 0, 0.5])
     # plt.yscale("log")
     plt.legend()
+    plt.xlim(pd.to_datetime("2012-12-15"),pd.to_datetime("2013-01-31"))
 
     # H2 and CO2 storage SOC
     plt.subplot(3, 2, 6)
@@ -90,6 +81,7 @@ def plot_methanol(model):
     plt.plot(times, co2_soc, label="co2_soc [%]", color=[0.5, 0.25, 0])
     # plt.yscale("log")
     plt.legend()
+    plt.xlim(pd.to_datetime("2012-12-15"),pd.to_datetime("2013-01-31"))
 
     fig = plt.gcf()
     fig.tight_layout()

@@ -33,17 +33,11 @@ technology_interconnections: [
   ["hopp", "electricity_splitter", "electricity", "cable"],
   ["electricity_splitter", "doc", "electricity", "cable"],
   ["electricity_splitter", "electrolyzer", "electricity", "cable"],
-  # ["hopp", "electrolyzer", "electricity", "cable"],
   ["electrolyzer", "h2_storage", "hydrogen", "pipe"],
   ["h2_storage", "methanol", "hydrogen", "pipe"],
-  # ["wind","doc","electricity","cable"],
   ["doc", "co2_storage", "co2", "pipe"],
   ["co2_storage","methanol","co2","pipe"],
 ]
-
-# resource_to_tech_connections: [
-#   ["wind_resource", "wind", "wind_resource_data"]
-# ]
 
 plant:
   plant_life: 30
