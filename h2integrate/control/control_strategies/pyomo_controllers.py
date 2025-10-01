@@ -5,6 +5,7 @@ import pyomo.environ as pyomo
 from attrs import field, define
 
 from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
+from h2integrate.core.validators import range_val
 from h2integrate.control.control_strategies.controller_baseclass import ControllerBaseClass
 
 
@@ -15,35 +16,45 @@ if TYPE_CHECKING:  # to avoid circular imports
 @define
 class PyomoControllerBaseConfig(BaseConfig):
     """
-    Configuration class for the DemandOpenLoopController.
+    Configuration data container for Pyomo-based storage / dispatch controllers.
 
-    This class defines the parameters required to configure the `DemandOpenLoopController`.
+    This class groups the fundamental parameters needed by derived controller
+    implementations. Values are typically populated from the technology
+    `tech_config.yaml` (merged under the "control" section).
 
     Attributes:
-        commodity_name (str): Name of the commodity being controlled (e.g., "hydrogen").
-        commodity_storage_units (str): Units of the commodity (e.g., "kg/h").
-        max_capacity (float): Maximum storage capacity of the commodity (in non-rate units,
-            e.g., "kg" if `commodity_rate_units` is "kg/h").
-        max_charge_percent (float): Maximum allowable state of charge (SOC) as a percentage
-            of `max_capacity`, represented as a decimal between 0 and 1.
-        min_charge_percent (float): Minimum allowable SOC as a percentage of `max_capacity`,
-            represented as a decimal between 0 and 1.
-        init_charge_percent (float): Initial SOC as a percentage of `max_capacity`, represented
-            as a decimal between 0 and 1.
-        max_charge_rate (float): Maximum rate at which the commodity can be charged (in units
-            per time step, e.g., "kg/time step").
-        max_discharge_rate (float): Maximum rate at which the commodity can be discharged (in
-            units per time step, e.g., "kg/time step").
-        charge_efficiency (float): Efficiency of charging the storage, represented as a decimal
-            between 0 and 1 (e.g., 0.9 for 90% efficiency).
-        discharge_efficiency (float): Efficiency of discharging the storage, represented as a
-            decimal between 0 and 1 (e.g., 0.9 for 90% efficiency).
+        max_capacity (float):
+            Physical maximum stored commodity capacity (inventory, not a rate).
+            Units correspond to the base commodity units (e.g., kg, MWh).
+        max_charge_percent (float):
+            Upper bound on state of charge expressed as a fraction in [0, 1].
+            1.0 means the controller may fill to max_capacity.
+        min_charge_percent (float):
+            Lower bound on state of charge expressed as a fraction in [0, 1].
+            0.0 allows full depletion; >0 reserves minimum inventory.
+        init_charge_percent (float):
+            Initial state of charge at simulation start as a fraction in [0, 1].
+        n_control_window (int):
+            Number of consecutive timesteps processed per control action
+            (rolling control / dispatch window length).
+        n_horizon_window (int):
+            Number of timesteps considered for look ahead / optimization horizon.
+            May be >= n_control_window (used by predictive strategies).
+        commodity_name (str):
+            Base name of the controlled commodity (e.g., "hydrogen", "electricity").
+            Used to construct input/output variable names (e.g., f"{commodity_name}_in").
+        commodity_storage_units (str):
+            Units string for stored commodity rates (e.g., "kg/h", "MW").
+            Used for unit annotations when creating model variables.
+        tech_name (str):
+            Technology identifier used to namespace Pyomo blocks / variables within
+            the broader OpenMDAO model (e.g., "battery", "h2_storage").
     """
 
     max_capacity: float = field()
-    max_charge_percent: float = field()
-    min_charge_percent: float = field()
-    init_charge_percent: float = field()
+    max_charge_percent: float = field(validator=range_val(0, 1))
+    min_charge_percent: float = field(validator=range_val(0, 1))
+    init_charge_percent: float = field(validator=range_val(0, 1))
     n_control_window: int = field()
     n_horizon_window: int = field()
     commodity_name: str = field()
@@ -60,6 +71,7 @@ class PyomoControllerBaseClass(ControllerBaseClass):
         return None
 
     def setup(self):
+        # import pdb; pdb.set_trace()
         # get technology group name
         # TODO: Make this more general, right now it might go astray if for example "battery" is
         # used twice in an OpenMDAO subsystem pathname
@@ -208,8 +220,6 @@ class PyomoControllerBaseClass(ControllerBaseClass):
 
     @property
     def blocks(self) -> pyomo.Block:
-        # TODO: Is there a way to inherit the correct tech name so it doesn't have to be defined
-        # in the input config?
         return getattr(self.pyomo_model, self.config.tech_name)
 
     @property

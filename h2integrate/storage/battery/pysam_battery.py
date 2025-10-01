@@ -5,9 +5,9 @@ import numpy as np
 import PySAM.BatteryTools as BatteryTools
 import PySAM.BatteryStateful as BatteryStateful
 from attrs import field, define
-from hopp.utilities.validators import gt_zero, contains, range_val
 
 from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
+from h2integrate.core.validators import gt_zero, contains, range_val
 from h2integrate.storage.battery.battery_baseclass import BatteryPerformanceBaseClass
 
 
