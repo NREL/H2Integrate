@@ -19,6 +19,12 @@ site:
     }
   ]
 
+  resources:
+    wind_resource:
+      resource_model: "wind_toolkit_v2_api"
+      resource_parameters:
+        resource_year: 2013
+
 # array of arrays containing left-to-right technology
 # interconnections; can support bidirectional connections
 # with the reverse definition.
@@ -31,6 +37,11 @@ technology_interconnections: [
 tech_to_dispatch_connections: [
   ["wind", "battery"],
   ["battery", "battery"],
+]
+
+resource_to_tech_connections: [
+  # connect the wind resource to the wind technology
+  ['wind_resource', 'wind', 'wind_resource_data'],
 ]
 
 plant:

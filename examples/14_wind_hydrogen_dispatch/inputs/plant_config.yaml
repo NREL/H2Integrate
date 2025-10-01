@@ -2,8 +2,6 @@ name: "plant_config"
 description: "This plant is located in CO, USA..."
 
 site:
-  latitude: 35.2018863
-  longitude: -101.945027
 
   # array of polygons defining boundaries with x/y coords
   boundaries: [
@@ -21,6 +19,9 @@ site:
       resource_model: "wind_toolkit_v2_api"
       resource_parameters:
         resource_year: 2012
+        latitude: 35.2018863
+        longitude: -101.945027
+
 # array of arrays containing left-to-right technology
 # interconnections; can support bidirectional connections
 # with the reverse definition.
