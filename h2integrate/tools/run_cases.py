@@ -4,6 +4,26 @@ from functools import reduce
 import pandas as pd
 
 
+def cast_by_name(type_name, value):
+    """Cast a string read in from an input file as a data type also given as a string.
+    Currently allowed data types: int, float, bool, str
+
+    Args:
+        type_name (str): The data type to cast into, as a string.
+        value (str): The value, as a string.
+
+    Returns:
+        The value in the specified data type
+
+    """
+    trusted_types = ["int", "float", "bool", "str"]  ## others as needed
+    if type_name in trusted_types:
+        return __builtins__[type_name](value)
+    else:
+        msg = f"Specified data type {type_name} invalid, must be one of {trusted_types}"
+        raise TypeError(msg)
+
+
 def getFromDict(dataDict, mapList):
     """Get value from nested dictionary using a list of keys.
 
@@ -65,13 +85,14 @@ def load_tech_config_cases(case_file):
 
     Note:
         The CSV format should be:
-        | "Index 1" | "Index 2" |...| "Index <N>" | <Case 1 Name> |...| <Case N Name> |
-        | "technologies" | <tech_name> |...| <param_1_name> | <Case 1 value> |...| <Case N value> |
-        | "technologies" | <tech_name> |...| <param_2_name> | <Case 1 value> |...| <Case N value> |
+        |   "Index 1"    |...|  "Index <N>"   | "Type"  | <Case 1 Name>  |...| <Case N Name>  |
+        | "technologies" |...| <param_1_name> | "float" | <Case 1 value> |...| <Case N value> |
+        | "technologies" |...| <param_2_name> | "str"   | <Case 1 value> |...| <Case N value> |
     """
     tech_config_cases = pd.read_csv(case_file)
     column_names = tech_config_cases.columns.values
     index_names = list(filter(lambda x: "Index" in x, column_names))
+    index_names.append("Type")
     tech_config_cases = tech_config_cases.set_index(index_names)
 
     return tech_config_cases
@@ -88,7 +109,10 @@ def modify_tech_config(h2i_model, tech_config_case):
     Returns:
         H2IntegrateModel: The H2IntegrateModel with modified tech_config values.
     """
-    for index_list, value in tech_config_case.items():
-        setInDict(h2i_model.technology_config, index_list, float(value))
+    for index_tup, value in tech_config_case.items():
+        index_list = list(index_tup)
+        data_type = index_list[-1]
+        index_list = index_list[:-1]
+        setInDict(h2i_model.technology_config, index_list, cast_by_name(data_type, value))
 
     return h2i_model
