@@ -450,6 +450,7 @@ def test_hybrid_energy_plant_example(subtests):
             == 0.0832123
         )
 
+
 def test_asu_example(subtests):
     # Change the current working directory to the example's directory
     os.chdir(EXAMPLE_DIR / "13_air_separator")
