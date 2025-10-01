@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.4.0, [October 1, 2025]
+## 0.4.0 [October 1, 2025]
 
 This release introduces significant new technology models and framework capabilities for system design and optimization, alongside major refactoring and user experience improvements.
 
@@ -30,7 +30,7 @@ This release introduces significant new technology models and framework capabili
 - Updated the naming scheme throughout the framework so resources produced always have `_out` and resources consumed always have `_in` in their names [PR 148](https://github.com/NREL/H2Integrate/pull/148).
 - Added ability to export ProFAST object to yaml file in `ProFastComp` [PR 207](https://github.com/NREL/H2Integrate/pull/207).
 - Refactored `ProFastComp` and put in a new file (`h2integrate/core/profast_financial.py`). Added flexibility to allow users to specify different financial models [PR 218](https://github.com/NREL/H2Integrate/pull/218).
-- Revamped the feedstocks technology group to allow for more precise modeling of feedstock supply chains, including capacity constraints and feedstock amount consumed [PR 192](https://github.com/NREL/H2Integrate/pull/192).
+- Revamped the feedstocks technology group to allow for more precise modeling of feedstock supply chains, including capacity constraints and feedstock amount consumed [PR 221](https://github.com/NREL/H2Integrate/pull/221).
 - Made `pipe` and `cable` substance-agnostic rather than hard-coded for `hydrogen` and `electricity` [PR 241](https://github.com/NREL/H2Integrate/pull/241).
 - Updated option to pass variables in technology interconnections to allow for different variable names from source to destination in the format `[source_tech, dest_tech, (source_tech_variable, dest_tech_variable)]` [PR 236](https://github.com/NREL/H2Integrate/pull/236).
 - Split out the electrolyzer cost models `basic` and `singlitico` for clarity [PR 147](https://github.com/NREL/H2Integrate/pull/147).
@@ -49,7 +49,7 @@ This release introduces significant new technology models and framework capabili
 
 ### Configuration and Optimization
 
-- Updated finance parameter organization naming in `plant_config` [PR 176](https://github.com/NREL/H2Integrate/pull/176).
+- Updated finance parameter organization naming in `plant_config` [PR 218](https://github.com/NREL/H2Integrate/pull/218).
 - Changed finance handling to use `finance_subgroups` and `finance_groups` defined in the `plant_config` rather than previous `financial_groups` in the `tech_config` and `technologies_to_include_in_metrics` in `plant_config` [PR 240](https://github.com/NREL/H2Integrate/pull/240).
 - Allow users to specify the technologies to include in the metrics calculations in the plant configuration file [PR 240](https://github.com/NREL/H2Integrate/pull/240).
 - Added option for user to provide ProFAST parameters in finance parameters [PR 240](https://github.com/NREL/H2Integrate/pull/240).
@@ -78,7 +78,7 @@ This release introduces significant new technology models and framework capabili
 - Expanded introductory documentation
 - Added TOL/MCH hydrogen storage cost model
 
-## 0.2.1, Unreleased, TBD
+## 0.2.1 Unreleased, TBD
 
 - Fixed iron data save issue [PR 122](https://github.com/NREL/H2Integrate/pull/122)
 - Added optional inputs to electrolyzer model, including curve coefficients and water usage rate.
@@ -136,7 +136,7 @@ This release introduces significant new technology models and framework capabili
 
 ## v0.1.1 [22 October, 2024]
 
-- ?
+- Hotfix for examples
 
 ## v0.1 [16 October, 2024]
 
