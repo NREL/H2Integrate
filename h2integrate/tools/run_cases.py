@@ -88,6 +88,9 @@ def load_tech_config_cases(case_file):
         |   "Index 1"    |...|  "Index <N>"   | "Type"  | <Case 1 Name>  |...| <Case N Name>  |
         | "technologies" |...| <param_1_name> | "float" | <Case 1 value> |...| <Case N value> |
         | "technologies" |...| <param_2_name> | "str"   | <Case 1 value> |...| <Case N value> |
+
+    If some parameters are nested deeper than others, make as many Index columns for the deepest-
+    nested parameters and leave any unused Indexes blank.
     """
     tech_config_cases = pd.read_csv(case_file)
     column_names = tech_config_cases.columns.values
@@ -113,6 +116,9 @@ def modify_tech_config(h2i_model, tech_config_case):
         index_list = list(index_tup)
         data_type = index_list[-1]
         index_list = index_list[:-1]
+        # Remove nans from blank index fields
+        while type(index_list[-1]) is not str:
+            index_list = index_list[:-1]
         setInDict(h2i_model.technology_config, index_list, cast_by_name(data_type, value))
 
     return h2i_model

@@ -8,7 +8,7 @@ from h2integrate.core.h2integrate_model import H2IntegrateModel
 model = H2IntegrateModel("12_ammonia_synloop.yaml")
 
 # Load cases
-case_file = Path("test_inputs.csv")
+case_file = Path("hb_inputs.csv")
 cases = load_tech_config_cases(case_file)
 
 # Modify and run the model for Haber Bosch Big
