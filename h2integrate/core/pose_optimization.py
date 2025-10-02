@@ -453,9 +453,9 @@ class PoseOptimization:
                     # get past numbers that were used to make unique files by matching
                     # filenames against the file base name followed by a number
                     past_numbers = [
-                        int(re.findall(f"{file_base}[0-9]+", fname)[0].split(fname)[-1])
+                        int(re.findall(f"{file_base}[0-9]+", str(fname))[0].split(file_base)[-1])
                         for fname in existing_files
-                        if len(re.findall(f"{file_base}[0-9]+", fname)) > 0
+                        if len(re.findall(f"{file_base}[0-9]+", str(fname))) > 0
                     ]
 
                     if len(past_numbers) > 0:
@@ -468,6 +468,7 @@ class PoseOptimization:
                         # but do have the same basename, then add a zero to the file basename
                         recorder_path = Path(folder_output) / f"{file_base}0.sql"
 
+            # Create recorder and add to model
             recorder = om.SqliteRecorder(recorder_path)
             opt_prob.model.add_recorder(recorder)
 
