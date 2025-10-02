@@ -143,3 +143,6 @@ reports/*
 *.tikz
 *.aux
 *.bbl
+
+# Ignore wind resource data files
+resource_files/wind/*
