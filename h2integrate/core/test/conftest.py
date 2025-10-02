@@ -19,29 +19,30 @@ def pytest_sessionstart(session):
 
 def pytest_sessionfinish(session, exitstatus):
     # remove files that were created in h2integrate/core/test/test_recorder.py
-    test_dir = (
-        EXAMPLE_DIR
-        / os.getenv("TEST_RECORDER_OUTPUT_EXAMPLE")
-        / os.getenv("TEST_RECORDER_OUTPUT_DIR")
-    )
-    file0path = test_dir / os.getenv("TEST_RECORDER_OUTPUT_FILE0")
-    file1path = test_dir / os.getenv("TEST_RECORDER_OUTPUT_FILE1")
-    file2path = test_dir / os.getenv("TEST_RECORDER_OUTPUT_FILE2")
-    if file0path.exists():
-        file0path.unlink()
-    if file1path.exists():
-        file1path.unlink()
-    if file2path.exists():
-        file2path.unlink()
-    # remove folder created in h2integrate/core/test/test_recorder.py
-    files_in_test_folder = list(test_dir.iterdir())
-    if len(files_in_test_folder) == 0:
-        test_dir.rmdir()
+    if os.getenv("TEST_RECORDER_OUTPUT_EXAMPLE") is not None:
+        test_dir = (
+            EXAMPLE_DIR
+            / os.getenv("TEST_RECORDER_OUTPUT_EXAMPLE")
+            / os.getenv("TEST_RECORDER_OUTPUT_DIR")
+        )
+        file0path = test_dir / os.getenv("TEST_RECORDER_OUTPUT_FILE0")
+        file1path = test_dir / os.getenv("TEST_RECORDER_OUTPUT_FILE1")
+        file2path = test_dir / os.getenv("TEST_RECORDER_OUTPUT_FILE2")
+        if file0path.exists():
+            file0path.unlink()
+        if file1path.exists():
+            file1path.unlink()
+        if file2path.exists():
+            file2path.unlink()
+        # remove folder created in h2integrate/core/test/test_recorder.py
+        files_in_test_folder = list(test_dir.iterdir())
+        if len(files_in_test_folder) == 0:
+            test_dir.rmdir()
 
-    # remove environment variables used for tests in
-    # h2integrate/core/test/test_recorder.py
-    os.environ.pop("TEST_RECORDER_OUTPUT_EXAMPLE", None)
-    os.environ.pop("TEST_RECORDER_OUTPUT_DIR", None)
-    os.environ.pop("TEST_RECORDER_OUTPUT_FILE0", None)
-    os.environ.pop("TEST_RECORDER_OUTPUT_FILE1", None)
-    os.environ.pop("TEST_RECORDER_OUTPUT_FILE2", None)
+        # remove environment variables used for tests in
+        # h2integrate/core/test/test_recorder.py
+        os.environ.pop("TEST_RECORDER_OUTPUT_EXAMPLE", None)
+        os.environ.pop("TEST_RECORDER_OUTPUT_DIR", None)
+        os.environ.pop("TEST_RECORDER_OUTPUT_FILE0", None)
+        os.environ.pop("TEST_RECORDER_OUTPUT_FILE1", None)
+        os.environ.pop("TEST_RECORDER_OUTPUT_FILE2", None)
