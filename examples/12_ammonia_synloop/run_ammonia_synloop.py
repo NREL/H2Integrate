@@ -11,14 +11,13 @@ model = H2IntegrateModel("12_ammonia_synloop.yaml")
 case_file = Path("hb_inputs.csv")
 cases = load_tech_config_cases(case_file)
 
-# Modify and run the model for Haber Bosch Big
-case = cases["Haber Bosch Big"]
-model = modify_tech_config(model, case)
-model.run()
-model.post_process()
-
-# Modify and run the model for Haber Bosch Small
-case = cases["Haber Bosch Small"]
-model = modify_tech_config(model, case)
-model.run()
-model.post_process()
+# Modify and run the model for different cases
+caselist = [
+    "Haber Bosch Big",
+    "Haber Bosch Small",
+]
+for casename in caselist:
+    case = cases[casename]
+    model = modify_tech_config(model, case)
+    model.run()
+    model.post_process()

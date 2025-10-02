@@ -1,5 +1,5 @@
 Index 0,Index 1,Index 2,Index 3,Index 4,Index 5,Type,Float Test,Int Test,Bool Test,Str Test
-technologies,electrolyzer,model_inputs,shared_parameters,electrolyzer_capex,,float,1000,1295,1295,1295
-technologies,electrolyzer,model_inputs,performance_parameters,n_clusters,,int,1,2,1,1
+technologies,steel,model_inputs,cost_parameters,feedstocks,iron_ore_pellet_unitcost,float,103.675,207.35,207.35,207.35
+technologies,electrolyzer,model_inputs,performance_parameters,n_clusters,,int,18,20,18,18
 technologies,electrolyzer,model_inputs,performance_parameters,include_degradation_penalty,,bool,TRUE,TRUE,FALSE,TRUE
-technologies,electrolyzer,model_inputs,performance_parameters,sizing,size_for,str,BOL,BOL,BOL,EOL
+technologies,h2_storage,model_inputs,performance_parameters,type,,str,lined_rock_cavern,lined_rock_cavern,lined_rock_cavern,salt_cavern

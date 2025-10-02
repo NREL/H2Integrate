@@ -16,9 +16,15 @@ def cast_by_name(type_name, value):
         The value in the specified data type
 
     """
+
+    bool_map = {"true": True, "false": False, "yes": True, "no": False, "1": True, "0": False}
+
     trusted_types = ["int", "float", "bool", "str"]  ## others as needed
     if type_name in trusted_types:
-        return __builtins__[type_name](value)
+        if type_name == "bool":
+            return bool_map.get(value.lower())
+        else:
+            return __builtins__[type_name](value)
     else:
         msg = f"Specified data type {type_name} invalid, must be one of {trusted_types}"
         raise TypeError(msg)
@@ -91,6 +97,8 @@ def load_tech_config_cases(case_file):
 
     If some parameters are nested deeper than others, make as many Index columns for the deepest-
     nested parameters and leave any unused Indexes blank.
+
+    See example .csv in h2integrate/tools/test/test_inputs.csv
     """
     tech_config_cases = pd.read_csv(case_file)
     column_names = tech_config_cases.columns.values
