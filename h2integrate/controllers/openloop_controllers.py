@@ -274,6 +274,20 @@ class DemandOpenLoopController(ControllerBaseClass):
             desc=f"{resource_name} demand profile timeseries",
         )
 
+        self.add_input(
+            "max_charge_rate",
+            val=self.config.max_charge_rate,
+            units=self.config.resource_rate_units,
+            desc="Storage charge/discharge rate",
+        )
+
+        self.add_input(
+            "max_capacity",
+            val=self.config.max_capacity,
+            units=self.config.resource_rate_units + "*h",
+            desc="Maximum storage capacity",
+        )
+
         self.add_output(
             f"{resource_name}_out",
             copy_shape=f"{resource_name}_in",
@@ -303,17 +317,23 @@ class DemandOpenLoopController(ControllerBaseClass):
             desc=f"{resource_name} missed load timeseries",
         )
 
+        self.add_output(
+            "storage_duration",
+            units="h",
+            desc="Estimated storage duration based on max capacity and charge rate",
+        )
+
     def compute(self, inputs, outputs):
         """
         Compute the state of charge (SOC) and output flow based on demand and storage constraints.
 
         """
         resource_name = self.config.resource_name
-        max_capacity = self.config.max_capacity
+        max_capacity = inputs["max_capacity"]
         max_charge_percent = self.config.max_charge_percent
         min_charge_percent = self.config.min_charge_percent
         init_charge_percent = self.config.init_charge_percent
-        max_charge_rate = self.config.max_charge_rate
+        max_charge_rate = inputs["max_charge_rate"]
         max_discharge_rate = self.config.max_discharge_rate
         charge_efficiency = self.config.charge_efficiency
         discharge_efficiency = self.config.discharge_efficiency
@@ -383,3 +403,6 @@ class DemandOpenLoopController(ControllerBaseClass):
 
             # Record the missed load at the current time step
             missed_load_array[t] = max(0, (demand_t - output_array[t]))
+
+            # Output the storage duration in hours
+            outputs["storage_duration"] = max_capacity / max_charge_rate
