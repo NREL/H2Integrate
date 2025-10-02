@@ -98,10 +98,6 @@ class PySAMBatteryPerformanceModelConfig(BaseConfig):
             Maximum allowable state of charge as a fraction (0 to 1).
         init_charge_percent (float):
             Initial state of charge as a fraction (0 to 1).
-        n_timesteps (int, optional):
-            Number of simulation timesteps. Defaults to 8760 (hourly for one year).
-        dt (float, optional):
-            Time step duration in hours. Defaults to 1.0.
         n_control_window (int, optional):
             Number of timesteps in the control window. Defaults to 24.
         n_horizon_window (int, optional):
@@ -124,8 +120,6 @@ class PySAMBatteryPerformanceModelConfig(BaseConfig):
     min_charge_percent: float = field(validator=range_val(0, 1))
     max_charge_percent: float = field(validator=range_val(0, 1))
     init_charge_percent: float = field(validator=range_val(0, 1))
-    n_timesteps: int = field(default=8760)
-    dt: float = field(default=1.0)
     n_control_window: int = field(default=24)
     n_horizon_window: int = field(default=48)
     ref_module_capacity: int | float = field(default=400)
@@ -292,7 +286,12 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass):
         # Initialize the PySAM BatteryStateful model with defaults
         self.system_model = BatteryStateful.default(self.config.chemistry)
 
-        n_timesteps = self.config.n_timesteps
+        n_timesteps = int(
+            self.options["plant_config"]["plant"]["simulation"]["n_timesteps"]
+        )  # self.config.n_timesteps
+        self.dt_hr = int(self.options["plant_config"]["plant"]["simulation"]["dt"]) / (
+            60**2
+        )  # convert from seconds to hours
         n_control_window = self.config.n_control_window
 
         # Setup outputs for the battery model to be stored during the compute method
@@ -355,7 +354,7 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass):
         self._set_control_mode()
 
         self.system_model.value("input_current", 0.0)
-        self.system_model.value("dt_hr", self.config.dt)
+        self.system_model.value("dt_hr", self.dt_hr)
         self.system_model.value("minimum_SOC", self.config.min_charge_percent * 100)
         self.system_model.value("maximum_SOC", self.config.max_charge_percent * 100)
         self.system_model.value("initial_SOC", self.config.init_charge_percent * 100)
@@ -364,7 +363,7 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass):
         self.system_model.setup()
 
         # Run PySAM battery model 1 timestep to initialize values
-        self.system_model.value("dt_hr", 1.0)
+        self.system_model.value("dt_hr", self.dt_hr)
         self.system_model.value("input_power", 0.0)
         self.system_model.execute(0)
 
@@ -372,7 +371,7 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass):
             # Simulate the battery with provided dispatch inputs
             dispatch = discrete_inputs["pyomo_dispatch_solver"]
             kwargs = {
-                "time_step_duration": self.config.dt,
+                "time_step_duration": self.dt_hr,
                 "control_variable": discrete_inputs["control_variable"],
             }
             (
@@ -387,7 +386,7 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass):
             # Simulate the battery with provided inputs and no controller
             total_power_out, soc = self.simulate(
                 storage_dispatch_commands=inputs["electricity_in"],
-                time_step_duration=self.config.dt,
+                time_step_duration=self.dt_hr,
                 control_variable=discrete_inputs["control_variable"],
             )
             # TODO how to calculate? these are not being calculated
@@ -452,7 +451,7 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass):
                 0, -self.system_model.value("P_chargeable")
             )  # according to simulation
             max_chargeable_2 = (
-                (soc_max - soc) * self.config.max_capacity / self.config.dt
+                (soc_max - soc) * self.config.max_capacity / self.dt_hr
             )  # according to soc
             max_chargeable = np.min([max_chargeable_0, max_chargeable_1, max_chargeable_2])
 
@@ -461,7 +460,7 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass):
                 0, self.system_model.value("P_dischargeable")
             )  # according to simulation
             max_dischargeable_2 = (
-                (soc - soc_min) * self.config.max_capacity / self.config.dt
+                (soc - soc_min) * self.config.max_capacity / self.dt_hr
             )  # according to soc
             max_dischargeable = np.min(
                 [max_dischargeable_0, max_dischargeable_1, max_dischargeable_2]

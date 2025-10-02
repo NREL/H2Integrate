@@ -49,7 +49,8 @@ def test_pysam_battery_performance_model(subtests):
     prob.model.add_subsystem(
         "pysam_battery",
         PySAMBatteryPerformanceModel(
-            plant_config={}, tech_config=tech_config["technologies"]["battery"]
+            plant_config={"plant": {"simulation": {"dt": 3600, "n_timesteps": 24}}},
+            tech_config=tech_config["technologies"]["battery"],
         ),
         promotes=["*"],
     )
@@ -159,10 +160,6 @@ def test_battery_config(subtests):
         )  # Decimal percent as compared to test_battery.py in HOPP 10%
     with subtests.test("with minimal params system_model_source"):
         assert config.system_model_source == "pysam"
-    with subtests.test("with minimal params n_timesteps"):
-        assert config.n_timesteps == 8760
-    with subtests.test("with minimal params dt"):
-        assert config.dt == 1.0
     with subtests.test("with minimal params n_control_window"):
         assert config.n_control_window == 24
     with subtests.test("with minimal params n_horizon_window"):
@@ -209,7 +206,8 @@ def test_battery_initialization(subtests):
         tech_config = yaml.safe_load(file)
 
     battery = PySAMBatteryPerformanceModel(
-        plant_config={}, tech_config=tech_config["technologies"]["battery"]
+        plant_config={"plant": {"simulation": {"dt": 3600, "n_timesteps": 24}}},
+        tech_config=tech_config["technologies"]["battery"],
     )
 
     battery.setup()
