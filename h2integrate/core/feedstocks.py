@@ -1,45 +1,96 @@
 import numpy as np
 import openmdao.api as om
+from attrs import field, define
+
+from h2integrate.core.utilities import BaseConfig, CostModelBaseConfig, merge_shared_inputs
+from h2integrate.core.model_baseclasses import CostModelBaseClass
 
 
-class FeedstockComponent(om.ExplicitComponent):
+@define
+class FeedstockPerformanceConfig(BaseConfig):
+    """Config class for feedstock.
+
+    Attributes:
+        name (str): feedstock name
+        units (str): feedstock usage units (such as "galUS" or "kg")
+        rated_capacity (float):  The rated capacity of the feedstock in `units`/hour.
+            This is used to size the feedstock supply to meet the plant's needs.
+    """
+
+    feedstock_type: str = field()
+    units: str = field()
+    rated_capacity: float = field()
+
+
+class FeedstockPerformanceModel(om.ExplicitComponent):
     def initialize(self):
-        self.options.declare("feedstocks_config", types=dict)
+        self.options.declare("driver_config", types=dict)
+        self.options.declare("plant_config", types=dict)
+        self.options.declare("tech_config", types=dict)
 
     def setup(self):
-        self.feedstock_data = {}
-        for feedstock_name, feedstock_data in self.options["feedstocks_config"].items():
-            self.feedstock_data[feedstock_name] = feedstock_data
-            self.add_output(feedstock_name, shape=(8760,), units=feedstock_data["capacity_units"])
-            self.add_output(f"{feedstock_name}_CapEx", val=0.0, units="USD")
-            self.add_output(f"{feedstock_name}_OpEx", val=0.0, units="USD/yr")
+        self.config = FeedstockPerformanceConfig.from_dict(
+            merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance")
+        )
+        n_timesteps = self.options["plant_config"]["plant"]["simulation"]["n_timesteps"]
+        feedstock_type = self.config.feedstock_type
 
-        # Add total CapEx and OpEx outputs
-        self.add_output("CapEx", val=0.0, units="USD")
-        self.add_output("OpEx", val=0.0, units="USD/yr")
+        self.add_output(f"{feedstock_type}_out", shape=n_timesteps, units=self.config.units)
 
     def compute(self, inputs, outputs):
-        total_capex = 0.0
-        total_opex = 0.0
+        feedstock_type = self.config.feedstock_type
+        n_timesteps = self.options["plant_config"]["plant"]["simulation"]["n_timesteps"]
+        # Generate feedstock array operating at full capacity for the full year
+        outputs[f"{feedstock_type}_out"] = np.full(n_timesteps, self.config.rated_capacity)
 
-        for feedstock_name, feedstock_data in self.feedstock_data.items():
-            rated_capacity = feedstock_data["rated_capacity"]
-            price = feedstock_data["price"]
 
-            # Generate feedstock array operating at full capacity for the full year
-            outputs[feedstock_name] = np.full(8760, rated_capacity)
+@define
+class FeedstockCostConfig(CostModelBaseConfig):
+    """Config class for feedstock.
 
-            # Calculate capex (given as $0)
-            capex = 0.0
-            outputs[f"{feedstock_name}_CapEx"] = capex
-            total_capex += capex
+    Attributes:
+        name (str): feedstock name
+        units (str): feedstock usage units (such as "galUS" or "kg")
+        price (scalar or list):  The cost of the feedstock in USD/`units`).
+            If scalar, cost is assumed to be constant for each timestep and each year.
+            If list, then it can be the cost per timestep of the simulation
 
-            # Calculate opex based on the cost of feedstock and total feedstock used
-            total_feedstock_used = rated_capacity * 8760
-            opex = total_feedstock_used * price
-            outputs[f"{feedstock_name}_OpEx"] = opex
-            total_opex += opex
+        annual_cost (float, optional): fixed cost associated with the feedstock in USD/year
+        start_up_cost (float, optional): one-time capital cost associated with the feedstock in USD.
+        cost_year (int): dollar-year for costs.
+    """
 
-        # Set total CapEx and OpEx
-        outputs["CapEx"] = total_capex
-        outputs["OpEx"] = total_opex
+    feedstock_type: str = field()
+    units: str = field()
+    price: int | float | list = field()
+    annual_cost: float = field(default=0.0)
+    start_up_cost: float = field(default=0.0)
+
+
+class FeedstockCostModel(CostModelBaseClass):
+    def setup(self):
+        self.config = FeedstockCostConfig.from_dict(
+            merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost")
+        )
+        n_timesteps = self.options["plant_config"]["plant"]["simulation"]["n_timesteps"]
+
+        super().setup()
+
+        feedstock_type = self.config.feedstock_type
+        self.add_input(
+            f"{feedstock_type}_consumed",
+            val=0.0,
+            shape=int(n_timesteps),
+            units=self.config.units,
+            desc=f"Consumption profile of {feedstock_type}",
+        )
+
+    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
+        feedstock_type = self.config.feedstock_type
+        price = self.config.price
+        hourly_consumption = inputs[f"{feedstock_type}_consumed"]
+        cost_per_year = sum(price * hourly_consumption)
+
+        outputs["CapEx"] = self.config.start_up_cost
+        outputs["OpEx"] = self.config.annual_cost
+        outputs["VarOpEx"] = cost_per_year

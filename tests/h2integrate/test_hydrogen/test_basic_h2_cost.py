@@ -21,11 +21,9 @@ class TestBasicH2Costs:
     elec_capex = 600  # $/kW
     time_between_replacement = 80000  # hours
     useful_life = 30  # years
-    atb_year = 2022
 
     def test_on_turbine_capex(self):
         (
-            cf_h2_annuals,
             per_turb_electrolyzer_total_capital_cost,
             per_turb_electrolyzer_OM_cost,
             per_turb_electrolyzer_capex_kw,
@@ -37,7 +35,6 @@ class TestBasicH2Costs:
             self.time_between_replacement,
             self.per_turb_electrolyzer_size_mw,
             self.useful_life,
-            self.atb_year,
             self.per_turb_electrical_generation_timeseries,
             self.per_turb_h2_annual_output,
             0.0,
@@ -53,7 +50,6 @@ class TestBasicH2Costs:
 
     def test_on_platform_capex(self):
         (
-            cf_h2_annuals,
             electrolyzer_total_capital_cost,
             electrolyzer_OM_cost,
             electrolyzer_capex_kw,
@@ -65,7 +61,6 @@ class TestBasicH2Costs:
             self.time_between_replacement,
             self.electrolyzer_size_mw,
             self.useful_life,
-            self.atb_year,
             self.electrical_generation_timeseries,
             self.h2_annual_output,
             0.0,
@@ -78,7 +73,6 @@ class TestBasicH2Costs:
 
     def test_on_land_capex(self):
         (
-            cf_h2_annuals,
             per_turb_electrolyzer_total_capital_cost,
             per_turb_electrolyzer_OM_cost,
             per_turb_electrolyzer_capex_kw,
@@ -90,7 +84,6 @@ class TestBasicH2Costs:
             self.time_between_replacement,
             self.per_turb_electrolyzer_size_mw,
             self.useful_life,
-            self.atb_year,
             self.per_turb_electrical_generation_timeseries,
             self.per_turb_h2_annual_output,
             0.0,
@@ -106,7 +99,6 @@ class TestBasicH2Costs:
 
     def test_on_turbine_opex(self):
         (
-            cf_h2_annuals,
             per_turb_electrolyzer_total_capital_cost,
             per_turb_electrolyzer_OM_cost,
             per_turb_electrolyzer_capex_kw,
@@ -118,7 +110,6 @@ class TestBasicH2Costs:
             self.time_between_replacement,
             self.per_turb_electrolyzer_size_mw,
             self.useful_life,
-            self.atb_year,
             self.per_turb_electrical_generation_timeseries,
             self.per_turb_h2_annual_output,
             0.0,
@@ -134,7 +125,6 @@ class TestBasicH2Costs:
 
     def test_on_platform_opex(self):
         (
-            cf_h2_annuals,
             electrolyzer_total_capital_cost,
             electrolyzer_OM_cost,
             electrolyzer_capex_kw,
@@ -146,7 +136,6 @@ class TestBasicH2Costs:
             self.time_between_replacement,
             self.electrolyzer_size_mw,
             self.useful_life,
-            self.atb_year,
             self.electrical_generation_timeseries,
             self.h2_annual_output,
             0.0,
@@ -159,7 +148,6 @@ class TestBasicH2Costs:
 
     def test_on_land_opex(self):
         (
-            cf_h2_annuals,
             per_turb_electrolyzer_total_capital_cost,
             per_turb_electrolyzer_OM_cost,
             per_turb_electrolyzer_capex_kw,
@@ -171,7 +159,6 @@ class TestBasicH2Costs:
             self.time_between_replacement,
             self.per_turb_electrolyzer_size_mw,
             self.useful_life,
-            self.atb_year,
             self.per_turb_electrical_generation_timeseries,
             self.per_turb_h2_annual_output,
             0.0,

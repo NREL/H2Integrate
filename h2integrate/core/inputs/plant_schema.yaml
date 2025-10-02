@@ -27,11 +27,6 @@ properties:
         type: number
         description: Elevation of the site in meters
         minimum: 0
-      time_zone:
-        type: number
-        description: Time zone offset from UTC in hours
-        minimum: -12
-        maximum: 14
       boundaries:
         type: array
         description: Array of polygons defining boundaries with x/y coordinates
@@ -49,7 +44,7 @@ properties:
                 type: number
               description: Y coordinates of the boundary polygon
           required: ["x", "y"]
-    required: ["latitude", "longitude", "elevation_m", "time_zone", "boundaries"]
+    required: ["latitude", "longitude", "boundaries"]
   plant:
     type: object
     properties:
@@ -58,14 +53,37 @@ properties:
         description: Plant lifetime in years
         minimum: 1
         default: 30
-    required: ["plant_life"]
+      simulation:
+        type: object
+        default: {}
+        properties:
+          dt:
+            type: number
+            description: simulation time-step in seconds
+            default: 3600
+          n_timesteps:
+            type: number
+            description: number of timesteps to simulate
+            default: 8760
+            minimum: 1
+          start_time:
+            type: string
+            description: simulation start time formatted as mm/dd/yyyy HH:MM:SS or mm/dd HH:MM:SS
+            default: "01/01 00:30:00"
+          timezone:
+            type: number
+            description: timezone as UTC offset corresponding to start_time
+            minimum: -12
+            maximum: 14
+        required: ["dt", "n_timesteps"]
+    required: ["plant_life", "simulation"]
   technology_interconnections:
     type: array
     description: Array of arrays representing technology interconnections
     items:
       type: array
       items:
-        type: string
+        type: [string, array]
         description: Technology names and connection types
 required:
   - name

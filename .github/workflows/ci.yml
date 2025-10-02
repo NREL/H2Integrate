@@ -1,13 +1,23 @@
 name: Testing
 
-on: [ push, pull_request ]
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  schedule:
+    - cron: "0 0 * * MON"
 
 jobs:
   build:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.11"]
+        python-version: ["3.11", "3.12"]
+        optional: [false]
+        include:
+          - python-version: "3.11"
+            optional: true
 
     steps:
       - uses: actions/checkout@v3
@@ -22,7 +32,12 @@ jobs:
           sudo apt-get update && sudo apt-get install -y libglpk-dev glpk-utils coinor-cbc
           python -m pip install --upgrade pip
           pip install git+https://github.com/NREL/HOPP@develop
-          pip install ".[develop]"
+          if [ "${{ matrix.optional }}" = "true" ]; then
+            pip install ".[develop]"
+            pip install git+https://github.com/NREL/MarineCarbonManagement.git
+          else
+            pip install ".[develop]"
+          fi
       - name: Create env file
         run: |
           touch .env

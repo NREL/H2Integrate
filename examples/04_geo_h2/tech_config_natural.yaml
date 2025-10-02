@@ -1,0 +1,37 @@
+name: "technology_config"
+description: "This hybrid plant produces geologic hydrogen"
+
+technologies:
+  geoh2:
+    performance_model:
+      model: "natural_geoh2_performance"
+    cost_model:
+      model: "natural_geoh2_cost"
+    finance_model:
+      model: "natural_geoh2"
+    model_inputs:
+      shared_parameters:
+        well_lifetime: 20
+      performance_parameters:
+        rock_type: 'peridotite'
+        grain_size: 0.01
+        site_prospectivity: 0.7
+        initial_wellhead_flow: 200
+        gas_reservoir_size: 35000
+      cost_parameters:
+        cost_year: 2020
+        test_drill_cost: 500000
+        permit_fees: 905
+        acreage: 500
+        rights_cost: 3
+        completion_cost: 4000000
+        success_chance: 20
+        fixed_opex: 200000
+        variable_opex: 0.
+        contracting_pct: 20
+        contingency_pct: 50
+        preprod_time: 6
+        as_spent_ratio: 1.10
+      finance_parameters:
+        eff_tax_rate: 25.74
+        atwacc: 4.73

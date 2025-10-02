@@ -107,7 +107,7 @@ ENV/
 # Images, datafiles
 *.png
 *.xlsx
-
+*.pdf
 *.pkl
 .DS_Store
 *.val
@@ -115,6 +115,7 @@ ENV/
 *.db-shm
 *.gz
 *.db-wal
+*n2.html
 
 # H2Integrate structure specific
 tests/h2integrate/data/*
@@ -126,7 +127,22 @@ examples/h2integrate/*/data
 examples/h2integrate/*/figures
 tests/h2integrate/reports/
 tests/h2integrate/test_hydrogen/output/
+**/run_*_out/
+*_out/
+**/test_*_out/
 
 output*
 snopt_history.txt
 reports/*
+
+# Don't ignore source data files
+!*source.xlsx
+
+# PyXDSM/Tex
+*.tex
+*.tikz
+*.aux
+*.bbl
+
+# Ignore wind resource data files
+resource_files/wind/*

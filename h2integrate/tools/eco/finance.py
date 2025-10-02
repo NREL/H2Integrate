@@ -685,7 +685,7 @@ def run_profast_lcoe(
 ):
     if isinstance(output_dir, str):
         output_dir = Path(output_dir).resolve()
-    gen_inflation = h2integrate_config["finance_parameters"]["profast_general_inflation"]
+    gen_inflation = h2integrate_config["finance_parameters"]["inflation_rate"]
 
     # initialize dictionary of weights for averaging financial parameters
     finance_param_weights = {}
@@ -716,7 +716,10 @@ def run_profast_lcoe(
         np.sum(hopp_results["combined_hybrid_power_production_hopp"]) / 365.0,
     )  # kWh/day
     pf.set_params("maintenance", {"value": 0, "escalation": gen_inflation})
-    pf.set_params("analysis start year", h2integrate_config["project_parameters"]["atb_year"] + 1)
+    pf.set_params(
+        "analysis start year",
+        h2integrate_config["project_parameters"]["financial_analysis_start_year"],
+    )
     pf.set_params("operating life", h2integrate_config["project_parameters"]["project_lifetime"])
     pf.set_params(
         "installation months", h2integrate_config["project_parameters"]["installation_time"]
@@ -871,7 +874,7 @@ def run_profast_lcoe(
     # adjust from 1992 dollars to start year
     wind_ptc_in_dollars_per_kw = -npf.fv(
         h2integrate_config["finance_parameters"]["costing_general_inflation"],
-        h2integrate_config["project_parameters"]["atb_year"]
+        h2integrate_config["project_parameters"]["financial_analysis_start_year"]
         + round(wind_cost_results.installation_time / 12)
         - 1992,
         0,
@@ -1000,7 +1003,7 @@ def run_profast_grid_only(
 
     if isinstance(output_dir, str):
         output_dir = Path(output_dir).resolve()
-    gen_inflation = h2integrate_config["finance_parameters"]["profast_general_inflation"]
+    gen_inflation = h2integrate_config["finance_parameters"]["inflation_rate"]
 
     # initialize dictionary of weights for averaging financial parameters
     finance_param_weights = {}
@@ -1032,7 +1035,10 @@ def run_profast_grid_only(
     )  # kg/day
     pf.set_params("maintenance", {"value": 0, "escalation": gen_inflation})
     # TODO: update analysis start year below (ESG)
-    pf.set_params("analysis start year", h2integrate_config["project_parameters"]["atb_year"] + 1)
+    pf.set_params(
+        "analysis start year",
+        h2integrate_config["project_parameters"]["financial_analysis_start_year"],
+    )
     pf.set_params("operating life", h2integrate_config["project_parameters"]["project_lifetime"])
     pf.set_params(
         "installation cost",
@@ -1264,12 +1270,16 @@ def run_profast_full_plant_model(
 
     if isinstance(output_dir, str):
         output_dir = Path(output_dir).resolve()
-    gen_inflation = h2integrate_config["finance_parameters"]["profast_general_inflation"]
+    gen_inflation = h2integrate_config["finance_parameters"]["inflation_rate"]
 
-    if "analysis_start_year" not in h2integrate_config["finance_parameters"]:
-        analysis_start_year = h2integrate_config["project_parameters"]["atb_year"] + 2
+    if "financial_analysis_start_year" not in h2integrate_config["finance_parameters"]:
+        financial_analysis_start_year = h2integrate_config["project_parameters"][
+            "financial_analysis_start_year"
+        ]
     else:
-        analysis_start_year = h2integrate_config["finance_parameters"]["analysis_start_year"]
+        financial_analysis_start_year = h2integrate_config["finance_parameters"][
+            "financial_analysis_start_year"
+        ]
 
     if "installation_time" not in h2integrate_config["project_parameters"]:
         installation_period_months = wind_cost_results.installation_time
@@ -1307,7 +1317,7 @@ def run_profast_full_plant_model(
     pf.set_params("maintenance", {"value": 0, "escalation": gen_inflation})
     pf.set_params(
         "analysis start year",
-        analysis_start_year,
+        financial_analysis_start_year,
     )
     pf.set_params("operating life", h2integrate_config["project_parameters"]["project_lifetime"])
     pf.set_params(
@@ -1674,7 +1684,7 @@ def run_profast_full_plant_model(
     # adjust from 1992 dollars to start year
     electricity_ptc_in_dollars_per_kw = -npf.fv(
         h2integrate_config["finance_parameters"]["costing_general_inflation"],
-        h2integrate_config["project_parameters"]["atb_year"]
+        h2integrate_config["project_parameters"]["financial_analysis_start_year"]
         + round(wind_cost_results.installation_time / 12)
         - 1992,
         0,
@@ -1697,7 +1707,7 @@ def run_profast_full_plant_model(
         h2integrate_config["finance_parameters"][
             "costing_general_inflation"
         ],  # use ATB year (cost inflation 2.5%) costing_general_inflation
-        h2integrate_config["project_parameters"]["atb_year"]
+        h2integrate_config["project_parameters"]["financial_analysis_start_year"]
         + round(wind_cost_results.installation_time / 12)
         - 2022,
         0,
@@ -1782,7 +1792,7 @@ def run_profast_full_plant_model(
             equity_discount_rate,
         )  # TODO probably ignore MIRR
         NPV = npf.npv(
-            h2integrate_config["finance_parameters"]["profast_general_inflation"],
+            h2integrate_config["finance_parameters"]["inflation_rate"],
             df["Investor cash flow"],
         )
         ROI = np.sum(df["Investor cash flow"]) / abs(

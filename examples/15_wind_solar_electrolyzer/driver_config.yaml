@@ -1,0 +1,5 @@
+name: "driver_config"
+description: "This analysis runs a hybrid plant"
+
+general:
+  folder_output: wind_solar_electrolyzer_outputs

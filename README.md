@@ -51,7 +51,7 @@ King, J. and Hammond, S. "[Integrated Modeling, TEA, and Reference Design for Re
 
 ## Software requirements
 
-- Python version 3.9, 3.10, 3.11 64-bit
+- Python version 3.11, 3.12 64-bit
 - Other versions may still work, but have not been extensively tested at this time
 
 ## Installing from Package Repositories
@@ -186,47 +186,14 @@ pip install -e ".[all]"
 
     [https://developer.nrel.gov/signup/](https://developer.nrel.gov/signup/)
 
-6. To set up the `NREL_API_KEY` and `NREL_API_EMAIL` required for resource downloads, you can create
-   Environment Variables called `NREL_API_KEY` and `NREL_API_EMAIL`. Otherwise, you can keep the key
-   in a new file called ".env" in the root directory of this project.
-
-    Create a file ".env" that contains the single line:
-
-    ```bash
-    NREL_API_KEY=key
-    NREL_API_EMAIL=your.name@email.com
-    ```
+6. To set up the `NREL_API_KEY` and `NREL_API_EMAIL` required for resource downloads, follow the steps
+    outlined in [this doc page](https://h2integrate.readthedocs.io/en/latest/getting_started/environment_variables.html).
 
 7. Verify setup by running tests:
 
     ```bash
     pytest
     ```
-
-
-2. To set up `NREL_API_KEY` for resource downloads, first refer to section 7 and 8 above. But for
-   the `.env` file method, the file should go in the working directory of your Python project, e.g.
-   directory from where you run `python`.
-
-## Parallel processing for H2Integrate finite differences and design of experiments
-
-H2Integrate is set up to run in parallel using MPI and PETSc for finite differencing and for design
-of experiments runs through OpenMDAO. To use this capability you will need to follow the additional
-installation
-instruction below:
-
-```bash
-conda install -c conda-forge mpi4py petsc4py
-```
-
-For more details on implementation and installation, reference the documentation for OpenMDAO.
-
-To check that your installation is working, do the following:
-
-```bash
-cd tests/h2integrate/
-mpirun -n 2 pytest test_openmdao_mpi.py
-```
 
 ## Getting Started
 

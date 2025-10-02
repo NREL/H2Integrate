@@ -1,13 +1,9 @@
 from attrs import field, define
 
-from h2integrate.core.utilities import (
-    BaseConfig,
-    merge_shared_cost_inputs,
-    merge_shared_performance_inputs,
-)
+from h2integrate.core.utilities import BaseConfig, CostModelBaseConfig, merge_shared_inputs
+from h2integrate.core.validators import must_equal
 from h2integrate.converters.hydrogen.electrolyzer_baseclass import (
     ElectrolyzerCostBaseClass,
-    ElectrolyzerFinanceBaseClass,
     ElectrolyzerPerformanceBaseClass,
 )
 from h2integrate.simulation.technologies.hydrogen.electrolysis import (
@@ -37,7 +33,7 @@ class ElectrolyzerPerformanceModel(ElectrolyzerPerformanceBaseClass):
     def setup(self):
         super().setup()
         self.config = ElectrolyzerPerformanceModelConfig.from_dict(
-            merge_shared_performance_inputs(self.options["tech_config"]["model_inputs"])
+            merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance")
         )
         self.electrolyzer = PEM_H2_LT_electrolyzer_Clusters(
             self.config.cluster_size_mw,
@@ -52,31 +48,34 @@ class ElectrolyzerPerformanceModel(ElectrolyzerPerformanceBaseClass):
     def compute(self, inputs, outputs):
         # Run the PEM electrolyzer model using the input power signal
         self.electrolyzer.max_stacks = inputs["cluster_size"]
-        h2_results, h2_results_aggregates = self.electrolyzer.run(inputs["electricity"])
+        h2_results, h2_results_aggregates = self.electrolyzer.run(inputs["electricity_in"])
 
         # Assuming `h2_results` includes hydrogen and oxygen rates per timestep
-        outputs["hydrogen"] = h2_results["hydrogen_hourly_production"]
+        outputs["hydrogen_out"] = h2_results["hydrogen_hourly_production"]
         outputs["total_hydrogen_produced"] = h2_results_aggregates["Total H2 Production [kg]"]
 
 
 @define
-class ElectrolyzeCostModelConfig(BaseConfig):
+class ElectrolyzeCostModelConfig(CostModelBaseConfig):
     cluster_size_mw: float = field()
     electrolyzer_cost: float = field()
+    cost_year: int = field(default=2021, converter=int, validator=must_equal(2021))
 
 
 class ElectrolyzerCostModel(ElectrolyzerCostBaseClass):
     """
-    An OpenMDAO component that computes the cost of a PEM electrolyzer.
+    An OpenMDAO component that computes the cost of a PEM electrolyzer cluster
+    using PEMCostsSinglicitoModel which outputs costs in 2021 USD.
     """
 
     def setup(self):
-        super().setup()
         self.cost_model = PEMCostsSingliticoModel(elec_location=1)
         # Define inputs: electrolyzer capacity and reference cost
         self.config = ElectrolyzeCostModelConfig.from_dict(
-            merge_shared_cost_inputs(self.options["tech_config"]["model_inputs"])
+            merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost")
         )
+        super().setup()
+
         self.add_input(
             "P_elec",
             val=self.config.cluster_size_mw,
@@ -90,7 +89,7 @@ class ElectrolyzerCostModel(ElectrolyzerCostBaseClass):
             desc="Reference cost of the electrolyzer",
         )
 
-    def compute(self, inputs, outputs):
+    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         # Call the cost model to compute costs
         P_elec = inputs["P_elec"] * 1.0e-3  # Convert MW to GW
         RC_elec = inputs["RC_elec"]
@@ -100,12 +99,3 @@ class ElectrolyzerCostModel(ElectrolyzerCostBaseClass):
 
         outputs["CapEx"] = capex * 1.0e-6  # Convert to MUSD
         outputs["OpEx"] = opex * 1.0e-6  # Convert to MUSD
-
-
-class ElectrolyzerFinanceModel(ElectrolyzerFinanceBaseClass):
-    """
-    Placeholder for the financial model of the PEM electrolyzer.
-    """
-
-    def compute(self, inputs, outputs):
-        outputs["LCOH"] = 4.11  # Placeholder value
