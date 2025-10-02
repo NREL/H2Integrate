@@ -54,6 +54,7 @@
 - Added variable O&M to `CostModelBaseClass` and integrated into finance-related models
 - Added generic storage model, useful for battery, hydrogen, CO2, or other resource storage.
 - Added wind resource model, API baseclasses, updated examples, and documentation.
+- Added `tools/run_cases.py` with tools to run different `tech_config` cases from a spreadsheet, with new docs page to describe: docs/user_guide/how_to_run_several_cases_in_sequence.md
 
 ## 0.3.0 [May 2 2025]
 
