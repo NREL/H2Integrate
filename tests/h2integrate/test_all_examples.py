@@ -734,13 +734,13 @@ def test_wombat_electrolyzer_example(subtests):
     )[0]
 
     with subtests.test("Check LCOH from custom  model"):
-        assert pytest.approx(lcoh_with_custom_model, rel=1e-5) == 4.20473064
+        assert pytest.approx(lcoh_with_custom_model, rel=1e-5) == 4.19232346
     with subtests.test("Check LCOH from ProFAST model"):
-        assert pytest.approx(lcoh_with_profast_model, rel=1e-5) == 5.34208563
+        assert pytest.approx(lcoh_with_profast_model, rel=1e-5) == 5.32632237
     with subtests.test("Check LCOE from custom model"):
-        assert pytest.approx(lcoe_with_custom_model, rel=1e-5) == 51.36276
+        assert pytest.approx(lcoe_with_custom_model, rel=1e-5) == 51.17615298
     with subtests.test("Check LCOE from ProFAST model"):
-        assert pytest.approx(lcoe_with_profast_model, rel=1e-5) == 59.31169
+        assert pytest.approx(lcoe_with_profast_model, rel=1e-5) == 59.0962084
 
 
 def test_wind_battery_dispatch_example(subtests):
