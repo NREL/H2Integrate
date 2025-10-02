@@ -25,8 +25,6 @@ class ATBBatteryCostConfig(CostModelBaseConfig):
     energy_capex: float | int = field(validator=gt_zero)
     power_capex: float | int = field(validator=gt_zero)
     opex_fraction: float = field(validator=range_val(0, 1))
-    max_charge_rate: float = field(validator=gt_zero)
-    max_capacity: float = field(validator=gt_zero)
 
 
 class ATBBatteryCostModel(CostModelBaseClass):
@@ -55,19 +53,22 @@ class ATBBatteryCostModel(CostModelBaseClass):
 
         self.add_input(
             "max_charge_rate",
-            val=self.config.max_charge_rate,
+            val=0.0,
             units="kW",
             desc="Battery charge/discharge rate",
         )
         self.add_input(
             "max_capacity",
-            val=self.config.max_capacity,
+            val=0.0,
             units="kW*h",
             desc="Battery storage capacity",
         )
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
-        storage_duration_hrs = inputs["max_capacity"] / inputs["max_charge_rate"]
+        storage_duration_hrs = 0.0
+
+        if inputs["max_charge_rate"] > 0:
+            storage_duration_hrs = inputs["max_capacity"] / inputs["max_charge_rate"]
 
         # CapEx equation from Cell E29
         total_system_cost = (
