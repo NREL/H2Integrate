@@ -17,9 +17,9 @@ from h2integrate.simulation.technologies.hydrogen.h2_storage.lined_rock_cavern.l
 
 @define
 class H2StorageModelConfig(BaseConfig):
-    commodity_name: str = field(default="hydrogen")
-    commodity_rate_units: str = field(default="kg/h")
-    rated_commodity_capacity: float = field(default=640)
+    resource_name: str = field(default="hydrogen")
+    resource_rate_units: str = field(default="kg/h")
+    rating: float = field(default=640)
     size_capacity_from_demand: dict = field(default={"flag": True})
     capacity_from_max_on_turbine_storage: bool = field(default=False)
     type: str = field(
@@ -63,57 +63,7 @@ class H2Storage(CostModelBaseClass):
         )
         self.add_input("efficiency", val=0.0, desc="Average efficiency of the electrolyzer")
 
-        self.add_input(
-            "demand_in",
-            val=0.0,
-            copy_shape="hydrogen_in",
-            units="kg/h",
-            desc="Hydrogen demand",
-        )
-
-        self.add_output(
-            "unmet_demand_out",
-            val=0.0,
-            copy_shape="hydrogen_in",
-            units="kg/h",
-            desc="Unmet hydrogen demand",
-        )
-
-        self.add_output(
-            "excess_commodity_out",
-            val=0.0,
-            copy_shape="hydrogen_in",
-            units="kg/h",
-            desc="Excess generated commodity",
-        )
-
-        # create inputs for pyomo control model
-        if "tech_to_dispatch_connections" in self.options["plant_config"]:
-            # get technology group name
-            # TODO: The split below seems brittle
-            self.tech_group_name = self.pathname.split(".")
-            for _source_tech, intended_dispatch_tech in self.options["plant_config"][
-                "tech_to_dispatch_connections"
-            ]:
-                if any(intended_dispatch_tech in name for name in self.tech_group_name):
-                    self.add_discrete_input("pyomo_dispatch_solver", val=dummy_function)
-                    self.add_output(
-                        "hydrogen_out",
-                        val=0.0,
-                        copy_shape="hydrogen_in",
-                        units="kg/h",
-                    )
-                    break
-
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
-        if "pyomo_dispatch_solver" in discrete_inputs:
-            dispatch = discrete_inputs["pyomo_dispatch_solver"]
-            kwargs = {}
-            dispatch(self.simulate, inputs, outputs, kwargs)
-        else:
-            self.simulate(inputs, outputs)
-
-    def simulate(self, inputs, outputs, sim_start_index: int = 0):
         ########### initialize output dictionary ###########
         h2_storage_results = {}
 
@@ -141,7 +91,7 @@ class H2Storage(CostModelBaseClass):
                 hydrogen_storage_soc,
             ) = hydrogen_storage_capacity(
                 results_dict,
-                self.config.rated_commodity_capacity,
+                self.config.rating,
                 hydrogen_storage_demand,
             )
             h2_storage_capacity_kg = hydrogen_storage_capacity_kg
@@ -264,8 +214,3 @@ class H2Storage(CostModelBaseClass):
 
         outputs["CapEx"] = h2_storage_results["storage_capex"]
         outputs["OpEx"] = h2_storage_results["storage_opex"]
-
-
-def dummy_function():
-    # this function is required for initializing the pyomo control input and nothing else
-    pass

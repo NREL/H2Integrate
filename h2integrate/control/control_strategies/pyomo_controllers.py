@@ -225,38 +225,6 @@ class PyomoControllerBaseClass(ControllerBaseClass):
         return self._model
 
 
-@define
-class PyomoControllerH2StorageConfig(PyomoControllerBaseConfig):
-    """
-    Configuration class for the PyomoControllerH2Storage.
-
-    This class defines the parameters required to configure the `PyomoControllerH2Storage`.
-
-    Attributes:
-        max_charge_rate (float): Maximum rate at which the commodity can be charged (in units
-            per time step, e.g., "kg/time step").
-        max_discharge_rate (float): Maximum rate at which the commodity can be discharged (in
-            units per time step, e.g., "kg/time step").
-        charge_efficiency (float): Efficiency of charging the storage, represented as a decimal
-            between 0 and 1 (e.g., 0.9 for 90% efficiency).
-        discharge_efficiency (float): Efficiency of discharging the storage, represented as a
-            decimal between 0 and 1 (e.g., 0.9 for 90% efficiency).
-    """
-
-    max_charge_rate: float = field()
-    max_discharge_rate: float = field()
-    charge_efficiency: float = field()
-    discharge_efficiency: float = field()
-
-
-class PyomoControllerH2Storage(PyomoControllerBaseClass):
-    def setup(self):
-        self.config = PyomoControllerH2StorageConfig.from_dict(
-            merge_shared_inputs(self.options["tech_config"]["model_inputs"], "control")
-        )
-        super().setup()
-
-
 class SimpleBatteryControllerHeuristic(PyomoControllerBaseClass):
     """Fixes battery dispatch operations based on user input.
 
