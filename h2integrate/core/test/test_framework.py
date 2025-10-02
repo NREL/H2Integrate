@@ -228,7 +228,7 @@ def test_resource_connection_error_missing_connection():
 
     with pytest.raises(ValueError) as excinfo:
         H2IntegrateModel(temp_highlevel_yaml)
-    assert "Resource models ['wind_resource'] are not in" in str(excinfo.value)
+        assert "Resource models ['wind_resource'] are not in" in str(excinfo.value)
 
     # Clean up temporary YAML files
     temp_plant_config.unlink(missing_ok=True)
@@ -270,7 +270,7 @@ def test_resource_connection_error_missing_resource():
 
     with pytest.raises(ValueError) as excinfo:
         H2IntegrateModel(temp_highlevel_yaml)
-    assert "Missing resource(s) are ['wind_resource']." in str(excinfo.value)
+        assert "Missing resource(s) are ['wind_resource']." in str(excinfo.value)
 
     # Clean up temporary YAML files
     temp_plant_config.unlink(missing_ok=True)
