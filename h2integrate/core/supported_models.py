@@ -60,10 +60,8 @@ from h2integrate.converters.natural_gas.natural_gas_cc_ct import (
 from h2integrate.converters.hydrogen.singlitico_cost_model import SingliticoCostModel
 from h2integrate.converters.co2.marine.direct_ocean_capture import DOCCostModel, DOCPerformanceModel
 from h2integrate.control.control_strategies.pyomo_controllers import (
-    PyomoControllerH2Storage,
     HeuristicLoadFollowingController,
 )
-from h2integrate.control.control_rules.converters.electrolyzer import PyomoDispatchElectrolyzer
 from h2integrate.converters.hydrogen.eco_tools_pem_electrolyzer import (
     ECOElectrolyzerPerformanceModel,
 )
@@ -160,11 +158,9 @@ supported_models = {
     # Control
     "pass_through_controller": PassThroughOpenLoopController,
     "demand_open_loop_controller": DemandOpenLoopController,
-    "pyomo_open_loop_controller_h2_storage": PyomoControllerH2Storage,
     "heuristic_load_following_controller": HeuristicLoadFollowingController,
     # Dispatch
     "pyomo_dispatch_wind": PyomoDispatchWind,
-    "pyomo_dispatch_electrolyzer": PyomoDispatchElectrolyzer,
     "pyomo_dispatch_h2_storage": PyomoDispatchH2Storage,
     "pyomo_dispatch_battery": PyomoDispatchBattery,
     # Feedstock
