@@ -1,5 +1,8 @@
 # Changelog
 
+## x.x.x [Unreleased, TBD]
+- Updated inputs for the `ATBBatteryCostModel` and `DemandOpenLoopController` so storage capacity and charge rate can be design variables
+
 ## 0.4.0 [October 1, 2025]
 
 This release introduces significant new technology models and framework capabilities for system design and optimization, alongside major refactoring and user experience improvements.
