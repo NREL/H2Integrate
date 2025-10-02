@@ -133,6 +133,7 @@ class PyomoControllerBaseClass(ControllerBaseClass):
             performance_model: callable,
             performance_model_kwargs,
             inputs,
+            commodity_name: str = self.config.commodity_name,
         ):
             self.initialize_parameters()
 
@@ -152,7 +153,9 @@ class PyomoControllerBaseClass(ControllerBaseClass):
                 commodity_in = inputs[self.config.commodity_name + "_in"][
                     t : t + self.config.n_control_window
                 ]
-                demand_in = inputs["demand_in"][t : t + self.config.n_control_window]
+                demand_in = inputs[f"{commodity_name}_demand_in"][
+                    t : t + self.config.n_control_window
+                ]
 
                 if "heuristic" in control_strategy:
                     self.set_fixed_dispatch(

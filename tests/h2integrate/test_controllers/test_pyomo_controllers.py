@@ -69,7 +69,7 @@ def test_heuristic_load_following_battery_dispatch(subtests):
     # Setup the system and required values
     prob.setup()
     prob.set_val("battery.electricity_in", electricity_in)
-    prob.set_val("battery.demand_in", demand_in)
+    prob.set_val("battery.electricity_demand_in", demand_in)
 
     # Run the model
     prob.run_model()
@@ -232,13 +232,13 @@ def test_heuristic_load_following_battery_dispatch(subtests):
     with subtests.test("Check unmet_demand"):
         assert (
             pytest.approx(expected_unmet_demand_out, abs=1e-4)
-            == prob.get_val("battery.unmet_demand_out")[0:24]
+            == prob.get_val("battery.unmet_electricity_demand_out")[0:24]
         )
 
-    with subtests.test("Check excess_commodity_out"):
+    with subtests.test("Check excess_electricity_out"):
         assert (
             pytest.approx(expected_excess_commodity_out)
-            == prob.get_val("battery.excess_commodity_out")[0:24]
+            == prob.get_val("battery.excess_electricity_out")[0:24]
         )
 
     # Test the case where the battery is discharged to its lower SOC limit
@@ -248,7 +248,7 @@ def test_heuristic_load_following_battery_dispatch(subtests):
     # Setup the system and required values
     prob.setup()
     prob.set_val("battery.electricity_in", electricity_in)
-    prob.set_val("battery.demand_in", demand_in)
+    prob.set_val("battery.electricity_demand_in", demand_in)
 
     # Run the model
     prob.run_model()
@@ -286,13 +286,13 @@ def test_heuristic_load_following_battery_dispatch(subtests):
     with subtests.test("Check unmet_demand for min SOC"):
         assert (
             pytest.approx(expected_unmet_demand_out, abs=1e-6)
-            == prob.get_val("battery.unmet_demand_out")[:5]
+            == prob.get_val("battery.unmet_electricity_demand_out")[:5]
         )
 
     with subtests.test("Check excess_commodity_out for min SOC"):
         assert (
             pytest.approx(expected_excess_commodity_out)
-            == prob.get_val("battery.excess_commodity_out")[:5]
+            == prob.get_val("battery.excess_electricity_out")[:5]
         )
 
     # Test the case where the battery is charged to its upper SOC limit
@@ -302,7 +302,7 @@ def test_heuristic_load_following_battery_dispatch(subtests):
     # Setup the system and required values
     prob.setup()
     prob.set_val("battery.electricity_in", electricity_in)
-    prob.set_val("battery.demand_in", demand_in)
+    prob.set_val("battery.electricity_demand_in", demand_in)
 
     # Run the model
     prob.run_model()
@@ -350,11 +350,11 @@ def test_heuristic_load_following_battery_dispatch(subtests):
     with subtests.test("Check unmet_demand for max SOC"):
         assert (
             pytest.approx(expected_unmet_demand_out, abs=abs_tol)
-            == prob.get_val("battery.unmet_demand_out")[:5]
+            == prob.get_val("battery.unmet_electricity_demand_out")[:5]
         )
 
     with subtests.test("Check excess_commodity_out for max SOC"):
         assert (
             pytest.approx(expected_excess_commodity_out, abs=abs_tol, rel=rel_tol)
-            == prob.get_val("battery.excess_commodity_out")[:5]
+            == prob.get_val("battery.excess_electricity_out")[:5]
         )

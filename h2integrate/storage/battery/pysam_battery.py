@@ -241,7 +241,7 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass):
         BatteryPerformanceBaseClass.setup(self)
 
         self.add_input(
-            "demand_in",
+            "electricity_demand_in",
             val=0.0,
             copy_shape="electricity_in",
             units="kW",
@@ -265,7 +265,7 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass):
         )
 
         self.add_output(
-            "unmet_demand_out",
+            "unmet_electricity_demand_out",
             val=0.0,
             copy_shape="electricity_in",
             units="kW/h",
@@ -273,7 +273,7 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass):
         )
 
         self.add_output(
-            "excess_commodity_out",
+            "excess_electricity_out",
             val=0.0,
             copy_shape="electricity_in",
             units="kW/h",
@@ -391,8 +391,8 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass):
             excess_commodity = self.outputs.excess_commodity
             battery_power_out = self.outputs.P
 
-        outputs["unmet_demand_out"] = unmet_demand
-        outputs["excess_commodity_out"] = excess_commodity
+        outputs["unmet_electricity_demand_out"] = unmet_demand
+        outputs["excess_electricity_out"] = excess_commodity
         outputs["battery_electricity_out"] = battery_power_out
         outputs["electricity_out"] = total_power_out
         outputs["SOC"] = soc
