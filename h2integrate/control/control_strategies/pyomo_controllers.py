@@ -71,10 +71,7 @@ class PyomoControllerBaseClass(ControllerBaseClass):
         return None
 
     def setup(self):
-        # import pdb; pdb.set_trace()
         # get technology group name
-        # TODO: Make this more general, right now it might go astray if for example "battery" is
-        # used twice in an OpenMDAO subsystem pathname
         self.tech_group_name = self.pathname.split(".")
 
         # create inputs for all pyomo object creation functions from all connected technologies
@@ -136,7 +133,6 @@ class PyomoControllerBaseClass(ControllerBaseClass):
             performance_model: callable,
             performance_model_kwargs,
             inputs,
-            pyomo_model=self.pyomo_model,
         ):
             self.initialize_parameters()
 
@@ -173,7 +169,9 @@ class PyomoControllerBaseClass(ControllerBaseClass):
                             but has not been implemented yet."
                         )
                     )
-                    # TODO: implement optimized solutions; this is where pyomo_model would be used
+                    # TODO: implement optimized solutions; pyomo_model may be needed.
+                    # Add pyomo_model=self.pyomo_model as input to pyomo_dispatch_solver
+                    # if needed in the future.
 
                 storage_commodity_out_control_window, soc_control_window = performance_model(
                     self.storage_dispatch_commands,
@@ -281,75 +279,20 @@ class SimpleBatteryControllerHeuristic(PyomoControllerBaseClass):
         """
         super().setup()
 
-        # self._create_soc_linking_constraint()
-
-        # TODO: implement and test lifecycle counting
-        # TODO: we could remove this option and just have lifecycle count default
-        # self.control_options = control_options
-        # if self.control_options.include_lifecycle_count:
-        #     self._create_lifecycle_model()
-        #     if self.control_options.max_lifecycle_per_day < np.inf:
-        #         self._create_lifecycle_count_constraint()
-
         self.round_digits = 4
 
         self.max_charge_fraction = [0.0] * self.config.n_control_window
         self.max_discharge_fraction = [0.0] * self.config.n_control_window
         self._fixed_dispatch = [0.0] * self.config.n_control_window
 
-        # TODO: should I enforce either a day schedule or a year schedule year and save it as
-        # user input? Additionally, Should I drop it as input in the init function?
-        # if fixed_dispatch is not None:
-        #     self.user_fixed_dispatch = fixed_dispatch
-
     def initialize_parameters(self):
         """Initializes parameters."""
-        # TODO: implement and test lifecycle counting
-        # if self.config.include_lifecycle_count:
-        #     self.lifecycle_cost = (
-        #         self.options.lifecycle_cost_per_kWh_cycle
-        #         * self._system_model.value("nominal_energy")
-        #     )
 
-        # self.cost_per_charge = self._financial_model.value("om_batt_variable_cost")[
-        #     0
-        # ]  # [$/MWh]
-        # self.cost_per_discharge = self._financial_model.value("om_batt_variable_cost")[
-        #     0
-        # ]  # [$/MWh]
         self.minimum_storage = 0.0
         self.maximum_storage = self.config.max_capacity
         self.minimum_soc = self.config.min_charge_percent
         self.maximum_soc = self.config.max_charge_percent
         self.initial_soc = self.config.init_charge_percent
-
-    # def _create_soc_linking_constraint(self):
-    #     """Creates state-of-charge linking constraint."""
-    #     ##################################
-    #     # Parameters                     #
-    #     ##################################
-    #     # self.model.initial_soc = pyomo.Param(
-    #     #     doc=self.block_set_name + " initial state-of-charge at beginning of the horizon[-]",
-    #     #     within=pyomo.PercentFraction,
-    #     #     default=0.5,
-    #     #     mutable=True,
-    #     #     units=u.dimensionless,
-    #     # )
-    #     ##################################
-    #     # Constraints                    #
-    #     ##################################
-
-    #     # Linking time periods together
-    #     def storage_soc_linking_rule(m, t):
-    #         if t == self.blocks.index_set().first():
-    #             return self.blocks[t].soc0 == self.model.initial_soc
-    #         return self.blocks[t].soc0 == self.blocks[t - 1].soc
-
-    #     self.model.soc_linking = pyomo.Constraint(
-    #         self.blocks.index_set(),
-    #         doc=self.block_set_name + " state-of-charge block linking constraint",
-    #         rule=storage_soc_linking_rule,
-    #     )
 
     def update_time_series_parameters(self, start_time: int = 0):
         """Updates time series parameters.
@@ -586,16 +529,6 @@ class SimpleBatteryControllerHeuristic(PyomoControllerBaseClass):
             (self.blocks[t].discharge_commodity.value - self.blocks[t].charge_commodity.value)
             for t in self.blocks.index_set()
         ]
-
-    # @property
-    # def current(self) -> list:
-    #     """Current."""
-    #     return [0.0 for t in self.blocks.index_set()]
-
-    # @property
-    # def generation(self) -> list:
-    #     """Generation."""
-    #     return self.storage_dispatch_commands
 
     @property
     def soc(self) -> list:
