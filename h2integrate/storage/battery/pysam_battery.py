@@ -102,6 +102,9 @@ class PySAMBatteryPerformanceModelConfig(BaseConfig):
             Number of timesteps in the control window. Defaults to 24.
         n_horizon_window (int, optional):
             Number of timesteps in the horizon window. Defaults to 48.
+        control_variable (str):
+            Control mode for the PySAM battery, either ``"input_power"``
+            or ``"input_current"``.
         ref_module_capacity (int | float, optional):
             Reference module capacity in kilowatt-hours (kWh).
             Defaults to 400.
@@ -122,6 +125,9 @@ class PySAMBatteryPerformanceModelConfig(BaseConfig):
     init_charge_percent: float = field(validator=range_val(0, 1))
     n_control_window: int = field(default=24)
     n_horizon_window: int = field(default=48)
+    control_variable: str = field(
+        default="input_power", validator=contains(["input_power", "input_current"])
+    )
     ref_module_capacity: int | float = field(default=400)
     ref_module_surface_area: int | float = field(default=30)
 
@@ -154,9 +160,6 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass):
             Battery charge rate in kilowatts per hour (kW).
         storage_capacity (float):
             Total energy storage capacity in kilowatt-hours (kWh).
-        control_variable (str):
-            Control mode for the PySAM battery, either ``"input_power"``
-            or ``"input_current"``.
         demand_in (ndarray):
             Power demand time series (kW).
         electricity_in (ndarray):
@@ -236,12 +239,6 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass):
         )
 
         BatteryPerformanceBaseClass.setup(self)
-
-        self.add_discrete_input(
-            "control_variable",
-            val="input_power",
-            desc="Configure the control mode for the PySAM battery",
-        )
 
         self.add_input(
             "demand_in",
@@ -372,7 +369,7 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass):
             dispatch = discrete_inputs["pyomo_dispatch_solver"]
             kwargs = {
                 "time_step_duration": self.dt_hr,
-                "control_variable": discrete_inputs["control_variable"],
+                "control_variable": self.config.control_variable,
             }
             (
                 total_power_out,
@@ -387,7 +384,7 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass):
             total_power_out, soc = self.simulate(
                 storage_dispatch_commands=inputs["electricity_in"],
                 time_step_duration=self.dt_hr,
-                control_variable=discrete_inputs["control_variable"],
+                control_variable=self.config.control_variable,
             )
             # TODO how to calculate? these are not being calculated
             unmet_demand = self.outputs.unmet_demand

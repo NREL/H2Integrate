@@ -60,6 +60,7 @@ technologies:
       performance_parameters:
         system_model_source: "pysam"
         chemistry: "LFPGraphite"
+        control_variable: "input_power"
       control_parameters:
         commodity_name: "electricity"
         commodity_storage_units: "kW"

@@ -68,7 +68,6 @@ def test_heuristic_load_following_battery_dispatch(subtests):
 
     # Setup the system and required values
     prob.setup()
-    prob.set_val("battery.control_variable", "input_power")
     prob.set_val("battery.electricity_in", electricity_in)
     prob.set_val("battery.demand_in", demand_in)
 
@@ -248,7 +247,6 @@ def test_heuristic_load_following_battery_dispatch(subtests):
 
     # Setup the system and required values
     prob.setup()
-    prob.set_val("battery.control_variable", "input_power")
     prob.set_val("battery.electricity_in", electricity_in)
     prob.set_val("battery.demand_in", demand_in)
 
@@ -303,7 +301,6 @@ def test_heuristic_load_following_battery_dispatch(subtests):
 
     # Setup the system and required values
     prob.setup()
-    prob.set_val("battery.control_variable", "input_power")
     prob.set_val("battery.electricity_in", electricity_in)
     prob.set_val("battery.demand_in", demand_in)
 
