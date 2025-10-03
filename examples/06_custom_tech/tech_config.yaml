@@ -7,9 +7,6 @@ technologies:
       model: wind_plant_performance
     cost_model:
       model: wind_plant_cost
-    resource:
-      type: pysam_wind
-      wind_speed: 9.
     model_inputs:
       shared_parameters:
         num_turbines: 4
@@ -45,7 +42,7 @@ technologies:
       model: paper_mill_cost
       model_class_name: PaperMillCost
       model_location: user_defined_model/paper_mill.py
-    financial_model:
+    finance_model:
       model: paper_mill_finance
       model_class_name: PaperMillFinance
       model_location: user_defined_model/paper_mill.py

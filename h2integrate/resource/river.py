@@ -2,6 +2,14 @@ from pathlib import Path
 
 import pandas as pd
 import openmdao.api as om
+from attrs import field, define
+
+from h2integrate.core.utilities import BaseConfig
+
+
+@define
+class RiverResourceConfig(BaseConfig):
+    filename: str | Path = field()
 
 
 class RiverResource(om.ExplicitComponent):
@@ -32,15 +40,19 @@ class RiverResource(om.ExplicitComponent):
     """
 
     def initialize(self):
+        self.options.declare("plant_config", types=dict)
         self.options.declare("resource_config", types=dict)
+        self.options.declare("driver_config", types=dict)
+        # self.options.declare("filename", types=str)
 
     def setup(self):
         # Define inputs and outputs
+        self.config = RiverResourceConfig.from_dict(self.options["resource_config"])
         self.add_output("discharge", shape=8760, val=0.0, units="ft**3/s")
 
     def compute(self, inputs, outputs):
         # Read the CSV file
-        filename = self.options["resource_config"]["filename"]
+        filename = self.config.filename
 
         # Check if the file exists
         if not Path(filename).is_file():

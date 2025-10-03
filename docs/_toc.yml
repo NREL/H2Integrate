@@ -8,6 +8,7 @@ parts:
   chapters:
     - file: getting_started/install
     - file: getting_started/expected_user_knowledge
+    - file: getting_started/environment_variables
 
 - caption: User Guide
   chapters:
@@ -17,9 +18,15 @@ parts:
   - file: user_guide/postprocessing_results
   - file: user_guide/how_to_interface_with_user_defined_model
   - file: user_guide/specifying_finance_parameters
+    sections:
+    - file: user_guide/cost_years
+    - file: finance_models/finance_index
+      sections:
+      - file: finance_models/ProFastComp
 
 - caption: Technology Models
   chapters:
+  - file: technology_models/technology_overview
   - file: technology_models/feedstocks
   - file: technology_models/run_of_river
   - file: technology_models/direct_ocean_capture
@@ -28,6 +35,14 @@ parts:
   - file: technology_models/pvwattsv8_solar_pv.md
   - file: technology_models/atb_costs_pv.md
   - file: technology_models/co2.md
+  - file: technology_models/simple_generic_storage.md
+
+- caption: Resource Models
+  chapters:
+  - file: resource/resource_index
+    sections:
+      - file: resource/wind_index
+      - file: resource/wind_toolkit_v2_api
 
 - caption: Examples
   chapters:
