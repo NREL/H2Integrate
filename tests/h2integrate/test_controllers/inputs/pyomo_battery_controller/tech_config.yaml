@@ -50,7 +50,7 @@ technologies:
       model: "pysam_battery"
     model_inputs:
       shared_parameters:
-        rated_commodity_capacity: 50000
+        max_charge_rate: 50000
         max_capacity: 200000
         n_control_window: 24
         n_horizon_window: 48
@@ -65,6 +65,7 @@ technologies:
         commodity_name: "electricity"
         commodity_storage_units: "kW"
         tech_name: "battery"
+        system_commodity_interface_limit: 1E12
       dispatch_rule_parameters:
         commodity_name: "electricity"
         commodity_storage_units: "kW"

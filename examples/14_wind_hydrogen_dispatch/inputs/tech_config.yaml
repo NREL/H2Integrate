@@ -82,7 +82,7 @@ technologies:
         max_charge_percent: 1.0  # percent as decimal
         min_charge_percent: 0.1  # percent as decimal
         init_charge_percent: 0.25  # percent as decimal
-        max_charge_rate: 10000.0  # kg/time step
+        rated_commodity_capacity: 10000.0  # kg/time step
         max_discharge_rate: 10000.0  # kg/time step
         charge_efficiency: 1.0 # percent as decimal
         discharge_efficiency: 1.0 # percent as decimal

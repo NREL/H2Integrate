@@ -1,5 +1,5 @@
 import openmdao.api as om
-import pyomo.environ as pyomo
+import pyomo.environ as pyo
 from attrs import field, define
 
 from h2integrate.core.utilities import BaseConfig
@@ -48,7 +48,7 @@ class PyomoRuleBaseClass(om.ExplicitComponent):
 
         pass
 
-    def dispatch_block_rule_function(self, pyomo_model: pyomo.ConcreteModel, tech_name: str):
+    def dispatch_block_rule_function(self, pyomo_model: pyo.ConcreteModel, tech_name: str):
         """Initializes technology parameters, variables, constraints, and ports.
             Called during Dispatch's __init__.
 

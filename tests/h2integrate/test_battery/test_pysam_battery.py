@@ -57,8 +57,6 @@ def test_pysam_battery_performance_model(subtests):
 
     prob.setup()
 
-    prob.set_val("control_variable", "input_power")
-
     prob.run_model()
 
     expected_battery_power = np.array(
@@ -132,7 +130,7 @@ def test_battery_config(subtests):
     batt_kw = 5e3
     config_data = {
         "max_capacity": batt_kw * 4,
-        "rated_commodity_capacity": batt_kw,
+        "max_charge_rate": batt_kw,
         "chemistry": "LFPGraphite",
         "init_charge_percent": 0.1,
         "max_charge_percent": 0.9,
@@ -143,7 +141,7 @@ def test_battery_config(subtests):
     config = PySAMBatteryPerformanceModelConfig.from_dict(config_data)
 
     with subtests.test("with minimal params batt_kw"):
-        assert config.rated_commodity_capacity == batt_kw
+        assert config.max_charge_rate == batt_kw
     with subtests.test("with minimal params system_capacity_kwh"):
         assert config.max_capacity == batt_kw * 4
     with subtests.test("with minimal params minimum_SOC"):
@@ -168,7 +166,7 @@ def test_battery_config(subtests):
     with subtests.test("with invalid capacity"):
         with pytest.raises(ValueError):
             data = deepcopy(config_data)
-            data["rated_commodity_capacity"] = -1.0
+            data["max_charge_rate"] = -1.0
             PySAMBatteryPerformanceModelConfig.from_dict(data)
 
         with pytest.raises(ValueError):

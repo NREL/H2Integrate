@@ -20,7 +20,7 @@ class BatteryPerformanceBaseClass(om.ExplicitComponent):
             "electricity_out",
             val=0.0,
             copy_shape="electricity_in",
-            units="kW/h",
+            units="kW",
             desc="Total electricity out of Battery",
         )
 
@@ -36,7 +36,7 @@ class BatteryPerformanceBaseClass(om.ExplicitComponent):
             "battery_electricity_out",
             val=0.0,
             copy_shape="electricity_in",
-            units="kW/h",
+            units="kW",
             desc="Electricty output from Battery only",
         )
 

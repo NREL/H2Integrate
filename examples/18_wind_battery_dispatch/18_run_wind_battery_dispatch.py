@@ -22,7 +22,7 @@ model.run()
 fig, ax = plt.subplots(2, 1, sharex=True)
 
 start_hour = 0
-end_hour = 24
+end_hour = 8760
 
 ax[0].plot(
     range(start_hour, end_hour),
@@ -42,25 +42,25 @@ ax[1].plot(
 )
 ax[1].plot(
     range(start_hour, end_hour),
-    model.prob.get_val("battery.excess_commodity_out", units="MW/h")[start_hour:end_hour],
+    model.prob.get_val("battery.excess_electricity_out", units="MW")[start_hour:end_hour],
     linestyle=":",
     label="Excess Electricity (MW)",
 )
 ax[1].plot(
     range(start_hour, end_hour),
-    model.prob.get_val("battery.unmet_demand_out", units="MW/h")[start_hour:end_hour],
+    model.prob.get_val("battery.unmet_electricity_demand_out", units="MW")[start_hour:end_hour],
     linestyle=":",
     label="Unmet Electrical Demand (MW)",
 )
 ax[1].plot(
     range(start_hour, end_hour),
-    model.prob.get_val("battery.electricity_out", units="MW/h")[start_hour:end_hour],
+    model.prob.get_val("battery.electricity_out", units="MW")[start_hour:end_hour],
     linestyle="-",
     label="Electricity Out (MW)",
 )
 ax[1].plot(
     range(start_hour, end_hour),
-    model.prob.get_val("battery.battery_electricity_out", units="MW/h")[start_hour:end_hour],
+    model.prob.get_val("battery.battery_electricity_out", units="MW")[start_hour:end_hour],
     linestyle="-.",
     label="Battery Electricity Out (MW)",
 )

@@ -60,6 +60,7 @@ class PyomoControllerBaseConfig(BaseConfig):
     commodity_name: str = field()
     commodity_storage_units: str = field()
     tech_name: str = field()
+    system_commodity_interface_limit: float = field()
 
 
 def dummy_function():
@@ -160,8 +161,7 @@ class PyomoControllerBaseClass(ControllerBaseClass):
                 if "heuristic" in control_strategy:
                     self.set_fixed_dispatch(
                         commodity_in,
-                        self.config.max_charge_rate,
-                        self.config.max_discharge_rate,
+                        self.config.system_commodity_interface_limit,
                         demand_in,
                     )
 
@@ -290,68 +290,68 @@ class SimpleBatteryControllerHeuristic(PyomoControllerBaseClass):
     def set_fixed_dispatch(
         self,
         commodity_in: list,
-        max_charge_rate: list,
-        max_discharge_rate: list,
+        system_commodity_interface_limit: list,
     ):
         """Sets charge and discharge amount of storage dispatch using fixed_dispatch attribute
             and enforces available generation and charge/discharge limits.
 
         Args:
             commodity_in (list): commodity blocks.
-            max_charge_rate (list): Max charge capacity.
-            max_discharge_rate (list): Max discharge capacity.
+            system_commodity_interface_limit (list): Maximum flow rate of commodity through
+            the system interface
 
         Raises:
-            ValueError: If commodity_in or max_charge_rate or max_discharge_rate length does not
+            ValueError: If commodity_in or system_commodity_interface_limit length do not
                 match fixed_dispatch length.
 
         """
-        self.check_commodity_in_discharge_limit(commodity_in, max_charge_rate, max_discharge_rate)
-        self._set_commodity_fraction_limits(commodity_in, max_charge_rate, max_discharge_rate)
+        self.check_commodity_in_discharge_limit(commodity_in, system_commodity_interface_limit)
+        self._set_commodity_fraction_limits(commodity_in, system_commodity_interface_limit)
         self._heuristic_method(commodity_in)
         self._fix_dispatch_model_variables()
 
     def check_commodity_in_discharge_limit(
-        self, commodity_in: list, max_charge_rate: list, max_discharge_rate: list
+        self, commodity_in: list, system_commodity_interface_limit: list
     ):
         """Checks if commodity in and discharge limit lengths match fixed_dispatch length.
 
         Args:
             commodity_in (list): commodity blocks.
-            max_charge_rate (list): Maximum charge capacity.
-            max_discharge_rate (list): Maximum discharge capacity.
+            system_commodity_interface_limit (list): Maximum flow rate of commodity through
+            the system interface
 
         Raises:
-            ValueError: If gen or max_discharge_rate length does not match fixed_dispatch length.
+            ValueError: If commodity_in or system_commodity_interface_limit length does not
+            match fixed_dispatch length.
 
         """
         if len(commodity_in) != len(self.fixed_dispatch):
-            raise ValueError("gen must be the same length as fixed_dispatch.")
-        elif len(max_charge_rate) != len(self.fixed_dispatch):
-            raise ValueError("max_charge_rate must be the same length as fixed_dispatch.")
-        elif len(max_discharge_rate) != len(self.fixed_dispatch):
-            raise ValueError("max_discharge_rate must be the same length as fixed_dispatch.")
+            raise ValueError("commodity_in must be the same length as fixed_dispatch.")
+        elif len(system_commodity_interface_limit) != len(self.fixed_dispatch):
+            raise ValueError(
+                "system_commodity_interface_limit must be the same length as fixed_dispatch."
+            )
 
     def _set_commodity_fraction_limits(
-        self, commodity_in: list, max_charge_rate: list, max_discharge_rate: list
+        self, commodity_in: list, system_commodity_interface_limit: list
     ):
         """Set storage charge and discharge fraction limits based on
-        available generation and grid capacity, respectively.
+        available generation and system interface capacity, respectively.
 
         Args:
             commodity_in (list): commodity blocks.
-            max_charge_rate (list): Maximum charge capacity.
-            max_discharge_rate (list): Maximum discharge capacity.
+            system_commodity_interface_limit (list): Maximum flow rate of commodity
+            through the system interface
 
         NOTE: This method assumes that storage cannot be charged by the grid.
 
         """
         for t in self.blocks.index_set():
             self.max_charge_fraction[t] = self.enforce_power_fraction_simple_bounds(
-                (max_charge_rate[t] - commodity_in[t]) / self.maximum_storage
+                (commodity_in[t]) / self.maximum_storage
             )
             self.max_discharge_fraction[t] = self.enforce_power_fraction_simple_bounds(
-                (max_discharge_rate[t] - commodity_in[t]) / self.maximum_storage
+                (system_commodity_interface_limit[t] - commodity_in[t]) / self.maximum_storage
             )
 
     @staticmethod
@@ -588,19 +588,16 @@ class SimpleBatteryControllerHeuristic(PyomoControllerBaseClass):
 
 @define
 class HeuristicLoadFollowingControllerConfig(PyomoControllerBaseConfig):
-    rated_commodity_capacity: int = field()
-    max_discharge_rate: float = field(default=1e12)
-    max_charge_rate: float = field(default=1e12)
+    max_charge_rate: int = field()
     charge_efficiency: float = field(default=None)
     discharge_efficiency: float = field(default=None)
     include_lifecycle_count: bool = field(default=False)
 
     def __attrs_post_init__(self):
-        # TODO: Is this the best way to handle scalar charge/discharge rates?
-        if isinstance(self.max_charge_rate, (float, int)):
-            self.max_charge_rate = [self.max_charge_rate] * self.n_control_window
-        if isinstance(self.max_discharge_rate, (float, int)):
-            self.max_discharge_rate = [self.max_discharge_rate] * self.n_control_window
+        if isinstance(self.system_commodity_interface_limit, (float, int)):
+            self.system_commodity_interface_limit = [
+                self.system_commodity_interface_limit
+            ] * self.n_control_window
 
 
 class HeuristicLoadFollowingController(SimpleBatteryControllerHeuristic):
@@ -641,8 +638,7 @@ class HeuristicLoadFollowingController(SimpleBatteryControllerHeuristic):
     def set_fixed_dispatch(
         self,
         commodity_in: list,
-        max_charge_rate: list,
-        max_discharge_rate: list,
+        system_commodity_interface_limit: list,
         commodity_demand: list,
     ):
         """Sets charge and discharge power of battery dispatch using fixed_dispatch attribute
@@ -650,14 +646,13 @@ class HeuristicLoadFollowingController(SimpleBatteryControllerHeuristic):
 
         Args:
             commodity_in (list): List of generated commodity in.
-            max_charge_rate (list): List of max charge rates.
-            max_discharge_rate (list): List of max discharge rates.
+            system_commodity_interface_limit (list): List of max charge rates.
             commodity_demand (list): The demanded commodity.
 
         """
 
-        self.check_commodity_in_discharge_limit(commodity_in, max_charge_rate, max_discharge_rate)
-        self._set_commodity_fraction_limits(commodity_in, max_charge_rate, max_discharge_rate)
+        self.check_commodity_in_discharge_limit(commodity_in, system_commodity_interface_limit)
+        self._set_commodity_fraction_limits(commodity_in, system_commodity_interface_limit)
         self._heuristic_method(commodity_in, commodity_demand)
         self._fix_dispatch_model_variables()
 
