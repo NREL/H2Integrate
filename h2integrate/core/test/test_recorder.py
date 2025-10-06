@@ -5,6 +5,12 @@ from h2integrate.core.h2integrate_model import H2IntegrateModel
 from h2integrate.core.inputs.validation import load_driver_yaml
 
 
+TEST_RECORDER_OUTPUT_DIR = "testingtesting_output_dir"
+TEST_RECORDER_OUTPUT_FILE0 = "testingtesting_filename.sql"
+TEST_RECORDER_OUTPUT_FILE1 = "testingtesting_filename0.sql"
+TEST_RECORDER_OUTPUT_FILE2 = "testingtesting_filename1.sql"
+
+
 def test_output_folder_creation_first_run(subtests):
     # Test that the sql file is written to the output folder
     # with the specified name
@@ -20,8 +26,8 @@ def test_output_folder_creation_first_run(subtests):
     driver_config = load_driver_yaml(EXAMPLE_DIR / "05_wind_h2_opt" / "driver_config.yaml")
 
     # update driver config params with test variables
-    new_output_folder = os.getenv("TEST_RECORDER_OUTPUT_DIR")
-    filename_initial = os.getenv("TEST_RECORDER_OUTPUT_FILE0")
+    new_output_folder = TEST_RECORDER_OUTPUT_DIR
+    filename_initial = TEST_RECORDER_OUTPUT_FILE0
     driver_config["general"]["folder_output"] = new_output_folder
     driver_config["recorder"]["file"] = filename_initial
     driver_config["driver"]["optimization"]["max_iter"] = 5  # to prevent tests taking too long
@@ -68,9 +74,10 @@ def test_output_new_recorder_filename_second_run(subtests):
     driver_config = load_driver_yaml(EXAMPLE_DIR / "05_wind_h2_opt" / "driver_config.yaml")
 
     # update driver config params with test variables
-    new_output_folder = os.getenv("TEST_RECORDER_OUTPUT_DIR")
-    filename_initial = os.getenv("TEST_RECORDER_OUTPUT_FILE0")
-    filename_expected = os.getenv("TEST_RECORDER_OUTPUT_FILE1")
+    new_output_folder = TEST_RECORDER_OUTPUT_DIR
+    filename_initial = TEST_RECORDER_OUTPUT_FILE0
+    filename_expected = TEST_RECORDER_OUTPUT_FILE1
+
     driver_config["general"]["folder_output"] = new_output_folder
     driver_config["recorder"]["file"] = filename_initial
     driver_config["driver"]["optimization"]["max_iter"] = 5  # to prevent tests taking too long
@@ -115,9 +122,9 @@ def test_output_new_recorder_overwrite_first_run(subtests):
     driver_config = load_driver_yaml(EXAMPLE_DIR / "05_wind_h2_opt" / "driver_config.yaml")
 
     # update driver config params with test variables
-    new_output_folder = os.getenv("TEST_RECORDER_OUTPUT_DIR")
-    filename_initial = os.getenv("TEST_RECORDER_OUTPUT_FILE0")
-    filename_exists_if_failed = os.getenv("TEST_RECORDER_OUTPUT_FILE2")
+    new_output_folder = TEST_RECORDER_OUTPUT_DIR
+    filename_initial = TEST_RECORDER_OUTPUT_FILE0
+    filename_exists_if_failed = TEST_RECORDER_OUTPUT_FILE2
     driver_config["general"]["folder_output"] = new_output_folder
     driver_config["recorder"]["file"] = filename_initial
 
@@ -166,10 +173,10 @@ def test_output_new_recorder_filename_third_run(subtests):
     driver_config = load_driver_yaml(EXAMPLE_DIR / "05_wind_h2_opt" / "driver_config.yaml")
 
     # update driver config params with test variables
-    new_output_folder = os.getenv("TEST_RECORDER_OUTPUT_DIR")
-    filename_initial = os.getenv("TEST_RECORDER_OUTPUT_FILE0")
-    filename_second = os.getenv("TEST_RECORDER_OUTPUT_FILE1")
-    filename_expected = os.getenv("TEST_RECORDER_OUTPUT_FILE2")
+    new_output_folder = TEST_RECORDER_OUTPUT_DIR
+    filename_initial = TEST_RECORDER_OUTPUT_FILE0
+    filename_second = TEST_RECORDER_OUTPUT_FILE1
+    filename_expected = TEST_RECORDER_OUTPUT_FILE2
     driver_config["general"]["folder_output"] = new_output_folder
     driver_config["recorder"]["file"] = filename_initial
     driver_config["driver"]["optimization"]["max_iter"] = 5  # to prevent tests taking too long
