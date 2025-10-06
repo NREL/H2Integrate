@@ -13,10 +13,10 @@ technologies:
         ard_system:
           system: "onshore_batch"
           modeling_options:
-            windIO_plant: !include windio.yaml
+            windIO_plant: !include ../ard_inputs/windio.yaml
             layout:
               type: "grid"
-              N_turbines: 65 # should be 65 turbines
+              N_turbines: 65
               N_substations: 1
               spacing_primary: 7.0
               spacing_secondary: 7.0
@@ -56,6 +56,10 @@ technologies:
               tcc_per_kW: 1300.00  # (USD/kW)
               opex_per_kW: 44.00  # (USD/kWh)
           analysis_options:
+      cost_parameters:
+        cost_per_kw: 1300.0
+        cost_year: 2024
+        var_opex: 0.0
   solar:
     performance_model:
       model: "pysam_solar_plant_performance"
@@ -84,3 +88,32 @@ technologies:
         capex_per_kWac: 1193
         opex_per_kWac_per_year: 18
         cost_year: 2024
+  combiner:
+    performance_model:
+      model: "combiner_performance"
+  battery:
+    performance_model:
+      model: "simple_generic_storage"
+    cost_model:
+      model: "atb_battery_cost"
+    control_strategy:
+      model: "demand_open_loop_controller"
+    model_inputs:
+      shared_parameters:
+        resource_name: "electricity"
+        resource_rate_units: "kW"
+        max_charge_rate: 150000.0  # kW/time step
+        max_capacity: 300000.0  # kWh
+      control_parameters:
+        max_charge_percent: 1.0  # percent as decimal
+        min_charge_percent: 0.1  # percent as decimal
+        init_charge_percent: 0.25  # percent as decimal
+        max_discharge_rate: 150000.0  # kW/time step
+        charge_efficiency: 0.985 # percent as decimal
+        discharge_efficiency: 0.985 # percent as decimal
+        demand_profile: 300000 # kW grid capacity
+      cost_parameters:
+        cost_year: 2022
+        energy_capex: 72.54 # $/kWh
+        power_capex: 18.72 # $/kW
+        opex_fraction: 0.02 # percent of capex
