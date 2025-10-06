@@ -13,6 +13,7 @@ from h2integrate.resource.solar.nrel_developer_goes_api_base import (
 class GOESAggregatedNRELDeveloperAPIConfig(ResourceBaseAPIConfig):
     """Configuration class to downloadsolar resource data from
     `GOES Aggregated PSM v4 <https://developer.nrel.gov/docs/solar/nsrdb/nsrdb-GOES-aggregated-v4-0-0-download/>`_.
+    This dataset covers regions within North and South America at a spatial resolution of 4 km.
 
     Args:
         resource_year (int): Year to use for resource data.
@@ -74,8 +75,10 @@ class GOESAggregatedNRELDeveloperAPISolarResource(GOESNRELDeveloperAPISolarResou
 
 @define
 class GOESConusNRELDeveloperAPIConfig(ResourceBaseAPIConfig):
-    """Configuration class to downloadsolar resource data from
+    """Configuration class to download solar resource data from
     `GOES Conus PSM v4 <https://developer.nrel.gov/docs/solar/nsrdb/nsrdb-GOES-conus-v4-0-0-download/>`_.
+    This dataset covers regions within the continental United States at a spatial resolution of
+    2 km.
 
     Args:
         resource_year (int): Year to use for resource data.
@@ -141,6 +144,7 @@ class GOESConusNRELDeveloperAPISolarResource(GOESNRELDeveloperAPISolarResourceBa
 class GOESFullDiscNRELDeveloperAPIConfig(ResourceBaseAPIConfig):
     """Configuration class to downloadsolar resource data from
     `GOES Full Disc PSM v4 <https://developer.nrel.gov/docs/solar/nsrdb/nsrdb-GOES-full-disc-v4-0-0-download/>`_.
+    This dataset covers regions within North and South America at a spatial resolution of 2 km.
 
     Args:
         resource_year (int): Year to use for resource data.
@@ -204,6 +208,7 @@ class GOESFullDiscNRELDeveloperAPISolarResource(GOESNRELDeveloperAPISolarResourc
 class GOESTMYNRELDeveloperAPIConfig(ResourceBaseAPIConfig):
     """Configuration class to downloadsolar resource data from
     `GOES Full Disc PSM v4 <https://developer.nrel.gov/docs/solar/nsrdb/nsrdb-GOES-tmy-v4-0-0-download/>`_.
+    This dataset covers regions within North and South America at a spatial resolution of 4 km.
 
     Args:
         resource_year (str): Year to use for resource data. Can be any of the following:

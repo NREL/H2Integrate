@@ -9,12 +9,12 @@ There are four datasets that use the NSRDB GOES PSM v4 API calls:
 
 These datasets allow for resource data to be downloaded for **locations** within the continental United States.
 
-| Model      | Temporal resolution | Spatial resolution | Years covered | Website |
-| :--------- | :---------------: | :---------------: | :---------------: | :---------------: |
-| `goes_aggregated_solar_v4_api`  | 30, 60 min  | 4km | 1998-2024  | [GOES Aggregated](https://developer.nrel.gov/docs/solar/nsrdb/nsrdb-GOES-aggregated-v4-0-0-download/) |
-| `goes_conus_solar_v4_api`  | 5, 15, 30, 60 min  | 2km | 2018-2024  | [GOES Conus](https://developer.nrel.gov/docs/solar/nsrdb/nsrdb-GOES-conus-v4-0-0-download/) |
-| `goes_fulldisc_solar_v4_api`  | 10, 30, 60 min  | 2km | 2018-2024  | [GOES Full disc](https://developer.nrel.gov/docs/solar/nsrdb/nsrdb-GOES-full-disc-v4-0-0-download/) |
-| `goes_tmy_solar_v4_api`  | 60 min  | 2km | 2022-2024, for tmy, tdy and tgy  | [GOES TMY](https://developer.nrel.gov/docs/solar/nsrdb/nsrdb-GOES-tmy-v4-0-0-download/) |
+| Model      | Temporal resolution | Spatial resolution | Years covered | Regions | Website |
+| :--------- | :---------------: | :---------------: | :---------------: | :---------------: | :---------------: |
+| `goes_aggregated_solar_v4_api`  | 30, 60 min  | 4 km | 1998-2024  | North America, South America | [GOES Aggregated](https://developer.nrel.gov/docs/solar/nsrdb/nsrdb-GOES-aggregated-v4-0-0-download/) |
+| `goes_conus_solar_v4_api`  | 5, 15, 30, 60 min  | 2 km | 2018-2024  | Continental United States | [GOES Conus](https://developer.nrel.gov/docs/solar/nsrdb/nsrdb-GOES-conus-v4-0-0-download/) |
+| `goes_fulldisc_solar_v4_api`  | 10, 30, 60 min  | 2 km | 2018-2024  | North America, South America |  [GOES Full disc](https://developer.nrel.gov/docs/solar/nsrdb/nsrdb-GOES-full-disc-v4-0-0-download/) |
+| `goes_tmy_solar_v4_api`  | 60 min  | 4 km | 2022-2024, for tmy, tdy and tgy  | North America, South America |  [GOES TMY](https://developer.nrel.gov/docs/solar/nsrdb/nsrdb-GOES-tmy-v4-0-0-download/) |
 
 
 ```{note}
