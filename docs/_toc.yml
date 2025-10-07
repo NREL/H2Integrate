@@ -17,6 +17,7 @@ parts:
   - file: user_guide/design_optimization_in_h2i
   - file: user_guide/postprocessing_results
   - file: user_guide/how_to_interface_with_user_defined_model
+  - file: user_guide/how_to_run_several_cases_in_sequence
   - file: user_guide/specifying_finance_parameters
     sections:
     - file: user_guide/cost_years

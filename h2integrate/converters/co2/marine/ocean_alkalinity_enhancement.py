@@ -63,7 +63,7 @@ class OAEPerformanceModel(MarineCarbonCapturePerformanceBaseClass):
         MarineCarbonCapturePerformanceBaseClass
 
     Computes:
-        - co2_capture_rate_mt: Hourly CO₂ capture rate in metric tons.
+        - co2_out: Hourly CO₂ capture rate (kg/h).
         - co2_capture_mtpy: Annual CO₂ captured in metric tons per year.
 
     Notes:
@@ -214,9 +214,7 @@ class OAEPerformanceModel(MarineCarbonCapturePerformanceBaseClass):
             plot_range=[3910, 4030],
         )
 
-        outputs["co2_capture_rate_mt"] = (
-            oae_outputs.OAE_outputs["mass_CO2_absorbed"] / 1000
-        )  # Convert from kg to metric tons
+        outputs["co2_out"] = oae_outputs.OAE_outputs["mass_CO2_absorbed"]
         outputs["co2_capture_mtpy"] = oae_outputs.M_co2est
         outputs["plant_mCC_capacity_mtph"] = max(range_outputs.S1["mass_CO2_absorbed"] / 1000)
         outputs["alkaline_seawater_flow_rate"] = oae_outputs.OAE_outputs["Qout"]
