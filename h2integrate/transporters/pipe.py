@@ -19,6 +19,8 @@ class PipePerformanceModel(om.ExplicitComponent):
 
         if transport_item == "natural_gas":
             units = "MMBtu"
+        elif transport_item == "co2":
+            units = "kg/h"
         else:
             units = "kg/s"
 
