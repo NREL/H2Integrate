@@ -702,26 +702,28 @@ class H2IntegrateModel:
                 non_connected_resource = [
                     k for k in resource_models if k not in resource_source_connections
                 ]
-                # check if theres a resource model that isnt connected to a technology
+                # check if theres a resource model that isn't connected to a technology
                 if len(non_connected_resource) > 0:
                     msg = (
                         "Some resources are not connected to a technology. Resource models "
                         f"{non_connected_resource} are not included in "
                         "`resource_to_tech_connections`. Please connect these resources "
-                        "to their technologies under `resource_to_tech_connections`"
+                        "to their technologies under `resource_to_tech_connections` in "
+                        "the plant config file."
                     )
                     raise ValueError(msg)
             if len(resource_source_connections) > len(resource_models):
-                # more more resources connected than resource models
+                # more resources connected than resource models
                 missing_resource = [
                     k for k in resource_source_connections if k not in resource_models
                 ]
-                # check if theres a resource model that isnt connected to a technology
+                # check if theres a resource model that isn't connected to a technology
                 if len(missing_resource) > 0:
                     msg = (
                         "Missing resource(s) are not defined but are connected to a technology. "
                         f"Missing resource(s) are {missing_resource}. "
-                        "Please check ``resource_to_tech_connections`` or add the missing resources"
+                        "Please check ``resource_to_tech_connections`` in the plant config file "
+                        "or add the missing resources"
                         " to plant_config['site']['resources']."
                     )
                     raise ValueError(msg)
