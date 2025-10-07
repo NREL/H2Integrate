@@ -3,4 +3,4 @@ technologies,ammonia,model_inputs,shared_parameters,production_capacity,,float,1
 technologies,h2_storage,model_inputs,performance_parameters,type,,str,salt_cavern,lined_rock_cavern
 technologies,electrolyzer,model_inputs,performance_parameters,n_clusters,,int,16,2
 technologies,electrolyzer,model_inputs,performance_parameters,include_degradation_penalty,,bool,TRUE,FALSE
-technologies,electrolyzer,model_inputs,financial_parameters,capital_items,replacement_cost_pecent,float,0.15,0.25
+technologies,electrolyzer,model_inputs,financial_parameters,capital_items,replacement_cost_percent,float,0.15,0.25

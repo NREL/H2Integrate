@@ -2,7 +2,7 @@
 
 ## Overview
 
-If the user has several different cases they want to run with different input parameters, these cases can be set up in an input spreadsheet rather than directly modifying the `tech_config`.
+If you have several different cases you want to run with different input parameters, these cases can be set up in an input spreadsheet rather than directly modifying the `tech_config`.
 This is done using the functions in `h2integrate/tools/run_cases.py`
 
 ## Setting up a variation of parameters in a .csv
@@ -20,22 +20,25 @@ To set up the inputs for each case, the input .csv should be set up like so:
 
 To demonstrate this capability, we include a short example that modifies the size and hydrogen storage type for a Haber Bosch ammonia plant in `examples/12_ammonia_synloop`.
 The example spreadsheet `hb_inputs.csv` shows the format:
+
 |Index 0|Index 1|Index 2|Index 3|Index 4|Index 5|Type|Haber Bosch Big|Haber Bosch Small
 |---    |---    |---    |---    |---    |---    |---    |---    |---    |
 technologies|ammonia|model_inputs|shared_parameters|production_capacity||float|100000|10000
 technologies|h2_storage|model_inputs|performance_parameters|type||str|salt_cavern|lined_rock_cavern
 technologies|electrolyzer|model_inputs|performance_parameters|n_clusters||int|16|2
 technologies|electrolyzer|model_inputs|performance_parameters|include_degradation_penalty||bool|TRUE|FALSE
-technologies|electrolyzer|model_inputs|financial_parameters|capital_items|replacement_cost_pecent|float|0.15|0.25
+technologies|electrolyzer|model_inputs|financial_parameters|capital_items|replacement_cost_percent|float|0.15|0.25
 
-Things to note about this format:
-- The nested depth of the parameters in the `tech_config` is variable. If some parameters do not use as many levels, leave the unused levels blank (like the Index 5 level for most parameters in the above example)
+
+### Things to note about this format
+
+- The nested depth of the parameters in the `tech_config` can vary based on the parameter you're setting. If some parameters do not use as many levels, leave the unused levels blank (like the Index 5 level for most parameters in the above example)
 - The currently available data types for each parameter are `float`, `str`, `int`, and `bool`. Be sure to specify the correct data type for each parameter.
-- For parameters delcared as `bool`, you can enter "0", "false", or "no" for `False`, and "1", "true", or "yes" for `True` (case insensitive). When making .csvs in Excel, the default "TRUE" and "FALSE" formatting will work.
-- All other parameters not included in the spreadsheet, their values will be kept the same as originally defined in the `tech_config.yaml`.
+- For parameters declared as `bool`, you can enter "0", "false", or "no" for `False`, and "1", "true", or "yes" for `True` (case insensitive). When making .csvs in Excel, the default "TRUE" and "FALSE" formatting will work.
+- For all other parameters not included in the spreadsheet, their values will be kept the same as originally defined in the `tech_config.yaml`.
 
 The variation of parameters can be run by first creating an H2I model (with a `tech_config.yaml`), then modifying only the `tech_config` values that need to change.
-First, the spreadsheet with each case is loaded into a DataFrame using `load_tech_config_cases`.
+First, the spreadsheet with each case is loaded into a Pandas DataFrame using `load_tech_config_cases`.
 Then, in a loop, individual cases are selected and the model is modified to use these parameters using `modify_tech_config`.
 An example is shown in `run_ammonia_synloop.py`:
 

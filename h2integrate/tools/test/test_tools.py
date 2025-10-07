@@ -9,13 +9,13 @@ from h2integrate.core.h2integrate_model import H2IntegrateModel
 
 
 def test_tech_config_modifier(subtests):
-    """Test cases for modifiying and running tech_config from csv.
-    Using 01 example as test case
+    """Test cases for modifying and running tech_config from csv.
+    Using 15 example as test case
     """
 
-    # Make an H2I model from the 01 example
-    os.chdir(EXAMPLE_DIR / "01_onshore_steel_mn")
-    example_yaml = "01_onshore_steel_mn.yaml"
+    # Make an H2I model from the 15 example
+    os.chdir(EXAMPLE_DIR / "15_wind_solar_electrolyzer")
+    example_yaml = "15_wind_solar_electrolyzer.yaml"
     model = H2IntegrateModel(example_yaml)
 
     # Modify using csv
@@ -25,19 +25,19 @@ def test_tech_config_modifier(subtests):
         case = cases["Float Test"]
         model = modify_tech_config(model, case)
         model.run()
-        assert pytest.approx(model.prob.get_val("steel.LCOS")[0], rel=1e-3) == 1036.6771578253597
+        assert pytest.approx(model.prob.get_val("finance_subgroup_hydrogen.LCOH")[0], rel=1e-3) == 5.327792370180044
     with subtests.test("bool"):
         case = cases["Bool Test"]
         model = modify_tech_config(model, case)
         model.run()
-        assert pytest.approx(model.prob.get_val("steel.LCOS")[0], rel=1e-3) == 1214.1874646965953
+        assert pytest.approx(model.prob.get_val("finance_subgroup_hydrogen.LCOH")[0], rel=1e-3) == 5.226443205147294
     with subtests.test("int"):
         case = cases["Int Test"]
         model = modify_tech_config(model, case)
         model.run()
-        assert pytest.approx(model.prob.get_val("steel.LCOS")[0], rel=1e-3) == 1190.9501717506432
+        assert pytest.approx(model.prob.get_val("finance_subgroup_hydrogen.LCOH")[0], rel=1e-3) == 5.4601971211592115
     with subtests.test("str"):
         case = cases["Str Test"]
         model = modify_tech_config(model, case)
         model.run()
-        assert pytest.approx(model.prob.get_val("steel.LCOS")[0], rel=1e-3) == 1208.0782566057335
+        assert pytest.approx(model.prob.get_val("finance_subgroup_hydrogen.LCOH")[0], rel=1e-3) == 5.226443205147294

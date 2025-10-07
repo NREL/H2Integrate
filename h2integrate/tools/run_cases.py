@@ -14,7 +14,6 @@ def cast_by_name(type_name, value):
 
     Returns:
         The value in the specified data type
-
     """
 
     bool_map = {"true": True, "false": False, "yes": True, "no": False, "1": True, "0": False}
@@ -30,12 +29,12 @@ def cast_by_name(type_name, value):
         raise TypeError(msg)
 
 
-def getFromDict(dataDict, mapList):
+def get_from_dict(dataDict, mapList):
     """Get value from nested dictionary using a list of keys.
 
     Allows for programmatic calling of items in a nested dict using a variable-length list.
     Instead of dataDict[item1][item2][item3][item4][item5], you can use
-    getFromDict(dataDict, [item1, item2, item3, item4, item5]).
+    get_from_dict(dataDict, [item1, item2, item3, item4, item5]).
 
     Args:
         dataDict (dict): The nested dictionary to access.
@@ -46,18 +45,18 @@ def getFromDict(dataDict, mapList):
 
     Example:
         >>> data = {"a": {"b": {"c": 42}}}
-        >>> getFromDict(data, ["a", "b", "c"])
+        >>> get_from_dict(data, ["a", "b", "c"])
         42
     """
     return reduce(operator.getitem, mapList, dataDict)
 
 
-def setInDict(dataDict, mapList, value):
+def set_in_dict(dataDict, mapList, value):
     """Set value in nested dictionary using a list of keys.
 
     Allows for programmatic setting of items in a nested dict using a variable-length list.
     Instead of dataDict[item1][item2][item3][item4][item5] = value, you can use
-    setInDict(dataDict, [item1, item2, item3, item4, item5], value).
+    set_in_dict(dataDict, [item1, item2, item3, item4, item5], value).
 
     Args:
         dataDict (dict): The nested dictionary to modify.
@@ -66,11 +65,11 @@ def setInDict(dataDict, mapList, value):
 
     Example:
         >>> data = {"a": {"b": {}}}
-        >>> setInDict(data, ["a", "b", "c"], 42)
+        >>> set_in_dict(data, ["a", "b", "c"], 42)
         >>> data["a"]["b"]["c"]
         42
     """
-    getFromDict(dataDict, mapList[:-1])[mapList[-1]] = value
+    get_from_dict(dataDict, mapList[:-1])[mapList[-1]] = value
 
 
 def load_tech_config_cases(case_file):
@@ -127,6 +126,6 @@ def modify_tech_config(h2i_model, tech_config_case):
         # Remove nans from blank index fields
         while type(index_list[-1]) is not str:
             index_list = index_list[:-1]
-        setInDict(h2i_model.technology_config, index_list, cast_by_name(data_type, value))
+        set_in_dict(h2i_model.technology_config, index_list, cast_by_name(data_type, value))
 
     return h2i_model
