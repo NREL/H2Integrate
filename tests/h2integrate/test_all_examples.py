@@ -248,6 +248,27 @@ def test_co2h_methanol_example(subtests):
         assert pytest.approx(model.prob.get_val("methanol.LCOM")[0], rel=1e-6) == 1.381162
 
 
+@unittest.skipUnless(importlib.util.find_spec("mcm") is not None, "mcm is not installed")
+def test_doc_methanol_example(subtests):
+    # Change the current working directory to the CO2 Hydrogenation example's directory
+    os.chdir(EXAMPLE_DIR / "03_methanol" / "co2_hydrogenation_doc")
+
+    # Create a H2Integrate model
+    model = H2IntegrateModel(Path.cwd() / "03_co2h_methanol.yaml")
+
+    # Run the model
+    model.run()
+
+    model.post_process()
+
+    # Check levelized cost of methanol (LCOM)
+    with subtests.test("Check CO2 Hydrogenation LCOM"):
+        assert (
+            pytest.approx(model.prob.get_val("finance_subgroup_default.LCOM"), rel=1e-6)
+            == 2.58989518
+        )
+
+
 def test_wind_h2_opt_example(subtests):
     # Change the current working directory to the example's directory
     os.chdir(EXAMPLE_DIR / "05_wind_h2_opt")

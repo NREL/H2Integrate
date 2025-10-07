@@ -790,7 +790,7 @@ class H2IntegrateModel:
                 tech_configs = group_configs.get("tech_configs")
                 primary_commodity_type = group_configs.get("commodity")
                 # Skip steel finances; it provides its own finances
-                if any(c in tech_configs for c in ("steel", "methanol", "geoh2")):
+                if any(c in tech_configs for c in ("steel", "geoh2")):
                     continue
 
                 plant_producing_electricity = False
@@ -853,6 +853,12 @@ class H2IntegrateModel:
                         self.plant.connect(
                             f"{tech_name}.total_ammonia_produced",
                             f"finance_subgroup_{group_id}.total_ammonia_produced",
+                        )
+
+                    if "methanol" in tech_name and primary_commodity_type == "methanol":
+                        self.plant.connect(
+                            f"{tech_name}.total_methanol_produced",
+                            f"finance_subgroup_{group_id}.total_methanol_produced",
                         )
 
                     if (
