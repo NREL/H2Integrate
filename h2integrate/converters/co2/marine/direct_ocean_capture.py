@@ -76,7 +76,6 @@ class DOCPerformanceModel(MarineCarbonCapturePerformanceBaseClass):
         MarineCarbonCapturePerformanceBaseClass
 
     Computes:
-        - co2_capture_rate_mt: Hourly CO2 capture rate (t/h)
         - co2_out: Hourly CO2 capture rate (kg/h)
         - co2_capture_mtpy: Annual CO2 capture (t/year)
         - co2_capture_kgpy: Annual CO2 capture (kg/year)
@@ -130,7 +129,6 @@ class DOCPerformanceModel(MarineCarbonCapturePerformanceBaseClass):
             plot_range=[3910, 4030],
         )
 
-        outputs["co2_capture_rate_mt"] = ed_outputs.ED_outputs["mCC"]
         outputs["co2_out"] = ed_outputs.ED_outputs["mCC"] * 1000
         outputs["co2_capture_mtpy"] = max(ed_outputs.mCC_yr, 1e-6)  # Must be >0
         outputs["total_tank_volume_m3"] = range_outputs.V_aT_max + range_outputs.V_bT_max
