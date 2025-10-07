@@ -5,10 +5,7 @@ from h2integrate.transporters.cable import CablePerformanceModel
 from h2integrate.converters.steel.steel import SteelPerformanceModel, SteelCostAndFinancialModel
 from h2integrate.converters.wind.wind_plant import WindPlantCostModel, WindPlantPerformanceModel
 from h2integrate.finances.profast_financial import ProFastComp
-from h2integrate.transporters.generic_summer import (
-    GenericProductionSummerPerformanceModel,
-    GenericConsumptionSummerPerformanceModel,
-)
+from h2integrate.transporters.generic_summer import GenericSummerPerformanceModel
 from h2integrate.converters.hopp.hopp_wrapper import HOPPComponent
 from h2integrate.converters.solar.solar_pysam import PYSAMSolarPlantPerformanceModel
 from h2integrate.storage.hydrogen.eco_storage import H2Storage
@@ -146,8 +143,7 @@ supported_models = {
     "combiner_performance": GenericCombinerPerformanceModel,
     "splitter_performance": GenericSplitterPerformanceModel,
     # Simple Summers
-    "production_summer": GenericProductionSummerPerformanceModel,
-    "consumption_summer": GenericConsumptionSummerPerformanceModel,
+    "summer": GenericSummerPerformanceModel,
     # Storage
     "h2_storage": H2Storage,
     "hydrogen_tank_performance": HydrogenTankPerformanceModel,
