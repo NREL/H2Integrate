@@ -78,7 +78,6 @@ class DOCPerformanceModel(MarineCarbonCapturePerformanceBaseClass):
     Computes:
         - co2_out: Hourly CO2 capture rate (kg/h)
         - co2_capture_mtpy: Annual CO2 capture (t/year)
-        - co2_capture_kgpy: Annual CO2 capture (kg/year)
         - total_tank_volume_m3: Total tank volume (m^3)
         - plant_mCC_capacity_mtph: Plant carbon capture capacity (t/h)
     """
