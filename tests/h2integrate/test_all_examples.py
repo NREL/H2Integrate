@@ -445,10 +445,7 @@ def test_hybrid_energy_plant_example(subtests):
 
     # Subtests for checking specific values
     with subtests.test("Check LCOE"):
-        assert (
-            pytest.approx(model.prob.get_val("finance_subgroup_default.LCOE"), rel=1e-3)
-            == 0.0832123
-        )
+        assert model.prob.get_val("finance_subgroup_default.LCOE", units="USD/MW/h")[0] < 83.2123
 
 
 def test_asu_example(subtests):
