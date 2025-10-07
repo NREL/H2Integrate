@@ -19,3 +19,19 @@ The `commodity_type` and `description` are used in the finance model naming conv
 ## Currently supported general finance models
 
 - [``ProFastComp``](profastcomp:profastcompmodel): calculates levelized cost of commodity using ProFAST.
+
+## Custom finance models
+
+A general finance model can be defined similarly to a custom technology model. A custom finance model should be defined in the plant configuration file within the `finance_groups` section under `finance_parameters`.
+
+Below shows an example, similar to the [Wind Electrolyzer Example](https://github.com/NREL/H2Integrate/tree/develop/examples/08_wind_electrolyzer/) of how to define a custom finance model within the `plant_config.yaml` file:
+```yaml
+finance_parameters:
+  finance_groups:
+    my_finance_model:
+      finance_model: simple_lco_finance #this is the key to give it in for supported models
+      finance_model_class_name: SimpleLCOFinance #name of the finance class
+      finance_model_location: user_finance_model/simple_lco.py #filepath of the finance model relative to the plant_config.yaml file
+      model_inputs: #inputs for the finance model
+        discount_rate: 0.09
+```
