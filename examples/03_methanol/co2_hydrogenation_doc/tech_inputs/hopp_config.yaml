@@ -1,4 +1,4 @@
-site: #!include flatirons_site.yaml
+site:
   data:
     lat: 29.2
     lon: -94.6
@@ -31,31 +31,14 @@ technologies:
   wind:
     num_turbines: 24
     turbine_rating_kw: 15000.0
-    model_name: pysam #floris
+    model_name: pysam
     timestep: [0, 8760]
-    # floris_config: !include floris_input_lbw_6MW.yaml
     fin_model: !include default_fin_config.yaml
   grid:
     interconnect_kw: 360000 # Set higher than rated generation capacity
     fin_model: !include default_fin_config.yaml
 
 config:
-  simulation_options:
-    cache: true
-    wind:
-      skip_financial: false
-  dispatch_options:
-    battery_dispatch: load_following_heuristic # load_following_heuristic #heuristic
-    solver: cbc
-    n_look_ahead_periods: 48
-    grid_charging: false
-    pv_charging_only: false
-    include_lifecycle_count: false
   cost_info:
     wind_installed_cost_mw: 1380000 # (2022USD) 2025 costs in 2022 USD from NREL 2024 ATB for land-based wind. 2025 used as an overnight-capex lock-in date for 2030 operation
-    solar_installed_cost_mw: 1323000 # (2022USD) 2025 costs in 2022 USD from NREL 2024 ATB for utility-scale pv. 2025 used as an overnight-capex lock-in date for 2030 operation
-    storage_installed_cost_mwh: 310000 # (2022USD) 2025 costs in 2022 USD from NREL 2024 ATB for utility-scale battery storage. 2025 used as an overnight-capex lock-in date for 2030 operation
-    storage_installed_cost_mw: 311000 # (2022USD) 2025 costs in 2022 USD from NREL 2024 ATB for utility-scale battery storage. 2025 used as an overnight-capex lock-in date for 2030 operation
     wind_om_per_kw: 29 # (2022USD) 2030 costs in 2022 USD from 2024 ATB for land-based wind
-    pv_om_per_kw:  18 # (2022USD) 2030 costs in 2022 USD from NREL 2024 ATB for utility-scale PV
-    battery_om_per_kw: 15.525 # (2022USD) based on 2.5 percent of battery capex/kW for a 1-hour battery using both power and energy costs above

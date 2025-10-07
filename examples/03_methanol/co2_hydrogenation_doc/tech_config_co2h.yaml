@@ -8,9 +8,6 @@ technologies:
       config: !include tech_inputs/hopp_config.yaml
     cost_model:
       model: "hopp"
-    financial_model:
-      group: "1"
-    electrolyzer_rating: 300. # MW
     model_inputs:
       cost_parameters:
         cost_year: 2019
@@ -25,8 +22,6 @@ technologies:
       model: "eco_pem_electrolyzer_performance"
     cost_model:
       model: "singlitico_electrolyzer_cost"
-    financial_model:
-      group: "1"
     model_inputs:
       shared_parameters:
         location: "onshore"
@@ -78,8 +73,6 @@ technologies:
       model: "direct_ocean_capture_performance"
     cost_model:
       model: "direct_ocean_capture_cost"
-    financial_model:
-      group: "1"
     model_inputs:
       shared_parameters:
         power_single_ed_w: 2858628.25565643  # W
@@ -132,8 +125,6 @@ technologies:
       model: "co2h_methanol_plant_performance"
     cost_model:
       model: "co2h_methanol_plant_cost"
-    financial_model:
-      group: "1"
     model_inputs:
       shared_parameters:
         plant_capacity_kgpy: 94731053.0605257

@@ -17,17 +17,6 @@ site:
     }
   ]
 
-  resources:
-  # probably want to pre-load wind and solar data for this site
-  # but also want to figure out why the API call isn't working
-    wind_resource: # API call isn't working right now (ask Elenya)
-      resource_model: "wind_toolkit_v2_api"
-      resource_parameters:
-        resource_year: 2012
-
-# array of arrays containing left-to-right technology
-# interconnections; can support bidirectional connections
-# with the reverse definition.
 # this will naturally grow as we mature the interconnected tech
 technology_interconnections: [
   ["hopp", "electricity_splitter", "electricity", "cable"],
