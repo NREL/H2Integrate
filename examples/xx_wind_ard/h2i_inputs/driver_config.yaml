@@ -1,12 +1,12 @@
 name: "driver_config"
-description: "This analysis runs a wind plant hooked up to an electrolyzer and simple tank with the wind farm modeled using Ard"
+description: "This analysis runs a wind plant from Ard, a solar plant from pysam, and a simple battery"
 
 general:
-  folder_output: wind_electrolyzer
+  folder_output: windard_pv_battery
 
 driver:
   optimization:
-    flag: True
+    flag: False
     solver: COBYLA
     tol: 0.1
     catol: 15000

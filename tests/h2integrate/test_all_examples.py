@@ -766,3 +766,72 @@ def test_wind_battery_dispatch_example(subtests):
             model.prob.get_val("battery.electricity_missed_load")
         )
         assert pytest.approx(electricity_missed_load, rel=1e-6) == 165604.70758669
+
+
+def test_windard_pv_battery_dispatch_example(subtests):
+    # Change the current working directory to the example's directory
+    os.chdir(EXAMPLE_DIR / "xx_wind_ard")
+
+    # Create the model
+    model = H2IntegrateModel("./h2i_inputs/wind_pv_battery.yaml")
+
+    # Run the model
+    model.run()
+
+    # Post-process the results
+    model.post_process()
+
+    with subtests.test("Check wind generation"):
+        # Wind should generate some electricity
+        wind_electricity = model.prob.get_val("wind.electricity_out", units="MW")
+        assert wind_electricity.sum() > 0
+
+    with subtests.test("Check solar generation"):
+        # Solar should generate some electricity
+        solar_electricity = model.prob.get_val("solar.electricity_out", units="MW")
+        assert solar_electricity.sum() > 0
+
+    with subtests.test("Check battery gets wind and solar output"):
+        # Wind plus solar electricity should match battery input (direct connection)
+        battery_electricity_in = model.prob.get_val("battery.electricity_in", units="MW")
+        assert wind_electricity.sum() + solar_electricity.sum() == pytest.approx(
+            battery_electricity_in.sum(), rel=1e-6
+        )
+
+    with subtests.test("Check demand satisfaction"):
+        electricity_out = model.prob.get_val("battery.electricity_out", units="MW")
+        # Demand should be met for the last part of the year
+        assert np.allclose(
+            electricity_out[8700:],
+            model.prob.get_val("battery.electricity_demand_profile", units="MW/h")[8700:],
+        )
+
+    # Subtest for LCOE
+    with subtests.test("Check LCOE value"):
+        lcoe = model.prob.get_val("finance_subgroup_electricity.LCOE")[0]
+        assert pytest.approx(lcoe, rel=1e-6) == 0.07200626005588326
+
+    # Subtest for total electricity produced
+    with subtests.test("Check total electricity produced"):
+        total_electricity = model.prob.get_val(
+            "finance_subgroup_electricity.electricity_sum.total_electricity_produced",
+            units="MW*h/year",
+        ).sum()
+        assert total_electricity == pytest.approx(electricity_out.sum())
+
+    # Subtest for electricity curtailed
+    with subtests.test("Check electricity curtailed"):
+        electricity_curtailed = np.linalg.norm(
+            model.prob.get_val("battery.electricity_curtailed", units="MW")
+        )
+        assert (
+            pytest.approx(electricity_curtailed, rel=1e-6)
+            == wind_electricity + solar_electricity - electricity_out
+        )
+
+    # Subtest for missed load
+    with subtests.test("Check electricity missed load"):
+        electricity_missed_load = np.linalg.norm(
+            model.prob.get_val("battery.electricity_missed_load", units="MW")
+        )
+        assert electricity_missed_load == pytest.approx(468.28057304873026)

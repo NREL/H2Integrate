@@ -2,23 +2,17 @@ import openmdao.api as om
 from attrs import field, define
 from ard.api import set_up_ard_model
 
-from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
+from h2integrate.core.utilities import BaseConfig, CostModelBaseConfig, merge_shared_inputs
+from h2integrate.core.model_baseclasses import CostModelBaseClass
 
 
-class cost_year_var_om_component(om.ExplicitComponent):
-    def initialize(self):
-        self.options.declare("cost_year")
-        self.options.declare("var_opex")
-        self.options.declare("plant_config", types=dict)
-
+class WindArdCostComponent(CostModelBaseClass):
     def setup(self):
-        lifetime = self.options["plant_config"]["plant"]["plant_life"]
-        self.add_output("VarOpEx", val=[self.options["var_opex"]] * lifetime)
-        # Discrete Inputs
-        self.add_discrete_output("cost_year", val=self.options["cost_year"])
+        self.config = CostModelBaseConfig.from_dict(
+            merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost")
+        )
 
-        # Continuous Outputs
-        self.add_output("blade_solidity", 0.0, desc="Blade solidity")
+        super().setup()
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         pass
@@ -28,8 +22,6 @@ class cost_year_var_om_component(om.ExplicitComponent):
 class WindPlantArdModelConfig(BaseConfig):
     ard_system: dict = field()
     ard_data_path: str = field()
-    # cost_year: int = field()
-    # var_opex: float = field()
 
 
 class ArdWindPlantModel(om.Group):
@@ -46,24 +38,22 @@ class ArdWindPlantModel(om.Group):
         self.config = WindPlantArdModelConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance")
         )
-        # add cost year and var opex
-        # cost_year = self.config.cost_year
-        cost_year = self.options["tech_config"]["model_inputs"]["cost_parameters"]["cost_year"]
-        # var_opex = self.config.var_opex
-        var_opex = self.options["tech_config"]["model_inputs"]["cost_parameters"]["var_opex"]
+
         self.add_subsystem(
-            "var_opex_comp",
-            cost_year_var_om_component(
-                cost_year=cost_year, var_opex=var_opex, plant_config=self.options["plant_config"]
+            "wind_ard_cost",
+            WindArdCostComponent(
+                driver_config=self.options["driver_config"],
+                plant_config=self.options["plant_config"],
+                tech_config=self.options["tech_config"],
             ),
-            promotes=["*"],
+            promotes=["cost_year", "VarOpEx"],
         )
 
         # add ard sub-problem
-        ard_input_dict = self.options["tech_config"]["model_inputs"]["shared_parameters"][
+        ard_input_dict = self.options["tech_config"]["model_inputs"]["performance_parameters"][
             "ard_system"
         ]
-        ard_data_path = self.options["tech_config"]["model_inputs"]["shared_parameters"][
+        ard_data_path = self.options["tech_config"]["model_inputs"]["performance_parameters"][
             "ard_data_path"
         ]
 

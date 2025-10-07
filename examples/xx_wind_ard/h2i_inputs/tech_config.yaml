@@ -8,7 +8,8 @@ technologies:
     cost_model:
       model: "wind_plant_ard"
     model_inputs:
-      shared_parameters:
+      shared_parameters: {}
+      performance_parameters:
         ard_data_path: "./"
         ard_system:
           system: "onshore_batch"
@@ -16,7 +17,7 @@ technologies:
             windIO_plant: !include ../ard_inputs/windio.yaml
             layout:
               type: "grid"
-              N_turbines: 65
+              N_turbines: 9 # 65
               N_substations: 1
               spacing_primary: 7.0
               spacing_secondary: 7.0
@@ -57,9 +58,7 @@ technologies:
               opex_per_kW: 44.00  # (USD/kWh)
           analysis_options:
       cost_parameters:
-        cost_per_kw: 1300.0
         cost_year: 2024
-        var_opex: 0.0
   solar:
     performance_model:
       model: "pysam_solar_plant_performance"
@@ -111,7 +110,7 @@ technologies:
         max_discharge_rate: 150000.0  # kW/time step
         charge_efficiency: 0.985 # percent as decimal
         discharge_efficiency: 0.985 # percent as decimal
-        demand_profile: 300000 # kW grid capacity
+        demand_profile: 30000 # 300000 kW grid capacity
       cost_parameters:
         cost_year: 2022
         energy_capex: 72.54 # $/kWh
