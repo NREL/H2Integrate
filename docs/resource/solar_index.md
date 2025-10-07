@@ -1,7 +1,7 @@
 (solar_resource:models)=
 # Solar Resource: Model Overview
 
-- [GOES PSM v4 API](solar_resource:goes_v4_api): these models require an API key for the NREL developer network, the available models are:
+- [GOES PSM v4 API](solar_resource:goes_v4_api): these models require an API key for the [NREL developer network](https://developer.nrel.gov/signup/), the available models are:
     - "goes_aggregated_solar_v4_api"
     - "goes_conus_solar_v4_api"
     - "goes_fulldisc_solar_v4_api"
@@ -27,6 +27,7 @@ Solar resource models may output solar resource data, site information, informat
 Not all solar resource models will output all the data keys listed below. Please check the documentation for each solar resource model and solar performance model to ensure compatibility.
 ```
 
+(primary-data-solar-resource-timeseries)=
 ## Primary Data: Solar Resource Timeseries
 The below variables are outputted as arrays, with a length equal to the simulation duration. The naming convention and standardized units of solar resource variables are listed below:
 - `solar_direction`: solar direction in degrees (units are 'deg')
@@ -46,7 +47,7 @@ The below variables are outputted as arrays, with a length equal to the simulati
 - `snow_depth`: (units are 'cm')
 - `precipitable_water`: (units are 'cm')
 
-
+(additional-data-site-information)=
 ## Additional Data: Site Information
 - `site_id` (int): site id
 - `site_tz` (int | float): local timezone for the site
@@ -54,10 +55,12 @@ The below variables are outputted as arrays, with a length equal to the simulati
 - `site_lon` (float): longitude of the site
 - `elevation` (float | int): elevation of the site in meters
 
+(additional-data-data-source)=
 ## Additional Data: Data source
 - `data_tz` (int | float): timezone the data is in represented as an hour offset from UTC
 - `filepath` (str): filepath where the resource data was loaded from
 
+(additional-data-time-profile)=
 ## Additional Data: Time profile
 Time data may be outputted as arrays to represent the time profile of the resource data. These times should be represented in the timezone of `data_tz` (if outputted).
 - `year`: year as 4-digit value (i.e., 2019)

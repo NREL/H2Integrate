@@ -15,6 +15,7 @@ The remaining sections outline different options for setting environment variabl
 - [Set environment variables with a .yaml file](#set-environment-variables-with-yaml-file)
 - [Set environment variables with a .env file](#set-environment-variables-with-env-file)
 
+(save-environment-variables-with-conda-preferred)=
 ## Save Environment Variables with Conda (Preferred)
 
 After creating the conda environment for H2Integrate, you can [save environment variables with conda](https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#saving-environment-variables) within that environment.
@@ -60,7 +61,7 @@ unset NREL_API_EMAIL
 unset RESOURCE_DIR
 ```
 
-
+(set-environment-variables-with-yaml-file)=
 ## Set Environment Variables with .yaml file
 
 1. In `environment.yml`, add the following lines to the bottom of the file, and replace the
@@ -80,6 +81,7 @@ unset RESOURCE_DIR
     conda env create -f environment.yml
     ```
 
+(set-environment-variables-with-env-file)=
 ## Set Environment Variables with .env file
 
 ```{note}
