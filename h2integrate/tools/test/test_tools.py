@@ -25,19 +25,31 @@ def test_tech_config_modifier(subtests):
         case = cases["Float Test"]
         model = modify_tech_config(model, case)
         model.run()
-        assert pytest.approx(model.prob.get_val("finance_subgroup_hydrogen.LCOH")[0], rel=1e-3) == 5.327792370180044
+        assert (
+            pytest.approx(model.prob.get_val("finance_subgroup_hydrogen.LCOH")[0], rel=1e-3)
+            == 5.327792370180044
+        )
     with subtests.test("bool"):
         case = cases["Bool Test"]
         model = modify_tech_config(model, case)
         model.run()
-        assert pytest.approx(model.prob.get_val("finance_subgroup_hydrogen.LCOH")[0], rel=1e-3) == 5.226443205147294
+        assert (
+            pytest.approx(model.prob.get_val("finance_subgroup_hydrogen.LCOH")[0], rel=1e-3)
+            == 5.226443205147294
+        )
     with subtests.test("int"):
         case = cases["Int Test"]
         model = modify_tech_config(model, case)
         model.run()
-        assert pytest.approx(model.prob.get_val("finance_subgroup_hydrogen.LCOH")[0], rel=1e-3) == 5.4601971211592115
+        assert (
+            pytest.approx(model.prob.get_val("finance_subgroup_hydrogen.LCOH")[0], rel=1e-3)
+            == 5.4601971211592115
+        )
     with subtests.test("str"):
         case = cases["Str Test"]
         model = modify_tech_config(model, case)
         model.run()
-        assert pytest.approx(model.prob.get_val("finance_subgroup_hydrogen.LCOH")[0], rel=1e-3) == 5.226443205147294
+        assert (
+            pytest.approx(model.prob.get_val("finance_subgroup_hydrogen.LCOH")[0], rel=1e-3)
+            == 5.22644320514729
+        )
