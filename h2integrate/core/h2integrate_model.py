@@ -71,31 +71,40 @@ class H2IntegrateModel:
         self.tech_config_path = config_path.parent / config.get("technology_config")
         self.technology_config = load_tech_yaml(self.tech_config_path)
         self.plant_config = load_plant_yaml(config_path.parent / config.get("plant_config"))
+        self.plant_config_path = config_path.parent / config.get("plant_config")
 
-    def collect_custom_models(self):
-        """
-        Collect custom models from the technology configuration.
-
-        This method loads custom models from the specified directory and adds them to the
+    def create_custom_models(self, model_config, config_parent_path, model_types, prefix=""):
+        """This method loads custom models from the specified directory and adds them to the
         supported models dictionary.
+
+        Args:
+            model_config (dict): dictionary containing models, such as
+                `technology_config["technologies"]`
+            config_parent_path (Path): parent path of the input file that `model_config` comes from.
+                Should either be `plant_config_path.parent` or `tech_config_path.parent`
+            model_types (list[str]): list of keynames to search for in `model_config.values()`.
+                Should be ["performance_model", "cost_model", "financial_model"] if `model_config`
+                is technology_config["technologies"].
+            prefix (str, optional): Prefix of "model_class_name", "model_location" and "model".
+                Defaults to "". Should be "finance_" if looking for custom general finance models.
         """
 
-        for tech_name, tech_config in self.technology_config["technologies"].items():
-            for model_type in ["performance_model", "cost_model", "finance_model"]:
-                if model_type in tech_config:
-                    model_name = tech_config[model_type].get("model")
+        for name, config in model_config.items():
+            for model_type in model_types:
+                if model_type in config:
+                    model_name = config[model_type].get(f"{prefix}model")
                     if (model_name not in self.supported_models) and (model_name is not None):
-                        model_class_name = tech_config[model_type].get("model_class_name")
-                        model_location = tech_config[model_type].get("model_location")
+                        model_class_name = config[model_type].get(f"{prefix}model_class_name")
+                        model_location = config[model_type].get(f"{prefix}model_location")
 
                         if not model_class_name or not model_location:
                             raise ValueError(
-                                f"Custom {model_type} for {tech_name} must specify "
-                                "'model_class_name' and 'model_location'."
+                                f"Custom {model_type} for {name} must specify "
+                                f"'{prefix}model_class_name' and '{prefix}model_location'."
                             )
 
                         # Resolve the full path of the model location
-                        model_path = self.tech_config_path.parent / model_location
+                        model_path = config_parent_path / model_location
 
                         if not model_path.exists():
                             raise FileNotFoundError(
@@ -113,11 +122,11 @@ class H2IntegrateModel:
 
                     else:
                         if (
-                            tech_config[model_type].get("model_class_name") is not None
-                            or tech_config[model_type].get("model_location") is not None
+                            config[model_type].get(f"{prefix}model_class_name") is not None
+                            or config[model_type].get(f"{prefix}model_location") is not None
                         ):
                             msg = (
-                                f"Custom model_class_name or model_location "
+                                f"Custom {prefix}model_class_name or {prefix}model_location "
                                 f"specified for '{model_name}', "
                                 f"but '{model_name}' is a built-in H2Integrate "
                                 "model. Using built-in model instead is not allowed. "
@@ -125,6 +134,41 @@ class H2IntegrateModel:
                                 "in your configuration."
                             )
                             raise ValueError(msg)
+
+    def collect_custom_models(self):
+        """Collect custom models from the technology configuration and
+        general finance models found in the plant configuration.
+        """
+        # check for custom technology models
+        self.create_custom_models(
+            self.technology_config["technologies"],
+            self.tech_config_path.parent,
+            ["performance_model", "cost_model", "finance_model"],
+        )
+
+        # check for custom finance models
+        if "finance_parameters" in self.plant_config:
+            finance_groups = self.plant_config["finance_parameters"]["finance_groups"]
+
+            # check for single custom finance models
+            if "model_inputs" in finance_groups:
+                self.create_custom_models(
+                    self.plant_config,
+                    self.plant_config_path.parent,
+                    ["finance_groups"],
+                    prefix="finance_",
+                )
+
+            # check for named finance models
+            if any("model_inputs" in v for k, v in finance_groups.items()):
+                finance_model_names = [k for k, v in finance_groups.items() if "model_inputs" in v]
+                finance_groups_config = {"finance_groups": finance_groups}
+                self.create_custom_models(
+                    finance_groups_config,
+                    self.plant_config_path.parent,
+                    finance_model_names,
+                    prefix="finance_",
+                )
 
     def create_site_model(self):
         site_group = om.Group()
