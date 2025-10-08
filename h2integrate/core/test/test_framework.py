@@ -191,3 +191,87 @@ def test_technology_connections():
     # Clean up temporary YAML files
     temp_plant_config.unlink(missing_ok=True)
     temp_highlevel_yaml.unlink(missing_ok=True)
+
+
+def test_resource_connection_error_missing_connection():
+    os.chdir(examples_dir / "08_wind_electrolyzer")
+
+    # Path to the original plant_config.yaml and high-level yaml in the example directory
+    orig_plant_config = Path.cwd() / "plant_config.yaml"
+    temp_plant_config = Path.cwd() / "temp_plant_config.yaml"
+    orig_highlevel_yaml = Path.cwd() / "wind_plant_electrolyzer.yaml"
+    temp_highlevel_yaml = Path.cwd() / "temp_08_wind_electrolyzer.yaml"
+
+    shutil.copy(orig_plant_config, temp_plant_config)
+    shutil.copy(orig_highlevel_yaml, temp_highlevel_yaml)
+
+    # Load the plant_config YAML content
+    plant_config_data = load_plant_yaml(temp_plant_config)
+
+    # Remove resource to tech connection
+    plant_config_data.pop("resource_to_tech_connections")
+
+    # Save the modified tech_config YAML back
+    with temp_plant_config.open("w") as f:
+        yaml.safe_dump(plant_config_data, f)
+
+    # Load the high-level YAML content
+    with temp_highlevel_yaml.open() as f:
+        highlevel_data = yaml.safe_load(f)
+
+    # Modify the high-level YAML to point to the temp tech_config file
+    highlevel_data["plant_config"] = str(temp_plant_config.name)
+
+    # Save the modified high-level YAML back
+    with temp_highlevel_yaml.open("w") as f:
+        yaml.safe_dump(highlevel_data, f)
+
+    with pytest.raises(ValueError) as excinfo:
+        H2IntegrateModel(temp_highlevel_yaml)
+        assert "Resource models ['wind_resource'] are not in" in str(excinfo.value)
+
+    # Clean up temporary YAML files
+    temp_plant_config.unlink(missing_ok=True)
+    temp_highlevel_yaml.unlink(missing_ok=True)
+
+
+def test_resource_connection_error_missing_resource():
+    os.chdir(examples_dir / "08_wind_electrolyzer")
+
+    # Path to the original plant_config.yaml and high-level yaml in the example directory
+    orig_plant_config = Path.cwd() / "plant_config.yaml"
+    temp_plant_config = Path.cwd() / "temp_plant_config.yaml"
+    orig_highlevel_yaml = Path.cwd() / "wind_plant_electrolyzer.yaml"
+    temp_highlevel_yaml = Path.cwd() / "temp_08_wind_electrolyzer.yaml"
+
+    shutil.copy(orig_plant_config, temp_plant_config)
+    shutil.copy(orig_highlevel_yaml, temp_highlevel_yaml)
+
+    # Load the plant_config YAML content
+    plant_config_data = load_plant_yaml(temp_plant_config)
+
+    # Remove resource
+    plant_config_data["site"]["resources"].pop("wind_resource")
+
+    # Save the modified tech_config YAML back
+    with temp_plant_config.open("w") as f:
+        yaml.safe_dump(plant_config_data, f)
+
+    # Load the high-level YAML content
+    with temp_highlevel_yaml.open() as f:
+        highlevel_data = yaml.safe_load(f)
+
+    # Modify the high-level YAML to point to the temp tech_config file
+    highlevel_data["plant_config"] = str(temp_plant_config.name)
+
+    # Save the modified high-level YAML back
+    with temp_highlevel_yaml.open("w") as f:
+        yaml.safe_dump(highlevel_data, f)
+
+    with pytest.raises(ValueError) as excinfo:
+        H2IntegrateModel(temp_highlevel_yaml)
+        assert "Missing resource(s) are ['wind_resource']." in str(excinfo.value)
+
+    # Clean up temporary YAML files
+    temp_plant_config.unlink(missing_ok=True)
+    temp_highlevel_yaml.unlink(missing_ok=True)
