@@ -6,9 +6,11 @@ import pytest
 import openmdao.api as om
 
 from h2integrate.storage.battery.pysam_battery import PySAMBatteryPerformanceModel
-from h2integrate.control.control_rules.storage.battery import PyomoDispatchBattery
 from h2integrate.control.control_strategies.pyomo_controllers import (
     HeuristicLoadFollowingController,
+)
+from h2integrate.control.control_rules.storage.pyomo_storage_rule_baseclass import (
+    PyomoRuleStorageBaseclass,
 )
 
 
@@ -44,7 +46,7 @@ def test_heuristic_load_following_battery_dispatch(subtests):
 
     prob.model.add_subsystem(
         "pyomo_dispatch_generic_storage",
-        PyomoDispatchBattery(
+        PyomoRuleStorageBaseclass(
             plant_config=plant_config, tech_config=tech_config["technologies"]["battery"]
         ),
         promotes=["*"],
