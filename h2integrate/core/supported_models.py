@@ -36,7 +36,6 @@ from h2integrate.converters.hydrogen.pem_electrolyzer import (
 from h2integrate.converters.solar.atb_res_com_pv_cost import ATBResComPVCostModel
 from h2integrate.converters.solar.atb_utility_pv_cost import ATBUtilityPVCostModel
 from h2integrate.resource.wind.nrel_developer_wtk_api import WTKNRELDeveloperAPIWindResource
-from h2integrate.control.control_rules.storage.battery import PyomoDispatchBattery
 from h2integrate.converters.methanol.smr_methanol_plant import (
     SMRMethanolPlantCostModel,
     SMRMethanolPlantFinanceModel,
@@ -51,7 +50,6 @@ from h2integrate.converters.methanol.co2h_methanol_plant import (
     CO2HMethanolPlantFinanceModel,
     CO2HMethanolPlantPerformanceModel,
 )
-from h2integrate.control.control_rules.storage.h2_storage import PyomoDispatchH2Storage
 from h2integrate.converters.natural_gas.natural_gas_cc_ct import (
     NaturalGasCostModel,
     NaturalGasPerformanceModel,
@@ -92,6 +90,9 @@ from h2integrate.converters.hydrogen.geologic.stimulated_geoh2_plant import (
     StimulatedGeoH2CostModel,
     StimulatedGeoH2FinanceModel,
     StimulatedGeoH2PerformanceModel,
+)
+from h2integrate.control.control_rules.storage.pyomo_storage_rule_baseclass import (
+    PyomoRuleStorageBaseclass,
 )
 
 
@@ -163,8 +164,7 @@ supported_models = {
     "heuristic_load_following_controller": HeuristicLoadFollowingController,
     # Dispatch
     "pyomo_dispatch_generic_convertor": PyomoDispatchGenericConvertor,
-    "pyomo_dispatch_h2_storage": PyomoDispatchH2Storage,
-    "pyomo_dispatch_battery": PyomoDispatchBattery,
+    "pyomo_dispatch_generic_storage": PyomoRuleStorageBaseclass,
     # Feedstock
     "feedstock_performance": FeedstockPerformanceModel,
     "feedstock_cost": FeedstockCostModel,

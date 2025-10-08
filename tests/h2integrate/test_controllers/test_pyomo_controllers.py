@@ -43,7 +43,7 @@ def test_heuristic_load_following_battery_dispatch(subtests):
     prob = om.Problem()
 
     prob.model.add_subsystem(
-        "pyomo_dispatch_battery",
+        "pyomo_dispatch_generic_storage",
         PyomoDispatchBattery(
             plant_config=plant_config, tech_config=tech_config["technologies"]["battery"]
         ),

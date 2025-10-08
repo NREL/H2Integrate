@@ -4,7 +4,7 @@ description: "This hybrid plant stores and discharges electricity"
 technologies:
    battery:
     dispatch_rule_set:
-      model: "pyomo_dispatch_battery"
+      model: "pyomo_dispatch_generic_storage"
     control_strategy:
       model: "heuristic_load_following_controller"
     performance_model:
