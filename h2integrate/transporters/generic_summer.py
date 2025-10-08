@@ -86,9 +86,9 @@ class GenericConsumptionSummerPerformanceModel(om.ExplicitComponent):
 
         if self.config.feedstock == "electricity":
             # NOTE: this should be updated in overhaul required for flexible dt
-            summed_units = f"{self.config.feedstock}*h"
+            summed_units = f"{self.config.feedstock_units}*h"
         else:
-            summed_units = self.config.feedstock
+            summed_units = self.config.feedstock_units
 
         self.add_input(
             f"{self.config.feedstock}_in",

@@ -2,6 +2,7 @@ import numpy as np
 import openmdao.api as om
 from pytest import approx, fixture
 
+from h2integrate.transporters.generic_summer import GenericConsumptionSummerPerformanceModel
 from h2integrate.transporters.generic_combiner import GenericCombinerPerformanceModel
 
 
@@ -32,6 +33,26 @@ def combiner_tech_config_hydrogen():
         }
     }
     return h2_combiner_dict
+
+
+@fixture
+def summer_tech_config_electricity():
+    elec_summer_dict = {
+        "model_inputs": {
+            "performance_parameters": {"feedstock": "electricity", "feedstock_units": "kW"}
+        }
+    }
+    return elec_summer_dict
+
+
+@fixture
+def summer_tech_config_hydrogen():
+    h2_summer_dict = {
+        "model_inputs": {
+            "performance_parameters": {"feedstock": "hydrogen", "feedstock_units": "kg"}
+        }
+    }
+    return h2_summer_dict
 
 
 def test_generic_combiner_performance_power(plant_config, combiner_tech_config_electricity):
@@ -80,3 +101,49 @@ def test_generic_combiner_performance_hydrogen(plant_config, combiner_tech_confi
     prob.run_model()
 
     assert prob.get_val("hydrogen_out", units="kg") == approx(hydrogen_output, rel=1e-5)
+
+
+def test_generic_consumption_summer_performance_electricity(
+    plant_config, summer_tech_config_electricity
+):
+    prob = om.Problem()
+    comp = GenericConsumptionSummerPerformanceModel(
+        plant_config=plant_config, tech_config=summer_tech_config_electricity, driver_config={}
+    )
+    prob.model.add_subsystem("comp", comp, promotes=["*"])
+    ivc = om.IndepVarComp()
+    ivc.add_output("electricity_in", val=np.zeros(8760), units="kW")
+    prob.model.add_subsystem("ivc", ivc, promotes=["*"])
+
+    prob.setup()
+
+    electricity_input = rng.random(8760)
+    total_electricity_consumed = sum(electricity_input)
+
+    prob.set_val("electricity_in", electricity_input, units="kW")
+    prob.run_model()
+
+    assert prob.get_val("total_electricity_consumed") == approx(
+        total_electricity_consumed, rel=1e-5
+    )
+
+
+def test_generic_consumption_summer_performance_hydrogen(plant_config, summer_tech_config_hydrogen):
+    prob = om.Problem()
+    comp = GenericConsumptionSummerPerformanceModel(
+        plant_config=plant_config, tech_config=summer_tech_config_hydrogen, driver_config={}
+    )
+    prob.model.add_subsystem("comp", comp, promotes=["*"])
+    ivc = om.IndepVarComp()
+    ivc.add_output("hydrogen_in", val=np.zeros(8760), units="kg")
+    prob.model.add_subsystem("ivc", ivc, promotes=["*"])
+
+    prob.setup()
+
+    hydrogen_input = rng.random(8760)
+    total_hydrogen_consumed = sum(hydrogen_input)
+
+    prob.set_val("hydrogen_in", hydrogen_input, units="kg")
+    prob.run_model()
+
+    assert prob.get_val("total_hydrogen_consumed") == approx(total_hydrogen_consumed, rel=1e-5)
