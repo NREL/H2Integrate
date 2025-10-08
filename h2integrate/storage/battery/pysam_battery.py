@@ -23,7 +23,7 @@ class BatteryOutputs:
     P_chargeable: Sequence
     P_dischargeable: Sequence
     unmet_demand: list[float]
-    excess_commodity: list[float]
+    unused_commodity: list[float]
 
     """
     Container for simulated outputs from the `BatteryStateful` and H2I dispatch models.
@@ -40,7 +40,7 @@ class BatteryOutputs:
         P_dischargeable (Sequence): Maximum estimated dischargeable power [kW] per timestep.
 
         unmet_demand (list[float]): Unmet demand [kW] per timestep.
-        excess_commodity (list[float]): Excess available commodity [kW] per timestep.
+        unused_commodity (list[float]): Unused available commodity [kW] per timestep.
     """
 
     def __init__(self, n_timesteps, n_control_window):
@@ -60,7 +60,7 @@ class BatteryOutputs:
 
         self.dispatch_lifecycles_per_control_window = [None] * int(n_timesteps / n_control_window)
 
-        self.component_attributes = ["unmet_demand", "excess_commodity"]
+        self.component_attributes = ["unmet_demand", "unused_commodity"]
         for attr in self.component_attributes:
             setattr(self, attr, [0.0] * n_timesteps)
 
@@ -137,7 +137,7 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass):
 
     This class integrates the NREL PySAM `BatteryStateful` model into
     an OpenMDAO component. It provides inputs and outputs for battery
-    capacity, charge/discharge power, state of charge, and unmet or excess
+    capacity, charge/discharge power, state of charge, and unmet or unused
     demand. The component can be used in standalone simulations or in
     dispatch optimization frameworks (e.g., Pyomo).
 
@@ -149,11 +149,11 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass):
             the selected chemistry and configuration parameters.
         outputs (BatteryOutputs):
             Container for simulation outputs such as SOC, chargeable/dischargeable
-            power, unmet demand, and excess commodities.
+            power, unmet demand, and unused commodities.
         unmet_demand (float):
             Tracks unmet demand during simulation (kW).
-        excess_commodity (float):
-            Tracks excess commodity during simulation (kW).
+        unused_commodity (float):
+            Tracks unused commodity during simulation (kW).
 
     Inputs:
         max_charge_rate (float):
@@ -172,8 +172,8 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass):
             Maximum dischargeable power (kW).
         unmet_demand_out (ndarray):
             Remaining unmet demand after discharge (kW).
-        excess_commodity_out (ndarray):
-            Excess energy not absorbed by the battery (kW).
+        unused_commodity_out (ndarray):
+            Unused energy not absorbed by the battery (kW).
         electricity_out (ndarray):
             Supplied electricity from the battery to meet demand (kW).
         SOC (ndarray):
@@ -188,7 +188,7 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass):
         compute(inputs, outputs, discrete_inputs, discrete_outputs):
             Runs the PySAM BatteryStateful model for a simulation timestep,
             updating outputs such as SOC, charge/discharge limits, unmet
-            demand, and excess commodities.
+            demand, and unused commodities.
         simulate(electricity_in, demand_in, time_step_duration, control_variable,
             sim_start_index=0):
             Simulates the battery behavior across timesteps using either
@@ -273,11 +273,11 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass):
         )
 
         self.add_output(
-            "excess_electricity_out",
+            "unused_electricity_out",
             val=0.0,
             copy_shape="electricity_in",
             units="kW",
-            desc="Excess generated commodity",
+            desc="Unused generated commodity",
         )
 
         # Initialize the PySAM BatteryStateful model with defaults
@@ -307,7 +307,7 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass):
                     break
 
         self.unmet_demand = 0.0
-        self.excess_commodity = 0.0
+        self.unused_commodity = 0.0
 
     def compute(self, inputs, outputs, discrete_inputs=[], discrete_outputs=[]):
         """Run the PySAM Battery model for one simulation step.
@@ -375,7 +375,7 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass):
                 total_power_out,
                 battery_power_out,
                 unmet_demand,
-                excess_commodity,
+                unused_commodity,
                 soc,
             ) = dispatch(self.simulate, kwargs, inputs)
 
@@ -388,11 +388,11 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass):
             )
             # TODO how to calculate? these are not being calculated
             unmet_demand = self.outputs.unmet_demand
-            excess_commodity = self.outputs.excess_commodity
+            unused_commodity = self.outputs.unused_commodity
             battery_power_out = self.outputs.P
 
         outputs["unmet_electricity_demand_out"] = unmet_demand
-        outputs["excess_electricity_out"] = excess_commodity
+        outputs["unused_electricity_out"] = unused_commodity
         outputs["battery_electricity_out"] = battery_power_out
         outputs["electricity_out"] = total_power_out
         outputs["SOC"] = soc
@@ -410,7 +410,7 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass):
 
         Iterates over input electricity values and demand to simulate charge
         and discharge behavior. Applies SOC bounds, unmet demand tracking,
-        and excess commodity calculations.
+        and unused commodity calculations.
 
         Args:
             electricity_in (list[float]):

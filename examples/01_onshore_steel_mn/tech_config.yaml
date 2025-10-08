@@ -77,7 +77,7 @@ technologies:
         inflation_rate: 0.0 # 0 for nominal analysis
         feedstocks:
           oxygen_market_price: 0.0 # 0.03 $/kgO2 if `o2_heat_integration` == 1
-          excess_oxygen: 395
+          unused_oxygen: 395
           lime_unitcost: 122.1
           carbon_unitcost: 236.97
           electricity_cost: 48.92

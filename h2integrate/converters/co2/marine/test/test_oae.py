@@ -72,7 +72,7 @@ class TestOAEPerformanceModel(unittest.TestCase):
         plant_mCC_capacity_mtph = self.prob.get_val("plant_mCC_capacity_mtph")
         alkaline_seawater_flow_rate = self.prob.get_val("alkaline_seawater_flow_rate")
         alkaline_seawater_pH = self.prob.get_val("alkaline_seawater_pH")
-        excess_acid = self.prob.get_val("excess_acid")
+        unused_acid = self.prob.get_val("unused_acid")
 
         # Assert values (allowing for small numerical tolerance)
         assert_near_equal(np.mean(co2_out), 1108.394704250361, tolerance=1e-3)
@@ -80,7 +80,7 @@ class TestOAEPerformanceModel(unittest.TestCase):
         assert_near_equal(plant_mCC_capacity_mtph, [1.10854656], tolerance=1e-6)
         assert_near_equal(np.mean(alkaline_seawater_flow_rate), 3.2395561643835618, tolerance=1e-6)
         assert_near_equal(np.mean(alkaline_seawater_pH), 9.145157555568293, tolerance=1e-6)
-        assert_near_equal(np.mean(excess_acid), 58.32, tolerance=1e-6)
+        assert_near_equal(np.mean(unused_acid), 58.32, tolerance=1e-6)
 
 
 @unittest.skipUnless(importlib.util.find_spec("mcm") is None, "mcm is installed")

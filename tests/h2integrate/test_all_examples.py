@@ -819,12 +819,12 @@ def test_wind_battery_dispatch_example(subtests):
         )[0]
         assert total_electricity == pytest.approx(62797265.9296355, rel=1e-6)
 
-    # Subtest for electricity excess_commodity
-    with subtests.test("Check electricity excess commodity"):
-        electricity_excess_commodity = np.linalg.norm(
-            model.prob.get_val("battery.excess_electricity_out")
+    # Subtest for electricity unused_commodity
+    with subtests.test("Check electricity unused commodity"):
+        electricity_unused_commodity = np.linalg.norm(
+            model.prob.get_val("battery.unused_electricity_out")
         )
-        assert electricity_excess_commodity == pytest.approx(412531.73840450746, rel=1e-6)
+        assert electricity_unused_commodity == pytest.approx(412531.73840450746, rel=1e-6)
 
     # Subtest for unmet demand
     with subtests.test("Check electricity unmet demand"):
@@ -879,12 +879,12 @@ def test_simple_dispatch_example(subtests):
         )[0]
         assert pytest.approx(total_electricity, rel=1e-6) == 62797265.9296355
 
-    # Subtest for electricity excess_commodity
-    with subtests.test("Check electricity excess commodity"):
-        electricity_excess_commodity = np.linalg.norm(
-            model.prob.get_val("battery.electricity_excess_commodity")
+    # Subtest for electricity unused_commodity
+    with subtests.test("Check electricity unused commodity"):
+        electricity_unused_commodity = np.linalg.norm(
+            model.prob.get_val("battery.electricity_unused_commodity")
         )
-        assert pytest.approx(electricity_excess_commodity, rel=1e-6) == 412531.73840450746
+        assert pytest.approx(electricity_unused_commodity, rel=1e-6) == 412531.73840450746
 
     # Subtest for unmet demand
     with subtests.test("Check electricity unmet demand"):

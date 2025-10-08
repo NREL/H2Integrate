@@ -186,7 +186,7 @@ class DemandOpenLoopController(ControllerBaseClass):
             - Units: Defined in `commodity_rate_units` (e.g., "kg/h").
         {commodity_name}_soc (float): State of charge (SOC) timeseries for the storage system.
             - Units: "unitless" (percentage of maximum capacity given as a ratio between 0 and 1).
-        {commodity_name}_excess_commodity (float): Curtailment timeseries for unused
+        {commodity_name}_unused_commodity (float): Curtailment timeseries for unused
         input commodity.
             - Units: Defined in `commodity_rate_units` (e.g., "kg/h").
             - Note: curtailment in this case does not reduce what the converter produces, but
@@ -240,7 +240,7 @@ class DemandOpenLoopController(ControllerBaseClass):
         )
 
         self.add_output(
-            f"{commodity_name}_excess_commodity",
+            f"{commodity_name}_unused_commodity",
             copy_shape=f"{commodity_name}_in",
             units=self.config.commodity_rate_units,
             desc=f"{commodity_name} curtailment timeseries for inflow commodity at \
@@ -277,7 +277,7 @@ class DemandOpenLoopController(ControllerBaseClass):
 
         # initialize outputs
         soc_array = outputs[f"{commodity_name}_soc"]
-        excess_commodity_array = outputs[f"{commodity_name}_excess_commodity"]
+        unused_commodity_array = outputs[f"{commodity_name}_unused_commodity"]
         output_array = outputs[f"{commodity_name}_out"]
         unmet_demand_array = outputs[f"{commodity_name}_unmet_demand"]
 
@@ -291,7 +291,7 @@ class DemandOpenLoopController(ControllerBaseClass):
             available_discharge = (soc - min_charge_percent) * max_capacity
 
             # Initialize persistent variables for curtailment and missed load
-            excess_input = 0.0
+            unused_input = 0.0
             charge = 0.0
 
             # Determine the output flow based on demand_t and SOC
@@ -309,14 +309,14 @@ class DemandOpenLoopController(ControllerBaseClass):
                 # applying `discharge_efficiency`.
                 output_array[t] = input_flow + discharge * discharge_efficiency
             else:
-                # Charge storage with excess input
-                # `excess_input` is as seen outside the storage
-                excess_input = input_flow - demand_t
+                # Charge storage with unused input
+                # `unused_input` is as seen outside the storage
+                unused_input = input_flow - demand_t
                 # `charge` is as seen by the storage, but the things being compared should all be as
                 # seen outside the storage so we need to adjust `available_charge` outside the
                 # storage view and the final result back into the storage view.
                 charge = (
-                    min(excess_input, available_charge / charge_efficiency, max_charge_rate)
+                    min(unused_input, available_charge / charge_efficiency, max_charge_rate)
                     * charge_efficiency
                 )
                 soc += charge / max_capacity  # soc is a ratio with value between 0 and 1
@@ -330,7 +330,7 @@ class DemandOpenLoopController(ControllerBaseClass):
 
             # Record the curtailment at the current time step. Adjust `charge` from storage view to
             # outside view for curtailment
-            excess_commodity_array[t] = max(0, float(excess_input - charge / charge_efficiency))
+            unused_commodity_array[t] = max(0, float(unused_input - charge / charge_efficiency))
 
             # Record the missed load at the current time step
             unmet_demand_array[t] = max(0, (demand_t - output_array[t]))
@@ -340,8 +340,8 @@ class DemandOpenLoopController(ControllerBaseClass):
         # Return the SOC
         outputs[f"{commodity_name}_soc"] = soc_array
 
-        # Return the excess commodity
-        outputs[f"{commodity_name}_excess_commodity"] = excess_commodity_array
+        # Return the unused commodity
+        outputs[f"{commodity_name}_unused_commodity"] = unused_commodity_array
 
         # Return the unmet load demand
         outputs[f"{commodity_name}_unmet_demand"] = unmet_demand_array

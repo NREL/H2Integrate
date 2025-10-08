@@ -186,7 +186,7 @@ def test_heuristic_load_following_battery_dispatch(subtests):
         ]
     )
 
-    expected_excess_commodity_out = np.array(
+    expected_unused_commodity_out = np.array(
         [
             0.0,
             0.0,
@@ -235,10 +235,10 @@ def test_heuristic_load_following_battery_dispatch(subtests):
             == prob.get_val("battery.unmet_electricity_demand_out")[0:24]
         )
 
-    with subtests.test("Check excess_electricity_out"):
+    with subtests.test("Check unused_electricity_out"):
         assert (
-            pytest.approx(expected_excess_commodity_out)
-            == prob.get_val("battery.excess_electricity_out")[0:24]
+            pytest.approx(expected_unused_commodity_out)
+            == prob.get_val("battery.unused_electricity_out")[0:24]
         )
 
     # Test the case where the battery is discharged to its lower SOC limit
@@ -267,7 +267,7 @@ def test_heuristic_load_following_battery_dispatch(subtests):
             2.9969593461021406e04,
         ]
     )
-    expected_excess_commodity_out = np.zeros(5)
+    expected_unused_commodity_out = np.zeros(5)
 
     with subtests.test("Check electricity_out for min SOC"):
         assert (
@@ -289,10 +289,10 @@ def test_heuristic_load_following_battery_dispatch(subtests):
             == prob.get_val("battery.unmet_electricity_demand_out")[:5]
         )
 
-    with subtests.test("Check excess_commodity_out for min SOC"):
+    with subtests.test("Check unused_commodity_out for min SOC"):
         assert (
-            pytest.approx(expected_excess_commodity_out)
-            == prob.get_val("battery.excess_electricity_out")[:5]
+            pytest.approx(expected_unused_commodity_out)
+            == prob.get_val("battery.unused_electricity_out")[:5]
         )
 
     # Test the case where the battery is charged to its upper SOC limit
@@ -317,7 +317,7 @@ def test_heuristic_load_following_battery_dispatch(subtests):
     # expected_SOC = [66.00200558, 79.43840635, 90.0, 90.0, 90.0]
     expected_SOC = np.array([66.00200558, 79.43840635, 89.02326413, 89.02326413, 89.02326413])
     expected_unmet_demand_out = np.array([0.00847709, 0.0, 0.0, 0.0, 0.0])
-    expected_excess_commodity_out = np.array(
+    expected_unused_commodity_out = np.array(
         [0.00000000e00, 2.64132028e01, 8.89077266e03, 3.04088135e04, 3.00564087e04]
     )
     # I think this is the right expected_electricity_out since the battery won't
@@ -328,7 +328,7 @@ def test_heuristic_load_following_battery_dispatch(subtests):
     # -23310.54620182, 0.0, 0.0]
     # expected_SOC = [66.00200558, 79.43840635, 90.0, 90.0, 90.0]
     # expected_unmet_demand_out = np.zeros(5)
-    # expected_excess_commodity_out = [0.0, 0.0, 6150.14483911, 30000.0, 30000.0]
+    # expected_unused_commodity_out = [0.0, 0.0, 6150.14483911, 30000.0, 30000.0]
 
     abs_tol = 1e-6
     rel_tol = 1e-1
@@ -353,8 +353,8 @@ def test_heuristic_load_following_battery_dispatch(subtests):
             == prob.get_val("battery.unmet_electricity_demand_out")[:5]
         )
 
-    with subtests.test("Check excess_commodity_out for max SOC"):
+    with subtests.test("Check unused_commodity_out for max SOC"):
         assert (
-            pytest.approx(expected_excess_commodity_out, abs=abs_tol, rel=rel_tol)
-            == prob.get_val("battery.excess_electricity_out")[:5]
+            pytest.approx(expected_unused_commodity_out, abs=abs_tol, rel=rel_tol)
+            == prob.get_val("battery.unused_electricity_out")[:5]
         )

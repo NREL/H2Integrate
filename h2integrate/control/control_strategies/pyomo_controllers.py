@@ -142,7 +142,7 @@ class PyomoControllerBaseClass(ControllerBaseClass):
             unmet_demand = np.zeros(self.n_timesteps)
             storage_commodity_out = np.zeros(self.n_timesteps)
             total_commodity_out = np.zeros(self.n_timesteps)
-            excess_commodity = np.zeros(self.n_timesteps)
+            unused_commodity = np.zeros(self.n_timesteps)
             soc = np.zeros(self.n_timesteps)
 
             ti = list(range(0, self.n_timesteps, self.config.n_control_window))
@@ -192,11 +192,11 @@ class PyomoControllerBaseClass(ControllerBaseClass):
                     )
 
                     unmet_demand[j] = np.maximum(0, demand_in[j - t] - total_commodity_out[j])
-                    excess_commodity[j] = np.maximum(
+                    unused_commodity[j] = np.maximum(
                         0, storage_commodity_out[j] + commodity_in[j - t] - demand_in[j - t]
                     )
 
-            return total_commodity_out, storage_commodity_out, unmet_demand, excess_commodity, soc
+            return total_commodity_out, storage_commodity_out, unmet_demand, unused_commodity, soc
 
         return pyomo_dispatch_solver
 
