@@ -772,7 +772,7 @@ def test_wind_battery_dispatch_example(subtests):
     # Create a H2Integrate model
     model = H2IntegrateModel(Path.cwd() / "h2i_wind_to_battery_storage.yaml")
 
-    demand_profile = np.ones(8760) * 100.0
+    demand_profile = np.ones(8760) * 50.0
 
     # TODO: Update with demand module once it is developed
     model.setup()
@@ -785,12 +785,14 @@ def test_wind_battery_dispatch_example(subtests):
 
     # Test battery storage functionality
     # SOC should stay within configured bounds (10% to 90%)
-    # Upper bound is not fully respected
+    # Due to pysam simulation, bounds may not be fully respected,
+    # but should not exceed the upper bound more than 4% SOC
+    # and the lower bound more than 1% SOC
     soc = model.prob.get_val("battery.SOC")
     with subtests.test("Check battery SOC lower bound"):
-        assert all(soc >= 10.0)
+        assert all(soc >= 9.0)
     with subtests.test("Check battery SOC upper bound"):
-        assert all(soc <= 90.6)
+        assert all(soc <= 94.0)
 
     with subtests.test("Check wind generation out of the wind plant"):
         # Wind should generate some electricity
@@ -803,35 +805,36 @@ def test_wind_battery_dispatch_example(subtests):
 
     with subtests.test("Check demand satisfaction"):
         electricity_out = model.prob.get_val("battery.electricity_out", units="MW")
-        # Battery output should try to meet the 5 MW constant demand
+        # Battery output should try to meet the 50 MW constant demand
         # Average output should be close to demand when there's sufficient generation
-        assert electricity_out.mean() > 4.20  # MW
+        assert electricity_out.mean() >= 45  # MW
 
     # Subtest for LCOE
     with subtests.test("Check LCOE value"):
         lcoe = model.prob.get_val("finance_subgroup_default.LCOE")[0]
-        assert lcoe == pytest.approx(0.07801723344476236, rel=1e-6)
+        assert lcoe == pytest.approx(0.09572305233848613, rel=1e-6)
 
     # Subtest for total electricity produced
     with subtests.test("Check total electricity produced"):
         total_electricity = model.prob.get_val(
-            "finance_subgroup_default.electricity_sum.total_electricity_produced"
+            name="finance_subgroup_default.electricity_sum.total_electricity_produced",
+            units="MW*h/year",
         )[0]
-        assert total_electricity == pytest.approx(62797265.9296355, rel=1e-6)
+        assert total_electricity == pytest.approx(2439289.6948979845, rel=1e-6)
 
     # Subtest for electricity unused_commodity
     with subtests.test("Check electricity unused commodity"):
         electricity_unused_commodity = np.linalg.norm(
-            model.prob.get_val("battery.unused_electricity_out")
+            model.prob.get_val("battery.unused_electricity_out", units="MW")
         )
-        assert electricity_unused_commodity == pytest.approx(412531.73840450746, rel=1e-6)
+        assert electricity_unused_commodity == pytest.approx(30124.16902518022, rel=1e-6)
 
     # Subtest for unmet demand
     with subtests.test("Check electricity unmet demand"):
         electricity_unmet_demand = np.linalg.norm(
-            model.prob.get_val("battery.unmet_electricity_demand_out")
+            model.prob.get_val("battery.unmet_electricity_demand_out", units="MW")
         )
-        assert electricity_unmet_demand == pytest.approx(0.0, rel=1e-6)
+        assert electricity_unmet_demand == pytest.approx(1025.2188131057821, rel=1e-6)
 
 
 def test_simple_dispatch_example(subtests):

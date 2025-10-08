@@ -7,7 +7,7 @@ from h2integrate.core.h2integrate_model import H2IntegrateModel
 # Create an H2Integrate model
 model = H2IntegrateModel("h2i_wind_to_battery_storage.yaml")
 
-demand_profile = np.ones(8760) * 100.0
+demand_profile = np.ones(8760) * 50.0
 
 
 # TODO: Update with demand module once it is developed
