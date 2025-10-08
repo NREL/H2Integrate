@@ -104,10 +104,6 @@ class GenericSplitterPerformanceModel(om.ExplicitComponent):
                 units=self.config.commodity_units,
                 desc="Prescribed amount of commodity to send to the priority technology",
             )
-        else:
-            raise ValueError(
-                f"Invalid split_mode: {split_mode}. Must be 'fraction' or 'prescribed_commodity'"
-            )
 
         self.add_output(
             f"{self.config.commodity}_out1",
