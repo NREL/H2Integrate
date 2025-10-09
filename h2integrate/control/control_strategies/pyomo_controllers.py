@@ -172,9 +172,6 @@ class PyomoControllerBaseClass(ControllerBaseClass):
                             but has not been implemented yet."
                         )
                     )
-                    # TODO: implement optimized solutions; pyomo_model may be needed.
-                    # Add pyomo_model=self.pyomo_model as input to pyomo_dispatch_solver
-                    # if needed in the future.
 
                 storage_commodity_out_control_window, soc_control_window = performance_model(
                     self.storage_dispatch_commands,
@@ -273,6 +270,7 @@ class SimpleBatteryControllerHeuristic(PyomoControllerBaseClass):
 
         """
         # TODO: provide more control; currently don't use `start_time`
+        # see HOPP implementation
         self.time_duration = [1.0] * len(self.blocks.index_set())
 
     def update_dispatch_initial_soc(self, initial_soc: float | None = None):
@@ -284,7 +282,7 @@ class SimpleBatteryControllerHeuristic(PyomoControllerBaseClass):
         """
         if initial_soc is not None:
             self._system_model.value("initial_SOC", initial_soc)
-            self._system_model.setup()  # TODO: Do I need to re-setup stateful battery?
+            self._system_model.setup()
         self.initial_soc = self._system_model.value("SOC")
 
     def set_fixed_dispatch(
@@ -482,7 +480,6 @@ class SimpleBatteryControllerHeuristic(PyomoControllerBaseClass):
 
     @user_fixed_dispatch.setter
     def user_fixed_dispatch(self, fixed_dispatch: list):
-        # TODO: Annual dispatch array...
         if len(fixed_dispatch) != len(self.blocks.index_set()):
             raise ValueError("fixed_dispatch must be the same length as dispatch index set.")
         elif max(fixed_dispatch) > 1.0 or min(fixed_dispatch) < -1.0:
@@ -594,6 +591,8 @@ class HeuristicLoadFollowingControllerConfig(PyomoControllerBaseConfig):
     include_lifecycle_count: bool = field(default=False)
 
     def __attrs_post_init__(self):
+        if isinstance(self.system_commodity_interface_limit, str):
+            self.system_commodity_interface_limit = float(self.system_commodity_interface_limit)
         if isinstance(self.system_commodity_interface_limit, (float, int)):
             self.system_commodity_interface_limit = [
                 self.system_commodity_interface_limit
