@@ -931,14 +931,6 @@ class H2IntegrateModel:
                             f"finance_subgroup_{group_id}.total_methanol_produced",
                         )
 
-                    if (
-                        "doc" in tech_name or "oae" in tech_name
-                    ) and primary_commodity_type == "co2":
-                        self.plant.connect(
-                            f"{tech_name}.co2_capture_mtpy",
-                            f"finance_subgroup_{group_id}.co2_capture_kgpy",
-                        )
-
                     if "air_separator" in tech_name and primary_commodity_type == "nitrogen":
                         self.plant.connect(
                             f"{tech_name}.total_nitrogen_produced",
