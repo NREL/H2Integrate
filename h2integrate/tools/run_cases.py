@@ -56,6 +56,7 @@ def load_tech_config_cases(case_file):
     tech_config_cases = pd.read_csv(case_file)
     column_names = tech_config_cases.columns.values
     index_names = list(filter(lambda x: "Index" in x, column_names))
+    index_names.append("type")
     tech_config_cases = tech_config_cases.set_index(index_names)
 
     return tech_config_cases
@@ -77,8 +78,14 @@ Output: h2i_model: H2IntegrateModel that is modified with the new tech_config va
 def mod_tech_config(h2i_model, tech_config_case):
     for index_tup, value in tech_config_case.items():
         index_list = list(index_tup)
+        data_type = index_list[-1]
+        index_list = index_list[:-1]
+        if data_type == "float":
+            value = float(value)
+        elif data_type == "bool":
+            value = value == "TRUE"
         while np.nan in index_list:
             index_list.remove(np.nan)
-        setInDict(h2i_model.technology_config, index_list, float(value))
+        setInDict(h2i_model.technology_config, index_list, value)
 
     return h2i_model
