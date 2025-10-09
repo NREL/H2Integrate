@@ -1,9 +1,9 @@
 name: "plant_config"
-description: "This plant is located west of the Wolf Hollow II NGCC power plant in Texas"
+description: "This plant is located of the coast of Galveston in Texas"
 
 site:
-  latitude: 32.34
-  longitude: -98.27
+  latitude: 29.2
+  longitude: -94.6
 
   # array of polygons defining boundaries with x/y coords
   boundaries: [
@@ -17,22 +17,27 @@ site:
     }
   ]
 
-# array of arrays containing left-to-right technology
-# interconnections; can support bidirectional connections
-# with the reverse definition.
 # this will naturally grow as we mature the interconnected tech
 technology_interconnections: [
+  ["hopp", "electricity_splitter", "electricity", "cable"],
+  ["electricity_splitter", "doc", "electricity", "cable"],
+  ["electricity_splitter", "electrolyzer", "electricity", "cable"],
+  ["electrolyzer", "h2_storage", "hydrogen", "pipe"],
+  ["h2_storage", "methanol", "hydrogen", "pipe"],
+  ["doc", "co2_storage", "co2", "pipe"],
+  ["co2_storage","methanol","co2","pipe"],
 ]
 
 plant:
   plant_life: 30
+  grid_connection: True # option, can be turned on or off
   ppa_price: 0.027498168 # based off correlations of LBNL PPA data
   hybrid_electricity_estimated_cf: 0.492 #should equal 1 if grid_connection = True
 
 finance_parameters:
   finance_groups:
-    finance_model: "ProFastComp"
     commodity: "methanol"
+    finance_model: "ProFastComp"
     model_inputs:
       params:
         analysis_start_year: 2032

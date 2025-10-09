@@ -17,6 +17,7 @@ parts:
   - file: user_guide/design_optimization_in_h2i
   - file: user_guide/postprocessing_results
   - file: user_guide/how_to_interface_with_user_defined_model
+  - file: user_guide/how_to_run_several_cases_in_sequence
   - file: user_guide/specifying_finance_parameters
     sections:
     - file: user_guide/cost_years
@@ -29,13 +30,14 @@ parts:
   - file: technology_models/technology_overview
   - file: technology_models/feedstocks
   - file: technology_models/run_of_river
-  - file: technology_models/direct_ocean_capture
   - file: technology_models/natural_gas
   - file: technology_models/wombat_electrolyzer_om
   - file: technology_models/pvwattsv8_solar_pv.md
   - file: technology_models/atb_costs_pv.md
   - file: technology_models/co2.md
   - file: technology_models/simple_generic_storage.md
+  - file: technology_models/methanol.md
+  - file: technology_models/ammonia.md
 
 - caption: Resource Models
   chapters:
@@ -45,10 +47,6 @@ parts:
       - file: resource/wind_toolkit_v2_api
       - file: resource/solar_index
       - file: resource/goes_solar_v4_api
-
-- caption: Examples
-  chapters:
-  - file: examples/01-green-hydrogen
 
 - caption: Developer Guide
   chapters:

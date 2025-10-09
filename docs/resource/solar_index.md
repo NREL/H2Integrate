@@ -1,7 +1,7 @@
 (solar_resource:models)=
 # Solar Resource: Model Overview
 
-- [GOES PSM v4 API](solar_resource:goes_v4_api): these models require an API key for the NREL developer network, the available models are:
+- [GOES PSM v4 API](solar_resource:goes_v4_api): these models require an API key from the [NREL developer network](https://developer.nrel.gov/signup/), the available models are:
     - "goes_aggregated_solar_v4_api"
     - "goes_conus_solar_v4_api"
     - "goes_fulldisc_solar_v4_api"
@@ -9,7 +9,7 @@
 
 
 ```{note}
-Please refer to the `Setting Environment Variables` doc page for information on setting up an NREL API key if you haven't yet.
+Please refer to the [`Setting Environment Variables`](environment_variables:setting-environment-variables) doc page for information on setting up an NREL API key if you haven't yet.
 ```
 
 (solarresource:overview)=
@@ -27,6 +27,7 @@ Solar resource models may output solar resource data, site information, informat
 Not all solar resource models will output all the data keys listed below. Please check the documentation for each solar resource model and solar performance model to ensure compatibility.
 ```
 
+(primary-data-solar-resource-timeseries)=
 ## Primary Data: Solar Resource Timeseries
 The below variables are outputted as arrays, with a length equal to the simulation duration. The naming convention and standardized units of solar resource variables are listed below:
 - `solar_direction`: solar direction in degrees (units are 'deg')
@@ -34,30 +35,32 @@ The below variables are outputted as arrays, with a length equal to the simulati
 - `temperature`: air temperature in Celsius (units are 'C')
 - `pressure`: air pressure in millibar (units are 'mbar')
 - `relative_humidity`: relative humidity represented as a percentage (units are 'percent')
-- `ghi`: global horizontal irrandiance in W/m2 (units are 'W/m**2')
-- `dni`: beam normal irrandiance in W/m2 (units are 'W/m**2')
-- `dhi`: diffuse horizontal irrandiance in W/m2 (units are 'W/m**2')
-- `clearsky_ghi`: global horizontal irrandiance in clearsky conditions in W/m2 (units are 'W/m**2')
-- `clearsky_dni`: beam normal irrandiance in clearsky conditions in W/m2 (units are 'W/m**2')
-- `clearsky_dhi`: diffuse horizontal irrandiance in clearsky conditions in W/m2 (units are 'W/m**2')
-- `dew_point`:  (units are 'C')
-- `surface_albedo`:  (units are 'percent')
-- `solar_zenith_angle`: (units are 'deg')
-- `snow_depth`: (units are 'cm')
-- `precipitable_water`: (units are 'cm')
+- `ghi`: global horizontal irradiance in watts per square meter (units are 'W/m**2')
+- `dni`: beam normal irradiance in watts per square meter (units are 'W/m**2')
+- `dhi`: diffuse horizontal irradiance in watts per square meter (units are 'W/m**2')
+- `clearsky_ghi`: global horizontal irradiance in clearsky conditions in watts per square meter (units are 'W/m**2')
+- `clearsky_dni`: beam normal irradiance in clearsky conditions in watts per square meter (units are 'W/m**2')
+- `clearsky_dhi`: diffuse horizontal irradiance in clearsky conditions in watts per square meter (units are 'W/m**2')
+- `dew_point`:  dew point in Celsius (units are 'C')
+- `surface_albedo`: surface albedo represented as a percentage (units are 'percent')
+- `solar_zenith_angle`: solar zenith angle in degrees (units are 'deg')
+- `snow_depth`: snow depth in centimeters (units are 'cm')
+- `precipitable_water`: precipitable water in centimeters (units are 'cm')
 
-
+(additional-data-site-information)=
 ## Additional Data: Site Information
-- `site_id` (int): site id
+- `site_id` (int): site identification
 - `site_tz` (int | float): local timezone for the site
 - `site_lat` (float): latitude of the site
 - `site_lon` (float): longitude of the site
 - `elevation` (float | int): elevation of the site in meters
 
+(additional-data-data-source)=
 ## Additional Data: Data source
 - `data_tz` (int | float): timezone the data is in represented as an hour offset from UTC
 - `filepath` (str): filepath where the resource data was loaded from
 
+(additional-data-time-profile)=
 ## Additional Data: Time profile
 Time data may be outputted as arrays to represent the time profile of the resource data. These times should be represented in the timezone of `data_tz` (if outputted).
 - `year`: year as 4-digit value (i.e., 2019)
