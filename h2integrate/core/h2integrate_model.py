@@ -522,11 +522,11 @@ class H2IntegrateModel:
             )
             finance_subgroup = om.Group()
 
-            # if commodity stream is specified, then create use the "production summer" model
+            # if commodity stream is specified, then create use the "summer" model
             # to sum the commodity production profile from the commodity stream
             if commodity_stream is not None:
-                # get the generic production summer model
-                commodity_summer_model = self.supported_models.get("production_summer")
+                # get the generic summer model
+                commodity_summer_model = self.supported_models.get("summer")
                 if "combiner" in commodity_stream or "splitter" in commodity_stream:
                     # combiners and splitters have the same tech config as the production summer,
                     # so just use their config if the commodity stream is a combiner or splitter

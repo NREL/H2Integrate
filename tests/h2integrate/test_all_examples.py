@@ -820,3 +820,46 @@ def test_wind_battery_dispatch_example(subtests):
             model.prob.get_val("battery.electricity_missed_load")
         )
         assert pytest.approx(electricity_missed_load, rel=1e-6) == 165604.70758669
+
+    # Subtest for total electricity produced from wind, should be equal to total
+    # electricity produced from finance_subgroup_electricity
+    with subtests.test("Check total electricity produced from wind"):
+        wind_electricity_finance = model.prob.get_val(
+            "finance_subgroup_wind.electricity_sum.total_electricity_produced", units="kW*h/year"
+        )[0]
+        assert pytest.approx(wind_electricity_finance, rel=1e-6) == 62797265.9296355
+
+    with subtests.test("Check total electricity produced from wind compared to wind aep"):
+        wind_electricity_performance = np.sum(
+            model.prob.get_val("wind.electricity_out", units="kW")
+        )
+        assert pytest.approx(wind_electricity_performance, rel=1e-6) == wind_electricity_finance
+
+    # Subtest for total electricity produced from battery, should be equal
+    # to sum of "battery.electricity_out"
+    with subtests.test("Check total electricity produced from battery"):
+        battery_electricity_finance = model.prob.get_val(
+            "finance_subgroup_battery.electricity_sum.total_electricity_produced", units="MW*h/year"
+        )[0]
+        battery_electricity_performance = np.sum(
+            model.prob.get_val("battery.electricity_out", units="MW")
+        )
+        assert (
+            pytest.approx(battery_electricity_finance, rel=1e-6) == battery_electricity_performance
+        )
+
+    wind_lcoe = model.prob.get_val("finance_subgroup_wind.LCOE", units="USD/MW/h")[0]
+    battery_lcoe = model.prob.get_val("finance_subgroup_battery.LCOE", units="USD/MW/h")[0]
+    electricity_lcoe = model.prob.get_val("finance_subgroup_electricity.LCOE", units="USD/MW/h")[0]
+
+    with subtests.test("Check electricity LCOE is greater than wind lcoe"):
+        assert electricity_lcoe > wind_lcoe
+
+    with subtests.test("Check battery LCOE"):
+        assert pytest.approx(battery_lcoe, rel=1e-6) == 32.4187
+
+    with subtests.test("Check wind LCOE"):
+        assert pytest.approx(wind_lcoe, rel=1e-6) == 58.8248
+
+    with subtests.test("Check electricity LCOE"):
+        assert pytest.approx(electricity_lcoe, rel=1e-6) == 78.01723
