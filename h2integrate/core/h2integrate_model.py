@@ -933,20 +933,18 @@ class H2IntegrateModel:
 
     def create_driver_model(self):
         """
-        Add the driver to the OpenMDAO model.
+        Add the driver to the OpenMDAO model and add recorder.
         """
+
+        myopt = PoseOptimization(self.driver_config)
         if "driver" in self.driver_config:
-            myopt = PoseOptimization(self.driver_config)
             myopt.set_driver(self.prob)
             myopt.set_objective(self.prob)
             myopt.set_design_variables(self.prob)
             myopt.set_constraints(self.prob)
-
         # Add a recorder if specified in the driver config
         if "recorder" in self.driver_config:
-            recorder_config = self.driver_config["recorder"]
-            recorder = om.SqliteRecorder(recorder_config["file"])
-            self.model.add_recorder(recorder)
+            myopt.set_recorders(self.prob)
 
     def setup(self):
         """
