@@ -49,6 +49,8 @@ class PyomoControllerBaseConfig(BaseConfig):
         tech_name (str):
             Technology identifier used to namespace Pyomo blocks / variables within
             the broader OpenMDAO model (e.g., "battery", "h2_storage").
+        system_commodity_interface_limit (float | int | str |list[float]): Max interface flow
+            (scalar or per-timestep list of length n_control_window) used to bound dispatch.
     """
 
     max_capacity: float = field()
@@ -60,18 +62,48 @@ class PyomoControllerBaseConfig(BaseConfig):
     commodity_name: str = field()
     commodity_storage_units: str = field()
     tech_name: str = field()
-    system_commodity_interface_limit: float = field()
+    system_commodity_interface_limit: float | int | str | list[float] = field()
+
+    def __attrs_post_init__(self):
+        if isinstance(self.system_commodity_interface_limit, str):
+            self.system_commodity_interface_limit = float(self.system_commodity_interface_limit)
+        if isinstance(self.system_commodity_interface_limit, (float, int)):
+            self.system_commodity_interface_limit = [
+                self.system_commodity_interface_limit
+            ] * self.n_control_window
 
 
 def dummy_function():
+    """Dummy function used for setting OpenMDAO input/output defaults but otherwise unused.
+
+    Returns:
+        None: empty output
+    """
     return None
 
 
 class PyomoControllerBaseClass(ControllerBaseClass):
     def dummy_method(self, in1, in2):
+        """Dummy method used for setting OpenMDAO input/output defaults but otherwise unused.
+
+        Args:
+            in1 (any): dummy input 1
+            in2 (any): dummy input 2
+
+        Returns:
+            None: empty output
+        """
         return None
 
     def setup(self):
+        """Register per-technology dispatch rule inputs and expose the solver callable.
+
+        Adds discrete inputs named 'dispatch_block_rule_function' (and variants
+        suffixed with source tech names for cross-tech connections) plus a
+        discrete output 'pyomo_dispatch_solver' that will hold the assembled
+        callable after compute().
+        """
+
         # get technology group name
         self.tech_group_name = self.pathname.split(".")
 
@@ -101,9 +133,17 @@ class PyomoControllerBaseClass(ControllerBaseClass):
         )
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
+        """Build Pyomo model blocks and assign the dispatch solver."""
         discrete_outputs["pyomo_dispatch_solver"] = self.pyomo_setup(discrete_inputs)
 
     def pyomo_setup(self, discrete_inputs):
+        """Create the Pyomo model, attach per-tech Blocks, and return dispatch solver.
+
+        Returns:
+            callable: Function(performance_model, performance_model_kwargs, inputs, commodity_name)
+                executing rolling-window heuristic dispatch and returning:
+                (total_out, storage_out, unmet_demand, unused_commodity, soc)
+        """
         # initialize the pyomo model
         self.pyomo_model = pyomo.ConcreteModel()
 
@@ -136,6 +176,57 @@ class PyomoControllerBaseClass(ControllerBaseClass):
             inputs,
             commodity_name: str = self.config.commodity_name,
         ):
+            r"""
+            Execute rolling-window dispatch for the controlled technology.
+
+            Iterates over the full simulation period in chunks of size
+            `self.config.n_control_window`, (re)configures per\-window dispatch
+            parameters, invokes a heuristic control strategy to set fixed
+            dispatch decisions, and then calls the provided performance_model
+            over each window to obtain storage output and SOC trajectories.
+
+            Args:
+                performance_model (callable):
+                    Function implementing the technology performance over a control
+                    window. Signature must accept (storage_dispatch_commands,
+                    **performance_model_kwargs, sim_start_index=<int>)
+                    and return (storage_out_window, soc_window) arrays of length
+                    n_control_window.
+                performance_model_kwargs (dict):
+                    Extra keyword arguments forwarded unchanged to performance_model
+                    at window (e.g., efficiencies, timestep size).
+                inputs (dict):
+                    Dictionary of numpy arrays (length = self.n_timesteps) containing at least:
+                        f"{commodity_name}_in"          : available generated commodity profile.
+                        f"{commodity_name}_demand_in"   : demanded commodity output profile.
+                commodity_name (str, optional):
+                    Base commodity name (e.g. "electricity", "hydrogen"). Default:
+                    self.config.commodity_name.
+
+            Returns:
+                tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+                    total_commodity_out :
+                        Net commodity supplied to demand each timestep (min(demand, storage + gen)).
+                    storage_commodity_out :
+                        Commodity supplied (positive) by the storage asset each timestep.
+                    unmet_demand :
+                        Positive shortfall = demand - total_out (0 if fully met).
+                    unused_commodity :
+                        Surplus generation + storage discharge not used to meet demand.
+                    soc :
+                        State of charge trajectory (percent of capacity).
+
+            Raises:
+                NotImplementedError:
+                    If the configured control strategy is not implemented.
+
+            Notes:
+                1. Uses heuristic strategies: currently only strategies whose
+                   name contains "heuristic" are supported.
+                2. Storage dispatch commands are derived from the controller's
+                   internal fixed dispatch fraction set per window.
+                3. Arrays returned have length self.n_timesteps (full simulation period).
+            """
             self.initialize_parameters()
 
             # initialize outputs
@@ -230,21 +321,14 @@ class SimpleBatteryControllerHeuristic(PyomoControllerBaseClass):
 
     Currently, enforces available generation and grid limit assuming no battery charging from grid.
 
+    Enforces:
+        - Available generation cannot be exceeded for charging.
+        - Interface (grid / export) limit bounds discharge.
+        - No grid charging (unless logic extended elsewhere).
     """
 
     def setup(self):
-        """Initialize SimpleBatteryControllerHeuristic.
-
-        Args:
-            pyomo_model (pyomo.ConcreteModel): Pyomo concrete model.
-            index_set (pyomo.Set): Indexed set.
-            system_model (PySAMBatteryModel.BatteryStateful): Battery system model.
-            fixed_dispatch (Optional[List], optional): List of normalized values [-1, 1]
-                (Charging (-), Discharging (+)). Defaults to None.
-            block_set_name (str, optional): Name of block set. Defaults to 'heuristic_battery'.
-            control_options (dict, optional): Dispatch options. Defaults to None.
-
-        """
+        """Initialize SimpleBatteryControllerHeuristic."""
         super().setup()
 
         self.round_digits = 4
@@ -370,7 +454,7 @@ class SimpleBatteryControllerHeuristic(PyomoControllerBaseClass):
         return storage_fraction
 
     def update_soc(self, storage_fraction: float, soc0: float) -> float:
-        """Updates SOC based on storage fraction threshold (0.1).
+        """Updates SOC based on storage fraction threshold.
 
         Args:
             storage_fraction (float): Storage fraction from heuristic method. Below threshold
@@ -585,18 +669,10 @@ class SimpleBatteryControllerHeuristic(PyomoControllerBaseClass):
 
 @define
 class HeuristicLoadFollowingControllerConfig(PyomoControllerBaseConfig):
-    max_charge_rate: int = field()
-    charge_efficiency: float = field(default=None)
-    discharge_efficiency: float = field(default=None)
+    max_charge_rate: int | float = field()
+    charge_efficiency: float = field(default=None, validator=range_val(0.0, 1.0))
+    discharge_efficiency: float = field(default=None, validator=range_val(0.0, 1.0))
     include_lifecycle_count: bool = field(default=False)
-
-    def __attrs_post_init__(self):
-        if isinstance(self.system_commodity_interface_limit, str):
-            self.system_commodity_interface_limit = float(self.system_commodity_interface_limit)
-        if isinstance(self.system_commodity_interface_limit, (float, int)):
-            self.system_commodity_interface_limit = [
-                self.system_commodity_interface_limit
-            ] * self.n_control_window
 
 
 class HeuristicLoadFollowingController(SimpleBatteryControllerHeuristic):
@@ -608,19 +684,7 @@ class HeuristicLoadFollowingController(SimpleBatteryControllerHeuristic):
     """
 
     def setup(self):
-        """Initialize HeuristicLoadFollowingController.
-
-        Args:
-            pyomo_model (pyomo.ConcreteModel): Pyomo concrete model.
-            index_set (pyomo.Set): Indexed set.
-            system_model (PySAMBatteryModel.BatteryStateful): System model.
-            fixed_dispatch (Optional[List], optional): List of normalized values [-1, 1]
-                (Charging (-), Discharging (+)). Defaults to None.
-            block_set_name (str, optional): Name of the block set. Defaults to
-                'heuristic_load_following_battery'.
-            control_options (Optional[dict], optional): Dispatch options. Defaults to None.
-
-        """
+        """Initialize HeuristicLoadFollowingController."""
         self.config = HeuristicLoadFollowingControllerConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "control")
         )
@@ -655,17 +719,17 @@ class HeuristicLoadFollowingController(SimpleBatteryControllerHeuristic):
         self._heuristic_method(commodity_in, commodity_demand)
         self._fix_dispatch_model_variables()
 
-    def _heuristic_method(self, commodity_in, goal_commodity):
+    def _heuristic_method(self, commodity_in, commodity_demand):
         """Enforces storage fraction limits and sets _fixed_dispatch attribute.
-        Sets the _fixed_dispatch based on goal_commodity and gen.
+        Sets the _fixed_dispatch based on commodity_demand and commodity_in.
 
         Args:
-            generated_commodity: commodity generation profile.
-            goal_commodity: Goal amount of commodity.
+            commodity_in: commodity generation profile.
+            commodity_demand: Goal amount of commodity.
 
         """
         for t in self.blocks.index_set():
-            fd = (goal_commodity[t] - commodity_in[t]) / self.maximum_storage
+            fd = (commodity_demand[t] - commodity_in[t]) / self.maximum_storage
             if fd > 0.0:  # Discharging
                 if fd > self.max_discharge_fraction[t]:
                     fd = self.max_discharge_fraction[t]
