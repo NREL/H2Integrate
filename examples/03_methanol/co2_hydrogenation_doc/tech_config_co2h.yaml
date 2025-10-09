@@ -14,7 +14,10 @@ technologies:
   electricity_splitter:
     performance_model:
       model: "splitter_performance"
-      config:
+    model_inputs:
+      performance_parameters:
+        commodity: "electricity"
+        commodity_units: "kW"
         split_mode: "fraction"
         fraction_to_priority_tech: 0.243998425816608
   electrolyzer:

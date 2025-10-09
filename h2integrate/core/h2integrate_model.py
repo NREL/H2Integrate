@@ -715,7 +715,7 @@ class H2IntegrateModel:
 
                     # Connect the splitter output to the connection component
                     self.plant.connect(
-                        f"{source_tech}.electricity_out{splitter_counts[source_tech]}",
+                        f"{source_tech}.{transport_item}_out{splitter_counts[source_tech]}",
                         f"{connection_name}.{transport_item}_in",
                     )
 
@@ -744,7 +744,7 @@ class H2IntegrateModel:
                     # Connect the connection component to the destination technology
                     self.plant.connect(
                         f"{connection_name}.{transport_item}_out",
-                        f"{dest_tech}.electricity_in{combiner_counts[dest_tech]}",
+                        f"{dest_tech}.{transport_item}_in{combiner_counts[dest_tech]}",
                     )
 
                 elif "storage" in dest_tech:
@@ -962,25 +962,22 @@ class H2IntegrateModel:
 
     def create_driver_model(self):
         """
-        Add the driver to the OpenMDAO model.
+        Add the driver to the OpenMDAO model and add recorder.
         """
+
+        myopt = PoseOptimization(self.driver_config)
         if "driver" in self.driver_config:
-            myopt = PoseOptimization(self.driver_config)
             myopt.set_driver(self.prob)
             myopt.set_objective(self.prob)
             myopt.set_design_variables(self.prob)
             myopt.set_constraints(self.prob)
+        # Add a recorder if specified in the driver config
+        if "recorder" in self.driver_config:
+            myopt.set_recorders(self.prob)
 
     def run(self):
         # do model setup based on the driver config
         # might add a recorder, driver, set solver tolerances, etc
-
-        # Add a recorder if specified in the driver config
-        if "recorder" in self.driver_config:
-            recorder_config = self.driver_config["recorder"]
-            recorder = om.SqliteRecorder(recorder_config["file"])
-            self.model.add_recorder(recorder)
-
         self.prob.setup()
 
         self.prob.run_driver()

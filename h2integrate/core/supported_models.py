@@ -5,9 +5,12 @@ from h2integrate.transporters.cable import CablePerformanceModel
 from h2integrate.converters.steel.steel import SteelPerformanceModel, SteelCostAndFinancialModel
 from h2integrate.converters.wind.wind_plant import WindPlantCostModel, WindPlantPerformanceModel
 from h2integrate.finances.profast_financial import ProFastComp
+from h2integrate.transporters.generic_summer import GenericSummerPerformanceModel
 from h2integrate.converters.hopp.hopp_wrapper import HOPPComponent
 from h2integrate.converters.solar.solar_pysam import PYSAMSolarPlantPerformanceModel
 from h2integrate.storage.hydrogen.eco_storage import H2Storage
+from h2integrate.transporters.generic_combiner import GenericCombinerPerformanceModel
+from h2integrate.transporters.generic_splitter import GenericSplitterPerformanceModel
 from h2integrate.converters.nitrogen.simple_ASU import SimpleASUCostModel, SimpleASUPerformanceModel
 from h2integrate.storage.simple_generic_storage import SimpleGenericStorage
 from h2integrate.storage.hydrogen.tank_baseclass import (
@@ -21,8 +24,6 @@ from h2integrate.controllers.openloop_controllers import (
 from h2integrate.converters.hydrogen.wombat_model import WOMBATElectrolyzerModel
 from h2integrate.converters.wind.wind_plant_pysam import PYSAMWindPlantPerformanceModel
 from h2integrate.storage.battery.atb_battery_cost import ATBBatteryCostModel
-from h2integrate.transporters.electricity_combiner import CombinerPerformanceModel
-from h2integrate.transporters.electricity_splitter import SplitterPerformanceModel
 from h2integrate.converters.ammonia.ammonia_synloop import (
     AmmoniaSynLoopCostModel,
     AmmoniaSynLoopPerformanceModel,
@@ -139,8 +140,10 @@ supported_models = {
     # Transport
     "cable": CablePerformanceModel,
     "pipe": PipePerformanceModel,
-    "combiner_performance": CombinerPerformanceModel,
-    "splitter_performance": SplitterPerformanceModel,
+    "combiner_performance": GenericCombinerPerformanceModel,
+    "splitter_performance": GenericSplitterPerformanceModel,
+    # Simple Summers
+    "summer": GenericSummerPerformanceModel,
     # Storage
     "h2_storage": H2Storage,
     "hydrogen_tank_performance": HydrogenTankPerformanceModel,
