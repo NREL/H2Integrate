@@ -7,6 +7,8 @@
     - "goes_fulldisc_solar_v4_api"
     - "goes_tmy_solar_v4_api"
 
+Please see the [GOES PSM v4 API model documentation here for more information on these models.](https://developer.nrel.gov/docs/solar/nsrdb/nsrdb-GOES-full-disc-v4-0-0-download/)
+
 
 ```{note}
 Please refer to the [`Setting Environment Variables`](environment_variables:setting-environment-variables) doc page for information on setting up an NREL API key if you haven't yet.

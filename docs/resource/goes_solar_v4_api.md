@@ -1,7 +1,7 @@
 (solar_resource:goes_v4_api)=
 # Solar Resource: GOES PSM v4
 
-There are four datasets that use the NSRDB GOES PSM v4 API calls:
+There are four datasets that use the [NSRDB GOES PSM v4 API](https://developer.nrel.gov/docs/solar/nsrdb/nsrdb-GOES-full-disc-v4-0-0-download/) calls:
 - "goes_aggregated_solar_v4_api"
 - "goes_conus_solar_v4_api"
 - "goes_fulldisc_solar_v4_api"

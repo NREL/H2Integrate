@@ -11,7 +11,7 @@ from h2integrate.resource.solar.nrel_developer_goes_api_base import (
 
 @define
 class GOESAggregatedAPIConfig(ResourceBaseAPIConfig):
-    """Configuration class to downloadsolar resource data from
+    """Configuration class to download solar resource data from
     `GOES Aggregated PSM v4 <https://developer.nrel.gov/docs/solar/nsrdb/nsrdb-GOES-aggregated-v4-0-0-download/>`_.
     This dataset covers regions within North and South America at a spatial resolution of 4 km.
 
@@ -46,26 +46,7 @@ class GOESAggregatedAPIConfig(ResourceBaseAPIConfig):
 
 class GOESAggregatedSolarAPI(GOESNRELDeveloperAPISolarResourceBase):
     def setup(self):
-        self.site_config = self.options["plant_config"]["site"]
-        self.sim_config = self.options["plant_config"]["plant"]["simulation"]
-        self.n_timesteps = int(self.sim_config["n_timesteps"])
-        self.dt = self.sim_config["dt"]
-        self.start_time = self.sim_config["start_time"]
-
-        # create the input dictionary for GOESAPIConfig
-        resource_specs = self.options["resource_config"]
-        # set the default latitude, longitude, and resource_year from the site_config
-        resource_specs.setdefault("latitude", self.site_config["latitude"])
-        resource_specs.setdefault("longitude", self.site_config["longitude"])
-        resource_specs.setdefault("resource_year", self.site_config.get("year", None))
-        # set the default resource_dir from a directory that can be
-        # specified in site_config['resources']['resource_dir']
-        resource_specs.setdefault(
-            "resource_dir", self.site_config.get("resources", {}).get("resource_dir", None)
-        )
-
-        # default timezone to UTC because 'timezone' was removed from the plant config schema
-        resource_specs.setdefault("timezone", self.sim_config.get("timezone", 0))
+        resource_specs = self.helper_setup_method()
 
         self.base_url = "https://developer.nrel.gov/api/nsrdb/v2/solar/nsrdb-GOES-aggregated-v4-0-0-download.csv?"
         # create the resource config
@@ -111,26 +92,7 @@ class GOESConusAPIConfig(ResourceBaseAPIConfig):
 
 class GOESConusSolarAPI(GOESNRELDeveloperAPISolarResourceBase):
     def setup(self):
-        self.site_config = self.options["plant_config"]["site"]
-        self.sim_config = self.options["plant_config"]["plant"]["simulation"]
-        self.n_timesteps = int(self.sim_config["n_timesteps"])
-        self.dt = self.sim_config["dt"]
-        self.start_time = self.sim_config["start_time"]
-
-        # create the input dictionary for GOESAPIConfig
-        resource_specs = self.options["resource_config"]
-        # set the default latitude, longitude, and resource_year from the site_config
-        resource_specs.setdefault("latitude", self.site_config["latitude"])
-        resource_specs.setdefault("longitude", self.site_config["longitude"])
-        resource_specs.setdefault("resource_year", self.site_config.get("year", None))
-        # set the default resource_dir from a directory that can be
-        # specified in site_config['resources']['resource_dir']
-        resource_specs.setdefault(
-            "resource_dir", self.site_config.get("resources", {}).get("resource_dir", None)
-        )
-
-        # default timezone to UTC because 'timezone' was removed from the plant config schema
-        resource_specs.setdefault("timezone", self.sim_config.get("timezone", 0))
+        resource_specs = self.helper_setup_method()
 
         self.base_url = (
             "https://developer.nrel.gov/api/nsrdb/v2/solar/nsrdb-GOES-conus-v4-0-0-download.csv?"
@@ -142,7 +104,7 @@ class GOESConusSolarAPI(GOESNRELDeveloperAPISolarResourceBase):
 
 @define
 class GOESFullDiscAPIConfig(ResourceBaseAPIConfig):
-    """Configuration class to downloadsolar resource data from
+    """Configuration class to download solar resource data from
     `GOES Full Disc PSM v4 <https://developer.nrel.gov/docs/solar/nsrdb/nsrdb-GOES-full-disc-v4-0-0-download/>`_.
     This dataset covers regions within North and South America at a spatial resolution of 2 km.
 
@@ -177,26 +139,7 @@ class GOESFullDiscAPIConfig(ResourceBaseAPIConfig):
 
 class GOESFullDiscSolarAPI(GOESNRELDeveloperAPISolarResourceBase):
     def setup(self):
-        self.site_config = self.options["plant_config"]["site"]
-        self.sim_config = self.options["plant_config"]["plant"]["simulation"]
-        self.n_timesteps = int(self.sim_config["n_timesteps"])
-        self.dt = self.sim_config["dt"]
-        self.start_time = self.sim_config["start_time"]
-
-        # create the input dictionary for GOESAPIConfig
-        resource_specs = self.options["resource_config"]
-        # set the default latitude, longitude, and resource_year from the site_config
-        resource_specs.setdefault("latitude", self.site_config["latitude"])
-        resource_specs.setdefault("longitude", self.site_config["longitude"])
-        resource_specs.setdefault("resource_year", self.site_config.get("year", None))
-        # set the default resource_dir from a directory that can be
-        # specified in site_config['resources']['resource_dir']
-        resource_specs.setdefault(
-            "resource_dir", self.site_config.get("resources", {}).get("resource_dir", None)
-        )
-
-        # default timezone to UTC because 'timezone' was removed from the plant config schema
-        resource_specs.setdefault("timezone", self.sim_config.get("timezone", 0))
+        resource_specs = self.helper_setup_method()
 
         self.base_url = "https://developer.nrel.gov/api/nsrdb/v2/solar/nsrdb-GOES-full-disc-v4-0-0-download.csv?"
         # create the resource config
@@ -206,7 +149,7 @@ class GOESFullDiscSolarAPI(GOESNRELDeveloperAPISolarResourceBase):
 
 @define
 class GOESTMYAPIConfig(ResourceBaseAPIConfig):
-    """Configuration class to downloadsolar resource data from
+    """Configuration class to download solar resource data from
     `GOES Full Disc PSM v4 <https://developer.nrel.gov/docs/solar/nsrdb/nsrdb-GOES-tmy-v4-0-0-download/>`_.
     This dataset covers regions within North and South America at a spatial resolution of 4 km.
 
@@ -265,25 +208,7 @@ class GOESTMYAPIConfig(ResourceBaseAPIConfig):
 
 class GOESTMYSolarAPI(GOESNRELDeveloperAPISolarResourceBase):
     def setup(self):
-        self.site_config = self.options["plant_config"]["site"]
-        self.sim_config = self.options["plant_config"]["plant"]["simulation"]
-        self.n_timesteps = int(self.sim_config["n_timesteps"])
-        self.dt = self.sim_config["dt"]
-        self.start_time = self.sim_config["start_time"]
-
-        # create the input dictionary for GOESAPIConfig
-        resource_specs = self.options["resource_config"]
-        # set the default latitude, longitude, and resource_year from the site_config
-        resource_specs.setdefault("latitude", self.site_config["latitude"])
-        resource_specs.setdefault("longitude", self.site_config["longitude"])
-        # set the default resource_dir from a directory that can be
-        # specified in site_config['resources']['resource_dir']
-        resource_specs.setdefault(
-            "resource_dir", self.site_config.get("resources", {}).get("resource_dir", None)
-        )
-
-        # default timezone to UTC because 'timezone' was removed from the plant config schema
-        resource_specs.setdefault("timezone", self.sim_config.get("timezone", 0))
+        resource_specs = self.helper_setup_method()
 
         self.base_url = (
             "https://developer.nrel.gov/api/nsrdb/v2/solar/nsrdb-GOES-tmy-v4-0-0-download.csv?"

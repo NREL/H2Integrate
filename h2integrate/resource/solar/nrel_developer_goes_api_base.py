@@ -36,6 +36,40 @@ class GOESNRELDeveloperAPISolarResourceBase(SolarResourceBaseAPIModel):
             "solar_resource_data", val=data, desc="Dict of solar resource data"
         )
 
+    def helper_setup_method(self):
+        """
+        Prepares and configures resource specifications for the GOES API based on plant
+        and site configuration options.
+
+        This method extracts relevant configuration details from the `self.options` dictionary,
+        sets default values for latitude, longitude, resource directory, and timezone if they
+        are not already specified, and returns the updated resource specifications dictionary.
+
+        Returns:
+            dict: The resource specifications dictionary with defaults set for latitude,
+            longitude, resource_dir, and timezone.
+        """
+        self.site_config = self.options["plant_config"]["site"]
+        self.sim_config = self.options["plant_config"]["plant"]["simulation"]
+        self.n_timesteps = int(self.sim_config["n_timesteps"])
+        self.dt = self.sim_config["dt"]
+        self.start_time = self.sim_config["start_time"]
+
+        # create the input dictionary for GOESAPIConfig
+        resource_specs = self.options["resource_config"]
+        # set the default latitude, longitude, and resource_year from the site_config
+        resource_specs.setdefault("latitude", self.site_config["latitude"])
+        resource_specs.setdefault("longitude", self.site_config["longitude"])
+        # set the default resource_dir from a directory that can be
+        # specified in site_config['resources']['resource_dir']
+        resource_specs.setdefault(
+            "resource_dir", self.site_config.get("resources", {}).get("resource_dir", None)
+        )
+
+        # default timezone to UTC because 'timezone' was removed from the plant config schema
+        resource_specs.setdefault("timezone", self.sim_config.get("timezone", 0))
+        return resource_specs
+
     def create_filename(self):
         """Create default filename to save downloaded data to. Filename is formatted as
         "{latitude}_{longitude}_{resource_year}_{config.dataset_desc}_{interval}min_{tz_desc}_tz.csv"
@@ -121,9 +155,9 @@ class GOESNRELDeveloperAPISolarResourceBase(SolarResourceBaseAPIModel):
         data = data.dropna(axis=1, how="all")
         data = data.rename(columns=colname_mapper)  # add units to colnames
 
-        # dont include data that doesnt have units
+        # dont include data that doesn't have units
         data_main_cols = time_cols + list(colname_mapper.values())
-        # make units for data in openmdao-compatible units
+        # make units for data in openMDAO-compatible units
         data, data_units = self.format_timeseries_data(data[data_main_cols])
         # convert units to standard units
         data, data_units = self.compare_units_and_correct(data, data_units)
@@ -169,12 +203,10 @@ class GOESNRELDeveloperAPISolarResourceBase(SolarResourceBaseAPIModel):
             data_rename_mapper.update({c: new_c})
             data_units.update({new_c: units})
         data = data.rename(columns=data_rename_mapper)
-        # time_cols_mapper = {t: t.lower() for t in time_cols}
-        # data = data.rename(columns=time_cols_mapper)
         data_dict = {c: data[c].astype(float).values for x, c in data_rename_mapper.items()}
         data_time_dict = {c.lower(): data[c].astype(float).values for c in time_cols}
         data_dict.update(data_time_dict)
         return data_dict, data_units
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
-        pass
+        raise NotImplementedError("This method should be implemented in a subclass.")
