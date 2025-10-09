@@ -74,7 +74,7 @@ finance_parameters:
     battery:
       commodity: "electricity"
       commodity_stream: "battery" #use electricity from battery in finance calc
-      technologies: ["battery"]
+      technologies: ["wind", "battery"]
     electricity:
       commodity: "electricity"
       technologies: ["wind","battery"]
