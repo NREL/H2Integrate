@@ -6,6 +6,7 @@ There are four datasets that use the NSRDB GOES PSM v4 API calls:
 - "goes_conus_solar_v4_api"
 - "goes_fulldisc_solar_v4_api"
 - "goes_tmy_solar_v4_api"
+    - supports solar resource data for typical meteorological year (TMY), typical global horizontal irradiance year (TGY), and typical direct normal irradiance year (TDY)
 
 These datasets allow for resource data to be downloaded for **locations** within the continental United States.
 
