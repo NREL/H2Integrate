@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.x [TBD]
+- Added `tools/run_cases.py` with tools to run different `tech_config` cases from a spreadsheet, with new docs page to describe: docs/user_guide/how_to_run_several_cases_in_sequence.md
+- Added capability for user-defined finance models in the H2Integrate framework
+- Added an optimized offshore methanol production case to examples/03_methanol/co2_hydrogenation_doc
+
 ## 0.4.0 [October 1, 2025]
 
 This release introduces significant new technology models and framework capabilities for system design and optimization, alongside major refactoring and user experience improvements.

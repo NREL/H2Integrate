@@ -248,6 +248,27 @@ def test_co2h_methanol_example(subtests):
         assert pytest.approx(model.prob.get_val("methanol.LCOM")[0], rel=1e-6) == 1.381162
 
 
+@unittest.skipUnless(importlib.util.find_spec("mcm") is not None, "mcm is not installed")
+def test_doc_methanol_example(subtests):
+    # Change the current working directory to the CO2 Hydrogenation example's directory
+    os.chdir(EXAMPLE_DIR / "03_methanol" / "co2_hydrogenation_doc")
+
+    # Create a H2Integrate model
+    model = H2IntegrateModel(Path.cwd() / "03_co2h_methanol.yaml")
+
+    # Run the model
+    model.run()
+
+    model.post_process()
+
+    # Check levelized cost of methanol (LCOM)
+    with subtests.test("Check CO2 Hydrogenation LCOM"):
+        assert (
+            pytest.approx(model.prob.get_val("finance_subgroup_default.LCOM"), rel=1e-6)
+            == 2.58989518
+        )
+
+
 def test_wind_h2_opt_example(subtests):
     # Change the current working directory to the example's directory
     os.chdir(EXAMPLE_DIR / "05_wind_h2_opt")
@@ -708,6 +729,39 @@ def test_electrolyzer_om_example(subtests):
         assert pytest.approx(lcoh_with_lcoh_finance, rel=1e-5) == 13.0954678
     with subtests.test("Check LCOH with lcoe_financials"):
         assert pytest.approx(lcoh_with_lcoe_finance, rel=1e-5) == 8.00321771
+
+
+def test_wombat_electrolyzer_example(subtests):
+    # Change the current working directory to the example's directory
+    os.chdir(EXAMPLE_DIR / "08_wind_electrolyzer")
+
+    # Create a H2Integrate model
+    model = H2IntegrateModel(Path.cwd() / "wind_plant_electrolyzer.yaml")
+
+    model.run()
+
+    lcoe_with_profast_model = model.prob.get_val(
+        "finance_subgroup_electricity_profast.LCOE", units="USD/MW/h"
+    )[0]
+    lcoe_with_custom_model = model.prob.get_val(
+        "finance_subgroup_electricity_custom.LCOE", units="USD/MW/h"
+    )[0]
+
+    lcoh_with_custom_model = model.prob.get_val(
+        "finance_subgroup_hydrogen.LCOH_produced_custom_model", units="USD/kg"
+    )[0]
+    lcoh_with_profast_model = model.prob.get_val(
+        "finance_subgroup_hydrogen.LCOH_produced_profast_model", units="USD/kg"
+    )[0]
+
+    with subtests.test("Check LCOH from custom  model"):
+        assert pytest.approx(lcoh_with_custom_model, rel=1e-5) == 4.19232346
+    with subtests.test("Check LCOH from ProFAST model"):
+        assert pytest.approx(lcoh_with_profast_model, rel=1e-5) == 5.32632237
+    with subtests.test("Check LCOE from custom model"):
+        assert pytest.approx(lcoe_with_custom_model, rel=1e-5) == 51.17615298
+    with subtests.test("Check LCOE from ProFAST model"):
+        assert pytest.approx(lcoe_with_profast_model, rel=1e-5) == 59.0962084
 
 
 def test_wind_battery_dispatch_example(subtests):

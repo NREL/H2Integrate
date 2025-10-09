@@ -43,11 +43,11 @@ class MarineCarbonCapturePerformanceBaseClass(om.ExplicitComponent):
             "electricity_in", val=0.0, shape=8760, units="W", desc="Hourly input electricity (W)"
         )
         self.add_output(
-            "co2_capture_rate_mt",
+            "co2_out",
             val=0.0,
             shape=8760,
-            units="t",
-            desc="Hourly CO₂ capture rate (t)",
+            units="kg/h",
+            desc="Hourly CO₂ capture rate (kg/h)",
         )
         self.add_output("co2_capture_mtpy", units="t/year", desc="Annual CO₂ captured (t/year)")
 
