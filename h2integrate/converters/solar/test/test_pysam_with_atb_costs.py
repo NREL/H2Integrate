@@ -6,9 +6,7 @@ from h2integrate import EXAMPLE_DIR
 from h2integrate.converters.solar.solar_pysam import PYSAMSolarPlantPerformanceModel
 from h2integrate.converters.solar.atb_res_com_pv_cost import ATBResComPVCostModel
 from h2integrate.converters.solar.atb_utility_pv_cost import ATBUtilityPVCostModel
-from h2integrate.resource.solar.nrel_developer_goes_api_models import (
-    GOESAggregatedNRELDeveloperAPISolarResource,
-)
+from h2integrate.resource.solar.nrel_developer_goes_api_models import GOESAggregatedSolarAPI
 
 
 @fixture
@@ -128,7 +126,7 @@ def test_utility_pv_cost(
     }
 
     prob = om.Problem()
-    solar_resource = GOESAggregatedNRELDeveloperAPISolarResource(
+    solar_resource = GOESAggregatedSolarAPI(
         plant_config=plant_config,
         resource_config=solar_resource_dict,
         driver_config={},
@@ -186,7 +184,7 @@ def test_commercial_pv_cost(
     }
 
     prob = om.Problem()
-    solar_resource = GOESAggregatedNRELDeveloperAPISolarResource(
+    solar_resource = GOESAggregatedSolarAPI(
         plant_config=plant_config,
         resource_config=solar_resource_dict,
         driver_config={},
@@ -238,7 +236,7 @@ def test_residential_pv_cost(
     }
 
     prob = om.Problem()
-    solar_resource = GOESAggregatedNRELDeveloperAPISolarResource(
+    solar_resource = GOESAggregatedSolarAPI(
         plant_config=plant_config,
         resource_config=solar_resource_dict,
         driver_config={},

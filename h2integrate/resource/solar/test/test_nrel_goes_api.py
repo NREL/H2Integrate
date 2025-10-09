@@ -5,10 +5,10 @@ from pytest import fixture
 
 from h2integrate import RESOURCE_DEFAULT_DIR
 from h2integrate.resource.solar.nrel_developer_goes_api_models import (
-    GOESTMYNRELDeveloperAPISolarResource,
-    GOESConusNRELDeveloperAPISolarResource,
-    GOESFullDiscNRELDeveloperAPISolarResource,
-    GOESAggregatedNRELDeveloperAPISolarResource,
+    GOESTMYSolarAPI,
+    GOESConusSolarAPI,
+    GOESFullDiscSolarAPI,
+    GOESAggregatedSolarAPI,
 )
 
 
@@ -52,7 +52,7 @@ def test_goes_aggregated_loaded_from_default_dir(plant_simulation_utc_start, sit
     }
 
     prob = om.Problem()
-    comp = GOESAggregatedNRELDeveloperAPISolarResource(
+    comp = GOESAggregatedSolarAPI(
         plant_config=plant_config,
         resource_config=plant_config["site"]["resources"]["solar_resource"]["resource_parameters"],
         driver_config={},
@@ -96,7 +96,7 @@ def test_goes_conus_loaded_from_default_dir(plant_simulation_utc_start, site_con
     )
 
     prob = om.Problem()
-    comp = GOESConusNRELDeveloperAPISolarResource(
+    comp = GOESConusSolarAPI(
         plant_config=plant_config,
         resource_config=plant_config["site"]["resources"]["solar_resource"]["resource_parameters"],
         driver_config={},
@@ -140,7 +140,7 @@ def test_goes_fulldisc_loaded_from_default_dir(plant_simulation_utc_start, site_
     )
 
     prob = om.Problem()
-    comp = GOESFullDiscNRELDeveloperAPISolarResource(
+    comp = GOESFullDiscSolarAPI(
         plant_config=plant_config,
         resource_config=plant_config["site"]["resources"]["solar_resource"]["resource_parameters"],
         driver_config={},
@@ -185,7 +185,7 @@ def test_goes_tmy_loaded_from_default_dir(plant_simulation_utc_start, site_confi
     )
 
     prob = om.Problem()
-    comp = GOESTMYNRELDeveloperAPISolarResource(
+    comp = GOESTMYSolarAPI(
         plant_config=plant_config,
         resource_config=plant_config["site"]["resources"]["solar_resource"]["resource_parameters"],
         driver_config={},

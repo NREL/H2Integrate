@@ -10,7 +10,7 @@ from h2integrate.resource.solar.nrel_developer_goes_api_base import (
 
 
 @define
-class GOESAggregatedNRELDeveloperAPIConfig(ResourceBaseAPIConfig):
+class GOESAggregatedAPIConfig(ResourceBaseAPIConfig):
     """Configuration class to downloadsolar resource data from
     `GOES Aggregated PSM v4 <https://developer.nrel.gov/docs/solar/nsrdb/nsrdb-GOES-aggregated-v4-0-0-download/>`_.
     This dataset covers regions within North and South America at a spatial resolution of 4 km.
@@ -44,7 +44,7 @@ class GOESAggregatedNRELDeveloperAPIConfig(ResourceBaseAPIConfig):
     resource_dir: Path | str | None = field(default=None)
 
 
-class GOESAggregatedNRELDeveloperAPISolarResource(GOESNRELDeveloperAPISolarResourceBase):
+class GOESAggregatedSolarAPI(GOESNRELDeveloperAPISolarResourceBase):
     def setup(self):
         self.site_config = self.options["plant_config"]["site"]
         self.sim_config = self.options["plant_config"]["plant"]["simulation"]
@@ -52,7 +52,7 @@ class GOESAggregatedNRELDeveloperAPISolarResource(GOESNRELDeveloperAPISolarResou
         self.dt = self.sim_config["dt"]
         self.start_time = self.sim_config["start_time"]
 
-        # create the input dictionary for GOESNRELDeveloperAPIConfig
+        # create the input dictionary for GOESAPIConfig
         resource_specs = self.options["resource_config"]
         # set the default latitude, longitude, and resource_year from the site_config
         resource_specs.setdefault("latitude", self.site_config["latitude"])
@@ -69,12 +69,12 @@ class GOESAggregatedNRELDeveloperAPISolarResource(GOESNRELDeveloperAPISolarResou
 
         self.base_url = "https://developer.nrel.gov/api/nsrdb/v2/solar/nsrdb-GOES-aggregated-v4-0-0-download.csv?"
         # create the resource config
-        self.config = GOESAggregatedNRELDeveloperAPIConfig.from_dict(resource_specs)
+        self.config = GOESAggregatedAPIConfig.from_dict(resource_specs)
         super().setup()
 
 
 @define
-class GOESConusNRELDeveloperAPIConfig(ResourceBaseAPIConfig):
+class GOESConusAPIConfig(ResourceBaseAPIConfig):
     """Configuration class to download solar resource data from
     `GOES Conus PSM v4 <https://developer.nrel.gov/docs/solar/nsrdb/nsrdb-GOES-conus-v4-0-0-download/>`_.
     This dataset covers regions within the continental United States at a spatial resolution of
@@ -109,7 +109,7 @@ class GOESConusNRELDeveloperAPIConfig(ResourceBaseAPIConfig):
     resource_dir: Path | str | None = field(default=None)
 
 
-class GOESConusNRELDeveloperAPISolarResource(GOESNRELDeveloperAPISolarResourceBase):
+class GOESConusSolarAPI(GOESNRELDeveloperAPISolarResourceBase):
     def setup(self):
         self.site_config = self.options["plant_config"]["site"]
         self.sim_config = self.options["plant_config"]["plant"]["simulation"]
@@ -117,7 +117,7 @@ class GOESConusNRELDeveloperAPISolarResource(GOESNRELDeveloperAPISolarResourceBa
         self.dt = self.sim_config["dt"]
         self.start_time = self.sim_config["start_time"]
 
-        # create the input dictionary for GOESNRELDeveloperAPIConfig
+        # create the input dictionary for GOESAPIConfig
         resource_specs = self.options["resource_config"]
         # set the default latitude, longitude, and resource_year from the site_config
         resource_specs.setdefault("latitude", self.site_config["latitude"])
@@ -136,12 +136,12 @@ class GOESConusNRELDeveloperAPISolarResource(GOESNRELDeveloperAPISolarResourceBa
             "https://developer.nrel.gov/api/nsrdb/v2/solar/nsrdb-GOES-conus-v4-0-0-download.csv?"
         )
         # create the resource config
-        self.config = GOESConusNRELDeveloperAPIConfig.from_dict(resource_specs)
+        self.config = GOESConusAPIConfig.from_dict(resource_specs)
         super().setup()
 
 
 @define
-class GOESFullDiscNRELDeveloperAPIConfig(ResourceBaseAPIConfig):
+class GOESFullDiscAPIConfig(ResourceBaseAPIConfig):
     """Configuration class to downloadsolar resource data from
     `GOES Full Disc PSM v4 <https://developer.nrel.gov/docs/solar/nsrdb/nsrdb-GOES-full-disc-v4-0-0-download/>`_.
     This dataset covers regions within North and South America at a spatial resolution of 2 km.
@@ -175,7 +175,7 @@ class GOESFullDiscNRELDeveloperAPIConfig(ResourceBaseAPIConfig):
     resource_dir: Path | str | None = field(default=None)
 
 
-class GOESFullDiscNRELDeveloperAPISolarResource(GOESNRELDeveloperAPISolarResourceBase):
+class GOESFullDiscSolarAPI(GOESNRELDeveloperAPISolarResourceBase):
     def setup(self):
         self.site_config = self.options["plant_config"]["site"]
         self.sim_config = self.options["plant_config"]["plant"]["simulation"]
@@ -183,7 +183,7 @@ class GOESFullDiscNRELDeveloperAPISolarResource(GOESNRELDeveloperAPISolarResourc
         self.dt = self.sim_config["dt"]
         self.start_time = self.sim_config["start_time"]
 
-        # create the input dictionary for GOESNRELDeveloperAPIConfig
+        # create the input dictionary for GOESAPIConfig
         resource_specs = self.options["resource_config"]
         # set the default latitude, longitude, and resource_year from the site_config
         resource_specs.setdefault("latitude", self.site_config["latitude"])
@@ -200,12 +200,12 @@ class GOESFullDiscNRELDeveloperAPISolarResource(GOESNRELDeveloperAPISolarResourc
 
         self.base_url = "https://developer.nrel.gov/api/nsrdb/v2/solar/nsrdb-GOES-full-disc-v4-0-0-download.csv?"
         # create the resource config
-        self.config = GOESFullDiscNRELDeveloperAPIConfig.from_dict(resource_specs)
+        self.config = GOESFullDiscAPIConfig.from_dict(resource_specs)
         super().setup()
 
 
 @define
-class GOESTMYNRELDeveloperAPIConfig(ResourceBaseAPIConfig):
+class GOESTMYAPIConfig(ResourceBaseAPIConfig):
     """Configuration class to downloadsolar resource data from
     `GOES Full Disc PSM v4 <https://developer.nrel.gov/docs/solar/nsrdb/nsrdb-GOES-tmy-v4-0-0-download/>`_.
     This dataset covers regions within North and South America at a spatial resolution of 4 km.
@@ -263,7 +263,7 @@ class GOESTMYNRELDeveloperAPIConfig(ResourceBaseAPIConfig):
             self.dataset_desc = "goes_tgy_v4"
 
 
-class GOESTMYNRELDeveloperAPISolarResource(GOESNRELDeveloperAPISolarResourceBase):
+class GOESTMYSolarAPI(GOESNRELDeveloperAPISolarResourceBase):
     def setup(self):
         self.site_config = self.options["plant_config"]["site"]
         self.sim_config = self.options["plant_config"]["plant"]["simulation"]
@@ -271,7 +271,7 @@ class GOESTMYNRELDeveloperAPISolarResource(GOESNRELDeveloperAPISolarResourceBase
         self.dt = self.sim_config["dt"]
         self.start_time = self.sim_config["start_time"]
 
-        # create the input dictionary for GOESNRELDeveloperAPIConfig
+        # create the input dictionary for GOESAPIConfig
         resource_specs = self.options["resource_config"]
         # set the default latitude, longitude, and resource_year from the site_config
         resource_specs.setdefault("latitude", self.site_config["latitude"])
@@ -289,5 +289,5 @@ class GOESTMYNRELDeveloperAPISolarResource(GOESNRELDeveloperAPISolarResourceBase
             "https://developer.nrel.gov/api/nsrdb/v2/solar/nsrdb-GOES-tmy-v4-0-0-download.csv?"
         )
         # create the resource config
-        self.config = GOESTMYNRELDeveloperAPIConfig.from_dict(resource_specs)
+        self.config = GOESTMYAPIConfig.from_dict(resource_specs)
         super().setup()
