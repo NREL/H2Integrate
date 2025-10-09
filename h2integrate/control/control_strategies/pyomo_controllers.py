@@ -670,8 +670,8 @@ class SimpleBatteryControllerHeuristic(PyomoControllerBaseClass):
 @define
 class HeuristicLoadFollowingControllerConfig(PyomoControllerBaseConfig):
     max_charge_rate: int | float = field()
-    charge_efficiency: float = field(default=None, validator=range_val(0.0, 1.0))
-    discharge_efficiency: float = field(default=None, validator=range_val(0.0, 1.0))
+    charge_efficiency: float = field(default=None)
+    discharge_efficiency: float = field(default=None)
     include_lifecycle_count: bool = field(default=False)
 
 

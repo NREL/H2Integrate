@@ -73,7 +73,7 @@ class PySAMBatteryPerformanceModelConfig(BaseConfig):
     """Configuration class for battery performance models.
 
     This class defines configuration parameters for simulating battery
-    performance in either PySAM or HOPP system models. It includes
+    performance in PySAM system models. It includes
     specifications such as capacity, chemistry, state-of-charge limits,
     and reference module characteristics.
 
@@ -85,13 +85,13 @@ class PySAMBatteryPerformanceModelConfig(BaseConfig):
             Rated power capacity of the battery in kilowatts (kW).
             Must be greater than zero.
         system_model_source (str):
-            Source software for the system model. Options are:
+            Source software for the system model. "hopp" source has not been brought
+            over from HOPP yet. Options are:
                 - "pysam"
-                - "hopp"
         chemistry (str):
-            Battery chemistry option. Supported values include:
+            Battery chemistry option. "LDES" has not been brought over from HOPP yet.
+            Supported values include:
                 - PySAM: "LFPGraphite", "LMOLTO", "LeadAcid", "NMCGraphite"
-                - HOPP: "LDES" (generic long-duration energy storage)
         min_charge_percent (float):
             Minimum allowable state of charge as a fraction (0 to 1).
         max_charge_percent (float):
@@ -116,9 +116,9 @@ class PySAMBatteryPerformanceModelConfig(BaseConfig):
     max_capacity: float = field(validator=gt_zero)
     max_charge_rate: float = field(validator=gt_zero)
 
-    system_model_source: str = field(validator=contains(["pysam", "hopp"]))
+    system_model_source: str = field(validator=contains(["pysam"]))
     chemistry: str = field(
-        validator=contains(["LFPGraphite", "LMOLTO", "LeadAcid", "NMCGraphite", "LDES"]),
+        validator=contains(["LFPGraphite", "LMOLTO", "LeadAcid", "NMCGraphite"]),
     )
     min_charge_percent: float = field(validator=range_val(0, 1))
     max_charge_percent: float = field(validator=range_val(0, 1))
@@ -138,8 +138,10 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass):
     This class integrates the NREL PySAM `BatteryStateful` model into
     an OpenMDAO component. It provides inputs and outputs for battery
     capacity, charge/discharge power, state of charge, and unmet or unused
-    demand. The component can be used in standalone simulations or in
-    dispatch optimization frameworks (e.g., Pyomo).
+    demand.
+
+    The PySAM battery simulation does not always respect max and min charge
+    bounds set by the user. It may exceed the bounds by up to 5% SOC.
 
     Attributes:
         config (PySAMBatteryPerformanceModelConfig):
