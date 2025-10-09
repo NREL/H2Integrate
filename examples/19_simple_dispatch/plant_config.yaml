@@ -22,8 +22,6 @@ site:
       resource_model: "wind_toolkit_v2_api"
       resource_parameters:
         resource_year: 2012
-        latitude: 35.2018863
-        longitude: -101.945027
 
 plant:
   plant_life: 30

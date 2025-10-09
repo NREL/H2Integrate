@@ -812,7 +812,7 @@ def test_wind_battery_dispatch_example(subtests):
     # Subtest for LCOE
     with subtests.test("Check LCOE value"):
         lcoe = model.prob.get_val("finance_subgroup_default.LCOE")[0]
-        assert lcoe == pytest.approx(0.09572305233848613, rel=1e-6)
+        assert lcoe == pytest.approx(0.07470820840238226, rel=1e-6)
 
     # Subtest for total electricity produced
     with subtests.test("Check total electricity produced"):
@@ -820,21 +820,21 @@ def test_wind_battery_dispatch_example(subtests):
             name="finance_subgroup_default.electricity_sum.total_electricity_produced",
             units="MW*h/year",
         )[0]
-        assert total_electricity == pytest.approx(2439289.6948979845, rel=1e-6)
+        assert total_electricity == pytest.approx(3125443.1089529935, rel=1e-6)
 
     # Subtest for electricity unused_commodity
     with subtests.test("Check electricity unused commodity"):
         electricity_unused_commodity = np.linalg.norm(
             model.prob.get_val("battery.unused_electricity_out", units="MW")
         )
-        assert electricity_unused_commodity == pytest.approx(30124.16902518022, rel=1e-6)
+        assert electricity_unused_commodity == pytest.approx(36590.067573337095, rel=1e-6)
 
     # Subtest for unmet demand
     with subtests.test("Check electricity unmet demand"):
         electricity_unmet_demand = np.linalg.norm(
             model.prob.get_val("battery.unmet_electricity_demand_out", units="MW")
         )
-        assert electricity_unmet_demand == pytest.approx(1025.2188131057821, rel=1e-6)
+        assert electricity_unmet_demand == pytest.approx(711.1997294551337, rel=1e-6)
 
 
 def test_simple_dispatch_example(subtests):
