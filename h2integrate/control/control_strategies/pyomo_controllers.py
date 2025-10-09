@@ -221,11 +221,7 @@ class PyomoControllerBaseClass(ControllerBaseClass):
                     If the configured control strategy is not implemented.
 
             Notes:
-                1. Uses heuristic strategies: currently only strategies whose
-                   name contains "heuristic" are supported.
-                2. Storage dispatch commands are derived from the controller's
-                   internal fixed dispatch fraction set per window.
-                3. Arrays returned have length self.n_timesteps (full simulation period).
+                1. Arrays returned have length self.n_timesteps (full simulation period).
             """
             self.initialize_parameters()
 
