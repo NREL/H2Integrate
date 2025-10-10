@@ -209,4 +209,4 @@ class GOESNRELDeveloperAPISolarResourceBase(SolarResourceBaseAPIModel):
         return data_dict, data_units
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
-        raise NotImplementedError("This method should be implemented in a subclass.")
+        pass
