@@ -767,10 +767,10 @@ def test_wombat_electrolyzer_example(subtests):
 
 def test_wind_battery_dispatch_example(subtests):
     # Change the current working directory to the example's directory
-    os.chdir(EXAMPLE_DIR / "18_wind_battery_dispatch")
+    os.chdir(EXAMPLE_DIR / "18_pyomo_heuristic_dispatch")
 
     # Create a H2Integrate model
-    model = H2IntegrateModel(Path.cwd() / "h2i_wind_to_battery_storage.yaml")
+    model = H2IntegrateModel(Path.cwd() / "pyomo_heuristic_dispatch.yaml")
 
     demand_profile = np.ones(8760) * 50.0
 

@@ -5,7 +5,7 @@ from h2integrate.core.h2integrate_model import H2IntegrateModel
 
 
 # Create an H2Integrate model
-model = H2IntegrateModel("h2i_wind_to_battery_storage.yaml")
+model = H2IntegrateModel("pyomo_heuristic_dispatch.yaml")
 
 demand_profile = np.ones(8760) * 50.0
 
