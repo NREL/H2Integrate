@@ -827,7 +827,7 @@ def test_wind_battery_dispatch_example(subtests):
         wind_electricity_finance = model.prob.get_val(
             "finance_subgroup_wind.electricity_sum.total_electricity_produced", units="kW*h/year"
         )[0]
-        assert pytest.approx(wind_electricity_finance, rel=1e-6) == 62797265.9296355
+        assert pytest.approx(wind_electricity_finance, rel=1e-6) == total_electricity
 
     with subtests.test("Check total electricity produced from wind compared to wind aep"):
         wind_electricity_performance = np.sum(
