@@ -765,7 +765,7 @@ def test_wombat_electrolyzer_example(subtests):
         assert pytest.approx(lcoe_with_profast_model, rel=1e-5) == 59.0962084
 
 
-def test_wind_battery_dispatch_example(subtests):
+def test_pyomo_heuristic_dispatch_example(subtests):
     # Change the current working directory to the example's directory
     os.chdir(EXAMPLE_DIR / "18_pyomo_heuristic_dispatch")
 
