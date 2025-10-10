@@ -49,6 +49,12 @@ class TestProFastComp(unittest.TestCase):
                 "grid_connection": True,
                 "ppa_price": 0.05,
             },
+            "policy_parameters": {
+                "electricity_itc": 0.3,
+                "h2_storage_itc": 0.3,
+                "electricity_ptc": 25,
+                "h2_ptc": 3,
+            },
         }
 
         self.tech_config = {
@@ -247,6 +253,12 @@ def test_profast_config_provided():
             "cost_year": 2022,
             "grid_connection": True,
             "ppa_price": 0.05,
+        },
+        "policy_parameters": {
+            "electricity_itc": 0.3,
+            "h2_storage_itc": 0.3,
+            "electricity_ptc": 25,
+            "h2_ptc": 3,
         },
     }
 

@@ -44,7 +44,7 @@ def test_custom_model_name_clash(subtests):
         highlevel_data = yaml.safe_load(f)
 
     # Modify the high-level YAML to point to the temp tech_config file
-    highlevel_data["technology_config"] = temp_tech_config.name
+    highlevel_data["technology_config"] = str(temp_tech_config.name)
 
     # Save the modified high-level YAML back
     with temp_highlevel_yaml.open("w") as f:
@@ -95,7 +95,7 @@ def test_custom_financial_model_grouping(subtests):
         highlevel_data = yaml.safe_load(f)
 
     # Modify the high-level YAML to point to the temp tech_config file
-    highlevel_data["technology_config"] = temp_tech_config.name
+    highlevel_data["technology_config"] = str(temp_tech_config.name)
 
     # Save the modified high-level YAML back
     with temp_highlevel_yaml.open("w") as f:
@@ -178,7 +178,7 @@ def test_technology_connections():
         highlevel_data = yaml.safe_load(f)
 
     # Modify the high-level YAML to point to the temp tech_config file
-    highlevel_data["plant_config"] = temp_plant_config.name
+    highlevel_data["plant_config"] = str(temp_plant_config.name)
 
     # Save the modified high-level YAML back
     with temp_highlevel_yaml.open("w") as f:

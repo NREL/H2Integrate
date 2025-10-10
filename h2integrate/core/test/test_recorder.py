@@ -56,7 +56,6 @@ def test_output_folder_creation_first_run(subtests):
     output_file_exists_postrun = (
         EXAMPLE_DIR / "05_wind_h2_opt" / new_output_folder / filename_initial
     ).exists()
-
     with subtests.test("Run 0: recorder output file exists after run"):
         assert output_file_exists_postrun is True
 

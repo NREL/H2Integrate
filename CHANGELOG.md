@@ -5,6 +5,8 @@
 - Added capability for user-defined finance models in the H2Integrate framework
 - Added an optimized offshore methanol production case to examples/03_methanol/co2_hydrogenation_doc
 - Updated setting up recorder in `PoseOptimization`
+- Added framework to run heuristic load following dispatch for storage technologies
+- Added PySAM battery model as a storage technology performance model
 
 ## 0.4.0 [October 1, 2025]
 
