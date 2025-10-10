@@ -75,7 +75,7 @@ finance_parameters:
   finance_subgroups:
     electricity:
       commodity: "electricity"
-      commodity_stream: "combiner"
+      commodity_stream: "combiner" #use the total electricity output from the combiner for the finance calc
       technologies: ["wind", "solar"]
     hydrogen:
       commodity: "hydrogen"
