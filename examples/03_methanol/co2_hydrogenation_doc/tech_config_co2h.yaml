@@ -54,8 +54,8 @@ technologies:
       model: "demand_open_loop_controller"
     model_inputs:
       shared_parameters:
-        resource_name: "hydrogen"
-        resource_units: "kg"
+        commodity_name: "hydrogen"
+        commodity_units: "kg/h"
         max_charge_rate: 50000.0  # kg/time step
         max_capacity: 103701.401563086  # kg
       control_parameters:
@@ -106,8 +106,8 @@ technologies:
       model: "demand_open_loop_controller"
     model_inputs:
       shared_parameters:
-        resource_name: "co2"
-        resource_units: "kg"
+        commodity_name: "co2"
+        commodity_units: "kg/h"
         max_charge_rate: 50000.0  # kg/time step
         max_capacity: 961456.376748904  # kg
       control_parameters:
