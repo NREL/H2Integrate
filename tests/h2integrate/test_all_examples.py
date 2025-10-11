@@ -248,6 +248,27 @@ def test_co2h_methanol_example(subtests):
         assert pytest.approx(model.prob.get_val("methanol.LCOM")[0], rel=1e-6) == 1.381162
 
 
+@unittest.skipUnless(importlib.util.find_spec("mcm") is not None, "mcm is not installed")
+def test_doc_methanol_example(subtests):
+    # Change the current working directory to the CO2 Hydrogenation example's directory
+    os.chdir(EXAMPLE_DIR / "03_methanol" / "co2_hydrogenation_doc")
+
+    # Create a H2Integrate model
+    model = H2IntegrateModel(Path.cwd() / "03_co2h_methanol.yaml")
+
+    # Run the model
+    model.run()
+
+    model.post_process()
+
+    # Check levelized cost of methanol (LCOM)
+    with subtests.test("Check CO2 Hydrogenation LCOM"):
+        assert (
+            pytest.approx(model.prob.get_val("finance_subgroup_default.LCOM"), rel=1e-6)
+            == 2.58989518
+        )
+
+
 def test_wind_h2_opt_example(subtests):
     # Change the current working directory to the example's directory
     os.chdir(EXAMPLE_DIR / "05_wind_h2_opt")
@@ -710,6 +731,39 @@ def test_electrolyzer_om_example(subtests):
         assert pytest.approx(lcoh_with_lcoe_finance, rel=1e-5) == 8.00321771
 
 
+def test_wombat_electrolyzer_example(subtests):
+    # Change the current working directory to the example's directory
+    os.chdir(EXAMPLE_DIR / "08_wind_electrolyzer")
+
+    # Create a H2Integrate model
+    model = H2IntegrateModel(Path.cwd() / "wind_plant_electrolyzer.yaml")
+
+    model.run()
+
+    lcoe_with_profast_model = model.prob.get_val(
+        "finance_subgroup_electricity_profast.LCOE", units="USD/MW/h"
+    )[0]
+    lcoe_with_custom_model = model.prob.get_val(
+        "finance_subgroup_electricity_custom.LCOE", units="USD/MW/h"
+    )[0]
+
+    lcoh_with_custom_model = model.prob.get_val(
+        "finance_subgroup_hydrogen.LCOH_produced_custom_model", units="USD/kg"
+    )[0]
+    lcoh_with_profast_model = model.prob.get_val(
+        "finance_subgroup_hydrogen.LCOH_produced_profast_model", units="USD/kg"
+    )[0]
+
+    with subtests.test("Check LCOH from custom  model"):
+        assert pytest.approx(lcoh_with_custom_model, rel=1e-5) == 4.19232346
+    with subtests.test("Check LCOH from ProFAST model"):
+        assert pytest.approx(lcoh_with_profast_model, rel=1e-5) == 5.32632237
+    with subtests.test("Check LCOE from custom model"):
+        assert pytest.approx(lcoe_with_custom_model, rel=1e-5) == 51.17615298
+    with subtests.test("Check LCOE from ProFAST model"):
+        assert pytest.approx(lcoe_with_profast_model, rel=1e-5) == 59.0962084
+
+
 def test_wind_battery_dispatch_example(subtests):
     # Change the current working directory to the example's directory
     os.chdir(EXAMPLE_DIR / "19_wind_battery_dispatch")
@@ -767,6 +821,52 @@ def test_wind_battery_dispatch_example(subtests):
         )
         assert pytest.approx(electricity_missed_load, rel=1e-6) == 165604.70758669
 
+    # Subtest for total electricity produced from wind, should be equal to total
+    # electricity produced from finance_subgroup_electricity
+    with subtests.test("Check total electricity produced from wind"):
+        wind_electricity_finance = model.prob.get_val(
+            "finance_subgroup_wind.electricity_sum.total_electricity_produced", units="kW*h/year"
+        )[0]
+        assert pytest.approx(wind_electricity_finance, rel=1e-6) == total_electricity
+
+    with subtests.test("Check total electricity produced from wind compared to wind aep"):
+        wind_electricity_performance = np.sum(
+            model.prob.get_val("wind.electricity_out", units="kW")
+        )
+        assert pytest.approx(wind_electricity_performance, rel=1e-6) == wind_electricity_finance
+
+    # Subtest for total electricity produced from battery, should be equal
+    # to sum of "battery.electricity_out"
+    with subtests.test("Check total electricity produced from battery"):
+        battery_electricity_finance = model.prob.get_val(
+            "finance_subgroup_battery.electricity_sum.total_electricity_produced", units="MW*h/year"
+        )[0]
+        battery_electricity_performance = np.sum(
+            model.prob.get_val("battery.electricity_out", units="MW")
+        )
+        assert (
+            pytest.approx(battery_electricity_finance, rel=1e-6) == battery_electricity_performance
+        )
+
+    wind_lcoe = model.prob.get_val("finance_subgroup_wind.LCOE", units="USD/MW/h")[0]
+    battery_lcoe = model.prob.get_val("finance_subgroup_battery.LCOE", units="USD/MW/h")[0]
+    electricity_lcoe = model.prob.get_val("finance_subgroup_electricity.LCOE", units="USD/MW/h")[0]
+
+    with subtests.test("Check electricity LCOE is greater than wind LCOE"):
+        assert electricity_lcoe > wind_lcoe
+
+    with subtests.test("Check battery LCOE is greater than electricity LCOE"):
+        assert battery_lcoe > electricity_lcoe
+
+    with subtests.test("Check battery LCOE"):
+        assert pytest.approx(battery_lcoe, rel=1e-6) == 131.781997
+
+    with subtests.test("Check wind LCOE"):
+        assert pytest.approx(wind_lcoe, rel=1e-6) == 58.8248
+
+    with subtests.test("Check electricity LCOE"):
+        assert pytest.approx(electricity_lcoe, rel=1e-6) == 78.01723
+
 
 def test_windard_pv_battery_dispatch_example(subtests):
     # Change the current working directory to the example's directory
@@ -799,35 +899,38 @@ def test_windard_pv_battery_dispatch_example(subtests):
         )
 
     with subtests.test("Check demand satisfaction"):
-        electricity_out = model.prob.get_val("battery.electricity_out", units="MW")
+        dispatched_electricity = model.prob.get_val("battery.electricity_out", units="MW")
         # Demand should be met for the last part of the year
         assert np.allclose(
-            electricity_out[8700:],
+            dispatched_electricity[8700:],
             model.prob.get_val("battery.electricity_demand_profile", units="MW/h")[8700:],
         )
 
     # Subtest for LCOE
-    with subtests.test("Check LCOE value"):
-        lcoe = model.prob.get_val("finance_subgroup_electricity.LCOE")[0]
-        assert pytest.approx(lcoe, rel=1e-6) == 0.07200626005588326
+    with subtests.test("Check dispatched LCOE value"):
+        lcoe = model.prob.get_val("finance_subgroup_dispatched_electricity.LCOE")[0]
+        assert pytest.approx(lcoe, rel=1e-6) == 0.22171693744337054
+
+    with subtests.test("Check generation LCOE value (excludes battery)"):
+        lcoe = model.prob.get_val("finance_subgroup_produced_electricity.LCOE")[0]
+        assert pytest.approx(lcoe, rel=1e-6) == 0.06770722531229562
 
     # Subtest for total electricity produced
-    with subtests.test("Check total electricity produced"):
+    with subtests.test("Check total electricity dispatched"):
         total_electricity = model.prob.get_val(
-            "finance_subgroup_electricity.electricity_sum.total_electricity_produced",
+            "finance_subgroup_dispatched_electricity.electricity_sum.total_electricity_produced",
             units="MW*h/year",
         ).sum()
-        assert total_electricity == pytest.approx(electricity_out.sum())
+        assert total_electricity == pytest.approx(dispatched_electricity.sum())
 
     # Subtest for electricity curtailed
     with subtests.test("Check electricity curtailed"):
-        electricity_curtailed = np.linalg.norm(
-            model.prob.get_val("battery.electricity_curtailed", units="MW")
-        )
-        assert (
-            pytest.approx(electricity_curtailed, rel=1e-6)
-            == wind_electricity + solar_electricity - electricity_out
-        )
+        electricity_curtailed = model.prob.get_val(
+            "battery.electricity_curtailed", units="MW"
+        ).sum()
+
+        # import pdb; pdb.set_trace()
+        assert electricity_curtailed == pytest.approx(525088.2729268058, rel=1e-6)
 
     # Subtest for missed load
     with subtests.test("Check electricity missed load"):

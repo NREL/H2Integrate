@@ -61,7 +61,7 @@ constraints:
       lower: 0.552
 
 objective:
-  name: finance_subgroup_electricity.LCOE
+  name: finance_subgroup_dispatched_electricity.LCOE
 
 recorder:
   flag: True

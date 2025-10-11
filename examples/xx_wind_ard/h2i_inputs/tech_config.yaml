@@ -16,13 +16,14 @@ technologies:
           modeling_options:
             windIO_plant: !include ../ard_inputs/windio.yaml
             layout:
-              type: "grid"
-              N_turbines: 9 # 65
+              N_turbines: 9 #65 # should be 65 turbines
               N_substations: 1
               spacing_primary: 7.0
               spacing_secondary: 7.0
               angle_orientation: 0.0
               angle_skew: 0.0
+            aero:
+              return_turbine_output: False
             floris:
               peak_shaving_fraction: 0.2
               peak_shaving_TI_threshold: 0.0
@@ -33,7 +34,7 @@ technologies:
                 time_limit: 60
                 mip_gap: 0.02
               model_options:
-                topology: "radial"  # "radial", "branched"
+                topology: "branched"  # "radial", "branched"
                 feeder_route: "segmented"
                 feeder_limit: "unlimited"
             offshore: false
@@ -90,6 +91,10 @@ technologies:
   combiner:
     performance_model:
       model: "combiner_performance"
+    model_inputs:
+      performance_parameters:
+        commodity: electricity
+        commodity_units: kW
   battery:
     performance_model:
       model: "simple_generic_storage"

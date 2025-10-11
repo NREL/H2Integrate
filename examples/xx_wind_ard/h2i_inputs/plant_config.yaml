@@ -58,6 +58,11 @@ finance_parameters:
     cost_year_adjustment_inflation: 0.025 # used to adjust modeled costs to target_dollar_year
     target_dollar_year: 2025
   finance_subgroups:
-    electricity:
+    dispatched_electricity:
       commodity: "electricity"
+      commodity_stream: "battery"
       technologies: ["wind", "solar", "battery"]
+    produced_electricity:
+      commodity: "electricity"
+      commodity_stream: "combiner"
+      technologies: ["wind", "solar"]
