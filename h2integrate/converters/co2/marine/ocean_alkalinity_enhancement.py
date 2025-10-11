@@ -131,11 +131,11 @@ class OAEPerformanceModel(MarineCarbonCapturePerformanceBaseClass):
             desc="Temperature of the alkaline seawater (°C)",
         )
         self.add_output(
-            "unused_acid",
+            "excess_acid",
             val=0.0,
             shape=n_timesteps,
             units="m**3",
-            desc="Unused acid produced (m³)",
+            desc="Excess acid produced (m³)",
         )
         self.add_output(
             "mass_sellable_product",
@@ -223,7 +223,7 @@ class OAEPerformanceModel(MarineCarbonCapturePerformanceBaseClass):
         outputs["alkaline_seawater_ta"] = oae_outputs.OAE_outputs["ta_f"]
         outputs["alkaline_seawater_salinity"] = oae_outputs.OAE_outputs["sal_f"]
         outputs["alkaline_seawater_temp"] = oae_outputs.OAE_outputs["temp_f"]
-        outputs["unused_acid"] = oae_outputs.OAE_outputs["volUnusedAcid"]
+        outputs["excess_acid"] = oae_outputs.OAE_outputs["volExcessAcid"]
         outputs["mass_sellable_product"] = oae_outputs.M_rev_yr
         outputs["value_products"] = oae_outputs.X_rev_yr
         outputs["mass_acid_disposed"] = oae_outputs.M_disposed_yr
