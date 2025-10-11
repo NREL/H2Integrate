@@ -1,8 +1,8 @@
 # Control Overview
 
-There are two different systematic approaches, or frameworks, in H2Integrate for control: [open-loop](open-loop control) and [pyomo](pyomo control). These two frameworks are useful in different situations and have different impacts on the system and control strategies that can be implemented. Both control frameworks are focused on dispatching storage technologies and as such can currently only be used on storage technologies. However, we plan to extend them to work more generally as system controllers, and even though the controllers must be placed on storage technologies for now, they behave somewhat like system controllers in that they may curtail/discard commodity amounts exceeding the needs of the storage technology and the specified demand. However, any unused commodity may be connected to another down-stream component to avoid actual curtailment.
-
-(open-loop control)=
+There are two different systematic approaches, or frameworks, in H2Integrate for control: [open-loop](open-loop-control) and [pyomo](pyomo-control). These two frameworks are useful in different situations and have different impacts on the system and control strategies that can be implemented. Both control frameworks are focused on dispatching storage technologies and as such can currently only be used on storage technologies. However, we plan to extend them to work more generally as system controllers, and even though the controllers must be placed on storage technologies for now, they behave somewhat like system controllers in that they may curtail/discard commodity amounts exceeding the needs of the storage technology and the specified demand. However, any unused commodity may be connected to another down-stream component to avoid actual curtailment.
+[here](profastcomp:tech_specific_finance)
+(open-loop-control)=
 ## Open-loop control framework
 The first, open-loop control, assumes no feedback of any kind to the controller. The open-loop framework does not require a detailed performance model and can essentially act as the performance model in the absence of a dedicated performance model for a given storage technology. The open-loop framework establishes a control component that runs the control and passes out information about storage dispatch, soc, etc.
 
@@ -21,7 +21,7 @@ For examples of how to use the open-loop control framework, see the following:
     - `examples/14_wind_hydrogen_dispatch/`
     - `examples/19_simple_dispatch/`
 
-(pyomo control)=
+(pyomo-control)=
 ## Pyomo control framework
 The second systematic control approach, pyomo control, allows for the possibility of feedback control at specified intervals, but can also be used for open-loop control if desired. In the pyomo control framework, each technology can have control rules associated with them that are in turn passed to the pyomo control component, which is owned by the storage technology. The pyomo control component combines the technology rules into a single pyomo model, which is then passed to the storage technology performance model inside a callable dispatch function. The dispatch function also accepts a simulation method from the performance model and iterates between the pyomo model for dispatch commands and the performance simulation function to simulated performance with the specified commands. The dispatch function runs in specified time windows for dispatch and performance until the whole simulation time has been run.
 
