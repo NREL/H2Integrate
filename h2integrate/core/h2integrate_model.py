@@ -559,7 +559,7 @@ class H2IntegrateModel:
                         "model_inputs": {
                             "performance_parameters": {
                                 "commodity": commodity,
-                                "commodity_units": "kW" if commodity == "electricity" else "kg",
+                                "commodity_units": "kW" if commodity == "electricity" else "kg/h",
                             }
                         }
                     }

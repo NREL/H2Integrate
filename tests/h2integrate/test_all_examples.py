@@ -507,19 +507,28 @@ def test_hydrogen_dispatch_example(subtests):
     with subtests.test("Check LCOE"):
         assert (
             pytest.approx(
-                model.prob.get_val("finance_subgroup_elec.LCOE", units="USD/MW/h")[0],
+                model.prob.get_val("finance_subgroup_electricity.LCOE", units="USD/MW/h")[0],
                 rel=1e-5,
             )
-            == 105.75426
+            == 59.0962072084844
         )
 
-    with subtests.test("Check LCOH"):
+    with subtests.test("Check all h2 LCOH"):
         assert (
             pytest.approx(
-                model.prob.get_val("finance_subgroup_h2.LCOH", units="USD/kg")[0],
+                model.prob.get_val("finance_subgroup_all_hydrogen.LCOH", units="USD/kg")[0],
                 rel=1e-5,
             )
-            == 5.6540332
+            == 5.360810057454742
+        )
+
+    with subtests.test("Check dispatched h2 LCOH"):
+        assert (
+            pytest.approx(
+                model.prob.get_val("finance_subgroup_dispatched_hydrogen.LCOH", units="USD/kg")[0],
+                rel=1e-5,
+            )
+            == 8.371194137479359
         )
 
 
@@ -810,14 +819,18 @@ def test_pyomo_heuristic_dispatch_example(subtests):
         assert electricity_out.mean() >= 45  # MW
 
     # Subtest for LCOE
-    with subtests.test("Check LCOE value"):
-        lcoe = model.prob.get_val("finance_subgroup_default.LCOE")[0]
+    with subtests.test("Check all LCOE value"):
+        lcoe = model.prob.get_val("finance_subgroup_all_electricity.LCOE")[0]
         assert lcoe == pytest.approx(0.07470820840238226, rel=1e-6)
+
+    with subtests.test("Check dispatched LCOE value"):
+        lcoe = model.prob.get_val("finance_subgroup_dispatched_electricity.LCOE")[0]
+        assert lcoe == pytest.approx(0.5473068063691052, rel=1e-6)
 
     # Subtest for total electricity produced
     with subtests.test("Check total electricity produced"):
         total_electricity = model.prob.get_val(
-            name="finance_subgroup_default.electricity_sum.total_electricity_produced",
+            name="finance_subgroup_all_electricity.electricity_sum.total_electricity_produced",
             units="MW*h/year",
         )[0]
         assert total_electricity == pytest.approx(3125443.1089529935, rel=1e-6)

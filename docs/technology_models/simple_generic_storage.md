@@ -32,7 +32,7 @@ The example produces detailed plots showing:
 The model can be configured for hydrogen storage systems by setting:
 ```yaml
 commodity_name: "hydrogen"
-commodity_rate_units: "kg/h"
+commodity_units: "kg/h" # commodity_units must by a rate
 max_capacity: 1000.0  # kg
 ```
 
@@ -43,7 +43,7 @@ This is useful for modeling hydrogen production from electrolyzers with variable
 For carbon capture and utilization systems:
 ```yaml
 commodity_name: "co2"
-commodity_rate_units: "kg/h"
+commodity_units: "kg/h"
 max_capacity: 50000.0  # kg
 ```
 

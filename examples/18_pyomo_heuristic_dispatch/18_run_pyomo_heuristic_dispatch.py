@@ -17,6 +17,10 @@ model.prob.set_val("battery.electricity_demand_in", demand_profile, units="MW")
 # Run the model
 model.run()
 
+import openmdao.api as om
+
+
+om.n2(model.prob)
 
 # Plot the results
 fig, ax = plt.subplots(2, 1, sharex=True)

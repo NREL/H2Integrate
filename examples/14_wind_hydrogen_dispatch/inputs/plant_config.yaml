@@ -67,9 +67,14 @@ finance_parameters:
     cost_year_adjustment_inflation: 0.025 # used to adjust modeled costs to target_dollar_year
     target_dollar_year: 2022
   finance_subgroups:
-    elec:
+    electricity:
       commodity: "electricity"
-      technologies: ["wind", "electrolyzer", "h2_storage"]
-    h2:
+      technologies: ["wind"]
+    all_hydrogen:
       commodity: "hydrogen"
+      commodity_stream: "electrolyzer" #use all hydrogen from the electrolyzer controller in finance calc
+      technologies: ["wind", "electrolyzer", "h2_storage"]
+    dispatched_hydrogen:
+      commodity: "hydrogen"
+      commodity_stream: "h2_storage" #use only dispatched hydrogen from h2_storage controller in finance calc
       technologies: ["wind", "electrolyzer", "h2_storage"]

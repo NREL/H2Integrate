@@ -7,7 +7,7 @@ from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
 @define
 class SimpleGenericStorageConfig(BaseConfig):
     commodity_name: str = field()
-    commodity_rate_units: str = field()
+    commodity_units: str = field()
 
 
 class SimpleGenericStorage(om.ExplicitComponent):
@@ -27,10 +27,8 @@ class SimpleGenericStorage(om.ExplicitComponent):
             strict=False,
         )
         commodity_name = self.config.commodity_name
-        commodity_rate_units = self.config.commodity_rate_units
-        self.add_input(
-            f"{commodity_name}_in", val=0.0, shape=n_timesteps, units=commodity_rate_units
-        )
+        commodity_units = self.config.commodity_units
+        self.add_input(f"{commodity_name}_in", val=0.0, shape=n_timesteps, units=commodity_units)
 
     def compute(self, inputs, outputs):
         pass

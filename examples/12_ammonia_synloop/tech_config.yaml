@@ -56,7 +56,7 @@ technologies:
         days: 0 #how many days worth of production we should be able to store (this is ignored if `capacity_from_max_on_turbine_storage` is set to True)
       control_parameters:
         commodity_name: "hydrogen"
-        commodity_rate_units: "kg/h"
+        commodity_units: "kg/h"
   ammonia:
     performance_model:
       model: "synloop_ammonia_performance"

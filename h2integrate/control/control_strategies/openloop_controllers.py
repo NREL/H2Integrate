@@ -11,7 +11,7 @@ from h2integrate.control.control_strategies.controller_baseclass import Controll
 @define
 class PassThroughOpenLoopControllerConfig(BaseConfig):
     commodity_name: str = field()
-    commodity_rate_units: str = field()
+    commodity_units: str = field()
 
 
 class PassThroughOpenLoopController(ControllerBaseClass):
@@ -32,14 +32,14 @@ class PassThroughOpenLoopController(ControllerBaseClass):
         self.add_input(
             f"{self.config.commodity_name}_in",
             shape_by_conn=True,
-            units=self.config.commodity_rate_units,
+            units=self.config.commodity_units,
             desc=f"{self.config.commodity_name} input timeseries from production to storage",
         )
 
         self.add_output(
             f"{self.config.commodity_name}_out",
             copy_shape=f"{self.config.commodity_name}_in",
-            units=self.config.commodity_rate_units,
+            units=self.config.commodity_units,
             desc=f"{self.config.commodity_name} output timeseries from plant after storage",
         )
 
@@ -93,9 +93,9 @@ class DemandOpenLoopControllerConfig(BaseConfig):
 
     Attributes:
         commodity_name (str): Name of the commodity being controlled (e.g., "hydrogen").
-        commodity_rate_units (str): Units of the commodity (e.g., "kg/h").
+        commodity_units (str): Units of the commodity (e.g., "kg").
         max_capacity (float): Maximum storage capacity of the commodity (in non-rate units,
-            e.g., "kg" if `commodity_rate_units` is "kg/h").
+            e.g., "kg" if `commodity_units` is "kg").
         max_charge_percent (float): Maximum allowable state of charge (SOC) as a percentage
             of `max_capacity`, represented as a decimal between 0 and 1.
         min_charge_percent (float): Minimum allowable SOC as a percentage of `max_capacity`,
@@ -117,11 +117,11 @@ class DemandOpenLoopControllerConfig(BaseConfig):
             the storage, represented as a decimal between 0 and 1 (e.g., 0.81 for 81% efficiency).
             Optional if `charge_efficiency` and `discharge_efficiency` are provided.
         demand_profile (scalar or list): The demand values for each time step (in the same units
-            as `commodity_rate_units`) or a scalar for a constant demand.
+            as `commodity_units`) or a scalar for a constant demand.
     """
 
     commodity_name: str = field()
-    commodity_rate_units: str = field()
+    commodity_units: str = field()
     max_capacity: float = field()
     max_charge_percent: float = field(validator=range_val(0, 1))
     min_charge_percent: float = field(validator=range_val(0, 1))
@@ -179,22 +179,22 @@ class DemandOpenLoopController(ControllerBaseClass):
 
     Inputs:
         {commodity_name}_in (float): Input commodity flow timeseries (e.g., hydrogen production).
-            - Units: Defined in `commodity_rate_units` (e.g., "kg/h").
+            - Units: Defined in `commodity_units` (e.g., "kg").
 
     Outputs:
         {commodity_name}_out (float): Output commodity flow timeseries after storage.
-            - Units: Defined in `commodity_rate_units` (e.g., "kg/h").
+            - Units: Defined in `commodity_rate` (e.g., "kg").
         {commodity_name}_soc (float): State of charge (SOC) timeseries for the storage system.
             - Units: "unitless" (percentage of maximum capacity given as a ratio between 0 and 1).
         {commodity_name}_unused_commodity (float): Curtailment timeseries for unused
         input commodity.
-            - Units: Defined in `commodity_rate_units` (e.g., "kg/h").
+            - Units: Defined in `commodity_units` (e.g., "kg").
             - Note: curtailment in this case does not reduce what the converter produces, but
                 rather the system just does not use it (throws it away) because this controller is
                 specific to the storage technology and has no influence on other technologies in
                 the system.
         {commodity_name}_unmet_demand (float): Missed load timeseries when demand exceeds supply.
-            - Units: Defined in `commodity_rate_units` (e.g., "kg/h").
+            - Units: Defined in `commodity_units` (e.g., "kg").
 
     """
 
@@ -210,7 +210,7 @@ class DemandOpenLoopController(ControllerBaseClass):
         self.add_input(
             f"{commodity_name}_in",
             shape_by_conn=True,
-            units=self.config.commodity_rate_units,
+            units=f"{self.config.commodity_units}",
             desc=f"{commodity_name} input timeseries from production to storage",
         )
 
@@ -219,7 +219,7 @@ class DemandOpenLoopController(ControllerBaseClass):
 
         self.add_input(
             f"{commodity_name}_demand_profile",
-            units=f"{self.config.commodity_rate_units}/h",
+            units=f"{self.config.commodity_units}",
             val=self.config.demand_profile,
             shape=self.n_timesteps,
             desc=f"{commodity_name} demand profile timeseries",
@@ -228,7 +228,7 @@ class DemandOpenLoopController(ControllerBaseClass):
         self.add_output(
             f"{commodity_name}_out",
             copy_shape=f"{commodity_name}_in",
-            units=self.config.commodity_rate_units,
+            units=f"{self.config.commodity_units}",
             desc=f"{commodity_name} output timeseries from plant after storage",
         )
 
@@ -242,7 +242,7 @@ class DemandOpenLoopController(ControllerBaseClass):
         self.add_output(
             f"{commodity_name}_unused_commodity",
             copy_shape=f"{commodity_name}_in",
-            units=self.config.commodity_rate_units,
+            units=self.config.commodity_units,
             desc=f"{commodity_name} curtailment timeseries for inflow commodity at \
                 storage point",
         )
@@ -250,7 +250,7 @@ class DemandOpenLoopController(ControllerBaseClass):
         self.add_output(
             f"{commodity_name}_unmet_demand",
             copy_shape=f"{commodity_name}_in",
-            units=self.config.commodity_rate_units,
+            units=self.config.commodity_units,
             desc=f"{commodity_name} missed load timeseries",
         )
 
