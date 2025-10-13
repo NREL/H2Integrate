@@ -37,6 +37,7 @@ parts:
   - file: technology_models/atb_costs_pv.md
   - file: technology_models/co2.md
   - file: technology_models/simple_generic_storage.md
+  - file: technology_models/wind_plant_ard.md
 
 - caption: Resource Models
   chapters:

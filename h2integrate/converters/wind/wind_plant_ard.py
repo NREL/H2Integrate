@@ -7,6 +7,8 @@ from h2integrate.core.model_baseclasses import CostModelBaseClass
 
 
 class WindArdCostComponent(CostModelBaseClass):
+    """The class is needed to allow connecting the Ard cost_year easily in H2Integrate"""
+
     def setup(self):
         self.config = CostModelBaseConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost")
@@ -20,13 +22,55 @@ class WindArdCostComponent(CostModelBaseClass):
 
 @define
 class WindPlantArdModelConfig(BaseConfig):
+    """Configuration container for Ard wind plant model inputs.
+
+    Attributes
+    ----------
+    ard_system : dict
+        Dictionary of Ard system / layout parameters (turbine specs, layout bounds,
+        wake model settings, etc.) passed through to `set_up_ard_model`.
+    ard_data_path : str
+        Root path to Ard data resources (e.g., turbine libraries).
+    """
+
     ard_system: dict = field()
     ard_data_path: str = field()
 
 
 class ArdWindPlantModel(om.Group):
     """
-    Create Ard group and promote Ard names into the H2Integrate naming conventions
+    OpenMDAO Group integrating the Ard wind plant as a sub-problem..
+
+    Added Subsystems
+    ----------------
+    wind_ard_cost : WindArdCostComponent
+        Necessary for providing cost_year to H2Integrate.
+    ard_sub_prob : SubmodelComp
+        Encapsulated Ard Problem exposing specified inputs/outputs.
+
+    Promoted Inputs
+    ---------------
+    spacing_primary
+    spacing_secondary
+    angle_orientation
+    angle_skew
+    x_substations
+    y_substations
+
+    Promoted Outputs
+    ----------------
+    electricity_out : float
+        Annual energy production (AEP) in MWh (as provided by ARD / FLORIS).
+    CapEx : float
+        Capital expenditure from ARD turbine & balance of plant cost model.
+    OpEx : float
+        Operating expenditure from ARD.
+    boundary_distances : array
+        Distances from turbines to boundary segments.
+    turbine_spacing : array
+        Inter-turbine spacing metrics.
+    cost_year, VarOpEx
+        From cost component (VarOpEx currently placeholder).
     """
 
     def initialize(self):
