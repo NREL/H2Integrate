@@ -60,6 +60,12 @@ from h2integrate.converters.natural_gas.natural_gas_cc_ct import (
 )
 from h2integrate.converters.hydrogen.singlitico_cost_model import SingliticoCostModel
 from h2integrate.converters.co2.marine.direct_ocean_capture import DOCCostModel, DOCPerformanceModel
+from h2integrate.resource.solar.nrel_developer_goes_api_models import (
+    GOESTMYSolarAPI,
+    GOESConusSolarAPI,
+    GOESFullDiscSolarAPI,
+    GOESAggregatedSolarAPI,
+)
 from h2integrate.converters.hydrogen.eco_tools_pem_electrolyzer import (
     ECOElectrolyzerPerformanceModel,
 )
@@ -91,6 +97,10 @@ supported_models = {
     # Resources
     "river_resource": RiverResource,
     "wind_toolkit_v2_api": WTKNRELDeveloperAPIWindResource,
+    "goes_aggregated_solar_v4_api": GOESAggregatedSolarAPI,
+    "goes_conus_solar_v4_api": GOESConusSolarAPI,
+    "goes_fulldisc_solar_v4_api": GOESFullDiscSolarAPI,
+    "goes_tmy_solar_v4_api": GOESTMYSolarAPI,
     # Converters
     "wind_plant_performance": WindPlantPerformanceModel,
     "wind_plant_cost": WindPlantCostModel,
