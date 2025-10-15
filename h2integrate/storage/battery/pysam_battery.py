@@ -177,7 +177,8 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass):
         unused_commodity_out (ndarray):
             Unused energy not absorbed by the battery (kW).
         electricity_out (ndarray):
-            Supplied electricity from the battery to meet demand (kW).
+            Dispatched electricity to meet demand (kW), including electricity from
+            electricity_in that was never used to charge the battery.
         SOC (ndarray):
             Battery state of charge (%).
         battery_electricity_out (ndarray):

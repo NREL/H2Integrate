@@ -93,9 +93,9 @@ class DemandOpenLoopControllerConfig(BaseConfig):
 
     Attributes:
         commodity_name (str): Name of the commodity being controlled (e.g., "hydrogen").
-        commodity_units (str): Units of the commodity (e.g., "kg").
+        commodity_units (str): Units of the commodity (e.g., "kg/h").
         max_capacity (float): Maximum storage capacity of the commodity (in non-rate units,
-            e.g., "kg" if `commodity_units` is "kg").
+            e.g., "kg" if `commodity_units` is "kg/h").
         max_charge_percent (float): Maximum allowable state of charge (SOC) as a percentage
             of `max_capacity`, represented as a decimal between 0 and 1.
         min_charge_percent (float): Minimum allowable SOC as a percentage of `max_capacity`,
@@ -179,22 +179,24 @@ class DemandOpenLoopController(ControllerBaseClass):
 
     Inputs:
         {commodity_name}_in (float): Input commodity flow timeseries (e.g., hydrogen production).
-            - Units: Defined in `commodity_units` (e.g., "kg").
+            - Units: Defined in `commodity_units` (e.g., "kg/h").
 
     Outputs:
-        {commodity_name}_out (float): Output commodity flow timeseries after storage.
-            - Units: Defined in `commodity_rate` (e.g., "kg").
+        {commodity_name}_out (float): Output commodity flow timeseries after storage to meet demand.
+            - Units: Defined in `commodity_units` (e.g., "kg/h").
+            - Note: the may include commodity from commodity_in that was never used to charge the
+                    storage system but was directly dispatched to meet demand.
         {commodity_name}_soc (float): State of charge (SOC) timeseries for the storage system.
             - Units: "unitless" (percentage of maximum capacity given as a ratio between 0 and 1).
         {commodity_name}_unused_commodity (float): Curtailment timeseries for unused
         input commodity.
-            - Units: Defined in `commodity_units` (e.g., "kg").
+            - Units: Defined in `commodity_units` (e.g., "kg/h").
             - Note: curtailment in this case does not reduce what the converter produces, but
                 rather the system just does not use it (throws it away) because this controller is
                 specific to the storage technology and has no influence on other technologies in
                 the system.
         {commodity_name}_unmet_demand (float): Missed load timeseries when demand exceeds supply.
-            - Units: Defined in `commodity_units` (e.g., "kg").
+            - Units: Defined in `commodity_units` (e.g., "kg/h").
 
     """
 
