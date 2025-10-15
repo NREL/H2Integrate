@@ -2,6 +2,7 @@ import numpy as np
 from attrs import field, define
 
 from h2integrate.core.utilities import merge_shared_inputs
+from h2integrate.tools.inflation.inflate import inflate_cpi, inflate_cepci
 from h2integrate.converters.hydrogen.geologic.geoh2_baseclass import (
     GeoH2CostConfig,
     GeoH2CostBaseClass,
@@ -26,22 +27,20 @@ class StimulatedGeoH2PerformanceConfig(GeoH2PerformanceConfig):
         technologies/geoh2/model_inputs/performance_parameters all other parameters
 
     Parameters (in addition to those in geoh2_baseclass.GeoH2PerformanceConfig):
-        -serp_rate:             float [1/s] - Rate constant of serpentinization reaction
-        -caprock_depth:         float [m] - Depth below surface of caprock not participating in rxn
-        -borehole_depth:        float [m] - Total depth of borehole (potentially including turns)
+        -olivine_phase_vol:     float [percent] - The volume percent of olivine in the formation
+        -olivine_fe_ii_conc:    float [percent] - The mass percent of iron (II) in the olivine
+        -depth_to_formation:    float [m] - Depth below surface of caprock not participating in rxn
         -inj_prod_distance:     float [m] - Distance between injection and production wells
         -reaction_zone_width:   float [m] - Estimated width of rock volume participating in the rxn
-        -iron_II_conc:          float [percent] - Mass % of iron (II) in the rock
         -bulk_density:          float [kg/m**3] - Bulk density of rock
         -water_temp:            float [C] - Temperature of water being injected
     """
 
-    serp_rate: float = field()  # 1/sec
-    caprock_depth: float = field()  # meters
-    borehole_depth: float = field()  # meters
+    olivine_phase_vol: float = field()  # vol pct
+    olivine_fe_ii_conc: float = field()  # wt pct
+    depth_to_formation: float = field()  # meters
     inj_prod_distance: float = field()  # meters
     reaction_zone_width: float = field()  # meters
-    iron_II_conc: float = field()  # wt_pct
     bulk_density: float = field()  # kg/m^3
     water_temp: float = field()  # deg C
 
@@ -56,16 +55,15 @@ class StimulatedGeoH2PerformanceModel(GeoH2PerformanceBaseClass):
     All inputs come from StimulatedGeoH2PerformanceConfig
 
     Inputs (in addition to those in geoh2_baseclass.GeoH2PerformanceBaseClass):
-        -serp_rate:             float [1/s] - Rate constant of serpentinization reaction
-        -caprock_depth:         float [m] - Depth below surface of caprock not participating in rxn
-        -borehole_depth:        float [m] - Total depth of borehole (potentially including turns)
+        -olivine_phase_vol:     float [percent] - The volume percent of olivine in the formation
+        -olivine_fe_ii_conc:    float [percent] - The mass percent of iron (II) in the olivine
+        -depth_to_formation:    float [m] - Depth below surface of caprock not participating in rxn
         -inj_prod_distance:     float [m] - Distance between injection and production wells
         -reaction_zone_width:   float [m] - Estimated width of rock volume participating in the rxn
-        -iron_II_conc:          float [percent] - Mass % of iron (II) in the rock
         -bulk_density:          float [kg/m**3] - Bulk density of rock
         -water_temp:            float [C] - Temperature of water being injected
     Outputs (in addition to those in geoh2_baseclass.GeoH2PerformanceBaseClass):
-        -hydrogen_produced:     array [kg/h] - The hydrogen production profile from stimulation
+        -hydrogen_out_stim:     array [kg/h] - The hydrogen production profile from stimulation
                                         over 1 year (8760 hours)
     """
 
@@ -76,35 +74,42 @@ class StimulatedGeoH2PerformanceModel(GeoH2PerformanceBaseClass):
         )
         super().setup()
 
-        self.add_input("serp_rate", units="1/s", val=self.config.serp_rate)
-        self.add_input("caprock_depth", units="m", val=self.config.caprock_depth)
-        self.add_input("borehole_depth", units="m", val=self.config.borehole_depth)
+        self.add_input("olivine_phase_vol", units="percent", val=self.config.olivine_phase_vol)
+        self.add_input("olivine_fe_ii_conc", units="percent", val=self.config.olivine_fe_ii_conc)
+        self.add_input("depth_to_formation", units="m", val=self.config.depth_to_formation)
         self.add_input("inj_prod_distance", units="m", val=self.config.inj_prod_distance)
         self.add_input("reaction_zone_width", units="m", val=self.config.reaction_zone_width)
-        self.add_input("iron_II_conc", units="percent", val=self.config.iron_II_conc)
         self.add_input("bulk_density", units="kg/m**3", val=self.config.bulk_density)
         self.add_input("water_temp", units="C", val=self.config.water_temp)
 
-        self.add_output("hydrogen_produced", units="kg/h", shape=n_timesteps)
+        self.add_output("hydrogen_out_stim", units="kg/h", shape=n_timesteps)
 
     def compute(self, inputs, outputs):
         n_timesteps = self.options["plant_config"]["plant"]["simulation"]["n_timesteps"]
         lifetime = int(inputs["well_lifetime"][0])
 
-        if self.config.rock_type == "peridotite":  # TODO: sub-models for different rock types
-            # Calculate serpentinization penetration rate
-            grain_size = inputs["grain_size"]
-            serp_rate = inputs["serp_rate"]
-            pen_rate = grain_size * serp_rate
+        # Calculate serpentinization penetration rate
+        grain_size = inputs["grain_size"]
+        lin_coeff = 1.00e-6
+        exp_coeff = -0.000209
+        orig_size = 0.0000685  # meters
+        temp = inputs["water_temp"]
+        serp_rate = (
+            lin_coeff
+            * np.exp(exp_coeff * (temp - 260) ** 2)
+            * 10 ** np.log10(orig_size / grain_size)
+        )
+        pen_rate = grain_size * serp_rate
 
         # Model rock deposit size
-        height = inputs["borehole_depth"] - inputs["caprock_depth"]
+        height = inputs["borehole_depth"] - inputs["depth_to_formation"]
         length = inputs["inj_prod_distance"]
         width = inputs["reaction_zone_width"]
         rock_volume = height * length * width
-        n_grains = rock_volume / grain_size**3
+        v_olivine = inputs["olivine_phase_vol"] / 100
+        n_grains = rock_volume / grain_size**3 * v_olivine
         rho = inputs["bulk_density"]
-        X_Fe = inputs["iron_II_conc"]
+        X_Fe = inputs["olivine_fe_ii_conc"] / 100
 
         # Model shrinking reactive particle
         years = np.linspace(1, lifetime, lifetime)
@@ -113,12 +118,12 @@ class StimulatedGeoH2PerformanceModel(GeoH2PerformanceBaseClass):
             np.zeros(len(sec_elapsed)), grain_size - 2 * pen_rate * sec_elapsed
         )
         reacted_volume = n_grains * (grain_size**3 - core_diameter**3)
-        reacted_mass = reacted_volume * rho * X_Fe / 100
+        reacted_mass = reacted_volume * rho * X_Fe
         h2_produced = reacted_mass * M_H2 / M_Fe
 
         # Parse outputs
         h2_prod_avg = h2_produced[-1] / lifetime / n_timesteps
-        outputs["hydrogen_produced"] = h2_prod_avg
+        outputs["hydrogen_out_stim"] = h2_prod_avg
         outputs["hydrogen_out"] = h2_prod_avg
 
 
@@ -131,11 +136,12 @@ class StimulatedGeoH2CostConfig(GeoH2CostConfig):
         technologies/geoh2/model_inputs/cost_parameters all other parameters
 
     Args:
-        cost_year (int): dollar year corresponding to costs provided in
-            geoh2_baseclass.GeoH2CostConfig
+        use_cost_curve (bool): Whether to use the built in drilling cost curve or a manual value
+        constant_drill_cost (float): If use_cost_curve is False, the constant cost of drilling
     """
 
-    cost_year: int = field(converter=int)
+    use_cost_curve: bool = field()
+    constant_drill_cost: float = field(default=1000000)
 
 
 class StimulatedGeoH2CostModel(GeoH2CostBaseClass):
@@ -158,22 +164,31 @@ class StimulatedGeoH2CostModel(GeoH2CostBaseClass):
         super().setup()
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
+        # Get cost years
+        cost_year = self.config.cost_year
+        dol_year = self.config.target_dollar_year
+
         # Calculate total capital cost per well (successful or unsuccessful)
-        drill = inputs["test_drill_cost"]
-        permit = inputs["permit_fees"]
+        drill = inflate_cepci(inputs["test_drill_cost"], cost_year, dol_year)
+        permit = inflate_cpi(inputs["permit_fees"], cost_year, dol_year)
         acreage = inputs["acreage"]
-        rights_acre = inputs["rights_cost"]
+        rights_acre = inflate_cpi(inputs["rights_cost"], cost_year, dol_year)
         cap_well = drill + permit + acreage * rights_acre
 
         # Calculate total capital cost per SUCCESSFUL well
-        completion = inputs["completion_cost"]
+        if self.config.use_cost_curve:
+            completion = self.calc_drill_cost(inputs["borehole_depth"])
+        else:
+            completion = self.config.constant_drill_cost
+            completion = inflate_cepci(completion, 2010, cost_year)
+        completion = inflate_cepci(completion, cost_year, dol_year)
         success = inputs["success_chance"]
         bare_capex = cap_well / success * 100 + completion
         outputs["bare_capital_cost"] = bare_capex
 
         # Parse in opex
-        fopex = inputs["fixed_opex"]
-        vopex = inputs["variable_opex"]
+        fopex = inflate_cpi(inputs["fixed_opex"], cost_year, dol_year)
+        vopex = inflate_cpi(inputs["variable_opex"], cost_year, dol_year)
         outputs["Fixed_OpEx"] = fopex
         outputs["Variable_OpEx"] = vopex
         production = np.sum(inputs["hydrogen_out"])
