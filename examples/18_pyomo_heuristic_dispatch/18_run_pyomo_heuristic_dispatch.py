@@ -21,7 +21,7 @@ model.run()
 fig, ax = plt.subplots(2, 1, sharex=True)
 
 start_hour = 0
-end_hour = 8760
+end_hour = 200
 
 ax[0].plot(
     range(start_hour, end_hour),
