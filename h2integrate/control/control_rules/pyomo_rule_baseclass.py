@@ -43,10 +43,11 @@ class PyomoRuleBaseClass(om.ExplicitComponent):
         Return the Pyomo model elements for a given technology through the OpenMDAO
         infrastructure.
 
-        For a template class this is not implement and raises an error.
+        No computations are required for PyomoRuleClass children. All the work should be done in
+        setup via the dispatch_block_rule_function() method.
         """
 
-        raise NotImplementedError("This method should be implemented in a subclass.")
+        pass
 
     def dispatch_block_rule_function(self, pyomo_model: pyo.ConcreteModel, tech_name: str):
         """Initializes technology parameters, variables, constraints, and ports.
