@@ -44,16 +44,16 @@ technologies:
       shared_parameters:
         commodity_name: "electricity"
         commodity_units: "kW"
-        max_charge_rate: 5000.0  # kW/time step
+        max_charge_rate: 5000.0  # kW
         max_capacity: 30000.0  # kWh
       control_parameters:
         max_charge_percent: 1.0  # percent as decimal
         min_charge_percent: 0.1  # percent as decimal
         init_charge_percent: 0.25  # percent as decimal
-        max_discharge_rate: 5000.0  # kW/time step
+        max_discharge_rate: 5000.0  # kW
         charge_efficiency: 1.0 # percent as decimal
         discharge_efficiency: 1.0 # percent as decimal
-        demand_profile: 5000
+        demand_profile: 5000 # kW
       cost_parameters:
         cost_year: 2022
         energy_capex: 300 # $/kWh

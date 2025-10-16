@@ -231,7 +231,8 @@ class DemandOpenLoopController(ControllerBaseClass):
             f"{commodity_name}_out",
             copy_shape=f"{commodity_name}_in",
             units=f"{self.config.commodity_units}",
-            desc=f"{commodity_name} output timeseries from plant after storage",
+            desc=f"{commodity_name} output timeseries from plant after storage including \
+            stored and pass-through commodity amounts up to the demand amount",
         )
 
         self.add_output(

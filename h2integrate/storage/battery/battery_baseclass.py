@@ -33,7 +33,7 @@ class BatteryPerformanceBaseClass(om.ExplicitComponent):
         )
 
         self.add_output(
-            "battery_electricity_out",
+            "battery_electricity_discharge",
             val=0.0,
             copy_shape="electricity_in",
             units="kW",

@@ -34,7 +34,9 @@ technology_interconnections: [
   ["wind", "battery", "electricity", "cable"],
 ]
 
-# array of arrays containing left-to-right source technology, dispatching technology, object_name
+# array of arrays containing left-to-right technology, technology doing the dispatching
+# in this case, battery is connected to battery because there are controls rules for
+# the battery and battery is controlling the dispatching
 tech_to_dispatch_connections: [
   ["wind", "battery"],
   ["battery", "battery"],

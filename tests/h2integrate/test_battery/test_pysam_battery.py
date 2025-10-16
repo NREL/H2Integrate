@@ -119,7 +119,7 @@ def test_pysam_battery_performance_model(subtests):
 
     with subtests.test("expected_battery_power"):
         np.testing.assert_allclose(
-            prob.get_val("battery_electricity_out"), expected_battery_power, rtol=1e-2
+            prob.get_val("battery_electricity_discharge"), expected_battery_power, rtol=1e-2
         )
 
     with subtests.test("expected_battery_SOC"):
