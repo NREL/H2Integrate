@@ -4,7 +4,7 @@ There are two different systematic approaches, or frameworks, in H2Integrate for
 [here](profastcomp:tech_specific_finance)
 (open-loop-control)=
 ## Open-loop control framework
-The first, open-loop control, assumes no feedback of any kind to the controller. The open-loop framework does not require a detailed performance model and can essentially act as the performance model in the absence of a dedicated performance model for a given storage technology. The open-loop framework establishes a control component that runs the control and passes out information about storage dispatch, soc, etc.
+The first approach, open-loop control, assumes no feedback of any kind to the controller. The open-loop framework does not require a detailed performance model and can essentially act as the performance model in the absence of a dedicated performance model for a given storage technology. The open-loop framework establishes a control component that runs the control and passes out information about storage dispatch, soc, etc.
 
 An example of an N2 diagram for a system using the open-loop control framework for hydrogen storage and dispatch is shown below ([click here for an interactive version](./figures/open-loop-n2.html)). Note that the hydrogen out going into the finance model is coming from the control component.
 
