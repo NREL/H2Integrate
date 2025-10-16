@@ -232,18 +232,23 @@ class PyomoControllerBaseClass(ControllerBaseClass):
             unused_commodity = np.zeros(self.n_timesteps)
             soc = np.zeros(self.n_timesteps)
 
-            ti = list(range(0, self.n_timesteps, self.config.n_control_window))
+            # get the starting index for each control window
+            window_start_indices = list(range(0, self.n_timesteps, self.config.n_control_window))
+
             control_strategy = self.options["tech_config"]["control_strategy"]["model"]
 
-            for t in ti:
+            # loop over all control windows, where t is the starting index of each window
+            for t in window_start_indices:
                 self.update_time_series_parameters()
-
+                # get the inputs over the current control window
                 commodity_in = inputs[self.config.commodity_name + "_in"][
                     t : t + self.config.n_control_window
                 ]
                 demand_in = inputs[f"{commodity_name}_demand"][t : t + self.config.n_control_window]
 
                 if "heuristic" in control_strategy:
+                    # determine dispatch commands for the current control window
+                    # using the heuristic method
                     self.set_fixed_dispatch(
                         commodity_in,
                         self.config.system_commodity_interface_limit,
@@ -258,21 +263,26 @@ class PyomoControllerBaseClass(ControllerBaseClass):
                         )
                     )
 
+                # run the performance/simulation model for the current control window
+                # using the dispatch commands
                 storage_commodity_out_control_window, soc_control_window = performance_model(
                     self.storage_dispatch_commands,
                     **performance_model_kwargs,
                     sim_start_index=t,
                 )
 
-                # store output values for every timestep
-                tj = list(range(t, t + self.config.n_control_window))
-                for j in tj:
+                # get a list of all time indices belonging to the current control window
+                window_indices = list(range(t, t + self.config.n_control_window))
+
+                # loop over all time steps in the current control window
+                for j in window_indices:
+                    # save the output for the control window to the output for the full
+                    # simulation
                     storage_commodity_out[j] = storage_commodity_out_control_window[j - t]
                     soc[j] = soc_control_window[j - t]
                     total_commodity_out[j] = np.minimum(
                         demand_in[j - t], storage_commodity_out[j] + commodity_in[j - t]
                     )
-
                     unmet_demand[j] = np.maximum(0, demand_in[j - t] - total_commodity_out[j])
                     unused_commodity[j] = np.maximum(
                         0, storage_commodity_out[j] + commodity_in[j - t] - demand_in[j - t]
