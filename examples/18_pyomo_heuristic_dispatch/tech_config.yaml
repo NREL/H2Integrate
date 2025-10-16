@@ -8,7 +8,7 @@ technologies:
     cost_model:
       model: "wind_plant_cost"
     dispatch_rule_set:
-      model: "pyomo_dispatch_generic_convertor"
+      model: "pyomo_dispatch_generic_converter"
     resource:
       type: "pysam_wind"
       wind_speed: 9.

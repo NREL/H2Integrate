@@ -4,7 +4,7 @@ from pyomo.network import Port
 from h2integrate.control.control_rules.pyomo_rule_baseclass import PyomoRuleBaseClass
 
 
-class PyomoDispatchGenericConvertor(PyomoRuleBaseClass):
+class PyomoDispatchGenericConverter(PyomoRuleBaseClass):
     def _create_variables(self, pyomo_model: pyo.ConcreteModel, tech_name: str):
         """Create generic generator variables to add to pyomo model instance.
 

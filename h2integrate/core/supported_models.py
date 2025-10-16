@@ -82,8 +82,8 @@ from h2integrate.converters.hydrogen.geologic.natural_geoh2_plant import (
     NaturalGeoH2FinanceModel,
     NaturalGeoH2PerformanceModel,
 )
-from h2integrate.control.control_rules.converters.generic_convertor import (
-    PyomoDispatchGenericConvertor,
+from h2integrate.control.control_rules.converters.generic_converter import (
+    PyomoDispatchGenericConverter,
 )
 from h2integrate.converters.co2.marine.ocean_alkalinity_enhancement import (
     OAECostModel,
@@ -176,7 +176,7 @@ supported_models = {
     "demand_open_loop_controller": DemandOpenLoopController,
     "heuristic_load_following_controller": HeuristicLoadFollowingController,
     # Dispatch
-    "pyomo_dispatch_generic_convertor": PyomoDispatchGenericConvertor,
+    "pyomo_dispatch_generic_converter": PyomoDispatchGenericConverter,
     "pyomo_dispatch_generic_storage": PyomoRuleStorageBaseclass,
     # Feedstock
     "feedstock_performance": FeedstockPerformanceModel,
