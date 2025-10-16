@@ -5,6 +5,7 @@
 - Added capability for user-defined finance models in the H2Integrate framework
 - Added an optimized offshore methanol production case to examples/03_methanol/co2_hydrogenation_doc
 - Updated setting up recorder in `PoseOptimization`
+- Added resource models to make solar resource API calls to the NREL Developer GOES dataset
 - Added framework to run heuristic load following dispatch for storage technologies
 - Added PySAM battery model as a storage technology performance model
 
