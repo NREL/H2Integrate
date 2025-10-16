@@ -67,6 +67,18 @@ finance_parameters:
     cost_year_adjustment_inflation: 0.025 # used to adjust modeled costs to target_dollar_year
     target_dollar_year: 2022
   finance_subgroups:
+    wind:
+      commodity: "electricity"
+      commodity_stream: "wind" #use electricity from wind in finance calc
+      technologies: ["wind"]
+    battery:
+      commodity: "electricity"
+      commodity_stream: "battery" #use electricity from battery in finance calc
+      technologies: ["wind", "battery"]
     electricity:
       commodity: "electricity"
+      # since commodity_stream is not specified, the default behavior is to
+      # use the electricity produced from all electricity producing technologies
+      # included in 'technologies'. In this case, it will use the electricity
+      # produced by the wind technology as the commodity stream.
       technologies: ["wind","battery"]
