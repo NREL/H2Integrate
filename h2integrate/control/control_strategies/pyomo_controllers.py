@@ -198,7 +198,7 @@ class PyomoControllerBaseClass(ControllerBaseClass):
                 inputs (dict):
                     Dictionary of numpy arrays (length = self.n_timesteps) containing at least:
                         f"{commodity_name}_in"          : available generated commodity profile.
-                        f"{commodity_name}_demand_in"   : demanded commodity output profile.
+                        f"{commodity_name}_demand"   : demanded commodity output profile.
                 commodity_name (str, optional):
                     Base commodity name (e.g. "electricity", "hydrogen"). Default:
                     self.config.commodity_name.
@@ -241,9 +241,7 @@ class PyomoControllerBaseClass(ControllerBaseClass):
                 commodity_in = inputs[self.config.commodity_name + "_in"][
                     t : t + self.config.n_control_window
                 ]
-                demand_in = inputs[f"{commodity_name}_demand_in"][
-                    t : t + self.config.n_control_window
-                ]
+                demand_in = inputs[f"{commodity_name}_demand"][t : t + self.config.n_control_window]
 
                 if "heuristic" in control_strategy:
                     self.set_fixed_dispatch(

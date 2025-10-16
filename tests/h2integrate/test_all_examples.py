@@ -785,7 +785,7 @@ def test_pyomo_heuristic_dispatch_example(subtests):
 
     # TODO: Update with demand module once it is developed
     model.setup()
-    model.prob.set_val("battery.electricity_demand_in", demand_profile, units="MW")
+    model.prob.set_val("battery.electricity_demand", demand_profile, units="MW")
 
     # Run the model
     model.run()
