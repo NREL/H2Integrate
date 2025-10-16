@@ -75,4 +75,4 @@ ax[1].set_xlabel("Timestep (hr)")
 
 plt.legend(ncol=2, frameon=False)
 plt.tight_layout()
-plt.savefig("plot.png")
+plt.savefig("plot.png", dpi=300)
