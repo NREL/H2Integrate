@@ -37,7 +37,7 @@ class BatteryPerformanceBaseClass(om.ExplicitComponent):
             val=0.0,
             copy_shape="electricity_in",
             units="kW",
-            desc="Electricty output from Battery only",
+            desc="Electricity output from Battery only",
         )
 
     def compute(self, inputs, outputs):
