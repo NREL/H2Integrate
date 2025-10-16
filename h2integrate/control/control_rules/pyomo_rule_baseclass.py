@@ -46,7 +46,7 @@ class PyomoRuleBaseClass(om.ExplicitComponent):
         For a template class this is not implement and raises an error.
         """
 
-        pass
+        raise NotImplementedError("This method should be implemented in a subclass.")
 
     def dispatch_block_rule_function(self, pyomo_model: pyo.ConcreteModel, tech_name: str):
         """Initializes technology parameters, variables, constraints, and ports.
