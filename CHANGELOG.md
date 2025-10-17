@@ -8,6 +8,7 @@
 - Added resource models to make solar resource API calls to the NREL Developer GOES dataset
 - Added framework to run heuristic load following dispatch for storage technologies
 - Added PySAM battery model as a storage technology performance model
+- Added `create_om_reports` option to driver config to enable/disable OpenMDAO reports (N2 diagrams, etc.)
 
 ## 0.4.0 [October 1, 2025]
 
