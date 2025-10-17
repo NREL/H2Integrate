@@ -38,6 +38,7 @@ parts:
   - file: technology_models/simple_generic_storage.md
   - file: technology_models/methanol.md
   - file: technology_models/ammonia.md
+  - file: technology_models/pysam_battery.md
 
 - caption: Resource Models
   chapters:

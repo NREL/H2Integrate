@@ -162,7 +162,7 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass):
             Battery charge rate in kilowatts per hour (kW).
         storage_capacity (float):
             Total energy storage capacity in kilowatt-hours (kWh).
-        demand_in (ndarray):
+        electricity_demand (ndarray):
             Power demand time series (kW).
         electricity_in (ndarray):
             Commanded input electricity (kW), typically from dispatch.
@@ -193,13 +193,13 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass):
             Runs the PySAM BatteryStateful model for a simulation timestep,
             updating outputs such as SOC, charge/discharge limits, unmet
             demand, and unused commodities.
-        simulate(electricity_in, demand_in, time_step_duration, control_variable,
+        simulate(electricity_in, electricity_demand, time_step_duration, control_variable,
             sim_start_index=0):
             Simulates the battery behavior across timesteps using either
-            input power or input current as control.
-        size_batterystateful(desired_capacity, desired_voltage, module_specs=None):
-            Sizes the PySAM battery model to match a desired capacity and voltage,
-            optionally scaling thermal properties based on reference module specs.
+            input power or input current as control. This method is similar to what is
+            provided in typical compute methods in H2Integrate for running models, but
+            needs to be a separate method here to allow the dispatch function to call
+            and manage the performance model.
         calculate_thermal_params(input_dict):
             Calculates mass and surface area of the scaled battery using
             specific energy ratios or reference module data.
@@ -322,7 +322,7 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass):
 
         Args:
             inputs (dict):
-                Continuous input values (e.g., electricity_in, demand_in).
+                Continuous input values (e.g., electricity_in, electricity_demand).
             outputs (dict):
                 Dictionary where model outputs (SOC, P_chargeable, unmet demand, etc.)
                 are written.
@@ -438,24 +438,49 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass):
         control_variable: str,
         sim_start_index: int = 0,
     ):
-        """Simulate battery behavior over a series of timesteps.
+        """Run the PySAM BatteryStateful model over a control window.
 
-        Iterates over input electricity values and demand to simulate charge
-        and discharge behavior. Applies SOC bounds, unmet demand tracking,
-        and unused commodity calculations.
+        Applies a sequence of dispatch commands (positive = discharge, negative = charge)
+        one timestep at a time. Each command is clipped to allowable instantaneous
+        charge / discharge limits derived from:
+          1. Rated power (config.max_charge_rate)
+          2. PySAM internal estimates (P_chargeable / P_dischargeable)
+          3. Remaining energy headroom vs. SOC bounds
+
+        The method updates internal rolling arrays in self.outputs in-place using
+        sim_start_index as an offset (enabling sliding / receding horizon logic).
+
+        The simulate method is much of what would normally be in the compute() method
+        of a component, but is separated into its own function here to allow the dispatch()
+        method to manage calls to the performance model.
 
         Args:
-            electricity_in (list[float]):
-                Commanded power values from the dispatch algorithm (kW).
-            demand_in (list[float]):
-                Power demand for each timestep (kW).
-            time_step_duration (list[float]):
-                Duration of each timestep (hours).
-            control_variable (str):
-                Battery control mode, either ``"input_power"`` or ``"input_current"``.
-            sim_start_index (int, optional):
-                Index offset for writing outputs into arrays. Defaults to 0.
+            storage_dispatch_commands : Sequence[float]
+                Commanded power per timestep (kW). Negative = charge, positive = discharge.
+                Length should be = config.n_control_window.
+            time_step_duration : float | Sequence[float]
+                Timestep duration in hours. Scalar applied uniformly or sequence matching
+                len(storage_dispatch_commands).
+            control_variable : str
+                PySAM control input to set each step ("input_power" or "input_current").
+            sim_start_index : int, optional
+                Starting index for writing into persistent output arrays (default 0).
+
+        Returns:
+            tuple[np.ndarray, np.ndarray]
+                (battery_power_kW, soc_percent)
+                battery_power_kW : array of PySAM P values (kW) per timestep
+                                    (positive = discharge, negative = charge).
+                soc_percent      : array of SOC values (%) per timestep.
+
+        Notes:
+            - SOC bounds may still be exceeded slightly due to PySAM internal dynamics.
+            - self.outputs.stateful_attributes are updated only if the attribute exists
+            in StatePack or StateCell.
+            - self.outputs.component_attributes (e.g., unmet_demand) are not modified here;
+            they are populated in compute(), unless an external dispatcher manages them.
         """
+
         # Loop through the provided input power/current (decided by control_variable)
         self.system_model.value("dt_hr", time_step_duration)
 

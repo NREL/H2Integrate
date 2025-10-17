@@ -50,12 +50,18 @@ class PyomoRuleBaseClass(om.ExplicitComponent):
         pass
 
     def dispatch_block_rule_function(self, pyomo_model: pyo.ConcreteModel, tech_name: str):
-        """Initializes technology parameters, variables, constraints, and ports.
-            Called during Dispatch's __init__.
+        """
+        Creates and initializes pyomo dispatch model components for a specific technology.
+
+        This method sets up all model elements (parameters, variables, constraints,
+        and ports) associated with a technology block within the dispatch model.
+        It is typically called in the setup_pyomo() method of the PyomoControllerBaseClass.
 
         Args:
-            storage: Storage instance.
-
+            pyomo_model (pyo.ConcreteModel): The Pyomo model to which the technology
+                components will be added.
+            tech_name (str): The name or key identifying the technology (e.g., "battery",
+                "electrolyzer") for which model components are created.
         """
         # Parameters
         self._create_parameters(pyomo_model, tech_name)

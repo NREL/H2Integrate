@@ -5,6 +5,8 @@ from h2integrate.control.control_rules.pyomo_rule_baseclass import PyomoRuleBase
 
 
 class PyomoRuleStorageBaseclass(PyomoRuleBaseClass):
+    """Base class defining PYomo rules for generic commodity storage components."""
+
     def _create_parameters(self, pyomo_model: pyo.ConcreteModel, t):
         """Creates storage parameters.
 

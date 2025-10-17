@@ -52,7 +52,7 @@ technologies:
       model: "atb_battery_cost"
     model_inputs:
       shared_parameters:
-        max_charge_rate: 100000 #50000
+        max_charge_rate: 100000
         max_capacity: 500000
         n_control_window: 24
         n_horizon_window: 48
