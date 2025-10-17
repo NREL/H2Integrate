@@ -28,7 +28,9 @@ class PyomoDispatchGenericConverter(PyomoRuleBaseClass):
         """Create generic converter port to add to pyomo model instance.
 
         Args:
-            pyomo_model: pyomo_model the ports should be added to.
+            pyomo_model (pyo.ConcreteModel): pyomo_model the ports should be added to.
+            tech_name (str): The name or key identifying the technology for which
+            ports are created.
 
         """
         setattr(
