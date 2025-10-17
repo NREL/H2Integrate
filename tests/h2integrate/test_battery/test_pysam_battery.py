@@ -12,7 +12,7 @@ from h2integrate.storage.battery.pysam_battery import (
 )
 
 
-def test_pysam_battery_performance_model(subtests):
+def test_pysam_battery_performance_model_without_controller(subtests):
     # Get the directory of the current script
     current_dir = Path(__file__).parent
 
@@ -31,8 +31,10 @@ def test_pysam_battery_performance_model(subtests):
     ]
 
     electricity_in = np.concatenate(
-        (np.ones(int(n_control_window / 2)) * 1000.0, np.ones(int(n_control_window / 2)) * -1000.0)
+        (np.ones(int(n_control_window / 2)) * 1000.0, np.zeros(int(n_control_window / 2)))
     )
+
+    electricity_demand = np.ones(int(n_control_window)) * 1000.0
 
     prob.model.add_subsystem(
         name="IVC1",
@@ -43,6 +45,12 @@ def test_pysam_battery_performance_model(subtests):
     prob.model.add_subsystem(
         name="IVC2",
         subsys=om.IndepVarComp(name="time_step_duration", val=np.ones(n_control_window), units="h"),
+        promotes=["*"],
+    )
+
+    prob.model.add_subsystem(
+        name="IVC3",
+        subsys=om.IndepVarComp(name="electricity_demand", val=electricity_demand, units="kW"),
         promotes=["*"],
     )
 
@@ -61,61 +69,91 @@ def test_pysam_battery_performance_model(subtests):
 
     expected_battery_power = np.array(
         [
-            999.99999997,
-            998.57930115,
-            998.52941043,
-            998.51660931,
-            998.50470535,
-            998.49284335,
-            998.48088314,
-            998.46877688,
-            998.45650206,
-            998.44404534,
-            998.43139721,
-            998.41854985,
-            -998.43134064,
-            -998.44395855,
-            -998.45637556,
-            -998.46859632,
-            -998.48062549,
-            -998.49246743,
-            -998.50412641,
-            -998.51560657,
-            -998.52691193,
-            -998.53804633,
-            -998.54901366,
-            -998.55981744,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            999.9999999703667,
+            998.5371904178584,
+            998.5263437993322,
+            998.5152383436508,
+            998.5038990519837,
+            998.4923409910639,
+            998.4805728240225,
+            998.4685988497556,
+            998.4564204119457,
+            998.444036724444,
+            998.4314456105915,
+            998.4186438286721,
         ]
     )
 
     expected_battery_SOC = np.array(
         [
-            51.70824047,
-            51.30394294,
-            50.8392576,
-            50.37162579,
-            49.90280372,
-            49.43320374,
-            48.96300622,
-            48.49230981,
-            48.02117569,
-            47.54964497,
-            47.0777468,
-            46.60550259,
-            47.08170333,
-            47.55772227,
-            48.03356641,
-            48.50924213,
-            48.98475532,
-            49.46011143,
-            49.93531553,
-            50.41037238,
-            50.88528642,
-            51.36006186,
-            51.83470268,
-            52.30921264,
+            50.07393113,
+            50.07924536,
+            50.08359418,
+            50.08738059,
+            50.09078403,
+            50.09390401,
+            50.09680279,
+            50.0995225,
+            50.1020933,
+            50.10453765,
+            50.10687283,
+            50.10911249,
+            51.82111663,
+            51.35016991,
+            50.87907361,
+            50.40778871,
+            49.93629139,
+            49.46456699,
+            48.99260672,
+            48.52040546,
+            48.04796035,
+            47.57526987,
+            47.10233318,
+            46.62914982,
         ]
     )
+
+    expected_unment_demand = np.array(
+        [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            2.963327006000327e-08,
+            1.462809582141631,
+            1.4736562006678469,
+            1.4847616563491783,
+            1.4961009480163057,
+            1.5076590089361162,
+            1.519427175977512,
+            1.5314011502443918,
+            1.5435795880542855,
+            1.555963275555996,
+            1.5685543894085185,
+            1.5813561713279114,
+        ]
+    )
+    expected_unused_electricity = np.zeros(n_control_window)
 
     with subtests.test("expected_battery_power"):
         np.testing.assert_allclose(
@@ -124,6 +162,16 @@ def test_pysam_battery_performance_model(subtests):
 
     with subtests.test("expected_battery_SOC"):
         np.testing.assert_allclose(prob.get_val("SOC"), expected_battery_SOC, rtol=1e-2)
+
+    with subtests.test("expected_battery_unmet_demand"):
+        np.testing.assert_allclose(
+            prob.get_val("unmet_electricity_demand_out"), expected_unment_demand, rtol=1e-2
+        )
+
+    with subtests.test("expected_battery_unused_commodity"):
+        np.testing.assert_allclose(
+            prob.get_val("unused_electricity_out"), expected_unused_electricity, rtol=1e-2
+        )
 
 
 def test_battery_config(subtests):

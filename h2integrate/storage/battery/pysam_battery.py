@@ -384,16 +384,44 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass):
             ) = dispatch(self.simulate, kwargs, inputs)
 
         else:
-            # Simulate the battery with provided inputs and no controller
-            total_power_out, soc = self.simulate(
-                storage_dispatch_commands=inputs["electricity_in"],
+            # Simulate the battery with provided inputs and no controller.
+            # This essentially asks for discharge when demand exceeds input
+            # and requests charge when input exceeds demand
+
+            # estimate required dispatch commands
+            pseudo_commands = inputs["electricity_demand"] - inputs["electricity_in"]
+
+            battery_power, soc = self.simulate(
+                storage_dispatch_commands=pseudo_commands,
                 time_step_duration=self.dt_hr,
                 control_variable=self.config.control_variable,
             )
-            # TODO how to calculate? these are not being calculated
-            unmet_demand = self.outputs.unmet_demand
+            n_time_steps = len(inputs["electricity_demand"])
+
+            # determine battery discharge
+            self.outputs.P = battery_power
+            battery_power_out = [np.max([0, battery_power[i]]) for i in range(n_time_steps)]
+
+            # calculate combined power out from inflow source and battery (note: battery_power is
+            # negative when charging)
+            combined_power_out = inputs["electricity_in"] + battery_power
+
+            # find the total power out to meet demand
+            total_power_out = np.minimum(inputs["electricity_demand"], combined_power_out)
+
+            # determine how much of the inflow electricity was unused
+            self.outputs.unused_commodity = [
+                np.max([0, combined_power_out[i] - inputs["electricity_demand"][i]])
+                for i in range(n_time_steps)
+            ]
             unused_commodity = self.outputs.unused_commodity
-            battery_power_out = self.outputs.P
+
+            # determine how much demand was not met
+            self.outputs.unmet_demand = [
+                np.max([0, inputs["electricity_demand"][i] - combined_power_out[i]])
+                for i in range(n_time_steps)
+            ]
+            unmet_demand = self.outputs.unmet_demand
 
         outputs["unmet_electricity_demand_out"] = unmet_demand
         outputs["unused_electricity_out"] = unused_commodity
