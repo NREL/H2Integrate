@@ -611,5 +611,5 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass):
 
 
 def dummy_function():
-    # this function is required for initialzing the pyomo control input and nothing else
+    # this function is required for initializing the pyomo control input and nothing else
     pass
