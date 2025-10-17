@@ -2,9 +2,12 @@ from attrs import field, define
 
 from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
 from h2integrate.core.validators import gt_zero, contains
-from h2integrate.tools.eco.utilities import ceildiv
 from h2integrate.converters.hydrogen.electrolyzer_baseclass import ElectrolyzerPerformanceBaseClass
 from h2integrate.simulation.technologies.hydrogen.electrolysis.run_h2_PEM import run_h2_PEM
+
+
+def ceildiv(a, b):
+    return -(a // -b)
 
 
 @define
