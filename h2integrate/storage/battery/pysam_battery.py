@@ -123,8 +123,8 @@ class PySAMBatteryPerformanceModelConfig(BaseConfig):
     min_charge_percent: float = field(validator=range_val(0, 1))
     max_charge_percent: float = field(validator=range_val(0, 1))
     init_charge_percent: float = field(validator=range_val(0, 1))
-    n_control_window: int = field(default=24)
-    n_horizon_window: int = field(default=48)
+    n_control_window: int = field(validator=gt_zero, default=24)
+    n_horizon_window: int = field(validator=gt_zero, default=48)
     control_variable: str = field(
         default="input_power", validator=contains(["input_power", "input_current"])
     )

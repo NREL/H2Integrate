@@ -28,7 +28,8 @@ class ControllerBaseClass(om.ExplicitComponent):
         """
         Define inputs and outputs for the component.
 
-        This method must be implemented in subclasses to define the specific control I/O.
+        This method must be implemented in subclasses to define the specific control inputs
+        and outputs.
 
         Raises:
             NotImplementedError: If the method is not implemented in a subclass.
