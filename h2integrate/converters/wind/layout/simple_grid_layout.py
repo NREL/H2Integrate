@@ -10,10 +10,10 @@ class BasicGridLayoutConfig(BaseConfig):
     """Configuration class for 'basicgrid' wind layout.
 
     Args:
-        row_D_spacing (float, Optional): rotor diameter multiplier for spacing between rows of
-            turbines (y direction). Defaults to 5.0.
-        turbine_D_spacing (float, Optional): rotor diameter multiplier for spacing between
-            turbines in a row (x direction). Defaults to 5.0.
+        row_D_spacing (float): rotor diameter multiplier for spacing between rows of
+            turbines (y direction).
+        turbine_D_spacing (float): rotor diameter multiplier for spacing between
+            turbines in a row (x direction).
         rotation_angle_deg (float, Optional): rotation angle of layout in degrees where 0 is North,
             increasing counter-clockwise. 90 degrees is East, 180 degrees is South,
             270 degrees is West. Defaults to 0.0.
@@ -25,8 +25,8 @@ class BasicGridLayoutConfig(BaseConfig):
             if using a 'rectangle' layout_shape. Unused for 'square' layout_shape.
     """
 
-    row_D_spacing: float = field(default=5.0)
-    turbine_D_spacing: float = field(default=5.0)
+    row_D_spacing: float = field()
+    turbine_D_spacing: float = field()
     rotation_angle_deg: float = field(default=0.0)
     row_phase_offset: float = field(default=0.0, validator=range_val(0.0, 1.0))
 
