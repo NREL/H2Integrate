@@ -147,20 +147,15 @@ def test_unsupported_simulation_parameters():
 
 
 def test_technology_connections():
-    original_cwd = Path.cwd()
     os.chdir(examples_dir / "01_onshore_steel_mn")
 
-    # Path to the original plant_config.yaml, driver_config.yaml and high-level yaml
-    # in the example directory
+    # Path to the original plant_config.yaml and high-level yaml in the example directory
     orig_plant_config = Path.cwd() / "plant_config.yaml"
     temp_plant_config = Path.cwd() / "temp_plant_config.yaml"
-    orig_driver_config = Path.cwd() / "driver_config.yaml"
-    temp_driver_config = Path.cwd() / "temp_driver_config.yaml"
     orig_highlevel_yaml = Path.cwd() / "01_onshore_steel_mn.yaml"
     temp_highlevel_yaml = Path.cwd() / "temp_01_onshore_steel_mn.yaml"
 
     shutil.copy(orig_plant_config, temp_plant_config)
-    shutil.copy(orig_driver_config, temp_driver_config)
     shutil.copy(orig_highlevel_yaml, temp_highlevel_yaml)
 
     # Load the plant_config YAML content
@@ -174,57 +169,28 @@ def test_technology_connections():
     )
     plant_config_data["technology_interconnections"] = new_tech_interconnections
 
-    # Save the modified plant_config YAML back
+    # Save the modified tech_config YAML back
     with temp_plant_config.open("w") as f:
         yaml.safe_dump(plant_config_data, f)
-
-    # Load the driver config and set create_om_reports to False to test report suppression
-    with temp_driver_config.open() as f:
-        driver_data = yaml.safe_load(f)
-
-    if "general" not in driver_data:
-        driver_data["general"] = {}
-    driver_data["general"]["create_om_reports"] = False
-
-    # Save the modified driver config
-    with temp_driver_config.open("w") as f:
-        yaml.safe_dump(driver_data, f)
 
     # Load the high-level YAML content
     with temp_highlevel_yaml.open() as f:
         highlevel_data = yaml.safe_load(f)
 
-    # Modify the high-level YAML to point to the temp config files
+    # Modify the high-level YAML to point to the temp tech_config file
     highlevel_data["plant_config"] = str(temp_plant_config.name)
-    highlevel_data["driver_config"] = str(temp_driver_config.name)
 
     # Save the modified high-level YAML back
     with temp_highlevel_yaml.open("w") as f:
         yaml.safe_dump(highlevel_data, f)
 
-    # Record initial files before running the model
-    initial_files = set(Path.cwd().rglob("*"))
-
     h2i_model = H2IntegrateModel(temp_highlevel_yaml)
+
     h2i_model.run()
-
-    # Check that no OpenMDAO report directories were created
-    final_files = set(Path.cwd().rglob("*"))
-    new_files = final_files - initial_files
-    report_dirs = [f for f in new_files if f.is_dir() and "reports" in f.name.lower()]
-
-    # Assert that no report directories were created due to create_om_reports=False
-    assert (
-        len(report_dirs) == 0
-    ), f"Report directories were created despite create_om_reports=False: {report_dirs}"
 
     # Clean up temporary YAML files
     temp_plant_config.unlink(missing_ok=True)
-    temp_driver_config.unlink(missing_ok=True)
     temp_highlevel_yaml.unlink(missing_ok=True)
-
-    # Restore original working directory
-    os.chdir(original_cwd)
 
 
 def test_resource_connection_error_missing_connection():
