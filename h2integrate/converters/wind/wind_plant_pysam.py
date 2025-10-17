@@ -1,10 +1,10 @@
 import operator
 import functools
-from typing import Any, Dict
+from typing import Any
 
 import numpy as np
-import matplotlib.pyplot as plt
 import PySAM.Windpower as Windpower
+import matplotlib.pyplot as plt
 from attrs import field, define
 
 from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
@@ -465,7 +465,7 @@ class PYSAMWindPlantPerformanceModel(WindPerformanceBaseClass):
     def post_process(self, show_plots=False):
         def plot_turbine_points(
             ax: plt.Axes = None,
-            plotting_dict: Dict[str, Any] = {},
+            plotting_dict: dict[str, Any] = {},
         ) -> plt.Axes:
             """
             Plots turbine layout.
@@ -519,5 +519,5 @@ class PYSAMWindPlantPerformanceModel(WindPerformanceBaseClass):
         if show_plots is True:
             _, ax = plt.subplots(1, 1, figsize=(16, 10))
             plot_turbine_points(ax=ax)
-            plt.xlabel('x-coordinate')
-            plt.ylabel('y-coordinate')
+            plt.xlabel("x-coordinate")
+            plt.ylabel("y-coordinate")

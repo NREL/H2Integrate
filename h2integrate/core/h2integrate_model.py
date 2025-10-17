@@ -3,8 +3,8 @@ from pathlib import Path
 
 import yaml
 import numpy as np
-import matplotlib.pyplot as plt
 import openmdao.api as om
+import matplotlib.pyplot as plt
 
 from h2integrate.core.utilities import create_xdsm_from_config
 from h2integrate.finances.finances import AdjustedCapexOpexComp
@@ -992,7 +992,7 @@ class H2IntegrateModel:
         self.prob.model.list_outputs(units=True, print_mean=True, excludes=["*resource_data"])
 
         for model in self.performance_models:
-            if hasattr(model, 'post_process') and callable(getattr(model, 'post_process')):
+            if hasattr(model, "post_process") and callable(model.post_process):
                 model.post_process(show_plots=show_plots)
                 if show_plots:
                     plt.show()
