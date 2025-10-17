@@ -29,7 +29,7 @@ class BatteryPerformanceBaseClass(om.ExplicitComponent):
             val=0.0,
             copy_shape="electricity_in",
             units="percent",
-            desc="SOC of Battery",
+            desc="State of charge of Battery",
         )
 
         self.add_output(
