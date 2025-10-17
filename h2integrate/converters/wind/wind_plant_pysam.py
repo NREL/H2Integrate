@@ -1,7 +1,9 @@
 import operator
 import functools
+from typing import Any, Dict
 
 import numpy as np
+import matplotlib.pyplot as plt
 import PySAM.Windpower as Windpower
 from attrs import field, define
 
@@ -459,3 +461,63 @@ class PYSAMWindPlantPerformanceModel(WindPerformanceBaseClass):
         outputs["electricity_out"] = self.system_model.Outputs.gen
         outputs["total_capacity"] = self.system_model.Farm.system_capacity
         outputs["annual_energy"] = self.system_model.Outputs.annual_energy
+
+    def post_process(self, show_plots=False):
+        def plot_turbine_points(
+            ax: plt.Axes = None,
+            plotting_dict: Dict[str, Any] = {},
+        ) -> plt.Axes:
+            """
+            Plots turbine layout.
+
+            Args:
+                ax (plt.Axes, optional): An existing axes object to plot on. If None,
+                    a new figure and axes will be created. Defaults to None.
+                plotting_dict (Dict[str, Any], optional):  A dictionary to customize plot
+                    appearance.  Valid keys include:
+                        * 'color' (str): Turbine marker color. Defaults to 'black'.
+                        * 'marker' (str):  Turbine marker style. Defaults to '.'.
+                        * 'markersize' (int): Turbine marker size. Defaults to 10.
+                        * 'label' (str): Label for the legend. Defaults to None.
+
+            Returns:
+                plt.Axes: The axes object used for the plot.
+
+            Raises:
+                IndexError: If any value in `turbine_indices` is an invalid turbine index.
+            """
+
+            # Generate axis, if needed
+            if ax is None:
+                _, ax = plt.subplots()
+
+            xpos = self.system_model.value("wind_farm_xCoordinates")
+            ypos = self.system_model.value("wind_farm_yCoordinates")
+
+            # Generate plotting dictionary
+            default_plotting_dict = {
+                "color": "black",
+                "marker": ".",
+                "markersize": 10,
+                "label": None,
+            }
+            plotting_dict = {**default_plotting_dict, **plotting_dict}
+
+            # Plot
+            ax.plot(
+                xpos,
+                ypos,
+                linestyle="None",
+                **plotting_dict,
+            )
+
+            # Make sure axis set to equal
+            ax.axis("equal")
+
+            return ax
+
+        if show_plots is True:
+            _, ax = plt.subplots(1, 1, figsize=(16, 10))
+            plot_turbine_points(ax=ax)
+            plt.xlabel('x-coordinate')
+            plt.ylabel('y-coordinate')
