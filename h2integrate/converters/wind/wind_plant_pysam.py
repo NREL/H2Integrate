@@ -418,12 +418,14 @@ class PYSAMWindPlantPerformanceModel(WindPerformanceBaseClass):
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         rotor_diameter = inputs["rotor_diameter"][0]
-        inputs["hub_height"][0]
         turbine_rating_kw = inputs["wind_turbine_rating"][0]
         n_turbs = int(np.round(inputs["num_turbines"][0]))
 
         # format resource data and input into model
-        self.format_resource_data(inputs["hub_height"][0], discrete_inputs["wind_resource_data"])
+        data = self.format_resource_data(
+            inputs["hub_height"][0], discrete_inputs["wind_resource_data"]
+        )
+        self.system_model.value("wind_resource_data", data)
 
         # recalculate power curve based on rotor diameter and turbine rating
         success = self.recalculate_power_curve(rotor_diameter, turbine_rating_kw)
