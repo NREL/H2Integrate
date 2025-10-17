@@ -467,12 +467,9 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass):
         soc_max = self.system_model.value("maximum_SOC") / 100.0
         soc_min = self.system_model.value("minimum_SOC") / 100.0
 
-        for t in range(len(storage_dispatch_commands)):
+        for t, dispatch_command_t in enumerate(storage_dispatch_commands):
             # get storage SOC at time t
             soc = self.system_model.value("SOC") / 100.0
-
-            # get dispatch command value at time t
-            dispatch_command_t = storage_dispatch_commands[t]
 
             # manually adjust the dispatch command based on SOC
             ## for when battery is withing set bounds
