@@ -144,5 +144,6 @@ reports/*
 *.aux
 *.bbl
 
-# Ignore wind resource data files
+# Ignore wind and solar resource data files
 resource_files/wind/*
+resource_files/solar/*
