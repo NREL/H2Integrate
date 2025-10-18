@@ -4,7 +4,6 @@ description: "This plant is located in Texas"
 site:
   latitude: 32.34
   longitude: -98.27
-  year: 2013
 
   # array of polygons defining boundaries with x/y coords
   boundaries: [
@@ -18,7 +17,6 @@ site:
     }
   ]
 
-
 # array of arrays containing left-to-right technology
 # interconnections; can support bidirectional connections
 # with the reverse definition.
@@ -26,7 +24,7 @@ site:
 # and not connected to additional technologies.
 # hence the empty array.
 technology_interconnections: [
-    ["ng_feedstock", "natural_gas_plant", "natural_gas", "pipe"], #connect NG feedstock to NG plant
+    ["ng_feedstock", "natural_gas_plant", "natural_gas", "pipe"],
 ]
 
 plant:
