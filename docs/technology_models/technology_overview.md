@@ -101,10 +101,9 @@ Below summarizes the available performance, cost, and financial models for each 
 ## Converter models
 - `wind`: wind turbine
     - performance models:
-        + `'wind_plant_performance'`
         + `'pysam_wind_plant_performance'`
     - cost models:
-        + `'wind_plant_cost'`
+        + `'atb_wind_cost'`
 - `solar`: solar-PV panels
     - performance models:
         + `'pysam_solar_plant_performance'`
