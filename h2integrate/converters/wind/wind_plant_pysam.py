@@ -69,6 +69,8 @@ class PYSAMWindPlantPerformanceModelConfig(BaseConfig):
             (please refer to Windpower documentation
             `here <https://nrel-pysam.readthedocs.io/en/main/modules/Windpower.html>`__
             )
+        run_recalculate_power_curve (bool, optional): whether to recalculate the wind turbine
+            power curve. defaults to True.
     """
 
     num_turbines: int = field(converter=int, validator=gt_zero)
@@ -96,6 +98,7 @@ class PYSAMWindPlantPerformanceModelConfig(BaseConfig):
         ),
     )
     pysam_options: dict = field(default={})
+    run_recalculate_power_curve: bool = field(default=True)
 
     def __attrs_post_init__(self):
         if self.create_model_from == "new" and not bool(self.pysam_options):
@@ -122,6 +125,7 @@ class PYSAMWindPlantPerformanceModelConfig(BaseConfig):
             "Losses",
             "AdjustmentFactors",
             "HybridCosts",
+            "Uncertainty",
         ]
         if bool(self.pysam_options):
             invalid_groups = [k for k in self.pysam_options if k not in valid_groups]
@@ -430,7 +434,10 @@ class PYSAMWindPlantPerformanceModel(WindPerformanceBaseClass):
         self.system_model.value("wind_resource_data", data)
 
         # recalculate power curve based on rotor diameter and turbine rating
-        success = self.recalculate_power_curve(rotor_diameter, turbine_rating_kw)
+        success = True
+        if self.config.run_recalculate_power_curve:
+            success = self.recalculate_power_curve(rotor_diameter, turbine_rating_kw)
+
         # if power-curve could not be adjusted to match input values
         if not success:
             msg = (
