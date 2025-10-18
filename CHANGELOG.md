@@ -7,6 +7,10 @@
 - Updated setting up recorder in `PoseOptimization`
 - Added resource models to make solar resource API calls to the NREL Developer GOES dataset
 - Added `create_om_reports` option to driver config to enable/disable OpenMDAO reports (N2 diagrams, etc.)
+- Added PySAM Windpower performance model to simulate wind.
+- Added `simple_grid_layout.py` for wind plant layout modeling, can model square or rectangular layouts.
+- Added ability to visualize the wind plant layout for PySAM Windpower model using `post_process(show_plots=True)`.
+- Added Wind Annual Technology Baseline cost model `atb_wind_cost.py`.
 
 ## 0.4.0 [October 1, 2025]
 

@@ -14,19 +14,22 @@ technologies:
             hub_height: 100.0
             rotor_diameter: 120.0
             turbine_rating_kw: 2500.0
-            create_model_from: "new" #options are "default" and "new"
-            config_name: #only used if create_model_from is "default"
+            create_model_from: new #options are "default" and "new"
+            config_name: #only used if create_model_from is "default", default is "WindPowerSingleOwner"
             layout:
-              layout_mode: "basicgrid" #currently only "basicgrid" is supported
+              layout_mode: basicgrid #currently only "basicgrid" is supported
               layout_options:
-                 spacing_x: 7.0
-                 spacing_y: 7.0
-                 row_spacing_y: 7.0
+                 row_D_spacing: 7.0
+                 turbine_D_spacing: 7.0
+                 rotation_angle_deg: 0.0
+                 row_phase_offset: 0.0
+                 layout_shape: square #options "square" or "rectangle"
             powercurve_calc_config: #optional configuration for power curve calculation
               elevation: 0
               wind_default_max_cp: 0.45
               wind_default_cut_in_speed: 4.0
               wind_default_cut_out_speed: 25.0
+            run_recalculate_power_curve: True
             pysam_options: #user specified pysam inputs
               Turbine:
                  wind_turbine_max_cp: 0.45
@@ -55,6 +58,8 @@ technologies:
     - [WindPowerResidential](https://github.com/NREL/SAM/blob/develop/api/api_autogen/library/defaults/Windpower_WindPowerResidential.json)
     - [WindPowerSaleLeaseback](https://github.com/NREL/SAM/blob/develop/api/api_autogen/library/defaults/Windpower_WindPowerSaleLeaseback.json)
     - [WindPowerSingleOwner](https://github.com/NREL/SAM/blob/develop/api/api_autogen/library/defaults/Windpower_WindPowerSingleOwner.json)
+- `run_recalculate_power_curve` (optional): Flag whether to recalculate the wind turbine
+        power curve. defaults to True.
 
 (layout-parameters)=
 ## Layout Parameters
@@ -62,9 +67,13 @@ technologies:
     - `layout_mode` (str): currently only `"basicgrid"` is supported
     - `layout_options` (dict): options specific to the layout mode
         - For `"basicgrid"` mode:
-            - `spacing_x` (float): spacing between turbines in the x-direction as a multiple of rotor diameter. Defaults to 7.0.
-            - `spacing_y` (float): spacing between turbines in the y-direction as a multiple of rotor diameter. Defaults to 7.0.
-            - `row_spacing_y` (float): spacing between rows in the y-direction as a multiple of rotor diameter. Defaults to 7.0.
+            - `row_D_spacing` (float): rotor diameter multiplier for spacing between rows of
+            turbines (y direction).
+            - `rotation_angle_deg` (float, Optional): rotation angle of layout in degrees where 0 is North, increasing counter-clockwise. 90 degrees is East, 180 degrees is South,
+            270 degrees is West. Defaults to 0.0.
+            - `row_phase_offset` (float, Optional): offset of turbines along row from one row to the next. Value must be between 0 and 1. Defaults to 0.0.
+            - `layout_shape` (str, optional): layout shape with respect to the number of turbines. Must be either 'square' or 'rectangle'. Defaults to 'square'.
+            - `turbine_aspect_ratio` (float, optional): ratio of number turbines per row / number of rows if using a 'rectangle' layout_shape. Unused for 'square' layout_shape.
 
 (powercurve-calc-parameters)=
 ## Power Curve Calculation Parameters
@@ -82,12 +91,16 @@ The `powercurve_calc_config` section allows customization of the turbine power c
     - 2: Multi-Generator
     - 3: Direct Drive
 
+(pysam-options)=
+## PySAM Options
 - `pysam_options` (dict): The top-level keys correspond to the Groups available in the [Windpower module](https://nrel-pysam.readthedocs.io/en/main/modules/Windpower.html). The next level is the individual attributes a user could set and a full list is available through the PySAM documentation of Windpower module. The Groups that users may want to specify specific options for are the:
     - [Turbine](#turbine-group)
     - [Farm](#farm-group)
     - [Resource](#resource-group)
     - [Losses](https://nrel-pysam.readthedocs.io/en/main/modules/Windpower.html#losses-group)
     - [AdjustmentFactors](https://nrel-pysam.readthedocs.io/en/main/modules/Windpower.html#adjustmentfactors-group)
+    - [Uncertainty](https://nrel-pysam.readthedocs.io/en/main/modules/Windpower.html#uncertainty-group)
+
 
 (turbine-group)=
 ### Turbine group
@@ -104,18 +117,18 @@ Some common turbine parameters that a user may want to specify within the [Turbi
 (farm-group)=
 ### Farm group
 Some common farm parameters that a user may want to specify within the [Farm Group](https://nrel-pysam.readthedocs.io/en/main/modules/Windpower.html#farm-group) are:
-- `wind_farm_wake_model` (int): wake model selection. Defaults to 0.
+- `wind_farm_wake_model` (int): wake model selection.
     - 0: Original Park model
     - 1: Park model with wind speed-dependent wake decay constant
     - 2: Eddy-viscosity model
     - 3: Constant wake decay constant
-- `wind_farm_wake_loss_percent` (float): wake losses as percentage of annual energy. Range (0, 50). Defaults to 8.0.
+- `wind_farm_wake_loss_percent` (float): wake losses as percentage of annual energy. Range (0, 50).
 
 (resource-group)=
 ### Resource group
 Wind resource data is automatically formatted from the wind resource database and input as the `wind_resource_data` variable in the Windpower Resource Group. Some other common resource parameters that a user may want to specify within the [Resource Group](https://nrel-pysam.readthedocs.io/en/main/modules/Windpower.html#resource-group) are:
-- `wind_resource_shear` (float): shear exponent for wind profile. Defaults to 0.14.
-- `wind_resource_turbulence_coeff` (float): turbulence coefficient. Defaults to 0.1.
+- `wind_resource_shear` (float): shear exponent for wind profile.
+- `wind_resource_turbulence_coeff` (float): turbulence coefficient.
 
 ## Model Outputs
 The wind plant PySAM model provides the following outputs:
