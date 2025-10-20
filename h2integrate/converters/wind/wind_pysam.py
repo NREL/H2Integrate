@@ -99,6 +99,8 @@ class PYSAMWindPlantPerformanceModelConfig(BaseConfig):
     )
     pysam_options: dict = field(default={})
     run_recalculate_power_curve: bool = field(default=True)
+    layout: dict = field(default={})
+    powercurve_calc_config: dict = field(default={})
 
     def __attrs_post_init__(self):
         if self.create_model_from == "new" and not bool(self.pysam_options):
@@ -188,9 +190,9 @@ class PYSAMWindPlantPerformanceModel(WindPerformanceBaseClass):
         # initialize layout config
         layout_options = {}
         if "layout" in performance_inputs:
-            layout_params = self.options["tech_config"]["model_inputs"][
-                "performance_parameters"
-            ].pop("layout")
+            layout_params = self.options["tech_config"]["model_inputs"]["performance_parameters"][
+                "layout"
+            ]
         layout_mode = layout_params.get("layout_mode", "basicgrid")
         layout_options = layout_params.get("layout_options", {})
         if layout_mode == "basicgrid":
@@ -202,7 +204,7 @@ class PYSAMWindPlantPerformanceModel(WindPerformanceBaseClass):
         if "powercurve_calc_config" in performance_inputs:
             powercurveconfig = self.options["tech_config"]["model_inputs"][
                 "performance_parameters"
-            ].pop("powercurve_calc_config")
+            ]["powercurve_calc_config"]
         self.power_curve_config = PySAMPowerCurveCalculationInputs.from_dict(powercurveconfig)
 
         # initialize wind turbine config
