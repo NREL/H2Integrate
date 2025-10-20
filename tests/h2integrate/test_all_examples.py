@@ -855,7 +855,9 @@ def test_wind_battery_dispatch_example(subtests):
 
     wind_lcoe = model.prob.get_val("finance_subgroup_wind.LCOE", units="USD/MW/h")[0]
     battery_lcoe = model.prob.get_val("finance_subgroup_battery.LCOE", units="USD/MW/h")[0]
-    electricity_lcoe = model.prob.get_val("finance_subgroup_electricity.LCOE", units="USD/MW/h")[0]
+    electricity_lcoe = model.prob.get_val(
+        "finance_subgroup_electricity.LCOE_profast", units="USD/MW/h"
+    )[0]
 
     with subtests.test("Check electricity LCOE is greater than wind LCOE"):
         assert electricity_lcoe > wind_lcoe

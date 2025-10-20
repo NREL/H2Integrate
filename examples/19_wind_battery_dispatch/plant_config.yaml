@@ -78,10 +78,12 @@ finance_parameters:
     wind:
       commodity: "electricity"
       commodity_stream: "wind" #use electricity from wind in finance calc
+      finance_groups: ["profast"]
       technologies: ["wind"]
     battery:
       commodity: "electricity"
       commodity_stream: "battery" #use electricity from battery in finance calc
+      finance_groups: ["profast"]
       technologies: ["wind", "battery"]
     electricity:
       commodity: "electricity"
