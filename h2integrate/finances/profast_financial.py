@@ -436,13 +436,28 @@ class ProFastComp(om.ExplicitComponent):
         self.options.declare("commodity_type", types=str)
         self.options.declare("description", types=str, default="")
 
+    def add_model_specific_outputs(self):
+        self.add_output(self.LCO_str, val=0.0, units=self.lco_units)
+        self.outputs_to_units = {
+            "wacc": "percent",
+            "crf": "percent",
+            "irr": "percent",
+            "profit_index": "unitless",
+            "investor_payback_period": "yr",
+            "price": self.lco_units,
+        }
+        for output_var, units in self.outputs_to_units.items():
+            self.add_output(f"{output_var}_{self.output_txt}", val=0.0, units=units)
+
+        return
+
     def setup(self):
         if self.options["commodity_type"] == "electricity":
             commodity_units = "kW*h/year"
-            lco_units = "USD/kW/h"
+            self.lco_units = "USD/kW/h"
         else:
             commodity_units = "kg/year"
-            lco_units = "USD/kg"
+            self.lco_units = "USD/kg"
 
         LCO_base_str = f"LCO{self.options['commodity_type'][0].upper()}"
         self.output_txt = self.options["commodity_type"].lower()
@@ -456,17 +471,7 @@ class ProFastComp(om.ExplicitComponent):
                 self.output_txt = f"{self.options['commodity_type'].lower()}_{desc_str}"
                 self.LCO_str = f"{LCO_base_str}_{desc_str}"
 
-        self.add_output(self.LCO_str, val=0.0, units=lco_units)
-        self.outputs_to_units = {
-            "wacc": "percent",
-            "crf": "percent",
-            "irr": "percent",
-            "profit_index": "unitless",
-            "investor_payback_period": "yr",
-            "price": lco_units,
-        }
-        for output_var, units in self.outputs_to_units.items():
-            self.add_output(f"{output_var}_{self.output_txt}", val=0.0, units=units)
+        self.add_model_specific_outputs()
 
         if self.options["commodity_type"] == "co2":
             self.add_input("co2_capture_kgpy", val=0.0, units="kg/year")
@@ -514,9 +519,9 @@ class ProFastComp(om.ExplicitComponent):
             "variable_costs", {}
         )
         variable_cost_params.setdefault("escalation", self.params.inflation_rate)
-        variable_cost_params.setdefault("unit", lco_units.replace("USD", "$"))
+        variable_cost_params.setdefault("unit", self.lco_units.replace("USD", "$"))
         self.variable_cost_settings = ProFASTDefaultVariableCost.from_dict(variable_cost_params)
-        self.lco_units = lco_units
+
         # incentives - unused for now
         # incentive_params = plant_config["finance_parameters"]["model_inputs"].get(
         #     "incentives", {}
