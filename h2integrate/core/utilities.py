@@ -341,7 +341,7 @@ def get_path(path: str | Path) -> Path:
         return path.absolute()
 
     # Determine the path relative to the H2Integrate package.
-    h2i_based_path = ROOT_DIR / Path(original_path)
+    h2i_based_path = ROOT_DIR.parent / Path(original_path)
 
     path = h2i_based_path
 
@@ -405,14 +405,14 @@ def find_file(filename: str | Path, root_dir: str | Path | None = None):
     if len(files_cwd) == 1:
         return files_cwd[0].absolute()
 
-    files_h2i = list(ROOT_DIR.glob(f"**/{filename}"))
+    files_h2i = list(ROOT_DIR.parent.glob(f"**/{filename}"))
     if len(files_h2i) == 1:
         return files_h2i[0].absolute()
 
     if len(files_cwd) == 0 and len(files_h2i) == 0:
         raise FileNotFoundError(
             f"Did not find any files matching {filename} in the current working directory "
-            f"{Path.cwd()} or relative to the H2Integrate package {ROOT_DIR}"
+            f"{Path.cwd()} or relative to the H2Integrate package {ROOT_DIR.parent}"
         )
 
 
