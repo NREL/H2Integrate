@@ -7,6 +7,7 @@ from attrs import field, define
 
 from h2integrate.core.utilities import (
     BaseConfig,
+    write_yaml,
     attr_filter,
     attr_serializer,
     dict_to_yaml_formatting,
@@ -21,7 +22,6 @@ from h2integrate.tools.profast_tools import (
     create_and_populate_profast,
     format_profast_price_breakdown_per_year,
 )
-from h2integrate.core.inputs.validation import write_yaml
 from h2integrate.tools.profast_reverse_tools import convert_pf_to_dict
 
 
