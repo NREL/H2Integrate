@@ -535,4 +535,4 @@ def write_yaml(
     yaml.indent(mapping=4, sequence=6, offset=3)
     yaml.allow_unicode = False
     with Path(foutput).open("w", encoding="utf-8") as f:
-        yaml.dump(instance, f, sort_keys=False, default_flow_style=False)
+        yaml.dump(instance, f)
