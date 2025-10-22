@@ -7,6 +7,7 @@
 - Updated setting up recorder in `PoseOptimization`
 - Added resource models to make solar resource API calls to the NREL Developer GOES dataset
 - Added `create_om_reports` option to driver config to enable/disable OpenMDAO reports (N2 diagrams, etc.)
+- Added `load_yaml()` function and flexibility to input a config dictionary to H2IntegrateModel rather than a filepath
 
 ## 0.4.0 [October 1, 2025]
 
