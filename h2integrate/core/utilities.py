@@ -442,7 +442,7 @@ def check_file_format_for_csv_generator(
         if not overwrite_file:
             dirname = Path(csv_fpath).absolute().parent
             fname = Path(csv_fpath).name
-            new_fname = make_unique_case_name(dir, fname, ".csv")
+            new_fname = make_unique_case_name(dirname, fname, ".csv")
             new_fpath = dirname / new_fname
         else:
             new_fpath = Path(csv_fpath).absolute()

@@ -9,7 +9,7 @@ driver:
     flag: true
     debug_print: true
     generator: "csvgen"
-    filename: "csv_doe_cases0.csv"
+    filename: "csv_doe_cases.csv"
     run_parallel: false
 design_variables:
   solar:
