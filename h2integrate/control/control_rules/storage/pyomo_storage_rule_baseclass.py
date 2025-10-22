@@ -10,7 +10,7 @@ class PyomoRuleStorageBaseclass(PyomoRuleBaseClass):
     def _create_parameters(self, pyomo_model: pyo.ConcreteModel, t):
         """Create storage-related parameters in the Pyomo model.
 
-        This method defines key storage parameters such as capacity limits, 
+        This method defines key storage parameters such as capacity limits,
         state-of-charge (SOC) bounds, efficiencies, and time duration for each
         time step.
 

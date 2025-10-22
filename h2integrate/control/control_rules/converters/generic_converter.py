@@ -50,7 +50,9 @@ class PyomoDispatchGenericConverter(PyomoRuleBaseClass):
     def _create_parameters(self, pyomo_model: pyo.ConcreteModel, tech_name: str):
         """Create technology Pyomo parameters to add to the Pyomo model instance.
 
-        Method is currently passed but this can serve as a template to add parameters to the Pyomo model instance.
+        Method is currently passed but this can serve as a template to add parameters to the Pyomo
+        model instance.
+
         Args:
             pyomo_model (pyo.ConcreteModel): pyomo_model that parameters are added to.
             tech_name (str): The name or key identifying the technology for which
@@ -63,7 +65,9 @@ class PyomoDispatchGenericConverter(PyomoRuleBaseClass):
     def _create_constraints(self, pyomo_model: pyo.ConcreteModel, tech_name: str):
         """Create technology Pyomo parameters to add to the Pyomo model instance.
 
-        Method is currently passed but this can serve as a template to add constraints to the Pyomo model instance.
+        Method is currently passed but this can serve as a template to add constraints to the Pyomo
+        model instance.
+
         Args:
             pyomo_model (pyo.ConcreteModel): pyomo_model that constraints are added to.
             tech_name (str): The name or key identifying the technology for which
