@@ -1,11 +1,9 @@
 import importlib.util
-from pathlib import Path
 
-import yaml
 import numpy as np
 import openmdao.api as om
 
-from h2integrate.core.utilities import create_xdsm_from_config
+from h2integrate.core.utilities import get_path, find_file, load_yaml, create_xdsm_from_config
 from h2integrate.finances.finances import AdjustedCapexOpexComp
 from h2integrate.core.resource_summer import ElectricitySumComp
 from h2integrate.core.supported_models import supported_models, electricity_producing_techs
@@ -61,19 +59,59 @@ class H2IntegrateModel:
         self.create_driver_model()
 
     def load_config(self, config_file):
-        config_path = Path(config_file)
-        with config_path.open() as file:
-            config = yaml.safe_load(file)
+        config_path = None
+        tech_path = None
+        driver_path = None
+        plant_path = None
+        tech_parent_path = None
+        plant_parent_path = None
+        if isinstance(config_file, dict):
+            config = config_file
+        else:
+            config_path = get_path(config_file)
+            config = load_yaml(config_path)
 
         self.name = config.get("name")
         self.system_summary = config.get("system_summary")
 
         # Load each config file as yaml and save as dict on this object
-        self.driver_config = load_driver_yaml(config_path.parent / config.get("driver_config"))
-        self.tech_config_path = config_path.parent / config.get("technology_config")
-        self.technology_config = load_tech_yaml(self.tech_config_path)
-        self.plant_config = load_plant_yaml(config_path.parent / config.get("plant_config"))
-        self.plant_config_path = config_path.parent / config.get("plant_config")
+        if isinstance(config.get("driver_config"), dict):
+            self.driver_config = load_driver_yaml(config.get("driver_config"))
+        else:
+            if config_path is None:
+                driver_path = get_path(config.get("driver_config"))
+            else:
+                driver_path = find_file(config.get("driver_config"), config_path.parent)
+
+            self.driver_config = load_driver_yaml(driver_path)
+
+        if isinstance(config.get("technology_config"), dict):
+            self.technology_config = load_tech_yaml(config.get("technology_config"))
+        else:
+            if config_path is None:
+                tech_path = get_path(config.get("technology_config"))
+            else:
+                tech_path = find_file(config.get("technology_config"), config_path.parent)
+
+            tech_parent_path = tech_path.parent
+            self.technology_config = load_tech_yaml(tech_path)
+
+        if isinstance(config.get("plant_config"), dict):
+            self.plant_config = load_plant_yaml(config.get("plant_config"))
+        else:
+            if config_path is None:
+                plant_path = get_path(config.get("plant_config"))
+            else:
+                plant_path = find_file(config.get("plant_config"), config_path.parent)
+            plant_parent_path = plant_path.parent
+            self.plant_config = load_plant_yaml(plant_path)
+
+        self.driver_config_path = driver_path
+        self.tech_config_path = tech_path
+        self.plant_config_path = plant_path
+
+        self.tech_parent_path = tech_parent_path
+        self.plant_parent_path = plant_parent_path
 
     def create_custom_models(self, model_config, config_parent_path, model_types, prefix=""):
         """This method loads custom models from the specified directory and adds them to the
@@ -106,7 +144,10 @@ class H2IntegrateModel:
                             )
 
                         # Resolve the full path of the model location
-                        model_path = config_parent_path / model_location
+                        if config_parent_path is not None:
+                            model_path = find_file(model_location, config_parent_path)
+                        else:
+                            model_path = find_file(model_location)
 
                         if not model_path.exists():
                             raise FileNotFoundError(
@@ -144,7 +185,7 @@ class H2IntegrateModel:
         # check for custom technology models
         self.create_custom_models(
             self.technology_config["technologies"],
-            self.tech_config_path.parent,
+            self.tech_parent_path,
             ["performance_model", "cost_model", "finance_model"],
         )
 
@@ -156,7 +197,7 @@ class H2IntegrateModel:
             if "model_inputs" in finance_groups:
                 self.create_custom_models(
                     self.plant_config,
-                    self.plant_config_path.parent,
+                    self.plant_parent_path,
                     ["finance_groups"],
                     prefix="finance_",
                 )
@@ -167,7 +208,7 @@ class H2IntegrateModel:
                 finance_groups_config = {"finance_groups": finance_groups}
                 self.create_custom_models(
                     finance_groups_config,
-                    self.plant_config_path.parent,
+                    self.plant_parent_path,
                     finance_model_names,
                     prefix="finance_",
                 )
