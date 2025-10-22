@@ -5,6 +5,8 @@
 - Added capability for user-defined finance models in the H2Integrate framework
 - Added an optimized offshore methanol production case to examples/03_methanol/co2_hydrogenation_doc
 - Updated setting up recorder in `PoseOptimization`
+- Added resource models to make solar resource API calls to the NREL Developer GOES dataset
+- Added `create_om_reports` option to driver config to enable/disable OpenMDAO reports (N2 diagrams, etc.)
 - Added Ard as a combined performance and cost model
 
 ## 0.4.0 [October 1, 2025]

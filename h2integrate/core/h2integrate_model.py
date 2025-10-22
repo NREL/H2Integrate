@@ -30,7 +30,9 @@ class H2IntegrateModel:
         # load custom models
         self.collect_custom_models()
 
-        self.prob = om.Problem()
+        # Check if create_om_reports is specified in driver config
+        create_om_reports = self.driver_config.get("general", {}).get("create_om_reports", True)
+        self.prob = om.Problem(reports=create_om_reports)
         self.model = self.prob.model
 
         # create site-level model

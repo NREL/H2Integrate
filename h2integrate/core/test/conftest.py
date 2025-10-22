@@ -35,9 +35,10 @@ def pytest_sessionfinish(session, exitstatus):
         if file2path.exists():
             file2path.unlink()
         # remove folder created in h2integrate/core/test/test_recorder.py
-        files_in_test_folder = list(test_dir.iterdir())
-        if len(files_in_test_folder) == 0:
-            test_dir.rmdir()
+        if test_dir.exists():
+            files_in_test_folder = list(test_dir.iterdir())
+            if len(files_in_test_folder) == 0:
+                test_dir.rmdir()
 
         # remove environment variables used for tests in
         # h2integrate/core/test/test_recorder.py
