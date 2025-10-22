@@ -849,6 +849,15 @@ def test_pyomo_heuristic_dispatch_example(subtests):
         )
         assert electricity_unmet_demand == pytest.approx(711.1997294551337, rel=1e-6)
 
+    # check that error is raised when incorrect tech_name is given
+    with subtests.test("Check incorrect tech_name error"):
+        expected_error = (
+            r"tech_name in control_parameters \(wrong_tech_name\) must match "
+            r"the top-level name of the tech group \(battery\)"
+        )
+        with pytest.raises(ValueError, match=expected_error):
+            H2IntegrateModel(Path.cwd() / "pyomo_heuristic_dispatch_error_for_testing.yaml")
+
 
 def test_simple_dispatch_example(subtests):
     # Change the current working directory to the example's directory

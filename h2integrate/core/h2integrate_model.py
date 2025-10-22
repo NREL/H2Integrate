@@ -243,6 +243,17 @@ class H2IntegrateModel:
         for tech_name, individual_tech_config in self.technology_config["technologies"].items():
             perf_model = individual_tech_config.get("performance_model", {}).get("model")
 
+            if "control_parameters" in individual_tech_config["model_inputs"]:
+                if "tech_name" in individual_tech_config["model_inputs"]["control_parameters"]:
+                    provided_tech_name = individual_tech_config["model_inputs"][
+                        "control_parameters"
+                    ]["tech_name"]
+                    if tech_name != provided_tech_name:
+                        raise ValueError(
+                            f"tech_name in control_parameters ({provided_tech_name}) must match "
+                            f"the top-level name of the tech group ({tech_name})"
+                        )
+
             if perf_model is not None and "feedstock" in perf_model:
                 comp = self.supported_models[perf_model](
                     driver_config=self.driver_config,
