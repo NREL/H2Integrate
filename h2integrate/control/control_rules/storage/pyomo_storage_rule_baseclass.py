@@ -15,7 +15,7 @@ class PyomoRuleStorageBaseclass(PyomoRuleBaseClass):
         time step.
 
         Args:
-            pyomo_model (pyo.ConcreteModel): Pyomo model instance representing 
+            pyomo_model (pyo.ConcreteModel): Pyomo model instance representing
                 the storage system.
             t: Time index or iterable representing time steps (unused in this method).
         """
@@ -98,7 +98,7 @@ class PyomoRuleStorageBaseclass(PyomoRuleBaseClass):
         charging/discharging modes, energy flows, and state-of-charge.
 
         Args:
-            pyomo_model (pyo.ConcreteModel): Pyomo model instance representing 
+            pyomo_model (pyo.ConcreteModel): Pyomo model instance representing
                 the storage system.
             t: Time index or iterable representing time steps (unused in this method).
         """
@@ -157,7 +157,7 @@ class PyomoRuleStorageBaseclass(PyomoRuleBaseClass):
         - The state-of-charge balance over time.
 
         Args:
-            pyomo_model (pyo.ConcreteModel): Pyomo model instance representing 
+            pyomo_model (pyo.ConcreteModel): Pyomo model instance representing
                 the storage system.
             t: Time index or iterable representing time steps (unused in this method).
         """
@@ -220,7 +220,7 @@ class PyomoRuleStorageBaseclass(PyomoRuleBaseClass):
         (e.g., charging and discharging commodities) to the overall Pyomo model.
 
         Args:
-            pyomo_model (pyo.ConcreteModel): Pyomo model instance representing 
+            pyomo_model (pyo.ConcreteModel): Pyomo model instance representing
                 the storage system.
             t: Time index or iterable representing time steps (unused in this method).
         """
