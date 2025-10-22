@@ -1,5 +1,0 @@
-name: "driver_config"
-description: "This analysis runs a wind plant hooked up to an electrolyzer and simple tank with the wind farm modeled using Ard"
-
-general:
-  folder_output: wind_electrolyzer
