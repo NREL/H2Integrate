@@ -56,7 +56,7 @@ dependencies = [
     "ruamel.yaml",
     "scipy",
     "wombat>=0.11",
-    "ard @ git+https://github.com/WISDEM/Ard@develop"
+    "ard-nrel"
 ]
 keywords = [
     "python3",

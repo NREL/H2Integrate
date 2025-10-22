@@ -14,8 +14,14 @@ site:
     },
   ]
 
-  solar_resource_filepath: "../11_hybrid_energy_plant/tech_inputs/weather/solar/30.6617_-101.7096_psmv3_60_2013.csv"
-
+  resources:
+    # wind resource is handled directly in the Ard wrapper in this example for now
+    solar_resource:
+      resource_model: "goes_aggregated_solar_v4_api"
+      resource_parameters:
+        resource_year: 2013
+        resource_dir: "../11_hybrid_energy_plant/tech_inputs/weather/solar"
+        resource_filename: "30.6617_-101.7096_psmv3_60_2013.csv"
 
 plant:
   plant_life: 30
@@ -29,6 +35,7 @@ technology_interconnections: [
 
 resource_to_tech_connections: [
   # connect the wind resource to the wind technology
+  ['solar_resource', 'solar', 'solar_resource_data'],
 ]
 
 finance_parameters:
