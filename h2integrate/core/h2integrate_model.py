@@ -542,7 +542,7 @@ class H2IntegrateModel:
                         "model_inputs": {
                             "performance_parameters": {
                                 "commodity": commodity,
-                                "commodity_units": "kW" if commodity == "electricity" else "kg",
+                                "commodity_units": "kW" if commodity == "electricity" else "kg/h",
                             }
                         }
                     }
@@ -973,6 +973,9 @@ class H2IntegrateModel:
         # do model setup based on the driver config
         # might add a recorder, driver, set solver tolerances, etc
         self.prob.setup()
+
+        # import re
+        # for case in case_gen(self._designvars, self._problem().model):
 
         self.prob.run_driver()
 
