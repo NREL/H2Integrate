@@ -75,36 +75,36 @@ class PyomoRuleBaseClass(om.ExplicitComponent):
     def _create_parameters(self, pyomo_model, tech_name: str):
         """Defines technology-specific Pyomo parameters for the given model.
 
-    This abstract method should be implemented by subclasses to create and add
-    technology-specific Pyomo parameters (e.g., efficiencies, limits, or costs)
-    to the provided model instance.
+        This abstract method should be implemented by subclasses to create and add
+        technology-specific Pyomo parameters (e.g., efficiencies, limits, or costs)
+        to the provided model instance.
 
-    Args:
-        pyomo_model: The Pyomo model instance to which parameters will be added.
-        tech_name (str): The name or identifier of the technology for which
-            parameters are defined.
+        Args:
+            pyomo_model: The Pyomo model instance to which parameters will be added.
+            tech_name (str): The name or identifier of the technology for which
+                parameters are defined.
 
-    Raises:
-        NotImplementedError: If the method is not implemented in a subclass.
-    """
+        Raises:
+            NotImplementedError: If the method is not implemented in a subclass.
+        """
 
         raise NotImplementedError("This method should be implemented in a subclass.")
 
     def _create_variables(self, pyomo_model, tech_name: str):
         """Defines technology-specific Pyomo variables for the given model.
 
-    This abstract method should be implemented by subclasses to create and add
-    technology-specific Pyomo variables (e.g., efficiencies, limits, or costs)
-    to the provided model instance.
+        This abstract method should be implemented by subclasses to create and add
+        technology-specific Pyomo variables (e.g., efficiencies, limits, or costs)
+        to the provided model instance.
 
-    Args:
-        pyomo_model: The Pyomo model instance to which variables will be added.
-        tech_name (str): The name or identifier of the technology for which
-            variables are defined.
+        Args:
+            pyomo_model: The Pyomo model instance to which variables will be added.
+            tech_name (str): The name or identifier of the technology for which
+                variables are defined.
 
-    Raises:
-        NotImplementedError: If the method is not implemented in a subclass.
-    """
+        Raises:
+            NotImplementedError: If the method is not implemented in a subclass.
+        """
 
         raise NotImplementedError(
             "This method should be implemented in a subclass. \
@@ -114,18 +114,18 @@ class PyomoRuleBaseClass(om.ExplicitComponent):
     def _create_constraints(self, pyomo_model, tech_name: str):
         """Defines technology-specific Pyomo constraints for the given model.
 
-    This abstract method should be implemented by subclasses to create and add
-    technology-specific Pyomo constraints (e.g., efficiencies, limits, or costs)
-    to the provided model instance.
+        This abstract method should be implemented by subclasses to create and add
+        technology-specific Pyomo constraints (e.g., efficiencies, limits, or costs)
+        to the provided model instance.
 
-    Args:
-        pyomo_model: The Pyomo model instance to which constraints will be added.
-        tech_name (str): The name or identifier of the technology for which
-            constraints are defined.
+        Args:
+            pyomo_model: The Pyomo model instance to which constraints will be added.
+            tech_name (str): The name or identifier of the technology for which
+                constraints are defined.
 
-    Raises:
-        NotImplementedError: If the method is not implemented in a subclass.
-    """
+        Raises:
+            NotImplementedError: If the method is not implemented in a subclass.
+        """
 
         raise NotImplementedError(
             "This method should be implemented in a subclass. \
@@ -135,17 +135,17 @@ class PyomoRuleBaseClass(om.ExplicitComponent):
     def _create_ports(self, pyomo_model, tech_name: str):
         """Defines technology-specific Pyomo ports for the given model.
 
-    This abstract method should be implemented by subclasses to create and add
-    technology-specific Pyomo ports (e.g., efficiencies, limits, or costs)
-    to the provided model instance.
+        This abstract method should be implemented by subclasses to create and add
+        technology-specific Pyomo ports (e.g., efficiencies, limits, or costs)
+        to the provided model instance.
 
-    Args:
-        pyomo_model: The Pyomo model instance to which ports will be added.
-        tech_name (str): The name or identifier of the technology for which
-            port are defined.
+        Args:
+            pyomo_model: The Pyomo model instance to which ports will be added.
+            tech_name (str): The name or identifier of the technology for which
+                port are defined.
 
-    Raises:
-        NotImplementedError: If the method is not implemented in a subclass.
-    """
+        Raises:
+            NotImplementedError: If the method is not implemented in a subclass.
+        """
 
         raise NotImplementedError("This method should be implemented in a subclass.")
