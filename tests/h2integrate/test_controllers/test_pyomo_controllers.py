@@ -1,6 +1,3 @@
-from pathlib import Path
-
-import yaml
 import numpy as np
 import pytest
 import openmdao.api as om
@@ -14,24 +11,66 @@ from h2integrate.control.control_rules.storage.pyomo_storage_rule_baseclass impo
 )
 
 
+plant_config = {
+    "name": "plant_config",
+    "description": "...",
+    "plant": {
+        "plant_life": 30,
+        "grid_connection": False,
+        "ppa_price": 0.025,
+        "hybrid_electricity_estimated_cf": 0.492,
+        "simulation": {
+            "dt": 3600,
+            "n_timesteps": 8760,
+        },
+    },
+    "tech_to_dispatch_connections": [
+        ["battery", "battery"],
+    ],
+}
+
+tech_config = {
+    "name": "technology_config",
+    "description": "...",
+    "technologies": {
+        "battery": {
+            "dispatch_rule_set": {"model": "pyomo_dispatch_generic_storage"},
+            "control_strategy": {"model": "heuristic_load_following_controller"},
+            "performance_model": {"model": "pysam_battery"},
+            "model_inputs": {
+                "shared_parameters": {
+                    "max_charge_rate": 50000,
+                    "max_capacity": 200000,
+                    "n_control_window": 24,
+                    "n_horizon_window": 48,
+                    "init_charge_percent": 0.5,
+                    "max_charge_percent": 0.9,
+                    "min_charge_percent": 0.1,
+                },
+                "performance_parameters": {
+                    "system_model_source": "pysam",
+                    "chemistry": "LFPGraphite",
+                    "control_variable": "input_power",
+                },
+                "control_parameters": {
+                    "commodity_name": "electricity",
+                    "commodity_storage_units": "kW",
+                    "tech_name": "battery",
+                    "system_commodity_interface_limit": 1e12,
+                },
+                "dispatch_rule_parameters": {
+                    "commodity_name": "electricity",
+                    "commodity_storage_units": "kW",
+                },
+            },
+        }
+    },
+}
+
+
 def test_heuristic_load_following_battery_dispatch(subtests):
-    # Get the directory of the current script
-    current_dir = Path(__file__).parent
-
-    # Get the paths for the relevant input files
-    plant_config_path = current_dir / "inputs" / "pyomo_battery_controller" / "plant_config.yaml"
-    tech_config_path = current_dir / "inputs" / "pyomo_battery_controller" / "tech_config.yaml"
-
-    # Load the plant configuration
-    with plant_config_path.open() as file:
-        plant_config = yaml.safe_load(file)
-
-    # Load the technology configuration
-    with tech_config_path.open() as file:
-        tech_config = yaml.safe_load(file)
-
     # Fabricate some oscillating power generation data: 0 kW for the first 12 hours, 10000 kW for
-    # the second tweleve hours, and repeat that daily cycle over a year.
+    # the second twelve hours, and repeat that daily cycle over a year.
     n_look_ahead_half = int(24 / 2)
 
     electricity_in = np.concatenate(
