@@ -200,9 +200,6 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass):
             provided in typical compute methods in H2Integrate for running models, but
             needs to be a separate method here to allow the dispatch function to call
             and manage the performance model.
-        calculate_thermal_params(input_dict):
-            Calculates mass and surface area of the scaled battery using
-            specific energy ratios or reference module data.
         _set_control_mode(control_mode=1.0, input_power=0.0, input_current=0.0,
             control_variable="input_power"):
             Sets the battery control mode (power or current).
@@ -553,53 +550,6 @@ class PySAMBatteryPerformanceModel(BatteryPerformanceBaseClass):
                 getattr(self.outputs, attr)[sim_start_index + t] = getattr(self, attr)
 
         return storage_power_out_timesteps, soc_timesteps
-
-    def calculate_thermal_params(self, input_dict):
-        """Calculate battery thermal parameters after resizing.
-
-        Uses specific energy and volume scaling relationships, or provided
-        module reference data, to calculate the new battery mass and surface
-        area at the desired capacity.
-
-        Args:
-            input_dict (dict):
-                Thermal and capacity parameters. Expected keys:
-                    - "mass" (float): Mass of original battery (kg).
-                    - "surface_area" (float): Surface area of original battery (m²).
-                    - "original_capacity" (float): Original capacity (Wh).
-                    - "desired_capacity" (float): New capacity (Wh).
-                    - "module_capacity" (float, optional): Module capacity (Wh).
-                    - "module_surface_area" (float, optional): Module surface area (m²).
-
-        Returns:
-            dict:
-                Dictionary with updated thermal parameters:
-                - "mass" (float): New battery mass (kg).
-                - "surface_area" (float): New battery surface area (m²).
-        """
-
-        mass = input_dict["mass"]
-        surface_area = input_dict["surface_area"]
-        original_capacity = input_dict["original_capacity"]
-        desired_capacity = input_dict["desired_capacity"]
-
-        mass_per_specific_energy = mass / original_capacity
-
-        volume = (surface_area / 6) ** (3 / 2)
-
-        volume_per_specific_energy = volume / original_capacity
-
-        output_dict = {
-            "mass": mass_per_specific_energy * desired_capacity,
-            "surface_area": (volume_per_specific_energy * desired_capacity) ** (2 / 3) * 6,
-        }
-
-        if input_dict.keys() >= {"module_capacity", "module_surface_area"}:
-            module_capacity = input_dict["module_capacity"]
-            module_surface_area = input_dict["module_surface_area"]
-            output_dict["surface_area"] = module_surface_area * desired_capacity / module_capacity
-
-        return output_dict
 
     def _set_control_mode(
         self,
