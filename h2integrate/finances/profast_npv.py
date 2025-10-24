@@ -27,7 +27,7 @@ class ProFASTNPV(ProFastComp):
             units=self.lco_units,
         )
 
-    def compute(self, inputs, outputs):
+    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         pf = self.populate_profast(inputs)
 
         outputs[f"NPV_{self.output_txt}"] = pf.cash_flow(
