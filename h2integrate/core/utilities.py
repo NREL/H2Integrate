@@ -381,6 +381,7 @@ def find_file(filename: str | Path, root_folder: str | Path | None = None):
     """
 
     # 1. check for file in the root directory
+    files = []
     if root_folder is not None:
         root_folder = Path(root_folder)
         # if the file exists in the root directory, return full path
@@ -428,7 +429,10 @@ def find_file(filename: str | Path, root_folder: str | Path | None = None):
             f"{Path.cwd()}, relative to the H2Integrate package {ROOT_DIR.parent}, or relative to "
             f"the root directory {root_folder}."
         )
-    raise ValueError("Unexpected situation occurred")
+    raise ValueError(
+        f"Unexpected situation occurred: {len(files_cwd)} cwd files found, "
+        f"{len(files_h2i)} h2i files, {len(files)} root files."
+    )
 
 
 def remove_numpy(fst_vt: dict) -> dict:
