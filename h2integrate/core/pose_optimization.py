@@ -356,7 +356,10 @@ class PoseOptimization:
         return opt_prob
 
     def set_objective(self, opt_prob):
-        """Set merit figure. Each objective has its own scaling.  Check first for user override
+        """Set merit figure. Each objective has its own scaling.  Check first for user override.
+
+        The optimization is always minimizing the objective. If you wish to maximize the objective,
+        use a negative ref or scaler value in the config.
 
         Args:
             opt_prob (openmdao problem instance): openmdao problem instance for
@@ -413,11 +416,12 @@ class PoseOptimization:
             opt_prob (openmdao problem instance): openmdao problem instance for
                 current optimization problem edited to include constraint setup
         """
-        for technology, variables in self.config["constraints"].items():
-            for key, value in variables.items():
-                if value["flag"]:
-                    value.pop("flag")
-                    opt_prob.model.add_constraint(f"{technology}.{key}", **value)
+        if self.config.get("constraints", False):
+            for technology, variables in self.config["constraints"].items():
+                for key, value in variables.items():
+                    if value["flag"]:
+                        value.pop("flag")
+                        opt_prob.model.add_constraint(f"{technology}.{key}", **value)
 
     def set_recorders(self, opt_prob):
         """sets up a recorder for the openmdao problem as desired in the input yaml

@@ -195,9 +195,11 @@ class DemandOpenLoopController(ControllerBaseClass):
                 rather the system just does not use it (throws it away) because this controller is
                 specific to the storage technology and has no influence on other technologies in
                 the system.
-        {commodity_name}_unmet_demand (float): Missed load timeseries when demand exceeds supply.
+        {commodity_name}_unmet_demand (float): Unmet demand timeseries when demand exceeds supply.
+            Same meaning as missed load.
             - Units: Defined in `commodity_units` (e.g., "kg/h").
-
+        total_{commodity_name}_unmet_demand (float): Total unmet demand over the simulation period.
+            - Units: Defined in `commodity_units` (e.g., "kg").
     """
 
     def setup(self):
@@ -255,6 +257,12 @@ class DemandOpenLoopController(ControllerBaseClass):
             copy_shape=f"{commodity_name}_in",
             units=self.config.commodity_units,
             desc=f"{commodity_name} missed load timeseries",
+        )
+
+        self.add_output(
+            f"total_{commodity_name}_unmet_demand",
+            units=self.config.commodity_units,
+            desc=f"Total {commodity_name} missed load over the simulation period",
         )
 
     def compute(self, inputs, outputs):
@@ -348,3 +356,6 @@ class DemandOpenLoopController(ControllerBaseClass):
 
         # Return the unmet load demand
         outputs[f"{commodity_name}_unmet_demand"] = unmet_demand_array
+
+        # Calculate and return the total unmet demand over the simulation period
+        outputs[f"total_{commodity_name}_unmet_demand"] = np.sum(unmet_demand_array)
