@@ -356,19 +356,19 @@ def get_path(path: str | Path) -> Path:
     )
 
 
-def find_file(filename: str | Path, root_dir: str | Path | None = None):
+def find_file(filename: str | Path, root_folder: str | Path | None = None):
     """This function attempts to find a filepath matching `filename` from a variety of locations
     in the following order:
 
-    1. Relative to the root_dir (if provided)
+    1. Relative to the root_folder (if provided)
     2. Relative to the current working directory.
     3. Relative to the H2Integrate package.
     4. The absolute path of filename with respect to the current working directory if
-        root_dir is None.
+        root_folder is None.
 
     Args:
         filename (str | Path): Input filepath
-        root_dir (str | Path, optional): Root directory to search for filename in.
+        root_folder (str | Path, optional): Root directory to search for filename in.
             Defaults to None.
 
     Raises:
@@ -380,41 +380,53 @@ def find_file(filename: str | Path, root_dir: str | Path | None = None):
 
     """
 
-    if root_dir is not None:
-        root_dir = Path(root_dir)
-        if Path(root_dir, filename).exists():
-            return Path(root_dir, filename).absolute()
+    # 1. check for file in the root directory
+    if root_folder is not None:
+        root_folder = Path(root_folder)
+        # if the file exists in the root directory, return full path
+        if Path(root_folder, filename).exists():
+            return Path(root_folder, filename).absolute()
 
-        files = list(Path(root_dir).glob(f"**/{filename}"))
+        # check for files within root directory
+        files = list(Path(root_folder).glob(f"**/{filename}"))
 
         if len(files) == 1:
             return files[0].absolute()
         if len(files) > 1:
             raise FileNotFoundError(
-                f"Found {len(files)} files in the root directory ({root_dir}) that have "
+                f"Found {len(files)} files in the root directory ({root_folder}) that have "
                 f"filename {filename}"
             )
 
         filename_no_rel = filename.resolve(strict=False)
-        files = list(Path(root_dir).glob(f"**/{filename_no_rel}"))
+        files = list(Path(root_folder).glob(f"**/{filename_no_rel}"))
         if len(files) == 1:
             return files[0].absolute()
 
+    # 2. check for file relative to the currrent working directory
     files_cwd = list(Path.cwd().glob(f"**/{filename}"))
     if len(files_cwd) == 1:
         return files_cwd[0].absolute()
 
+    # 3. check for file relative to the H2Integrate package root
     files_h2i = list(ROOT_DIR.parent.glob(f"**/{filename}"))
     if len(files_h2i) == 1:
         return files_h2i[0].absolute()
 
-    if root_dir is None and Path(filename).exists():
+    # 4. check for as absolute path
+    if root_folder is None and Path(filename).exists():
         return Path(filename).absolute()
 
     if len(files_cwd) == 0 and len(files_h2i) == 0:
         raise FileNotFoundError(
             f"Did not find any files matching {filename} in the current working directory "
             f"{Path.cwd()} or relative to the H2Integrate package {ROOT_DIR.parent}"
+        )
+    if root_folder is not None and len(files) == 0:
+        raise FileNotFoundError(
+            f"Did not find any files matching {filename} in the current working directory "
+            f"{Path.cwd()}, relative to the H2Integrate package {ROOT_DIR.parent}, or relative to "
+            f"the root directory {root_folder}."
         )
 
 

@@ -73,23 +73,23 @@ def test_find_file(subtests):
         assert file_cwd_rel_out_path == file_abs_path
 
     # 3. Relative to the H2Integrate package.
-    os.chdir(ROOT_DIR)
+    os.chdir(ROOT_DIR / "core" / "inputs")
     file_h2i_rel_path = "examples/01_onshore_steel_mn/tech_inputs/hopp_config.yaml"
     file_h2i_rel_out_path = find_file(file_h2i_rel_path)
     with subtests.test("find_file: filepath relative to H2I package"):
         assert file_h2i_rel_out_path == file_abs_path
 
-    # 3. Relative to the root_dir (outside of it)
+    # 3. Relative to the root_folder (outside of it)
     file_root_rel_path = "../examples/01_onshore_steel_mn/tech_inputs/hopp_config.yaml"
-    file_root_rel_out_path = find_file(file_root_rel_path, root_dir=ROOT_DIR)
-    with subtests.test("find_file: filepath relative (outside) of root_dir"):
+    file_root_rel_out_path = find_file(file_root_rel_path, root_folder=ROOT_DIR)
+    with subtests.test("find_file: filepath relative (outside) of root_folder"):
         assert file_root_rel_out_path.resolve() == file_abs_path
 
-    # 4. Relative to the root_dir (inside of it)
+    # 4. Relative to the root_folder (inside of it)
     file_root_in_rel_path = "tech_inputs/hopp_config.yaml"
     ex_root = EXAMPLE_DIR / "01_onshore_steel_mn"
-    file_root_in_rel_out_path = find_file(file_root_in_rel_path, root_dir=ex_root)
-    with subtests.test("find_file: filepath relative (inside) to root_dir"):
+    file_root_in_rel_out_path = find_file(file_root_in_rel_path, root_folder=ex_root)
+    with subtests.test("find_file: filepath relative (inside) to root_folder"):
         assert file_root_in_rel_out_path.resolve() == file_abs_path
     os.chdir(current_cwd)
 
