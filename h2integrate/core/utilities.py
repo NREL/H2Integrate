@@ -363,6 +363,8 @@ def find_file(filename: str | Path, root_dir: str | Path | None = None):
     1. Relative to the root_dir (if provided)
     2. Relative to the current working directory.
     3. Relative to the H2Integrate package.
+    4. The absolute path of filename with respect to the current working directory if
+        root_dir is None.
 
     Args:
         filename (str | Path): Input filepath
@@ -377,9 +379,6 @@ def find_file(filename: str | Path, root_dir: str | Path | None = None):
 
 
     """
-
-    if Path(filename).exists():
-        return Path(filename).absolute()
 
     if root_dir is not None:
         root_dir = Path(root_dir)
@@ -408,6 +407,9 @@ def find_file(filename: str | Path, root_dir: str | Path | None = None):
     files_h2i = list(ROOT_DIR.parent.glob(f"**/{filename}"))
     if len(files_h2i) == 1:
         return files_h2i[0].absolute()
+
+    if root_dir is None and Path(filename).exists():
+        return Path(filename).absolute()
 
     if len(files_cwd) == 0 and len(files_h2i) == 0:
         raise FileNotFoundError(
