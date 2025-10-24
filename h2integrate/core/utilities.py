@@ -428,6 +428,7 @@ def find_file(filename: str | Path, root_folder: str | Path | None = None):
             f"{Path.cwd()}, relative to the H2Integrate package {ROOT_DIR.parent}, or relative to "
             f"the root directory {root_folder}."
         )
+    raise ValueError("Unexpected situation occurred")
 
 
 def remove_numpy(fst_vt: dict) -> dict:
