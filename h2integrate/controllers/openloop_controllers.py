@@ -246,7 +246,8 @@ class DemandOpenLoopController(ControllerBaseClass):
                 the system.
         {resource_name}_missed_load (float): Missed load timeseries when demand exceeds supply.
             - Units: Defined in `resource_rate_units` (e.g., "kg/h").
-
+        total_{resource_name}_missed_load (float): Total missed load over the simulation period.
+            - Units: Defined in `resource_rate_units` (e.g., "kg").
     """
 
     def setup(self):
@@ -301,6 +302,12 @@ class DemandOpenLoopController(ControllerBaseClass):
             copy_shape=f"{resource_name}_in",
             units=self.config.resource_rate_units,
             desc=f"{resource_name} missed load timeseries",
+        )
+
+        self.add_output(
+            f"total_{resource_name}_missed_load",
+            units=self.config.resource_rate_units,
+            desc=f"Total {resource_name} missed load over the simulation period",
         )
 
     def compute(self, inputs, outputs):
@@ -383,3 +390,5 @@ class DemandOpenLoopController(ControllerBaseClass):
 
             # Record the missed load at the current time step
             missed_load_array[t] = max(0, (demand_t - output_array[t]))
+
+        outputs[f"total_{resource_name}_missed_load"] = np.sum(missed_load_array)
