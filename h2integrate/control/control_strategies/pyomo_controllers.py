@@ -49,8 +49,9 @@ class PyomoControllerBaseConfig(BaseConfig):
         tech_name (str):
             Technology identifier used to namespace Pyomo blocks / variables within
             the broader OpenMDAO model (e.g., "battery", "h2_storage").
-        system_commodity_interface_limit (float | int | str |list[float]): Max interface flow
-            (scalar or per-timestep list of length n_control_window) used to bound dispatch.
+        system_commodity_interface_limit (float | int | str |list[float]): Max interface
+            (e.g. grid interface) flow used to bound dispatch (scalar or per-timestep list of
+            length n_control_window).
     """
 
     max_capacity: float = field()
@@ -384,7 +385,7 @@ class SimpleBatteryControllerHeuristic(PyomoControllerBaseClass):
         Args:
             commodity_in (list): commodity blocks.
             system_commodity_interface_limit (list): Maximum flow rate of commodity through
-            the system interface
+            the system interface (e.g. grid interface)
 
         Raises:
             ValueError: If commodity_in or system_commodity_interface_limit length do not
@@ -404,7 +405,7 @@ class SimpleBatteryControllerHeuristic(PyomoControllerBaseClass):
         Args:
             commodity_in (list): commodity blocks.
             system_commodity_interface_limit (list): Maximum flow rate of commodity through
-            the system interface
+            the system interface (e.g. grid interface).
 
         Raises:
             ValueError: If commodity_in or system_commodity_interface_limit length does not
@@ -427,7 +428,7 @@ class SimpleBatteryControllerHeuristic(PyomoControllerBaseClass):
         Args:
             commodity_in (list): commodity blocks.
             system_commodity_interface_limit (list): Maximum flow rate of commodity
-            through the system interface
+            through the system interface (e.g. grid interface).
 
         NOTE: This method assumes that storage cannot be charged by the grid.
 
@@ -713,7 +714,8 @@ class HeuristicLoadFollowingController(SimpleBatteryControllerHeuristic):
 
         Args:
             commodity_in (list): List of generated commodity in.
-            system_commodity_interface_limit (list): List of max charge rates.
+            system_commodity_interface_limit (list): List of max flow rates through system
+                interface (e.g. grid interface).
             commodity_demand (list): The demanded commodity.
 
         """
