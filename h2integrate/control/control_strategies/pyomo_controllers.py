@@ -435,14 +435,20 @@ class SimpleBatteryControllerHeuristic(PyomoControllerBaseClass):
         """
         for t in self.blocks.index_set():
             self.max_charge_fraction[t] = self.enforce_power_fraction_simple_bounds(
-                (commodity_in[t]) / self.maximum_storage
+                (commodity_in[t]) / self.maximum_storage, self.minimum_soc, self.maximum_soc
             )
             self.max_discharge_fraction[t] = self.enforce_power_fraction_simple_bounds(
-                (system_commodity_interface_limit[t] - commodity_in[t]) / self.maximum_storage
+                (system_commodity_interface_limit[t] - commodity_in[t]) / self.maximum_storage,
+                self.minimum_soc,
+                self.maximum_soc,
             )
 
     @staticmethod
-    def enforce_power_fraction_simple_bounds(storage_fraction: float) -> float:
+    def enforce_power_fraction_simple_bounds(
+        storage_fraction: float,
+        minimum_soc: float,
+        maximum_soc: float,
+    ) -> float:
         """Enforces simple bounds (0, .9) for battery power fractions.
 
         Args:
@@ -452,10 +458,10 @@ class SimpleBatteryControllerHeuristic(PyomoControllerBaseClass):
             storage_fraction (float): Bounded storage fraction.
 
         """
-        if storage_fraction > 0.9:
-            storage_fraction = 0.9
-        elif storage_fraction < 0.0:
-            storage_fraction = 0.0
+        if storage_fraction > maximum_soc:
+            storage_fraction = maximum_soc
+        elif storage_fraction < minimum_soc:
+            storage_fraction = minimum_soc
         return storage_fraction
 
     def update_soc(self, storage_fraction: float, soc0: float) -> float:
