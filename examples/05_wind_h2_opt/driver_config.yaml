@@ -2,7 +2,7 @@ name: "driver_config"
 description: "Runs a wind plant and electrolyzer with simple optimization"
 
 general:
-  folder_output: wind_plant_run
+  folder_output: wind_h2_plant_run
 
 driver:
   optimization:
