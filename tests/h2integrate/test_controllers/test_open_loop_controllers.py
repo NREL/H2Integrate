@@ -7,7 +7,7 @@ import pytest
 import openmdao.api as om
 from openmdao.utils.assert_utils import assert_check_totals
 
-from h2integrate.controllers.openloop_controllers import (
+from h2integrate.control.control_strategies.openloop_controllers import (
     DemandOpenLoopController,
     PassThroughOpenLoopController,
 )
@@ -79,12 +79,15 @@ def test_demand_controller(subtests):
     with tech_config_path.open() as file:
         tech_config = yaml.safe_load(file)
 
+    plant_config = {"plant": {"simulation": {"n_timesteps": 10}}}
+
     tech_config["technologies"]["h2_storage"]["control_strategy"]["model"] = (
         "demand_openloop_controller"
     )
+
     tech_config["technologies"]["h2_storage"]["model_inputs"]["control_parameters"] = {
-        "resource_name": "hydrogen",
-        "resource_rate_units": "kg/h",
+        "commodity_name": "hydrogen",
+        "commodity_units": "kg",
         "max_capacity": 10.0,  # kg
         "max_charge_percent": 1.0,  # percent as decimal
         "min_charge_percent": 0.0,  # percent as decimal
@@ -95,6 +98,8 @@ def test_demand_controller(subtests):
         "discharge_efficiency": 1.0,
         "demand_profile": [1.0] * 10,  # Example: 10 time steps with 10 kg/time step demand
     }
+
+    plant_config = {"plant": {"plant_life": 30, "simulation": {"n_timesteps": 10}}}
 
     # Set up the OpenMDAO problem
     prob = om.Problem()
@@ -108,8 +113,7 @@ def test_demand_controller(subtests):
     prob.model.add_subsystem(
         "demand_openloop_controller",
         DemandOpenLoopController(
-            plant_config={"plant": {"simulation": {"n_timesteps": 10}}},
-            tech_config=tech_config["technologies"]["h2_storage"],
+            plant_config=plant_config, tech_config=tech_config["technologies"]["h2_storage"]
         ),
         promotes=["*"],
     )
@@ -126,7 +130,7 @@ def test_demand_controller(subtests):
 
     with subtests.test("Check curtailment"):
         assert pytest.approx([0.0, 0.0, 0.5, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]) == prob.get_val(
-            "hydrogen_curtailed"
+            "hydrogen_unused_commodity"
         )
 
     with subtests.test("Check soc"):
@@ -136,7 +140,7 @@ def test_demand_controller(subtests):
 
     with subtests.test("Check missed load"):
         assert pytest.approx([0.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]) == prob.get_val(
-            "hydrogen_missed_load"
+            "hydrogen_unmet_demand"
         )
 
 
@@ -151,12 +155,14 @@ def test_demand_controller_round_trip_efficiency(subtests):
     with tech_config_path.open() as file:
         tech_config = yaml.safe_load(file)
 
+    plant_config = {"plant": {"simulation": {"n_timesteps": 10}}}
+
     tech_config["technologies"]["h2_storage"]["control_strategy"]["model"] = (
         "demand_openloop_controller"
     )
     tech_config["technologies"]["h2_storage"]["model_inputs"]["control_parameters"] = {
-        "resource_name": "hydrogen",
-        "resource_rate_units": "kg/h",
+        "commodity_name": "hydrogen",
+        "commodity_units": "kg",
         "max_capacity": 10.0,  # kg
         "max_charge_percent": 1.0,  # percent as decimal
         "min_charge_percent": 0.0,  # percent as decimal
@@ -170,8 +176,8 @@ def test_demand_controller_round_trip_efficiency(subtests):
 
     tech_config_rte = deepcopy(tech_config)
     tech_config_rte["technologies"]["h2_storage"]["model_inputs"]["control_parameters"] = {
-        "resource_name": "hydrogen",
-        "resource_rate_units": "kg/h",
+        "commodity_name": "hydrogen",
+        "commodity_units": "kg",
         "max_capacity": 10.0,  # kg
         "max_charge_percent": 1.0,  # percent as decimal
         "min_charge_percent": 0.0,  # percent as decimal
@@ -181,6 +187,8 @@ def test_demand_controller_round_trip_efficiency(subtests):
         "round_trip_efficiency": 1.0,
         "demand_profile": [1.0] * 10,  # Example: 10 time steps with 10 kg/time step demand
     }
+
+    plant_config = {"plant": {"plant_life": 30, "simulation": {"n_timesteps": 10}}}
 
     def set_up_and_run_problem(config):
         # Set up the OpenMDAO problem
@@ -195,8 +203,7 @@ def test_demand_controller_round_trip_efficiency(subtests):
         prob.model.add_subsystem(
             "demand_openloop_controller",
             DemandOpenLoopController(
-                plant_config={"plant": {"simulation": {"n_timesteps": 10}}},
-                tech_config=config["technologies"]["h2_storage"],
+                plant_config=plant_config, tech_config=config["technologies"]["h2_storage"]
             ),
             promotes=["*"],
         )
@@ -215,16 +222,16 @@ def test_demand_controller_round_trip_efficiency(subtests):
         assert pytest.approx(prob_ioe.get_val("hydrogen_out")) == prob_rte.get_val("hydrogen_out")
 
     with subtests.test("Check curtailment"):
-        assert pytest.approx(prob_ioe.get_val("hydrogen_curtailed")) == prob_rte.get_val(
-            "hydrogen_curtailed"
+        assert pytest.approx(prob_ioe.get_val("hydrogen_unused_commodity")) == prob_rte.get_val(
+            "hydrogen_unused_commodity"
         )
 
     with subtests.test("Check soc"):
         assert pytest.approx(prob_ioe.get_val("hydrogen_soc")) == prob_rte.get_val("hydrogen_soc")
 
     with subtests.test("Check missed load"):
-        assert pytest.approx(prob_ioe.get_val("hydrogen_missed_load")) == prob_rte.get_val(
-            "hydrogen_missed_load"
+        assert pytest.approx(prob_ioe.get_val("hydrogen_unmet_demand")) == prob_rte.get_val(
+            "hydrogen_unmet_demand"
         )
 
 
@@ -251,8 +258,8 @@ def test_generic_demand_controller(subtests):
         },
         "model_inputs": {
             "shared_parameters": {
-                "resource_name": "hydrogen",
-                "resource_rate_units": "kg/h",
+                "commodity_name": "hydrogen",
+                "commodity_units": "kg",
                 "max_capacity": 10.0,  # kg
                 "max_charge_rate": 1.0,  # percent as decimal
             },
@@ -268,6 +275,8 @@ def test_generic_demand_controller(subtests):
         },
     }
 
+    plant_config = {"plant": {"plant_life": 30, "simulation": {"n_timesteps": 10}}}
+
     # Set up OpenMDAO problem
     prob = om.Problem()
 
@@ -280,8 +289,7 @@ def test_generic_demand_controller(subtests):
     prob.model.add_subsystem(
         "demand_openloop_controller",
         DemandOpenLoopController(
-            plant_config={"plant": {"simulation": {"n_timesteps": 10}}},
-            tech_config=tech_config["technologies"]["h2_storage"],
+            plant_config=plant_config, tech_config=tech_config["technologies"]["h2_storage"]
         ),
         promotes=["*"],
     )
@@ -298,7 +306,7 @@ def test_generic_demand_controller(subtests):
 
     with subtests.test("Check curtailment"):
         assert pytest.approx([0.0, 0.0, 0.5, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]) == prob.get_val(
-            "hydrogen_curtailed"
+            "hydrogen_unused_commodity"
         )
 
     with subtests.test("Check soc"):
@@ -308,5 +316,5 @@ def test_generic_demand_controller(subtests):
 
     with subtests.test("Check missed load"):
         assert pytest.approx([0.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]) == prob.get_val(
-            "hydrogen_missed_load"
+            "hydrogen_unmet_demand"
         )

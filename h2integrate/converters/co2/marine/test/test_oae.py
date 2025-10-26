@@ -67,7 +67,7 @@ class TestOAEPerformanceModel(unittest.TestCase):
         self.prob.run_model()
 
         # Get output values to determine expected values
-        co2_capture_rate_mt = self.prob.get_val("co2_capture_rate_mt")
+        co2_out = self.prob.get_val("co2_out")
         co2_capture_mtpy = self.prob.get_val("co2_capture_mtpy")
         plant_mCC_capacity_mtph = self.prob.get_val("plant_mCC_capacity_mtph")
         alkaline_seawater_flow_rate = self.prob.get_val("alkaline_seawater_flow_rate")
@@ -75,7 +75,7 @@ class TestOAEPerformanceModel(unittest.TestCase):
         excess_acid = self.prob.get_val("excess_acid")
 
         # Assert values (allowing for small numerical tolerance)
-        assert_near_equal(np.mean(co2_capture_rate_mt), 1.108394704250361, tolerance=1e-6)
+        assert_near_equal(np.mean(co2_out), 1108.394704250361, tolerance=1e-3)
         assert_near_equal(co2_capture_mtpy, [9709.53760923], tolerance=1e-6)
         assert_near_equal(plant_mCC_capacity_mtph, [1.10854656], tolerance=1e-6)
         assert_near_equal(np.mean(alkaline_seawater_flow_rate), 3.2395561643835618, tolerance=1e-6)

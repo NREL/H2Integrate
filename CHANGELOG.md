@@ -1,6 +1,14 @@
 # Changelog
 
-## x.x.x [Unreleased, TBD]
+## 0.4.x [TBD]
+- Added `tools/run_cases.py` with tools to run different `tech_config` cases from a spreadsheet, with new docs page to describe: docs/user_guide/how_to_run_several_cases_in_sequence.md
+- Added capability for user-defined finance models in the H2Integrate framework
+- Added an optimized offshore methanol production case to examples/03_methanol/co2_hydrogenation_doc
+- Updated setting up recorder in `PoseOptimization`
+- Added resource models to make solar resource API calls to the NREL Developer GOES dataset
+- Added framework to run heuristic load following dispatch for storage technologies
+- Added PySAM battery model as a storage technology performance model
+- Added `create_om_reports` option to driver config to enable/disable OpenMDAO reports (N2 diagrams, etc.)
 - Updated inputs for the `ATBBatteryCostModel` and `DemandOpenLoopController` so storage capacity and charge rate can be design variables
 
 ## 0.4.0 [October 1, 2025]

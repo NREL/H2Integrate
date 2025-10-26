@@ -63,7 +63,7 @@ class OAEPerformanceModel(MarineCarbonCapturePerformanceBaseClass):
         MarineCarbonCapturePerformanceBaseClass
 
     Computes:
-        - co2_capture_rate_mt: Hourly CO₂ capture rate in metric tons.
+        - co2_out: Hourly CO₂ capture rate (kg/h).
         - co2_capture_mtpy: Annual CO₂ captured in metric tons per year.
 
     Notes:
@@ -174,11 +174,11 @@ class OAEPerformanceModel(MarineCarbonCapturePerformanceBaseClass):
             desc="Mass of RCA tumbler slurry produced (grams)",
         )
         self.add_output(
-            "excess_energy",
+            "unused_energy",
             val=0.0,
             shape=n_timesteps,
             units="W",
-            desc="Excess energy unused by OAE system (W)",
+            desc="Unused energy unused by OAE system (W)",
         )
 
     def compute(self, inputs, outputs):
@@ -214,9 +214,7 @@ class OAEPerformanceModel(MarineCarbonCapturePerformanceBaseClass):
             plot_range=[3910, 4030],
         )
 
-        outputs["co2_capture_rate_mt"] = (
-            oae_outputs.OAE_outputs["mass_CO2_absorbed"] / 1000
-        )  # Convert from kg to metric tons
+        outputs["co2_out"] = oae_outputs.OAE_outputs["mass_CO2_absorbed"]
         outputs["co2_capture_mtpy"] = oae_outputs.M_co2est
         outputs["plant_mCC_capacity_mtph"] = max(range_outputs.S1["mass_CO2_absorbed"] / 1000)
         outputs["alkaline_seawater_flow_rate"] = oae_outputs.OAE_outputs["Qout"]
@@ -232,7 +230,7 @@ class OAEPerformanceModel(MarineCarbonCapturePerformanceBaseClass):
         outputs["cost_acid_disposal"] = oae_outputs.X_disp
         outputs["based_added_seawater_max_power"] = oae_outputs.mol_OH_yr_MaxPwr
         outputs["mass_rca"] = oae_outputs.slurry_mass_max
-        outputs["excess_energy"] = oae_outputs.OAE_outputs["P_xs"]
+        outputs["unused_energy"] = oae_outputs.OAE_outputs["P_xs"]
 
 
 @define
@@ -372,11 +370,11 @@ class OAECostAndFinancialModel(MarineCarbonCaptureCostBaseClass):
             desc="Annual energy production in kWac",
         )
         self.add_input(
-            "excess_energy",
+            "unused_energy",
             val=0.0,
             shape=n_timesteps,
             units="W",
-            desc="Excess energy unused by OAE system (W)",
+            desc="Unused energy unused by OAE system (W)",
         )
         self.add_input(
             "mass_sellable_product",
@@ -430,8 +428,8 @@ class OAECostAndFinancialModel(MarineCarbonCaptureCostBaseClass):
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         annual_energy_cost_usd_yr = inputs["LCOE"] * (
-            inputs["annual_energy"] - (sum(inputs["excess_energy"]) / 1000)  # Convert W to kW
-        )  # remove excess power from the annual energy cost only used power considered
+            inputs["annual_energy"] - (sum(inputs["unused_energy"]) / 1000)  # Convert W to kW
+        )  # remove unused power from the annual energy cost only used power considered
         costs = echem_oae.OAECosts(
             mass_product=inputs["mass_sellable_product"],
             value_product=inputs["value_products"],
