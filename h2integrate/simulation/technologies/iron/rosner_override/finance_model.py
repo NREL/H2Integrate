@@ -68,9 +68,9 @@ def main(config):
     raw_water_unitcost = 0.441167535
     slag_disposal_unitcost = 28.0
     if config.product_selection in ["ng_eaf", "h2_eaf"]:
-        excess_oxygen = 0
+        unused_oxygen = 0
     else:
-        excess_oxygen = 395
+        unused_oxygen = 395
 
     # Get plant performances into data frame/series with performance names as index
     performance = config.performance
@@ -250,7 +250,7 @@ def main(config):
 
     pf.add_coproduct(
         name=f"{module_label}: Oxygen sales",
-        usage=excess_oxygen,
+        usage=unused_oxygen,
         unit="kg O2 per metric tonne of iron",
         cost=oxygen_market_price,
         escalation=gen_inflation,
