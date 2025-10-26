@@ -46,7 +46,7 @@ class GenericSummerPerformanceModel(om.ExplicitComponent):
             # and flexible simulation length
             summed_units = f"{self.config.commodity_units}*h/year"
         else:
-            summed_units = f"{self.config.commodity_units}/year"
+            summed_units = f"{self.config.commodity_units}*h/year"
 
         self.add_input(
             f"{self.config.commodity}_in",
