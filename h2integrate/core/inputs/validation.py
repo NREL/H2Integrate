@@ -164,7 +164,23 @@ def load_tech_yaml(finput):
 
 
 def load_plant_yaml(finput):
-    return _validate(finput, fschema_plant)
+    plant_config = _validate(finput, fschema_plant)
+
+    if int(plant_config["plant"]["simulation"]["n_timesteps"]) != 8760:
+        msg = (
+            "H2Integrate does not currently support simulations that are less than or "
+            "greater than 1-year. Please ensure that "
+            "plant_config['plant']['simulation']['n_timesteps'] is set to 8760."
+        )
+        raise ValueError(msg)
+    if int(plant_config["plant"]["simulation"]["dt"]) != 3600:
+        msg = (
+            "H2Integrate does not currently support simulations with a time step that is "
+            "less than or greater than 1-hour. Please ensure that "
+            "plant_config['plant']['simulation']['dt'] is set to 3600."
+        )
+        raise ValueError(msg)
+    return plant_config
 
 
 def load_driver_yaml(finput):

@@ -3,6 +3,7 @@ This file is based on the WISDEM file of the same name: https://github.com/WISDE
 and also based off of the H2Integrate file of the same name originally adapted by Jared Thomas.
 """
 
+import re
 import warnings
 from pathlib import Path
 
@@ -355,7 +356,10 @@ class PoseOptimization:
         return opt_prob
 
     def set_objective(self, opt_prob):
-        """Set merit figure. Each objective has its own scaling.  Check first for user override
+        """Set merit figure. Each objective has its own scaling.  Check first for user override.
+
+        The optimization is always minimizing the objective. If you wish to maximize the objective,
+        use a negative ref or scaler value in the config.
 
         Args:
             opt_prob (openmdao problem instance): openmdao problem instance for
@@ -412,11 +416,12 @@ class PoseOptimization:
             opt_prob (openmdao problem instance): openmdao problem instance for
                 current optimization problem edited to include constraint setup
         """
-        for technology, variables in self.config["constraints"].items():
-            for key, value in variables.items():
-                if value["flag"]:
-                    value.pop("flag")
-                    opt_prob.model.add_constraint(f"{technology}.{key}", **value)
+        if self.config.get("constraints", False):
+            for technology, variables in self.config["constraints"].items():
+                for key, value in variables.items():
+                    if value["flag"]:
+                        value.pop("flag")
+                        opt_prob.model.add_constraint(f"{technology}.{key}", **value)
 
     def set_recorders(self, opt_prob):
         """sets up a recorder for the openmdao problem as desired in the input yaml
@@ -431,22 +436,55 @@ class PoseOptimization:
         """
         folder_output = self.config["general"]["folder_output"]
 
+        # Check that the output folder exists and create it if needed
+        if not Path(folder_output).exists():
+            Path.mkdir(folder_output, parents=True)
         # Set recorder on the OpenMDAO driver level using the `optimization_log`
         # filename supplied in the optimization yaml
-        if self.config["recorder"]["flag"]:
-            recorder = om.SqliteRecorder(Path(folder_output) / self.config["recorder"]["file_name"])
-            opt_prob.driver.add_recorder(recorder)
-            opt_prob.add_recorder(recorder)
+        if self.config["recorder"].get("flag", False):
+            overwrite_recorder = self.config["recorder"].get("overwrite_recorder", False)
+            recorder_path = Path(folder_output) / self.config["recorder"]["file"]
 
-            opt_prob.driver.recording_options["excludes"] = ["*_df"]
-            opt_prob.driver.recording_options["record_constraints"] = True
-            opt_prob.driver.recording_options["record_desvars"] = True
-            opt_prob.driver.recording_options["record_objectives"] = True
+            if not overwrite_recorder:
+                # make a unique filename with the same base as self.config["recorder"]["file"]
+                # separate out the filename without the extension
+                file_base = self.config["recorder"]["file"].split(".sql")[0]
+                # get all the files in the output folder that start with file_base
+                existing_files = list(Path(folder_output).glob(f"{file_base}*"))
+                if len(existing_files) > 0:
+                    # if file(s) exist with the same base name, make a new unique filename
 
-            if self.config["recorder"]["includes"]:
-                opt_prob.driver.recording_options["includes"] = self.config["recorder"]["includes"]
+                    # get past numbers that were used to make unique files by matching
+                    # filenames against the file base name followed by a number
+                    past_numbers = [
+                        int(re.findall(f"{file_base}[0-9]+", str(fname))[0].split(file_base)[-1])
+                        for fname in existing_files
+                        if len(re.findall(f"{file_base}[0-9]+", str(fname))) > 0
+                    ]
 
-        return opt_prob
+                    if len(past_numbers) > 0:
+                        # if multiple files have the same basename followed by a number,
+                        # take the maximum unique number and add one
+                        unique_number = int(max(past_numbers) + 1)
+                        recorder_path = Path(folder_output) / f"{file_base}{unique_number}.sql"
+                    else:
+                        # if no files have the same basename followed by a number,
+                        # but do have the same basename, then add a zero to the file basename
+                        recorder_path = Path(folder_output) / f"{file_base}0.sql"
+
+            # Create recorder and add to model
+            recorder = om.SqliteRecorder(recorder_path)
+            opt_prob.model.add_recorder(recorder)
+
+            opt_prob.model.recording_options["record_inputs"] = True
+            opt_prob.model.recording_options["record_outputs"] = True
+            opt_prob.model.recording_options["record_residuals"] = True
+
+            if self.config["recorder"].get("includes", False):
+                opt_prob.model.recording_options["includes"] = self.config["recorder"]["includes"]
+
+            if self.config["recorder"].get("excludes", False):
+                opt_prob.model.recording_options["excludes"] = self.config["recorder"]["excludes"]
 
     def set_restart(self, opt_prob):
         """

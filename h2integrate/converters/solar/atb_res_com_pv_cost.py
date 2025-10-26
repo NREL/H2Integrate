@@ -1,12 +1,12 @@
 from attrs import field, define
 
-from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
+from h2integrate.core.utilities import CostModelBaseConfig, merge_shared_inputs
 from h2integrate.core.validators import gt_zero
-from h2integrate.converters.solar.solar_baseclass import SolarCostBaseClass
+from h2integrate.core.model_baseclasses import CostModelBaseClass
 
 
 @define
-class ATBResComPVCostModelConfig(BaseConfig):
+class ATBResComPVCostModelConfig(CostModelBaseConfig):
     """Configuration class for the ATBResComPVCostModel with costs based on DC capacity.
     Recommended to use with commercial or residential PV models. More information on
     ATB methodology and representative PV technologies can be found
@@ -21,6 +21,7 @@ class ATBResComPVCostModelConfig(BaseConfig):
         opex_per_kWdc_per_year (float|int): annual operating cost of solar-PV
             system in $/kW-DC/year
         pv_capacity_kWdc (float): capacity of solar-PV system in kW-DC
+        cost_year (int): dollar year corresponding to input costs
     """
 
     capex_per_kWdc: float | int = field(validator=gt_zero)
@@ -28,12 +29,13 @@ class ATBResComPVCostModelConfig(BaseConfig):
     pv_capacity_kWdc: float = field()
 
 
-class ATBResComPVCostModel(SolarCostBaseClass):
+class ATBResComPVCostModel(CostModelBaseClass):
     def setup(self):
-        super().setup()
         self.config = ATBResComPVCostModelConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost")
         )
+        super().setup()
+
         self.add_input(
             "capacity_kWdc",
             val=self.config.pv_capacity_kWdc,
@@ -41,7 +43,7 @@ class ATBResComPVCostModel(SolarCostBaseClass):
             desc="PV rated capacity in DC",
         )
 
-    def compute(self, inputs, outputs):
+    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         capacity = inputs["capacity_kWdc"][0]
         capex = self.config.capex_per_kWdc * capacity
         opex = self.config.opex_per_kWdc_per_year * capacity

@@ -14,6 +14,9 @@ def test_wombat_model_outputs(subtests):
             plant_config={
                 "plant": {
                     "plant_life": 20,
+                    "simulation": {
+                        "n_timesteps": 8760,
+                    },
                 },
             },
             tech_config={
@@ -34,6 +37,7 @@ def test_wombat_model_outputs(subtests):
                         "include_degradation_penalty": True,
                         "turndown_ratio": 0.1,
                         "library_path": "resource_files/wombat_library",
+                        "cost_year": 2022,
                     },
                 }
             },
@@ -72,6 +76,9 @@ def test_wombat_error(subtests):
             plant_config={
                 "plant": {
                     "plant_life": 20,
+                    "simulation": {
+                        "n_timesteps": 8760,
+                    },
                 },
             },
             tech_config={
@@ -92,6 +99,7 @@ def test_wombat_error(subtests):
                         "include_degradation_penalty": True,
                         "turndown_ratio": 0.1,
                         "library_path": "resource_files/wombat_library",
+                        "cost_year": 2022,
                     },
                 }
             },

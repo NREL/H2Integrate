@@ -18,3 +18,4 @@ technologies:
       cost_parameters:
         capital_cost_usd_per_kw: 7648. # $/kW
         operational_cost_usd_per_kw_year: 50. # $/kW-yr
+        cost_year: 2024

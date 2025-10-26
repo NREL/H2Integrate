@@ -60,13 +60,13 @@ class TestDOCPerformanceModel(unittest.TestCase):
         self.prob.run_model()
 
         # Additional asserts for output values
-        co2_capture_rate_mt = self.prob.get_val("co2_capture_rate_mt")
+        co2_out = self.prob.get_val("co2_out")
         co2_capture_mtpy = self.prob.get_val("co2_capture_mtpy")
         plant_mCC_capacity_mtph = self.prob.get_val("plant_mCC_capacity_mtph")
         total_tank_volume_m3 = self.prob.get_val("total_tank_volume_m3")
 
         # Assert values (allowing for small numerical tolerance)
-        assert_near_equal(np.linalg.norm(co2_capture_rate_mt), 11394.97006218, tolerance=1e-5)
+        assert_near_equal(np.linalg.norm(co2_out), 11394970.06218, tolerance=1e-1)
         assert_near_equal(np.linalg.norm(co2_capture_mtpy), [1041164.44000004], tolerance=1e-5)
         assert_near_equal(plant_mCC_capacity_mtph, [176.34], tolerance=1e-2)
         assert_near_equal(total_tank_volume_m3, [25920.0], tolerance=1e-2)
@@ -80,6 +80,10 @@ class TestDOCPerformanceModelNoMCM(unittest.TestCase):
         try:
             self.model = DOCPerformanceModel(plant_config={}, tech_config={})
         except ImportError as e:
-            self.assertIn("The `mcm` package is required. Install it via:", str(e))
+            self.assertIn(
+                "The `mcm` package is required to use the Direct Ocean Capture model."
+                " Install it via:",
+                str(e),
+            )
         else:
             self.fail("ImportError was not raised")

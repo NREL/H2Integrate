@@ -9,6 +9,12 @@ def gt_zero(instance, attribute, value):
         raise ValueError(f"{attribute} must be greater than zero")
 
 
+def gte_zero(instance, attribute, value):
+    """Validates that an attribute's value is greater than or equal to zero."""
+    if value < 0:
+        raise ValueError(f"{attribute} must be greater than or equal to zero")
+
+
 def range_val(min_val, max_val):
     """Validates that an attribute's value is between two values, inclusive ([min_val, max_val])."""
 
@@ -37,5 +43,19 @@ def contains(items):
     def validator(instance, attribute, value):
         if value not in items:
             raise ValueError(f"Item {value} not found in list for {attribute}: {items}")
+
+    return validator
+
+
+def must_equal(required_value):
+    """Validates that an item equals a specific value"""
+
+    def validator(instance, attribute, value):
+        if value != required_value:
+            msg = (
+                f"{attribute.name} cannot be {value}, {attribute.name} "
+                f"must have value of {required_value}"
+            )
+            raise ValueError(msg)
 
     return validator

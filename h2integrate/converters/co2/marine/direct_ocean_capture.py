@@ -1,6 +1,7 @@
 from attrs import field, define
 
 from h2integrate.core.utilities import merge_shared_inputs
+from h2integrate.core.validators import must_equal
 from h2integrate.converters.co2.marine.marine_carbon_capture_baseclass import (
     MarineCarbonCaptureCostBaseClass,
     MarineCarbonCapturePerformanceConfig,
@@ -37,6 +38,8 @@ class DOCPerformanceConfig(MarineCarbonCapturePerformanceConfig):
     """Extended configuration for Direct Ocean Capture (DOC) performance model.
 
     Attributes:
+        power_single_ed_w (float): Power requirement of a single electrodialysis (ED) unit (watts).
+        flow_rate_single_ed_m3s (float): Flow rate of a single ED unit (cubic meters per second).
         E_HCl (float): Energy required per mole of HCl produced (kWh/mol).
         E_NaOH (float): Energy required per mole of NaOH produced (kWh/mol).
         y_ext (float): CO2 extraction efficiency (unitless fraction).
@@ -50,6 +53,8 @@ class DOCPerformanceConfig(MarineCarbonCapturePerformanceConfig):
         initial_tank_volume_m3 (float): Initial volume of the tank (m³).
     """
 
+    power_single_ed_w: float = field()
+    flow_rate_single_ed_m3s: float = field()
     E_HCl: float = field()
     E_NaOH: float = field()
     y_ext: float = field()
@@ -71,15 +76,18 @@ class DOCPerformanceModel(MarineCarbonCapturePerformanceBaseClass):
         MarineCarbonCapturePerformanceBaseClass
 
     Computes:
-        - Hourly CO2 capture rate (t/h)
-        - Annual CO2 capture (t/year)
+        - co2_out: Hourly CO2 capture rate (kg/h)
+        - co2_capture_mtpy: Annual CO2 capture (t/year)
+        - total_tank_volume_m3: Total tank volume (m^3)
+        - plant_mCC_capacity_mtph: Plant carbon capture capacity (t/h)
     """
 
     def initialize(self):
         super().initialize()
         if echem_mcc is None:
             raise ImportError(
-                "The `mcm` package is required. Install it via:\n"
+                "The `mcm` package is required to use the Direct Ocean Capture model. "
+                "Install it via:\n"
                 "pip install git+https://github.com/NREL/MarineCarbonManagement.git"
             )
 
@@ -120,8 +128,8 @@ class DOCPerformanceModel(MarineCarbonCapturePerformanceBaseClass):
             plot_range=[3910, 4030],
         )
 
-        outputs["co2_capture_rate_mt"] = ed_outputs.ED_outputs["mCC"]
-        outputs["co2_capture_mtpy"] = ed_outputs.mCC_yr
+        outputs["co2_out"] = ed_outputs.ED_outputs["mCC"] * 1000
+        outputs["co2_capture_mtpy"] = max(ed_outputs.mCC_yr, 1e-6)  # Must be >0
         outputs["total_tank_volume_m3"] = range_outputs.V_aT_max + range_outputs.V_bT_max
         outputs["plant_mCC_capacity_mtph"] = max(range_outputs.S1["mCC"])
 
@@ -132,9 +140,11 @@ class DOCCostModelConfig(DOCPerformanceConfig):
 
     Attributes:
         infrastructure_type (str): Type of infrastructure (e.g., "desal", "swCool", "new"").
+        cost_year (int): dollar year corresponding to cost values
     """
 
     infrastructure_type: str = field()
+    cost_year: int = field(default=2023, converter=int, validator=must_equal(2023))
 
 
 class DOCCostModel(MarineCarbonCaptureCostBaseClass):
@@ -150,15 +160,17 @@ class DOCCostModel(MarineCarbonCaptureCostBaseClass):
         super().initialize()
         if echem_mcc is None:
             raise ImportError(
-                "The `mcm` package is required. Install it via:\n"
+                "The `mcm` package is required to use the Direct Ocean Capture model. "
+                "Install it via:\n"
                 "pip install git+https://github.com/NREL/MarineCarbonManagement.git"
             )
 
     def setup(self):
-        super().setup()
         self.config = DOCCostModelConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost")
         )
+
+        super().setup()
 
         self.add_input(
             "total_tank_volume_m3",
@@ -173,7 +185,7 @@ class DOCCostModel(MarineCarbonCaptureCostBaseClass):
             desc="Theoretical plant maximum CO₂ capture (t/h)",
         )
 
-    def compute(self, inputs, outputs):
+    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         # Set up electrodialysis inputs
         ED_inputs = setup_electrodialysis_inputs(self.config)
 

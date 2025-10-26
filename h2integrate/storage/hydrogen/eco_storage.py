@@ -1,8 +1,9 @@
 import numpy as np
-import openmdao.api as om
 from attrs import field, define
 
 from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
+from h2integrate.core.validators import contains
+from h2integrate.core.model_baseclasses import CostModelBaseClass
 from h2integrate.simulation.technologies.hydrogen.h2_storage.mch.mch_cost import MCHStorage
 
 
@@ -16,26 +17,37 @@ from h2integrate.simulation.technologies.hydrogen.h2_storage.lined_rock_cavern.l
 
 @define
 class H2StorageModelConfig(BaseConfig):
-    resource_name: str = field(default="hydrogen")
-    resource_rate_units: str = field(default="kg/h")
-    rating: float = field(default=640)
+    commodity_name: str = field(default="hydrogen")
+    commodity_units: str = field(default="kg")
+    electrolyzer_rating_mw_for_h2_storage_sizing: float | None = field(default=None)
     size_capacity_from_demand: dict = field(default={"flag": True})
     capacity_from_max_on_turbine_storage: bool = field(default=False)
-    type: str = field(default="salt_cavern")
+    type: str = field(
+        default="salt_cavern",
+        validator=contains(["salt_cavern", "lined_rock_cavern", "none", "mch"]),
+    )
     days: int = field(default=0)
+    cost_year: int = field(default=2018, converter=int, validator=contains([2018, 2021]))
+
+    def __attrs_post_init__(self):
+        if self.type == "mch":
+            self.cost_year = 2024
+        else:
+            self.cost_year = 2018
 
 
-class H2Storage(om.ExplicitComponent):
+class H2Storage(CostModelBaseClass):
     def initialize(self):
-        self.options.declare("driver_config", types=dict)
-        self.options.declare("tech_config", types=dict)
-        self.options.declare("plant_config", types=dict)
+        super().initialize()
         self.options.declare("verbose", types=bool, default=False)
 
     def setup(self):
         self.config = H2StorageModelConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance")
         )
+
+        super().setup()
+
         self.add_input(
             "hydrogen_in",
             val=0.0,
@@ -51,12 +63,7 @@ class H2Storage(om.ExplicitComponent):
         )
         self.add_input("efficiency", val=0.0, desc="Average efficiency of the electrolyzer")
 
-        self.add_output("CapEx", val=0.0, units="USD", desc="Capital expenditure")
-        self.add_output("OpEx", val=0.0, units="USD/year", desc="Operational expenditure")
-
-    def compute(self, inputs, outputs):
-        self.options["tech_config"]
-
+    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         # Need to make sure hydrogen_in is never exactly zero to prevent NaNs in iterative_mode
         self.set_val("hydrogen_in", np.maximum(inputs["hydrogen_in"], 1e-6))
 
@@ -73,6 +80,13 @@ class H2Storage(om.ExplicitComponent):
 
         ##################### get storage capacity from hydrogen storage demand
         elif self.config.size_capacity_from_demand["flag"]:
+            if self.config.electrolyzer_rating_mw_for_h2_storage_sizing is None:
+                raise (
+                    ValueError(
+                        "h2 storage input battery_electricity_discharge must be specified \
+                                 if size_capacity_from_demand is True."
+                    )
+                )
             hydrogen_storage_demand = np.mean(
                 inputs["hydrogen_in"]
             )  # TODO: update demand based on end-use needs
@@ -87,7 +101,7 @@ class H2Storage(om.ExplicitComponent):
                 hydrogen_storage_soc,
             ) = hydrogen_storage_capacity(
                 results_dict,
-                self.config.rating,
+                self.config.electrolyzer_rating_mw_for_h2_storage_sizing,
                 hydrogen_storage_demand,
             )
             h2_storage_capacity_kg = hydrogen_storage_capacity_kg
@@ -107,6 +121,7 @@ class H2Storage(om.ExplicitComponent):
             h2_storage_results["storage_capex"] = 0.0
             h2_storage_results["storage_opex"] = 0.0
             h2_storage_results["storage_energy"] = 0.0
+            h2_storage_results["cost_year"] = 2018
 
             h2_storage = None
 
@@ -130,6 +145,7 @@ class H2Storage(om.ExplicitComponent):
             ]
             h2_storage_results["storage_opex"] = h2_storage.output_dict["salt_cavern_storage_opex"]
             h2_storage_results["storage_energy"] = 0.0
+            h2_storage_results["cost_year"] = 2018
 
         elif self.config.type == "lined_rock_cavern":
             # initialize dictionary for salt cavern storage parameters
@@ -153,6 +169,7 @@ class H2Storage(om.ExplicitComponent):
                 "lined_rock_cavern_storage_opex"
             ]
             h2_storage_results["storage_energy"] = 0.0
+            h2_storage_results["cost_year"] = 2018  # TODO: check
 
         elif self.config.type == "mch":
             if not self.config.size_capacity_from_demand["flag"]:
@@ -181,6 +198,7 @@ class H2Storage(om.ExplicitComponent):
                 h2_storage_costs["mch_variable_om"] + h2_storage_costs["mch_opex"]
             )
             h2_storage_results["storage_energy"] = 0.0
+            h2_storage_results["cost_year"] = 2024
 
         else:
             msg = (

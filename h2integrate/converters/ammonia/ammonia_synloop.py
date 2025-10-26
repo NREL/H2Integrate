@@ -2,9 +2,10 @@ import numpy as np
 import openmdao.api as om
 from attrs import field, define
 
-from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
+from h2integrate.core.utilities import BaseConfig, CostModelBaseConfig, merge_shared_inputs
 from h2integrate.core.validators import gt_zero, range_val
 from h2integrate.tools.constants import H_MW, N_MW
+from h2integrate.core.model_baseclasses import CostModelBaseClass
 from h2integrate.tools.inflation.inflate import inflate_cpi, inflate_cepci
 
 
@@ -154,35 +155,20 @@ class AmmoniaSynLoopPerformanceModel(om.ExplicitComponent):
         self.options.declare("whole_tech_config", types=dict)
 
     def setup(self):
+        n_timesteps = self.options["plant_config"]["plant"]["simulation"]["n_timesteps"]
         self.config = AmmoniaSynLoopPerformanceConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance")
         )
 
-        self.add_input(
-            "hydrogen_in", val=0.0, shape_by_conn=True, copy_shape="ammonia_out", units="kg/h"
-        )
-        self.add_input(
-            "nitrogen_in", val=0.0, shape_by_conn=True, copy_shape="ammonia_out", units="kg/h"
-        )
-        self.add_input(
-            "electricity_in", val=0.0, shape_by_conn=True, copy_shape="ammonia_out", units="MW"
-        )
+        self.add_input("hydrogen_in", val=0.0, shape=n_timesteps, units="kg/h")
+        self.add_input("nitrogen_in", val=0.0, shape=n_timesteps, units="kg/h")
+        self.add_input("electricity_in", val=0.0, shape=n_timesteps, units="MW")
 
-        self.add_output(
-            "ammonia_out", val=0.0, shape_by_conn=True, copy_shape="hydrogen_in", units="kg/h"
-        )
-        self.add_output(
-            "nitrogen_out", val=0.0, shape_by_conn=True, copy_shape="hydrogen_in", units="kg/h"
-        )
-        self.add_output(
-            "hydrogen_out", val=0.0, shape_by_conn=True, copy_shape="hydrogen_in", units="kg/h"
-        )
-        self.add_output(
-            "electricity_out", val=0.0, shape_by_conn=True, copy_shape="hydrogen_in", units="MW"
-        )
-        self.add_output(
-            "heat_out", val=0.0, shape_by_conn=True, copy_shape="hydrogen_in", units="kW*h/kg"
-        )
+        self.add_output("ammonia_out", val=0.0, shape=n_timesteps, units="kg/h")
+        self.add_output("nitrogen_out", val=0.0, shape=n_timesteps, units="kg/h")
+        self.add_output("hydrogen_out", val=0.0, shape=n_timesteps, units="kg/h")
+        self.add_output("electricity_out", val=0.0, shape=n_timesteps, units="MW")
+        self.add_output("heat_out", val=0.0, shape=n_timesteps, units="kW*h/kg")
         self.add_output("catalyst_mass", val=0.0, units="kg")
         self.add_output("total_ammonia_produced", val=0.0, units="kg/year")
         self.add_output("total_hydrogen_consumed", val=0.0, units="kg/year")
@@ -207,7 +193,7 @@ class AmmoniaSynLoopPerformanceModel(om.ExplicitComponent):
         x_n2_purge = self.config.purge_gas_x_n2  # mol frac
         ratio_purge = self.config.purge_gas_mass_ratio  # kg/kg NH3
 
-        # Inputs (arrays of length 8760)
+        # Inputs (arrays of length n_timesteps)
         h2_in = inputs["hydrogen_in"]
         n2_in = inputs["nitrogen_in"]
         if np.max(n2_in) == 0:  # Temporary until ASU is added
@@ -282,7 +268,7 @@ class AmmoniaSynLoopPerformanceModel(om.ExplicitComponent):
 
 
 @define
-class AmmoniaSynLoopCostConfig(BaseConfig):
+class AmmoniaSynLoopCostConfig(CostModelBaseConfig):
     """
     Configuration inputs for the ammonia synthesis loop cost model.
     *Starred inputs are from tech_config/ammonia/model_inputs/shared_parameters
@@ -332,7 +318,7 @@ class AmmoniaSynLoopCostConfig(BaseConfig):
 
     production_capacity: float = field()
     baseline_capacity: float = field()
-    base_cost_year: int = field()
+    base_cost_year: int = field(converter=int)
     capex_scaling_exponent: float = field()
     labor_scaling_exponent: float = field()
     asu_capex_base: float = field()
@@ -358,7 +344,7 @@ class AmmoniaSynLoopCostConfig(BaseConfig):
     oxygen_price_base: float = field()
 
 
-class AmmoniaSynLoopCostModel(om.ExplicitComponent):
+class AmmoniaSynLoopCostModel(CostModelBaseClass):
     """
     OpenMDAO component modeling the cost of an ammonia synthesis loop.
 
@@ -419,16 +405,23 @@ class AmmoniaSynLoopCostModel(om.ExplicitComponent):
         self.options.declare("whole_tech_config", types=dict)
 
     def setup(self):
+        target_cost_year = self.options["plant_config"]["finance_parameters"][
+            "cost_adjustment_parameters"
+        ]["target_dollar_year"]
+        self.options["tech_config"]["model_inputs"]["cost_parameters"].update(
+            {"cost_year": target_cost_year}
+        )
+
         self.config = AmmoniaSynLoopCostConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost")
         )
+        super().setup()
 
         self.add_input("total_ammonia_produced", val=0.0, units="kg/year")
         self.add_input("total_hydrogen_consumed", val=0.0, units="kg/year")
         self.add_input("total_nitrogen_consumed", val=0.0, units="kg/year")
         self.add_input("total_electricity_consumed", val=0.0, units="kW*h/year")
-        self.add_output("CapEx", val=0.0, units="USD")
-        self.add_output("OpEx", val=0.0, units="USD/year")
+
         self.add_output(
             "capex_asu", val=0.0, units="USD", desc="Capital cost for air separation unit"
         )
@@ -465,7 +458,7 @@ class AmmoniaSynLoopCostModel(om.ExplicitComponent):
             "maintenance_cost", val=0.0, units="USD/year", desc="Annual maintenance cost"
         )
 
-    def compute(self, inputs, outputs):
+    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         ##---Scaling Ratios---
 
         # Get config values

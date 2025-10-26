@@ -3,7 +3,7 @@ from collections import OrderedDict
 
 import attrs
 import numpy as np
-from attrs import Attribute, define
+from attrs import Attribute, field, define
 
 
 try:
@@ -44,19 +44,24 @@ def create_xdsm_from_config(config, output_file="connections_xdsm"):
     for conn in config["technology_interconnections"]:
         if len(conn) == 3:
             source, destination, data = conn
-            connection_label = data
         else:
             source, destination, data, label = conn
 
-        source.replace("_", r"\_")
-        destination.replace("_", r"\_")
-        connection_label = rf"\text{{{data} {'via'} {label}}}"
+        if isinstance(data, (list, tuple)) and len(data) >= 2:
+            data = f"{data[0]} as {data[1]}"
+
+        if len(conn) == 3:
+            connection_label = rf"\text{{{data}}}"
+        else:
+            connection_label = rf"\text{{{data} {'via'} {label}}}"
+
+        connection_label = connection_label.replace("_", r"\_")
 
         x.connect(source, destination, connection_label)
 
     # Write the diagram to a file
     x.write(output_file, quiet=True)
-    print(f"XDSM diagram written to {output_file}.tex")
+    print(f"XDSM diagram written to {output_file}.pdf")
 
 
 def merge_shared_inputs(config, input_type):
@@ -155,7 +160,12 @@ class BaseConfig:
         Returns:
             dict: All key, value pairs required for class re-creation.
         """
-        return attrs.asdict(self, filter=attr_hopp_filter, value_serializer=attr_serializer)
+        return attrs.asdict(self, filter=attr_filter, value_serializer=attr_serializer)
+
+
+@define
+class CostModelBaseConfig(BaseConfig):
+    cost_year: int = field(converter=int)
 
 
 def attr_serializer(inst: type, field: Attribute, value: Any):
@@ -164,7 +174,7 @@ def attr_serializer(inst: type, field: Attribute, value: Any):
     return value
 
 
-def attr_hopp_filter(inst: Attribute, value: Any) -> bool:
+def attr_filter(inst: Attribute, value: Any) -> bool:
     if inst.init is False:
         return False
     if value is None:
@@ -237,3 +247,46 @@ def check_plant_config_and_profast_params(
             f"{pf_config_key} from pf_params input."
         )
         raise ValueError(msg)
+
+
+def dict_to_yaml_formatting(orig_dict):
+    """Recursive method to convert arrays to lists and numerical entries to floats.
+    This is primarily used before writing a dictionary to a YAML file to ensure
+    proper output formatting.
+
+    Args:
+        orig_dict (dict): input dictionary
+
+    Returns:
+        dict: input dictionary with reformatted values.
+    """
+    for key, val in orig_dict.items():
+        if isinstance(val, dict):
+            tmp = dict_to_yaml_formatting(orig_dict.get(key, {}))
+            orig_dict[key] = tmp
+        else:
+            if isinstance(key, list):
+                for i, k in enumerate(key):
+                    if isinstance(orig_dict[k], (str, bool, int)):
+                        orig_dict[k] = orig_dict.get(k, []) + val[i]
+                    elif isinstance(orig_dict[k], (list, np.ndarray)):
+                        orig_dict[k] = np.array(val, dtype=float).tolist()
+                    else:
+                        orig_dict[k] = float(val[i])
+            elif isinstance(key, str):
+                if isinstance(orig_dict[key], (str, bool, int)):
+                    continue
+                if isinstance(orig_dict[key], (list, np.ndarray)):
+                    if any(isinstance(v, dict) for v in val):
+                        for vii, v in enumerate(val):
+                            if isinstance(v, dict):
+                                new_val = dict_to_yaml_formatting(v)
+                            else:
+                                new_val = v if isinstance(v, (str, bool, int)) else float(v)
+                            orig_dict[key][vii] = new_val
+                    else:
+                        new_val = [v if isinstance(v, (str, bool, int)) else float(v) for v in val]
+                        orig_dict[key] = new_val
+                else:
+                    orig_dict[key] = float(val)
+    return orig_dict

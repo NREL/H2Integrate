@@ -18,7 +18,7 @@ def main(config):
     Args:
         config (object): Configuration object containing:
             product_selection (str): The selected technology
-            (e.g., "ng_dri", "h2_dri","ng_eaf", "h2_eaf").
+            (e.g., "ng_dri", "h2_dri", "ng_eaf", "h2_eaf").
             performance (object): Contains plant performance data as a dataframe.
             cost (object): Contains cost data as a dataframe.
             params (dict): Key financial and operational parameters, including:
@@ -68,9 +68,9 @@ def main(config):
     raw_water_unitcost = 0.441167535
     slag_disposal_unitcost = 28.0
     if config.product_selection in ["ng_eaf", "h2_eaf"]:
-        excess_oxygen = 0
+        unused_oxygen = 0
     else:
-        excess_oxygen = 395
+        unused_oxygen = 395
 
     # Get plant performances into data frame/series with performance names as index
     performance = config.performance
@@ -250,7 +250,7 @@ def main(config):
 
     pf.add_coproduct(
         name=f"{module_label}: Oxygen sales",
-        usage=excess_oxygen,
+        usage=unused_oxygen,
         unit="kg O2 per metric tonne of iron",
         cost=oxygen_market_price,
         escalation=gen_inflation,

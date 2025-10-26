@@ -8,16 +8,15 @@ technologies:
       config: !include tech_inputs/hopp_config.yaml
     cost_model:
       model: "hopp"
-    financial_model:
-      group: "1"
     electrolyzer_rating: 156. # MW
+    model_inputs:
+      cost_parameters:
+        cost_year: 2019
   electrolyzer:
     performance_model:
       model: "eco_pem_electrolyzer_performance"
     cost_model:
       model: "singlitico_electrolyzer_cost"
-    financial_model:
-      group: "1"
     model_inputs:
       shared_parameters:
         location: "onshore"
@@ -35,15 +34,16 @@ technologies:
         include_degradation_penalty: True #include degradation
         turndown_ratio: 0.1 #turndown_ratio = minimum_cluster_power/cluster_rating_MW
       financial_parameters:
-        replacement_cost_percent: 0.15 # percent of capex - H2A default case
+        capital_items:
+          depr_period: 7 # based on PEM Electrolysis H2A Production Case Study Documentation estimate of 7 years. also see https://www.irs.gov/publications/p946#en_US_2020_publink1000107507
+          replacement_cost_percent: 0.15 # percent of capex - H2A default case
   methanol:
     performance_model:
       model: "co2h_methanol_plant_performance"
     cost_model:
       model: "co2h_methanol_plant_cost"
-    financial_model:
+    finance_model:
       model: "co2h_methanol_plant_financial"
-      group: "2"
     model_inputs:
       shared_parameters:
         plant_capacity_kgpy: 127893196.8
@@ -65,6 +65,7 @@ technologies:
         meoh_syn_cat_price: 615.274273
         ng_price: 4.0
         co2_price: 0.0549007
+        cost_year: 2020
       finance_parameters:
         # Sources in NETL-PUB-22580: Exhibit 3-5 and Exhibit 3-7
         tasc_toc_multiplier: 1.093
