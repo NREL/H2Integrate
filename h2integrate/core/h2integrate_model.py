@@ -36,6 +36,9 @@ class H2IntegrateModel:
         self.prob = om.Problem(reports=create_om_reports)
         self.model = self.prob.model
 
+        # track if setup has been called via boolean
+        self.setup_has_been_called = False
+
         # create site-level model
         # this is an OpenMDAO group that contains all the site information
         self.create_site_model()
@@ -231,6 +234,7 @@ class H2IntegrateModel:
         self.tech_names = []
         self.performance_models = []
         self.control_strategies = []
+        self.dispatch_rule_sets = []
         self.cost_models = []
         self.finance_models = []
 
@@ -239,6 +243,17 @@ class H2IntegrateModel:
         # Create a technology group for each technology
         for tech_name, individual_tech_config in self.technology_config["technologies"].items():
             perf_model = individual_tech_config.get("performance_model", {}).get("model")
+
+            if "control_parameters" in individual_tech_config["model_inputs"]:
+                if "tech_name" in individual_tech_config["model_inputs"]["control_parameters"]:
+                    provided_tech_name = individual_tech_config["model_inputs"][
+                        "control_parameters"
+                    ]["tech_name"]
+                    if tech_name != provided_tech_name:
+                        raise ValueError(
+                            f"tech_name in control_parameters ({provided_tech_name}) must match "
+                            f"the top-level name of the tech group ({tech_name})"
+                        )
 
             if perf_model is not None and "feedstock" in perf_model:
                 comp = self.supported_models[perf_model](
@@ -261,6 +276,20 @@ class H2IntegrateModel:
                     and (perf_model == cost_model)
                     and (perf_model in combined_performance_and_cost_models)
                 ):
+                    # Catch dispatch rules for systems that have the same performance & cost models
+                    if "dispatch_rule_set" in individual_tech_config:
+                        control_object = self._process_model(
+                            "dispatch_rule_set", individual_tech_config, tech_group
+                        )
+                        self.control_strategies.append(control_object)
+
+                    # Catch control models for systems that have the same performance & cost models
+                    if "control_strategy" in individual_tech_config:
+                        control_object = self._process_model(
+                            "control_strategy", individual_tech_config, tech_group
+                        )
+                        self.control_strategies.append(control_object)
+
                     comp = self.supported_models[perf_model](
                         driver_config=self.driver_config,
                         plant_config=self.plant_config,
@@ -271,17 +300,17 @@ class H2IntegrateModel:
                     self.cost_models.append(om_model_object)
                     self.finance_models.append(om_model_object)
 
-                    # Catch control models for systems that have the same performance & cost models
-                    if "control_strategy" in individual_tech_config:
-                        control_object = self._process_model(
-                            "control_strategy", individual_tech_config, tech_group
-                        )
-                        self.control_strategies.append(control_object)
                     continue
 
                 # Process the models
-                # TODO: integrate finance_model into the loop below
-                model_types = ["performance_model", "control_strategy", "cost_model"]
+                # TODO: integrate financial_model into the loop below
+                model_types = [
+                    "dispatch_rule_set",
+                    "control_strategy",
+                    "performance_model",
+                    "cost_model",
+                ]
+
                 for model_type in model_types:
                     if model_type in individual_tech_config:
                         om_model_object = self._process_model(
@@ -543,7 +572,7 @@ class H2IntegrateModel:
                         "model_inputs": {
                             "performance_parameters": {
                                 "commodity": commodity,
-                                "commodity_units": "kW" if commodity == "electricity" else "kg",
+                                "commodity_units": "kW" if commodity == "electricity" else "kg/h",
                             }
                         }
                     }
@@ -952,8 +981,30 @@ class H2IntegrateModel:
                 self.plant.linear_solver = om.DirectSolver()
                 break
 
+        # initialize dispatch rules connection list
+        tech_to_dispatch_connections = self.plant_config.get("tech_to_dispatch_connections", [])
+
+        for connection in tech_to_dispatch_connections:
+            if len(connection) != 2:
+                err_msg = f"Invalid tech to dispatching_tech_name connection: {connection}"
+                raise ValueError(err_msg)
+
+            tech_name, dispatching_tech_name = connection
+
+            if tech_name == dispatching_tech_name:
+                continue
+            else:
+                # Connect the dispatch rules output to the dispatching_tech_name input
+                self.model.connect(
+                    f"{tech_name}.dispatch_block_rule_function",
+                    f"{dispatching_tech_name}.dispatch_block_rule_function_{tech_name}",
+                )
+
         if (pyxdsm is not None) and (len(technology_interconnections) > 0):
-            create_xdsm_from_config(self.plant_config)
+            try:
+                create_xdsm_from_config(self.plant_config)
+            except FileNotFoundError as e:
+                print(f"Unable to create system XDSM diagram. Error: {e}")
 
     def create_driver_model(self):
         """
@@ -970,10 +1021,19 @@ class H2IntegrateModel:
         if "recorder" in self.driver_config:
             myopt.set_recorders(self.prob)
 
+    def setup(self):
+        """
+        Extremely light wrapper to setup the OpenMDAO problem and track setup status.
+        """
+        self.setup_has_been_called = True
+        self.prob.setup()
+
     def run(self):
         # do model setup based on the driver config
         # might add a recorder, driver, set solver tolerances, etc
-        self.prob.setup()
+        if not self.setup_has_been_called:
+            self.prob.setup()
+            self.setup_has_been_called = True
 
         self.prob.run_driver()
 
