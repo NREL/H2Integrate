@@ -6,6 +6,8 @@
 - Added an optimized offshore methanol production case to examples/03_methanol/co2_hydrogenation_doc
 - Updated setting up recorder in `PoseOptimization`
 - Added resource models to make solar resource API calls to the NREL Developer GOES dataset
+- Added framework to run heuristic load following dispatch for storage technologies
+- Added PySAM battery model as a storage technology performance model
 - Added `create_om_reports` option to driver config to enable/disable OpenMDAO reports (N2 diagrams, etc.)
 - Added `load_yaml()` function and flexibility to input a config dictionary to H2IntegrateModel rather than a filepath
 
