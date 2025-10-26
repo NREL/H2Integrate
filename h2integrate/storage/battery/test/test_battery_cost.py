@@ -2,8 +2,8 @@ import numpy as np
 import openmdao.api as om
 from pytest import fixture
 
-from h2integrate.controllers.openloop_controllers import DemandOpenLoopController
 from h2integrate.storage.battery.atb_battery_cost import ATBBatteryCostModel
+from h2integrate.control.control_strategies.openloop_controllers import DemandOpenLoopController
 
 
 @fixture
