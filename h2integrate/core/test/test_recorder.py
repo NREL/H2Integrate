@@ -1,4 +1,6 @@
 import os
+import shutil
+from pathlib import Path
 
 from h2integrate import EXAMPLE_DIR
 from h2integrate.core.h2integrate_model import H2IntegrateModel
@@ -9,6 +11,28 @@ TEST_RECORDER_OUTPUT_DIR = "testingtesting_output_dir"
 TEST_RECORDER_OUTPUT_FILE0 = "testingtesting_filename.sql"
 TEST_RECORDER_OUTPUT_FILE1 = "testingtesting_filename0.sql"
 TEST_RECORDER_OUTPUT_FILE2 = "testingtesting_filename1.sql"
+
+
+def test_cleanup_from_past_tests(subtests):
+    """This function just removes any left over files if they
+    were not properly cleaned up in the last test run. The other
+    tests are interdependent via output files, so it is possible
+    to have tests fail because of previous failures.
+    """
+
+    os.chdir(EXAMPLE_DIR / "05_wind_h2_opt")
+
+    dirs_to_remove = [
+        "wind_plant_run",
+        TEST_RECORDER_OUTPUT_DIR,
+    ]
+
+    for d in dirs_to_remove:
+        p = Path(d)  # relative to cwd set above
+        if p.exists():
+            shutil.rmtree(p)
+        with subtests.test(f"{d} does not exist"):
+            assert not p.exists()
 
 
 def test_output_folder_creation_first_run(subtests):
