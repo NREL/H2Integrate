@@ -4,9 +4,9 @@ from pytest import fixture
 
 from h2integrate import EXAMPLE_DIR
 from h2integrate.core.inputs.validation import load_driver_yaml
-from h2integrate.converters.iron.iron_electrowinning import (
-    IronDRICostComponent,
-    IronDRIPerformanceComponent,
+from h2integrate.converters.iron.iron_plant import (
+    IronPlantCostComponent,
+    IronPlantPerformanceComponent,
 )
 
 
@@ -71,13 +71,13 @@ def test_baseline_iron_dri_costs_rosner_ng(
     capacity = 3885.1917808219177
 
     prob = om.Problem()
-    iron_dri_perf = IronDRIPerformanceComponent(
+    iron_dri_perf = IronPlantPerformanceComponent(
         plant_config=plant_config,
         tech_config=iron_dri_config_rosner_ng,
         driver_config=driver_config,
     )
 
-    iron_dri_cost = IronDRICostComponent(
+    iron_dri_cost = IronPlantCostComponent(
         plant_config=plant_config,
         tech_config=iron_dri_config_rosner_ng,
         driver_config=driver_config,

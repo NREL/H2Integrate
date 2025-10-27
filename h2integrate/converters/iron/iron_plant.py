@@ -18,7 +18,7 @@ from h2integrate.simulation.technologies.iron.load_top_down_coeffs import load_t
 
 
 @define
-class IronDRIBaseConfig(BaseConfig):
+class IronPlantBaseConfig(BaseConfig):
     winning_type: str = field(
         kw_only=True, converter=(str.lower, str.strip), validator=contains(["h2", "ng"])
     )  # product selection
@@ -46,7 +46,7 @@ class IronDRIBaseConfig(BaseConfig):
 
 
 @define
-class IronDRIPerformanceConfig(IronDRIBaseConfig):
+class IronPlantPerformanceConfig(IronPlantBaseConfig):
     def make_model_dict(self):
         keys = ["model_fp", "inputs_fp", "coeffs_fp", "refit_coeffs"]
         d = self.as_dict()
@@ -55,48 +55,48 @@ class IronDRIPerformanceConfig(IronDRIBaseConfig):
         return model_dict
 
 
-class IronDRIPerformanceComponent(om.ExplicitComponent):
+class IronPlantPerformanceComponent(om.ExplicitComponent):
     def initialize(self):
         self.options.declare("driver_config", types=dict)
         self.options.declare("plant_config", types=dict)
         self.options.declare("tech_config", types=dict)
 
     def setup(self):
-        self.config = IronDRIPerformanceConfig.from_dict(
+        self.config = IronPlantPerformanceConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance"),
             strict=False,
         )
 
         self.add_discrete_output(
-            "iron_dri_performance", val=pd.DataFrame, desc="iron dri performance results"
+            "iron_plant_performance", val=pd.DataFrame, desc="iron plant performance results"
         )
         self.add_output("total_pig_iron_produced", val=0.0, units="t/year")
         # self.add_output("total_steel_produced", val=0.0, units="t/year")
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
-        dri_performance_inputs = {
+        iron_plant_performance_inputs = {
             "plant_capacity_mtpy": self.config.iron_win_capacity,
             "capacity_denominator": self.config.win_capacity_demon,
         }
-        dri_model_inputs = self.config.make_model_dict()
-        iron_dri_site = self.config.make_site_dict()
+        iron_plant_model_inputs = self.config.make_model_dict()
+        iron_plant_site = self.config.make_site_dict()
         performance_config = IronPerformanceModelConfig(
             product_selection=f"{self.config.winning_type}_dri",
-            site=iron_dri_site,
-            model=dri_model_inputs,
-            params=dri_performance_inputs,
+            site=iron_plant_site,
+            model=iron_plant_model_inputs,
+            params=iron_plant_performance_inputs,
         )
-        iron_dri_performance = run_size_iron_plant_performance(performance_config)
+        iron_plant_performance = run_size_iron_plant_performance(performance_config)
         # wltpy = wet long tons per year
-        pig_iron_produced_mtpy = iron_dri_performance.performances_df.set_index("Name").loc[
+        pig_iron_produced_mtpy = iron_plant_performance.performances_df.set_index("Name").loc[
             "Pig Iron Production"
         ]["Model"]
         outputs["total_pig_iron_produced"] = pig_iron_produced_mtpy
-        discrete_outputs["iron_dri_performance"] = iron_dri_performance.performances_df
+        discrete_outputs["iron_plant_performance"] = iron_plant_performance.performances_df
 
 
 @define
-class IronDRICostConfig(IronDRIBaseConfig):
+class IronPlantCostConfig(IronPlantBaseConfig):
     LCOE: float = field(kw_only=True)  # $/MWh
     LCOH: float = field(kw_only=True)  # $/kg
     LCOI_ore: float = field(kw_only=True)
@@ -126,7 +126,7 @@ class IronDRICostConfig(IronDRIBaseConfig):
         return cost_dict
 
 
-class IronDRICostComponent(CostModelBaseClass):
+class IronPlantCostComponent(CostModelBaseClass):
     def setup(self):
         self.target_dollar_year = self.options["plant_config"]["finance_parameters"][
             "cost_adjustment_parameters"
@@ -137,7 +137,7 @@ class IronDRICostComponent(CostModelBaseClass):
         config_dict.update({"cost_year": self.target_dollar_year})
         config_dict.update({"plant_life": self.plant_life})
 
-        self.config = IronDRICostConfig.from_dict(config_dict)
+        self.config = IronPlantCostConfig.from_dict(config_dict)
 
         super().setup()
         self.add_input("LCOE", val=self.config.LCOE, units="USD/MW/h")
@@ -146,14 +146,18 @@ class IronDRICostComponent(CostModelBaseClass):
         self.add_input("iron_transport_cost", val=self.config.iron_transport_cost, units="USD/t")
         self.add_input("ore_profit_pct", val=self.config.ore_profit_pct, units="USD/t")
         self.add_discrete_input(
-            "iron_dri_performance", val=pd.DataFrame, desc="iron dri performance results"
+            "iron_plant_performance", val=pd.DataFrame, desc="iron plant performance results"
         )
-        self.add_discrete_output("iron_dri_cost", val=pd.DataFrame, desc="iron dri cost results")
+        self.add_discrete_output(
+            "iron_plant_cost", val=pd.DataFrame, desc="iron plant cost results"
+        )
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
-        dri_performance = IronPerformanceModelOutputs(discrete_inputs["iron_dri_performance"])
+        iron_plant_performance = IronPerformanceModelOutputs(
+            discrete_inputs["iron_plant_performance"]
+        )
 
-        dri_cost_inputs = {
+        iron_plant_cost_inputs = {
             "lcoe": inputs["LCOE"][0] / 1e3,
             "lcoh": inputs["LCOH"][0],
             "lco_iron_ore_tonne": inputs["LCOI_ore"][0],
@@ -162,23 +166,23 @@ class IronDRICostComponent(CostModelBaseClass):
             "capacity_denominator": self.config.win_capacity_demon,
         }
         cost_dict = self.config.make_cost_dict()
-        dri_cost_inputs.update(cost_dict)
+        iron_plant_cost_inputs.update(cost_dict)
 
-        dri_model_inputs = self.config.make_model_dict()
+        iron_plant_model_inputs = self.config.make_model_dict()
         iron_ore_site = self.config.make_site_dict()
         cost_config = IronCostModelConfig(
             product_selection=f"{self.config.winning_type}_dri",
             site=iron_ore_site,
-            model=dri_model_inputs,
-            params=dri_cost_inputs,
-            performance=dri_performance,
+            model=iron_plant_model_inputs,
+            params=iron_plant_cost_inputs,
+            performance=iron_plant_performance,
         )
-        iron_dri_cost = run_iron_cost_model(cost_config)
+        iron_plant_cost = run_iron_cost_model(cost_config)
 
-        discrete_outputs["iron_dri_cost"] = iron_dri_cost.costs_df
+        discrete_outputs["iron_plant_cost"] = iron_plant_cost.costs_df
 
         # Now taking some stuff from finance
-        cost_df = iron_dri_cost.costs_df.set_index("Name")
+        cost_df = iron_plant_cost.costs_df.set_index("Name")
         cost_ds = cost_df.loc[:, self.config.site_name]
 
         cost_names = cost_df.index.values
@@ -207,7 +211,7 @@ class IronDRICostComponent(CostModelBaseClass):
             fixed_om += inflate_cpi(source_year_cost, source_year, self.config.cost_year)
 
         # add feedstock costs
-        perf_df = dri_performance.performances_df.set_index("Name")
+        perf_df = iron_plant_performance.performances_df.set_index("Name")
         perf_ds = perf_df.loc[:, "Model"]
 
         coeff_dict = load_top_down_coeffs(

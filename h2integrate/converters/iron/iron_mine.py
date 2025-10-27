@@ -23,7 +23,7 @@ from h2integrate.simulation.technologies.iron.rosner_ore.variable_om_cost import
 
 
 @define
-class IronOreBaseConfig(BaseConfig):
+class IronMineBaseConfig(BaseConfig):
     mine: str = field(validator=contains(["Hibbing", "Northshore", "United", "Minorca", "Tilden"]))
 
     # product_selection
@@ -49,7 +49,7 @@ class IronOreBaseConfig(BaseConfig):
 
 
 @define
-class IronOrePerformanceConfig(IronOreBaseConfig):
+class IronMinePerformanceConfig(IronMineBaseConfig):
     ore_cf_estimate: float = field(default=0.9, validator=range_val(0, 1))  # ore
 
     def make_model_dict(self):
@@ -60,45 +60,45 @@ class IronOrePerformanceConfig(IronOreBaseConfig):
         return model_dict
 
 
-class IronOrePerformanceComponent(om.ExplicitComponent):
+class IronMinePerformanceComponent(om.ExplicitComponent):
     def initialize(self):
         self.options.declare("driver_config", types=dict)
         self.options.declare("plant_config", types=dict)
         self.options.declare("tech_config", types=dict)
 
     def setup(self):
-        self.config = IronOrePerformanceConfig.from_dict(
+        self.config = IronMinePerformanceConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance"),
             strict=False,
         )
         self.add_discrete_output(
-            "iron_ore_performance", val=pd.DataFrame, desc="iron ore performance results"
+            "iron_mine_performance", val=pd.DataFrame, desc="iron mine performance results"
         )
         self.add_output("total_iron_ore_produced", val=0.0, units="t/year")
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         ore_performance_inputs = {"input_capacity_factor_estimate": self.config.ore_cf_estimate}
         ore_model_inputs = self.config.make_model_dict()
-        iron_ore_site = self.config.make_site_dict()
+        iron_mine_site = self.config.make_site_dict()
         performance_config = IronPerformanceModelConfig(
             product_selection=f"{self.config.taconite_pellet_type}_taconite_pellets",
-            site=iron_ore_site,
+            site=iron_mine_site,
             model=ore_model_inputs,
             params=ore_performance_inputs,
         )
-        iron_ore_performance = run_size_iron_plant_performance(performance_config)
+        iron_mine_performance = run_size_iron_plant_performance(performance_config)
         # wltpy = wet long tons per year
-        ore_produced_wltpy = iron_ore_performance.performances_df.set_index("Name").loc[
+        ore_produced_wltpy = iron_mine_performance.performances_df.set_index("Name").loc[
             "Ore pellets produced"
         ][self.config.mine]
         ore_produced_wmtpy = ore_produced_wltpy * 1.016047  # wmtpy = wet metric tonnes per year
         ore_produced_mtpy = ore_produced_wmtpy * 0.98  # mtpy = dry metric tonnes per year
-        discrete_outputs["iron_ore_performance"] = iron_ore_performance.performances_df
+        discrete_outputs["iron_mine_performance"] = iron_mine_performance.performances_df
         outputs["total_iron_ore_produced"] = ore_produced_mtpy
 
 
 @define
-class IronOreCostConfig(IronOreBaseConfig):
+class IronMineCostConfig(IronMineBaseConfig):
     LCOE: float = field(kw_only=True)  # $/MWh
     LCOH: float = field(kw_only=True)  # $/kg
     varom_model_name: str = field(
@@ -123,7 +123,7 @@ class IronOreCostConfig(IronOreBaseConfig):
         return cost_dict
 
 
-class IronOreCostComponent(CostModelBaseClass):
+class IronMineCostComponent(CostModelBaseClass):
     def setup(self):
         self.target_dollar_year = self.options["plant_config"]["finance_parameters"][
             "cost_adjustment_parameters"
@@ -134,18 +134,18 @@ class IronOreCostComponent(CostModelBaseClass):
         config_dict.update({"cost_year": self.target_dollar_year})
         config_dict.update({"plant_life": self.plant_life})
 
-        self.config = IronOreCostConfig.from_dict(config_dict, strict=False)
+        self.config = IronMineCostConfig.from_dict(config_dict, strict=False)
 
         super().setup()
         self.add_input("LCOE", val=self.config.LCOE, units="USD/MW/h")
         self.add_input("LCOH", val=self.config.LCOH, units="USD/kg")
         self.add_discrete_input(
-            "iron_ore_performance", val=pd.DataFrame, desc="iron ore performance results"
+            "iron_mine_performance", val=pd.DataFrame, desc="iron mine performance results"
         )
-        self.add_discrete_output("iron_ore_cost", val=pd.DataFrame, desc="iron ore cost results")
+        self.add_discrete_output("iron_mine_cost", val=pd.DataFrame, desc="iron mine cost results")
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
-        ore_performance = IronPerformanceModelOutputs(discrete_inputs["iron_ore_performance"])
+        ore_performance = IronPerformanceModelOutputs(discrete_inputs["iron_mine_performance"])
 
         ore_cost_inputs = {
             "lcoe": inputs["LCOE"][0] / 1e3,
@@ -155,17 +155,17 @@ class IronOreCostComponent(CostModelBaseClass):
         ore_cost_inputs.update(cost_dict)
 
         ore_model_inputs = self.config.make_model_dict()
-        iron_ore_site = self.config.make_site_dict()
+        iron_mine_site = self.config.make_site_dict()
         cost_config = IronCostModelConfig(
             product_selection=f"{self.config.taconite_pellet_type}_taconite_pellets",
-            site=iron_ore_site,
+            site=iron_mine_site,
             model=ore_model_inputs,
             params=ore_cost_inputs,
             performance=ore_performance,
         )
         iron_ore_cost = run_iron_cost_model(cost_config)
 
-        discrete_outputs["iron_ore_cost"] = iron_ore_cost.costs_df
+        discrete_outputs["iron_mine_cost"] = iron_ore_cost.costs_df
 
         # Now taking some stuff from finance
         cost_df = iron_ore_cost.costs_df.set_index("Name")

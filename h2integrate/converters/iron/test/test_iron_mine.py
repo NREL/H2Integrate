@@ -4,7 +4,10 @@ from pytest import fixture
 
 from h2integrate import EXAMPLE_DIR
 from h2integrate.core.inputs.validation import load_driver_yaml
-from h2integrate.converters.iron.iron_ore import IronOreCostComponent, IronOrePerformanceComponent
+from h2integrate.converters.iron.iron_mine import (
+    IronMineCostComponent,
+    IronMinePerformanceComponent,
+)
 
 
 @fixture
@@ -92,13 +95,13 @@ def test_baseline_iron_ore_costs_martin(
     martin_ore_fixed_om = 0.0
 
     prob = om.Problem()
-    iron_ore_perf = IronOrePerformanceComponent(
+    iron_ore_perf = IronMinePerformanceComponent(
         plant_config=plant_config,
         tech_config=iron_ore_config_martin_om,
         driver_config=driver_config,
     )
 
-    iron_ore_cost = IronOreCostComponent(
+    iron_ore_cost = IronMineCostComponent(
         plant_config=plant_config,
         tech_config=iron_ore_config_martin_om,
         driver_config=driver_config,
@@ -127,13 +130,13 @@ def test_baseline_iron_ore_costs_rosner(
     rosner_ore_var_om = 97.76558025830258
     rosner_ore_fixed_om = 0.0
     prob = om.Problem()
-    iron_ore_perf = IronOrePerformanceComponent(
+    iron_ore_perf = IronMinePerformanceComponent(
         plant_config=plant_config,
         tech_config=iron_ore_config_rosner_om,
         driver_config=driver_config,
     )
 
-    iron_ore_cost = IronOreCostComponent(
+    iron_ore_cost = IronMineCostComponent(
         plant_config=plant_config,
         tech_config=iron_ore_config_rosner_om,
         driver_config=driver_config,
