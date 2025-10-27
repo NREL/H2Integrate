@@ -32,8 +32,8 @@ def battery_tech_config_kW():
         "control_strategy": {"model": "demand_open_loop_controller"},
         "model_inputs": {
             "shared_parameters": {
-                "resource_name": "electricity",
-                "resource_rate_units": "kW",
+                "commodity_name": "electricity",
+                "commodity_units": "kW",
                 "max_charge_rate": 5000.0,
                 "max_capacity": 30000.0,
             },
@@ -65,8 +65,8 @@ def battery_tech_config_MW():
         "control_strategy": {"model": "demand_open_loop_controller"},
         "model_inputs": {
             "shared_parameters": {
-                "resource_name": "electricity",
-                "resource_rate_units": "MW",
+                "commodity_name": "electricity",
+                "commodity_units": "MW",
                 "max_charge_rate": 5.0,
                 "max_capacity": 30.0,
             },
