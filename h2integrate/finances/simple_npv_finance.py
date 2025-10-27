@@ -85,9 +85,9 @@ class NPVFinance(om.ExplicitComponent):
                 .strip("_()-")
             )
             if NPV_desc_str == "":
-                self.NPV_str = f"{NPV_base_str}_NPV"
+                self.NPV_str = f"NPV_{NPV_base_str}"
             else:
-                self.NPV_str = f"{NPV_base_str}_{NPV_desc_str}_NPV"
+                self.NPV_str = f"NPV_{NPV_base_str}_{NPV_desc_str}"
 
         # TODO: update below with standardized naming
         if self.options["commodity_type"] == "electricity":
