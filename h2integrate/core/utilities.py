@@ -432,6 +432,7 @@ def find_file(filename: str | Path, root_folder: str | Path | None = None):
     raise ValueError(
         f"Unexpected situation occurred: {len(files_cwd)} cwd files found, "
         f"{len(files_h2i)} h2i files, {len(files)} root files."
+        f"files_h2i is {files_h2i}"
     )
 
 
