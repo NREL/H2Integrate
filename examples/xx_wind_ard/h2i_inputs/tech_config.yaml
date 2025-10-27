@@ -104,8 +104,8 @@ technologies:
       model: "demand_open_loop_controller"
     model_inputs:
       shared_parameters:
-        resource_name: "electricity"
-        resource_rate_units: "kW"
+        commodity_name: "electricity"
+        commodity_units: "kW"
         max_charge_rate: 150000.0  # kW/time step
         max_capacity: 300000.0  # kWh
       control_parameters:

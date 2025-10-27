@@ -1000,7 +1000,7 @@ def test_windard_pv_battery_dispatch_example(subtests):
         # Demand should be met for the last part of the year
         assert np.allclose(
             dispatched_electricity[8700:],
-            model.prob.get_val("battery.electricity_demand_profile", units="MW/h")[8700:],
+            model.prob.get_val("battery.electricity_demand_profile", units="MW")[8700:],
         )
 
     # Subtest for LCOE
@@ -1023,7 +1023,7 @@ def test_windard_pv_battery_dispatch_example(subtests):
     # Subtest for electricity curtailed
     with subtests.test("Check electricity curtailed"):
         electricity_curtailed = model.prob.get_val(
-            "battery.electricity_curtailed", units="MW"
+            "battery.electricity_unused_commodity", units="MW"
         ).sum()
 
         # import pdb; pdb.set_trace()
@@ -1032,6 +1032,6 @@ def test_windard_pv_battery_dispatch_example(subtests):
     # Subtest for missed load
     with subtests.test("Check electricity missed load"):
         electricity_missed_load = np.linalg.norm(
-            model.prob.get_val("battery.electricity_missed_load", units="MW")
+            model.prob.get_val("battery.electricity_unmet_demand", units="MW")
         )
         assert electricity_missed_load == pytest.approx(468.28057304873026)
