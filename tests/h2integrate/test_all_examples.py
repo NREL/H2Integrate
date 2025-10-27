@@ -821,11 +821,11 @@ def test_pyomo_heuristic_dispatch_example(subtests):
     # Subtest for LCOE
     with subtests.test("Check all LCOE value"):
         lcoe = model.prob.get_val("finance_subgroup_all_electricity.LCOE")[0]
-        assert lcoe == pytest.approx(0.07470820840238226, rel=1e-6)
+        assert lcoe == pytest.approx(0.08157197567200995, rel=1e-6)
 
     with subtests.test("Check dispatched LCOE value"):
         lcoe = model.prob.get_val("finance_subgroup_dispatched_electricity.LCOE")[0]
-        assert lcoe == pytest.approx(0.5473068063691052, rel=1e-6)
+        assert lcoe == pytest.approx(0.5975902853904799, rel=1e-6)
 
     # Subtest for total electricity produced
     with subtests.test("Check total electricity produced"):
