@@ -30,31 +30,6 @@ def profast_inputs_no1():
 
 
 @fixture
-def profast_inputs_no2():
-    params = {
-        "analysis_start_year": 2032,
-        "installation_time": 36,
-        "inflation_rate": 0.0,
-        "discount_rate": 0.0615,
-        "debt_equity_ratio": 2.82,
-        "property_tax_and_insurance": 0.015,
-        "total_income_tax_rate": 0.2574,
-        "capital_gains_tax_rate": 0.15,
-        "sales_tax_rate": 0.00,
-        "debt_interest_rate": 0.0439,
-        "debt_type": "Revolving debt",
-        "loan_period_if_used": 0,
-        "cash_onhand_months": 1,
-        "admin_expense": 0.00,
-    }
-    cap_items = {"depr_type": "MACRS", "depr_period": 5, "refurb": [0.0]}
-
-    model_inputs = {"params": params, "capital_items": cap_items}
-
-    return model_inputs
-
-
-@fixture
 def fake_filtered_tech_config():
     tech_config = {
         "wind": {"model_inputs": {}},
@@ -84,7 +59,7 @@ def fake_cost_dict():
     return fake_costs
 
 
-def test_profast(profast_inputs_no1, fake_filtered_tech_config, fake_cost_dict, subtests):
+def test_profast_comp(profast_inputs_no1, fake_filtered_tech_config, fake_cost_dict, subtests):
     mean_hourly_production = 500000.0
     prob = om.Problem()
     plant_config = {
