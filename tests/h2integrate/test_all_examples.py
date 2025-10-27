@@ -902,6 +902,11 @@ def test_simple_dispatch_example(subtests):
         npv = model.prob.get_val("finance_subgroup_electricity.electricity_npv_NPV")[0]
         assert pytest.approx(npv, rel=1e-6) == 3791194.71
 
+    # Subtest for ProFAST NPV
+    with subtests.test("Check NPV value"):
+        npv = model.prob.get_val("finance_subgroup_electricity.NPV_electricity_profast_npv")[0]
+        assert pytest.approx(npv, rel=1e-6) == 7518969.18
+
     # Subtest for total electricity produced
     with subtests.test("Check total electricity produced"):
         total_electricity = model.prob.get_val(
