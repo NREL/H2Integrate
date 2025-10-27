@@ -19,7 +19,9 @@ class ATBBatteryCostConfig(CostModelBaseConfig):
         energy_capex (float|int): battery energy capital cost in $/kWh
         power_capex (float|int): battery power capital cost in $/kW
         opex_fraction (float): annual operating cost as a fraction of the total system cost.
-        cost_year (int): dollar year corresponding to input costs
+        max_charge_rate (float): maximum charge rate of battery in kW
+        max_capacity (float): maximum storage capacity of battery in kWh
+
     """
 
     energy_capex: float | int = field(validator=gt_zero)
@@ -54,7 +56,7 @@ class ATBBatteryCostModel(CostModelBaseClass):
         super().setup()
 
         self.add_input(
-            "charge_rate",
+            "max_charge_rate",
             val=self.config.max_charge_rate,
             units="kW",
             desc="Battery charge/discharge rate",
@@ -67,13 +69,13 @@ class ATBBatteryCostModel(CostModelBaseClass):
         )
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
-        storage_duration_hrs = inputs["storage_capacity"] / inputs["charge_rate"]
+        storage_duration_hrs = inputs["storage_capacity"] / inputs["max_charge_rate"]
 
         # CapEx equation from Cell E29
         total_system_cost = (
             storage_duration_hrs * self.config.energy_capex
         ) + self.config.power_capex
-        capex = total_system_cost * inputs["charge_rate"]
+        capex = total_system_cost * inputs["max_charge_rate"]
         # OpEx equation from cells in the Fixed Operation and Maintenance Expenses section
         opex = self.config.opex_fraction * capex
         outputs["CapEx"] = capex

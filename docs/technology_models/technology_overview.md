@@ -56,9 +56,9 @@ The inputs, outputs, and corresponding technology that are currently available i
 | Technology        | Transport Commodity |
 | :---------------- | :---------------: |
 | `cable`         |  electricity      |
-| `pipe`      |  hydrogen         |
-| `combiner`      |  Any    |
-| `splitter` | electricity |
+| `pipe`      |  most mass-based commodities         |
+| `combiner`      | Any    |
+| `splitter` |  Any|
 
 Connection: `[source_tech, dest_tech, transport_commodity, transport_technology]`
 
@@ -72,14 +72,15 @@ Connection: `[source_tech, dest_tech, transport_commodity, transport_technology]
 | `battery`         |  electricity      |
 | `generic_storage` |  Any              |
 
-(controller)=
-## Controller
-`Controller` models are used to control the `Storage` models and resource flows.
+(control)=
+## Control
+`Control` models are used to control the `Storage` models and resource flows.
 
 | Controller        | Control Method |
 | :----------------------------- | :---------------: |
 | `pass_through_controller`      |  open-loop control. directly passes the input resource flow to the output without any modifications         |
 | `demand_open_loop_controller`  |  open-loop control. manages resource flow based on demand and storage constraints     |
+| `heuristic_load_following_controller` | open-loop control that works on a time window basis to set dispatch commands. Uses pyomo |
 
 # Technology Models Overview
 
@@ -88,6 +89,8 @@ Below summarizes the available performance, cost, and financial models for each 
 - [Converters](#converter-models)
 - [Transport](#transport-models)
 - [Storage](#storage-models)
+- [Basic Operations](#basic-operations)
+- [Control](#control-models)
 
 (resource-models)=
 ## Resource models
@@ -183,13 +186,16 @@ Below summarizes the available performance, cost, and financial models for each 
 ## Transport Models
 - `cable`
     - performance models:
-        + `'cable'`
+        + `'cable'`: specific to `electricity` commodity
 - `pipe`:
     - performance models:
-        + `'pipe'`
+        + `'pipe'`: currently compatible with the commodities "hydrogen", "co2", "methanol", "ammonia", "nitrogen", "natural_gas"
 - `combiner`:
     - performance models:
-        + `'combiner_performance'`
+        + `'combiner_performance'`: can be used for any commodity
+- `splitter`:
+    - performance models:
+        + `'splitter_performance'`: can be used for any commodity
 
 (storage-models)=
 ## Storage Models
@@ -202,9 +208,19 @@ Below summarizes the available performance, cost, and financial models for each 
         + `'hydrogen_tank_cost'`
 - `generic_storage`: any resource storage
 - `battery`: battery storage
+    - performance models:
+        + `'pysam_battery'`
     - cost models:
         + `'atb_battery_cost'`
 
-## Controller Models
+(basic-operations)=
+## Basic Operations
+- `production_summer`: sums the production profile of any commodity
+- `consumption_summer`: sums the consumption profile of any feedstock
+
+
+(control-models)=
+## Control Models
 - `pass_through_controller`
 - `demand_open_loop_controller`
+- `heuristic_load_following_controller`

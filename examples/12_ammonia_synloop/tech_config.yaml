@@ -50,15 +50,15 @@ technologies:
       group: default
     model_inputs:
       performance_parameters:
-        rating: 1500.
+        electrolyzer_rating_mw_for_h2_storage_sizing: 640
         size_capacity_from_demand:
           flag: True # If True, then storage is sized to provide steady-state storage
         capacity_from_max_on_turbine_storage: False # if True, then days of storage is ignored and storage capacity is based on how much h2 storage fits on the turbines in the plant using Kottenstete 2003.
         type: "lined_rock_cavern" # can be one of ["none", "pipe", "turbine", "pressure_vessel", "salt_cavern", "lined_rock_cavern"]
         days: 0 #how many days worth of production we should be able to store (this is ignored if `capacity_from_max_on_turbine_storage` is set to True)
       control_parameters:
-        resource_name: "hydrogen"
-        resource_rate_units: "kg/h"
+        commodity_name: "hydrogen"
+        commodity_units: "kg/h"
         max_capacity: 10000000.0  # kg
         max_charge_percent: 1.0  # percent as decimal
         min_charge_percent: 0.1  # percent as decimal

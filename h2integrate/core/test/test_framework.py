@@ -191,3 +191,158 @@ def test_technology_connections():
     # Clean up temporary YAML files
     temp_plant_config.unlink(missing_ok=True)
     temp_highlevel_yaml.unlink(missing_ok=True)
+
+
+def test_resource_connection_error_missing_connection():
+    os.chdir(examples_dir / "08_wind_electrolyzer")
+
+    # Path to the original plant_config.yaml and high-level yaml in the example directory
+    orig_plant_config = Path.cwd() / "plant_config.yaml"
+    temp_plant_config = Path.cwd() / "temp_plant_config.yaml"
+    orig_highlevel_yaml = Path.cwd() / "wind_plant_electrolyzer.yaml"
+    temp_highlevel_yaml = Path.cwd() / "temp_08_wind_electrolyzer.yaml"
+
+    shutil.copy(orig_plant_config, temp_plant_config)
+    shutil.copy(orig_highlevel_yaml, temp_highlevel_yaml)
+
+    # Load the plant_config YAML content
+    plant_config_data = load_plant_yaml(temp_plant_config)
+
+    # Remove resource to tech connection
+    plant_config_data.pop("resource_to_tech_connections")
+
+    # Save the modified tech_config YAML back
+    with temp_plant_config.open("w") as f:
+        yaml.safe_dump(plant_config_data, f)
+
+    # Load the high-level YAML content
+    with temp_highlevel_yaml.open() as f:
+        highlevel_data = yaml.safe_load(f)
+
+    # Modify the high-level YAML to point to the temp tech_config file
+    highlevel_data["plant_config"] = str(temp_plant_config.name)
+
+    # Save the modified high-level YAML back
+    with temp_highlevel_yaml.open("w") as f:
+        yaml.safe_dump(highlevel_data, f)
+
+    with pytest.raises(ValueError) as excinfo:
+        H2IntegrateModel(temp_highlevel_yaml)
+        assert "Resource models ['wind_resource'] are not in" in str(excinfo.value)
+
+    # Clean up temporary YAML files
+    temp_plant_config.unlink(missing_ok=True)
+    temp_highlevel_yaml.unlink(missing_ok=True)
+
+
+def test_resource_connection_error_missing_resource():
+    os.chdir(examples_dir / "08_wind_electrolyzer")
+
+    # Path to the original plant_config.yaml and high-level yaml in the example directory
+    orig_plant_config = Path.cwd() / "plant_config.yaml"
+    temp_plant_config = Path.cwd() / "temp_plant_config.yaml"
+    orig_highlevel_yaml = Path.cwd() / "wind_plant_electrolyzer.yaml"
+    temp_highlevel_yaml = Path.cwd() / "temp_08_wind_electrolyzer.yaml"
+
+    shutil.copy(orig_plant_config, temp_plant_config)
+    shutil.copy(orig_highlevel_yaml, temp_highlevel_yaml)
+
+    # Load the plant_config YAML content
+    plant_config_data = load_plant_yaml(temp_plant_config)
+
+    # Remove resource
+    plant_config_data["site"]["resources"].pop("wind_resource")
+
+    # Save the modified tech_config YAML back
+    with temp_plant_config.open("w") as f:
+        yaml.safe_dump(plant_config_data, f)
+
+    # Load the high-level YAML content
+    with temp_highlevel_yaml.open() as f:
+        highlevel_data = yaml.safe_load(f)
+
+    # Modify the high-level YAML to point to the temp tech_config file
+    highlevel_data["plant_config"] = str(temp_plant_config.name)
+
+    # Save the modified high-level YAML back
+    with temp_highlevel_yaml.open("w") as f:
+        yaml.safe_dump(highlevel_data, f)
+
+    with pytest.raises(ValueError) as excinfo:
+        H2IntegrateModel(temp_highlevel_yaml)
+        assert "Missing resource(s) are ['wind_resource']." in str(excinfo.value)
+
+    # Clean up temporary YAML files
+    temp_plant_config.unlink(missing_ok=True)
+    temp_highlevel_yaml.unlink(missing_ok=True)
+
+
+def test_reports_turned_off():
+    # Change the current working directory to the example's directory
+    os.chdir(examples_dir / "13_air_separator")
+
+    # Path to the original config files in the example directory
+    orig_plant_config = Path.cwd() / "plant_config.yaml"
+    orig_driver_config = Path.cwd() / "driver_config.yaml"
+    orig_tech_config = Path.cwd() / "tech_config.yaml"
+    orig_highlevel_yaml = Path.cwd() / "13_air_separator.yaml"
+
+    # Create temporary config files
+    temp_plant_config = Path.cwd() / "temp_plant_config.yaml"
+    temp_driver_config = Path.cwd() / "temp_driver_config.yaml"
+    temp_tech_config = Path.cwd() / "temp_tech_config.yaml"
+    temp_highlevel_yaml = Path.cwd() / "temp_13_air_separator.yaml"
+
+    # Copy the original config files to temp files
+    shutil.copy(orig_plant_config, temp_plant_config)
+    shutil.copy(orig_driver_config, temp_driver_config)
+    shutil.copy(orig_tech_config, temp_tech_config)
+    shutil.copy(orig_highlevel_yaml, temp_highlevel_yaml)
+
+    # Load and modify the driver config to turn off reports
+    with temp_driver_config.open() as f:
+        driver_data = yaml.safe_load(f)
+
+    if "general" not in driver_data:
+        driver_data["general"] = {}
+    driver_data["general"]["create_om_reports"] = False
+
+    # Save the modified driver config
+    with temp_driver_config.open("w") as f:
+        yaml.safe_dump(driver_data, f)
+
+    # Load the high-level YAML content and point to temp config files
+    with temp_highlevel_yaml.open() as f:
+        highlevel_data = yaml.safe_load(f)
+
+    # Modify the high-level YAML to point to the temp config files
+    highlevel_data["plant_config"] = str(temp_plant_config.name)
+    highlevel_data["driver_config"] = str(temp_driver_config.name)
+    highlevel_data["technology_config"] = str(temp_tech_config.name)
+
+    # Save the modified high-level YAML back
+    with temp_highlevel_yaml.open("w") as f:
+        yaml.safe_dump(highlevel_data, f)
+
+    # Record initial files before running the model
+    initial_files = set(Path.cwd().rglob("*"))
+
+    # Run the model
+    h2i_model = H2IntegrateModel(temp_highlevel_yaml)
+    h2i_model.run()
+
+    # Check that no OpenMDAO report directories were created
+    final_files = set(Path.cwd().rglob("*"))
+    new_files = final_files - initial_files
+    report_dirs = [f for f in new_files if f.is_dir() and "reports" in f.name.lower()]
+
+    # Assert that no report directories were created due to create_om_reports=False
+    assert (
+        len(report_dirs) == 0
+    ), f"Report directories were created despite create_om_reports=False: {report_dirs}"
+
+    # Clean up temporary YAML files
+    temp_plant_config.unlink(missing_ok=True)
+    temp_driver_config.unlink(missing_ok=True)
+    temp_tech_config.unlink(missing_ok=True)
+    temp_highlevel_yaml.unlink(missing_ok=True)
