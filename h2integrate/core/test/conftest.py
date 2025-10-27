@@ -8,6 +8,12 @@ from h2integrate import EXAMPLE_DIR
 
 
 def pytest_sessionstart(session):
+    initial_om_report_setting = os.getenv("OPENMDAO_REPORTS")
+    if initial_om_report_setting is not None:
+        os.environ["TMP_OPENMDAO_REPORTS"] = initial_om_report_setting
+
+    os.environ["OPENMDAO_REPORTS"] = "none"
+
     # set environment variables used for
     # tests in h2integrate/core/test/test_recorder.py
     os.environ["TEST_RECORDER_OUTPUT_EXAMPLE"] = "05_wind_h2_opt"
@@ -18,6 +24,11 @@ def pytest_sessionstart(session):
 
 
 def pytest_sessionfinish(session, exitstatus):
+    initial_om_report_setting = os.getenv("TMP_OPENMDAO_REPORTS")
+    if initial_om_report_setting is not None:
+        os.environ["OPENMDAO_REPORTS"] = initial_om_report_setting
+    os.environ.pop("TMP_OPENMDAO_REPORTS", None)
+
     # remove files that were created in h2integrate/core/test/test_recorder.py
     if os.getenv("TEST_RECORDER_OUTPUT_EXAMPLE") is not None:
         test_dir = (
