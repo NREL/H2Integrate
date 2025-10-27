@@ -86,14 +86,18 @@ class NPVFinance(om.ExplicitComponent):
             )
             if NPV_desc_str == "":
                 self.NPV_str = f"NPV_{NPV_base_str}"
+                self.output_txt = f"{NPV_base_str}"
             else:
                 self.NPV_str = f"NPV_{NPV_base_str}_{NPV_desc_str}"
+                self.output_txt = f"{NPV_base_str}_{NPV_desc_str}"
 
         # TODO: update below with standardized naming
         if self.options["commodity_type"] == "electricity":
             commodity_units = "kW*h/year"
+            commodity_price_units = "USD/kW/h"
         else:
             commodity_units = "kg/year"
+            commodity_price_units = "USD/kg"
 
         self.add_output(self.NPV_str, val=0.0, units="USD")
 
@@ -132,7 +136,9 @@ class NPVFinance(om.ExplicitComponent):
             self.add_input("electrolyzer_time_until_replacement", units="h")
 
         self.add_input(
-            "commodity_sell_price", val=self.config.commodity_sell_price, units=commodity_units
+            f"sell_price_{self.output_txt}",
+            val=self.config.commodity_sell_price,
+            units=commodity_price_units,
         )
 
     def compute(self, inputs, outputs):
@@ -177,7 +183,7 @@ class NPVFinance(om.ExplicitComponent):
         else:
             annual_production = float(inputs["co2_capture_kgpy"])
 
-        income = float(inputs["commodity_sell_price"]) * annual_production
+        income = float(inputs[f"sell_price_{self.output_txt}"]) * annual_production
         cash_inflow = np.concatenate(([0], income * np.ones(self.config.plant_life)))
         cost_breakdown = {f"Cash Inflow of Selling {self.options['commodity_type']}": cash_inflow}
         initial_investment_cost = 0
@@ -247,7 +253,7 @@ class NPVFinance(om.ExplicitComponent):
                 filename_base = f"{fdesc}_{self.options['commodity_type']}_NPVFinance"
             else:
                 desc = (
-                    self.NPV_str.replace("_NPV", "")
+                    self.NPV_str.replace("NPV_", "")
                     .replace(self.options["commodity_type"], "")
                     .strip("_")
                 )

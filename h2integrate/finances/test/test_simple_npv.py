@@ -73,6 +73,14 @@ def test_simple_npv(npv_finance_inputs, fake_filtered_tech_config, fake_cost_dic
 
     prob.run_model()
 
+    with subtests.test("Sell price"):
+        assert (
+            pytest.approx(
+                prob.get_val("npv.sell_price_electricity_no1", units="USD/kW/h"), rel=1e-6
+            )
+            == npv_finance_inputs["commodity_sell_price"]
+        )
+
     with subtests.test("NPV"):
         assert (
             pytest.approx(prob.get_val("npv.NPV_electricity_no1", units="USD")[0], rel=1e-6)
