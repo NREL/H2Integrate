@@ -1,0 +1,94 @@
+from attrs import field, define
+
+from h2integrate.core.utilities import CostModelBaseConfig, merge_shared_inputs
+from h2integrate.core.validators import contains, gte_zero, range_val
+from h2integrate.core.model_baseclasses import CostModelBaseClass
+
+
+@define
+class GenericStorageCostConfig(CostModelBaseConfig):
+    """Configuration class for the GenericStorageCostModel with costs based on storage
+    capacity and charge rate.
+
+    Attributes:
+        capacity_capex (float|int): battery energy capital cost in $/capacity_units
+        charge_capex (float|int): battery power capital cost in $/charge_units/h
+        opex_fraction (float): annual operating cost as a fraction of the total system cost.
+        cost_year (int): dollar year corresponding to input costs
+        max_capacity (float): Maximum storage capacity of the battery (in non-rate units,
+            e.g., "kW*h" if `commodity_units` is "kW").
+        max_charge_rate (float): Maximum rate at which the battery can be charged (in units
+            per time step, e.g., "kW/time step").
+        commodity_units (str): Units of the storage resource used to define the charge rate.
+            max_capacity and max_charge_rate. Must have a base of Watts ('W') or grams ('g/h')
+            or heat ('MMBtu/h')
+    """
+
+    capacity_capex: float | int = field(validator=gte_zero)
+    charge_capex: float | int = field(validator=gte_zero)
+    opex_fraction: float = field(validator=range_val(0, 1))
+    max_capacity: float = field()
+    max_charge_rate: float = field()
+    commodity_units: str = field(
+        validator=contains(["W", "kW", "MW", "GW", "TW", "g/h", "kg/h", "t/h", "MMBtu/h"])
+    )
+
+
+class GenericStorageCostModel(CostModelBaseClass):
+    """This cost model is based on the equations in the "Utility-Scale Battery Storage"
+    sheet in the ATB 2024 workbook.
+
+    - Cell E29 has the equation for CapEx. Also found in the cells for the CapEx section.
+    - Cell G121 (all the cells in the Fixed Operation and Maintenance Expenses
+        section) include the equation to calculate fixed o&m costs.
+
+    Total_CapEx = capacity_capex * Storage_Hours + charge_capex
+
+    - Total_CapEx: Total System Cost (USD/charge_units)
+    - Storage_Hours: Storage Duration (hr)
+    - capacity_capex: Storage Capacity Cost (USD/capacity_units)
+    - charge_capex: Storage Charge Cost (USD/charge_units)
+
+    """
+
+    def setup(self):
+        self.config = GenericStorageCostConfig.from_dict(
+            merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost"), strict=False
+        )
+
+        super().setup()
+
+        charge_units = self.config.commodity_units
+        if self.config.commodity_units in ["W", "kW", "MW", "GW", "TW"]:
+            capacity_units = f"{self.config.commodity_units}*h"
+        else:
+            capacity_units = self.config.commodity_units.split("/")[0]
+
+        self.add_input(
+            "max_charge_rate",
+            val=self.config.max_charge_rate,
+            units=charge_units,
+            desc="Storage charge/discharge rate",
+        )
+        self.add_input(
+            "max_capacity",
+            val=self.config.max_capacity,
+            units=capacity_units,
+            desc="Storage storage capacity",
+        )
+
+    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
+        storage_duration_hrs = 0.0
+
+        if inputs["max_charge_rate"] > 0:
+            storage_duration_hrs = inputs["max_capacity"] / inputs["max_charge_rate"]
+
+        # CapEx equation from Cell E29
+        total_system_cost = (
+            storage_duration_hrs * self.config.capacity_capex
+        ) + self.config.charge_capex
+        capex = total_system_cost * inputs["max_charge_rate"]
+        # OpEx equation from cells in the Fixed Operation and Maintenance Expenses section
+        opex = self.config.opex_fraction * capex
+        outputs["CapEx"] = capex
+        outputs["OpEx"] = opex
