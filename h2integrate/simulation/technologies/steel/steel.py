@@ -17,8 +17,8 @@ class Feedstocks:
     Attributes:
         natural_gas_prices (Dict[str, float]):
             Natural gas costs, indexed by year ($/GJ).
-        excess_oxygen (float):
-            Excess oxygen produced (kgO2), default = 395.
+        unused_oxygen (float):
+            Unused oxygen produced (kgO2), default = 395.
         lime_unitcost (float):
             Cost per metric ton of lime ($/metric ton).
         lime_transport_cost (float):
@@ -61,7 +61,7 @@ class Feedstocks:
     """
 
     natural_gas_prices: dict[str, float]
-    excess_oxygen: float = 395
+    unused_oxygen: float = 395
     lime_unitcost: float = 122.1
     lime_transport_cost: float = 0.0  # USD/metric ton lime
     carbon_unitcost: float = 236.97
@@ -834,7 +834,7 @@ def run_steel_finance_model(
 
     pf.add_coproduct(
         name="Oxygen sales",
-        usage=feedstocks.excess_oxygen,
+        usage=feedstocks.unused_oxygen,
         unit="kg O2 per metric ton of steel",
         cost=feedstocks.oxygen_market_price,
         escalation=config.gen_inflation,

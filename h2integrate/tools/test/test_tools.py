@@ -53,3 +53,20 @@ def test_tech_config_modifier(subtests):
             pytest.approx(model.prob.get_val("finance_subgroup_hydrogen.LCOH")[0], rel=1e-3)
             == 5.22644320514729
         )
+    with subtests.test("int repeat without run setup modify_tech_config"):
+        case = cases["Int Test"]
+        model = modify_tech_config(model, case, run_setup=False)
+        model.run()
+        assert (
+            pytest.approx(model.prob.get_val("finance_subgroup_hydrogen.LCOH")[0], rel=1e-3)
+            == 5.22644320514729  # should still "str" test value
+        )
+    with subtests.test("int repeat with run setup outside modify_tech_config"):
+        case = cases["Int Test"]
+        model = modify_tech_config(model, case, run_setup=False)
+        model.setup()
+        model.run()
+        assert (
+            pytest.approx(model.prob.get_val("finance_subgroup_hydrogen.LCOH")[0], rel=1e-3)
+            == 5.4601971211592115  # should still "str" test value
+        )

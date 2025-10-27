@@ -108,13 +108,16 @@ def load_tech_config_cases(case_file):
     return tech_config_cases
 
 
-def modify_tech_config(h2i_model, tech_config_case):
+def modify_tech_config(h2i_model, tech_config_case, run_setup=True):
     """Modify particular tech_config values on an existing H2I model before it is run.
 
     Args:
         h2i_model: H2IntegrateModel that has been set up but not run.
         tech_config_case (pd.Series): Series that was indexed from tech_config_cases
             DataFrame containing the parameter values to modify.
+        run_setup (bool): defaults to True. In case the user wishes to delay calling setup,
+            run_setup may be set to False, this may be useful to allow multiple calls to
+            modify_tech_config prior to running a simulation.
 
     Returns:
         H2IntegrateModel: The H2IntegrateModel with modified tech_config values.
@@ -127,5 +130,8 @@ def modify_tech_config(h2i_model, tech_config_case):
         while type(index_list[-1]) is not str:
             index_list = index_list[:-1]
         set_in_dict(h2i_model.technology_config, index_list, cast_by_name(data_type, value))
+
+    if run_setup:
+        h2i_model.setup()
 
     return h2i_model
