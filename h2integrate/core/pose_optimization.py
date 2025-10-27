@@ -436,12 +436,15 @@ class PoseOptimization:
         """
         folder_output = self.config["general"]["folder_output"]
 
-        # Check that the output folder exists and create it if needed
-        if not Path(folder_output).exists():
-            Path.mkdir(folder_output, parents=True)
         # Set recorder on the OpenMDAO driver level using the `optimization_log`
         # filename supplied in the optimization yaml
+        recorder_options = ["record_inputs", "record_outputs", "record_residuals"]
+
         if self.config["recorder"].get("flag", False):
+            # Check that the output folder exists and create it if needed
+            if not Path(folder_output).exists():
+                Path.mkdir(folder_output, parents=True, exist_ok=True)
+
             overwrite_recorder = self.config["recorder"].get("overwrite_recorder", False)
             recorder_path = Path(folder_output) / self.config["recorder"]["file"]
 
@@ -472,19 +475,63 @@ class PoseOptimization:
                         # but do have the same basename, then add a zero to the file basename
                         recorder_path = Path(folder_output) / f"{file_base}0.sql"
 
-            # Create recorder and add to model
+            recorder_attachment = (
+                self.config["recorder"].get("recorder_attachment", "driver").lower()
+            )
+            allowed_attachments = ["driver", "model"]
+            if recorder_attachment not in allowed_attachments:
+                msg = (
+                    f"Invalid recorder attachment '{recorder_attachment}'. "
+                    f"Currently supported options are {allowed_attachments}. "
+                    "We recommend using 'driver' if running an optimization or DOE in parallel."
+                )
+                raise ValueError(msg)
+
+            # Create recorder
             recorder = om.SqliteRecorder(recorder_path)
-            opt_prob.model.add_recorder(recorder)
 
-            opt_prob.model.recording_options["record_inputs"] = True
-            opt_prob.model.recording_options["record_outputs"] = True
-            opt_prob.model.recording_options["record_residuals"] = True
+            if recorder_attachment == "model":
+                # add the recorder to the model
+                recorder_options += ["options_excludes"]
 
-            if self.config["recorder"].get("includes", False):
-                opt_prob.model.recording_options["includes"] = self.config["recorder"]["includes"]
+                opt_prob.model.add_recorder(recorder)
 
-            if self.config["recorder"].get("excludes", False):
-                opt_prob.model.recording_options["excludes"] = self.config["recorder"]["excludes"]
+                for recorder_opt in recorder_options:
+                    if recorder_opt in self.config["recorder"]:
+                        opt_prob.model.recording_options[recorder_opt] = self.config[
+                            "recorder"
+                        ].get(recorder_opt)
+
+                opt_prob.model.recording_options["includes"] = self.config["recorder"].get(
+                    "includes", ["*"]
+                )
+                opt_prob.model.recording_options["excludes"] = self.config["recorder"].get(
+                    "excludes", ["*resource_data"]
+                )
+                return
+
+            if recorder_attachment == "driver":
+                recorder_options += [
+                    "record_constraints",
+                    "record_derivative",
+                    "record_desvars",
+                    "record_objectives",
+                ]
+                # add the recorder to the driver
+                opt_prob.driver.add_recorder(recorder)
+
+                for recorder_opt in recorder_options:
+                    if recorder_opt in self.config["recorder"]:
+                        opt_prob.driver.recording_options[recorder_opt] = self.config[
+                            "recorder"
+                        ].get(recorder_opt)
+
+                opt_prob.driver.recording_options["includes"] = self.config["recorder"].get(
+                    "includes", ["*"]
+                )
+                opt_prob.driver.recording_options["excludes"] = self.config["recorder"].get(
+                    "excludes", ["*resource_data"]
+                )
 
     def set_restart(self, opt_prob):
         """
