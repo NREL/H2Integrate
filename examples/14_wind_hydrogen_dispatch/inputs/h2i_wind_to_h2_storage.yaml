@@ -1,5 +1,4 @@
 name: "H2Integrate_config"
-
 system_summary: "This reference hybrid plant is located in Minnesota and contains wind, electrolysis, and hydrogen storage technologies."
 
 driver_config: "driver_config.yaml"
