@@ -478,11 +478,12 @@ class PoseOptimization:
             recorder_attachment = (
                 self.config["recorder"].get("recorder_attachment", "driver").lower()
             )
-            if recorder_attachment not in ["driver", "model"]:
+            allowed_attachments = ["driver", "model"]
+            if recorder_attachment not in allowed_attachments:
                 msg = (
-                    f"Invalid recorder attachment {recorder_attachment}. Currently supported "
-                    "options are 'driver' and 'model'. It is recommended to use 'driver' if "
-                    "running an optimization in parallel."
+                    f"Invalid recorder attachment '{recorder_attachment}'. "
+                    f"Currently supported options are {allowed_attachments}. "
+                    "We recommend using 'driver' if running an optimization or DOE in parallel."
                 )
                 raise ValueError(msg)
 
@@ -496,7 +497,7 @@ class PoseOptimization:
                 opt_prob.model.add_recorder(recorder)
 
                 for recorder_opt in recorder_options:
-                    if self.config["recorder"].get(recorder_opt, None) is not None:
+                    if recorder_opt in self.config["recorder"]:
                         opt_prob.model.recording_options[recorder_opt] = self.config[
                             "recorder"
                         ].get(recorder_opt)
@@ -520,7 +521,7 @@ class PoseOptimization:
                 opt_prob.driver.add_recorder(recorder)
 
                 for recorder_opt in recorder_options:
-                    if self.config["recorder"].get(recorder_opt, None) is not None:
+                    if recorder_opt in self.config["recorder"]:
                         opt_prob.driver.recording_options[recorder_opt] = self.config[
                             "recorder"
                         ].get(recorder_opt)
