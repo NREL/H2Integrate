@@ -2,7 +2,7 @@ from attrs import field, define
 from openmdao.utils import units
 
 from h2integrate.core.utilities import CostModelBaseConfig, merge_shared_inputs
-from h2integrate.core.validators import gt_zero, contains, range_val
+from h2integrate.core.validators import contains, gte_zero, range_val
 from h2integrate.core.model_baseclasses import CostModelBaseClass
 
 
@@ -29,8 +29,8 @@ class ATBBatteryCostConfig(CostModelBaseConfig):
             max_capacity and max_charge_rate. Must have a base of Watts ('W').
     """
 
-    energy_capex: float | int = field(validator=gt_zero)
-    power_capex: float | int = field(validator=gt_zero)
+    energy_capex: float | int = field(validator=gte_zero)
+    power_capex: float | int = field(validator=gte_zero)
     opex_fraction: float = field(validator=range_val(0, 1))
     max_capacity: float = field()
     max_charge_rate: float = field()
@@ -78,23 +78,23 @@ class ATBBatteryCostModel(CostModelBaseClass):
         storage_duration_hrs = 0.0
 
         # convert the input capacity to units of kW*h
-        max_capacity = units.convert_units(
+        max_capacity_kWh = units.convert_units(
             inputs["max_capacity"], f"{self.config.commodity_units}*h", "kW*h"
         )
 
         # convert the input charge rate to units of kW
-        max_charge_rate = units.convert_units(
+        max_charge_rate_kW = units.convert_units(
             inputs["max_charge_rate"], self.config.commodity_units, "kW"
         )
 
-        if max_charge_rate > 0:
-            storage_duration_hrs = max_capacity / max_charge_rate
+        if max_charge_rate_kW > 0:
+            storage_duration_hrs = max_capacity_kWh / max_charge_rate_kW
 
         # CapEx equation from Cell E29
         total_system_cost = (
             storage_duration_hrs * self.config.energy_capex
         ) + self.config.power_capex
-        capex = total_system_cost * max_charge_rate
+        capex = total_system_cost * max_charge_rate_kW
         # OpEx equation from cells in the Fixed Operation and Maintenance Expenses section
         opex = self.config.opex_fraction * capex
         outputs["CapEx"] = capex
