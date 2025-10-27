@@ -9,6 +9,7 @@ from h2integrate.transporters.generic_summer import GenericSummerPerformanceMode
 from h2integrate.converters.hopp.hopp_wrapper import HOPPComponent
 from h2integrate.converters.solar.solar_pysam import PYSAMSolarPlantPerformanceModel
 from h2integrate.storage.hydrogen.eco_storage import H2Storage
+from h2integrate.storage.battery.pysam_battery import PySAMBatteryPerformanceModel
 from h2integrate.transporters.generic_combiner import GenericCombinerPerformanceModel
 from h2integrate.transporters.generic_splitter import GenericSplitterPerformanceModel
 from h2integrate.converters.nitrogen.simple_ASU import SimpleASUCostModel, SimpleASUPerformanceModel
@@ -17,10 +18,6 @@ from h2integrate.storage.simple_generic_storage import SimpleGenericStorage
 from h2integrate.storage.hydrogen.tank_baseclass import (
     HydrogenTankCostModel,
     HydrogenTankPerformanceModel,
-)
-from h2integrate.controllers.openloop_controllers import (
-    DemandOpenLoopController,
-    PassThroughOpenLoopController,
 )
 from h2integrate.converters.hydrogen.wombat_model import WOMBATElectrolyzerModel
 from h2integrate.converters.wind.wind_plant_pysam import PYSAMWindPlantPerformanceModel
@@ -61,6 +58,9 @@ from h2integrate.converters.natural_gas.natural_gas_cc_ct import (
 )
 from h2integrate.converters.hydrogen.singlitico_cost_model import SingliticoCostModel
 from h2integrate.converters.co2.marine.direct_ocean_capture import DOCCostModel, DOCPerformanceModel
+from h2integrate.control.control_strategies.pyomo_controllers import (
+    HeuristicLoadFollowingController,
+)
 from h2integrate.resource.solar.nrel_developer_goes_api_models import (
     GOESTMYSolarAPI,
     GOESConusSolarAPI,
@@ -70,6 +70,10 @@ from h2integrate.resource.solar.nrel_developer_goes_api_models import (
 from h2integrate.converters.hydrogen.eco_tools_pem_electrolyzer import (
     ECOElectrolyzerPerformanceModel,
 )
+from h2integrate.control.control_strategies.openloop_controllers import (
+    DemandOpenLoopController,
+    PassThroughOpenLoopController,
+)
 from h2integrate.converters.water_power.hydro_plant_run_of_river import (
     RunOfRiverHydroCostModel,
     RunOfRiverHydroPerformanceModel,
@@ -78,6 +82,9 @@ from h2integrate.converters.hydrogen.geologic.natural_geoh2_plant import (
     NaturalGeoH2CostModel,
     NaturalGeoH2FinanceModel,
     NaturalGeoH2PerformanceModel,
+)
+from h2integrate.control.control_rules.converters.generic_converter import (
+    PyomoDispatchGenericConverter,
 )
 from h2integrate.converters.co2.marine.ocean_alkalinity_enhancement import (
     OAECostModel,
@@ -91,6 +98,9 @@ from h2integrate.converters.hydrogen.geologic.stimulated_geoh2_plant import (
     StimulatedGeoH2CostModel,
     StimulatedGeoH2FinanceModel,
     StimulatedGeoH2PerformanceModel,
+)
+from h2integrate.control.control_rules.storage.pyomo_storage_rule_baseclass import (
+    PyomoRuleStorageBaseclass,
 )
 
 
@@ -157,6 +167,7 @@ supported_models = {
     # Simple Summers
     "summer": GenericSummerPerformanceModel,
     # Storage
+    "pysam_battery": PySAMBatteryPerformanceModel,
     "h2_storage": H2Storage,
     "hydrogen_tank_performance": HydrogenTankPerformanceModel,
     "hydrogen_tank_cost": HydrogenTankCostModel,
@@ -165,6 +176,10 @@ supported_models = {
     # Control
     "pass_through_controller": PassThroughOpenLoopController,
     "demand_open_loop_controller": DemandOpenLoopController,
+    "heuristic_load_following_controller": HeuristicLoadFollowingController,
+    # Dispatch
+    "pyomo_dispatch_generic_converter": PyomoDispatchGenericConverter,
+    "pyomo_dispatch_generic_storage": PyomoRuleStorageBaseclass,
     # Feedstock
     "feedstock_performance": FeedstockPerformanceModel,
     "feedstock_cost": FeedstockCostModel,
