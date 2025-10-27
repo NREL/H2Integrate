@@ -411,6 +411,7 @@ def find_file(filename: str | Path, root_folder: str | Path | None = None):
 
     # 3. check for file relative to the H2Integrate package root
     files_h2i = list(ROOT_DIR.parent.glob(f"**/{filename}"))
+    files_h2i = [file for file in files_h2i if "build" not in file.parts]
     if len(files_h2i) == 1:
         return files_h2i[0].absolute()
 
@@ -430,9 +431,9 @@ def find_file(filename: str | Path, root_folder: str | Path | None = None):
             f"the root directory {root_folder}."
         )
     raise ValueError(
-        f"Unexpected situation occurred: {len(files_cwd)} cwd files found, "
-        f"{len(files_h2i)} h2i files, {len(files)} root files."
-        f"files_h2i is {files_h2i}"
+        f"Cannot find unique file: found {len(files_cwd)} files relative to cwd, "
+        f"{len(files_h2i)} files relative to H2Integrate root directory, "
+        f"{len(files)} files relative to the root folder."
     )
 
 
