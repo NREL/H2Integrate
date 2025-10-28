@@ -1,4 +1,4 @@
-# Defining files in H2I
+# Specifying Filepaths in H2I
 
 Filepaths in H2I can be specified in a number of ways. Files are looked for using the `find_file()` method, which looks for files in the following order:
 1. With respect to a specified root folder
