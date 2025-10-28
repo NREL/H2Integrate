@@ -1,7 +1,7 @@
 from h2integrate.finances.profast_financial import ProFastComp
 
 
-class ProFASTNPV(ProFastComp):
+class ProFastNPV(ProFastComp):
     def add_model_specific_outputs(self):
         self.add_output(
             f"NPV_{self.output_txt}",

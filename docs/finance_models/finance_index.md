@@ -18,7 +18,9 @@ The `commodity_type` and `description` are used in the finance model naming conv
 (finance:supportedmodels)=
 ## Currently supported general finance models
 
-- [``ProFastComp``](profastcomp:profastcompmodel): calculates levelized cost of commodity using ProFAST.
+- [``ProFastComp``](profastcomp:profastcompmodel): calculates levelized cost of commodity using [ProFAST](https://github.com/NREL/ProFAST).
+- [``ProFastNPV``](profastnpv:profastnpvmodel): calculates the net present value of a commodity using [ProFAST](https://github.com/NREL/ProFAST).
+- [``NPVFinance``](npvfinance:npvfinancemodel): calculates the net present value of a commodity using the [Numpy Financial npv](https://numpy.org/numpy-financial/latest/npv.html#numpy_financial.npv) method.
 
 ## Custom finance models
 

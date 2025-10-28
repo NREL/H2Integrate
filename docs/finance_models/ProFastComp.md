@@ -1,7 +1,7 @@
 
 (profastcomp:profastcompmodel)=
 # ProFastComp
-The `ProFastComp` finance model calculates levelized cost of commodity using [ProFAST](https://github.com/NREL/ProFAST).
+The `ProFastComp` finance model calculates levelized cost of a commodity using [ProFAST](https://github.com/NREL/ProFAST).
 
 The inputs, outputs, and naming convention for the `ProFastComp` model are outlined in this doc page.
 
@@ -31,6 +31,10 @@ finance_parameters:
       unit: "$/year" #optional unit of the cost. Defaults to $/year
       usage: 1.0 #usage multiplier, most commonly is set to 1 and defaults to 1.0
 
+```
+
+```{note}
+If you are setting `save_profast_to_file` to `True` and are using multiple finance subgroups, use the `commodity_desc` in each unique finance subgroup to ensure the output files get written correctly for each subgroup.
 ```
 
 (profastcomp:direct_opt)=

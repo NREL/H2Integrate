@@ -2,7 +2,7 @@ import pytest
 import openmdao.api as om
 from pytest import fixture
 
-from h2integrate.finances.profast_npv import ProFASTNPV
+from h2integrate.finances.profast_npv import ProFastNPV
 
 
 @fixture
@@ -101,7 +101,7 @@ def test_profast_npv_no1(profast_inputs_no1, fake_filtered_tech_config, fake_cos
         },
         "finance_parameters": {"model_inputs": profast_inputs_no1},
     }
-    pf = ProFASTNPV(
+    pf = ProFastNPV(
         driver_config={},
         plant_config=plant_config,
         tech_config=fake_filtered_tech_config,
@@ -141,7 +141,7 @@ def test_profast_npv_no1_change_sell_price(
         },
         "finance_parameters": {"model_inputs": profast_inputs_no1},
     }
-    pf = ProFASTNPV(
+    pf = ProFastNPV(
         driver_config={},
         plant_config=plant_config,
         tech_config=fake_filtered_tech_config,
@@ -150,7 +150,7 @@ def test_profast_npv_no1_change_sell_price(
     )
     prob.model.add_subsystem("pf", pf)
 
-    pf = ProFASTNPV(
+    pf = ProFastNPV(
         driver_config={},
         plant_config=plant_config,
         tech_config=fake_filtered_tech_config,
@@ -220,7 +220,7 @@ def test_profast_npv_no2(profast_inputs_no2, fake_filtered_tech_config, fake_cos
         },
         "finance_parameters": {"model_inputs": profast_inputs_no2},
     }
-    pf = ProFASTNPV(
+    pf = ProFastNPV(
         driver_config={},
         plant_config=plant_config,
         tech_config=fake_filtered_tech_config,

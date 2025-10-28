@@ -9,6 +9,8 @@
 - Added framework to run heuristic load following dispatch for storage technologies
 - Added PySAM battery model as a storage technology performance model
 - Added `create_om_reports` option to driver config to enable/disable OpenMDAO reports (N2 diagrams, etc.)
+- Added `ProFastNPV`, a finance model using ProFAST to calculate NPV of the commodity
+- Added `NPVFinance`, a simple finance model that uses Numpy Financial npv to caluclate the npv from the cash flows
 
 ## 0.4.0 [October 1, 2025]
 

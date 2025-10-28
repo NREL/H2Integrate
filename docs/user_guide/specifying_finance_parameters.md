@@ -6,7 +6,7 @@ The `finance_parameters` section of the `plant_config` defines the financial sub
 The `plant_life` parameter from the `plant` section of the `plant_config` is also used in finance calculations as the operating life of the plant.
 ```
 
-At minimum, `finance_parameters` must include:
+If a user is computing finances, at minimum, `finance_parameters` must include:
 - `cost_adjustment_parameters`:
   - `target_dollar_year`: dollar-year to convert costs to.
   - `cost_year_adjustment_inflation`: used to adjust costs for each technology from its native cost year to the `target_dollar_year` (see [details on cost years and cost models here](cost:cost_years))

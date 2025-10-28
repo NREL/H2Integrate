@@ -18,12 +18,6 @@ parts:
   - file: user_guide/postprocessing_results
   - file: user_guide/how_to_interface_with_user_defined_model
   - file: user_guide/how_to_run_several_cases_in_sequence
-  - file: user_guide/specifying_finance_parameters
-    sections:
-    - file: user_guide/cost_years
-    - file: finance_models/finance_index
-      sections:
-      - file: finance_models/ProFastComp
 
 - caption: Technology Models
   chapters:
@@ -52,6 +46,16 @@ parts:
 - caption: Control
   chapters:
   - file: control/control_overview.md
+
+- caption: Finance Models
+  chapters:
+    - file: user_guide/specifying_finance_parameters
+    - file: user_guide/cost_years
+    - file: finance_models/finance_index
+      sections:
+      - file: finance_models/ProFastComp
+      - file: finance_models/ProFastNPV
+      - file: finance_models/npv_finance
 
 - caption: Examples
   chapters:
