@@ -168,32 +168,3 @@ def tech_yaml(instance: dict, foutput: str) -> None:
         foutput += ".yaml"
     write_yaml(instance, foutput)
     return foutput
-
-
-def write_plant_yaml(instance: dict, foutput: str) -> None:
-    _validate(instance, fschema_plant, defaults=False)
-
-    # Ensure the output filename does not end with .yaml or .yml
-    if foutput.endswith(".yaml"):
-        foutput = foutput[:-5]
-    elif foutput.endswith(".yml"):
-        foutput = foutput[:-4]
-    sfx_str = "-plant.yaml"
-
-    instance2 = simple_types(instance)
-    write_yaml(instance2, foutput + sfx_str)
-    return foutput + sfx_str
-
-
-def write_analysis_yaml(instance: dict, foutput: str) -> None:
-    _validate(instance, fschema_driver, defaults=False)
-
-    # Ensure the output filename does not end with .yaml or .yml
-    if foutput.endswith(".yaml"):
-        foutput = foutput[:-5]
-    elif foutput.endswith(".yml"):
-        foutput = foutput[:-4]
-
-    sfx_str = "-analysis.yaml"
-    write_yaml(instance, foutput + sfx_str)
-    return foutput + sfx_str

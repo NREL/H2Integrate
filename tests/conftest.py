@@ -8,6 +8,12 @@ from h2integrate.resource.utilities.nrel_developer_api_keys import set_nrel_key_
 
 
 def pytest_sessionstart(session):
+    initial_om_report_setting = os.getenv("OPENMDAO_REPORTS")
+    if initial_om_report_setting is not None:
+        os.environ["TMP_OPENMDAO_REPORTS"] = initial_om_report_setting
+
+    os.environ["OPENMDAO_REPORTS"] = "none"
+
     # Set a dummy API key
     os.environ["NREL_API_KEY"] = "a" * 40
     set_nrel_key_dot_env()
@@ -32,3 +38,8 @@ def pytest_sessionfinish(session, exitstatus):
     if user_dir is not None:
         os.environ["RESOURCE_DIR"] = user_dir
     os.environ.pop("TEMP_RESOURCE_DIR", None)
+
+    initial_om_report_setting = os.getenv("TMP_OPENMDAO_REPORTS")
+    if initial_om_report_setting is not None:
+        os.environ["OPENMDAO_REPORTS"] = initial_om_report_setting
+    os.environ.pop("TMP_OPENMDAO_REPORTS", None)
