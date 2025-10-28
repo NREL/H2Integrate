@@ -62,25 +62,89 @@ class H2IntegrateModel:
         self.create_driver_model()
 
     def load_config(self, config_file):
+        """Load and validate configuration files for the H2I model.
+
+        This method loads the main configuration and the three component configuration files
+        (driver, technology, and plant configurations). Each configuration can be provided
+        either as a dictionary object or as a filepath. When filepaths are provided,
+        the method resolves them using multiple search strategies.
+
+        Args:
+            config_file (dict | str | Path): Main configuration containing references to
+                driver, technology, and plant configurations. Can be:
+                - A dictionary containing the configuration data directly
+                - A string or Path object pointing to a YAML file containing the configuration
+
+        Behavior:
+            - If `config_file` is a dict: Uses it directly as the main configuration
+            - If `config_file` is a path: Uses `get_path()` to resolve and load the YAML file
+              from multiple search locations (absolute path, relative to CWD, relative to
+              H2Integrate package)
+
+            For each component config (driver_config, technology_config, plant_config):
+            - If the config value is a dict: Validates it directly using the appropriate
+              validation function (`load_driver_yaml`, `load_tech_yaml`, `load_plant_yaml`)
+            - If the config value is a path string:
+                - When main config was loaded from file: Uses `find_file()` to search
+                  relative to the main config file's directory first, then falls back
+                  to other search locations (CWD, H2Integrate package, glob patterns)
+                - When main config was provided as dict: Uses `get_path()` with standard
+                  search strategy (absolute, relative to CWD, relative to H2Integrate package)
+
+        Sets:
+            self.name (str): Name of the system from main config
+            self.system_summary (str): Summary description from main config
+            self.driver_config (dict): Validated driver configuration
+            self.technology_config (dict): Validated technology configuration
+            self.plant_config (dict): Validated plant configuration
+            self.driver_config_path (Path | None): Path to driver config file (None if dict)
+            self.tech_config_path (Path | None): Path to technology config file (None if dict)
+            self.plant_config_path (Path | None): Path to plant config file (None if dict)
+            self.tech_parent_path (Path | None): Parent directory of technology config file
+            self.plant_parent_path (Path | None): Parent directory of plant config file
+
+        Note:
+            The parent path attributes (tech_parent_path, plant_parent_path) are used later
+            for resolving relative paths to custom models and other referenced files within
+            the technology and plant configurations.
+
+        Example:
+            >>> # Using filepaths
+            >>> model = H2IntegrateModel("main_config.yaml")
+
+            >>> # Using mixed dict and filepaths
+            >>> config = {
+            ...     "name": "my_system",
+            ...     "driver_config": "driver.yaml",
+            ...     "technology_config": {"technologies": {...}},
+            ...     "plant_config": "plant.yaml",
+            ... }
+            >>> model = H2IntegrateModel(config)
+        """
         config_path = None
         tech_path = None
         driver_path = None
         plant_path = None
         tech_parent_path = None
         plant_parent_path = None
+
         if isinstance(config_file, dict):
+            # Use dictionary directly without filepath context
             config = config_file
         else:
+            # Resolve filepath and load YAML content
             config_path = get_path(config_file)
             config = load_yaml(config_path)
 
         self.name = config.get("name")
         self.system_summary = config.get("system_summary")
 
-        # Load each config file as yaml and save as dict on this object
+        # Load driver configuration with validation
         if isinstance(config.get("driver_config"), dict):
+            # Driver config provided as embedded dictionary
             self.driver_config = load_driver_yaml(config.get("driver_config"))
         else:
+            # Driver config provided as filepath - resolve location
             if config_path is None:
                 driver_path = get_path(config.get("driver_config"))
             else:
@@ -88,31 +152,42 @@ class H2IntegrateModel:
 
             self.driver_config = load_driver_yaml(driver_path)
 
+        # Load technology configuration with validation
         if isinstance(config.get("technology_config"), dict):
+            # Technology config provided as embedded dictionary
             self.technology_config = load_tech_yaml(config.get("technology_config"))
         else:
+            # Technology config provided as filepath - resolve location
             if config_path is None:
                 tech_path = get_path(config.get("technology_config"))
             else:
                 tech_path = find_file(config.get("technology_config"), config_path.parent)
 
+            # Store parent directory for resolving custom model paths later
             tech_parent_path = tech_path.parent
             self.technology_config = load_tech_yaml(tech_path)
 
+        # Load plant configuration with validation
         if isinstance(config.get("plant_config"), dict):
+            # Plant config provided as embedded dictionary
             self.plant_config = load_plant_yaml(config.get("plant_config"))
         else:
+            # Plant config provided as filepath - resolve location
             if config_path is None:
                 plant_path = get_path(config.get("plant_config"))
             else:
                 plant_path = find_file(config.get("plant_config"), config_path.parent)
+
+            # Store parent directory for resolving custom model paths later
             plant_parent_path = plant_path.parent
             self.plant_config = load_plant_yaml(plant_path)
 
+        # Store filepaths for reference (None if configs were provided as dicts)
         self.driver_config_path = driver_path
         self.tech_config_path = tech_path
         self.plant_config_path = plant_path
 
+        # Store parent directories for custom model resolution in collect_custom_models()
         self.tech_parent_path = tech_parent_path
         self.plant_parent_path = plant_parent_path
 
