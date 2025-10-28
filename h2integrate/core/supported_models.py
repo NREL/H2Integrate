@@ -4,8 +4,8 @@ from h2integrate.transporters.pipe import PipePerformanceModel
 from h2integrate.transporters.cable import CablePerformanceModel
 from h2integrate.finances.profast_npv import ProFastNPV
 from h2integrate.converters.steel.steel import SteelPerformanceModel, SteelCostAndFinancialModel
+from h2integrate.finances.profast_finance import ProFastComp
 from h2integrate.converters.wind.wind_plant import WindPlantCostModel, WindPlantPerformanceModel
-from h2integrate.finances.profast_financial import ProFastComp
 from h2integrate.finances.simple_npv_finance import NPVFinance
 from h2integrate.transporters.generic_summer import GenericSummerPerformanceModel
 from h2integrate.converters.hopp.hopp_wrapper import HOPPComponent

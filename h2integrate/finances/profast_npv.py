@@ -1,4 +1,4 @@
-from h2integrate.finances.profast_financial import ProFastComp
+from h2integrate.finances.profast_finance import ProFastComp
 
 
 class ProFastNPV(ProFastComp):
