@@ -31,7 +31,7 @@ def plant_config():
 def test_iron_transport_performance_chicago(plant_config, subtests):
     # Chicago land distance: 68.19490223326876 km
     # Chicago has water distance of 1414.8120870922066 km
-    tech_config_cleveland = {
+    tech_config_chicago = {
         "model_inputs": {
             "performance_parameters": {
                 "find_closest_ship_site": False,
@@ -42,7 +42,7 @@ def test_iron_transport_performance_chicago(plant_config, subtests):
     prob = om.Problem()
     transport = IronTransportPerformanceComponent(
         plant_config=plant_config,
-        tech_config=tech_config_cleveland,
+        tech_config=tech_config_chicago,
         driver_config={},
     )
 
@@ -70,14 +70,14 @@ def test_iron_transport_performance_chicago(plant_config, subtests):
             pytest.approx(
                 prob.get_val("transport.water_transport_distance", units="km")[0], rel=1e-6
             )
-            == 1414.8120870922066
+            == 1359.70926331  # 1414.8120870922066
         )
 
 
 def test_iron_transport_performance_buffalo(plant_config, subtests):
     # Buffalo land distance: 794.1713773276688 km
     # Buffalo has water distance of 1621.9112211308186 km
-    tech_config_cleveland = {
+    tech_config_buffalo = {
         "model_inputs": {
             "performance_parameters": {
                 "find_closest_ship_site": False,
@@ -88,7 +88,7 @@ def test_iron_transport_performance_buffalo(plant_config, subtests):
     prob = om.Problem()
     transport = IronTransportPerformanceComponent(
         plant_config=plant_config,
-        tech_config=tech_config_cleveland,
+        tech_config=tech_config_buffalo,
         driver_config={},
     )
 

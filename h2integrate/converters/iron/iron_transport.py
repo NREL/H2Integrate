@@ -223,6 +223,4 @@ class IronTransportCostComponent(CostModelBaseClass):
             pm_year_idx
         ]
 
-        # outputs["CapEx"] = capex
-        # outputs["OpEx"] = fixed_om
         outputs["VarOpEx"] = total_shipment_cost
