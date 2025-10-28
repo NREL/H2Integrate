@@ -96,6 +96,8 @@ class DemandOpenLoopControllerConfig(BaseConfig):
         commodity_units (str): Units of the commodity (e.g., "kg/h").
         max_capacity (float): Maximum storage capacity of the commodity (in non-rate units,
             e.g., "kg" if `commodity_units` is "kg/h").
+        demand_profile (scalar or list): The demand values for each time step (in the same units
+            as `commodity_units`) or a scalar for a constant demand.
         max_charge_percent (float): Maximum allowable state of charge (SOC) as a percentage
             of `max_capacity`, represented as a decimal between 0 and 1.
         min_charge_percent (float): Minimum allowable SOC as a percentage of `max_capacity`,
@@ -104,32 +106,34 @@ class DemandOpenLoopControllerConfig(BaseConfig):
             as a decimal between 0 and 1.
         max_charge_rate (float): Maximum rate at which the commodity can be charged (in units
             per time step, e.g., "kg/time step"). This rate does not include the charge_efficiency.
-        max_discharge_rate (float): Maximum rate at which the commodity can be discharged (in
-            units per time step, e.g., "kg/time step"). This rate does not include the
-            discharge_efficiency.
-        charge_efficiency (float | None): Efficiency of charging the storage, represented as a
-            decimal between 0 and 1 (e.g., 0.9 for 90% efficiency). Optional if
-            `round_trip_efficiency` is provided.
-        discharge_efficiency (float | None): Efficiency of discharging the storage, represented
+        charge_equals_discharge (bool, optional): If True, set the max_discharge_rate equal to the
+            max_charge_rate. If False, specify the max_discharge_rate as a value different than
+            the max_charge_rate. Defaults to True.
+        max_discharge_rate (float | None, optional): Maximum rate at which the commodity can be
+            discharged (in units per time step, e.g., "kg/time step"). This rate does not include
+            the discharge_efficiency. Only required if `charge_equals_discharge` is False.
+        charge_efficiency (float | None, optional): Efficiency of charging the storage, represented
             as a decimal between 0 and 1 (e.g., 0.9 for 90% efficiency). Optional if
             `round_trip_efficiency` is provided.
-        round_trip_efficiency (float | None): Combined efficiency of charging and discharging
-            the storage, represented as a decimal between 0 and 1 (e.g., 0.81 for 81% efficiency).
-            Optional if `charge_efficiency` and `discharge_efficiency` are provided.
-        demand_profile (scalar or list): The demand values for each time step (in the same units
-            as `commodity_units`) or a scalar for a constant demand.
+        discharge_efficiency (float | None, optional): Efficiency of discharging the storage,
+            represented as a decimal between 0 and 1 (e.g., 0.9 for 90% efficiency). Optional if
+            `round_trip_efficiency` is provided.
+        round_trip_efficiency (float | None, optional): Combined efficiency of charging and
+            discharging the storage, represented as a decimal between 0 and 1 (e.g., 0.81 for
+            81% efficiency). Optional if `charge_efficiency` and `discharge_efficiency` are
+            provided.
     """
 
     commodity_name: str = field()
     commodity_units: str = field()
     max_capacity: float = field()
+    demand_profile: int | float | list = field()
     max_charge_percent: float = field(validator=range_val(0, 1))
     min_charge_percent: float = field(validator=range_val(0, 1))
     init_charge_percent: float = field(validator=range_val(0, 1))
     max_charge_rate: float = field(validator=gt_zero)
-    max_discharge_rate: float = field(validator=gt_zero)
-    demand_profile: int | float | list = field()
-    charge_equals_discharge: bool = field(default=False)
+    charge_equals_discharge: bool = field(default=True)
+    max_discharge_rate: float | None = field(default=None)
     charge_efficiency: float | None = field(default=None, validator=range_val_or_none(0, 1))
     discharge_efficiency: float | None = field(default=None, validator=range_val_or_none(0, 1))
     round_trip_efficiency: float | None = field(default=None, validator=range_val_or_none(0, 1))
@@ -161,13 +165,19 @@ class DemandOpenLoopControllerConfig(BaseConfig):
                 "`charge_efficiency` and `discharge_efficiency`."
             )
 
-        if self.charge_equals_discharge and self.max_discharge_rate != self.max_charge_rate:
-            msg = (
-                "Max discharge rate does not equal max charge rate but charge_equals_discharge "
-                f"is True. Discharge rate is {self.max_discharge_rate} and charge rate "
-                f"is {self.max_charge_rate}."
-            )
-            raise ValueError(msg)
+        if self.charge_equals_discharge:
+            if (
+                self.max_discharge_rate is not None
+                and self.max_discharge_rate != self.max_charge_rate
+            ):
+                msg = (
+                    "Max discharge rate does not equal max charge rate but charge_equals_discharge "
+                    f"is True. Discharge rate is {self.max_discharge_rate} and charge rate "
+                    f"is {self.max_charge_rate}."
+                )
+                raise ValueError(msg)
+
+            self.max_discharge_rate = self.max_charge_rate
 
 
 class DemandOpenLoopController(ControllerBaseClass):
@@ -291,7 +301,7 @@ class DemandOpenLoopController(ControllerBaseClass):
         self.add_output(
             "storage_duration",
             units="h",
-            desc="Estimated storage duration based on max capacity and charge rate",
+            desc="Estimated storage duration based on max capacity and discharge rate",
         )
 
     def compute(self, inputs, outputs):
@@ -406,4 +416,4 @@ class DemandOpenLoopController(ControllerBaseClass):
         outputs[f"total_{commodity_name}_unmet_demand"] = np.sum(unmet_demand_array)
 
         # Output the storage duration in hours
-        outputs["storage_duration"] = max_capacity / max_charge_rate
+        outputs["storage_duration"] = max_capacity / max_discharge_rate

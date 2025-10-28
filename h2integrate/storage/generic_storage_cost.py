@@ -10,6 +10,10 @@ class GenericStorageCostConfig(CostModelBaseConfig):
     """Configuration class for the GenericStorageCostModel with costs based on storage
     capacity and charge rate for any commodity.
 
+    Note:
+        This could be expanded to allow for different types of commodity units in the future.
+        Currently only supports electrical, mass, and some thermal units.
+
     Attributes:
         capacity_capex (float|int): storage energy capital cost in $/capacity_units
         charge_capex (float|int): storage power capital cost in $/charge_units/h
@@ -56,10 +60,8 @@ class GenericStorageCostModel(CostModelBaseClass):
         super().setup()
 
         charge_units = self.config.commodity_units
-        if self.config.commodity_units in ["W", "kW", "MW", "GW", "TW"]:
-            capacity_units = f"{self.config.commodity_units}*h"
-        else:
-            capacity_units = self.config.commodity_units.split("/")[0]
+
+        capacity_units = f"({self.config.commodity_units})*h"
 
         self.add_input(
             "max_charge_rate",
@@ -79,7 +81,12 @@ class GenericStorageCostModel(CostModelBaseClass):
 
         if inputs["max_charge_rate"] > 0:
             storage_duration_hrs = inputs["max_capacity"] / inputs["max_charge_rate"]
-
+        if inputs["max_charge_rate"] < 0:
+            msg = (
+                f"max_charge_rate cannot be less than zero and has value of "
+                f"{inputs['max_charge_rate']}"
+            )
+            raise UserWarning(msg)
         # Calculate total system cost based on capacity and charge components
         total_system_cost = (
             storage_duration_hrs * self.config.capacity_capex
