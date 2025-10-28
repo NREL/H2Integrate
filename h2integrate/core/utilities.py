@@ -363,8 +363,7 @@ def find_file(filename: str | Path, root_folder: str | Path | None = None):
     1. Relative to the root_folder (if provided)
     2. Relative to the current working directory.
     3. Relative to the H2Integrate package.
-    4. The absolute path of filename with respect to the current working directory if
-        root_folder is None.
+    4. The absolute path of filename if filename is an absolute path
 
     Args:
         filename (str | Path): Input filepath
@@ -414,8 +413,8 @@ def find_file(filename: str | Path, root_folder: str | Path | None = None):
         return files_h2i[0].absolute()
 
     # 4. check for as absolute path
-    if root_folder is None and Path(filename).exists():
-        return Path(filename).absolute()
+    if Path(filename).is_absolute():
+        return Path(filename)
 
     if len(files_cwd) == 0 and len(files_h2i) == 0:
         raise FileNotFoundError(
