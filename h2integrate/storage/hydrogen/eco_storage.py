@@ -62,7 +62,6 @@ class H2Storage(CostModelBaseClass):
             desc="Rated hydrogen production of electrolyzer",
         )
         self.add_input("efficiency", val=0.0, desc="Average efficiency of the electrolyzer")
-        self.add_output("hydrogen_storage_soc", val=0.5, copy_shape="hydrogen_in")
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         ########### initialize output dictionary ###########
@@ -222,4 +221,3 @@ class H2Storage(CostModelBaseClass):
 
         outputs["CapEx"] = h2_storage_results["storage_capex"]
         outputs["OpEx"] = h2_storage_results["storage_opex"]
-        outputs["hydrogen_storage_soc"] = h2_storage_results["hydrogen_storage_soc"]

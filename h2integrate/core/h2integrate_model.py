@@ -864,9 +864,6 @@ class H2IntegrateModel:
                 tech_configs = group_configs.get("tech_configs")
                 primary_commodity_type = group_configs.get("commodity")
                 commodity_stream = group_configs.get("commodity_stream")
-                # Skip steel finances; it provides its own finances
-                if any(c in tech_configs for c in ("steel", "methanol", "geoh2", "iron")):
-                    continue
 
                 if commodity_stream is not None:
                     # connect commodity stream output to summer input
