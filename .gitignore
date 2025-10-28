@@ -143,3 +143,7 @@ reports/*
 *.tikz
 *.aux
 *.bbl
+
+# Ignore wind and solar resource data files
+resource_files/wind/*
+resource_files/solar/*

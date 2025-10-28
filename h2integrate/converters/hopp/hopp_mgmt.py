@@ -248,9 +248,6 @@ def run_hopp(hi, project_lifetime, verbose=True, n_timesteps=8760):
     hopp_results = {
         "hopp_interface": hi,
         "hybrid_plant": hi.system,
-        "wind_out": hi.system.wind.generation_profile,
-        "solar_out": hi.system.pv.generation_profile,
-        "battery_out": hi.system.battery.generation_profile,
         "combined_hybrid_power_production_hopp": grid_outputs.system_pre_interconnect_kwac[
             0:n_timesteps
         ],

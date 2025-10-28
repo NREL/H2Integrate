@@ -4,6 +4,22 @@ from pytest import fixture
 
 from h2integrate import EXAMPLE_DIR
 from h2integrate.converters.solar.solar_pysam import PYSAMSolarPlantPerformanceModel
+from h2integrate.resource.solar.nrel_developer_goes_api_models import GOESAggregatedSolarAPI
+
+
+@fixture
+def plant_config():
+    plant = {
+        "plant_life": 30,
+        "simulation": {
+            "dt": 3600,
+            "n_timesteps": 8760,
+            "start_time": "01/01/1900 00:30:00",
+            "timezone": 0,
+        },
+    }
+
+    return {"plant": plant, "site": {"latitude": 30.6617, "longitude": -101.7096, "resources": {}}}
 
 
 @fixture
@@ -11,10 +27,9 @@ def solar_resource_dict():
     pv_resource_dir = EXAMPLE_DIR / "11_hybrid_energy_plant" / "tech_inputs" / "weather" / "solar"
     pv_filename = "30.6617_-101.7096_psmv3_60_2013.csv"
     pv_resource_dict = {
-        "latitude": 30.6617,
-        "longitude": -101.7096,
-        "year": 2013,
-        "solar_resource_filepath": pv_resource_dir / pv_filename,
+        "resource_year": 2013,
+        "resource_dir": pv_resource_dir,
+        "resource_filename": pv_filename,
     }
     return pv_resource_dict
 
@@ -36,7 +51,9 @@ def basic_pysam_options():
     return pysam_options
 
 
-def test_pvwatts_singleowner_notilt(basic_pysam_options, solar_resource_dict, subtests):
+def test_pvwatts_singleowner_notilt(
+    basic_pysam_options, solar_resource_dict, plant_config, subtests
+):
     """Test `PYSAMSolarPlantPerformanceModel` with a basic input scenario:
 
     - `pysam_options` is provided
@@ -63,19 +80,19 @@ def test_pvwatts_singleowner_notilt(basic_pysam_options, solar_resource_dict, su
         }
     }
 
-    plant_info = {
-        "simulation": {
-            "n_timesteps": 8760,
-            "dt": 3600,
-        }
-    }
-
     prob = om.Problem()
-    comp = PYSAMSolarPlantPerformanceModel(
-        plant_config={"site": solar_resource_dict, "plant": plant_info},
-        tech_config=tech_config_dict,
+    solar_resource = GOESAggregatedSolarAPI(
+        plant_config=plant_config,
+        resource_config=solar_resource_dict,
+        driver_config={},
     )
-    prob.model.add_subsystem("pv_perf", comp)
+    comp = PYSAMSolarPlantPerformanceModel(
+        plant_config=plant_config,
+        tech_config=tech_config_dict,
+        driver_config={},
+    )
+    prob.model.add_subsystem("solar_resource", solar_resource, promotes=["*"])
+    prob.model.add_subsystem("pv_perf", comp, promotes=["*"])
     prob.setup()
     prob.run_model()
 
@@ -95,7 +112,9 @@ def test_pvwatts_singleowner_notilt(basic_pysam_options, solar_resource_dict, su
         assert pytest.approx(capacity_kWdc, rel=1e-6) == pv_design_dict["pv_capacity_kWdc"]
 
 
-def test_pvwatts_singleowner_withtilt(basic_pysam_options, solar_resource_dict, subtests):
+def test_pvwatts_singleowner_withtilt(
+    basic_pysam_options, solar_resource_dict, plant_config, subtests
+):
     """Test PYSAMSolarPlantPerformanceModel with tilt angle calculated using 'lat-func' option.
     The AEP of this test should be higher than the AEP in `test_pvwatts_singleowner_notilt`.
     """
@@ -115,19 +134,19 @@ def test_pvwatts_singleowner_withtilt(basic_pysam_options, solar_resource_dict, 
         }
     }
 
-    plant_info = {
-        "simulation": {
-            "n_timesteps": 8760,
-            "dt": 3600,
-        }
-    }
-
     prob = om.Problem()
-    comp = PYSAMSolarPlantPerformanceModel(
-        plant_config={"site": solar_resource_dict, "plant": plant_info},
-        tech_config=tech_config_dict,
+    solar_resource = GOESAggregatedSolarAPI(
+        plant_config=plant_config,
+        resource_config=solar_resource_dict,
+        driver_config={},
     )
-    prob.model.add_subsystem("pv_perf", comp)
+    comp = PYSAMSolarPlantPerformanceModel(
+        plant_config=plant_config,
+        tech_config=tech_config_dict,
+        driver_config={},
+    )
+    prob.model.add_subsystem("solar_resource", solar_resource, promotes=["*"])
+    prob.model.add_subsystem("pv_perf", comp, promotes=["*"])
     prob.setup()
     prob.run_model()
 
@@ -136,7 +155,7 @@ def test_pvwatts_singleowner_withtilt(basic_pysam_options, solar_resource_dict, 
     capacity_kWdc = prob.get_val("pv_perf.capacity_kWdc")[0]
 
     with subtests.test("AEP"):
-        assert pytest.approx(aep, rel=1e-6) == 556441491
+        assert pytest.approx(aep, rel=1e-6) == 556443491
 
     with subtests.test("Capacity in kW-AC"):
         assert (
