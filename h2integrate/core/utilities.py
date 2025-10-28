@@ -376,8 +376,6 @@ def find_file(filename: str | Path, root_folder: str | Path | None = None):
 
     Returns:
         Path: The absolute path to the file.
-
-
     """
 
     # 1. check for file in the root directory
@@ -404,7 +402,7 @@ def find_file(filename: str | Path, root_folder: str | Path | None = None):
         if len(files) == 1:
             return files[0].absolute()
 
-    # 2. check for file relative to the currrent working directory
+    # 2. check for file relative to the current working directory
     files_cwd = list(Path.cwd().glob(f"**/{filename}"))
     if len(files_cwd) == 1:
         return files_cwd[0].absolute()
