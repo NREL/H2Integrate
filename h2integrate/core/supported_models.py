@@ -8,7 +8,6 @@ from h2integrate.finances.profast_financial import ProFastComp
 from h2integrate.transporters.generic_summer import GenericSummerPerformanceModel
 from h2integrate.converters.hopp.hopp_wrapper import HOPPComponent
 from h2integrate.converters.solar.solar_pysam import PYSAMSolarPlantPerformanceModel
-from h2integrate.storage.hydrogen.eco_storage import H2Storage
 from h2integrate.storage.hydrogen.mch_storage import MCHTOLStorageCostModel
 from h2integrate.storage.battery.pysam_battery import PySAMBatteryPerformanceModel
 from h2integrate.transporters.generic_combiner import GenericCombinerPerformanceModel
@@ -173,7 +172,6 @@ supported_models = {
     "summer": GenericSummerPerformanceModel,
     # Storage
     "pysam_battery": PySAMBatteryPerformanceModel,
-    "h2_storage": H2Storage,
     "hydrogen_tank_performance": HydrogenTankPerformanceModel,
     "hydrogen_tank_cost": HydrogenTankCostModel,
     "h2_storage_auto_sizing": H2StorageAutoSizingModel,
