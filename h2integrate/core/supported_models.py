@@ -9,6 +9,7 @@ from h2integrate.transporters.generic_summer import GenericSummerPerformanceMode
 from h2integrate.converters.hopp.hopp_wrapper import HOPPComponent
 from h2integrate.converters.solar.solar_pysam import PYSAMSolarPlantPerformanceModel
 from h2integrate.storage.hydrogen.eco_storage import H2Storage
+from h2integrate.storage.hydrogen.mch_storage import MCHTOLStorageCostModel
 from h2integrate.storage.battery.pysam_battery import PySAMBatteryPerformanceModel
 from h2integrate.transporters.generic_combiner import GenericCombinerPerformanceModel
 from h2integrate.transporters.generic_splitter import GenericSplitterPerformanceModel
@@ -21,6 +22,11 @@ from h2integrate.storage.hydrogen.tank_baseclass import (
 from h2integrate.converters.hydrogen.wombat_model import WOMBATElectrolyzerModel
 from h2integrate.converters.wind.wind_plant_pysam import PYSAMWindPlantPerformanceModel
 from h2integrate.storage.battery.atb_battery_cost import ATBBatteryCostModel
+from h2integrate.storage.hydrogen.h2_storage_cost import (
+    PipeStorageCostModel,
+    SaltCavernStorageCostModel,
+    LinedRockCavernStorageCostModel,
+)
 from h2integrate.converters.ammonia.ammonia_synloop import (
     AmmoniaSynLoopCostModel,
     AmmoniaSynLoopPerformanceModel,
@@ -51,6 +57,7 @@ from h2integrate.converters.methanol.co2h_methanol_plant import (
     CO2HMethanolPlantFinanceModel,
     CO2HMethanolPlantPerformanceModel,
 )
+from h2integrate.storage.hydrogen.h2_storage_auto_sizing import H2StorageAutoSizingModel
 from h2integrate.converters.natural_gas.natural_gas_cc_ct import (
     NaturalGasCostModel,
     NaturalGasPerformanceModel,
@@ -169,6 +176,11 @@ supported_models = {
     "h2_storage": H2Storage,
     "hydrogen_tank_performance": HydrogenTankPerformanceModel,
     "hydrogen_tank_cost": HydrogenTankCostModel,
+    "h2_storage_auto_sizing": H2StorageAutoSizingModel,
+    "lined_rock_cavern_cost": LinedRockCavernStorageCostModel,
+    "salt_cavern_cost": SaltCavernStorageCostModel,
+    "mch_tol_storage_cost": MCHTOLStorageCostModel,
+    "buried_pipe_storage_cost": PipeStorageCostModel,
     "atb_battery_cost": ATBBatteryCostModel,
     "simple_generic_storage": SimpleGenericStorage,
     # Control

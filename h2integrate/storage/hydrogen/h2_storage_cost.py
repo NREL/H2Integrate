@@ -8,10 +8,12 @@ from h2integrate.core.model_baseclasses import CostModelBaseClass
 
 # TODO: fix import structure in future refactor
 from h2integrate.simulation.technologies.hydrogen.h2_storage.lined_rock_cavern.lined_rock_cavern import LinedRockCavernStorage  # noqa: E501  # fmt: skip  # isort:skip
+from h2integrate.simulation.technologies.hydrogen.h2_storage.salt_cavern.salt_cavern import SaltCavernStorage  # noqa: E501  # fmt: skip  # isort:skip
+from h2integrate.simulation.technologies.hydrogen.h2_storage.pipe_storage import UndergroundPipeStorage  # noqa: E501  # fmt: skip  # isort:skip
 
 
 @define
-class LinedRockCavernStorageCostModelConfig(BaseConfig):
+class HydrogenStorageBaseCostModelConfig(BaseConfig):
     max_capacity: float = field()
     max_charge_rate: float = field()
 
@@ -31,7 +33,7 @@ class LinedRockCavernStorageCostModelConfig(BaseConfig):
     compressor_om: float = field(default=0.04, validator=range_val(0, 1))
     facility_om: float = field(default=0.01, validator=range_val(0, 1))
 
-    def make_lrc_dict(self):
+    def make_model_dict(self):
         params = self.as_dict()
         h2i_params = [
             "max_capacity",
@@ -40,17 +42,17 @@ class LinedRockCavernStorageCostModelConfig(BaseConfig):
             "commodity_units",
             "cost_year",
         ]
-        lrc_dict = {k: v for k, v in params if k not in h2i_params}
+        lrc_dict = {k: v for k, v in params.items() if k not in h2i_params}
         return lrc_dict
 
 
-class LinedRockCavernStorageCostModel(CostModelBaseClass):
+class HydrogenStorageBaseCostModel(CostModelBaseClass):
     def initialize(self):
         super().initialize()
 
     def setup(self):
-        self.config = LinedRockCavernStorageCostModelConfig.from_dict(
-            merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance"),
+        self.config = HydrogenStorageBaseCostModelConfig.from_dict(
+            merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost"),
             strict=False,
         )
 
@@ -70,10 +72,10 @@ class LinedRockCavernStorageCostModel(CostModelBaseClass):
             desc="Hydrogen storage capacity",
         )
 
-    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
+    def make_storage_input_dict(self, inputs):
         storage_input = {}
 
-        storage_input = self.config.make_lrc_dict()
+        storage_input = self.config.make_model_dict()
 
         # convert capacity to kg
         max_capacity_kg = units.convert_units(
@@ -82,7 +84,7 @@ class LinedRockCavernStorageCostModel(CostModelBaseClass):
 
         # convert charge rate to kg/d
         storage_max_fill_rate = units.convert_units(
-            inputs["max_charge_rate"], f"{self.config.commodity_units}", "kg/d"
+            inputs["max_charge_rate"], f"{self.config.commodity_units}", "kg/h"
         )
 
         storage_input["h2_storage_kg"] = max_capacity_kg[0]
@@ -90,7 +92,23 @@ class LinedRockCavernStorageCostModel(CostModelBaseClass):
         # below has to be in kg/day
         storage_input["system_flow_rate"] = storage_max_fill_rate[0]
 
-        # run salt cavern storage model
+        return storage_input
+
+    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
+        # storage_input = self.make_storage_input_dict(inputs)
+
+        raise NotImplementedError("This method should be implemented in a subclass.")
+
+
+class LinedRockCavernStorageCostModel(HydrogenStorageBaseCostModel):
+    def initialize(self):
+        super().initialize()
+
+    def setup(self):
+        super().setup()
+
+    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
+        storage_input = self.make_storage_input_dict(inputs)
         h2_storage = LinedRockCavernStorage(storage_input)
 
         h2_storage.lined_rock_cavern_capex()
@@ -98,3 +116,49 @@ class LinedRockCavernStorageCostModel(CostModelBaseClass):
 
         outputs["CapEx"] = h2_storage.output_dict["lined_rock_cavern_storage_capex"]
         outputs["OpEx"] = h2_storage.output_dict["lined_rock_cavern_storage_opex"]
+
+
+class SaltCavernStorageCostModel(HydrogenStorageBaseCostModel):
+    def initialize(self):
+        super().initialize()
+
+    def setup(self):
+        super().setup()
+
+    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
+        storage_input = self.make_storage_input_dict(inputs)
+        h2_storage = SaltCavernStorage(storage_input)
+
+        h2_storage.salt_cavern_capex()
+        h2_storage.salt_cavern_opex()
+
+        outputs["CapEx"] = h2_storage.output_dict["salt_cavern_storage_capex"]
+        outputs["OpEx"] = h2_storage.output_dict["salt_cavern_storage_opex"]
+
+
+@define
+class PipeStorageCostModelConfig(HydrogenStorageBaseCostModelConfig):
+    compressor_output_pressure: float = field(default=100, kw_only=True)  # bar
+
+
+class PipeStorageCostModel(HydrogenStorageBaseCostModel):
+    def initialize(self):
+        super().initialize()
+
+    def setup(self):
+        super().setup()
+
+        self.config = PipeStorageCostModelConfig.from_dict(
+            merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance"),
+            strict=False,
+        )
+
+    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
+        storage_input = self.make_storage_input_dict(inputs)
+        h2_storage = UndergroundPipeStorage(storage_input)
+
+        h2_storage.pipe_storage_capex()
+        h2_storage.pipe_storage_opex()
+
+        outputs["CapEx"] = h2_storage.output_dict["pipe_storage_capex"]
+        outputs["OpEx"] = h2_storage.output_dict["pipe_storage_opex"]

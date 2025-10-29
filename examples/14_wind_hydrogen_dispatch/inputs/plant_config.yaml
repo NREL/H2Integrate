@@ -28,7 +28,6 @@ site:
 # this will naturally grow as we mature the interconnected tech
 technology_interconnections: [
   ["wind", "electrolyzer", "electricity", "cable"],
-  ["electrolyzer", "h2_storage", "efficiency"],
   ["electrolyzer", "h2_storage", "hydrogen", "pipe"],
 ]
 
