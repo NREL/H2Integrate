@@ -177,7 +177,7 @@ class AmmoniaSynLoopPerformanceModel(om.ExplicitComponent):
         self.add_output(
             "limiting_input", val=0, shape_by_conn=True, copy_shape="hydrogen_in", units=None
         )
-        self.add_output("max_hydrogen_capacity", val=1.0, units="kg/h")
+        self.add_output("max_hydrogen_capacity", val=1000.0, units="kg/h")
 
     def compute(self, inputs, outputs):
         # Get config values

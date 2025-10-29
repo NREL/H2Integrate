@@ -122,17 +122,7 @@ class ECOElectrolyzerPerformanceModel(ElectrolyzerPerformanceBaseClass):
             desc="Size of the electrolyzer in MW",
         )
 
-        self.add_input(
-            "electricity_in", val=0.0, shape_by_conn=True, copy_shape="hydrogen_out", units="kW"
-        )
-        self.add_input("max_hydrogen_capacity", val=1.0, units="kg/h")
-        self.add_output(
-            "hydrogen_out",
-            val=0.0,
-            shape_by_conn=True,
-            copy_shape="electricity_in",
-            units="kg/h",
-        )
+        self.add_input("max_hydrogen_capacity", val=1000.0, units="kg/h")
 
     def compute(self, inputs, outputs):
         plant_life = self.options["plant_config"]["plant"]["plant_life"]
