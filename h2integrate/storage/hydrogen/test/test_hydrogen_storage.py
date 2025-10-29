@@ -28,7 +28,7 @@ def test_salt_cavern_ex_2(plant_config, subtests):
         "model_inputs": {
             "shared_parameters": {
                 "max_capacity": 3580383.39133725,
-                "max_charge_rate": 12549.62622698 / 24,
+                "max_charge_rate": 12549.62622698,
             }
         }
     }
@@ -57,7 +57,7 @@ def test_lined_rock_cavern_ex_12_small_case(plant_config, subtests):
         "model_inputs": {
             "shared_parameters": {
                 "max_capacity": 169320.79994693,
-                "max_charge_rate": 1568.70894716 / 24,
+                "max_charge_rate": 1568.70894716,
             }
         }
     }
@@ -87,7 +87,7 @@ def test_lined_rock_cavern_ex_1(plant_config, subtests):
         "model_inputs": {
             "shared_parameters": {
                 "max_capacity": 2081385.93267781,
-                "max_charge_rate": 14118.14678877 / 24,
+                "max_charge_rate": 14118.14678877,
             }
         }
     }
@@ -116,7 +116,7 @@ def test_lined_rock_cavern_ex_14(plant_config, subtests):
         "model_inputs": {
             "shared_parameters": {
                 "max_capacity": 2987042.0,
-                "max_charge_rate": 12446.00729773 / 24,
+                "max_charge_rate": 12446.00729773,
             }
         }
     }
@@ -145,7 +145,7 @@ def test_buried_pipe_storage(plant_config, subtests):
         "model_inputs": {
             "shared_parameters": {
                 "max_capacity": 3580383.39133725,
-                "max_charge_rate": 12549.62622698 / 24,
+                "max_charge_rate": 12549.62622698,
             }
         }
     }
