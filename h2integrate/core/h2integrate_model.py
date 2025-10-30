@@ -856,6 +856,10 @@ class H2IntegrateModel:
             # Connect the resource output to the technology input
             self.model.connect(f"{resource_name}.{variable}", f"{tech_name}.{variable}")
 
+            # Connect the latitude and longitude to the resource input
+            self.model.connect("latitude", f"{resource_name}.latitude")
+            self.model.connect("longitude", f"{resource_name}.longitude")
+
         # connect outputs of the technology models to the cost and finance models of the
         # same name if the cost and finance models are not None
         if "finance_parameters" in self.plant_config:

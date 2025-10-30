@@ -29,48 +29,14 @@ class GOESNRELDeveloperAPISolarResourceBase(SolarResourceBaseAPIModel):
                 self.interval = int(min(self.config.valid_intervals))
 
         # get the data dictionary
-        data = self.get_data()
+        data = self.get_data(self.config.latitude, self.config.longitude)
 
         # add resource data dictionary as an out
         self.add_discrete_output(
             "solar_resource_data", val=data, desc="Dict of solar resource data"
         )
 
-    def helper_setup_method(self):
-        """
-        Prepares and configures resource specifications for the GOES API based on plant
-        and site configuration options.
-
-        This method extracts relevant configuration details from the `self.options` dictionary,
-        sets default values for latitude, longitude, resource directory, and timezone if they
-        are not already specified, and returns the updated resource specifications dictionary.
-
-        Returns:
-            dict: The resource specifications dictionary with defaults set for latitude,
-            longitude, resource_dir, and timezone.
-        """
-        self.site_config = self.options["plant_config"]["site"]
-        self.sim_config = self.options["plant_config"]["plant"]["simulation"]
-        self.n_timesteps = int(self.sim_config["n_timesteps"])
-        self.dt = self.sim_config["dt"]
-        self.start_time = self.sim_config["start_time"]
-
-        # create the input dictionary for GOESAPIConfig
-        resource_specs = self.options["resource_config"]
-        # set the default latitude, longitude, and resource_year from the site_config
-        resource_specs.setdefault("latitude", self.site_config["latitude"])
-        resource_specs.setdefault("longitude", self.site_config["longitude"])
-        # set the default resource_dir from a directory that can be
-        # specified in site_config['resources']['resource_dir']
-        resource_specs.setdefault(
-            "resource_dir", self.site_config.get("resources", {}).get("resource_dir", None)
-        )
-
-        # default timezone to UTC because 'timezone' was removed from the plant config schema
-        resource_specs.setdefault("timezone", self.sim_config.get("timezone", 0))
-        return resource_specs
-
-    def create_filename(self):
+    def create_filename(self, latitude, longitude):
         """Create default filename to save downloaded data to. Filename is formatted as
         "{latitude}_{longitude}_{resource_year}_{config.dataset_desc}_{interval}min_{tz_desc}_tz.csv"
         where "tz_desc" is "utc" if the timezone is zero, or "local" otherwise.
@@ -85,19 +51,19 @@ class GOESNRELDeveloperAPISolarResourceBase(SolarResourceBaseAPIModel):
         else:
             tz_desc = "local"
         filename = (
-            f"{self.config.latitude}_{self.config.longitude}_{self.config.resource_year}_"
+            f"{latitude}_{longitude}_{self.config.resource_year}_"
             f"{self.config.dataset_desc}_{self.interval}min_{tz_desc}_tz.csv"
         )
         return filename
 
-    def create_url(self):
+    def create_url(self, latitude, longitude):
         """Create url for data download.
 
         Returns:
             str: url to use for API call.
         """
         input_data = {
-            "wkt": f"POINT({self.config.longitude} {self.config.latitude})",
+            "wkt": f"POINT({longitude} {latitude})",
             "names": [str(self.config.resource_year)],  # TODO: update to handle multiple years
             "interval": str(self.interval),
             "utc": str(self.utc).lower(),
@@ -207,6 +173,3 @@ class GOESNRELDeveloperAPISolarResourceBase(SolarResourceBaseAPIModel):
         data_time_dict = {c.lower(): data[c].astype(float).values for c in time_cols}
         data_dict.update(data_time_dict)
         return data_dict, data_units
-
-    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
-        pass
