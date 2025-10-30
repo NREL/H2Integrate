@@ -175,6 +175,14 @@ def test_mch_wrapper(plant_config, subtests):
     prob.set_val("sys.hydrogen_soc", soc)
     prob.run_model()
 
+    with subtests.test("Dehydrogenation capacity"):
+        assert comp.Dc == approx(Dc_tpd, rel=1e-6)
+    with subtests.test("Hydrogenation capacity"):
+        assert comp.Hc == approx(Hc_tpd, rel=1e-6)
+    with subtests.test("Annual storage capacity"):
+        assert comp.As == approx(As_tpy, rel=1e-6)
+    with subtests.test("Maximum storage capacity"):
+        assert comp.Ms == approx(Ms_tpy, rel=1e-6)
     with subtests.test("CapEx"):
         assert pytest.approx(prob.get_val("sys.CapEx")[0], rel=max_cost_error_rel) == toc_actual
     with subtests.test("OpEx"):
