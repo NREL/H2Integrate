@@ -5,27 +5,45 @@ from attrs import field, define
 from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
 
 
-from h2integrate.simulation.technologies.hydrogen.h2_storage.storage_sizing import hydrogen_storage_capacity  # noqa: E501  # fmt: skip  # isort:skip
-
-
 @define
 class H2StorageSizingModelConfig(BaseConfig):
+    """Configuration class for the H2StorageAutoSizingModel.
+
+    Attributes:
+        commodity_name (str, optional): Name of the commodity being controlled (e.g., "hydrogen").
+            Defaults to "hydrogen"
+        commodity_units (str, optional): Units of the commodity (e.g., "kg/h"). Defaults to "kg/h"
+        demand_profile (scalar or list): The demand values for each time step (in the same units
+            as `commodity_units`) or a scalar for a constant demand.
+    """
+
     commodity_name: str = field(default="hydrogen")
-    commodity_units: str = field(default="kg")
-    electrolyzer_rating_mw_for_h2_storage_sizing: float | None = field(default=None)
-    size_capacity_from_demand: dict = field(default={"flag": True})
-    capacity_from_max_on_turbine_storage: bool = field(default=False)
-    days: int = field(default=0)
-    demand_profile: int | float | list | None = field(default=None)
+    commodity_units: str = field(default="kg/h")
+    demand_profile: int | float | list = field(default=0.0)
 
 
 class H2StorageAutoSizingModel(om.ExplicitComponent):
+    """Performance model that calculates the hydrogen storage charge rate and capacity needed
+    to either supply hydrogen at a constant rate based on the hydrogen production profile or
+    try to meet the hydrogen demand with the given hydrogen production profile.
+
+    Inputs:
+        {commodity_name}_in (float): Input commodity flow timeseries (e.g., hydrogen production).
+            - Units: Defined in `commodity_units` (e.g., "kg/h").
+        {commodity_name}_demand_profile (float): Demand profile of commodity.
+            - Units: Defined in `commodity_units` (e.g., "kg/h").
+
+    Outputs:
+        max_capacity (float): Maximum storage capacity of the commodity.
+            - Units: in non-rate units, e.g., "kg" if `commodity_units` is "kg/h"
+        max_charge_rate (float): Maximum rate at which the commodity can be charged
+            - Units: Defined in `commodity_units` (e.g., "kg/h").
+    """
+
     def initialize(self):
         self.options.declare("driver_config", types=dict)
         self.options.declare("plant_config", types=dict)
         self.options.declare("tech_config", types=dict)
-
-        self.options.declare("verbose", types=bool, default=False)
 
     def setup(self):
         self.config = H2StorageSizingModelConfig.from_dict(
@@ -34,82 +52,73 @@ class H2StorageAutoSizingModel(om.ExplicitComponent):
         )
 
         super().setup()
+
         n_timesteps = self.options["plant_config"]["plant"]["simulation"]["n_timesteps"]
 
+        commodity_name = self.config.commodity_name
+
         self.add_input(
-            "hydrogen_in",
-            val=0.0,
-            shape_by_conn=True,
-            units="kg/h",
-        )
-        self.add_input(
-            "hydrogen_demand_profile",
-            units="kg/h",
-            val=0.0,
+            f"{commodity_name}_demand_profile",
+            units=f"{self.config.commodity_units}",
+            val=self.config.demand_profile,
             shape=n_timesteps,
-            desc="Hydrogen demand profile timeseries",
+            desc=f"{commodity_name} demand profile timeseries",
         )
 
-        self.add_input("efficiency", val=0.0, desc="Average efficiency of the electrolyzer")
+        self.add_input(
+            f"{commodity_name}_in",
+            shape_by_conn=True,
+            units=f"{self.config.commodity_units}",
+            desc=f"{commodity_name} input timeseries from production to storage",
+        )
 
         self.add_output(
             "max_capacity",
             val=0.0,
             shape=1,
-            units="kg",
+            units=f"({self.config.commodity_units})*h",
         )
 
         self.add_output(
             "max_charge_rate",
             val=0.0,
             shape=1,
-            units="kg/h",
+            units=f"{self.config.commodity_units}",
         )
 
     def compute(self, inputs, outputs):
-        ########### initialize output dictionary ###########
+        commodity_name = self.config.commodity_name
+        storage_max_fill_rate = np.max(inputs[f"{commodity_name}_in"])
 
-        storage_max_fill_rate = np.max(inputs["hydrogen_in"])
-
-        ########### get hydrogen storage size in kilograms ###########
-
-        ##################### get storage capacity from hydrogen storage demand
-        if self.config.size_capacity_from_demand["flag"]:
-            if self.config.electrolyzer_rating_mw_for_h2_storage_sizing is None:
-                raise (
-                    ValueError(
-                        "h2 storage input battery_electricity_discharge must be specified \
-                                 if size_capacity_from_demand is True."
-                    )
-                )
-            if np.sum(inputs["hydrogen_demand_profile"]) > 0:
-                hydrogen_storage_demand = inputs["hydrogen_demand_profile"]
-            else:
-                hydrogen_storage_demand = np.mean(
-                    inputs["hydrogen_in"]
-                )  # TODO: update demand based on end-use needs
-            results_dict = {
-                "Hydrogen Hourly Production [kg/hr]": inputs["hydrogen_in"],
-                "Sim: Average Efficiency [%-HHV]": inputs["efficiency"],
-            }
-            (
-                hydrogen_demand_kgphr,
-                hydrogen_storage_capacity_kg,
-                hydrogen_storage_duration_hr,
-                hydrogen_storage_soc,
-            ) = hydrogen_storage_capacity(
-                results_dict,
-                self.config.electrolyzer_rating_mw_for_h2_storage_sizing,
-                hydrogen_storage_demand,
-            )
-            h2_storage_capacity_kg = hydrogen_storage_capacity_kg
-            # h2_storage_results["hydrogen_storage_duration_hr"] = hydrogen_storage_duration_hr
-            # h2_storage_results["hydrogen_storage_soc"] = hydrogen_storage_soc
-
-        ##################### get storage capacity based on storage days in config
+        ########### get storage size ###########
+        if np.sum(inputs[f"{commodity_name}_demand_profile"]) > 0:
+            commodity_demand = inputs[f"{commodity_name}_demand_profile"]
         else:
-            storage_hours = self.config.days * 24
-            h2_storage_capacity_kg = round(storage_hours * storage_max_fill_rate)
+            commodity_demand = np.mean(
+                inputs[f"{commodity_name}_in"]
+            )  # TODO: update demand based on end-use needs
+
+        commodity_production = inputs[f"{commodity_name}_in"]
+
+        # TODO: SOC is just an absolute value and is not a percentage. Ideally would calculate as shortfall in future.
+        commodity_storage_soc = []
+        for j in range(len(commodity_production)):
+            if j == 0:
+                commodity_storage_soc.append(commodity_production[j] - commodity_demand)
+            else:
+                commodity_storage_soc.append(
+                    commodity_storage_soc[j - 1] + commodity_production[j] - commodity_demand
+                )
+
+        minimum_soc = np.min(commodity_storage_soc)
+
+        # adjust soc so it's not negative.
+        if minimum_soc < 0:
+            commodity_storage_soc = [x + np.abs(minimum_soc) for x in commodity_storage_soc]
+
+        commodity_storage_capacity_kg = np.max(commodity_storage_soc) - np.min(
+            commodity_storage_soc
+        )
 
         outputs["max_charge_rate"] = storage_max_fill_rate
-        outputs["max_capacity"] = h2_storage_capacity_kg
+        outputs["max_capacity"] = commodity_storage_capacity_kg

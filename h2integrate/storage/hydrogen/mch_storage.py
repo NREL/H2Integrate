@@ -30,7 +30,7 @@ class MCHTOLStorageCostModelConfig(BaseConfig):
 
     max_capacity: float = field()
     max_charge_rate: float = field()
-    max_discharge_rate: float = field()
+    max_discharge_rate: float = field(default=None)
     charge_equals_discharge: bool = field(default=True)
 
     commodity_name: str = field(default="hydrogen")
