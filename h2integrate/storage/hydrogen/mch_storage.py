@@ -122,12 +122,13 @@ class MCHTOLStorageCostModel(CostModelBaseClass):
         h2_storage_capacity_tons = units.convert_units(
             inputs["max_capacity"], f"({self.config.commodity_units})*h", "t"
         )
-        # Equation (3): DC = P_avg
-        self.Dc = storage_max_fill_rate_tpd[0]
 
         # Equation (2): HC = P_nameplate - P_avg
         # P_nameplate = self.max_H2_production_kg_pr_hr * 24 / 1e3
-        self.Hc = storage_max_empty_rate_tpd[0]
+        self.Hc = storage_max_fill_rate_tpd[0]
+
+        # Equation (3): DC = P_avg
+        self.Dc = storage_max_empty_rate_tpd[0]
 
         # Equation (1): AS = sum(curtailed_h2)
         self.As = annual_h2_stored_tpy  # tons/year
@@ -147,16 +148,3 @@ class MCHTOLStorageCostModel(CostModelBaseClass):
         outputs["CapEx"] = self.calc_cost_value(*occ_coeff)
         outputs["OpEx"] = self.calc_cost_value(*foc_coeff)
         outputs["VarOpEx"] = self.calc_cost_value(*voc_coeff)
-
-        # h2_storage = MCHStorage(
-        #     max_H2_production_kg_pr_hr=storage_max_fill_rate[0],
-        #     hydrogen_storage_capacity_kg=max_capacity_kg[0],
-        #     hydrogen_demand_kg_pr_hr=hydrogen_demand_kgphr,
-        #     annual_hydrogen_stored_kg_pr_yr=annual_h2_stored,
-        # )
-
-        # h2_storage_costs = h2_storage.run_costs()
-
-        # outputs["CapEx"] = h2_storage_costs["mch_capex"]
-        # outputs["OpEx"] = h2_storage_costs["mch_opex"]
-        # outputs["VarOpEx"] = h2_storage_costs["mch_variable_om"]
