@@ -6,8 +6,8 @@ from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
 
 
 @define
-class H2StorageSizingModelConfig(BaseConfig):
-    """Configuration class for the H2StorageAutoSizingModel.
+class StorageSizingModelConfig(BaseConfig):
+    """Configuration class for the StorageAutoSizingModel.
 
     Attributes:
         commodity_name (str, optional): Name of the commodity being controlled (e.g., "hydrogen").
@@ -22,10 +22,12 @@ class H2StorageSizingModelConfig(BaseConfig):
     demand_profile: int | float | list = field(default=0.0)
 
 
-class H2StorageAutoSizingModel(om.ExplicitComponent):
-    """Performance model that calculates the hydrogen storage charge rate and capacity needed
-    to either supply hydrogen at a constant rate based on the hydrogen production profile or
-    try to meet the hydrogen demand with the given hydrogen production profile.
+class StorageAutoSizingModel(om.ExplicitComponent):
+    """Performance model that calculates the storage charge rate and capacity needed
+    to either:
+
+    1. supply the comodity at a constant rate based on the commodity production profile or
+    2. try to meet the commodity demand with the given commodity production profile.
 
     Inputs:
         {commodity_name}_in (float): Input commodity flow timeseries (e.g., hydrogen production).
@@ -46,7 +48,7 @@ class H2StorageAutoSizingModel(om.ExplicitComponent):
         self.options.declare("tech_config", types=dict)
 
     def setup(self):
-        self.config = H2StorageSizingModelConfig.from_dict(
+        self.config = StorageSizingModelConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance"),
             strict=False,
         )
