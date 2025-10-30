@@ -8,6 +8,7 @@ from h2integrate.finances.profast_financial import ProFastComp
 from h2integrate.transporters.generic_summer import GenericSummerPerformanceModel
 from h2integrate.converters.hopp.hopp_wrapper import HOPPComponent
 from h2integrate.converters.solar.solar_pysam import PYSAMSolarPlantPerformanceModel
+from h2integrate.storage.generic_storage_cost import GenericStorageCostModel
 from h2integrate.storage.hydrogen.mch_storage import MCHTOLStorageCostModel
 from h2integrate.storage.battery.pysam_battery import PySAMBatteryPerformanceModel
 from h2integrate.transporters.generic_combiner import GenericCombinerPerformanceModel
@@ -180,6 +181,7 @@ supported_models = {
     "mch_tol_storage_cost": MCHTOLStorageCostModel,
     "buried_pipe_storage_cost": PipeStorageCostModel,
     "atb_battery_cost": ATBBatteryCostModel,
+    "generic_storage_cost": GenericStorageCostModel,
     "simple_generic_storage": SimpleGenericStorage,
     # Control
     "pass_through_controller": PassThroughOpenLoopController,

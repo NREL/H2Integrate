@@ -9,6 +9,9 @@
 - Added framework to run heuristic load following dispatch for storage technologies
 - Added PySAM battery model as a storage technology performance model
 - Added `create_om_reports` option to driver config to enable/disable OpenMDAO reports (N2 diagrams, etc.)
+- Updated inputs for the `ATBBatteryCostModel` and `DemandOpenLoopController` so storage capacity and charge rate can be design variables
+- Split out cost models from coupled hydrogen storage performance and cost model
+- Added storage auto-sizing performance model based on storage sizing calculations that existed in the coupled hydrogen storage performance and cost model
 
 ## 0.4.0 [October 1, 2025]
 

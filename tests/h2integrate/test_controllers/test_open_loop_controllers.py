@@ -92,6 +92,7 @@ def test_demand_controller(subtests):
         "init_charge_percent": 1.0,  # percent as decimal
         "max_charge_rate": 1.0,  # kg/time step
         "max_discharge_rate": 0.5,  # kg/time step
+        "charge_equals_discharge": False,
         "charge_efficiency": 1.0,
         "discharge_efficiency": 1.0,
         "demand_profile": [1.0] * 10,  # Example: 10 time steps with 10 kg/time step demand
@@ -165,6 +166,7 @@ def test_demand_controller_round_trip_efficiency(subtests):
         "init_charge_percent": 1.0,  # percent as decimal
         "max_charge_rate": 1.0,  # kg/time step
         "max_discharge_rate": 0.5,  # kg/time step
+        "charge_equals_discharge": False,
         "charge_efficiency": 1.0,
         "discharge_efficiency": 1.0,
         "demand_profile": [1.0] * 10,  # Example: 10 time steps with 10 kg/time step demand
@@ -178,6 +180,7 @@ def test_demand_controller_round_trip_efficiency(subtests):
         "init_charge_percent": 1.0,  # percent as decimal
         "max_charge_rate": 1.0,  # kg/time step
         "max_discharge_rate": 0.5,  # kg/time step
+        "charge_equals_discharge": False,
         "round_trip_efficiency": 1.0,
         "demand_profile": [1.0] * 10,  # Example: 10 time steps with 10 kg/time step demand
     }
@@ -263,6 +266,7 @@ def test_generic_demand_controller(subtests):
                 "init_charge_percent": 1.0,  # percent as decimal
                 "max_discharge_rate": 0.5,  # kg/time step
                 "charge_efficiency": 1.0,
+                "charge_equals_discharge": False,
                 "discharge_efficiency": 1.0,
                 "demand_profile": [1.0] * 10,  # Example: 10 time steps with 10 kg/time step demand
             },
