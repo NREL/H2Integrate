@@ -20,11 +20,6 @@ class HydrogenStorageBaseCostModelConfig(BaseConfig):
     commodity_name: str = field(default="hydrogen")
     commodity_units: str = field(default="kg/h", validator=contains(["kg/h", "g/h", "t/h"]))
 
-    model: str = field(
-        default="papadias",
-        converter=(str.strip, str.lower),
-        validator=contains(["hdsam", "papadias"]),
-    )
     cost_year: int = field(default=2018, converter=int, validator=contains([2018]))
     labor_rate: float = field(default=37.39817, validator=range_val(0, 100))
     insurance: float = field(default=0.01, validator=range_val(0, 1))
