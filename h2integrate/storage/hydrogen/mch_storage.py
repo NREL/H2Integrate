@@ -3,12 +3,31 @@ from attrs import field, define
 from openmdao.utils import units
 
 from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
-from h2integrate.core.validators import contains, range_val
+from h2integrate.core.validators import contains
 from h2integrate.core.model_baseclasses import CostModelBaseClass
 
 
 @define
 class MCHTOLStorageCostModelConfig(BaseConfig):
+    """Config class for MCHTOLStorageCostModel
+
+    Attributes:
+        max_capacity (float): Maximum hydrogen storage capacity (in non-rate units,
+            e.g., "kg" if `commodity_units` is "kg/h").
+        max_charge_rate (float): Maximum rate at which the commodity can be charged (in units
+            per time step, e.g., "kg/time step"). This is the hydrogenation capacity.
+        charge_equals_discharge (bool, optional): If True, set the max_discharge_rate equal to the
+            max_charge_rate. If False, specify the max_discharge_rate as a value different than
+            the max_charge_rate. Defaults to True. This is the dehydrogenation capacity.
+        max_discharge_rate (float | None, optional): Maximum rate at which the commodity can be
+            discharged (in units per time step, e.g., "kg/time step"). This rate does not include
+            the discharge_efficiency. Only required if `charge_equals_discharge` is False.
+        commodity_name (str, optional): Name of the commodity being controlled (e.g., "hydrogen").
+            Defaults to "hydrogen"
+        commodity_units (str, optional): Units of the commodity (e.g., "kg/h"). Defaults to "kg/h"
+        cost_year (int, optional): Dollar year corresponding to the costs, must be 2024.
+    """
+
     max_capacity: float = field()
     max_charge_rate: float = field()
     max_discharge_rate: float = field()
@@ -17,11 +36,37 @@ class MCHTOLStorageCostModelConfig(BaseConfig):
     commodity_name: str = field(default="hydrogen")
     commodity_units: str = field(default="kg/h", validator=contains(["kg/h", "g/h", "t/h"]))
 
-    storage_efficiency: float = field(default=0.9984, validator=range_val(0, 1))
     cost_year: int = field(default=2024, converter=int, validator=contains([2024]))
+
+    def __attrs_post_init__(self):
+        if self.charge_equals_discharge:
+            if (
+                self.max_discharge_rate is not None
+                and self.max_discharge_rate != self.max_charge_rate
+            ):
+                msg = (
+                    "Max discharge rate does not equal max charge rate but charge_equals_discharge "
+                    f"is True. Discharge rate is {self.max_discharge_rate} and charge rate "
+                    f"is {self.max_charge_rate}."
+                )
+                raise ValueError(msg)
+
+            self.max_discharge_rate = self.max_charge_rate
 
 
 class MCHTOLStorageCostModel(CostModelBaseClass):
+    """
+    Cost model representing a toluene/methylcyclohexane (TOL/MCH) hydrogen storage system.
+
+    Costs are in 2024 USD.
+
+    Sources:
+        Breunig, H., Rosner, F., Saqline, S. et al. "Achieving gigawatt-scale green hydrogen
+        production and seasonal storage at industrial locations across the U.S." *Nat Commun*
+        **15**, 9049 (2024). https://doi.org/10.1038/s41467-024-53189-2
+
+    """
+
     def initialize(self):
         super().initialize()
 
@@ -93,7 +138,7 @@ class MCHTOLStorageCostModel(CostModelBaseClass):
             inputs["max_charge_rate"], f"{self.config.commodity_units}", "t/d"
         )
 
-        # convert charge rate to kg/d
+        # convert discharge rate to kg/d
         if self.config.charge_equals_discharge:
             storage_max_empty_rate_tpd = units.convert_units(
                 inputs["max_charge_rate"], f"{self.config.commodity_units}", "t/d"
@@ -103,16 +148,19 @@ class MCHTOLStorageCostModel(CostModelBaseClass):
                 inputs["max_discharge_rate"], f"{self.config.commodity_units}", "t/d"
             )
 
+        # convert state of charge profile from fraction to kg
         hydrogen_storage_soc_kg = units.convert_units(
             inputs["hydrogen_soc"] * inputs["max_capacity"],
             f"({self.config.commodity_units})*h",
             "kg",
         )
 
+        # calculate the annual amount of hydrogen stored
         h2_charge_discharge = np.diff(hydrogen_storage_soc_kg, prepend=False)
         h2_charged_idx = np.argwhere(h2_charge_discharge > 0).flatten()
         annual_h2_stored_kg = sum([h2_charge_discharge[i] for i in h2_charged_idx])
 
+        # convert annual hydrogen stored to metric tonnes/day
         annual_h2_stored_tpy = units.convert_units(
             annual_h2_stored_kg,
             "kg/yr",
@@ -123,26 +171,25 @@ class MCHTOLStorageCostModel(CostModelBaseClass):
             inputs["max_capacity"], f"({self.config.commodity_units})*h", "t"
         )
 
-        # Equation (2): HC = P_nameplate - P_avg
-        # P_nameplate = self.max_H2_production_kg_pr_hr * 24 / 1e3
+        # hydrogenation capacity [metric tonnes/day]
         self.Hc = storage_max_fill_rate_tpd[0]
 
-        # Equation (3): DC = P_avg
+        # dehydrogenation capacity [metric tonnes/day]
         self.Dc = storage_max_empty_rate_tpd[0]
 
-        # Equation (1): AS = sum(curtailed_h2)
+        # annual hydrogen into storage [metric tonnes]
         self.As = annual_h2_stored_tpy  # tons/year
 
-        # Defined in paragraph between Equation (2) and (3)
+        # maximum storage capacity [metric tonnes]
         self.Ms = h2_storage_capacity_tons[0]
 
         # overnight capital cost coefficients
         occ_coeff = (54706639.43, 147074.25, 588779.05, 20825.39, 10.31)
 
-        #: fixed O&M cost coefficients
+        # fixed O&M cost coefficients
         foc_coeff = (3419384.73, 3542.79, 13827.02, 61.22, 0.0)
 
-        #: variable O&M cost coefficients
+        # variable O&M cost coefficients
         voc_coeff = (711326.78, 1698.76, 6844.86, 36.04, 376.31)
 
         outputs["CapEx"] = self.calc_cost_value(*occ_coeff)
