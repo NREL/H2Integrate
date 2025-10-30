@@ -2,7 +2,7 @@ from attrs import field, define
 from openmdao.utils import units
 
 from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
-from h2integrate.core.validators import contains, range_val
+from h2integrate.core.validators import contains, gte_zero, range_val
 from h2integrate.core.model_baseclasses import CostModelBaseClass
 
 
@@ -14,6 +14,29 @@ from h2integrate.simulation.technologies.hydrogen.h2_storage.pipe_storage import
 
 @define
 class HydrogenStorageBaseCostModelConfig(BaseConfig):
+    """Base config class for HydrogenStorageBaseCostModel
+
+    Attributes:
+        max_capacity (float): Maximum hydrogen storage capacity (in non-rate units,
+            e.g., "kg" if `commodity_units` is "kg/h").
+        max_charge_rate (float): Maximum rate at which the commodity can be charged (in units
+            per time step, e.g., "kg/time step"). This is the hydrogenation capacity.
+        commodity_name (str, optional): Name of the commodity being controlled (e.g., "hydrogen").
+            Defaults to "hydrogen"
+        commodity_units (str, optional): Units of the commodity (e.g., "kg/h"). Defaults to "kg/h"
+        cost_year (int, optional): Dollar year corresponding to the costs, must be 2018.
+        labor_rate (float, optional): hourly cost of labor in 2018 USD/hr. Defaults to 37.39817.
+        insurance_rate (float, optional): insurance cost as a percent (between 0 and 1) of
+            storage capex. Defaults to 0.01 (or 1.0%).
+        property_taxes (float, optional): property tax cost as a percent (between 0 and 1) of
+            storage capex. Defaults to 0.01 (or 1.0%).
+        licensing_permits (float, optional): licensing and permitting costs as a percent
+            (between 0 and 1) of storage capex. Defaults to 0.001 (or 0.1%).
+        compressor_om (float, optional): Compressor fixed operations and maintenance cost as a
+            percent (between 0 and 1) of compressor capex. Defaults to 0.04 (or 4.0%).
+        facility_om (float, optional):
+    """
+
     max_capacity: float = field()
     max_charge_rate: float = field()
 
@@ -21,7 +44,7 @@ class HydrogenStorageBaseCostModelConfig(BaseConfig):
     commodity_units: str = field(default="kg/h", validator=contains(["kg/h", "g/h", "t/h"]))
 
     cost_year: int = field(default=2018, converter=int, validator=contains([2018]))
-    labor_rate: float = field(default=37.39817, validator=range_val(0, 100))
+    labor_rate: float = field(default=37.39817, validator=gte_zero)
     insurance: float = field(default=0.01, validator=range_val(0, 1))
     property_taxes: float = field(default=0.01, validator=range_val(0, 1))
     licensing_permits: float = field(default=0.001, validator=range_val(0, 1))
@@ -131,11 +154,6 @@ class SaltCavernStorageCostModel(HydrogenStorageBaseCostModel):
         outputs["OpEx"] = h2_storage.output_dict["salt_cavern_storage_opex"]
 
 
-@define
-class PipeStorageCostModelConfig(HydrogenStorageBaseCostModelConfig):
-    compressor_output_pressure: float = field(default=100, kw_only=True)  # bar
-
-
 class PipeStorageCostModel(HydrogenStorageBaseCostModel):
     def initialize(self):
         super().initialize()
@@ -143,13 +161,11 @@ class PipeStorageCostModel(HydrogenStorageBaseCostModel):
     def setup(self):
         super().setup()
 
-        self.config = PipeStorageCostModelConfig.from_dict(
-            merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance"),
-            strict=False,
-        )
-
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         storage_input = self.make_storage_input_dict(inputs)
+
+        # compressor_output_pressure must be 100 bar or else an error will be thrown
+        storage_input.update({"compressor_output_pressure": 100})
         h2_storage = UndergroundPipeStorage(storage_input)
 
         h2_storage.pipe_storage_capex()
