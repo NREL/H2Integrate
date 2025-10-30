@@ -101,13 +101,14 @@ class HydrogenStorageBaseCostModel(CostModelBaseClass):
         )
 
         # convert charge rate to kg/h
+        # TODO: update to kg/day as a bug-fix
         storage_max_fill_rate = units.convert_units(
             inputs["max_charge_rate"], f"{self.config.commodity_units}", "kg/h"
         )
 
         storage_input["h2_storage_kg"] = max_capacity_kg[0]
 
-        # below has to be in kg/day
+        # below should be in kg/day
         storage_input["system_flow_rate"] = storage_max_fill_rate[0]
 
         return storage_input
