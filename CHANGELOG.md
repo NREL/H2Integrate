@@ -13,6 +13,7 @@
 - Added `simple_grid_layout.py` for wind plant layout modeling, can model square or rectangular layouts.
 - Added ability to visualize the wind plant layout for PySAM Windpower model using `post_process(show_plots=True)`.
 - Added Wind Annual Technology Baseline cost model `atb_wind_cost.py`.
+- Updated inputs for the `ATBBatteryCostModel` and `DemandOpenLoopController` so storage capacity and charge rate can be design variables
 
 ## 0.4.0 [October 1, 2025]
 
