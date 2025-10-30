@@ -30,6 +30,7 @@ from h2integrate.converters.ammonia.ammonia_synloop import (
     AmmoniaSynLoopCostModel,
     AmmoniaSynLoopPerformanceModel,
 )
+from h2integrate.storage.simple_storage_auto_sizing import StorageAutoSizingModel
 from h2integrate.converters.water.desal.desalination import (
     ReverseOsmosisCostModel,
     ReverseOsmosisPerformanceModel,
@@ -56,7 +57,6 @@ from h2integrate.converters.methanol.co2h_methanol_plant import (
     CO2HMethanolPlantFinanceModel,
     CO2HMethanolPlantPerformanceModel,
 )
-from h2integrate.storage.hydrogen.h2_storage_auto_sizing import H2StorageAutoSizingModel
 from h2integrate.converters.natural_gas.natural_gas_cc_ct import (
     NaturalGasCostModel,
     NaturalGasPerformanceModel,
@@ -174,7 +174,7 @@ supported_models = {
     "pysam_battery": PySAMBatteryPerformanceModel,
     "hydrogen_tank_performance": HydrogenTankPerformanceModel,
     "hydrogen_tank_cost": HydrogenTankCostModel,
-    "h2_storage_auto_sizing": H2StorageAutoSizingModel,
+    "storage_auto_sizing": StorageAutoSizingModel,
     "lined_rock_cavern_cost": LinedRockCavernStorageCostModel,
     "salt_cavern_cost": SaltCavernStorageCostModel,
     "mch_tol_storage_cost": MCHTOLStorageCostModel,
