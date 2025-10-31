@@ -66,9 +66,9 @@ def test_baseline_steel_eaf_costs_rosner_ng(
     plant_config, driver_config, steel_eaf_config_rosner_ng, subtests
 ):
     expected_capex = 264034898.3329662
-    expected_var_om = 0
+    expected_var_om = 32.09095
     expected_fixed_om = 38298777.651658
-    capacity = 0
+    capacity = 1189772 / 365  # t/day
 
     prob = om.Problem()
     steel_eaf_perf = EAFPlantPerformanceComponent(
