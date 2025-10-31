@@ -3,6 +3,7 @@ from pathlib import Path
 
 import yaml
 import numpy as np
+import networkx as nx
 import openmdao.api as om
 
 from h2integrate.core.utilities import create_xdsm_from_config
@@ -313,7 +314,7 @@ class H2IntegrateModel:
                 for model_type in model_types:
                     if model_type in individual_tech_config:
                         model_object = self._process_model(
-                            model_type, individual_tech_config, tech_group
+                            model_type, individual_tech_config, tech_group, self.technology_config
                         )
                         if "control_strategy" in model_type:
                             plural_model_type_name = "control_strategies"
@@ -353,7 +354,7 @@ class H2IntegrateModel:
                 )
                 self.plant.add_subsystem(tech_name, comp)
 
-    def _process_model(self, model_type, individual_tech_config, tech_group):
+    def _process_model(self, model_type, individual_tech_config, tech_group, whole_tech_config={}):
         # Generalized function to process model definitions
         model_name = individual_tech_config[model_type]["model"]
         model_object = self.supported_models[model_name]
@@ -363,6 +364,7 @@ class H2IntegrateModel:
                 driver_config=self.driver_config,
                 plant_config=self.plant_config,
                 tech_config=individual_tech_config,
+                whole_tech_config=whole_tech_config,
             ),
             promotes=["*"],
         )
@@ -970,15 +972,20 @@ class H2IntegrateModel:
 
         self.plant.options["auto_order"] = True
 
-        # Check if there are any connections FROM a finance group to ammonia
-        # This handles the case where LCOH is computed in the finance group and passed to ammonia
+        # Check if there are any loops in the technology interconnections
+        # If loops are present, add solvers to resolve the coupling
+        # Create a directed graph from the technology interconnections
+        G = nx.DiGraph()
         for connection in technology_interconnections:
-            if connection[0].startswith("finance_subgroup_") and connection[1] == "ammonia":
-                # If the connection is from a finance group, set solvers for the
-                # plant to resolve the coupling
-                self.plant.nonlinear_solver = om.NonlinearBlockGS()
-                self.plant.linear_solver = om.DirectSolver()
-                break
+            source = connection[0]
+            destination = connection[1]
+            G.add_edge(source, destination)
+
+        # Check if there are any cycles (loops) in the graph
+        if list(nx.simple_cycles(G)):
+            # If cycles are found, set solvers for the plant to resolve the coupling
+            self.plant.nonlinear_solver = om.NonlinearBlockGS()
+            self.plant.linear_solver = om.DirectSolver()
 
         # initialize dispatch rules connection list
         tech_to_dispatch_connections = self.plant_config.get("tech_to_dispatch_connections", [])

@@ -1,9 +1,14 @@
+import numpy as np
 from attrs import field, define
 
 from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
 from h2integrate.core.validators import gt_zero, contains
 from h2integrate.tools.eco.utilities import ceildiv
+from h2integrate.converters.ammonia.ammonia_synloop import size_hydrogen
 from h2integrate.converters.hydrogen.electrolyzer_baseclass import ElectrolyzerPerformanceBaseClass
+from h2integrate.simulation.technologies.hydrogen.electrolysis.PEM_tools import (
+    size_electrolyzer_for_hydrogen_demand,
+)
 from h2integrate.simulation.technologies.hydrogen.electrolysis.run_h2_PEM import run_h2_PEM
 
 
@@ -13,6 +18,19 @@ class ECOElectrolyzerPerformanceModelConfig(BaseConfig):
     Configuration class for the ECOElectrolyzerPerformanceModel.
 
     Args:
+        size_mode (str): The mode in which the electrolyzer is sized. Options:
+            - "size_from_config": The electrolyzer size is taken from the config.
+            - "resize_for_max_feedstock": The electrolyzer size is calculated to handle the
+                maximum available amount of a certain feedstock or feedstocks
+            - "resize_for_max_product": The electrolyzer size is calculated to handle the
+                maximum amount of a certain product or products used by another tech
+        resize_by_flow (str): The feedstock/product flow used to determine the plant size
+        resize_by_tech (str): A connected tech whose feedstock requirements are used to determine
+            the plant size in "resize_for_max_product" mode
+        iterative_mode (bool): A temporary boolean used to switch between the two methods of
+            executing "resize_for_max_product" mode. When true, an additional connected variable
+            will be made from the upstream component, creating a group with no explicit solution.
+            OM will attempt to solve this but will crash - just here for demonstration purposes.
         sizing (dict): A dictionary containing the following model sizing parameters:
             - resize_for_enduse (bool): Flag to adjust the electrolyzer based on the enduse.
             - size_for (str): Determines the sizing strategy, either "BOL" (generous), or
@@ -35,6 +53,29 @@ class ECOElectrolyzerPerformanceModelConfig(BaseConfig):
             (https://www.hydrogen.energy.gov/docs/hydrogenprogramlibraries/pdfs/24005-clean-hydrogen-production-cost-pem-electrolyzer.pdf?sfvrsn=8cb10889_1)
     """
 
+    size_mode: str = field(
+        validator=contains(
+            ["size_from_config", "resize_for_max_feedstock", "resize_for_max_product"]
+        )
+    )
+    resize_by_flow: str = field(
+        validator=contains(
+            [
+                "none",
+                "electricity",
+                "hydrogen",
+            ]
+        )
+    )
+    resize_by_tech: str = field(
+        validator=contains(
+            [
+                "none",
+                "ammonia",
+            ]
+        )
+    )
+    iterative_mode: bool = field()
     sizing: dict = field()
     n_clusters: int = field(validator=gt_zero)
     location: str = field(validator=contains(["onshore", "offshore"]))
@@ -75,11 +116,13 @@ class ECOElectrolyzerPerformanceModel(ElectrolyzerPerformanceBaseClass):
         )
 
         self.add_output(
-            "electrolyzer_size_mw",
+            "electrolyzer_size_mw_cost",
             val=0.0,
             units="MW",
             desc="Size of the electrolyzer in MW",
         )
+
+        self.add_input("max_hydrogen_capacity", val=1000.0, units="kg/h")
 
     def compute(self, inputs, outputs):
         plant_life = self.options["plant_config"]["plant"]["plant_life"]
@@ -106,7 +149,55 @@ class ECOElectrolyzerPerformanceModel(ElectrolyzerPerformanceBaseClass):
         # else:
         hydrogen_production_capacity_required_kgphr = []
         grid_connection_scenario = "off-grid"
-        energy_to_electrolyzer_kw = inputs["electricity_in"]
+
+        # Need to make sure electricity_in is never exactly zero to prevent NaNs in iterative_mode
+        self.set_val("electricity_in", np.maximum(inputs["electricity_in"], 1e-6))
+
+        # Make changes to computation based on sizing_mode:
+        if self.config.size_mode == "size_from_config":
+            # In this sizing mode, electrolyzer size comes from config
+            electrolyzer_size_mw = inputs["n_clusters"][0] * self.config.cluster_rating_MW
+        elif self.config.size_mode == "resize_for_max_feedstock":
+            # In this sizing mode, electrolyzer size comes from feedstock
+            if self.config.resize_by_flow == "electricity":
+                electrolyzer_size_mw = np.max(inputs["electricity_in"]) / 1000
+            else:
+                raise ValueError(f"Cannot resize for '{self.config.resize_by_flow}' feedstock")
+        elif self.config.size_mode == "resize_for_max_product":
+            # In this sizing mode, electrolyzer size comes from a connected tech's capacity
+            # to take in one of the electrolyzer's products
+            if self.config.resize_by_flow == "hydrogen":
+                connected_tech = self.options["plant_config"]["technology_interconnections"]
+                tech_found = False
+                tech_index = 0
+                while not tech_found and tech_index < len(connected_tech):
+                    connection = connected_tech[tech_index]
+                    dest_tech = connection[1]
+                    transport_item = connection[2]
+                    if (
+                        dest_tech == self.config.resize_by_tech
+                        and transport_item == self.config.resize_by_flow
+                    ):
+                        tech_found = True
+                        if dest_tech == "ammonia":
+                            if self.config.iterative_mode:
+                                h2_kgphr = inputs["max_hydrogen_capacity"]
+                            else:
+                                h2_kgphr = size_hydrogen(
+                                    self.options["whole_tech_config"]["technologies"]["ammonia"]
+                                )
+                        else:
+                            raise ValueError(f"Sizing mode not defined for '{dest_tech}'")
+                    else:
+                        tech_index += 1
+                if tech_index == len(connected_tech):
+                    raise ValueError(f"Cannot find a connection to '{self.config.resize_by_tech}'")
+                else:
+                    electrolyzer_size_mw = size_electrolyzer_for_hydrogen_demand(h2_kgphr)
+            else:
+                raise ValueError(f"Cannot resize for '{self.config.resize_by_flow}' product")
+        else:
+            raise ValueError("Sizing mode '%s' not found".format())
 
         n_pem_clusters = int(ceildiv(electrolyzer_size_mw, self.config.cluster_rating_MW))
 
@@ -119,6 +210,7 @@ class ECOElectrolyzerPerformanceModel(ElectrolyzerPerformanceBaseClass):
             "turndown_ratio": self.config.turndown_ratio,
         }
 
+        energy_to_electrolyzer_kw = inputs["electricity_in"]
         H2_Results, h2_ts, h2_tot, power_to_electrolyzer_kw = run_h2_PEM(
             electrical_generation_timeseries=energy_to_electrolyzer_kw,
             electrolyzer_size=electrolyzer_size_mw,
@@ -139,4 +231,4 @@ class ECOElectrolyzerPerformanceModel(ElectrolyzerPerformanceBaseClass):
         outputs["efficiency"] = H2_Results["Sim: Average Efficiency [%-HHV]"]
         outputs["time_until_replacement"] = H2_Results["Time Until Replacement [hrs]"]
         outputs["rated_h2_production_kg_pr_hr"] = H2_Results["Rated BOL: H2 Production [kg/hr]"]
-        outputs["electrolyzer_size_mw"] = electrolyzer_actual_capacity_MW
+        outputs["electrolyzer_size_mw_cost"] = electrolyzer_actual_capacity_MW

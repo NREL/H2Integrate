@@ -39,14 +39,14 @@ class SingliticoCostModel(ElectrolyzerCostBaseClass):
         super().setup()
 
         self.add_input(
-            "electrolyzer_size_mw",
+            "electrolyzer_size_mw_cost",
             val=0,
             units="MW",
             desc="Size of the electrolyzer in MW",
         )
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
-        electrolyzer_size_mw = inputs["electrolyzer_size_mw"][0]
+        electrolyzer_size_mw = inputs["electrolyzer_size_mw_cost"][0]
 
         # run hydrogen production cost model - from hopp examples
         if self.config.location == "onshore":

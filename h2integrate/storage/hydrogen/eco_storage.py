@@ -64,6 +64,9 @@ class H2Storage(CostModelBaseClass):
         self.add_input("efficiency", val=0.0, desc="Average efficiency of the electrolyzer")
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
+        # Need to make sure hydrogen_in is never exactly zero to prevent NaNs in iterative_mode
+        self.set_val("hydrogen_in", np.maximum(inputs["hydrogen_in"], 1e-6))
+
         ########### initialize output dictionary ###########
         h2_storage_results = {}
 
