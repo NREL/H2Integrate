@@ -9,7 +9,7 @@ Filepaths in H2I can be specified in a number of ways. Files are looked for usin
 ## Main Input Files
 The main input files to H2Integrate (`plant_config`, `tech_config` and `driver_config`) are defined in a top-level config file. In many examples, these files live in the same folder as the python run script.
 
-The main input files are searched for H2I in the following order:
+The main input files are searched for in H2I in the following order:
 1. Relative to the folder containing the top-level config file
     ```yaml
     plant_config: "plant_config.yaml"
@@ -35,8 +35,10 @@ The main input files are searched for H2I in the following order:
     driver_config: "/Users/myname/H2Integrate/examples/01_onshore_steel_mn/driver_config.yaml"
     ```
 
+Note that if more than one file is found with the same name, then the code will give an error. A filepath will only be returned if there is one, and only one, file that matches.
+
 ## Recommendations
-1. Change your current working directory to the folder containing your input files, this is how most examples are set-up.
+1. Change your current working directory to the folder containing your input files. This is how most examples are set-up.
     ```bash
     cd examples/01_onshore_steel_mn
     python run_onshore_steel_mn.py
