@@ -12,14 +12,8 @@ technologies:
         location: "onshore"
         electrolyzer_capex: 1295 # $/kW overnight installed capital costs for a 1 MW system in 2022 USD/kW (DOE hydrogen program record 24005	Clean Hydrogen Production Cost Scenarios with PEM Electrolyzer Technology 05/20/24) (https://www.hydrogen.energy.gov/docs/hydrogenprogramlibraries/pdfs/24005-clean-hydrogen-production-cost-pem-electrolyzer.pdf?sfvrsn=8cb10889_1)
       performance_parameters:
-        size_mode: "resize_for_max_product"
-        resize_by_flow: "hydrogen"
-        resize_by_tech: "ammonia"
-        iterative_mode: True
         sizing:
-          resize_for_enduse: False
-          size_for: 'BOL' #'BOL' (generous) or 'EOL' (conservative)
-          hydrogen_dmd:
+          size_mode: "normal"
         n_clusters: 16
         cluster_rating_MW: 40
         pem_control_type: 'basic'
@@ -71,7 +65,8 @@ technologies:
         catalyst_consumption_rate: 0.000091295354067341
         catalyst_replacement_interval: 3
       performance_parameters:
-        iterative_mode: True
+        sizing:
+          size_mode: "normal"
         capacity_factor: 0.9
         energy_demand: 0.530645243
         heat_output: 0.8299956
@@ -96,7 +91,7 @@ technologies:
         synloop_capex_base: 302460908 # See ASU + HB capex-NETL source.xlsx
         heat_capex_base: 7069100
         cool_capex_base: 4799200
-        other_eqpt_capex_base: 0
+        other_eqpt_capex_base: 0.001
         land_capex_base: 4112701.84103543
         deprec_noneq_capex_rate: 0.42
         labor_rate_base: 57
@@ -107,7 +102,7 @@ technologies:
         maint_rep: 0.005
         oxygen_byproduct_rate: 0.29405077250145
         water_consumption_rate: 0.049236824
-        rebuild_cost_base: 0
+        rebuild_cost_base: 0.001
         cooling_water_cost_base: 0.000113349938601175
         catalyst_cost_base: 23.19977341
         oxygen_price_base: 0.0285210891617726

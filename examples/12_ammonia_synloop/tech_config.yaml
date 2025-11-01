@@ -24,9 +24,7 @@ technologies:
 
       performance_parameters:
         sizing:
-          resize_for_enduse: False
-          size_for: 'BOL' #'BOL' (generous) or 'EOL' (conservative)
-          hydrogen_dmd:
+          size_mode: "normal"
         n_clusters: 16
         cluster_rating_MW: 40
         pem_control_type: 'basic'
@@ -68,6 +66,8 @@ technologies:
         catalyst_consumption_rate: 0.000091295354067341
         catalyst_replacement_interval: 3
       performance_parameters:
+        sizing:
+          size_mode: "normal"
         capacity_factor: 0.9
         energy_demand: 0.530645243
         heat_output: 0.8299956
