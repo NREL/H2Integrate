@@ -52,6 +52,7 @@ class NaturalGasPerformanceModel(om.ExplicitComponent):
         self.options.declare("driver_config", types=dict)
         self.options.declare("plant_config", types=dict)
         self.options.declare("tech_config", types=dict)
+        self.options.declare("whole_tech_config", types=dict)
 
     def setup(self):
         self.config = NaturalGasPerformanceConfig.from_dict(

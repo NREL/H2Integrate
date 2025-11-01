@@ -295,6 +295,7 @@ class SimpleASUCostModel(CostModelBaseClass):
         self.options.declare("plant_config", types=dict)
         self.options.declare("tech_config", types=dict)
         self.options.declare("driver_config", types=dict)
+        self.options.declare("whole_tech_config", types=dict)
 
     def setup(self):
         self.config = SimpleASUCostConfig.from_dict(
