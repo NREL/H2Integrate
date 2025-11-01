@@ -18,24 +18,25 @@ class ECOElectrolyzerPerformanceModelConfig(BaseConfig):
     Configuration class for the ECOElectrolyzerPerformanceModel.
 
     Args:
-        size_mode (str): The mode in which the electrolyzer is sized. Options:
-            - "size_from_config": The electrolyzer size is taken from the config.
-            - "resize_for_max_feedstock": The electrolyzer size is calculated to handle the
-                maximum available amount of a certain feedstock or feedstocks
-            - "resize_for_max_product": The electrolyzer size is calculated to handle the
-                maximum amount of a certain product or products used by another tech
-        resize_by_flow (str): The feedstock/product flow used to determine the plant size
-        resize_by_tech (str): A connected tech whose feedstock requirements are used to determine
-            the plant size in "resize_for_max_product" mode
-        iterative_mode (bool): A temporary boolean used to switch between the two methods of
-            executing "resize_for_max_product" mode. When true, an additional connected variable
-            will be made from the upstream component, creating a group with no explicit solution.
-            OM will attempt to solve this but will crash - just here for demonstration purposes.
         sizing (dict): A dictionary containing the following model sizing parameters:
-            - resize_for_enduse (bool): Flag to adjust the electrolyzer based on the enduse.
-            - size_for (str): Determines the sizing strategy, either "BOL" (generous), or
-                "EOL" (conservative).
-            - hydrogen_dmd (#TODO): #TODO
+            - size_mode (str): The mode in which the component is sized. Options:
+                - "normal": The component size is taken from the tech_config.
+                - "resize_by_max_feedstock": The component size is calculated relative to the
+                    maximum available amount of a certain feedstock or feedstocks
+                - "resize_by_max_commodity": The electrolyzer size is calculated relative to the
+                    maximum amount of the commodity used by another tech
+            - resize_by_flow (str): The feedstock/commodity flow used to determine the plant size
+                in "resize_by_max_feedstock" and "resize_by_max_commodity" modes
+            - resize_by_tech (str): A connected tech whose feedstock/commodity flow is used to
+                determine the plant size in "resize_for_max_product" mode
+            - max_feedstock_ratio (float): The ratio of the max feedstock that can be consumed by
+                this component to the max feedstock available.
+            - max_commodity_ratio (float): The ratio of the max commodity that can be produced by
+                this component to the max commodity consumed by the downstream tech.
+            - iterative_mode (bool): A temporary boolean used to switch between the two methods of
+                executing "resize_by_max_commodity" mode. When true an additional connected variable
+                will be made from the upstream component, making a group with no explicit solution.
+                OM will attempt to solve this but will crash, just here for demonstration purposes.
         n_clusters (int): number of electrolyzer clusters within the system.
         location (str): The location of the electrolyzer; options include "onshore" or "offshore".
         cluster_rating_MW (float): The rating of the clusters that the electrolyzer is grouped
@@ -53,29 +54,6 @@ class ECOElectrolyzerPerformanceModelConfig(BaseConfig):
             (https://www.hydrogen.energy.gov/docs/hydrogenprogramlibraries/pdfs/24005-clean-hydrogen-production-cost-pem-electrolyzer.pdf?sfvrsn=8cb10889_1)
     """
 
-    size_mode: str = field(
-        validator=contains(
-            ["size_from_config", "resize_for_max_feedstock", "resize_for_max_product"]
-        )
-    )
-    resize_by_flow: str = field(
-        validator=contains(
-            [
-                "none",
-                "electricity",
-                "hydrogen",
-            ]
-        )
-    )
-    resize_by_tech: str = field(
-        validator=contains(
-            [
-                "none",
-                "ammonia",
-            ]
-        )
-    )
-    iterative_mode: bool = field()
     sizing: dict = field()
     n_clusters: int = field(validator=gt_zero)
     location: str = field(validator=contains(["onshore", "offshore"]))
@@ -129,44 +107,57 @@ class ECOElectrolyzerPerformanceModel(ElectrolyzerPerformanceBaseClass):
         electrolyzer_size_mw = inputs["n_clusters"][0] * self.config.cluster_rating_MW
         electrolyzer_capex_kw = self.config.electrolyzer_capex
 
-        # # IF GRID CONNECTED
-        # if plant_config["plant"]["grid_connection"]:
-        #     # NOTE: if grid-connected, it assumes that hydrogen demand is input and there is not
-        #     # multi-cluster control strategies.
-        # This capability exists at the cluster level, not at the
-        #     # system level.
-        #     if config["sizing"]["hydrogen_dmd"] is not None:
-        #         grid_connection_scenario = "grid-only"
-        #         hydrogen_production_capacity_required_kgphr = config[
-        #             "sizing"
-        #         ]["hydrogen_dmd"]
-        #         energy_to_electrolyzer_kw = []
-        #     else:
-        #         grid_connection_scenario = "off-grid"
-        #         hydrogen_production_capacity_required_kgphr = []
-        #         energy_to_electrolyzer_kw = np.ones(8760) * electrolyzer_size_mw * 1e3
-        # # IF NOT GRID CONNECTED
-        # else:
         hydrogen_production_capacity_required_kgphr = []
         grid_connection_scenario = "off-grid"
 
         # Need to make sure electricity_in is never exactly zero to prevent NaNs in iterative_mode
         self.set_val("electricity_in", np.maximum(inputs["electricity_in"], 1e-6))
 
+        # Parse in sizing parameters
+        size_mode = self.config.sizing["size_mode"]
+        if "max_feedstock_ratio" not in self.config.sizing.keys():
+            feed_ratio = 1.0
+        else:
+            feed_ratio = self.config.sizing["max_feedstock_ratio"]
+        if "max_commodity_ratio" not in self.config.sizing.keys():
+            comm_ratio = 1.0
+        else:
+            comm_ratio = self.config.sizing["max_commodity_ratio"]
+        if size_mode != "normal":
+            if "resize_by_flow" in self.config.sizing.keys():
+                size_flow = self.config.sizing["resize_by_flow"]
+            else:
+                raise ValueError(
+                    "'resize_by_flow' must be set in sizing dict when size_mode is "
+                    "'resize_by_max_feedstock' or 'resize_by_max_commodity'"
+                )
+            if size_mode == "resize_by_max_commodity":
+                if "resize_by_tech" in self.config.sizing.keys():
+                    size_tech = self.config.sizing["resize_by_tech"]
+                else:
+                    raise ValueError(
+                        "'resize_by_tech' must be set in sizing dict when size_mode is "
+                        "'resize_by_max_commodity'"
+                    )
+        if "iterative_mode" in self.config.sizing.keys():
+            iter_mode = self.config.sizing["iterative_mode"]
+        else:
+            iter_mode = False
+
         # Make changes to computation based on sizing_mode:
-        if self.config.size_mode == "size_from_config":
+        if size_mode == "normal":
             # In this sizing mode, electrolyzer size comes from config
             electrolyzer_size_mw = inputs["n_clusters"][0] * self.config.cluster_rating_MW
-        elif self.config.size_mode == "resize_for_max_feedstock":
+        elif size_mode == "resize_by_max_feedstock":
             # In this sizing mode, electrolyzer size comes from feedstock
-            if self.config.resize_by_flow == "electricity":
-                electrolyzer_size_mw = np.max(inputs["electricity_in"]) / 1000
+            if size_flow == "electricity":
+                electrolyzer_size_mw = np.max(inputs["electricity_in"]) / 1000 * feed_ratio
             else:
-                raise ValueError(f"Cannot resize for '{self.config.resize_by_flow}' feedstock")
-        elif self.config.size_mode == "resize_for_max_product":
+                raise ValueError(f"Cannot resize for '{size_flow}' feedstock")
+        elif size_mode == "resize_by_max_commodity":
             # In this sizing mode, electrolyzer size comes from a connected tech's capacity
             # to take in one of the electrolyzer's products
-            if self.config.resize_by_flow == "hydrogen":
+            if size_flow == "hydrogen":
                 connected_tech = self.options["plant_config"]["technology_interconnections"]
                 tech_found = False
                 tech_index = 0
@@ -174,13 +165,10 @@ class ECOElectrolyzerPerformanceModel(ElectrolyzerPerformanceBaseClass):
                     connection = connected_tech[tech_index]
                     dest_tech = connection[1]
                     transport_item = connection[2]
-                    if (
-                        dest_tech == self.config.resize_by_tech
-                        and transport_item == self.config.resize_by_flow
-                    ):
+                    if dest_tech == size_tech and transport_item == size_flow:
                         tech_found = True
                         if dest_tech == "ammonia":
-                            if self.config.iterative_mode:
+                            if iter_mode:
                                 h2_kgphr = inputs["max_hydrogen_capacity"]
                             else:
                                 h2_kgphr = size_hydrogen(
@@ -191,11 +179,13 @@ class ECOElectrolyzerPerformanceModel(ElectrolyzerPerformanceBaseClass):
                     else:
                         tech_index += 1
                 if tech_index == len(connected_tech):
-                    raise ValueError(f"Cannot find a connection to '{self.config.resize_by_tech}'")
+                    raise ValueError(f"Cannot find a connection to '{size_tech}'")
                 else:
-                    electrolyzer_size_mw = size_electrolyzer_for_hydrogen_demand(h2_kgphr)
+                    electrolyzer_size_mw = size_electrolyzer_for_hydrogen_demand(
+                        h2_kgphr * comm_ratio
+                    )
             else:
-                raise ValueError(f"Cannot resize for '{self.config.resize_by_flow}' product")
+                raise ValueError(f"Cannot resize for '{size_flow}' product")
         else:
             raise ValueError("Sizing mode '%s' not found".format())
 
