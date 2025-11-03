@@ -33,7 +33,7 @@ class SteelCostBaseClass(CostModelBaseClass):
         self.add_input("plant_capacity_factor", val=0.0, units=None, desc="Capacity factor")
         self.add_input("LCOH", val=0.0, units="USD/kg", desc="Levelized cost of hydrogen")
         self.add_input(
-            "electricity_cost", val=0.0, units="USD/MW/h", desc="Levelized cost of electricity"
+            "electricity_cost", val=0.0, units="USD/(MW*h)", desc="Levelized cost of electricity"
         )
 
 

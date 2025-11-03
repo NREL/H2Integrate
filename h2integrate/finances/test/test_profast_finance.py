@@ -84,8 +84,8 @@ def test_profast_comp(profast_inputs_no1, fake_filtered_tech_config, fake_cost_d
 
     prob.run_model()
 
-    lcoe = prob.get_val("pf.LCOE_no1", units="USD/MW/h")
-    price = prob.get_val("pf.price_electricity_no1", units="USD/MW/h")
+    lcoe = prob.get_val("pf.LCOE_no1", units="USD/(MW*h)")
+    price = prob.get_val("pf.price_electricity_no1", units="USD/(MW*h)")
 
     wacc = prob.get_val("pf.wacc_electricity_no1", units="percent")
     crf = prob.get_val("pf.crf_electricity_no1", units="percent")
