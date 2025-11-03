@@ -5,13 +5,14 @@ from h2integrate.transporters.cable import CablePerformanceModel
 from h2integrate.finances.profast_lco import ProFastLCO
 from h2integrate.finances.profast_npv import ProFastNPV
 from h2integrate.converters.steel.steel import SteelPerformanceModel, SteelCostAndFinancialModel
-from h2integrate.converters.wind.wind_plant import WindPlantCostModel, WindPlantPerformanceModel
+from h2integrate.converters.wind.wind_pysam import PYSAMWindPlantPerformanceModel
 from h2integrate.finances.simple_npv_finance import NPVFinance
 from h2integrate.transporters.generic_summer import GenericSummerPerformanceModel
 from h2integrate.converters.hopp.hopp_wrapper import HOPPComponent
 from h2integrate.converters.solar.solar_pysam import PYSAMSolarPlantPerformanceModel
 from h2integrate.storage.generic_storage_cost import GenericStorageCostModel
 from h2integrate.storage.hydrogen.eco_storage import H2Storage
+from h2integrate.converters.wind.atb_wind_cost import ATBWindPlantCostModel
 from h2integrate.storage.battery.pysam_battery import PySAMBatteryPerformanceModel
 from h2integrate.transporters.generic_combiner import GenericCombinerPerformanceModel
 from h2integrate.transporters.generic_splitter import GenericSplitterPerformanceModel
@@ -22,7 +23,6 @@ from h2integrate.storage.hydrogen.tank_baseclass import (
     HydrogenTankPerformanceModel,
 )
 from h2integrate.converters.hydrogen.wombat_model import WOMBATElectrolyzerModel
-from h2integrate.converters.wind.wind_plant_pysam import PYSAMWindPlantPerformanceModel
 from h2integrate.storage.battery.atb_battery_cost import ATBBatteryCostModel
 from h2integrate.converters.ammonia.ammonia_synloop import (
     AmmoniaSynLoopCostModel,
@@ -115,8 +115,7 @@ supported_models = {
     "goes_fulldisc_solar_v4_api": GOESFullDiscSolarAPI,
     "goes_tmy_solar_v4_api": GOESTMYSolarAPI,
     # Converters
-    "wind_plant_performance": WindPlantPerformanceModel,
-    "wind_plant_cost": WindPlantCostModel,
+    "atb_wind_cost": ATBWindPlantCostModel,
     "pysam_wind_plant_performance": PYSAMWindPlantPerformanceModel,
     "pysam_solar_plant_performance": PYSAMSolarPlantPerformanceModel,
     "atb_utility_pv_cost": ATBUtilityPVCostModel,
