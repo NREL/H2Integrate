@@ -436,8 +436,6 @@ class PoseOptimization:
         """
         folder_output = self.config["general"]["folder_output"]
 
-        if not Path(folder_output).exists():
-            Path.mkdir(folder_output, parents=True)
         # Set recorder on the OpenMDAO driver level using the `optimization_log`
         # filename supplied in the optimization yaml
         recorder_options = ["record_inputs", "record_outputs", "record_residuals"]
