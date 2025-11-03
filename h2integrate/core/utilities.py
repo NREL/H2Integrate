@@ -372,80 +372,95 @@ def check_file_format_for_csv_generator(
 
     name_map = {}
 
+    # below is how OpenMDAO loads in the csv file and searches for invalid variables
     with Path(csv_fpath).open() as f:
         # map header names to absolute names if necessary
         names = re.sub(" ", "", f.readline()).strip().split(",")
         name_map = {name: name for name in names if name in design_vars}
 
+    # make list of invalid design variables (which may be formatting issues)
     invalid_desvars = [name for name in names if name not in name_map]
 
     if check_only:
         if len(invalid_desvars) == 0:
-            return True
+            return True  # no invalid design variables
         else:
-            return False
+            return False  # found formatting issues/invalid design variables
 
-    if len(invalid_desvars) == 0:
+    if len(invalid_desvars) == 0:  # didn't find errors
         return csv_fpath
 
     file_txt_to_remove = []
     remove_index = False
-    if len(invalid_desvars) > 0:
-        for invalid_var in invalid_desvars:
-            if invalid_var != "":
-                contains_dvar = [d for d in design_vars if d in invalid_var]
-                if len(contains_dvar) == 1:
-                    txt_to_remove = [
-                        rm_txt for rm_txt in invalid_var.split(contains_dvar[0]) if rm_txt != ""
-                    ]
-                    file_txt_to_remove.extend(txt_to_remove)
 
-                if len(contains_dvar) > 1:
-                    # duplicate definitions of the design variable
-                    msg = (
-                        f"{invalid_var} is does not match a unique design variable. The design "
-                        f"variables defined in the driver_config file are {design_vars}."
-                        f" Please check the csv file {csv_fpath} to only have one column per "
-                        "design variable included in the driver config file."
-                    )
-                    raise ValueError(msg)
-                if len(contains_dvar) == 0:
-                    msg = (
-                        f"{invalid_var} is an invalid design variable. The design "
-                        f"variables defined in the driver_config file are {design_vars}."
-                        f" Please check the csv file {csv_fpath} to only have the design "
-                        "variables included in the driver config file."
-                    )
-                    raise ValueError(msg)
+    for invalid_var in invalid_desvars:
+        if invalid_var != "":
+            # check if any invalid variables contain a design variable name
+            # this could occur if "invisible" characters are attached to the column name
+            contains_dvar = [d for d in design_vars if d in invalid_var]
+            if len(contains_dvar) == 1:
+                # only one column contains the design variable, but has formatting issue
+                txt_to_remove = [
+                    rm_txt for rm_txt in invalid_var.split(contains_dvar[0]) if rm_txt != ""
+                ]
+                file_txt_to_remove.extend(txt_to_remove)
 
-            else:
-                remove_index = True
-                with Path(csv_fpath).open() as f:
-                    reader = csv.DictReader(f)
-                    index_col = [i for i, n in enumerate(reader.fieldnames) if n == ""]
+            if len(contains_dvar) > 1:
+                # duplicate definitions of the design variable
+                msg = (
+                    f"{invalid_var} is does not match a unique design variable. The design "
+                    f"variables defined in the driver_config file are {design_vars}."
+                    f" Please check the csv file {csv_fpath} to only have one column per "
+                    "design variable included in the driver config file."
+                )
+                raise ValueError(msg)
 
-        original_file = Path(csv_fpath).open()
-        lines = original_file.readlines()
-        original_file.close()
-        for f_remove in file_txt_to_remove:
-            lines = [line.replace(f_remove, "") for line in lines]
-        if remove_index:
-            # remove the columns that are index columns
-            lines = [
-                ",".join(lp for li, lp in enumerate(line.split(",")) if li not in index_col)
-                for line in lines
-            ]
-        if not overwrite_file:
-            dirname = Path(csv_fpath).absolute().parent
-            fname = Path(csv_fpath).name
-            new_fname = make_unique_case_name(dirname, fname, ".csv")
-            new_fpath = dirname / new_fname
+            if len(contains_dvar) == 0:
+                # the invalid_desvar column has a variable that isnt a design variable
+                msg = (
+                    f"{invalid_var} is an invalid design variable. The design "
+                    f"variables defined in the driver_config file are {design_vars}."
+                    f" Please check the csv file {csv_fpath} to only have the design "
+                    "variables included in the driver config file."
+                )
+                raise ValueError(msg)
+
         else:
-            new_fpath = Path(csv_fpath).absolute()
+            # theres an empty index column, with a column name of ""
+            remove_index = True
+            with Path(csv_fpath).open() as f:
+                reader = csv.DictReader(f)
+                index_col = [i for i, n in enumerate(reader.fieldnames) if n == ""]
 
-        txt = "".join(line for line in lines)
-        new_file = Path(new_fpath).open(mode="w+")
-        new_file.write(txt)
-        new_file.close()
+    original_file = Path(csv_fpath).open()
+    lines = original_file.readlines()
+    original_file.close()
+    for f_remove in file_txt_to_remove:
+        # remove characters that cause formatting issues
+        lines = [line.replace(f_remove, "") for line in lines]
+    if remove_index:
+        # remove the columns that are index columns
+        lines = [
+            ",".join(lp for li, lp in enumerate(line.split(",")) if li not in index_col)
+            for line in lines
+        ]
 
-        return new_fpath
+    if not overwrite_file:
+        # create a new file name with the same basename as the input csv file
+        dirname = Path(csv_fpath).absolute().parent
+        fname = Path(csv_fpath).name
+        new_fname = make_unique_case_name(dirname, fname, ".csv")
+        new_fpath = dirname / new_fname
+    else:
+        # use the same filepath as the csv file and overwrite it
+        new_fpath = Path(csv_fpath).absolute()
+
+    # join the separate lines into one string
+    txt = "".join(line for line in lines)
+    new_file = Path(new_fpath).open(mode="w+")
+
+    # save the reformatted lines to the file
+    new_file.write(txt)
+    new_file.close()
+
+    return new_fpath
