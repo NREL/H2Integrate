@@ -455,7 +455,7 @@ class ProFastComp(om.ExplicitComponent):
     def setup(self):
         if self.options["commodity_type"] == "electricity":
             commodity_units = "kW*h/year"
-            self.lco_units = "USD/kW/h"
+            self.lco_units = "USD/(kW*h)"
         else:
             commodity_units = "kg/year"
             self.lco_units = "USD/kg"

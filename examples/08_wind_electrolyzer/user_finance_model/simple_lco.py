@@ -23,7 +23,7 @@ class SimpleLCOFinance(om.ExplicitComponent):
     def setup(self):
         if self.options["commodity_type"] == "electricity":
             commodity_units = "kW*h/year"
-            lco_units = "USD/kW/h"
+            lco_units = "USD/(kW*h)"
         else:
             commodity_units = "kg/year"
             lco_units = "USD/kg"

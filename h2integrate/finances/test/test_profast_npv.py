@@ -119,7 +119,9 @@ def test_profast_npv_no1(profast_inputs_no1, fake_filtered_tech_config, fake_cos
 
     with subtests.test("Sell price"):
         assert (
-            pytest.approx(prob.get_val("pf.sell_price_electricity_no1", units="USD/kW/h"), rel=1e-6)
+            pytest.approx(
+                prob.get_val("pf.sell_price_electricity_no1", units="USD/(kW*h)"), rel=1e-6
+            )
             == profast_inputs_no1["commodity_sell_price"]
         )
 
@@ -160,16 +162,16 @@ def test_profast_npv_no1_change_sell_price(
 
     prob.model.add_subsystem("pf2", pf)
     prob.setup()
-    # set inputs for 'pf' with commodity sell price of 0.04 USD/kW/h
+    # set inputs for 'pf' with commodity sell price of 0.04 USD/(kW*h)
     prob.set_val("pf.total_electricity_produced", mean_hourly_production * 8760, units="kW*h/year")
     for variable, cost in fake_cost_dict.items():
         units = "USD" if "capex" in variable else "USD/year"
         prob.set_val(f"pf.{variable}", cost, units=units)
 
-    # set inputs for 'pf2' with commodity sell price of 0.07 USD/kW/h
+    # set inputs for 'pf2' with commodity sell price of 0.07 USD/(kW*h)
     new_sell_price = 0.07
     prob.set_val("pf2.total_electricity_produced", mean_hourly_production * 8760, units="kW*h/year")
-    prob.set_val("pf2.sell_price_electricity_no1_expensive", new_sell_price, units="USD/kW/h")
+    prob.set_val("pf2.sell_price_electricity_no1_expensive", new_sell_price, units="USD/(kW*h)")
     for variable, cost in fake_cost_dict.items():
         units = "USD" if "capex" in variable else "USD/year"
         prob.set_val(f"pf2.{variable}", cost, units=units)
@@ -178,11 +180,13 @@ def test_profast_npv_no1_change_sell_price(
 
     with subtests.test("Sell price for pf"):
         assert (
-            pytest.approx(prob.get_val("pf.sell_price_electricity_no1", units="USD/kW/h"), rel=1e-6)
+            pytest.approx(
+                prob.get_val("pf.sell_price_electricity_no1", units="USD/(kW*h)"), rel=1e-6
+            )
             == profast_inputs_no1["commodity_sell_price"]
         )
 
-    with subtests.test("NPV with sell price of 0.04 USD/kW/h"):
+    with subtests.test("NPV with sell price of 0.04 USD/(kW*h)"):
         assert (
             pytest.approx(prob.get_val("pf.NPV_electricity_no1", units="USD")[0], rel=1e-6)
             == -580179388.883
@@ -191,7 +195,8 @@ def test_profast_npv_no1_change_sell_price(
     with subtests.test("Sell price for pf2"):
         assert (
             pytest.approx(
-                prob.get_val("pf2.sell_price_electricity_no1_expensive", units="USD/kW/h"), rel=1e-6
+                prob.get_val("pf2.sell_price_electricity_no1_expensive", units="USD/(kW*h)"),
+                rel=1e-6,
             )
             == new_sell_price
         )
@@ -202,7 +207,7 @@ def test_profast_npv_no1_change_sell_price(
             > prob.get_val("pf.NPV_electricity_no1", units="USD")[0]
         )
 
-    with subtests.test("NPV with sell price of 0.07 USD/kW/h"):
+    with subtests.test("NPV with sell price of 0.07 USD/(kW*h)"):
         assert (
             pytest.approx(
                 prob.get_val("pf2.NPV_electricity_no1_expensive", units="USD")[0], rel=1e-6
@@ -238,7 +243,9 @@ def test_profast_npv_no2(profast_inputs_no2, fake_filtered_tech_config, fake_cos
 
     with subtests.test("Sell price"):
         assert (
-            pytest.approx(prob.get_val("pf.sell_price_electricity_no2", units="USD/kW/h"), rel=1e-6)
+            pytest.approx(
+                prob.get_val("pf.sell_price_electricity_no2", units="USD/(kW*h)"), rel=1e-6
+            )
             == profast_inputs_no2["commodity_sell_price"]
         )
 

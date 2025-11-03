@@ -94,7 +94,7 @@ class NPVFinance(om.ExplicitComponent):
         # TODO: update below with standardized naming
         if self.options["commodity_type"] == "electricity":
             commodity_units = "kW*h/year"
-            commodity_price_units = "USD/kW/h"
+            commodity_price_units = "USD/(kW*h)"
         else:
             commodity_units = "kg/year"
             commodity_price_units = "USD/kg"
