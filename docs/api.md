@@ -7,6 +7,12 @@
    :toctree: _autosummary
    :recursive:
 
-   simulation
+   core
+   converters
+   control
+   finances
+   resource
+   storage
+   transporters
    tools
 ```
