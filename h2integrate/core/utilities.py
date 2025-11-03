@@ -1,4 +1,7 @@
+import re
+import csv
 from typing import Any
+from pathlib import Path
 from collections import OrderedDict
 
 import attrs
@@ -290,3 +293,174 @@ def dict_to_yaml_formatting(orig_dict):
                 else:
                     orig_dict[key] = float(val)
     return orig_dict
+
+
+def make_unique_case_name(folder, proposed_fname, fext):
+    """Generate a filename that does not already exist in a user-defined folder.
+
+    Args:
+        folder (str | Path): directory that a file is expected to be created in.
+        proposed_fname (str): filename (with extension) to check for existence and
+            to use as the base file description of a new an unique file name.
+        fext (str): file extension, such as ".csv", ".sql", ".yaml", etc.
+
+    Returns:
+        str: unique filename that does not yet exist in folder.
+    """
+    if "." not in fext:
+        fext = f".{fext}"
+
+    # if file(s) exist with the same base name, make a new unique filename
+    file_base = proposed_fname.split(fext)[0]
+    existing_files = [f for f in Path(folder).glob(f"**/*{fext}") if file_base in f.name]
+    if len(existing_files) == 0:
+        return proposed_fname
+
+    # get past numbers that were used to make unique files by matching
+    # filenames against the file base name followed by a number
+    past_numbers = [
+        int(re.findall(f"{file_base}[0-9]+", str(fname))[0].split(file_base)[-1])
+        for fname in existing_files
+        if len(re.findall(f"{file_base}[0-9]+", str(fname))) > 0
+    ]
+
+    if len(past_numbers) > 0:
+        # if multiple files have the same basename followed by a number,
+        # take the maximum unique number and add one
+        unique_number = int(max(past_numbers) + 1)
+        return f"{file_base}{unique_number}{fext}"
+    else:
+        # if no files have the same basename followed by a number,
+        # but do have the same basename, then add a zero to the file basename
+        return f"{file_base}0{fext}"
+
+
+def check_file_format_for_csv_generator(
+    csv_fpath, driver_config, check_only=True, overwrite_file=False
+):
+    """Check csv file format for the csv file used for the CSVGenerator generator.
+
+    Note:
+        Future development could include further checking the values within the rows
+        of the csv file and more rigorous checking of columns with empty headers.
+
+    Args:
+        csv_fpath (str | Path): filepath to csv file used for 'csvgen' generator.
+        driver_config (dict): driver configuration dictionary
+        check_only (bool, optional): If True, only check if file is error-free and return a boolean.
+          If False, also create a valid csv file if errors are found in the original csv file.
+          Defaults to True.
+        overwrite_file (bool, optional): If True, overwrites the input csv file with possible errors
+            removed. If False, writes a new csv file with a unique name. Only used if check_only is
+            False. Defaults to False.
+
+    Raises:
+        ValueError: If there are errors in the csv file beyond general formatting errors.
+
+    Returns:
+        bool | Path: returns a boolean if check_only is True, or a Path object is check_only is
+            False. If check_only is True, returns True if the file appears error-free or False
+            if errors are found. If check_only is False, returns the filepath of the new csv
+            file that should not have errors.
+    """
+    design_vars = []
+    for technology, variables in driver_config["design_variables"].items():
+        for key, value in variables.items():
+            if value["flag"]:
+                design_var = f"{technology}.{key}"
+                design_vars.append(design_var)
+
+    name_map = {}
+
+    # below is how OpenMDAO loads in the csv file and searches for invalid variables
+    with Path(csv_fpath).open() as f:
+        # map header names to absolute names if necessary
+        names = re.sub(" ", "", f.readline()).strip().split(",")
+        name_map = {name: name for name in names if name in design_vars}
+
+    # make list of invalid design variables (which may be formatting issues)
+    invalid_desvars = [name for name in names if name not in name_map]
+
+    if check_only:
+        if len(invalid_desvars) == 0:
+            return True  # no invalid design variables
+        else:
+            return False  # found formatting issues/invalid design variables
+
+    if len(invalid_desvars) == 0:  # didn't find errors
+        return csv_fpath
+
+    file_txt_to_remove = []
+    remove_index = False
+
+    for invalid_var in invalid_desvars:
+        if invalid_var != "":
+            # check if any invalid variables contain a design variable name
+            # this could occur if "invisible" characters are attached to the column name
+            contains_dvar = [d for d in design_vars if d in invalid_var]
+            if len(contains_dvar) == 1:
+                # only one column contains the design variable, but has formatting issue
+                txt_to_remove = [
+                    rm_txt for rm_txt in invalid_var.split(contains_dvar[0]) if rm_txt != ""
+                ]
+                file_txt_to_remove.extend(txt_to_remove)
+
+            if len(contains_dvar) > 1:
+                # duplicate definitions of the design variable
+                msg = (
+                    f"{invalid_var} is does not match a unique design variable. The design "
+                    f"variables defined in the driver_config file are {design_vars}."
+                    f" Please check the csv file {csv_fpath} to only have one column per "
+                    "design variable included in the driver config file."
+                )
+                raise ValueError(msg)
+
+            if len(contains_dvar) == 0:
+                # the invalid_desvar column has a variable that isnt a design variable
+                msg = (
+                    f"{invalid_var} is an invalid design variable. The design "
+                    f"variables defined in the driver_config file are {design_vars}."
+                    f" Please check the csv file {csv_fpath} to only have the design "
+                    "variables included in the driver config file."
+                )
+                raise ValueError(msg)
+
+        else:
+            # theres an empty index column, with a column name of ""
+            remove_index = True
+            with Path(csv_fpath).open() as f:
+                reader = csv.DictReader(f)
+                index_col = [i for i, n in enumerate(reader.fieldnames) if n == ""]
+
+    original_file = Path(csv_fpath).open()
+    lines = original_file.readlines()
+    original_file.close()
+    for f_remove in file_txt_to_remove:
+        # remove characters that cause formatting issues
+        lines = [line.replace(f_remove, "") for line in lines]
+    if remove_index:
+        # remove the columns that are index columns
+        lines = [
+            ",".join(lp for li, lp in enumerate(line.split(",")) if li not in index_col)
+            for line in lines
+        ]
+
+    if not overwrite_file:
+        # create a new file name with the same basename as the input csv file
+        dirname = Path(csv_fpath).absolute().parent
+        fname = Path(csv_fpath).name
+        new_fname = make_unique_case_name(dirname, fname, ".csv")
+        new_fpath = dirname / new_fname
+    else:
+        # use the same filepath as the csv file and overwrite it
+        new_fpath = Path(csv_fpath).absolute()
+
+    # join the separate lines into one string
+    txt = "".join(line for line in lines)
+    new_file = Path(new_fpath).open(mode="w+")
+
+    # save the reformatted lines to the file
+    new_file.write(txt)
+    new_file.close()
+
+    return new_fpath
