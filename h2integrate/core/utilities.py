@@ -300,7 +300,7 @@ def make_unique_case_name(folder, proposed_fname, fext):
 
     Args:
         folder (str | Path): directory that a file is expected to be created in.
-        proposed_fname (str): filename (with extension) to check for existance and
+        proposed_fname (str): filename (with extension) to check for existence and
             to use as the base file description of a new an unique file name.
         fext (str): file extension, such as ".csv", ".sql", ".yaml", etc.
 
@@ -423,10 +423,6 @@ def check_file_format_for_csv_generator(
                 with Path(csv_fpath).open() as f:
                     reader = csv.DictReader(f)
                     index_col = [i for i, n in enumerate(reader.fieldnames) if n == ""]
-                    # for row in reader:
-                    #     for name in reader.fieldnames:
-                    #         if name=="":
-                    #             npfs = np.fromstring(re.sub(r'[\[\]]', '', row[name]), sep=' ')
 
         original_file = Path(csv_fpath).open()
         lines = original_file.readlines()

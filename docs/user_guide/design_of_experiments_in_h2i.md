@@ -7,14 +7,12 @@ Detailed information on setting up the `driver_config.yaml` file can be found [h
 
 ## Driver config file
 
-A design of experiments is The driver config file defines the analysis type and the optimization settings.
-However, if you are running an optimization, the driver config file will contain additional top-level keys to define the optimization settings, including driver specifications, design variables, constraints, and objective functions.
-
+The driver config file defines the analysis type and the optimization or design of experiments settings.
 For completeness, here is an example of a driver config file for a design of experiments problem:
 
 ```yaml
 name: "driver_config"
-description: "Runs a design sweel"
+description: "Runs a design sweep"
 
 general:
   folder_output: outputs
@@ -45,7 +43,7 @@ constraints: #constraints are not used within the design of experiments run
 
 objective: #the objective is not used within the design of experiments run
 # but is accessible in the recorder file as the objective
-  name: financials_subgroup_hydrogen.LCOH
+  name: finance_subgroup_hydrogen.LCOH
 
 recorder:
   file: "cases.sql"
@@ -123,7 +121,7 @@ driver:
 
 
 ### CSV
-This method is useful if there are specific combinations of designs variables that you want to sweep. An example
+This method is useful if there are specific combinations of designs variables that you want to sweep. An example is shown here:
 
 ```yaml
 driver:
@@ -136,5 +134,5 @@ driver:
 The **filename** input is the filepath to the csv file to read cases from. The first row of the csv file should contain the names of the design variables. The rest of the rows should contain the values of that design variable you want to run (such as `solar.capacity_kWdc` or `electrolyzer.n_clusters`). **The values in the csv file are expected to be in the same units specified for that design variable**.
 
 ```{note}
-It is recommended to check the csv file for potential formatting issues before running a simulation. This can be done using the `check_file_format_for_csv_generator` method in `h2integrate/core/utilities.py`. Usage of this method is shown in the `20_solar_electrolyzer_doe` example in the `examples` folder.
+You should check the csv file for potential formatting issues before running a simulation. This can be done using the `check_file_format_for_csv_generator` method in `h2integrate/core/utilities.py`. Usage of this method is shown in the `20_solar_electrolyzer_doe` example in the `examples` folder.
 ```

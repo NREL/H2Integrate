@@ -1035,9 +1035,6 @@ class H2IntegrateModel:
             self.prob.setup()
             self.setup_has_been_called = True
 
-        # import re
-        # for case in case_gen(self._designvars, self._problem().model):
-
         self.prob.run_driver()
 
     def post_process(self, show_plots=False):
