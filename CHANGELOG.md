@@ -11,6 +11,11 @@
 - Added `create_om_reports` option to driver config to enable/disable OpenMDAO reports (N2 diagrams, etc.)
 - Added design of experiment functionality
 - Added "csvgen" as generator type for design of experiments
+- Added PySAM Windpower performance model to simulate wind.
+- Added `simple_grid_layout.py` for wind plant layout modeling, can model square or rectangular layouts.
+- Added ability to visualize the wind plant layout for PySAM Windpower model using `post_process(show_plots=True)`.
+- Added Wind Annual Technology Baseline cost model `atb_wind_cost.py`.
+- Updated inputs for the `ATBBatteryCostModel` and `DemandOpenLoopController` so storage capacity and charge rate can be design variables
 
 ## 0.4.0 [October 1, 2025]
 
