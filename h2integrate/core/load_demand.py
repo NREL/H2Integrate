@@ -8,19 +8,18 @@ from h2integrate.core.validators import range_val
 
 @define
 class DemandProfileModelConfig(BaseConfig):
-    """Config class for feedstock.
+    """Config class for defining a demand profile.
 
     Attributes:
-        demand (scalar or list):  The load demand in units of `units`.
-            If scalar, demand is assumed to be constant for each timestep.
-            If list, then must be the the demand for each timestep.
-        units (str): demand profile units (such as "galUS" or "kg")
-        commodity (str, optional): name of the demanded commodity.
+        commodity_name (str): Name of the commodity being controlled (e.g., "hydrogen").
+        commodity_units (str): Units of the commodity (e.g., "kg/h").
+        demand_profile (scalar or list): The demand values for each time step (in the same units
+            as `commodity_units`) or a scalar for a constant demand.
     """
 
-    demand: list | int | float = field()
-    units: str = field(converter=str.strip)
-    commodity: str = field(converter=(str.strip, str.lower))
+    commodity_name: str = field()
+    commodity_units: str = field()
+    demand_profile: int | float | list = field()
 
 
 class DemandPerformanceModelComponent(om.ExplicitComponent):
@@ -35,13 +34,13 @@ class DemandPerformanceModelComponent(om.ExplicitComponent):
         self.config = DemandProfileModelConfig.from_dict(
             self.options["tech_config"]["model_inputs"]["performance_parameters"]
         )
-        commodity = self.config.commodity
+        commodity = self.config.commodity_name
 
         self.add_input(
             f"{commodity}_demand_profile",
-            val=self.config.demand,
+            val=self.config.demand_profile,
             shape=(n_timesteps),
-            units=f"{self.config.units}/h",  # NOTE: hardcoded to align with controllers
+            units=self.config.commodity_units,  # NOTE: hardcoded to align with controllers
             desc=f"Demand profile of {commodity}",
         )
 
@@ -49,23 +48,23 @@ class DemandPerformanceModelComponent(om.ExplicitComponent):
             f"{commodity}_in",
             val=0.0,
             shape=(n_timesteps),
-            units=self.config.units,
+            units=self.config.commodity_units,
             desc=f"Amount of {commodity} demand that has already been supplied",
         )
 
         self.add_output(
-            f"{commodity}_missed_load",
-            val=self.config.demand,
+            f"{commodity}_unmet_demand",
+            val=self.config.demand_profile,
             shape=(n_timesteps),
-            units=self.config.units,
+            units=self.config.commodity_units,
             desc=f"Remaining demand profile of {commodity}",
         )
 
         self.add_output(
-            f"{commodity}_curtailed",
+            f"{commodity}_unused_commodity",
             val=0.0,
             shape=(n_timesteps),
-            units=self.config.units,
+            units=self.config.commodity_units,
             desc=f"Excess production of {commodity}",
         )
 
@@ -73,20 +72,24 @@ class DemandPerformanceModelComponent(om.ExplicitComponent):
             f"{commodity}_out",
             val=0.0,
             shape=(n_timesteps),
-            units=self.config.units,
+            units=self.config.commodity_units,
             desc=f"Production profile of {commodity}",
         )
 
     def compute(self, inputs, outputs):
-        commodity = self.config.commodity
+        commodity = self.config.commodity_name
         remaining_demand = inputs[f"{commodity}_demand_profile"] - inputs[f"{commodity}_in"]
 
         # Calculate missed load and curtailed production
-        outputs[f"{commodity}_missed_load"] = np.where(remaining_demand > 0, remaining_demand, 0)
-        outputs[f"{commodity}_curtailed"] = np.where(remaining_demand < 0, -1 * remaining_demand, 0)
+        outputs[f"{commodity}_unmet_demand"] = np.where(remaining_demand > 0, remaining_demand, 0)
+        outputs[f"{commodity}_unused_commodity"] = np.where(
+            remaining_demand < 0, -1 * remaining_demand, 0
+        )
 
         # Calculate actual output based on demand met and curtailment
-        outputs[f"{commodity}_out"] = inputs[f"{commodity}_in"] - outputs[f"{commodity}_curtailed"]
+        outputs[f"{commodity}_out"] = (
+            inputs[f"{commodity}_in"] - outputs[f"{commodity}_unused_commodity"]
+        )
 
 
 @define
@@ -97,13 +100,13 @@ class FlexibleDemandProfileModelConfig(BaseConfig):
         demand (scalar or list):  The load demand in units of `units`.
             If scalar, demand is assumed to be constant for each timestep.
             If list, then must be the the demand for each timestep.
-        units (str): demand profile units (such as "galUS" or "kg")
-        commodity (str, optional): name of the demanded commodity.
+        commodity_name (str): Name of the commodity being controlled (e.g., "hydrogen").
+        commodity_units (str): Units of the commodity (e.g., "kg/h").
     """
 
     maximum_demand: list | int | float = field()
-    units: str = field(converter=str.strip)
-    commodity: str = field(converter=(str.strip, str.lower))
+    commodity_units: str = field(converter=str.strip)
+    commodity_name: str = field(converter=(str.strip, str.lower))
     turndown_ratio: float = field(validator=range_val(0, 1.0))
     ramp_down_rate_fraction: float = field(validator=range_val(0, 1.0))
     ramp_up_rate_fraction: float = field(validator=range_val(0, 1.0))
@@ -122,13 +125,13 @@ class FlexibleDemandPerformanceModelComponent(om.ExplicitComponent):
         self.config = FlexibleDemandProfileModelConfig.from_dict(
             self.options["tech_config"]["model_inputs"]["performance_parameters"]
         )
-        commodity = self.config.commodity
+        commodity = self.config.commodity_name
 
         self.add_input(
             f"{commodity}_demand_profile",
             val=self.config.maximum_demand,
             shape=(n_timesteps),
-            units=f"{self.config.units}/h",  # NOTE: hardcoded to align with controllers
+            units=self.config.commodity_units,
             desc=f"Demand profile of {commodity}",
         )
 
@@ -136,7 +139,7 @@ class FlexibleDemandPerformanceModelComponent(om.ExplicitComponent):
             f"{commodity}_in",
             val=0.0,
             shape=(n_timesteps),
-            units=self.config.units,
+            units=self.config.commodity_units,
             desc=f"Amount of {commodity} demand that has already been supplied",
         )
 
@@ -169,18 +172,18 @@ class FlexibleDemandPerformanceModelComponent(om.ExplicitComponent):
         )
 
         self.add_output(
-            f"{commodity}_missed_load",
+            f"{commodity}_unmet_demand",
             val=self.config.maximum_demand,
             shape=(n_timesteps),
-            units=self.config.units,
+            units=self.config.commodity_units,
             desc=f"Remaining demand profile of {commodity}",
         )
 
         self.add_output(
-            f"{commodity}_curtailed",
+            f"{commodity}_unused_commodity",
             val=0.0,
             shape=(n_timesteps),
-            units=self.config.units,
+            units=self.config.commodity_units,
             desc=f"Excess production of {commodity}",
         )
 
@@ -188,7 +191,7 @@ class FlexibleDemandPerformanceModelComponent(om.ExplicitComponent):
             f"{commodity}_out",
             val=0.0,
             shape=(n_timesteps),
-            units=self.config.units,
+            units=self.config.commodity_units,
             desc=f"Production profile of {commodity}",
         )
 
@@ -196,7 +199,7 @@ class FlexibleDemandPerformanceModelComponent(om.ExplicitComponent):
             f"{commodity}_flexible_demand_profile",
             val=0.0,
             shape=(n_timesteps),
-            units=self.config.units,
+            units=self.config.commodity_units,
             desc=f"Flexible demand profile of {commodity}",
         )
 
@@ -285,15 +288,15 @@ class FlexibleDemandPerformanceModelComponent(om.ExplicitComponent):
         return flexible_demand_profile
 
     def compute(self, inputs, outputs):
-        commodity = self.config.commodity
+        commodity = self.config.commodity_name
         remaining_demand = inputs[f"{commodity}_demand_profile"] - inputs[f"{commodity}_in"]
 
         if self.config.min_utilization == 1.0:
             # Calculate missed load and curtailed production
-            outputs[f"{commodity}_missed_load"] = np.where(
+            outputs[f"{commodity}_unmet_demand"] = np.where(
                 remaining_demand > 0, remaining_demand, 0
             )
-            outputs[f"{commodity}_curtailed"] = np.where(
+            outputs[f"{commodity}_unused_commodity"] = np.where(
                 remaining_demand < 0, -1 * remaining_demand, 0
             )
         else:
@@ -306,12 +309,14 @@ class FlexibleDemandPerformanceModelComponent(om.ExplicitComponent):
             outputs[f"{commodity}_flexible_demand_profile"] = flexible_demand_profile
             flexible_remaining_demand = flexible_demand_profile - inputs[f"{commodity}_in"]
 
-            outputs[f"{commodity}_missed_load"] = np.where(
+            outputs[f"{commodity}_unmet_demand"] = np.where(
                 flexible_remaining_demand > 0, flexible_remaining_demand, 0
             )
-            outputs[f"{commodity}_curtailed"] = np.where(
+            outputs[f"{commodity}_unused_commodity"] = np.where(
                 flexible_remaining_demand < 0, -1 * flexible_remaining_demand, 0
             )
 
         # Calculate actual output based on demand met and curtailment
-        outputs[f"{commodity}_out"] = inputs[f"{commodity}_in"] - outputs[f"{commodity}_curtailed"]
+        outputs[f"{commodity}_out"] = (
+            inputs[f"{commodity}_in"] - outputs[f"{commodity}_unused_commodity"]
+        )
