@@ -510,6 +510,7 @@ class ProFastBase(om.ExplicitComponent):
             self.lco_units = "USD/kg"
 
         # Construct output name based on commodity and optional description
+        # this is necessary to allow for financial subgroups
         LCO_base_str = f"LCO{self.options['commodity_type'][0].upper()}"
         self.output_txt = self.options["commodity_type"].lower()
         if self.options["description"] == "":
