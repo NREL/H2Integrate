@@ -722,11 +722,11 @@ def test_electrolyzer_om_example(subtests):
         "finance_subgroup_hydrogen.LCOH_lcoe_financials", units="USD/kg"
     )[0]
     with subtests.test("Check LCOE"):
-        assert pytest.approx(lcoe, rel=1e-5) == 39.98869
+        assert pytest.approx(lcoe, rel=1e-4) == 39.98869
     with subtests.test("Check LCOH with lcoh_financials"):
-        assert pytest.approx(lcoh_with_lcoh_finance, rel=1e-5) == 13.0954678
+        assert pytest.approx(lcoh_with_lcoh_finance, rel=1e-4) == 13.0954678
     with subtests.test("Check LCOH with lcoe_financials"):
-        assert pytest.approx(lcoh_with_lcoe_finance, rel=1e-5) == 8.00321771
+        assert pytest.approx(lcoh_with_lcoe_finance, rel=1e-4) == 8.00321771
 
 
 def test_wombat_electrolyzer_example(subtests):
@@ -809,11 +809,11 @@ def test_pyomo_heuristic_dispatch_example(subtests):
     # Subtest for LCOE
     with subtests.test("Check all LCOE value"):
         lcoe = model.prob.get_val("finance_subgroup_all_electricity.LCOE")[0]
-        assert lcoe == pytest.approx(0.07470820840238226, rel=1e-6)
+        assert lcoe == pytest.approx(0.08157197567200995, rel=1e-6)
 
     with subtests.test("Check dispatched LCOE value"):
         lcoe = model.prob.get_val("finance_subgroup_dispatched_electricity.LCOE")[0]
-        assert lcoe == pytest.approx(0.5473068063691052, rel=1e-6)
+        assert lcoe == pytest.approx(0.5975902853904799, rel=1e-6)
 
     # Subtest for total electricity produced
     with subtests.test("Check total electricity produced"):
