@@ -2,7 +2,7 @@ import pytest
 import openmdao.api as om
 from pytest import fixture
 
-from h2integrate.finances.simple_npv_finance import NPVFinance
+from h2integrate.finances.numpy_financial_npv import NumpyFinancialNPV
 
 
 @fixture
@@ -56,7 +56,7 @@ def test_simple_npv(npv_finance_inputs, fake_filtered_tech_config, fake_cost_dic
         },
         "finance_parameters": {"model_inputs": npv_finance_inputs},
     }
-    pf = NPVFinance(
+    pf = NumpyFinancialNPV(
         driver_config={},
         plant_config=plant_config,
         tech_config=fake_filtered_tech_config,

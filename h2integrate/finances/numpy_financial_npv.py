@@ -11,12 +11,12 @@ from h2integrate.core.validators import gte_zero, range_val
 
 
 @define
-class NPVFinanceConfig(BaseConfig):
-    """Config of financing parameters for NPVFinance.
+class NumpyFinancialNPVFinanceConfig(BaseConfig):
+    """Configuration for NumpyFinancialNPVFinance.
 
     Attributes:
         plant_life (int): operating life of plant in years
-        discount_rate (float): leverage after tax nominal discount rate
+        discount_rate (float): discount rate, expressed as a fraction between 0 and 1.
         commodity_sell_price (int | float, optional): sell price of commodity in
             USD/unit of commodity. Defaults to 0.0
         save_cost_breakdown (bool, optional): whether to save the cost breakdown per year.
@@ -36,8 +36,9 @@ class NPVFinanceConfig(BaseConfig):
     cost_breakdown_file_description: str = field(default="default")
 
 
-class NPVFinance(om.ExplicitComponent):
-    """OpenMDAO component for calculating Net Present Value (NPV) of a plant or technology.
+class NumpyFinancialNPV(om.ExplicitComponent):
+    """OpenMDAO component for calculating Net Present Value (NPV)
+    using the NumPy Financial.
 
     This component computes the NPV of a given commodity-producing plant over its
     operational lifetime, accounting for capital expenditures (CAPEX), operating
@@ -49,17 +50,20 @@ class NPVFinance(om.ExplicitComponent):
     positive. This follows the NumPy Financial convention:
 
     Reference:
+        NumpPy Financial NPV documentation:
         https://numpy.org/numpy-financial/latest/npv.html#numpy_financial.npv
 
-        * "By convention, investments or 'deposits' are negative, income or
-        'withdrawals' are positive; values must begin with the initial
-        investment, thus values[0] will typically be negative."
+        By convention:
+            - Investments or "deposits" are negative.
+            - Income or "withdrawals" are positive.
+            - Values typically start with the initial investment, so
+              ``values[0]`` is often negative.
 
     Attributes:
         NPV_str (str): The dynamically generated name of the NPV output variable,
             based on `commodity_type` and optional `description`.
         tech_config (dict): Technology-specific configuration dictionary.
-        config (NPVFinanceConfig): Parsed financial configuration parameters
+        config (NumpyFinancialNPVConfig): Parsed financial configuration parameters
             (e.g., discount rate, plant life, save options).
     """
 
@@ -118,7 +122,7 @@ class NPVFinance(om.ExplicitComponent):
             )
         finance_params.update({"plant_life": plant_config["plant"]["plant_life"]})
 
-        self.config = NPVFinanceConfig.from_dict(finance_params)
+        self.config = NumpyFinancialNPVFinanceConfig.from_dict(finance_params)
 
         tech_config = self.tech_config = self.options["tech_config"]
         for tech in tech_config:
@@ -250,14 +254,14 @@ class NPVFinance(om.ExplicitComponent):
                 self.options["description"] == ""
                 or self.options["description"] == self.options["commodity_type"]
             ):
-                filename_base = f"{fdesc}_{self.options['commodity_type']}_NPVFinance"
+                filename_base = f"{fdesc}_{self.options['commodity_type']}_NumpyFinancialNPV"
             else:
                 desc = (
                     self.NPV_str.replace("NPV_", "")
                     .replace(self.options["commodity_type"], "")
                     .strip("_")
                 )
-                filename_base = f"{fdesc}_{self.options['commodity_type']}_{desc}_NPVFinance"
+                filename_base = f"{fdesc}_{self.options['commodity_type']}_{desc}_NumpyFinancialNPV"
             if self.config.save_npv_breakdown:
                 npv_fname = f"{filename_base}_NPV_breakdown.csv"
                 npv_fpath = Path(output_dir) / npv_fname

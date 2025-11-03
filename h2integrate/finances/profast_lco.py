@@ -14,7 +14,62 @@ from h2integrate.tools.profast_reverse_tools import convert_pf_to_dict
 
 
 class ProFastLCO(ProFastBase):
+    """Calculates the Levelized Cost of Commodity (LCO) using ProFAST for a given technology
+    configuration.
+
+    This component estimates the levelized cost of user-defined commodities—such as hydrogen (LCOH),
+    electricity (LCOE), ammonia (LCOA), nitrogen (LCON), or CO₂ (LCOC)—based on the technologies
+    included in the configuration. It can output both scalar results (e.g., LCO, IRR, WACC) and
+    detailed cost breakdowns. Optionally, ProFAST inputs, configurations, and results can be
+    exported to YAML and CSV files for record-keeping or debugging.
+
+    Attributes:
+        LCO_str (str): Name of the primary output variable (e.g., "LCOH").
+        output_txt (str): Text label used for output naming, typically based on the commodity type.
+        outputs_to_units (dict): Mapping of output variable names to their physical units.
+        lco_units (str): Units of the LCO output, dependent on the commodity type (e.g., USD/kg or
+            USD/kWh).
+
+    Outputs:
+        LCOx (float): Levelized cost of the commodity, where `x` corresponds to the first letter of
+            the commodity (e.g., LCOH for hydrogen). Units depend on commodity type.
+        wacc_<commodity> (float): Weighted average cost of capital, as a fraction.
+        crf_<commodity> (float): Capital recovery factor, as a fraction.
+        irr_<commodity> (float): Internal rate of return, as a fraction.
+        profit_index_<commodity> (float): Profitability index, dimensionless.
+        investor_payback_period_<commodity> (float): Time until the initial investment is
+            recovered (years).
+        price_<commodity> (float): First-year selling price of the commodity in the same units
+            as LCOx.
+        <LCOx>_breakdown (dict): Annualized breakdown of LCO costs by category.
+
+    Methods:
+        add_model_specific_outputs():
+            Creates model outputs for the LCO and associated financial metrics, including
+                cost breakdowns.
+
+        compute(inputs, outputs, discrete_inputs, discrete_outputs):
+            Runs the ProFAST simulation, calculates the LCO and financial outputs, generates
+            breakdowns, and optionally exports configuration and results to files.
+
+    Notes:
+        - The outputs and file exports are governed by user-specified finance parameters in the
+          plant configuration.
+        - The computation relies on `run_profast()` for core financial simulation and
+          `make_price_breakdown()` for cost disaggregation.
+    """
+
     def add_model_specific_outputs(self):
+        """Define output variables specific to the selected commodity.
+
+        Constructs standardized names for the Levelized Cost of Commodity (LCO) and its
+        associated financial metrics (WACC, CRF, IRR, etc.), based on the commodity type
+        and optional user-specified description.
+
+        Returns:
+            None
+        """
+
         self.add_output(self.LCO_str, val=0.0, units=self.lco_units)
         self.outputs_to_units = {
             "wacc": "percent",
@@ -31,11 +86,29 @@ class ProFastLCO(ProFastBase):
         return
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
+        """Run ProFAST simulation and populate outputs.
+
+        Executes a ProFAST financial simulation using model inputs to calculate the
+        Levelized Cost of Commodity (LCO) and related economic metrics. Generates cost
+        breakdown dictionaries and optionally exports configuration and results to YAML
+        or CSV files, depending on user options.
+
+        Args:
+            inputs (dict): Continuous model inputs.
+            outputs (dict): Continuous model outputs to be populated.
+            discrete_inputs (dict): Discrete model inputs (e.g., configuration flags).
+            discrete_outputs (dict): Discrete outputs for structured results.
+
+        Returns:
+            None
+        """
         pf = self.populate_profast(inputs)
 
         # simulate ProFAST
         sol, summary, price_breakdown = run_profast(pf)
 
+        # populate outputs
+        # Output names based on naming convention for finance subgroups
         outputs[self.LCO_str] = sol["lco"]
         for output_var in self.outputs_to_units.keys():
             val = sol[output_var.replace("_", " ")]
