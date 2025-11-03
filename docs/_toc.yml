@@ -34,7 +34,9 @@ parts:
   - file: technology_models/natural_gas
   - file: technology_models/wombat_electrolyzer_om
   - file: technology_models/pvwattsv8_solar_pv.md
+  - file: technology_models/windpower_wind_plant.md
   - file: technology_models/atb_costs_pv.md
+  - file: technology_models/atb_costs_wind.md
   - file: technology_models/co2.md
   - file: technology_models/simple_generic_storage.md
   - file: technology_models/methanol.md

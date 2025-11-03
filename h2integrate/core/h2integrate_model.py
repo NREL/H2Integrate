@@ -4,6 +4,7 @@ from pathlib import Path
 import yaml
 import numpy as np
 import openmdao.api as om
+import matplotlib.pyplot as plt
 
 from h2integrate.core.utilities import create_xdsm_from_config
 from h2integrate.finances.finances import AdjustedCapexOpexComp
@@ -272,8 +273,8 @@ class H2IntegrateModel:
                 individual_tech_config.get("finance_model", {}).get("model")
                 if (
                     perf_model
-                    and perf_model == cost_model
-                    and perf_model in combined_performance_and_cost_models
+                    and (perf_model == cost_model)
+                    and (perf_model in combined_performance_and_cost_models)
                 ):
                     # Catch dispatch rules for systems that have the same performance & cost models
                     if "dispatch_rule_set" in individual_tech_config:
@@ -294,10 +295,10 @@ class H2IntegrateModel:
                         plant_config=self.plant_config,
                         tech_config=individual_tech_config,
                     )
-                    tech_group.add_subsystem(tech_name, comp, promotes=["*"])
-                    self.performance_models.append(comp)
-                    self.cost_models.append(comp)
-                    self.finance_models.append(comp)
+                    om_model_object = tech_group.add_subsystem(tech_name, comp, promotes=["*"])
+                    self.performance_models.append(om_model_object)
+                    self.cost_models.append(om_model_object)
+                    self.finance_models.append(om_model_object)
 
                     continue
 
@@ -312,14 +313,14 @@ class H2IntegrateModel:
 
                 for model_type in model_types:
                     if model_type in individual_tech_config:
-                        model_object = self._process_model(
+                        om_model_object = self._process_model(
                             model_type, individual_tech_config, tech_group
                         )
                         if "control_strategy" in model_type:
                             plural_model_type_name = "control_strategies"
                         else:
                             plural_model_type_name = model_type + "s"
-                        getattr(self, plural_model_type_name).append(model_object)
+                        getattr(self, plural_model_type_name).append(om_model_object)
                     elif model_type == "performance_model":
                         raise KeyError("Model definition requires 'performance_model'.")
 
@@ -357,7 +358,7 @@ class H2IntegrateModel:
         # Generalized function to process model definitions
         model_name = individual_tech_config[model_type]["model"]
         model_object = self.supported_models[model_name]
-        tech_group.add_subsystem(
+        om_model_object = tech_group.add_subsystem(
             model_name,
             model_object(
                 driver_config=self.driver_config,
@@ -366,7 +367,7 @@ class H2IntegrateModel:
             ),
             promotes=["*"],
         )
-        return model_object
+        return om_model_object
 
     def create_finance_model(self):
         """
@@ -1036,13 +1037,22 @@ class H2IntegrateModel:
 
         self.prob.run_driver()
 
-    def post_process(self):
+    def post_process(self, show_plots=False):
         """
         Post-process the results of the OpenMDAO model.
 
-        Right now, this just means printing the inputs and outputs to all systems in the model.
+        Right now, this means printing the inputs and outputs to all systems in the model.
         We currently exclude any variables with "resource_data" in the name, since those
         are large dictionary variables that are not correctly formatted when printing.
+
+        Also, if `show_plots` is set to True, then any performance models with post-processing
+        plots available will be run and shown.
         """
         self.prob.model.list_inputs(units=True, print_mean=True, excludes=["*resource_data"])
         self.prob.model.list_outputs(units=True, print_mean=True, excludes=["*resource_data"])
+
+        for model in self.performance_models:
+            if hasattr(model, "post_process") and callable(model.post_process):
+                model.post_process(show_plots=show_plots)
+                if show_plots:
+                    plt.show()
