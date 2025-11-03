@@ -170,7 +170,7 @@ class FlexibleDemandPerformanceModelComponent(om.ExplicitComponent):
 
         self.add_output(
             f"{commodity}_missed_load",
-            val=self.config.demand,
+            val=self.config.maximum_demand,
             shape=(n_timesteps),
             units=self.config.units,
             desc=f"Remaining demand profile of {commodity}",
@@ -190,6 +190,14 @@ class FlexibleDemandPerformanceModelComponent(om.ExplicitComponent):
             shape=(n_timesteps),
             units=self.config.units,
             desc=f"Production profile of {commodity}",
+        )
+
+        self.add_output(
+            f"{commodity}_flexible_demand_profile",
+            val=0.0,
+            shape=(n_timesteps),
+            units=self.config.units,
+            desc=f"Flexible demand profile of {commodity}",
         )
 
     def adjust_demand_for_ramping(self, pre_demand_met_clipped, demand_bounds, ramp_rate_bounds):
@@ -295,6 +303,7 @@ class FlexibleDemandPerformanceModelComponent(om.ExplicitComponent):
             flexible_demand_profile = self.make_flexible_demand(
                 inputs[f"{commodity}_demand_profile"], inflexible_out, inputs
             )
+            outputs[f"{commodity}_flexible_demand_profile"] = flexible_demand_profile
             flexible_remaining_demand = flexible_demand_profile - inputs[f"{commodity}_in"]
 
             outputs[f"{commodity}_missed_load"] = np.where(
