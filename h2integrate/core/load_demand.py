@@ -37,7 +37,7 @@ class DemandPerformanceModelComponent(om.ExplicitComponent):
         commodity = self.config.commodity_name
 
         self.add_input(
-            f"{commodity}_demand_profile",
+            f"{commodity}_demand",
             val=self.config.demand_profile,
             shape=(n_timesteps),
             units=self.config.commodity_units,  # NOTE: hardcoded to align with controllers
@@ -78,7 +78,7 @@ class DemandPerformanceModelComponent(om.ExplicitComponent):
 
     def compute(self, inputs, outputs):
         commodity = self.config.commodity_name
-        remaining_demand = inputs[f"{commodity}_demand_profile"] - inputs[f"{commodity}_in"]
+        remaining_demand = inputs[f"{commodity}_demand"] - inputs[f"{commodity}_in"]
 
         # Calculate missed load and curtailed production
         outputs[f"{commodity}_unmet_demand"] = np.where(remaining_demand > 0, remaining_demand, 0)
@@ -128,7 +128,7 @@ class FlexibleDemandPerformanceModelComponent(om.ExplicitComponent):
         commodity = self.config.commodity_name
 
         self.add_input(
-            f"{commodity}_demand_profile",
+            f"{commodity}_demand",
             val=self.config.maximum_demand,
             shape=(n_timesteps),
             units=self.config.commodity_units,
@@ -289,7 +289,7 @@ class FlexibleDemandPerformanceModelComponent(om.ExplicitComponent):
 
     def compute(self, inputs, outputs):
         commodity = self.config.commodity_name
-        remaining_demand = inputs[f"{commodity}_demand_profile"] - inputs[f"{commodity}_in"]
+        remaining_demand = inputs[f"{commodity}_demand"] - inputs[f"{commodity}_in"]
 
         if self.config.min_utilization == 1.0:
             # Calculate missed load and curtailed production
@@ -304,7 +304,7 @@ class FlexibleDemandPerformanceModelComponent(om.ExplicitComponent):
             inflexible_out = inputs[f"{commodity}_in"] - curtailed
 
             flexible_demand_profile = self.make_flexible_demand(
-                inputs[f"{commodity}_demand_profile"], inflexible_out, inputs
+                inputs[f"{commodity}_demand"], inflexible_out, inputs
             )
             outputs[f"{commodity}_flexible_demand_profile"] = flexible_demand_profile
             flexible_remaining_demand = flexible_demand_profile - inputs[f"{commodity}_in"]
