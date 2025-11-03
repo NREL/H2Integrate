@@ -2,7 +2,7 @@ import pytest
 import openmdao.api as om
 from pytest import fixture
 
-from h2integrate.finances.profast_finance import ProFastComp
+from h2integrate.finances.profast_lco import ProFastLCO
 
 
 @fixture
@@ -68,7 +68,7 @@ def test_profast_comp(profast_inputs_no1, fake_filtered_tech_config, fake_cost_d
         },
         "finance_parameters": {"model_inputs": profast_inputs_no1},
     }
-    pf = ProFastComp(
+    pf = ProFastLCO(
         driver_config={},
         plant_config=plant_config,
         tech_config=fake_filtered_tech_config,
