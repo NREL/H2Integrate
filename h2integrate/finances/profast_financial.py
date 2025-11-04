@@ -525,7 +525,15 @@ class ProFastComp(om.ExplicitComponent):
         # self.incentive_params_settings = ProFASTDefaultIncentive.from_dict(incentive_params)
 
     def compute(self, inputs, outputs):
-        mass_commodities = ["hydrogen", "ammonia", "co2", "nitrogen", "methanol"]
+        mass_commodities = [
+            "hydrogen",
+            "ammonia",
+            "co2",
+            "nitrogen",
+            "methanol",
+            "iron_ore",
+            "pig_iron",
+        ]
 
         years_of_operation = create_years_of_operation(
             self.params.plant_life,
