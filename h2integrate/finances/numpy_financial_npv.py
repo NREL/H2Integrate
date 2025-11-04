@@ -75,25 +75,24 @@ class NumpyFinancialNPV(om.ExplicitComponent):
         self.options.declare("description", types=str, default="")
 
     def setup(self):
-        if (
-            self.options["description"] == ""
-            or self.options["description"] == self.options["commodity_type"]
-        ):
-            self.NPV_str = f"{self.options['commodity_type']}_NPV"
+        commodity_type = self.options["commodity_type"]
+        description = self.options["description"].strip()
+
+        # Remove redundant description cases
+        if description == "" or description == commodity_type:
+            NPV_base_str = commodity_type
+            NPV_desc_str = ""
         else:
-            NPV_base_str = f"{self.options['commodity_type']}"
-            NPV_desc_str = (
-                self.options["description"]
-                .replace(self.options["commodity_type"], "")
-                .strip()
-                .strip("_()-")
-            )
-            if NPV_desc_str == "":
-                self.NPV_str = f"NPV_{NPV_base_str}"
-                self.output_txt = f"{NPV_base_str}"
-            else:
-                self.NPV_str = f"NPV_{NPV_base_str}_{NPV_desc_str}"
-                self.output_txt = f"{NPV_base_str}_{NPV_desc_str}"
+            NPV_base_str = commodity_type
+            NPV_desc_str = description.replace(commodity_type, "").strip().strip("_()-")
+
+        # Build final strings
+        if NPV_desc_str == "":
+            self.NPV_str = f"NPV_{NPV_base_str}"
+            self.output_txt = NPV_base_str
+        else:
+            self.NPV_str = f"NPV_{NPV_base_str}_{NPV_desc_str}"
+            self.output_txt = f"{NPV_base_str}_{NPV_desc_str}"
 
         # TODO: update below with standardized naming
         if self.options["commodity_type"] == "electricity":
@@ -255,6 +254,7 @@ class NumpyFinancialNPV(om.ExplicitComponent):
                 )
 
                 # Calculate actual replacement costs by multiplying CAPEX by schedule percentages
+                # capex is negative, so refurb_cost will also be negative (cash outflow)
                 refurb_cost = capex * refurb_schedule
                 # Add refurbishment schedule to cost breakdown
                 cost_breakdown[f"{tech}: replacement cost"] = refurb_cost

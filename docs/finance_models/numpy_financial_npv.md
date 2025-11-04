@@ -1,6 +1,6 @@
-(npvfinance:npvfinancemodel)=
-# Simple Net Present Value Finance Model
-The `NPVFinance` component calculates the Net Present Value (NPV) of a commodity-producing plant or technology over its operational lifetime using the [Numpy Financial npv](https://numpy.org/numpy-financial/latest/npv.html#numpy_financial.npv) method.
+(numpyfinancialnpvfinance:numpyfinancialnpvmodel)=
+# NumPy Financial NPV Finance Model
+The `NumpyFinancialNPV` component calculates the Net Present Value (NPV) of a commodity-producing plant or technology over its operational lifetime using the [NumPy Financial npv](https://numpy.org/numpy-financial/latest/npv.html#numpy_financial.npv) method.
 It is implemented as an OpenMDAO `ExplicitComponent` and integrates with system-level technoeconomic optimization workflows.
 
 The component evaluates profitability by discounting future cash flows — including capital expenditures (CAPEX), operating expenses (OPEX), refurbishments, and revenues — based on user-defined financial parameters.
@@ -10,14 +10,14 @@ By convention:
 - Revenues (commodity sales) are positive cash flows.
 
 ## Model Inputs
-### `NPVFinanceConfig`
+### `NumpyFinancialNPVFinanceConfig`
 **Description**
 Configuration class defining financial parameters for the NPV calculation.
 Implements validation and default handling using the `attrs` library.
 | Attribute                         | Type             | Description                                           | Default     |
 | --------------------------------- | ---------------- | ----------------------------------------------------- | ----------- |
 | `plant_life`                      | `int`            | Operating life of the plant in years. Must be ≥ 0.    | —           |
-| `discount_rate`                   | `float`          | Nominal after-tax discount rate (0–1).                | —           |
+| `discount_rate`                   | `float`          | Discount rate (0–1).                | —           |
 | `commodity_sell_price`            | `int` or `float` | Sale price of the commodity (USD/unit).               | `0.0`       |
 | `save_cost_breakdown`             | `bool`           | Whether to save annual cost breakdowns to CSV.        | `False`     |
 | `save_npv_breakdown`              | `bool`           | Whether to save per-technology NPV breakdowns to CSV. | `False`     |
@@ -28,9 +28,9 @@ An example of what to include in the `plant_config` to use the `NPVFinance` mode
 
 ```yaml
 npv:
-  finance_model: "NPVFinance"
+  finance_model: "NumpyFinancialNPV"
   model_inputs:
-    discount_rate: 0.09 # nominal return
+    discount_rate: 0.09 # each period is discounted at a rate of `discount_rate`
     commodity_sell_price: 0.078 # if commodity is electricity $/kwh
     save_cost_breakdown: True
     save_npv_breakdown: True
@@ -43,7 +43,7 @@ npv:
 ## Model Outputs
 | Name              | Units | Description                                        |
 | ----------------- | ----- | -------------------------------------------------- |
-| `<commodity>_NPV` | `USD` | Total discounted Net Present Value for the system. |
+| `NPV_<commodity>_<optional_description>` | `USD` | Total discounted Net Present Value for the system. |
 
 ### Output Files (if enabled)
 

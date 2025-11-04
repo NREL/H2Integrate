@@ -58,7 +58,7 @@ parts:
       sections:
       - file: finance_models/ProFastComp
       - file: finance_models/ProFastNPV
-      - file: finance_models/npv_finance
+      - file: finance_models/numpy_financial_npv
 
 - caption: Examples
   chapters:
