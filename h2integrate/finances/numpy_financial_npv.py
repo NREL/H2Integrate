@@ -76,23 +76,13 @@ class NumpyFinancialNPV(om.ExplicitComponent):
 
     def setup(self):
         commodity_type = self.options["commodity_type"]
-        description = self.options["description"].strip()
+        description = self.options["description"].strip() if "description" in self.options else ""
 
-        # Remove redundant description cases
-        if description == "" or description == commodity_type:
-            NPV_base_str = commodity_type
-            NPV_desc_str = ""
-        else:
-            NPV_base_str = commodity_type
-            NPV_desc_str = description.replace(commodity_type, "").strip().strip("_()-")
+        # Use description only if non-empty
+        suffix = f"_{description}" if description else ""
 
-        # Build final strings
-        if NPV_desc_str == "":
-            self.NPV_str = f"NPV_{NPV_base_str}"
-            self.output_txt = NPV_base_str
-        else:
-            self.NPV_str = f"NPV_{NPV_base_str}_{NPV_desc_str}"
-            self.output_txt = f"{NPV_base_str}_{NPV_desc_str}"
+        self.NPV_str = f"NPV_{commodity_type}{suffix}"
+        self.output_txt = f"{commodity_type}{suffix}"
 
         # TODO: update below with standardized naming
         if self.options["commodity_type"] == "electricity":

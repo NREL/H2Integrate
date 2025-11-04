@@ -45,6 +45,7 @@ finance_parameters:
     profast:
       finance_model: "ProFastComp"
       model_inputs:
+        save_profast_results: True
         params:
           analysis_start_year: 2032
           installation_time: 36 # months
@@ -101,11 +102,13 @@ finance_parameters:
     wind:
       commodity: "electricity"
       commodity_stream: "wind" #use electricity from wind in finance calc
+      commodity_desc: "wind_only"
       finance_groups: ["profast"]
       technologies: ["wind"]
     battery:
       commodity: "electricity"
       commodity_stream: "battery" #use electricity from battery in finance calc
+      commodity_desc: "battery_included"
       finance_groups: ["profast"]
       technologies: ["wind", "battery"]
     electricity:
@@ -115,4 +118,5 @@ finance_parameters:
       # included in 'technologies'. In this case, it will use the electricity
       # produced by the wind technology as the commodity stream.
       finance_groups: ["profast", "npv", "profast_npv"]
+      commodity_desc: "all_electricity"
       technologies: ["wind","battery"]
