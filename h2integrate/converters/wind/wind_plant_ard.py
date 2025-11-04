@@ -7,7 +7,11 @@ from h2integrate.core.model_baseclasses import CostModelBaseClass
 
 
 class WindArdCostComponent(CostModelBaseClass):
-    """The class is needed to allow connecting the Ard cost_year easily in H2Integrate"""
+    """The class is needed to allow connecting the Ard cost_year easily in H2Integrate.
+
+    We could almost use the CostModelBaseClass directly, but its setup method
+    requires a self.config attribute to be defined, so we create this minimal subclass.
+    """
 
     def setup(self):
         self.config = CostModelBaseConfig.from_dict(
@@ -24,13 +28,10 @@ class WindArdCostComponent(CostModelBaseClass):
 class WindPlantArdModelConfig(BaseConfig):
     """Configuration container for Ard wind plant model inputs.
 
-    Attributes
-    ----------
-    ard_system : dict
-        Dictionary of Ard system / layout parameters (turbine specs, layout bounds,
-        wake model settings, etc.) passed through to `set_up_ard_model`.
-    ard_data_path : str
-        Root path to Ard data resources (e.g., turbine libraries).
+    Attributes:
+        ard_system (dict): Dictionary of Ard system / layout parameters (turbine specs,
+            layout bounds, wake model settings, etc.) passed through to `set_up_ard_model`.
+        ard_data_path (str): Root path to Ard data resources (e.g., turbine libraries).
     """
 
     ard_system: dict = field()
@@ -38,39 +39,28 @@ class WindPlantArdModelConfig(BaseConfig):
 
 
 class ArdWindPlantModel(om.Group):
-    """
-    OpenMDAO Group integrating the Ard wind plant as a sub-problem..
+    """OpenMDAO Group integrating the Ard wind plant as a sub-problem.
 
-    Added Subsystems
-    ----------------
-    wind_ard_cost : WindArdCostComponent
-        Necessary for providing cost_year to H2Integrate.
-    ard_sub_prob : SubmodelComp
-        Encapsulated Ard Problem exposing specified inputs/outputs.
+    Subsystems:
+        wind_ard_cost (WindArdCostComponent): Necessary for providing cost_year to H2Integrate.
+        ard_sub_prob (SubmodelComp): Encapsulated Ard Problem exposing specified inputs/outputs.
 
-    Promoted Inputs
-    ---------------
-    spacing_primary
-    spacing_secondary
-    angle_orientation
-    angle_skew
-    x_substations
-    y_substations
+    Promoted Inputs:
+        spacing_primary: Primary spacing parameter.
+        spacing_secondary: Secondary spacing parameter.
+        angle_orientation: Orientation angle.
+        angle_skew: Skew angle.
+        x_substations: X-coordinates of substations.
+        y_substations: Y-coordinates of substations.
 
-    Promoted Outputs
-    ----------------
-    electricity_out : float
-        Annual energy production (AEP) in MWh (as provided by ARD / FLORIS).
-    CapEx : float
-        Capital expenditure from ARD turbine & balance of plant cost model.
-    OpEx : float
-        Operating expenditure from ARD.
-    boundary_distances : array
-        Distances from turbines to boundary segments.
-    turbine_spacing : array
-        Inter-turbine spacing metrics.
-    cost_year, VarOpEx
-        From cost component (VarOpEx currently placeholder).
+    Promoted Outputs:
+        electricity_out (float): Annual energy production (AEP) in MWh (as provided by ARD/FLORIS).
+        CapEx (float): Capital expenditure from ARD turbine & balance of plant cost model.
+        OpEx (float): Operating expenditure from ARD.
+        boundary_distances (array): Distances from turbines to boundary segments.
+        turbine_spacing (array): Inter-turbine spacing metrics.
+        cost_year: Cost year from cost component.
+        VarOpEx: Variable operating expenditure (currently placeholder).
     """
 
     def initialize(self):
@@ -94,12 +84,8 @@ class ArdWindPlantModel(om.Group):
         )
 
         # add ard sub-problem
-        ard_input_dict = self.options["tech_config"]["model_inputs"]["performance_parameters"][
-            "ard_system"
-        ]
-        ard_data_path = self.options["tech_config"]["model_inputs"]["performance_parameters"][
-            "ard_data_path"
-        ]
+        ard_input_dict = self.config.ard_system
+        ard_data_path = self.config.ard_data_path
 
         ard_prob = set_up_ard_model(input_dict=ard_input_dict, root_data_path=ard_data_path)
 
