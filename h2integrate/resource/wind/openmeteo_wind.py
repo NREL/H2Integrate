@@ -14,7 +14,7 @@ from h2integrate.resource.wind.wind_resource_base import WindResourceBaseAPIMode
 @define
 class OpenMeteoHistoricalWindAPIConfig(ResourceBaseAPIConfig):
     """Configuration class to download wind resource data from
-    `Open-Meteo Weather API <https://open-meteo.com/en/docs/historical-weather-api/>`_.
+    `Open-Meteo Weather API <https://open-meteo.com/en/docs/historical-weather-api>`_.
 
     Args:
         resource_year (int): Year to use for resource data.
@@ -86,11 +86,12 @@ class OpenMeteoHistoricalWindResource(WindResourceBaseAPIModel):
         self.hourly_wind_data_to_units = {
             "wind_speed_10m": "m/s",
             "wind_speed_100m": "m/s",
-            "wind_direction_10m": "degree",
-            "wind_direction_100m": "degree",
-            "temperature_2m": "C",
+            "wind_direction_10m": "deg",
+            "wind_direction_100m": "deg",
+            "temperature_2m": "degC",
             "surface_pressure": "hPa",
             "precipitation": "mm/h",
+            "relative_humidity_2m": "unitless",
         }
         # get the data dictionary
         data = self.get_data()
@@ -163,7 +164,13 @@ class OpenMeteoHistoricalWindResource(WindResourceBaseAPIModel):
 
         # Make data
         for i, varname in enumerate(url["hourly"]):
-            ts_data.update({varname: hourly_data.Variables(i).ValuesAsNumpy()})
+            ts_data.update(
+                {
+                    f"{varname} ({self.hourly_wind_data_to_units[varname]})": hourly_data.Variables(
+                        i
+                    ).ValuesAsNumpy()
+                }
+            )
             len(hourly_data.Variables(i).ValuesAsNumpy())
         time_data = pd.date_range(
             start=pd.to_datetime(hourly_data.Time(), unit="s"),
@@ -186,11 +193,13 @@ class OpenMeteoHistoricalWindResource(WindResourceBaseAPIModel):
         }
 
         if response.Timezone() is not None:
-            header_data.update({"timezone": response.Timezone()})
+            header_data.update({"timezone": response.Timezone().decode("utf-8")})
         else:
             header_data.update({"timezone": url["timezone"]})
         if response.TimezoneAbbreviation() is not None:
-            header_data.update({"timezone_abbreviation": response.TimezoneAbbreviation()})
+            header_data.update(
+                {"timezone_abbreviation": response.TimezoneAbbreviation().decode("utf-8")}
+            )
         else:
             if response.UtcOffsetSeconds() == 0:
                 header_data.update({"timezone_abbreviation": "GMT"})
@@ -297,7 +306,7 @@ class OpenMeteoHistoricalWindResource(WindResourceBaseAPIModel):
         data_rename_mapper = {}
         data_units = {}
         for c in data_cols_init:
-            units = c.split("(")[-1].strip(")").replace("°", "deg")
+            units = c.split("(")[-1].strip(")").replace("°", "deg").replace("%", "unitless")
 
             new_c = c.split("(")[0].replace("air", "").replace("at ", "")
             new_c = new_c.replace(f"({units})", "").strip().replace(" ", "_").replace("__", "_")
@@ -305,7 +314,7 @@ class OpenMeteoHistoricalWindResource(WindResourceBaseAPIModel):
             if "surface" in c:
                 new_c += "_0m"
                 new_c = new_c.replace("surface", "").replace("__", "").strip("_")
-            if "precipitation" in c and units == "mm":
+            if "precipitation" in c and "mm" in units:
                 units = "mm/h"
                 new_c = "precipitation_rate_0m"  # TODO: check how others name this
             data_rename_mapper.update({c: new_c})
