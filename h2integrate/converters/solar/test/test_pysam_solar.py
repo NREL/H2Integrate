@@ -122,6 +122,15 @@ def test_pvwatts_singleowner_notilt_different_site(basic_pysam_options, plant_co
     - `tilt_angle_func` is "none" and tilt is provided (in two separate places) as zero.
     """
 
+    driver_config = {
+        "driver": {"design_of_experiments": {"flag": True}},
+        "design_variables": {
+            "site": {
+                "latitude": {},
+                "longitude": {},
+            }
+        },
+    }
     plant_config["site"].update({"latitude": 35.2018863, "longitude": -101.945027})
 
     basic_pysam_options["SystemDesign"].update({"tilt": 0.0})
@@ -151,7 +160,7 @@ def test_pvwatts_singleowner_notilt_different_site(basic_pysam_options, plant_co
     solar_resource = GOESAggregatedSolarAPI(
         plant_config=plant_config,
         resource_config=solar_resource_dict,
-        driver_config={},
+        driver_config=driver_config,
     )
     comp = PYSAMSolarPlantPerformanceModel(
         plant_config=plant_config,

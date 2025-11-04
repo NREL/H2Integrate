@@ -59,6 +59,7 @@ class ResourceBaseAPIModel(om.ExplicitComponent):
         self.options.declare("driver_config", types=dict)
 
     def setup(self):
+        self.check_if_sweeping_location()
         # create attributes that will be commonly used for resource classes.
         self.site_config = self.options["plant_config"]["site"]
         self.sim_config = self.options["plant_config"]["plant"]["simulation"]
@@ -67,6 +68,25 @@ class ResourceBaseAPIModel(om.ExplicitComponent):
         self.start_time = self.sim_config["start_time"]
         self.add_input("latitude", self.config.latitude, units="deg")
         self.add_input("longitude", self.config.longitude, units="deg")
+
+    def check_if_sweeping_location(self):
+        # NOTE: this logic will not work if only changing the lat/lon of one resource type
+
+        self.check_for_changing_location = False
+
+        driver = self.options["driver_config"].get("driver", {})
+        running_opt = driver.get("optimization", {}).get("flag", False)
+        running_doe = driver.get("design_of_experiments", {}).get("flag", False)
+        if not running_opt and not running_doe:
+            return
+
+        design_vars = self.options["driver_config"].get("design_variables", {})
+        if bool(design_vars):
+            for variables in design_vars.values():
+                for key, value in variables.items():
+                    if key == "latitude" or key == "longitude":
+                        if value.get("flag") is None:  # was popped out in pose_optimziation
+                            self.check_for_changing_location = True
 
     def helper_setup_method(self):
         """
@@ -241,5 +261,6 @@ class ResourceBaseAPIModel(om.ExplicitComponent):
             raise ValueError("Unexpected situation occurred while trying to load data")
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
-        data = self.get_data(float(inputs["latitude"]), float(inputs["longitude"]))
-        discrete_outputs[f"{self.config.resource_type}_resource_data"] = data
+        if self.check_for_changing_location:
+            data = self.get_data(float(inputs["latitude"]), float(inputs["longitude"]))
+            discrete_outputs[f"{self.config.resource_type}_resource_data"] = data
