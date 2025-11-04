@@ -4,7 +4,7 @@ from h2integrate.tools.run_cases import modify_tech_config, load_tech_config_cas
 from h2integrate.core.h2integrate_model import H2IntegrateModel
 
 
-# Create a H2Integrate models
+# Create H2Integrate models - one with iron_wrapper, one with modular iron components
 model = H2IntegrateModel("20_iron.yaml")
 model_modular = H2IntegrateModel("20_iron_modular.yaml")
 
@@ -30,18 +30,12 @@ for casename in casenames:
     model.run()
     model_modular.run()
     model.post_process()
-    model_modular.post_process(
-        exclude_other=[
-            "*iron_mine_performance",
-            "*iron_mine_cost",
-            "*iron_plant_performance",
-            "*iron_plant_cost",
-        ]
-    )
+    model_modular.post_process()
     lcois.append(float(model.model.get_val("iron.LCOI")[0]))
     lcois_modular.append(
         float(model_modular.model.get_val("finance_subgroup_pig_iron.price_pig_iron")[0])
     )
 
+# Compare the LCOIs from iron_wrapper and modular iron
 print(lcois)
 print(lcois_modular)
