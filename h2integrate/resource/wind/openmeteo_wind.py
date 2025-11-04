@@ -171,7 +171,8 @@ class OpenMeteoHistoricalWindResource(WindResourceBaseAPIModel):
                     ).ValuesAsNumpy()
                 }
             )
-            len(hourly_data.Variables(i).ValuesAsNumpy())
+
+        # Make time column in ISO 8601 format
         time_data = pd.date_range(
             start=pd.to_datetime(hourly_data.Time(), unit="s"),
             end=pd.to_datetime(hourly_data.TimeEnd(), unit="s"),
@@ -179,9 +180,12 @@ class OpenMeteoHistoricalWindResource(WindResourceBaseAPIModel):
             inclusive="left",
         )
 
+        # Convert timeseries data to a DataFrame
         df = pd.DataFrame(ts_data, index=time_data)
         df.index.name = "time"
 
+        # Convert the timeseries data to a string compatible with
+        # csv formatting
         data_str = df.to_csv(None)
 
         # make header, formatted as if downloading data from OpenMETEO
