@@ -1,0 +1,122 @@
+from pathlib import Path
+
+import openmdao.api as om
+from pytest import fixture
+
+from h2integrate.resource.wind.open_meteo_wind import OpenMeteoAPIWindResource
+
+
+@fixture
+def plant_simulation_utc_start():
+    plant = {
+        "plant_life": 30,
+        "simulation": {
+            "dt": 3600,
+            "n_timesteps": 8760,
+            "start_time": "01/01/1900 00:30:00",
+            "timezone": 0,
+        },
+    }
+    return plant
+
+
+@fixture
+def plant_simulation_nonutc_start():
+    plant = {
+        "plant_life": 30,
+        "simulation": {
+            "dt": 3600,
+            "n_timesteps": 8760,
+            "start_time": "01/01/1900 00:30:00",
+            "timezone": -6,
+        },
+    }
+    return plant
+
+
+@fixture
+def site_config_download_from_web():
+    site = {
+        "latitude": 44.04218,
+        "longitude": -95.19757,
+        "resources": {
+            "wind_resource": {
+                "resource_model": "openmeteo_wind_api",
+                "resource_parameters": {
+                    "resource_year": 2023,
+                    "resource_filename": "open-meteo-44.04N95.20W438m.csv",
+                },
+            }
+        },
+    }
+    return site
+
+
+@fixture
+def site_config_download_from_h2i():
+    site = {
+        "latitude": 44.04218,
+        "longitude": -95.19757,
+        "resources": {
+            "wind_resource": {
+                "resource_model": "openmeteo_wind_api",
+                "resource_parameters": {
+                    "resource_year": 2023,
+                    # "resource_filename":
+                    # "44.04218_-95.19757_2023_openmeteo_archive_60min_local_tz.csv",
+                },
+            }
+        },
+    }
+    return site
+
+
+def test_wind_resource_loaded_web_download(
+    plant_simulation_utc_start, site_config_download_from_web, subtests
+):
+    plant_config = {
+        "site": site_config_download_from_web,
+        "plant": plant_simulation_utc_start,
+    }
+
+    prob = om.Problem()
+    comp = OpenMeteoAPIWindResource(
+        plant_config=plant_config,
+        resource_config=plant_config["site"]["resources"]["wind_resource"]["resource_parameters"],
+        driver_config={},
+    )
+    prob.model.add_subsystem("resource", comp)
+    prob.setup()
+    prob.run_model()
+    wind_data = prob.get_val("resource.wind_resource_data")
+
+    with subtests.test("filepath for data was found where expected"):
+        assert Path(wind_data["filepath"]).exists()
+        assert Path(wind_data["filepath"]).name == "open-meteo-44.04N95.20W438m.csv"
+
+
+def test_wind_resource_h2i_download(
+    plant_simulation_nonutc_start, site_config_download_from_h2i, subtests
+):
+    plant_config = {
+        "site": site_config_download_from_h2i,
+        "plant": plant_simulation_nonutc_start,
+    }
+
+    prob = om.Problem()
+    comp = OpenMeteoAPIWindResource(
+        plant_config=plant_config,
+        resource_config=plant_config["site"]["resources"]["wind_resource"]["resource_parameters"],
+        driver_config={},
+    )
+    prob.model.add_subsystem("resource", comp)
+    prob.setup()
+    prob.run_model()
+    wind_data = prob.get_val("resource.wind_resource_data")
+
+    with subtests.test("filepath for data was found where expected"):
+        assert Path(wind_data["filepath"]).exists()
+        assert (
+            Path(wind_data["filepath"]).name
+            == "44.04218_-95.19757_2023_openmeteo_archive_60min_local_tz.csv"
+        )
