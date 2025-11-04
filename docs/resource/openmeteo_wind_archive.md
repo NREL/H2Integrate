@@ -17,6 +17,7 @@ This dataset allows for resource data to be downloaded for:
 | `wind_direction`  | 10, 100 |
 | `temperature`  | 2 |
 | `pressure`  | 0 |
+| `relative_humidity`  | 2 |
 | `precipitation_rate`  | 0 |
 
 | Additional Data     | Included  |
