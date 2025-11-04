@@ -6,8 +6,13 @@ from pathlib import Path
 import yaml
 import numpy as np
 
-from h2integrate import ROOT_DIR, EXAMPLE_DIR
-from h2integrate.core.utilities import get_path, find_file, dict_to_yaml_formatting
+from h2integrate import ROOT_DIR, EXAMPLE_DIR, RESOURCE_DEFAULT_DIR
+from h2integrate.core.utilities import (
+    get_path,
+    find_file,
+    make_unique_case_name,
+    dict_to_yaml_formatting,
+)
 
 
 def test_get_path(subtests):
@@ -92,6 +97,25 @@ def test_find_file(subtests):
     with subtests.test("find_file: filepath relative (inside) to root_folder"):
         assert file_root_in_rel_out_path.resolve() == file_abs_path
     os.chdir(current_cwd)
+
+
+def test_make_unique_filename(subtests):
+    unique_yaml_name = make_unique_case_name(EXAMPLE_DIR, "tech_config.yaml", ".yaml")
+    unique_py_name = make_unique_case_name(ROOT_DIR.parent, "conftest.py", ".py")
+    unique_csv_name = make_unique_case_name(
+        RESOURCE_DEFAULT_DIR, "34.22_-102.75_2013_wtk_v2_60min_local_tz.csv", ".csv"
+    )
+
+    yaml_files = list(Path(EXAMPLE_DIR).glob(f"**/{unique_yaml_name}"))
+    py_files = list(Path(ROOT_DIR.parent).glob(f"**/{unique_py_name}"))
+    csv_files = list(Path(RESOURCE_DEFAULT_DIR).glob(f"**/{unique_csv_name}"))
+
+    with subtests.test("Uniquely named .yaml file"):
+        assert len(yaml_files) == 0
+    with subtests.test("Uniquely named .py file"):
+        assert len(py_files) == 0
+    with subtests.test("Uniquely named .csv file"):
+        assert len(csv_files) == 0
 
 
 class TestDictToYamlFormatting(unittest.TestCase):
