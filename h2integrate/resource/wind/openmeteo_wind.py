@@ -292,14 +292,14 @@ class OpenMeteoHistoricalWindResource(WindResourceBaseAPIModel):
             - **data_units** (*dict*): dictionary with same keys as `data` and values as the
                 data units in OpenMDAO compatible format.
         """
-        time_cols = ["Year", "Month", "Day", "Hour", "Minute"]
+        time_cols = ["Year", "Month", "Day", "Hour", "Minute", "time"]
         data_cols_init = [c for c in data.columns.to_list() if c not in time_cols]
         data_rename_mapper = {}
         data_units = {}
         for c in data_cols_init:
             units = c.split("(")[-1].strip(")").replace("°", "deg")
 
-            new_c = c.replace("air", "").replace("at ", "")
+            new_c = c.split("(")[0].replace("air", "").replace("at ", "")
             new_c = new_c.replace(f"({units})", "").strip().replace(" ", "_").replace("__", "_")
 
             if "surface" in c:
@@ -312,7 +312,7 @@ class OpenMeteoHistoricalWindResource(WindResourceBaseAPIModel):
             data_units.update({new_c: units})
         data = data.rename(columns=data_rename_mapper)
         data_dict = {c: data[c].astype(float).values for x, c in data_rename_mapper.items()}
-        data_time_dict = {c.lower(): data[c].astype(float).values for c in time_cols}
+        data_time_dict = {c.lower(): data[c].astype(float).values for c in time_cols if c != "time"}
         data_dict.update(data_time_dict)
         return data_dict, data_units
 
