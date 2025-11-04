@@ -8,6 +8,7 @@ from h2integrate.finances.profast_financial import ProFastComp
 from h2integrate.transporters.generic_summer import GenericSummerPerformanceModel
 from h2integrate.converters.hopp.hopp_wrapper import HOPPComponent
 from h2integrate.converters.solar.solar_pysam import PYSAMSolarPlantPerformanceModel
+from h2integrate.resource.wind.openmeteo_wind import OpenMeteoHistoricalWindResource
 from h2integrate.storage.generic_storage_cost import GenericStorageCostModel
 from h2integrate.storage.hydrogen.eco_storage import H2Storage
 from h2integrate.converters.wind.atb_wind_cost import ATBWindPlantCostModel
@@ -108,6 +109,7 @@ supported_models = {
     # Resources
     "river_resource": RiverResource,
     "wind_toolkit_v2_api": WTKNRELDeveloperAPIWindResource,
+    "openmeteo_wind_api": OpenMeteoHistoricalWindResource,
     "goes_aggregated_solar_v4_api": GOESAggregatedSolarAPI,
     "goes_conus_solar_v4_api": GOESConusSolarAPI,
     "goes_fulldisc_solar_v4_api": GOESFullDiscSolarAPI,
