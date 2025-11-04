@@ -1,7 +1,7 @@
 (npvfinance:npvfinancemodel)=
 # Simple Net Present Value Finance Model
-The `NPVFinance` component calculates the Net Present Value (NPV) of a commodity-producing plant or technology over its operational lifetime using the [Numpy Financial npv](https://numpy.org/numpy-financial/latest/npv.html#numpy_financial.npv) method..
-It is implemented as an OpenMDAO `ExplicitComponent` and integrates with system-level techno-economic optimization workflows.
+The `NPVFinance` component calculates the Net Present Value (NPV) of a commodity-producing plant or technology over its operational lifetime using the [Numpy Financial npv](https://numpy.org/numpy-financial/latest/npv.html#numpy_financial.npv) method.
+It is implemented as an OpenMDAO `ExplicitComponent` and integrates with system-level technoeconomic optimization workflows.
 
 The component evaluates profitability by discounting future cash flows — including capital expenditures (CAPEX), operating expenses (OPEX), refurbishments, and revenues — based on user-defined financial parameters.
 

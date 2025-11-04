@@ -86,3 +86,49 @@ def test_simple_npv(npv_finance_inputs, fake_filtered_tech_config, fake_cost_dic
             pytest.approx(prob.get_val("npv.NPV_electricity_no1", units="USD")[0], rel=1e-6)
             == -1352263704.120
         )
+
+
+def test_simple_npv_positive(
+    npv_finance_inputs, fake_filtered_tech_config, fake_cost_dict, subtests
+):
+    mean_hourly_production = 500000.0
+    prob = om.Problem()
+
+    # Increase commodity sell price to get positive NPV
+    npv_finance_inputs_positive = npv_finance_inputs.copy()
+    npv_finance_inputs_positive["commodity_sell_price"] = 0.15
+
+    plant_config = {
+        "plant": {
+            "plant_life": 30,
+        },
+        "finance_parameters": {"model_inputs": npv_finance_inputs_positive},
+    }
+    pf = NumpyFinancialNPV(
+        driver_config={},
+        plant_config=plant_config,
+        tech_config=fake_filtered_tech_config,
+        commodity_type="electricity",
+        description="no1",
+    )
+
+    prob.model.add_subsystem("npv", pf)
+    prob.setup()
+    prob.set_val("npv.total_electricity_produced", mean_hourly_production * 8760, units="kW*h/year")
+    for variable, cost in fake_cost_dict.items():
+        units = "USD" if "capex" in variable else "USD/year"
+        prob.set_val(f"npv.{variable}", cost, units=units)
+
+    prob.run_model()
+
+    with subtests.test("Sell price"):
+        assert (
+            pytest.approx(
+                prob.get_val("npv.sell_price_electricity_no1", units="USD/(kW*h)"), rel=1e-6
+            )
+            == npv_finance_inputs_positive["commodity_sell_price"]
+        )
+
+    with subtests.test("NPV positive"):
+        npv_value = prob.get_val("npv.NPV_electricity_no1", units="USD")[0]
+        assert pytest.approx(npv_value, rel=1e-6) == 3597582813.8071656

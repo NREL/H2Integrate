@@ -595,6 +595,8 @@ class ProFastBase(om.ExplicitComponent):
     def populate_profast(self, inputs):
         """Populate and configure the ProFAST financial model for analysis.
 
+        This is called during the `compute` method of the inheriting class.
+
         Args:
             inputs (dict): OpenMDAO input values for technology CapEx, OpEx, and production levels.
 
@@ -734,11 +736,13 @@ class ProFastBase(om.ExplicitComponent):
                 for coprod_cost_key, coprod_cost_val in coproduct_cost_defaults.items():
                     tech_coproduct_info.setdefault(coprod_cost_key, coprod_cost_val)
                 coproduct_costs[tech] = tech_coproduct_info
+
         # add capital costs and fixed costs to pf_dict
         pf_dict["capital_items"] = capital_items
         pf_dict["fixed_costs"] = fixed_costs
         pf_dict["feedstocks"] = variable_costs
         pf_dict["coproducts"] = coproduct_costs
+
         # create ProFAST object
         pf = create_and_populate_profast(pf_dict)
         return pf
