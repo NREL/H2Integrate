@@ -95,7 +95,7 @@ def test_baseline_iron_ore_costs_martin(
     plant_config, driver_config, iron_ore_config_martin_om, subtests
 ):
     martin_ore_capex = 1221599018.626594
-    martin_ore_var_om = 97.76558025830258
+    martin_ore_var_om = 441958721.59532887
     martin_ore_fixed_om = 0.0
 
     prob = om.Problem()
@@ -131,7 +131,7 @@ def test_baseline_iron_ore_costs_rosner(
     plant_config, driver_config, iron_ore_config_rosner_om, subtests
 ):
     rosner_ore_capex = 1221599018.626594
-    rosner_ore_var_om = 97.76558025830258
+    rosner_ore_var_om = 441958721.59532887
     rosner_ore_fixed_om = 0.0
     prob = om.Problem()
     iron_ore_perf = IronMinePerformanceComponent(
