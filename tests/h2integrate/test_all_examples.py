@@ -685,7 +685,15 @@ def test_wind_solar_electrolyzer_example(subtests):
     model = H2IntegrateModel(Path.cwd() / "15_wind_solar_electrolyzer.yaml")
     model.run()
 
-    model.post_process()
+    solar_fpath = model.model.get_val("site.solar_resource.solar_resource_data")["filepath"]
+    wind_fpath = model.model.get_val("site.wind_resource.wind_resource_data")["filepath"]
+
+    with subtests.test("Wind resource file"):
+        assert Path(wind_fpath).name == "35.2018863_-101.945027_2012_wtk_v2_60min_utc_tz.csv"
+
+    with subtests.test("Solar resource file"):
+        assert Path(solar_fpath).name == "30.6617_-101.7096_psmv3_60_2013.csv"
+
     with subtests.test("Check LCOE"):
         assert (
             pytest.approx(
