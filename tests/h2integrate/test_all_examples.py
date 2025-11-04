@@ -963,3 +963,129 @@ def test_simple_dispatch_example(subtests):
 
     with subtests.test("Check electricity LCOE"):
         assert pytest.approx(electricity_lcoe, rel=1e-6) == 78.01723
+
+
+def test_csvgen_design_of_experiments(subtests):
+    os.chdir(EXAMPLE_DIR / "20_solar_electrolyzer_doe")
+
+    # Create a H2Integrate model
+
+    with pytest.raises(UserWarning) as excinfo:
+        model = H2IntegrateModel(Path.cwd() / "20_solar_electrolyzer_doe.yaml")
+        assert "There may be issues with the csv file csv_doe_cases.csv" in str(excinfo.value)
+
+    # Run the model
+    from hopp.utilities.utilities import load_yaml
+
+    from h2integrate.core.utilities import check_file_format_for_csv_generator
+    from h2integrate.core.dict_utils import update_defaults
+    from h2integrate.core.inputs.validation import write_yaml, load_driver_yaml
+
+    # load the driver config file
+    driver_config = load_driver_yaml("driver_config.yaml")
+    # specify the filepath to the csv file
+    csv_fpath = Path(driver_config["driver"]["design_of_experiments"]["filename"]).absolute()
+    # run the csv checker method, we want it to write the csv file to a new filepath so
+    # set overwrite_file=False
+    new_csv_filename = check_file_format_for_csv_generator(
+        csv_fpath, driver_config, check_only=False, overwrite_file=False
+    )
+
+    # update the csv filename in the driver config dictionary
+    updated_driver = update_defaults(driver_config["driver"], "filename", new_csv_filename.name)
+    driver_config["driver"].update(updated_driver)
+
+    # save the updated driver to a new file
+    new_driver_fpath = Path.cwd() / "driver_config_test.yaml"
+    new_toplevel_fpath = Path.cwd() / "20_solar_electrolyzer_doe_test.yaml"
+    write_yaml(driver_config, new_driver_fpath)
+
+    # update the driver config filename in the top-level config
+    main_config = load_yaml("20_solar_electrolyzer_doe.yaml")
+    main_config["driver_config"] = new_driver_fpath.name
+
+    # save the updated top-level config file to a new file
+    write_yaml(main_config, new_toplevel_fpath)
+
+    model = H2IntegrateModel(new_toplevel_fpath)
+    model.run()
+
+    sql_fpath = Path.cwd() / "ex_20_out" / "cases.sql"
+    cr = om.CaseReader(str(sql_fpath))
+    cases = list(cr.get_cases())
+
+    with subtests.test("Check solar capacity in case 0"):
+        assert pytest.approx(cases[0].get_val("solar.capacity_kWdc", units="MW"), rel=1e-6) == 25.0
+    with subtests.test("Check solar capacity in case 9"):
+        assert (
+            pytest.approx(cases[-1].get_val("solar.capacity_kWdc", units="MW"), rel=1e-6) == 500.0
+        )
+
+    with subtests.test("Check electrolyzer capacity in case 0"):
+        assert (
+            pytest.approx(
+                cases[0].get_val("electrolyzer.electrolyzer_size_mw", units="MW"), rel=1e-6
+            )
+            == 10.0 * 5
+        )
+
+    with subtests.test("Check electrolyzer capacity in case 9"):
+        assert (
+            pytest.approx(
+                cases[-1].get_val("electrolyzer.electrolyzer_size_mw", units="MW"), rel=1e-6
+            )
+            == 10.0 * 10
+        )
+
+    min_lcoh_val = 100000.0
+    min_lcoh_case_num = 0
+    for i, case in enumerate(cases):
+        lcoh = case.get_val("finance_subgroup_hydrogen.LCOH_optimistic", units="USD/kg")[0]
+        if lcoh < min_lcoh_val:
+            min_lcoh_val = np.min([lcoh, min_lcoh_val])
+            min_lcoh_case_num = i
+
+    with subtests.test("Min LCOH value"):
+        assert pytest.approx(min_lcoh_val, rel=1e-6) == 4.468258
+
+    with subtests.test("Min LCOH case number"):
+        assert min_lcoh_case_num == 6
+
+    with subtests.test("Min LCOH case LCOH value"):
+        assert (
+            pytest.approx(
+                cases[min_lcoh_case_num].get_val(
+                    "finance_subgroup_hydrogen.LCOH_optimistic", units="USD/kg"
+                ),
+                rel=1e-6,
+            )
+            == min_lcoh_val
+        )
+
+    with subtests.test("Min LCOH case has lower LCOH than other cases"):
+        for i, case in enumerate(cases):
+            lcoh_case = case.get_val("finance_subgroup_hydrogen.LCOH_optimistic", units="USD/kg")
+            if i != min_lcoh_case_num:
+                assert lcoh_case > min_lcoh_val
+
+    with subtests.test("Min LCOH solar capacity"):
+        assert (
+            pytest.approx(
+                cases[min_lcoh_case_num].get_val("solar.capacity_kWdc", units="MW"), rel=1e-6
+            )
+            == 200.0
+        )
+
+    with subtests.test("Min LCOH electrolyzer capacity"):
+        assert (
+            pytest.approx(
+                cases[min_lcoh_case_num].get_val("electrolyzer.electrolyzer_size_mw", units="MW"),
+                rel=1e-6,
+            )
+            == 100.0
+        )
+
+    # remove files created
+    new_driver_fpath.unlink()
+    new_toplevel_fpath.unlink()
+    new_csv_filename.unlink()
