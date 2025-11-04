@@ -127,11 +127,11 @@ class DemandOpenLoopControllerConfig(BaseConfig):
     commodity_name: str = field()
     commodity_units: str = field()
     max_capacity: float = field()
-    demand_profile: int | float | list = field()
     max_charge_percent: float = field(validator=range_val(0, 1))
     min_charge_percent: float = field(validator=range_val(0, 1))
     init_charge_percent: float = field(validator=range_val(0, 1))
     max_charge_rate: float = field(validator=gt_zero)
+    demand_profile: int | float | list = field(default=0.0)
     charge_equals_discharge: bool = field(default=True)
     max_discharge_rate: float | None = field(default=None)
     charge_efficiency: float | None = field(default=None, validator=range_val_or_none(0, 1))
@@ -309,6 +309,10 @@ class DemandOpenLoopController(ControllerBaseClass):
         Compute the state of charge (SOC) and output flow based on demand and storage constraints.
 
         """
+        commodity_name = self.config.commodity_name
+        if np.all(inputs[f"{commodity_name}_demand"] == 0.0):
+            msg = "Demand profile is zero, check that demand profile is input"
+            raise UserWarning(msg)
         if inputs["max_charge_rate"][0] < 0:
             msg = (
                 f"max_charge_rate cannot be less than zero and has value of "
@@ -322,7 +326,6 @@ class DemandOpenLoopController(ControllerBaseClass):
             )
             raise UserWarning(msg)
 
-        commodity_name = self.config.commodity_name
         max_capacity = inputs["max_capacity"]
         max_charge_percent = self.config.max_charge_percent
         min_charge_percent = self.config.min_charge_percent
