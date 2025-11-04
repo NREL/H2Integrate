@@ -9,11 +9,9 @@ from h2integrate.core.model_baseclasses import CostModelBaseClass
 from h2integrate.tools.inflation.inflate import inflate_cpi
 from h2integrate.simulation.technologies.iron.iron import (
     IronCostModelConfig,
-    IronFinanceModelConfig,
     IronPerformanceModelConfig,
     IronPerformanceModelOutputs,
     run_iron_cost_model,
-    run_iron_finance_model,
     run_size_iron_plant_performance,
 )
 from h2integrate.simulation.technologies.iron.martin_ore.variable_om_cost import (
@@ -78,9 +76,10 @@ class IronMinePerformanceComponent(om.ExplicitComponent):
             "iron_mine_performance", val=pd.DataFrame, desc="iron mine performance results"
         )
         self.add_output("iron_ore_out", val=0.0, shape=n_timesteps, units="kg/h")
-        self.add_output("total_iron_ore_produced", val=1.0, units="t/year")
+        self.add_output("total_iron_ore_produced", val=0.0, units="t/year")
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
+        n_timesteps = self.options["plant_config"]["plant"]["simulation"]["n_timesteps"]
         ore_performance_inputs = {"input_capacity_factor_estimate": self.config.ore_cf_estimate}
         ore_model_inputs = self.config.make_model_dict()
         iron_mine_site = self.config.make_site_dict()
@@ -98,7 +97,7 @@ class IronMinePerformanceComponent(om.ExplicitComponent):
         ore_produced_wmtpy = ore_produced_wltpy * 1.016047  # wmtpy = wet metric tonnes per year
         ore_produced_mtpy = ore_produced_wmtpy * 0.98  # mtpy = dry metric tonnes per year
         discrete_outputs["iron_mine_performance"] = iron_mine_performance.performances_df
-        outputs["iron_ore_out"] = ore_produced_mtpy * 1000 / 8760
+        outputs["iron_ore_out"] = ore_produced_mtpy * 1000 / n_timesteps
         outputs["total_iron_ore_produced"] = ore_produced_mtpy
 
 
@@ -107,14 +106,12 @@ class IronMineCostConfig(IronMineBaseConfig):
     LCOE: float = field(kw_only=True)  # $/MWh
     LCOH: float = field(kw_only=True)  # $/kg
     varom_model_name: str = field(
-        default="martine_ore", validator=contains(["martin_ore", "rosner_ore"])
+        default="martin_ore", validator=contains(["martin_ore", "rosner_ore"])
     )
     operational_year: int = field(converter=int, kw_only=True)
     installation_years: int | float = field(kw_only=True)
     plant_life: int = field(converter=int, kw_only=True)
     cost_year: int = field(converter=int, kw_only=True)
-    gen_inflation: int = field(converter=int, kw_only=True)
-    financial_assumptions: dict = field(converter=dict, kw_only=True)
 
     def make_model_dict(self):
         keys = ["model_fp", "inputs_fp", "coeffs_fp", "refit_coeffs"]
@@ -128,19 +125,6 @@ class IronMineCostConfig(IronMineBaseConfig):
         d = self.as_dict()
         cost_dict = {k: v for k, v in d.items() if k in keys}
         return cost_dict
-
-    def make_finance_dict(self):
-        keys = [
-            "operational_year",
-            "installation_years",
-            "plant_life",
-            "gen_inflation",
-            "financial_assumptions",
-            "cost_year",
-        ]
-        d = self.as_dict()
-        finance_dict = {k: v for k, v in d.items() if k in keys}
-        return finance_dict
 
 
 class IronMineCostComponent(CostModelBaseClass):
@@ -160,7 +144,6 @@ class IronMineCostComponent(CostModelBaseClass):
         self.add_input("LCOE", val=self.config.LCOE, units="USD/MW/h")
         self.add_input("LCOH", val=self.config.LCOH, units="USD/kg")
         self.add_input("total_iron_ore_produced", val=1.0, units="t/year")
-        self.add_output("LCOI_ore", val=0.0, units="USD/kg")
         self.add_discrete_input(
             "iron_mine_performance", val=pd.DataFrame, desc="iron mine performance results"
         )
@@ -188,21 +171,6 @@ class IronMineCostComponent(CostModelBaseClass):
         iron_ore_cost = run_iron_cost_model(cost_config)
 
         discrete_outputs["iron_mine_cost"] = iron_ore_cost.costs_df
-
-        # TEMPORARY - Run old Iron finance model to get LCOI_ore
-        finance_dict = self.config.make_finance_dict()
-        ore_cost_inputs.update(finance_dict)
-        ore_model_inputs["model_fp"] = ore_model_inputs["model_fp"].replace(".cost", ".finance")
-        finance_config = IronFinanceModelConfig(
-            product_selection=f"{self.config.taconite_pellet_type}_taconite_pellets",
-            site=iron_mine_site,
-            model=ore_model_inputs,
-            params=ore_cost_inputs,
-            performance=ore_performance,
-            cost=iron_ore_cost,
-        )
-        iron_ore_finance = run_iron_finance_model(finance_config)
-        outputs["LCOI_ore"] = iron_ore_finance.sol["lco"] * 1000
 
         # Now taking some stuff from finance
         cost_df = iron_ore_cost.costs_df.set_index("Name")

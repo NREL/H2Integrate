@@ -76,6 +76,7 @@ class IronPlantPerformanceComponent(om.ExplicitComponent):
         # self.add_output("total_steel_produced", val=0.0, units="t/year")
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
+        n_timesteps = self.options["plant_config"]["plant"]["simulation"]["n_timesteps"]
         iron_plant_performance_inputs = {
             "plant_capacity_mtpy": self.config.iron_win_capacity,
             "capacity_denominator": self.config.win_capacity_demon,
@@ -93,7 +94,7 @@ class IronPlantPerformanceComponent(om.ExplicitComponent):
         pig_iron_produced_mtpy = iron_plant_performance.performances_df.set_index("Name").loc[
             "Pig Iron Production"
         ]["Model"]
-        outputs["pig_iron_out"] = pig_iron_produced_mtpy * 1000 / 8760
+        outputs["pig_iron_out"] = pig_iron_produced_mtpy * 1000 / n_timesteps
         outputs["total_pig_iron_produced"] = pig_iron_produced_mtpy
         discrete_outputs["iron_plant_performance"] = iron_plant_performance.performances_df
 

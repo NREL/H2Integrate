@@ -1033,7 +1033,7 @@ class H2IntegrateModel:
 
         self.prob.run_driver()
 
-    def post_process(self, print_mean_flag=True, exclude_other=[]):
+    def post_process(self):
         """
         Post-process the results of the OpenMDAO model.
 
@@ -1042,8 +1042,5 @@ class H2IntegrateModel:
         are large dictionary variables that are not correctly formatted when printing.
         """
 
-        exclude_list = ["*resource_data"]
-        exclude_list.extend(exclude_other)
-
-        self.prob.model.list_inputs(units=True, print_mean=print_mean_flag, excludes=exclude_list)
-        self.prob.model.list_outputs(units=True, print_mean=print_mean_flag, excludes=exclude_list)
+        self.prob.model.list_inputs(units=True, print_mean=True, excludes=["*resource_data"])
+        self.prob.model.list_outputs(units=True, print_mean=True, excludes=["*resource_data"])
