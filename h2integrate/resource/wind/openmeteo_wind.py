@@ -135,7 +135,7 @@ class OpenMeteoHistoricalWindResource(WindResourceBaseAPIModel):
             "end_date": f"{end_year}-01-01",  # format is "%Y-%m-%d"
             "hourly": list(self.hourly_wind_data_to_units.keys()),
             "wind_speed_unit": "ms",
-            # "temperature_unit": "celsius",
+            "temperature_unit": "celsius",
             "precipitation_unit": "mm",
             "timezone": "GMT" if self.utc else "auto",
         }
@@ -311,12 +311,19 @@ class OpenMeteoHistoricalWindResource(WindResourceBaseAPIModel):
             new_c = c.split("(")[0].replace("air", "").replace("at ", "")
             new_c = new_c.replace(f"({units})", "").strip().replace(" ", "_").replace("__", "_")
 
+            old_c = c.split("(")[0].strip()
+
+            # don't include data that isn't relevant for wind data
+            if old_c not in self.hourly_wind_data_to_units:
+                continue
+
             if "surface" in c:
                 new_c += "_0m"
                 new_c = new_c.replace("surface", "").replace("__", "").strip("_")
             if "precipitation" in c and "mm" in units:
                 units = "mm/h"
                 new_c = "precipitation_rate_0m"  # TODO: check how others name this
+
             data_rename_mapper.update({c: new_c})
             data_units.update({new_c: units})
         data = data.rename(columns=data_rename_mapper)

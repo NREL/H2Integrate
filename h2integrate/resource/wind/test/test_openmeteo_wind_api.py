@@ -72,7 +72,7 @@ def site_config_download_from_h2i():
     return site
 
 
-def test_wind_resource_loaded_web_download(
+def test_wind_resource_web_download(
     plant_simulation_utc_start, site_config_download_from_web, subtests
 ):
     plant_config = {
@@ -102,6 +102,8 @@ def test_wind_resource_loaded_web_download(
         assert pytest.approx(wind_data["elevation"], rel=1e-6) == 438
     with subtests.test("resource data is 8760 in length"):
         assert all(len(wind_data[k]) == 8760 for k in data_keys)
+    with subtests.test("theres 12 timeseries data keys"):
+        assert len(data_keys) == 12
 
 
 def test_wind_resource_h2i_download(
@@ -137,3 +139,5 @@ def test_wind_resource_h2i_download(
         assert pytest.approx(wind_data["elevation"], rel=1e-6) == 449
     with subtests.test("resource data is 8760 in length"):
         assert all(len(wind_data[k]) == 8760 for k in data_keys)
+    with subtests.test("theres 13 timeseries data keys"):
+        assert len(data_keys) == 13
