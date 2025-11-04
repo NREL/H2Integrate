@@ -18,20 +18,20 @@ design_variables:
       lower: 5000.0
       upper: 5000000.0
       units: "kW"
-  solar_resource:
+  site:
     latitude:
       flag: True
       units: "deg"
       lower: -90.0
       upper: 90.0
-  solar_resource:
     longitude:
       flag: True
       units: "deg"
       lower: -180.0
       upper: 180.0
+
 objective:
-  name: finance_subgroup_hydrogen.LCOH_optimistic
+  name: finance_subgroup_electricity.LCOE_optimistic
 recorder:
     file: cases.sql
     overwrite_recorder: true
