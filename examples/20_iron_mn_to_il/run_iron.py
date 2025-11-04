@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from h2integrate.tools.run_cases import mod_tech_config, load_tech_config_cases
+from h2integrate.tools.run_cases import modify_tech_config, load_tech_config_cases
 from h2integrate.core.h2integrate_model import H2IntegrateModel
 
 
@@ -57,7 +57,7 @@ casenames = [
 lcois = []
 
 for casename in casenames:
-    model = mod_tech_config(model, cases[casename])
+    model = modify_tech_config(model, cases[casename])
     model.run()
     model.post_process()
     lcois.append(float(model.model.get_val("iron.LCOI")[0]))

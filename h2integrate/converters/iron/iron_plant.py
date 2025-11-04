@@ -62,6 +62,7 @@ class IronPlantPerformanceComponent(om.ExplicitComponent):
         self.options.declare("tech_config", types=dict)
 
     def setup(self):
+        n_timesteps = self.options["plant_config"]["plant"]["simulation"]["n_timesteps"]
         self.config = IronPlantPerformanceConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance"),
             strict=False,
@@ -70,10 +71,12 @@ class IronPlantPerformanceComponent(om.ExplicitComponent):
         self.add_discrete_output(
             "iron_plant_performance", val=pd.DataFrame, desc="iron plant performance results"
         )
+        self.add_output("pig_iron_out", val=0.0, shape=n_timesteps, units="kg/h")
         self.add_output("total_pig_iron_produced", val=0.0, units="t/year")
         # self.add_output("total_steel_produced", val=0.0, units="t/year")
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
+        n_timesteps = self.options["plant_config"]["plant"]["simulation"]["n_timesteps"]
         iron_plant_performance_inputs = {
             "plant_capacity_mtpy": self.config.iron_win_capacity,
             "capacity_denominator": self.config.win_capacity_demon,
@@ -91,6 +94,7 @@ class IronPlantPerformanceComponent(om.ExplicitComponent):
         pig_iron_produced_mtpy = iron_plant_performance.performances_df.set_index("Name").loc[
             "Pig Iron Production"
         ]["Model"]
+        outputs["pig_iron_out"] = pig_iron_produced_mtpy * 1000 / n_timesteps
         outputs["total_pig_iron_produced"] = pig_iron_produced_mtpy
         discrete_outputs["iron_plant_performance"] = iron_plant_performance.performances_df
 
@@ -142,9 +146,10 @@ class IronPlantCostComponent(CostModelBaseClass):
         super().setup()
         self.add_input("LCOE", val=self.config.LCOE, units="USD/MW/h")
         self.add_input("LCOH", val=self.config.LCOH, units="USD/kg")
-        self.add_input("LCOI_ore", val=self.config.LCOI_ore, units="USD/t")
+        self.add_input("price_iron_ore", val=self.config.LCOI_ore, units="USD/t")
         self.add_input("iron_transport_cost", val=self.config.iron_transport_cost, units="USD/t")
         self.add_input("ore_profit_pct", val=self.config.ore_profit_pct, units="USD/t")
+        self.add_input("total_pig_iron_produced", val=1.0, units="t/year")
         self.add_discrete_input(
             "iron_plant_performance", val=pd.DataFrame, desc="iron plant performance results"
         )
@@ -160,7 +165,7 @@ class IronPlantCostComponent(CostModelBaseClass):
         iron_plant_cost_inputs = {
             "lcoe": inputs["LCOE"][0] / 1e3,
             "lcoh": inputs["LCOH"][0],
-            "lco_iron_ore_tonne": inputs["LCOI_ore"][0],
+            "lco_iron_ore_tonne": inputs["price_iron_ore"],
             "iron_transport_tonne": inputs["iron_transport_cost"][0],
             "plant_capacity_mtpy": self.config.iron_win_capacity,
             "capacity_denominator": self.config.win_capacity_demon,
@@ -253,7 +258,7 @@ class IronPlantCostComponent(CostModelBaseClass):
         natural_gas_prices_MMBTU = coeff_dict["Natural Gas"]["values"][indices].astype(float)
         natural_gas_prices_GJ = natural_gas_prices_MMBTU * 1.05506  # Convert to GJ
 
-        iron_ore_pellet_unitcost_tonne = inputs["LCOI_ore"][0]
+        iron_ore_pellet_unitcost_tonne = inputs["price_iron_ore"]
         if inputs["iron_transport_cost"] > 0:
             iron_transport_cost_tonne = inputs["iron_transport_cost"][0]
             ore_profit_pct = inputs["ore_profit_pct"][0]
@@ -270,6 +275,9 @@ class IronPlantCostComponent(CostModelBaseClass):
         variable_om += perf_ds["Natural Gas"] * natural_gas_prices_GJ
         variable_om += perf_ds["Electricity"] * inputs["LCOE"][0]
         variable_om += perf_ds["Slag"] * slag_disposal_unitcost_tonne
+
+        total_production = inputs["total_pig_iron_produced"]
+        variable_om = np.multiply(total_production, variable_om)
 
         outputs["CapEx"] = capex
         outputs["OpEx"] = fixed_om

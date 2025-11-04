@@ -67,6 +67,7 @@ class IronMinePerformanceComponent(om.ExplicitComponent):
         self.options.declare("tech_config", types=dict)
 
     def setup(self):
+        n_timesteps = self.options["plant_config"]["plant"]["simulation"]["n_timesteps"]
         self.config = IronMinePerformanceConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance"),
             strict=False,
@@ -74,9 +75,11 @@ class IronMinePerformanceComponent(om.ExplicitComponent):
         self.add_discrete_output(
             "iron_mine_performance", val=pd.DataFrame, desc="iron mine performance results"
         )
+        self.add_output("iron_ore_out", val=0.0, shape=n_timesteps, units="kg/h")
         self.add_output("total_iron_ore_produced", val=0.0, units="t/year")
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
+        n_timesteps = self.options["plant_config"]["plant"]["simulation"]["n_timesteps"]
         ore_performance_inputs = {"input_capacity_factor_estimate": self.config.ore_cf_estimate}
         ore_model_inputs = self.config.make_model_dict()
         iron_mine_site = self.config.make_site_dict()
@@ -94,6 +97,7 @@ class IronMinePerformanceComponent(om.ExplicitComponent):
         ore_produced_wmtpy = ore_produced_wltpy * 1.016047  # wmtpy = wet metric tonnes per year
         ore_produced_mtpy = ore_produced_wmtpy * 0.98  # mtpy = dry metric tonnes per year
         discrete_outputs["iron_mine_performance"] = iron_mine_performance.performances_df
+        outputs["iron_ore_out"] = ore_produced_mtpy * 1000 / n_timesteps
         outputs["total_iron_ore_produced"] = ore_produced_mtpy
 
 
@@ -102,7 +106,7 @@ class IronMineCostConfig(IronMineBaseConfig):
     LCOE: float = field(kw_only=True)  # $/MWh
     LCOH: float = field(kw_only=True)  # $/kg
     varom_model_name: str = field(
-        default="martine_ore", validator=contains(["martin_ore", "rosner_ore"])
+        default="martin_ore", validator=contains(["martin_ore", "rosner_ore"])
     )
     operational_year: int = field(converter=int, kw_only=True)
     installation_years: int | float = field(kw_only=True)
@@ -139,6 +143,7 @@ class IronMineCostComponent(CostModelBaseClass):
         super().setup()
         self.add_input("LCOE", val=self.config.LCOE, units="USD/MW/h")
         self.add_input("LCOH", val=self.config.LCOH, units="USD/kg")
+        self.add_input("total_iron_ore_produced", val=1.0, units="t/year")
         self.add_discrete_input(
             "iron_mine_performance", val=pd.DataFrame, desc="iron mine performance results"
         )
@@ -219,6 +224,9 @@ class IronMineCostComponent(CostModelBaseClass):
             )
 
         variable_om += var_om_td
+
+        total_production = inputs["total_iron_ore_produced"]
+        variable_om = np.multiply(total_production, variable_om)
 
         outputs["CapEx"] = capex
         outputs["OpEx"] = fixed_om

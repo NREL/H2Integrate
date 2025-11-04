@@ -190,6 +190,7 @@ class IronTransportCostComponent(CostModelBaseClass):
         self.add_input("total_transport_distance", val=0.0, units="mi")
         self.add_input("total_iron_ore_produced", val=0.0, units="t/year")
 
+        self.add_output("iron_transport_cost", val=0.0, units="USD/t")
         self.add_output("ore_profit_margin", val=0.0, units="USD/t")
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
@@ -223,4 +224,5 @@ class IronTransportCostComponent(CostModelBaseClass):
             pm_year_idx
         ]
 
+        outputs["iron_transport_cost"] = total_shipment_cost / inputs["total_iron_ore_produced"]
         outputs["VarOpEx"] = total_shipment_cost

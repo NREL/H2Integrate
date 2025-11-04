@@ -21,6 +21,10 @@ from h2integrate.storage.hydrogen.eco_storage import H2Storage
 from h2integrate.storage.battery.pysam_battery import PySAMBatteryPerformanceModel
 from h2integrate.transporters.generic_combiner import GenericCombinerPerformanceModel
 from h2integrate.transporters.generic_splitter import GenericSplitterPerformanceModel
+from h2integrate.converters.iron.iron_transport import (
+    IronTransportCostComponent,
+    IronTransportPerformanceComponent,
+)
 from h2integrate.converters.nitrogen.simple_ASU import SimpleASUCostModel, SimpleASUPerformanceModel
 from h2integrate.storage.simple_generic_storage import SimpleGenericStorage
 from h2integrate.storage.hydrogen.tank_baseclass import (
@@ -176,6 +180,8 @@ supported_models = {
     "pipe": PipePerformanceModel,
     "combiner_performance": GenericCombinerPerformanceModel,
     "splitter_performance": GenericSplitterPerformanceModel,
+    "iron_transport_performance": IronTransportPerformanceComponent,
+    "iron_transport_cost": IronTransportCostComponent,
     # Simple Summers
     "summer": GenericSummerPerformanceModel,
     # Storage
