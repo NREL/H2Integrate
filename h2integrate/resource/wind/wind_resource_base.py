@@ -10,7 +10,7 @@ class WindResourceBaseAPIModel(ResourceBaseAPIModel):
         self.output_vars_to_units = {
             "wind_direction": "deg",
             "wind_speed": "m/s",
-            "temperature": "C",
+            "temperature": "degC",
             "pressure": "atm",
             "precipitation_rate": "mm/h",
             "relative_humidity": "percent",
