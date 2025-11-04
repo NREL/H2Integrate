@@ -5,7 +5,27 @@ from pathlib import Path
 import yaml
 import numpy as np
 
-from h2integrate.core.utilities import dict_to_yaml_formatting
+from h2integrate import ROOT_DIR, EXAMPLE_DIR, RESOURCE_DEFAULT_DIR
+from h2integrate.core.utilities import make_unique_case_name, dict_to_yaml_formatting
+
+
+def test_make_unique_filename(subtests):
+    unique_yaml_name = make_unique_case_name(EXAMPLE_DIR, "tech_config.yaml", ".yaml")
+    unique_py_name = make_unique_case_name(ROOT_DIR.parent, "conftest.py", ".py")
+    unique_csv_name = make_unique_case_name(
+        RESOURCE_DEFAULT_DIR, "34.22_-102.75_2013_wtk_v2_60min_local_tz.csv", ".csv"
+    )
+
+    yaml_files = list(Path(EXAMPLE_DIR).glob(f"**/{unique_yaml_name}"))
+    py_files = list(Path(ROOT_DIR.parent).glob(f"**/{unique_py_name}"))
+    csv_files = list(Path(RESOURCE_DEFAULT_DIR).glob(f"**/{unique_csv_name}"))
+
+    with subtests.test("Uniquely named .yaml file"):
+        assert len(yaml_files) == 0
+    with subtests.test("Uniquely named .py file"):
+        assert len(py_files) == 0
+    with subtests.test("Uniquely named .csv file"):
+        assert len(csv_files) == 0
 
 
 class TestDictToYamlFormatting(unittest.TestCase):
