@@ -241,7 +241,7 @@ class DemandOpenLoopController(ControllerBaseClass):
             self.config.demand_profile = [self.config.demand_profile] * self.n_timesteps
 
         self.add_input(
-            f"{commodity_name}_demand_profile",
+            f"{commodity_name}_demand",
             units=f"{self.config.commodity_units}",
             val=self.config.demand_profile,
             shape=self.n_timesteps,
@@ -339,7 +339,7 @@ class DemandOpenLoopController(ControllerBaseClass):
         # the previous time step's value
         soc = deepcopy(init_charge_percent)
 
-        demand_profile = inputs[f"{commodity_name}_demand_profile"]
+        demand_profile = inputs[f"{commodity_name}_demand"]
 
         # initialize outputs
         soc_array = outputs[f"{commodity_name}_soc"]
