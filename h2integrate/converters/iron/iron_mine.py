@@ -79,6 +79,7 @@ class IronMinePerformanceComponent(om.ExplicitComponent):
         self.add_output("total_iron_ore_produced", val=0.0, units="t/year")
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
+        n_timesteps = self.options["plant_config"]["plant"]["simulation"]["n_timesteps"]
         ore_performance_inputs = {"input_capacity_factor_estimate": self.config.ore_cf_estimate}
         ore_model_inputs = self.config.make_model_dict()
         iron_mine_site = self.config.make_site_dict()
@@ -96,7 +97,7 @@ class IronMinePerformanceComponent(om.ExplicitComponent):
         ore_produced_wmtpy = ore_produced_wltpy * 1.016047  # wmtpy = wet metric tonnes per year
         ore_produced_mtpy = ore_produced_wmtpy * 0.98  # mtpy = dry metric tonnes per year
         discrete_outputs["iron_mine_performance"] = iron_mine_performance.performances_df
-        outputs["iron_ore_out"] = ore_produced_mtpy * 1000 / 8760
+        outputs["iron_ore_out"] = ore_produced_mtpy * 1000 / n_timesteps
         outputs["total_iron_ore_produced"] = ore_produced_mtpy
 
 
