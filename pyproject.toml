@@ -59,6 +59,7 @@ dependencies = [
     "openmeteo-requests",
     "pyDOE3",
     "requests-cache",
+    "retry_requests",
 ]
 keywords = [
     "python3",
