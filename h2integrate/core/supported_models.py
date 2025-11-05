@@ -2,12 +2,14 @@ from h2integrate.resource.river import RiverResource
 from h2integrate.core.feedstocks import FeedstockCostModel, FeedstockPerformanceModel
 from h2integrate.transporters.pipe import PipePerformanceModel
 from h2integrate.transporters.cable import CablePerformanceModel
+from h2integrate.finances.profast_lco import ProFastLCO
+from h2integrate.finances.profast_npv import ProFastNPV
 from h2integrate.converters.steel.steel import SteelPerformanceModel, SteelCostAndFinancialModel
 from h2integrate.converters.wind.wind_pysam import PYSAMWindPlantPerformanceModel
-from h2integrate.finances.profast_financial import ProFastComp
 from h2integrate.transporters.generic_summer import GenericSummerPerformanceModel
 from h2integrate.converters.hopp.hopp_wrapper import HOPPComponent
 from h2integrate.converters.solar.solar_pysam import PYSAMSolarPlantPerformanceModel
+from h2integrate.finances.numpy_financial_npv import NumpyFinancialNPV
 from h2integrate.storage.generic_storage_cost import GenericStorageCostModel
 from h2integrate.storage.hydrogen.eco_storage import H2Storage
 from h2integrate.converters.wind.atb_wind_cost import ATBWindPlantCostModel
@@ -185,7 +187,9 @@ supported_models = {
     "feedstock_performance": FeedstockPerformanceModel,
     "feedstock_cost": FeedstockCostModel,
     # Finance
-    "ProFastComp": ProFastComp,
+    "ProFastComp": ProFastLCO,
+    "ProFastNPV": ProFastNPV,
+    "NumpyFinancialNPV": NumpyFinancialNPV,
 }
 
 electricity_producing_techs = ["wind", "solar", "pv", "river", "hopp", "natural_gas_plant"]
