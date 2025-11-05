@@ -360,7 +360,7 @@ class OAECostAndFinancialModel(MarineCarbonCaptureCostBaseClass):
         self.add_input(
             "LCOE",
             val=0.0,
-            units="USD/kW/h",
+            units="USD/(kW*h)",
             desc="Levelized cost of electricity (USD/kWh)",
         )
         self.add_input(
