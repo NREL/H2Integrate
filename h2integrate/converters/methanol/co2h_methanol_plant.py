@@ -247,7 +247,7 @@ class CO2HMethanolPlantFinanceModel(MethanolFinanceBaseClass):
         )
         self.add_input(
             "LCOE",
-            units="USD/kW/h",
+            units="USD/(kW*h)",
             desc="Levelized cost of electricity in USD/kWh",
         )
         self.add_input(

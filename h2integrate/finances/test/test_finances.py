@@ -5,8 +5,8 @@ import pytest
 import openmdao.api as om
 from pytest import approx
 
+from h2integrate.finances.profast_lco import ProFastLCO
 from h2integrate.core.inputs.validation import load_tech_yaml, load_plant_yaml, load_driver_yaml
-from h2integrate.finances.profast_financial import ProFastComp
 
 
 examples_dir = Path(__file__).resolve().parent.parent.parent.parent / "examples/."
@@ -74,7 +74,7 @@ class TestProFastComp(unittest.TestCase):
 
     def test_electrolyzer_refurb_results(self):
         prob = om.Problem()
-        comp = ProFastComp(
+        comp = ProFastLCO(
             plant_config=self.plant_config,
             tech_config=self.tech_config,
             driver_config=self.driver_config,
@@ -106,7 +106,7 @@ class TestProFastComp(unittest.TestCase):
         plant_config_filtered.update({"finance_parameters": finance_inputs})
         # Run ProFastComp with loaded configs
         prob = om.Problem()
-        comp = ProFastComp(
+        comp = ProFastLCO(
             plant_config=plant_config_filtered,
             tech_config=tech_config["technologies"],
             driver_config=driver_config,
@@ -149,7 +149,7 @@ class TestProFastComp(unittest.TestCase):
         plant_config_filtered.update({"finance_parameters": finance_inputs})
 
         prob = om.Problem()
-        comp = ProFastComp(
+        comp = ProFastLCO(
             plant_config=plant_config_filtered,
             tech_config=tech_config["technologies"],
             driver_config=driver_config,
@@ -278,7 +278,7 @@ def test_profast_config_provided():
     driver_config = {"general": {}}
 
     prob = om.Problem()
-    comp = ProFastComp(
+    comp = ProFastLCO(
         plant_config=plant_config,
         tech_config=tech_config,
         driver_config=driver_config,
@@ -361,7 +361,7 @@ def test_parameter_validation_clashing_values():
     driver_config = {"general": {}}
 
     prob = om.Problem()
-    comp = ProFastComp(
+    comp = ProFastLCO(
         plant_config=plant_config,
         tech_config=tech_config,
         driver_config=driver_config,
@@ -376,7 +376,7 @@ def test_parameter_validation_clashing_values():
     # check that it works for just operating life
     plant_config["finance_parameters"]["model_inputs"]["params"].pop("installation months")
     prob = om.Problem()
-    comp = ProFastComp(
+    comp = ProFastLCO(
         plant_config=plant_config,
         tech_config=tech_config,
         driver_config=driver_config,
@@ -452,7 +452,7 @@ def test_parameter_validation_duplicate_parameters():
     driver_config = {"general": {}}
 
     prob = om.Problem()
-    comp = ProFastComp(
+    comp = ProFastLCO(
         plant_config=plant_config,
         tech_config=tech_config,
         driver_config=driver_config,
