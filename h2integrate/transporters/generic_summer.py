@@ -43,9 +43,10 @@ class GenericSummerPerformanceModel(om.ExplicitComponent):
 
         if self.config.commodity == "electricity":
             # NOTE: this should be updated in overhaul required for flexible dt
-            summed_units = f"{self.config.commodity_units}*h"
+            # and flexible simulation length
+            summed_units = f"{self.config.commodity_units}*h/year"
         else:
-            summed_units = self.config.commodity_units
+            summed_units = f"{self.config.commodity_units}*h/year"
 
         self.add_input(
             f"{self.config.commodity}_in",

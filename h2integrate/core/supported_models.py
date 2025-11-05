@@ -2,13 +2,18 @@ from h2integrate.resource.river import RiverResource
 from h2integrate.core.feedstocks import FeedstockCostModel, FeedstockPerformanceModel
 from h2integrate.transporters.pipe import PipePerformanceModel
 from h2integrate.transporters.cable import CablePerformanceModel
+from h2integrate.finances.profast_lco import ProFastLCO
+from h2integrate.finances.profast_npv import ProFastNPV
 from h2integrate.converters.steel.steel import SteelPerformanceModel, SteelCostAndFinancialModel
-from h2integrate.converters.wind.wind_plant import WindPlantCostModel, WindPlantPerformanceModel
-from h2integrate.finances.profast_financial import ProFastComp
+from h2integrate.converters.wind.wind_pysam import PYSAMWindPlantPerformanceModel
 from h2integrate.transporters.generic_summer import GenericSummerPerformanceModel
 from h2integrate.converters.hopp.hopp_wrapper import HOPPComponent
 from h2integrate.converters.solar.solar_pysam import PYSAMSolarPlantPerformanceModel
+from h2integrate.finances.numpy_financial_npv import NumpyFinancialNPV
+from h2integrate.storage.generic_storage_cost import GenericStorageCostModel
 from h2integrate.storage.hydrogen.eco_storage import H2Storage
+from h2integrate.converters.wind.atb_wind_cost import ATBWindPlantCostModel
+from h2integrate.storage.battery.pysam_battery import PySAMBatteryPerformanceModel
 from h2integrate.transporters.generic_combiner import GenericCombinerPerformanceModel
 from h2integrate.transporters.generic_splitter import GenericSplitterPerformanceModel
 from h2integrate.converters.nitrogen.simple_ASU import SimpleASUCostModel, SimpleASUPerformanceModel
@@ -17,12 +22,7 @@ from h2integrate.storage.hydrogen.tank_baseclass import (
     HydrogenTankCostModel,
     HydrogenTankPerformanceModel,
 )
-from h2integrate.controllers.openloop_controllers import (
-    DemandOpenLoopController,
-    PassThroughOpenLoopController,
-)
 from h2integrate.converters.hydrogen.wombat_model import WOMBATElectrolyzerModel
-from h2integrate.converters.wind.wind_plant_pysam import PYSAMWindPlantPerformanceModel
 from h2integrate.storage.battery.atb_battery_cost import ATBBatteryCostModel
 from h2integrate.converters.ammonia.ammonia_synloop import (
     AmmoniaSynLoopCostModel,
@@ -60,8 +60,21 @@ from h2integrate.converters.natural_gas.natural_gas_cc_ct import (
 )
 from h2integrate.converters.hydrogen.singlitico_cost_model import SingliticoCostModel
 from h2integrate.converters.co2.marine.direct_ocean_capture import DOCCostModel, DOCPerformanceModel
+from h2integrate.control.control_strategies.pyomo_controllers import (
+    HeuristicLoadFollowingController,
+)
+from h2integrate.resource.solar.nrel_developer_goes_api_models import (
+    GOESTMYSolarAPI,
+    GOESConusSolarAPI,
+    GOESFullDiscSolarAPI,
+    GOESAggregatedSolarAPI,
+)
 from h2integrate.converters.hydrogen.eco_tools_pem_electrolyzer import (
     ECOElectrolyzerPerformanceModel,
+)
+from h2integrate.control.control_strategies.openloop_controllers import (
+    DemandOpenLoopController,
+    PassThroughOpenLoopController,
 )
 from h2integrate.converters.water_power.hydro_plant_run_of_river import (
     RunOfRiverHydroCostModel,
@@ -71,6 +84,9 @@ from h2integrate.converters.hydrogen.geologic.natural_geoh2_plant import (
     NaturalGeoH2CostModel,
     NaturalGeoH2FinanceModel,
     NaturalGeoH2PerformanceModel,
+)
+from h2integrate.control.control_rules.converters.generic_converter import (
+    PyomoDispatchGenericConverter,
 )
 from h2integrate.converters.co2.marine.ocean_alkalinity_enhancement import (
     OAECostModel,
@@ -85,15 +101,21 @@ from h2integrate.converters.hydrogen.geologic.stimulated_geoh2_plant import (
     StimulatedGeoH2FinanceModel,
     StimulatedGeoH2PerformanceModel,
 )
+from h2integrate.control.control_rules.storage.pyomo_storage_rule_baseclass import (
+    PyomoRuleStorageBaseclass,
+)
 
 
 supported_models = {
     # Resources
     "river_resource": RiverResource,
     "wind_toolkit_v2_api": WTKNRELDeveloperAPIWindResource,
+    "goes_aggregated_solar_v4_api": GOESAggregatedSolarAPI,
+    "goes_conus_solar_v4_api": GOESConusSolarAPI,
+    "goes_fulldisc_solar_v4_api": GOESFullDiscSolarAPI,
+    "goes_tmy_solar_v4_api": GOESTMYSolarAPI,
     # Converters
-    "wind_plant_performance": WindPlantPerformanceModel,
-    "wind_plant_cost": WindPlantCostModel,
+    "atb_wind_cost": ATBWindPlantCostModel,
     "pysam_wind_plant_performance": PYSAMWindPlantPerformanceModel,
     "pysam_solar_plant_performance": PYSAMSolarPlantPerformanceModel,
     "atb_utility_pv_cost": ATBUtilityPVCostModel,
@@ -145,19 +167,27 @@ supported_models = {
     # Simple Summers
     "summer": GenericSummerPerformanceModel,
     # Storage
+    "pysam_battery": PySAMBatteryPerformanceModel,
     "h2_storage": H2Storage,
     "hydrogen_tank_performance": HydrogenTankPerformanceModel,
     "hydrogen_tank_cost": HydrogenTankCostModel,
     "atb_battery_cost": ATBBatteryCostModel,
+    "generic_storage_cost": GenericStorageCostModel,
     "simple_generic_storage": SimpleGenericStorage,
     # Control
     "pass_through_controller": PassThroughOpenLoopController,
     "demand_open_loop_controller": DemandOpenLoopController,
+    "heuristic_load_following_controller": HeuristicLoadFollowingController,
+    # Dispatch
+    "pyomo_dispatch_generic_converter": PyomoDispatchGenericConverter,
+    "pyomo_dispatch_generic_storage": PyomoRuleStorageBaseclass,
     # Feedstock
     "feedstock_performance": FeedstockPerformanceModel,
     "feedstock_cost": FeedstockCostModel,
     # Finance
-    "ProFastComp": ProFastComp,
+    "ProFastComp": ProFastLCO,
+    "ProFastNPV": ProFastNPV,
+    "NumpyFinancialNPV": NumpyFinancialNPV,
 }
 
 electricity_producing_techs = ["wind", "solar", "pv", "river", "hopp", "natural_gas_plant"]

@@ -17,6 +17,10 @@ properties:
         type: string
         description: Name of the folder for output files
         default: "output"
+      create_om_reports:
+        type: boolean
+        description: Whether to create OpenMDAO reports (N2 diagrams, etc.)
+        default: true
   driver:
     type: object
     properties:

@@ -72,14 +72,15 @@ Connection: `[source_tech, dest_tech, transport_commodity, transport_technology]
 | `battery`         |  electricity      |
 | `generic_storage` |  Any              |
 
-(controller)=
-## Controller
-`Controller` models are used to control the `Storage` models and resource flows.
+(control)=
+## Control
+`Control` models are used to control the `Storage` models and resource flows.
 
 | Controller        | Control Method |
 | :----------------------------- | :---------------: |
 | `pass_through_controller`      |  open-loop control. directly passes the input resource flow to the output without any modifications         |
 | `demand_open_loop_controller`  |  open-loop control. manages resource flow based on demand and storage constraints     |
+| `heuristic_load_following_controller` | open-loop control that works on a time window basis to set dispatch commands. Uses pyomo |
 
 # Technology Models Overview
 
@@ -89,7 +90,7 @@ Below summarizes the available performance, cost, and financial models for each 
 - [Transport](#transport-models)
 - [Storage](#storage-models)
 - [Basic Operations](#basic-operations)
-- [Controllers](#controller-models)
+- [Control](#control-models)
 
 (resource-models)=
 ## Resource models
@@ -101,10 +102,9 @@ Below summarizes the available performance, cost, and financial models for each 
 ## Converter models
 - `wind`: wind turbine
     - performance models:
-        + `'wind_plant_performance'`
         + `'pysam_wind_plant_performance'`
     - cost models:
-        + `'wind_plant_cost'`
+        + `'atb_wind_cost'`
 - `solar`: solar-PV panels
     - performance models:
         + `'pysam_solar_plant_performance'`
@@ -207,6 +207,8 @@ Below summarizes the available performance, cost, and financial models for each 
         + `'hydrogen_tank_cost'`
 - `generic_storage`: any resource storage
 - `battery`: battery storage
+    - performance models:
+        + `'pysam_battery'`
     - cost models:
         + `'atb_battery_cost'`
 
@@ -217,6 +219,7 @@ Below summarizes the available performance, cost, and financial models for each 
 
 
 (control-models)=
-## Controller Models
+## Control Models
 - `pass_through_controller`
 - `demand_open_loop_controller`
+- `heuristic_load_following_controller`

@@ -4,6 +4,7 @@ from pathlib import Path
 import yaml
 import numpy as np
 import openmdao.api as om
+import matplotlib.pyplot as plt
 
 from h2integrate.core.utilities import create_xdsm_from_config
 from h2integrate.finances.finances import AdjustedCapexOpexComp
@@ -30,8 +31,13 @@ class H2IntegrateModel:
         # load custom models
         self.collect_custom_models()
 
-        self.prob = om.Problem()
+        # Check if create_om_reports is specified in driver config
+        create_om_reports = self.driver_config.get("general", {}).get("create_om_reports", True)
+        self.prob = om.Problem(reports=create_om_reports)
         self.model = self.prob.model
+
+        # track if setup has been called via boolean
+        self.setup_has_been_called = False
 
         # create site-level model
         # this is an OpenMDAO group that contains all the site information
@@ -228,6 +234,7 @@ class H2IntegrateModel:
         self.tech_names = []
         self.performance_models = []
         self.control_strategies = []
+        self.dispatch_rule_sets = []
         self.cost_models = []
         self.finance_models = []
 
@@ -236,6 +243,17 @@ class H2IntegrateModel:
         # Create a technology group for each technology
         for tech_name, individual_tech_config in self.technology_config["technologies"].items():
             perf_model = individual_tech_config.get("performance_model", {}).get("model")
+
+            if "control_parameters" in individual_tech_config["model_inputs"]:
+                if "tech_name" in individual_tech_config["model_inputs"]["control_parameters"]:
+                    provided_tech_name = individual_tech_config["model_inputs"][
+                        "control_parameters"
+                    ]["tech_name"]
+                    if tech_name != provided_tech_name:
+                        raise ValueError(
+                            f"tech_name in control_parameters ({provided_tech_name}) must match "
+                            f"the top-level name of the tech group ({tech_name})"
+                        )
 
             if perf_model is not None and "feedstock" in perf_model:
                 comp = self.supported_models[perf_model](
@@ -255,18 +273,15 @@ class H2IntegrateModel:
                 individual_tech_config.get("finance_model", {}).get("model")
                 if (
                     perf_model
-                    and perf_model == cost_model
-                    and perf_model in combined_performance_and_cost_models
+                    and (perf_model == cost_model)
+                    and (perf_model in combined_performance_and_cost_models)
                 ):
-                    comp = self.supported_models[perf_model](
-                        driver_config=self.driver_config,
-                        plant_config=self.plant_config,
-                        tech_config=individual_tech_config,
-                    )
-                    tech_group.add_subsystem(tech_name, comp, promotes=["*"])
-                    self.performance_models.append(comp)
-                    self.cost_models.append(comp)
-                    self.finance_models.append(comp)
+                    # Catch dispatch rules for systems that have the same performance & cost models
+                    if "dispatch_rule_set" in individual_tech_config:
+                        control_object = self._process_model(
+                            "dispatch_rule_set", individual_tech_config, tech_group
+                        )
+                        self.control_strategies.append(control_object)
 
                     # Catch control models for systems that have the same performance & cost models
                     if "control_strategy" in individual_tech_config:
@@ -274,21 +289,38 @@ class H2IntegrateModel:
                             "control_strategy", individual_tech_config, tech_group
                         )
                         self.control_strategies.append(control_object)
+
+                    comp = self.supported_models[perf_model](
+                        driver_config=self.driver_config,
+                        plant_config=self.plant_config,
+                        tech_config=individual_tech_config,
+                    )
+                    om_model_object = tech_group.add_subsystem(tech_name, comp, promotes=["*"])
+                    self.performance_models.append(om_model_object)
+                    self.cost_models.append(om_model_object)
+                    self.finance_models.append(om_model_object)
+
                     continue
 
                 # Process the models
-                # TODO: integrate finance_model into the loop below
-                model_types = ["performance_model", "control_strategy", "cost_model"]
+                # TODO: integrate financial_model into the loop below
+                model_types = [
+                    "dispatch_rule_set",
+                    "control_strategy",
+                    "performance_model",
+                    "cost_model",
+                ]
+
                 for model_type in model_types:
                     if model_type in individual_tech_config:
-                        model_object = self._process_model(
+                        om_model_object = self._process_model(
                             model_type, individual_tech_config, tech_group
                         )
                         if "control_strategy" in model_type:
                             plural_model_type_name = "control_strategies"
                         else:
                             plural_model_type_name = model_type + "s"
-                        getattr(self, plural_model_type_name).append(model_object)
+                        getattr(self, plural_model_type_name).append(om_model_object)
                     elif model_type == "performance_model":
                         raise KeyError("Model definition requires 'performance_model'.")
 
@@ -326,7 +358,7 @@ class H2IntegrateModel:
         # Generalized function to process model definitions
         model_name = individual_tech_config[model_type]["model"]
         model_object = self.supported_models[model_name]
-        tech_group.add_subsystem(
+        om_model_object = tech_group.add_subsystem(
             model_name,
             model_object(
                 driver_config=self.driver_config,
@@ -335,7 +367,7 @@ class H2IntegrateModel:
             ),
             promotes=["*"],
         )
-        return model_object
+        return om_model_object
 
     def create_finance_model(self):
         """
@@ -364,8 +396,11 @@ class H2IntegrateModel:
             Each subgroup is nested under a unique name of your choice under
             ["finance_parameters"]["subgroups"] in the plant configuration.
             * Subsystems such as ``ElectricitySumComp``, ``AdjustedCapexOpexComp``,
-            and the selected finance models are added to each subgroup's
-            finance group.
+            ``GenericProductionSummerPerformanceModel``, and the selected finance
+            models are added to each subgroup's finance group.
+            * If `commodity_stream` is provided for a subgroup, the output of the
+            technology specified as the `commodity_stream` must be the same as the
+            specified commodity for that subgroup.
             * Supports both global finance models and technology-specific finance
             models. Technology-specific finance models are defined in the technology
             configuration.
@@ -478,6 +513,7 @@ class H2IntegrateModel:
                 "finance_groups", [default_finance_group_name]
             )
             tech_names = subgroup_params.get("technologies")
+            commodity_stream = subgroup_params.get("commodity_stream", None)
 
             if isinstance(finance_group_names, str):
                 finance_group_names = [finance_group_names]
@@ -499,18 +535,57 @@ class H2IntegrateModel:
                         "Available "
                         f"technologies: {list(self.technology_config['technologies'].keys())}"
                     )
+            if commodity_stream is not None:
+                if "combiner" not in commodity_stream and commodity_stream not in tech_names:
+                    raise UserWarning(
+                        f"The technology specific for the commodity_stream '{commodity_stream}' "
+                        f"is not included in subgroup '{subgroup_name}' technologies list."
+                        f" Subgroup '{subgroup_name}' includes technologies: {tech_names}."
+                    )
 
             finance_subgroups.update(
                 {
                     subgroup_name: {
                         "tech_configs": tech_configs,
                         "commodity": commodity,
+                        "commodity_stream": commodity_stream,
                     }
                 }
             )
             finance_subgroup = om.Group()
 
-            if commodity == "electricity":
+            # if commodity stream is specified, then create use the "summer" model
+            # to sum the commodity production profile from the commodity stream
+            if commodity_stream is not None:
+                # get the generic summer model
+                commodity_summer_model = self.supported_models.get("summer")
+                if "combiner" in commodity_stream or "splitter" in commodity_stream:
+                    # combiners and splitters have the same tech config as the production summer,
+                    # so just use their config if the commodity stream is a combiner or splitter
+                    commodity_summer_config = self.technology_config["technologies"][
+                        commodity_stream
+                    ]
+                else:
+                    # create the input dictionary for the production summer based
+                    # on the commodity type
+                    commodity_summer_config = {
+                        "model_inputs": {
+                            "performance_parameters": {
+                                "commodity": commodity,
+                                "commodity_units": "kW" if commodity == "electricity" else "kg/h",
+                            }
+                        }
+                    }
+                # create the commodity production summer model
+                commodity_summer = commodity_summer_model(
+                    driver_config=self.driver_config,
+                    plant_config=self.plant_config,
+                    tech_config=commodity_summer_config,
+                )
+                # add the production summer as a subsystem
+                finance_subgroup.add_subsystem(f"{commodity}_sum", commodity_summer)
+
+            if commodity_stream is None and commodity == "electricity":
                 finance_subgroup.add_subsystem(
                     "electricity_sum", ElectricitySumComp(tech_configs=tech_configs)
                 )
@@ -782,40 +857,56 @@ class H2IntegrateModel:
             # Connect the resource output to the technology input
             self.model.connect(f"{resource_name}.{variable}", f"{tech_name}.{variable}")
 
-        # TODO: connect outputs of the technology models to the cost and finance models of the
+        # connect outputs of the technology models to the cost and finance models of the
         # same name if the cost and finance models are not None
         if "finance_parameters" in self.plant_config:
             # Connect the outputs of the technology models to the appropriate finance groups
             for group_id, group_configs in self.finance_subgroups.items():
                 tech_configs = group_configs.get("tech_configs")
                 primary_commodity_type = group_configs.get("commodity")
+                commodity_stream = group_configs.get("commodity_stream")
                 # Skip steel finances; it provides its own finances
                 if any(c in tech_configs for c in ("steel", "geoh2")):
                     continue
 
-                plant_producing_electricity = False
-
-                # Loop through technologies and connect electricity outputs to the ExecComp
-                # Only connect if the technology is included in at least one commodity's stackup
-                # and in this finance group
-                for tech_name in tech_configs.keys():
-                    if (
-                        tech_name in electricity_producing_techs
-                        # and tech_name in all_included_techs
-                        and primary_commodity_type == "electricity"
-                    ):
-                        self.plant.connect(
-                            f"{tech_name}.electricity_out",
-                            f"finance_subgroup_{group_id}.electricity_sum.electricity_{tech_name}",
-                        )
-                        plant_producing_electricity = True
-
-                if plant_producing_electricity and primary_commodity_type == "electricity":
-                    # Connect total electricity produced to the finance group
+                if commodity_stream is not None:
+                    # connect commodity stream output to summer input
                     self.plant.connect(
-                        f"finance_subgroup_{group_id}.electricity_sum.total_electricity_produced",
-                        f"finance_subgroup_{group_id}.total_electricity_produced",
+                        f"{commodity_stream}.{primary_commodity_type}_out",
+                        f"finance_subgroup_{group_id}.{primary_commodity_type}_sum.{primary_commodity_type}_in",
                     )
+                    # NOTE: this wont be compatible with co2 in the finance models
+                    # because its expected to have a different name
+                    # connect summer output to finance model
+                    self.plant.connect(
+                        f"finance_subgroup_{group_id}.{primary_commodity_type}_sum.total_{primary_commodity_type}_produced",
+                        f"finance_subgroup_{group_id}.total_{primary_commodity_type}_produced",
+                    )
+
+                # if commodity stream was not specified, follow existing logic
+                else:
+                    plant_producing_electricity = False
+
+                    # Loop through technologies and connect electricity outputs to the ExecComp
+                    # Only connect if the technology is included in at least one commodity's stackup
+                    # and in this finance group
+                    for tech_name in tech_configs.keys():
+                        if (
+                            tech_name in electricity_producing_techs
+                            and primary_commodity_type == "electricity"
+                        ):
+                            self.plant.connect(
+                                f"{tech_name}.electricity_out",
+                                f"finance_subgroup_{group_id}.electricity_sum.electricity_{tech_name}",
+                            )
+                            plant_producing_electricity = True
+
+                    if plant_producing_electricity and primary_commodity_type == "electricity":
+                        # Connect total electricity produced to the finance group
+                        self.plant.connect(
+                            f"finance_subgroup_{group_id}.electricity_sum.total_electricity_produced",
+                            f"finance_subgroup_{group_id}.total_electricity_produced",
+                        )
 
                 # Only connect technologies that are included in the finance stackup
                 for tech_name in tech_configs.keys():
@@ -843,30 +934,33 @@ class H2IntegrateModel:
                             f"{tech_name}.time_until_replacement",
                             f"finance_subgroup_{group_id}.{tech_name}_time_until_replacement",
                         )
-                        if primary_commodity_type == "hydrogen":
+
+                    if commodity_stream is None:
+                        if "electrolyzer" in tech_name:
+                            if primary_commodity_type == "hydrogen":
+                                self.plant.connect(
+                                    f"{tech_name}.total_hydrogen_produced",
+                                    f"finance_subgroup_{group_id}.total_hydrogen_produced",
+                                )
+
+                        if "ammonia" in tech_name and primary_commodity_type == "ammonia":
                             self.plant.connect(
-                                f"{tech_name}.total_hydrogen_produced",
-                                f"finance_subgroup_{group_id}.total_hydrogen_produced",
+                                f"{tech_name}.total_ammonia_produced",
+                                f"finance_subgroup_{group_id}.total_ammonia_produced",
                             )
 
-                    if "ammonia" in tech_name and primary_commodity_type == "ammonia":
-                        self.plant.connect(
-                            f"{tech_name}.total_ammonia_produced",
-                            f"finance_subgroup_{group_id}.total_ammonia_produced",
-                        )
+                        if (
+                            "doc" in tech_name or "oae" in tech_name
+                        ) and primary_commodity_type == "co2":
+                            self.plant.connect(
+                                f"{tech_name}.co2_capture_mtpy",
+                                f"finance_subgroup_{group_id}.co2_capture_kgpy",
+                            )
 
                     if "methanol" in tech_name and primary_commodity_type == "methanol":
                         self.plant.connect(
                             f"{tech_name}.total_methanol_produced",
                             f"finance_subgroup_{group_id}.total_methanol_produced",
-                        )
-
-                    if (
-                        "doc" in tech_name or "oae" in tech_name
-                    ) and primary_commodity_type == "co2":
-                        self.plant.connect(
-                            f"{tech_name}.co2_capture_mtpy",
-                            f"finance_subgroup_{group_id}.co2_capture_kgpy",
                         )
 
                     if "air_separator" in tech_name and primary_commodity_type == "nitrogen":
@@ -887,41 +981,78 @@ class H2IntegrateModel:
                 self.plant.linear_solver = om.DirectSolver()
                 break
 
+        # initialize dispatch rules connection list
+        tech_to_dispatch_connections = self.plant_config.get("tech_to_dispatch_connections", [])
+
+        for connection in tech_to_dispatch_connections:
+            if len(connection) != 2:
+                err_msg = f"Invalid tech to dispatching_tech_name connection: {connection}"
+                raise ValueError(err_msg)
+
+            tech_name, dispatching_tech_name = connection
+
+            if tech_name == dispatching_tech_name:
+                continue
+            else:
+                # Connect the dispatch rules output to the dispatching_tech_name input
+                self.model.connect(
+                    f"{tech_name}.dispatch_block_rule_function",
+                    f"{dispatching_tech_name}.dispatch_block_rule_function_{tech_name}",
+                )
+
         if (pyxdsm is not None) and (len(technology_interconnections) > 0):
-            create_xdsm_from_config(self.plant_config)
+            try:
+                create_xdsm_from_config(self.plant_config)
+            except FileNotFoundError as e:
+                print(f"Unable to create system XDSM diagram. Error: {e}")
 
     def create_driver_model(self):
         """
-        Add the driver to the OpenMDAO model.
+        Add the driver to the OpenMDAO model and add recorder.
         """
+
+        myopt = PoseOptimization(self.driver_config)
         if "driver" in self.driver_config:
-            myopt = PoseOptimization(self.driver_config)
             myopt.set_driver(self.prob)
             myopt.set_objective(self.prob)
             myopt.set_design_variables(self.prob)
             myopt.set_constraints(self.prob)
+        # Add a recorder if specified in the driver config
+        if "recorder" in self.driver_config:
+            myopt.set_recorders(self.prob)
+
+    def setup(self):
+        """
+        Extremely light wrapper to setup the OpenMDAO problem and track setup status.
+        """
+        self.setup_has_been_called = True
+        self.prob.setup()
 
     def run(self):
         # do model setup based on the driver config
         # might add a recorder, driver, set solver tolerances, etc
-
-        # Add a recorder if specified in the driver config
-        if "recorder" in self.driver_config:
-            recorder_config = self.driver_config["recorder"]
-            recorder = om.SqliteRecorder(recorder_config["file"])
-            self.model.add_recorder(recorder)
-
-        self.prob.setup()
+        if not self.setup_has_been_called:
+            self.prob.setup()
+            self.setup_has_been_called = True
 
         self.prob.run_driver()
 
-    def post_process(self):
+    def post_process(self, show_plots=False):
         """
         Post-process the results of the OpenMDAO model.
 
-        Right now, this just means printing the inputs and outputs to all systems in the model.
+        Right now, this means printing the inputs and outputs to all systems in the model.
         We currently exclude any variables with "resource_data" in the name, since those
         are large dictionary variables that are not correctly formatted when printing.
+
+        Also, if `show_plots` is set to True, then any performance models with post-processing
+        plots available will be run and shown.
         """
         self.prob.model.list_inputs(units=True, print_mean=True, excludes=["*resource_data"])
         self.prob.model.list_outputs(units=True, print_mean=True, excludes=["*resource_data"])
+
+        for model in self.performance_models:
+            if hasattr(model, "post_process") and callable(model.post_process):
+                model.post_process(show_plots=show_plots)
+                if show_plots:
+                    plt.show()
