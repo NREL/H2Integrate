@@ -383,7 +383,7 @@ def find_file(filename: str | Path, root_folder: str | Path | None = None):
         root_folder = Path(root_folder)
         # if the file exists in the root directory, return full path
         if Path(root_folder, filename).exists():
-            return Path(root_folder, filename).absolute()
+            return Path(root_folder, filename).resolve().absolute()
 
         # check for files within root directory
         files = list(Path(root_folder).glob(f"**/{filename}"))
@@ -396,7 +396,11 @@ def find_file(filename: str | Path, root_folder: str | Path | None = None):
                 f"filename {filename}"
             )
 
-        filename_no_rel = filename.resolve(strict=False)
+        filename_no_rel = "/".join(
+            p
+            for p in Path(root_folder, filename).resolve(strict=False).parts
+            if p not in Path(root_folder).parts
+        )
         files = list(Path(root_folder).glob(f"**/{filename_no_rel}"))
         if len(files) == 1:
             return files[0].absolute()
