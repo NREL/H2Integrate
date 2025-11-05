@@ -455,7 +455,7 @@ def test_hybrid_energy_plant_example(subtests):
 
     # Subtests for checking specific values
     with subtests.test("Check LCOE"):
-        assert model.prob.get_val("finance_subgroup_default.LCOE", units="USD/MW/h")[0] < 83.2123
+        assert model.prob.get_val("finance_subgroup_default.LCOE", units="USD/(MW*h)")[0] < 83.2123
 
 
 def test_asu_example(subtests):
@@ -495,7 +495,7 @@ def test_hydrogen_dispatch_example(subtests):
     with subtests.test("Check LCOE"):
         assert (
             pytest.approx(
-                model.prob.get_val("finance_subgroup_electricity.LCOE", units="USD/MW/h")[0],
+                model.prob.get_val("finance_subgroup_electricity.LCOE", units="USD/(MW*h)")[0],
                 rel=1e-5,
             )
             == 59.0962072084844
@@ -677,7 +677,7 @@ def test_wind_solar_electrolyzer_example(subtests):
     with subtests.test("Check LCOE"):
         assert (
             pytest.approx(
-                model.prob.get_val("finance_subgroup_electricity.LCOE", units="USD/MW/h")[0],
+                model.prob.get_val("finance_subgroup_electricity.LCOE", units="USD/(MW*h)")[0],
                 rel=1e-5,
             )
             == 53.9306558
@@ -714,7 +714,7 @@ def test_electrolyzer_om_example(subtests):
 
     model.run()
 
-    lcoe = model.prob.get_val("finance_subgroup_electricity.LCOE", units="USD/MW/h")[0]
+    lcoe = model.prob.get_val("finance_subgroup_electricity.LCOE", units="USD/(MW*h)")[0]
     lcoh_with_lcoh_finance = model.prob.get_val(
         "finance_subgroup_hydrogen.LCOH_lcoh_financials", units="USD/kg"
     )[0]
@@ -739,10 +739,10 @@ def test_wombat_electrolyzer_example(subtests):
     model.run()
 
     lcoe_with_profast_model = model.prob.get_val(
-        "finance_subgroup_electricity_profast.LCOE", units="USD/MW/h"
+        "finance_subgroup_electricity_profast.LCOE", units="USD/(MW*h)"
     )[0]
     lcoe_with_custom_model = model.prob.get_val(
-        "finance_subgroup_electricity_custom.LCOE", units="USD/MW/h"
+        "finance_subgroup_electricity_custom.LCOE", units="USD/(MW*h)"
     )[0]
 
     lcoh_with_custom_model = model.prob.get_val(
@@ -882,8 +882,22 @@ def test_simple_dispatch_example(subtests):
 
     # Subtest for LCOE
     with subtests.test("Check LCOE value"):
-        lcoe = model.prob.get_val("finance_subgroup_electricity.LCOE")[0]
+        lcoe = model.prob.get_val("finance_subgroup_electricity.LCOE_all_electricity_profast")[0]
         assert pytest.approx(lcoe, rel=1e-6) == 0.07801723344476236
+
+    # Subtest for NPV
+    with subtests.test("Check NPV value"):
+        npv = model.prob.get_val(
+            "finance_subgroup_electricity.NPV_electricity_all_electricity_npv"
+        )[0]
+        assert pytest.approx(npv, rel=1e-6) == 3791194.71
+
+    # Subtest for ProFAST NPV
+    with subtests.test("Check NPV value"):
+        npv = model.prob.get_val(
+            "finance_subgroup_electricity.NPV_electricity_all_electricity_profast_npv"
+        )[0]
+        assert pytest.approx(npv, rel=1e-6) == 7518969.18
 
     # Subtest for total electricity produced
     with subtests.test("Check total electricity produced"):
@@ -933,9 +947,13 @@ def test_simple_dispatch_example(subtests):
             pytest.approx(battery_electricity_finance, rel=1e-6) == battery_electricity_performance
         )
 
-    wind_lcoe = model.prob.get_val("finance_subgroup_wind.LCOE", units="USD/MW/h")[0]
-    battery_lcoe = model.prob.get_val("finance_subgroup_battery.LCOE", units="USD/MW/h")[0]
-    electricity_lcoe = model.prob.get_val("finance_subgroup_electricity.LCOE", units="USD/MW/h")[0]
+    wind_lcoe = model.prob.get_val("finance_subgroup_wind.LCOE_wind_only", units="USD/(MW*h)")[0]
+    battery_lcoe = model.prob.get_val(
+        "finance_subgroup_battery.LCOE_battery_included", units="USD/(MW*h)"
+    )[0]
+    electricity_lcoe = model.prob.get_val(
+        "finance_subgroup_electricity.LCOE_all_electricity_profast", units="USD/(MW*h)"
+    )[0]
 
     with subtests.test("Check electricity LCOE is greater than wind LCOE"):
         assert electricity_lcoe > wind_lcoe
