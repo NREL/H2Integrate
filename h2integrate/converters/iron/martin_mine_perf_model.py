@@ -65,7 +65,7 @@ class MartinIronMinePerformanceComponent(om.ExplicitComponent):
             "iron_ore_demand",
             val=self.config.rated_ore_production_capacity_t,
             shape=n_timesteps,
-            units="t/yr",
+            units="t/h",
             desc="Iron ore demand for iron mine",
         )
 

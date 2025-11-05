@@ -115,12 +115,12 @@ class MartinIronMineCostComponent(CostModelBaseClass):
 
         return coeff_df
 
-    def compute(self, inputs, outputs):
+    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         ref_Oreproduced = self.coeff_df[self.coeff_df["Name"] == "Ore pellets produced"][
             "Value"
         ].values
 
-        ref_tot_capex = self.coeff_df[self.coeff_df["Type"] == "capital"].sum()
+        ref_tot_capex = self.coeff_df[self.coeff_df["Type"] == "capital"]["Value"].sum()
         ref_capex_per_anual_processed_ore = ref_tot_capex / ref_Oreproduced  # USD/t/yr
         ref_capex_per_processed_ore = ref_capex_per_anual_processed_ore * 8760  # USD/t/hr
         tot_capex_2021USD = inputs["system_capacity"] * ref_capex_per_processed_ore  # USD
