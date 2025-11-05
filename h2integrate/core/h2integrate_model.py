@@ -19,9 +19,9 @@ except ImportError:
 
 
 class H2IntegrateModel:
-    def __init__(self, config_file):
+    def __init__(self, config_input):
         # read in config file; it's a yaml dict that looks like this:
-        self.load_config(config_file)
+        self.load_config(config_input)
 
         # load in supported models
         self.supported_models = supported_models.copy()
@@ -91,7 +91,7 @@ class H2IntegrateModel:
             parent_path = file_path.parent
             return validator_func(file_path), file_path, parent_path
 
-    def load_config(self, config_file):
+    def load_config(self, config_input):
         """Load and validate configuration files for the H2I model.
 
         This method loads the main configuration and the three component configuration files
@@ -100,14 +100,14 @@ class H2IntegrateModel:
         the method resolves them using multiple search strategies.
 
         Args:
-            config_file (dict | str | Path): Main configuration containing references to
+            config_input (dict | str | Path): Main configuration containing references to
                 driver, technology, and plant configurations. Can be:
                 - A dictionary containing the configuration data directly
                 - A string or Path object pointing to a YAML file containing the configuration
 
         Behavior:
-            - If `config_file` is a dict: Uses it directly as the main configuration
-            - If `config_file` is a path: Uses `get_path()` to resolve and load the YAML file
+            - If `config_input` is a dict: Uses it directly as the main configuration
+            - If `config_input` is a path: Uses `get_path()` to resolve and load the YAML file
               from multiple search locations (absolute path, relative to CWD, relative to
               H2Integrate package)
 
@@ -152,11 +152,11 @@ class H2IntegrateModel:
             >>> model = H2IntegrateModel(config)
         """
         # Load main configuration
-        if isinstance(config_file, dict):
-            config = config_file
+        if isinstance(config_input, dict):
+            config = config_input
             config_path = None
         else:
-            config_path = get_path(config_file)
+            config_path = get_path(config_input)
             config = load_yaml(config_path)
 
         self.name = config.get("name")

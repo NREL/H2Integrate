@@ -35,7 +35,7 @@ The main input files are searched for in H2I in the following order (with exampl
     driver_config: "/Users/myname/H2Integrate/examples/01_onshore_steel_mn/driver_config.yaml"
     ```
 
-> **Note:** If multiple files with the same name are found during the search, H2I will raise an error. A filepath is only returned if exactly one matching file is found.
+> **Note:** If none of the search methods find a single matching file (search methods find multiple files with matching names or no files with a matching name), H2I will raise an error. A filepath is only returned if exactly one matching file is found for a given search method.
 
 ## Recommendations
 1. Change your current working directory to the folder containing your input files. This is how most examples are setup.
