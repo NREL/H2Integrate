@@ -121,7 +121,7 @@ cr = om.CaseReader(fpath)
 cases = list(cr.get_cases())
 # access a variable from the problem, this can be anything thats an
 # input or output from the models that were run and not specified
-# as variables to exlude in the driver_config file
+# as variables to exclude in the driver_config file
 
 cases[0].get_val("finance_subgroup_default.LCOE",units="USD/kW/h")
 cases[0].get_val("solar.capacity_kWdc",units="MW")
