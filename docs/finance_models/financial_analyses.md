@@ -47,11 +47,6 @@ Suppose you are evaluating a project that incurs $1 million in operating costs e
 * The **real analysis** shows the same cost every year because it ignores inflation—values are all in Year 0 (today’s) dollars.
 * The **nominal analysis** escalates costs each year to reflect inflation, showing what you’d actually pay in each year’s currency.
 
-When discounting these values back to the present:
-
-* The **real analysis** uses a **real discount rate** (excluding inflation).
-* The **nominal analysis** uses a **nominal discount rate** (including inflation).
-
 ---
 
 ## Summary
