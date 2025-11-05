@@ -101,6 +101,10 @@ class MartinIronMinePerformanceComponent(om.ExplicitComponent):
         self.coeff_df = self.format_coeff_df(coeff_df, self.config.mine)
 
     def format_coeff_df(self, coeff_df, mine):
+        # only include data for the given product
+        coeff_df = coeff_df[
+            coeff_df["Product"] == f"{self.config.taconite_pellet_type}_taconite_pellets"
+        ]
         data_cols = ["Name", "Type", "Coeff", "Unit", mine]
         coeff_df = coeff_df[data_cols]
         coeff_df = coeff_df.rename(columns={mine: "Value"})
