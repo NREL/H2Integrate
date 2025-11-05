@@ -57,7 +57,7 @@ class ProFastNPV(ProFastBase):
         self.add_input(
             f"sell_price_{self.output_txt}",
             val=self.commodity_sell_price,
-            units=self.lco_units,
+            units=self.price_units,
         )
 
     def compute(self, inputs, outputs):

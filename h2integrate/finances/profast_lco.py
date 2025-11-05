@@ -69,15 +69,20 @@ class ProFastLCO(ProFastBase):
         Returns:
             None
         """
+        # Construct output name based on commodity and optional description
+        # this is necessary to allow for financial subgroups
+        desc = self.options["description"].strip().strip("_()-")
+        base = f"LCO{self.options['commodity_type'][0].upper()}"
+        self.LCO_str = f"{base}_{desc}" if desc else base
 
-        self.add_output(self.LCO_str, val=0.0, units=self.lco_units)
+        self.add_output(self.LCO_str, val=0.0, units=self.price_units)
         self.outputs_to_units = {
             "wacc": "percent",
             "crf": "percent",
             "irr": "percent",
             "profit_index": "unitless",
             "investor_payback_period": "yr",
-            "price": self.lco_units,
+            "price": self.price_units,
         }
         for output_var, units in self.outputs_to_units.items():
             self.add_output(f"{output_var}_{self.output_txt}", val=0.0, units=units)

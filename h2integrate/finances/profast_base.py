@@ -504,24 +504,17 @@ class ProFastBase(om.ExplicitComponent):
         # Determine commodity units
         if self.options["commodity_type"] == "electricity":
             commodity_units = "kW*h/year"
-            self.lco_units = "USD/(kW*h)"
+            self.price_units = "USD/(kW*h)"
         else:
             commodity_units = "kg/year"
-            self.lco_units = "USD/kg"
+            self.price_units = "USD/kg"
 
         # Construct output name based on commodity and optional description
         # this is necessary to allow for financial subgroups
-        LCO_base_str = f"LCO{self.options['commodity_type'][0].upper()}"
-        self.output_txt = self.options["commodity_type"].lower()
-        if self.options["description"] == "":
-            self.LCO_str = LCO_base_str
-        else:
-            desc_str = self.options["description"].strip().strip("_()-")
-            if desc_str == "":
-                self.LCO_str = LCO_base_str
-            else:
-                self.output_txt = f"{self.options['commodity_type'].lower()}_{desc_str}"
-                self.LCO_str = f"{LCO_base_str}_{desc_str}"
+        self.description = (
+            self.options["description"].strip() if "description" in self.options else ""
+        )
+        self.output_txt = f"{self.options['commodity_type'].lower()}_{self.description}"
 
         # Add model-specific outputs defined by subclass
         self.add_model_specific_outputs()
@@ -574,7 +567,7 @@ class ProFastBase(om.ExplicitComponent):
             "variable_costs", {}
         )
         variable_cost_params.setdefault("escalation", self.params.inflation_rate)
-        variable_cost_params.setdefault("unit", self.lco_units.replace("USD", "$"))
+        variable_cost_params.setdefault("unit", self.price_units.replace("USD", "$"))
         self.variable_cost_settings = ProFASTDefaultVariableCost.from_dict(variable_cost_params)
 
         # initialize default coproduct cost parameters (same as feedstocks)
@@ -582,7 +575,7 @@ class ProFastBase(om.ExplicitComponent):
             "coproducts", {}
         )
         coproduct_cost_params.setdefault("escalation", self.params.inflation_rate)
-        coproduct_cost_params.setdefault("unit", self.lco_units.replace("USD", "$"))
+        coproduct_cost_params.setdefault("unit", self.price_units.replace("USD", "$"))
         self.coproduct_cost_settings = ProFASTDefaultCoproduct.from_dict(coproduct_cost_params)
 
         # incentives - unused for now
