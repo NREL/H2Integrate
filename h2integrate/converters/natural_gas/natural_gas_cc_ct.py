@@ -42,13 +42,15 @@ class NaturalGasPerformanceModel(om.ExplicitComponent):
         electricity_out = natural_gas_in / heat_rate
 
     Inputs:
+        system_capacity (float): Natural gas plant rated capacity in MW
         natural_gas_in (array): Natural gas input energy in MMBtu for each timestep
+        heat_rate_mmbtu_per_mwh (float): Plant heat rate in MMBtu/MWh
+        electricity_demand (array): Electricity demand in MW for each timestep
 
     Outputs:
         electricity_out (array): Electricity output in MW for each timestep
+        natural_gas_consumed (array): Natural gas consumed in MMBtu for each timestep
 
-    Parameters (from config):
-        heat_rate_mmbtu_per_mwh (float): Plant heat rate in MMBtu/MWh
     """
 
     def initialize(self):

@@ -16,6 +16,7 @@
 - Added ability to visualize the wind plant layout for PySAM Windpower model using `post_process(show_plots=True)`.
 - Added Wind Annual Technology Baseline cost model `atb_wind_cost.py`.
 - Updated inputs for the `ATBBatteryCostModel` and `DemandOpenLoopController` so storage capacity and charge rate can be design variables
+- Add feature for natural gas plant converter to take electricity demand as an input and added system capacity as an input
 
 ## 0.4.0 [October 1, 2025]
 
