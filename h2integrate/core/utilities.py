@@ -311,17 +311,14 @@ def get_path(path: str | Path) -> Path:
     2. Relative to the current working directory.
     3. Relative to the H2Integrate package.
 
-    If the path cannot be found in any of the locations, a FileNotFoundError is raised.
-
     Args:
         path (str | Path): The input path, either as a string or a Path object.
 
     Raises:
-        FileNotFoundError: If the path is not found in any of the prioritized locations.
+        FileNotFoundError: If the path is not found in any of the locations.
 
     Returns:
         Path: The absolute path to the file.
-
     """
     # Store the original path for reference in error messages.
     original_path = path
@@ -359,13 +356,14 @@ def get_path(path: str | Path) -> Path:
 
 
 def find_file(filename: str | Path, root_folder: str | Path | None = None):
-    """This function attempts to find a filepath matching `filename` from a variety of locations
+    """
+    This function attempts to find a filepath matching `filename` from a variety of locations
     in the following order:
 
     1. Relative to the root_folder (if provided)
     2. Relative to the current working directory.
     3. Relative to the H2Integrate package.
-    4. The absolute path of filename if filename is an absolute path
+    4. As an absolute path if `filename` is already absolute
 
     Args:
         filename (str | Path): Input filepath
@@ -373,7 +371,7 @@ def find_file(filename: str | Path, root_folder: str | Path | None = None):
             Defaults to None.
 
     Raises:
-        FileNotFoundError: If the path is not found in any of the prioritized locations.
+        FileNotFoundError: If the path is not found in any of the locations.
 
     Returns:
         Path: The absolute path to the file.

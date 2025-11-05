@@ -1,6 +1,6 @@
 # Specifying Filepaths in H2I
 
-Filepaths in H2I can be specified in a number of ways. Files are looked for using the `find_file()` method, which looks for files in the following order:
+You can specify filepaths in H2I in several ways. The `find_file()` method used in H2I searches for files in this order:
 1. With respect to a specified root folder
 2. With respect to the current working directory (cwd)
 3. With respect to the H2Integrate package root. This folder includes subdirectories of `examples`, `resource_files`, `docs` and `h2integrate`.
@@ -9,8 +9,8 @@ Filepaths in H2I can be specified in a number of ways. Files are looked for usin
 ## Main Input Files
 The main input files to H2Integrate (`plant_config`, `tech_config` and `driver_config`) are defined in a top-level config file. In many examples, these files live in the same folder as the python run script.
 
-The main input files are searched for in H2I in the following order:
-1. Relative to the folder containing the top-level config file
+The main input files are searched for in H2I in the following order (with examples):
+1. Relative to the folder containing the top-level config file, e.g.:
     ```yaml
     plant_config: "plant_config.yaml"
     technology_config: "tech_config.yaml"
@@ -22,28 +22,28 @@ The main input files are searched for in H2I in the following order:
     technology_config: "inputs/tech_config.yaml"
     driver_config: "inputs/driver_config.yaml"
     ```
-3. Relative to the H2Integrate root directory
+3. Relative to the H2Integrate root directory:
     ```yaml
     plant_config: "examples/01_onshore_steel_mn/plant_config.yaml"
     technology_config: "examples/01_onshore_steel_mn/tech_config.yaml"
     driver_config: "examples/01_onshore_steel_mn/driver_config.yaml"
     ```
-4. As an absolute filepath.
+4. As an absolute filepath:
     ```yaml
     plant_config: "/Users/myname/H2Integrate/examples/01_onshore_steel_mn/plant_config.yaml"
     technology_config: "/Users/myname/H2Integrate/examples/01_onshore_steel_mn/tech_config.yaml"
     driver_config: "/Users/myname/H2Integrate/examples/01_onshore_steel_mn/driver_config.yaml"
     ```
 
-Note that if more than one file is found with the same name, then the code will give an error. A filepath will only be returned if there is one, and only one, file that matches.
+> **Note:** If multiple files with the same name are found during the search, H2I will raise an error. A filepath is only returned if exactly one matching file is found.
 
 ## Recommendations
-1. Change your current working directory to the folder containing your input files. This is how most examples are set-up.
+1. Change your current working directory to the folder containing your input files. This is how most examples are setup.
     ```bash
     cd examples/01_onshore_steel_mn
     python run_onshore_steel_mn.py
     ```
-2. Specify full filepaths instead of relative filepaths
+2. Specify full filepaths instead of relative filepaths.
 3. Use unique filenames if specifying filepaths relative to the H2Integrate package root.
 4. Check the filepaths are correct:
     ```python

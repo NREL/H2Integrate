@@ -62,6 +62,35 @@ class H2IntegrateModel:
         # might be an analysis or optimization
         self.create_driver_model()
 
+    def _load_component_config(self, config_key, config_value, config_path, validator_func):
+        """Helper method to load and validate a component configuration.
+
+        Args:
+            config_key (str): Key name for the configuration (e.g., "driver_config")
+            config_value (dict | str): Configuration value from main config
+            config_path (Path | None): Path to main config file (None if dict)
+            validator_func (callable): Validation function to apply
+
+        Returns:
+            tuple: (validated_config, config_file_path, parent_path)
+                - validated_config: Validated configuration dictionary
+                - config_file_path: Path to config file (None if dict)
+                - parent_path: Parent directory of config file (None if dict)
+        """
+        if isinstance(config_value, dict):
+            # Config provided as embedded dictionary
+            return validator_func(config_value), None, None
+        else:
+            # Config provided as filepath - resolve location
+            if config_path is None:
+                file_path = get_path(config_value)
+            else:
+                file_path = find_file(config_value, config_path.parent)
+
+            # Store parent directory for resolving custom model paths later
+            parent_path = file_path.parent
+            return validator_func(file_path), file_path, parent_path
+
     def load_config(self, config_file):
         """Load and validate configuration files for the H2I model.
 
@@ -122,75 +151,33 @@ class H2IntegrateModel:
             ... }
             >>> model = H2IntegrateModel(config)
         """
-        config_path = None
-        tech_path = None
-        driver_path = None
-        plant_path = None
-        tech_parent_path = None
-        plant_parent_path = None
-
+        # Load main configuration
         if isinstance(config_file, dict):
-            # Use dictionary directly without filepath context
             config = config_file
+            config_path = None
         else:
-            # Resolve filepath and load YAML content
             config_path = get_path(config_file)
             config = load_yaml(config_path)
 
         self.name = config.get("name")
         self.system_summary = config.get("system_summary")
 
-        # Load driver configuration with validation
-        if isinstance(config.get("driver_config"), dict):
-            # Driver config provided as embedded dictionary
-            self.driver_config = load_driver_yaml(config.get("driver_config"))
-        else:
-            # Driver config provided as filepath - resolve location
-            if config_path is None:
-                driver_path = get_path(config.get("driver_config"))
-            else:
-                driver_path = find_file(config.get("driver_config"), config_path.parent)
+        # Load and validate each component configuration using the helper method
+        self.driver_config, self.driver_config_path, _ = self._load_component_config(
+            "driver_config", config.get("driver_config"), config_path, load_driver_yaml
+        )
 
-            self.driver_config = load_driver_yaml(driver_path)
+        self.technology_config, self.tech_config_path, self.tech_parent_path = (
+            self._load_component_config(
+                "technology_config", config.get("technology_config"), config_path, load_tech_yaml
+            )
+        )
 
-        # Load technology configuration with validation
-        if isinstance(config.get("technology_config"), dict):
-            # Technology config provided as embedded dictionary
-            self.technology_config = load_tech_yaml(config.get("technology_config"))
-        else:
-            # Technology config provided as filepath - resolve location
-            if config_path is None:
-                tech_path = get_path(config.get("technology_config"))
-            else:
-                tech_path = find_file(config.get("technology_config"), config_path.parent)
-
-            # Store parent directory for resolving custom model paths later
-            tech_parent_path = tech_path.parent
-            self.technology_config = load_tech_yaml(tech_path)
-
-        # Load plant configuration with validation
-        if isinstance(config.get("plant_config"), dict):
-            # Plant config provided as embedded dictionary
-            self.plant_config = load_plant_yaml(config.get("plant_config"))
-        else:
-            # Plant config provided as filepath - resolve location
-            if config_path is None:
-                plant_path = get_path(config.get("plant_config"))
-            else:
-                plant_path = find_file(config.get("plant_config"), config_path.parent)
-
-            # Store parent directory for resolving custom model paths later
-            plant_parent_path = plant_path.parent
-            self.plant_config = load_plant_yaml(plant_path)
-
-        # Store filepaths for reference (None if configs were provided as dicts)
-        self.driver_config_path = driver_path
-        self.tech_config_path = tech_path
-        self.plant_config_path = plant_path
-
-        # Store parent directories for custom model resolution in collect_custom_models()
-        self.tech_parent_path = tech_parent_path
-        self.plant_parent_path = plant_parent_path
+        self.plant_config, self.plant_config_path, self.plant_parent_path = (
+            self._load_component_config(
+                "plant_config", config.get("plant_config"), config_path, load_plant_yaml
+            )
+        )
 
     def create_custom_models(self, model_config, config_parent_path, model_types, prefix=""):
         """This method loads custom models from the specified directory and adds them to the
