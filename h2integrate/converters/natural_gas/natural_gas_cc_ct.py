@@ -215,19 +215,19 @@ class NaturalGasCostModel(CostModelBaseClass):
         self.add_input(
             "fixed_opex_per_kw_per_year",
             val=self.config.fixed_opex_per_kw_per_year,
-            units="USD/kW/year",
+            units="USD/(kW*year)",
             desc="Fixed operating expenses per unit capacity per year",
         )
         self.add_input(
             "variable_opex_per_mwh",
             val=self.config.variable_opex_per_mwh,
-            units="USD/MW/h",
+            units="USD/(MW*h)",
             desc="Variable operating expenses per unit generation",
         )
         self.add_input(
             "heat_rate_mmbtu_per_mwh",
             val=self.config.heat_rate_mmbtu_per_mwh,
-            units="MMBtu/MW/h",
+            units="MMBtu/(MW*h)",
             desc="Plant heat rate",
         )
 

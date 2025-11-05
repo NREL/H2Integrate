@@ -1,5 +1,3 @@
-from pathlib import Path
-
 import attrs
 import numpy as np
 import openmdao.api as om
@@ -9,22 +7,14 @@ from h2integrate.core.utilities import (
     BaseConfig,
     attr_filter,
     attr_serializer,
-    dict_to_yaml_formatting,
     check_plant_config_and_profast_params,
 )
 from h2integrate.core.dict_utils import update_defaults
 from h2integrate.core.validators import gt_zero, contains, gte_zero, range_val
-from h2integrate.tools.profast_tools import (
-    run_profast,
-    make_price_breakdown,
-    create_years_of_operation,
-    create_and_populate_profast,
-    format_profast_price_breakdown_per_year,
-)
-from h2integrate.core.inputs.validation import write_yaml
-from h2integrate.tools.profast_reverse_tools import convert_pf_to_dict
+from h2integrate.tools.profast_tools import create_years_of_operation, create_and_populate_profast
 
 
+# Mapping between user-facing finance parameters and ProFAST internal parameter names
 finance_to_pf_param_mapper = {
     # "income tax rate": "total income tax rate",
     "debt equity ratio": "debt equity ratio of initial financing",
@@ -39,21 +29,22 @@ finance_to_pf_param_mapper = {
 
 
 def format_params_for_profast_config(param_dict):
-    """Replace spaces with underscores for top-level dictionary keys and replace
-    underscores with spaces for any embedded dictionaries. Create a dictionary that is
-    formatted for BasicProFASTParameterConfig.
+    """Format a parameter dictionary for BasicProFASTParameterConfig.
 
+    This function standardizes dictionary key names so that top-level keys
+    use underscores instead of spaces, while nested dictionary keys use spaces.
 
     Args:
-        param_dict (dict): dictionary of financing parameters
+        param_dict (dict): Input dictionary of financing parameters.
 
     Returns:
-        dict: financing parameters formatted for BasicProFASTParameterConfig
+        dict: Reformatted dictionary compatible with BasicProFASTParameterConfig.
     """
     param_dict_reformatted = {}
     for k, v in param_dict.items():
-        k_new = k.replace(" ", "_")
+        k_new = k.replace(" ", "_")  # Standardize top-level keys
         if isinstance(v, dict):
+            # Convert nested dictionary keys to use spaces
             v_new = {vk.replace("_", " "): vv for vk, vv in v.items()}
             param_dict_reformatted[k_new] = v_new
         else:
@@ -62,32 +53,30 @@ def format_params_for_profast_config(param_dict):
 
 
 def check_parameter_inputs(finance_params, plant_config):
-    """Check and format the input finance parameters. This method checks:
+    """Validate and format financing parameter inputs for ProFAST.
 
-    1) for duplicated keys that only differ in formatting (spaces or underscores).
-        Such as 'analysis_start_year' and 'analysis start year'. Throws an error if found.
-    2) two keys that map to the same parameter have differing values,
-        see `finance_to_pf_param_mapper`. Such as 'installation time' and
-        'installation months'. Throws an error if values differ.
-    3) parameters that are in the ProFAST format are reformatted to be compatible with
-        BasicProFASTParameterConfig
+    This function:
+      1. Detects duplicated keys that differ only by spaces or underscores.
+      2. Ensures that synonymous parameters (e.g., "installation time" and
+         "installation months") do not have conflicting values.
+      3. Reformats the parameters for compatibility with ProFAST.
 
     Args:
-        finance_params (dict): `params` dictionary containing financing information.
-        plant_config (dict): plant configuration dictionary.
+        finance_params (dict): Financing parameters provided by the user.
+        plant_config (dict): Plant configuration dictionary.
 
     Raises:
         ValueError: If duplicated keys are input.
         ValueError: If two equivalent keys have different values.
 
     Returns:
-        dict: financing parameters formatted for BasicProFASTParameterConfig
-        validated financing parameters with consistent formatting.
+        dict: Validated and reformatted financing parameters for ProFAST.
     """
-    # make consistent formatting
+    # make consistent formatting for keys
     fin_params = {k.replace("_", " "): v for k, v in finance_params.items()}
 
-    # check for duplicated entries (ex. 'analysis_start_year' and 'analysis start year')
+    # check for duplicated entries differing only by underscores/spaces
+    # (ex. 'analysis_start_year' and 'analysis start year')
     if len(fin_params) != len(finance_params):
         finance_keys = [k.replace("_", " ") for k, v in finance_params.items()]
         fin_keys = list(fin_params.keys())
@@ -101,6 +90,7 @@ def check_parameter_inputs(finance_params, plant_config):
         msg = f"Duplicate entries found in ProFastComp params. Duplicated entries are: {err_info}"
         raise ValueError(msg)
 
+    # Check for conflicts between nickname/realname pairs
     # check if duplicate entries were input, like "installation time" AND "installation months"
     for nickname, realname in finance_to_pf_param_mapper.items():
         has_nickname = any(k == nickname for k, v in fin_params.items())
@@ -109,13 +99,13 @@ def check_parameter_inputs(finance_params, plant_config):
         if has_nickname and has_realname:
             check_plant_config_and_profast_params(fin_params, fin_params, nickname, realname)
 
-    # check for value mismatch
+    # Validate consistency between plant life and operating life
     if "operating life" in fin_params:
         check_plant_config_and_profast_params(
             plant_config["plant"], fin_params, "plant_life", "operating life"
         )
 
-    # if profast params are in profast format
+    # Re-map ProFAST parameters back to finance-style keys if needed
     if any(k in list(finance_to_pf_param_mapper.values()) for k, v in fin_params.items()):
         pf_param_to_finance_mapper = {v: k for k, v in finance_to_pf_param_mapper.items()}
         pf_params = {}
@@ -126,6 +116,7 @@ def check_parameter_inputs(finance_params, plant_config):
                 pf_params[k] = v
         fin_params = dict(pf_params.items())
 
+    # Final format for ProFAST configuration
     fin_params = format_params_for_profast_config(fin_params)
     fin_params.update({"plant_life": plant_config["plant"]["plant_life"]})
 
@@ -134,7 +125,11 @@ def check_parameter_inputs(finance_params, plant_config):
 
 @define
 class BasicProFASTParameterConfig(BaseConfig):
-    """Config of financing parameters for ProFAST.
+    """Configuration class for financial parameters used in ProFAST models.
+
+    This class defines default financing parameters, including discount rate,
+    tax structure, inflation, and cost categories. Values are validated using
+    range and type constraints.
 
     Attributes:
         plant_life (int): operating life of plant in years
@@ -180,6 +175,7 @@ class BasicProFASTParameterConfig(BaseConfig):
         one_time_cap_inct (dict, optional): investment tax credit.
     """
 
+    # --- Primary finance parameters ---
     plant_life: int = field(converter=int, validator=gte_zero)
     analysis_start_year: int = field(converter=int, validator=range_val(1000, 4000))
     installation_time: int = field(converter=int, validator=gte_zero)
@@ -199,6 +195,7 @@ class BasicProFASTParameterConfig(BaseConfig):
 
     admin_expense: float = field(validator=range_val(0, 1))
 
+    # --- Optional parameters ---
     non_depr_assets: float = field(default=0.0, validator=gte_zero)
     end_of_proj_sale_non_depr_assets: float = field(default=0.0, validator=gte_zero)
 
@@ -209,11 +206,13 @@ class BasicProFASTParameterConfig(BaseConfig):
     credit_card_fees: float = field(default=0.0)
     demand_rampup: float = field(default=0.0, validator=gte_zero)
 
+    # --- Debt configuration ---
     debt_type: str = field(
         default="Revolving debt", validator=contains(["Revolving debt", "One time loan"])
     )
     loan_period_if_used: int = field(default=0, validator=gte_zero)
 
+    # --- Nested dictionaries (financial categories) ---
     commodity: dict = field(
         default={
             "name": None,
@@ -259,21 +258,25 @@ class BasicProFASTParameterConfig(BaseConfig):
     )
 
     def as_dict(self) -> dict:
-        """Creates a JSON and YAML friendly dictionary that can be save for future reloading.
+        """Return a dictionary formatted for ProFAST initialization.
 
+        Converts the configuration to a ProFAST-compatible dictionary, replacing
+        underscores with spaces, applying inflation defaults, and mapping keys
+        to internal ProFAST parameter names.
 
         Returns:
-            dict: All key, value pairs required for class re-creation.
+            dict: Formatted parameter dictionary.
         """
+        # Convert attrs object to serializable dict
         pf_params_init = attrs.asdict(self, filter=attr_filter, value_serializer=attr_serializer)
 
-        # rename keys to profast format
+        # Rename underscores to spaces for ProFAST compatibility
         pf_params = {k.replace("_", " "): v for k, v in pf_params_init.items()}
 
-        # update all instances of "escalation" with the general inflation rate
+        # Apply inflation rate defaults to escalation fields
         pf_params = update_defaults(pf_params, "escalation", self.inflation_rate)
 
-        # rename keys
+        # Remap finance keys to ProFAST names where applicable
         params = {}
         for keyname, vals in pf_params.copy().items():
             if keyname in finance_to_pf_param_mapper:
@@ -285,7 +288,10 @@ class BasicProFASTParameterConfig(BaseConfig):
 
 @define
 class ProFASTDefaultCapitalItem(BaseConfig):
-    """Configuration class of default settings for ProFAST capital items.
+    """Default configuration for ProFAST capital cost items.
+
+    Represents capital investment items such as equipment or infrastructure,
+    with associated cost, depreciation, and sales tax options.
 
     Attributes:
         depr_period (int): depreciation period in years if using MACRS depreciation.
@@ -304,6 +310,14 @@ class ProFASTDefaultCapitalItem(BaseConfig):
     replacement_cost_percent: int | float = field(default=0.0, validator=range_val(0, 1))
 
     def create_dict(self):
+        """Create a ProFAST-compatible dictionary of attributes.
+
+        Excludes attributes not used by the ProFAST configuration file.
+
+        Returns:
+            dict: Dictionary containing ProFAST-compatible fields.
+        """
+        # Remove attributes not required by ProFAST input schema
         non_profast_attrs = ["replacement_cost_percent"]
         full_dict = self.as_dict()
         d = {k: v for k, v in full_dict.items() if k not in non_profast_attrs}
@@ -312,7 +326,10 @@ class ProFASTDefaultCapitalItem(BaseConfig):
 
 @define
 class ProFASTDefaultFixedCost(BaseConfig):
-    """Configuration class of default settings for ProFAST fixed costs.
+    """Default configuration for ProFAST fixed operating costs.
+
+    Represents recurring annual costs such as maintenance, rent, or insurance
+    that do not vary with production level.
 
     Attributes:
         escalation (float | int, optional): annual escalation of price.
@@ -327,13 +344,21 @@ class ProFASTDefaultFixedCost(BaseConfig):
     usage: float | int = field(default=1.0)
 
     def create_dict(self):
+        """Return a dictionary representation for ProFAST.
+
+        Returns:
+            dict: Dictionary of fixed cost attributes.
+        """
+        # Convert attributes to standard dictionary
         return self.as_dict()
 
 
 @define
 class ProFASTDefaultVariableCost(BaseConfig):
-    """Configuration class of default settings for ProFAST variable costs.
-    The total cost is calculated as ``usage*cost``.
+    """Default configuration for ProFAST variable costs.
+
+    Represents costs that scale with production or feedstock usage.
+    The total cost is calculated as ``usage * cost``.
 
     Attributes:
         escalation (float | int, optional): annual escalation of price.
@@ -349,12 +374,51 @@ class ProFASTDefaultVariableCost(BaseConfig):
     usage: float | int = field(default=1.0)
 
     def create_dict(self):
+        """Return a dictionary representation for ProFAST.
+
+        Returns:
+            dict: Dictionary of variable cost attributes.
+        """
+        # Prepare dictionary for ProFAST configuration input
+        return self.as_dict()
+
+
+@define
+class ProFASTDefaultCoproduct(BaseConfig):
+    """Default configuration for ProFAST coproduct settings.
+
+    Represents additional revenue sources or byproducts associated with
+    the primary process. The total value is calculated as ``usage * cost``.
+
+    Attributes:
+        escalation (float | int, optional): annual escalation of price.
+            Defaults to 0.
+        unit (str): unit of the cost, only used for reporting. The cost should be input in
+            USD/unit of commodity.
+        usage (float, optional): Usage of feedstock per unit of commodity.
+            Defaults to 1.0.
+    """
+
+    escalation: float | int = field()
+    unit: str = field()
+    usage: float | int = field(default=1.0)
+
+    def create_dict(self):
+        """Return a dictionary representation for ProFAST.
+
+        Returns:
+            dict: Dictionary of coproduct attributes.
+        """
+        # Prepare dictionary for ProFAST configuration input
         return self.as_dict()
 
 
 @define
 class ProFASTDefaultIncentive(BaseConfig):
-    """Configuration class of default settings for ProFAST production-based incentives.
+    """Default configuration for ProFAST production-based incentives.
+
+        Represents financial incentives (e.g., tax credits or subsidies)
+        applied per unit of production over a defined period.
 
     Attributes:
         decay (float): rate of decay of incentive value.
@@ -369,25 +433,40 @@ class ProFASTDefaultIncentive(BaseConfig):
     tax_credit: bool = field(default=True)
 
     def create_dict(self):
+        """Return a dictionary representation for ProFAST.
+
+        Returns:
+            dict: Dictionary of incentive attributes.
+        """
+        # Prepare dictionary for ProFAST configuration input
         return self.as_dict()
 
 
-class ProFastComp(om.ExplicitComponent):
+class ProFastBase(om.ExplicitComponent):
     """
-    This component calculates the Levelized Cost of Commodity (LCO) for a user-defined set
-    of technologies and commodities, including hydrogen (LCOH), electricity (LCOE),
-    ammonia (LCOA), nitrogen (LCON), and CO2 (LCOC). Only the user-defined technologies specified
-    in the `tech_config` are included in the LCO stackup (or all if no specific technologies are
-    defined).
+    Base component for using the ProFAST financial model within OpenMDAO.
+
+    This component aggregates capital, fixed, variable, and coproduct costs from
+    user-defined technologies to compute financial metrics using ProFAST.
+
+    Reference:
+        ProFAST Documentation:
+        https://www.nrel.gov/hydrogen/profast-access
+
 
     Attributes:
-        tech_config (dict): Dictionary specifying the technologies to include in the
-            LCO calculation. Only these technologies are considered in the stackup.
-        plant_config (dict): Plant configuration parameters, including financial and
-            operational settings.
+        tech_config (dict): Technology-specific model configurations included in the
+            financial calculation.
+        plant_config (dict): Plant configuration and financial parameter settings.
         driver_config (dict): Driver configuration parameters (not directly used in calculations).
-        commodity_type (str): The type of commodity for which the LCO is calculated.
-            Supported values are "hydrogen", "electricity", "ammonia", "nitrogen", and "co2".
+        commodity_type (str): Type of commodity analyzed. Supported: 'hydrogen', 'electricity',
+            'ammonia', 'nitrogen', and 'co2'.
+        params (BasicProFASTParameterConfig): Financial parameters used in the ProFAST analysis.
+        capital_item_settings (ProFASTDefaultCapitalItem): Default capital cost parameters.
+        fixed_cost_settings (ProFASTDefaultFixedCost): Default fixed operating cost parameters.
+        variable_cost_settings (ProFASTDefaultVariableCost): Default variable operating cost
+            parameters.
+        coproduct_cost_settings (ProFASTDefaultCoproduct): Default coproduct cost parameters.
 
     Inputs:
         capex_adjusted_{tech} (float): Adjusted capital expenditure for each
@@ -401,73 +480,46 @@ class ProFastComp(om.ExplicitComponent):
         co2_capture_kgpy (float): Total annual CO2 captured, in kg/year
             (only for commodity_type "co2").
 
-    Outputs:
-        LCOx (float): Levelized Cost of commodity (where 'x' is the uppercase first letter
-            of the commodity). For example, LCOH if commodity_type is "hydrogen".
-            If commodity_type is "hydrogen", "ammonia", "nitrogen", or "co2", the units are USD/kg.
-            If the commodity type is "electricity", the units are USD/kWh.
-        wacc_<commodity> (float): weighted average cost of capital as a fraction.
-        crf_<commodity> (float): capital recovery factor as a fraction.
-        irr_<commodity> (float): internal rate of return as a fraction.
-        profit_index_<commodity> (float):
-        investor_payback_period_<commodity> (float): time until initial investment costs are
-            recovered in years.
-        price_<commodity> (float): first year price of commodity in same units as `LCOx`
-
     Methods:
         initialize(): Declares component options.
-        setup(): Defines inputs and outputs based on user configuration and validates
-            required parameters.
-        compute(inputs, outputs): Assembles financial parameters, adds capital and fixed cost
-            items for user-defined technologies, runs the ProFAST financial model,
-            and sets the appropriate LCOx output.
-
-    Notes:
-        - Only technologies specified by the user in `tech_config` are included in the LCO stackup.
-        - The component supports flexible configuration for different commodities
-            and technology mixes.
-        - Only includes fixed annual operating costs and capital costs at the moment.
+        setup(): Defines inputs/outputs and initializes ProFAST configuration.
+        populate_profast(inputs): Builds a ProFAST input dictionary based on user inputs.
+        compute(inputs, outputs, ...): Must be implemented in a subclass.
     """
 
     def initialize(self):
+        """Declare OpenMDAO component options."""
         self.options.declare("driver_config", types=dict)
         self.options.declare("plant_config", types=dict)
         self.options.declare("tech_config", types=dict)
         self.options.declare("commodity_type", types=str)
         self.options.declare("description", types=str, default="")
 
+    def add_model_specific_outputs(self):
+        """Placeholder for subclass-defined outputs."""
+        raise NotImplementedError("This method should be implemented in a subclass.")
+
     def setup(self):
+        """Set up component inputs and outputs based on plant and technology configurations."""
+        # Determine commodity units
         if self.options["commodity_type"] == "electricity":
             commodity_units = "kW*h/year"
-            lco_units = "USD/kW/h"
+            self.price_units = "USD/(kW*h)"
         else:
             commodity_units = "kg/year"
-            lco_units = "USD/kg"
+            self.price_units = "USD/kg"
 
-        LCO_base_str = f"LCO{self.options['commodity_type'][0].upper()}"
-        self.output_txt = self.options["commodity_type"].lower()
-        if self.options["description"] == "":
-            self.LCO_str = LCO_base_str
-        else:
-            desc_str = self.options["description"].strip().strip("_()-")
-            if desc_str == "":
-                self.LCO_str = LCO_base_str
-            else:
-                self.output_txt = f"{self.options['commodity_type'].lower()}_{desc_str}"
-                self.LCO_str = f"{LCO_base_str}_{desc_str}"
+        # Construct output name based on commodity and optional description
+        # this is necessary to allow for financial subgroups
+        self.description = (
+            self.options["description"].strip() if "description" in self.options else ""
+        )
+        self.output_txt = f"{self.options['commodity_type'].lower()}_{self.description}"
 
-        self.add_output(self.LCO_str, val=0.0, units=lco_units)
-        self.outputs_to_units = {
-            "wacc": "percent",
-            "crf": "percent",
-            "irr": "percent",
-            "profit_index": "unitless",
-            "investor_payback_period": "yr",
-            "price": lco_units,
-        }
-        for output_var, units in self.outputs_to_units.items():
-            self.add_output(f"{output_var}_{self.output_txt}", val=0.0, units=units)
+        # Add model-specific outputs defined by subclass
+        self.add_model_specific_outputs()
 
+        # Add production input (CO2 capture or total commodity produced)
         if self.options["commodity_type"] == "co2":
             self.add_input("co2_capture_kgpy", val=0.0, units="kg/year")
         else:
@@ -477,6 +529,7 @@ class ProFastComp(om.ExplicitComponent):
                 units=commodity_units,
             )
 
+        # Add inputs for CapEx, OpEx, and variable OpEx for each technology
         plant_life = int(self.options["plant_config"]["plant"]["plant_life"])
         tech_config = self.tech_config = self.options["tech_config"]
         for tech in tech_config:
@@ -484,13 +537,13 @@ class ProFastComp(om.ExplicitComponent):
             self.add_input(f"opex_adjusted_{tech}", val=0.0, units="USD/year")
             self.add_input(f"varopex_adjusted_{tech}", val=0.0, shape=plant_life, units="USD/year")
 
+        # Include electrolyzer replacement time if applicable
         if "electrolyzer" in tech_config:
             self.add_input("electrolyzer_time_until_replacement", units="h")
 
+        # Load plant configuration and financial parameters
         plant_config = self.options["plant_config"]
-
         finance_params = plant_config["finance_parameters"]["model_inputs"]["params"]
-
         fin_params = check_parameter_inputs(finance_params, plant_config)
 
         # initialize financial parameters
@@ -514,8 +567,16 @@ class ProFastComp(om.ExplicitComponent):
             "variable_costs", {}
         )
         variable_cost_params.setdefault("escalation", self.params.inflation_rate)
-        variable_cost_params.setdefault("unit", lco_units.replace("USD", "$"))
+        variable_cost_params.setdefault("unit", self.price_units.replace("USD", "$"))
         self.variable_cost_settings = ProFASTDefaultVariableCost.from_dict(variable_cost_params)
+
+        # initialize default coproduct cost parameters (same as feedstocks)
+        coproduct_cost_params = plant_config["finance_parameters"]["model_inputs"].get(
+            "coproducts", {}
+        )
+        coproduct_cost_params.setdefault("escalation", self.params.inflation_rate)
+        coproduct_cost_params.setdefault("unit", self.price_units.replace("USD", "$"))
+        self.coproduct_cost_settings = ProFASTDefaultCoproduct.from_dict(coproduct_cost_params)
 
         # incentives - unused for now
         # incentive_params = plant_config["finance_parameters"]["model_inputs"].get(
@@ -524,9 +585,21 @@ class ProFastComp(om.ExplicitComponent):
         # incentive_params.setdefault("decay", -1 * self.params.inflation_rate)
         # self.incentive_params_settings = ProFASTDefaultIncentive.from_dict(incentive_params)
 
-    def compute(self, inputs, outputs):
+    def populate_profast(self, inputs):
+        """Populate and configure the ProFAST financial model for analysis.
+
+        This is called during the `compute` method of the inheriting class.
+
+        Args:
+            inputs (dict): OpenMDAO input values for technology CapEx, OpEx, and production levels.
+
+        Returns:
+            ProFAST: A fully configured ProFAST financial model object ready for execution.
+        """
+        # determine commodity units
         mass_commodities = ["hydrogen", "ammonia", "co2", "nitrogen", "methanol"]
 
+        # create years of operation list
         years_of_operation = create_years_of_operation(
             self.params.plant_life,
             self.params.analysis_start_year,
@@ -540,6 +613,7 @@ class ProFastComp(om.ExplicitComponent):
             {"unit": "kg" if self.options["commodity_type"] in mass_commodities else "kWh"}
         )
 
+        # calculate capacity and total production based on commodity type
         if self.options["commodity_type"] != "co2":
             capacity = float(inputs[f"total_{self.options['commodity_type']}_produced"][0]) / 365.0
             total_production = float(inputs[f"total_{self.options['commodity_type']}_produced"][0])
@@ -549,6 +623,7 @@ class ProFastComp(om.ExplicitComponent):
         if capacity == 0.0:
             raise ValueError("Capacity cannot be zero")
 
+        # define profast parameters for capacity and utilization
         profast_params["capacity"] = capacity  # TODO: update to actual daily capacity
         profast_params["long term utilization"] = 1  # TODO: update to capacity factor
 
@@ -559,11 +634,13 @@ class ProFastComp(om.ExplicitComponent):
         capital_items = {}
         fixed_costs = {}
         variable_costs = {}
+        coproduct_costs = {}
 
         # create default capital item and fixed cost entries
         capital_item_defaults = self.capital_item_settings.create_dict()
         fixed_cost_defaults = self.fixed_cost_settings.create_dict()
         variable_cost_defaults = self.variable_cost_settings.create_dict()
+        coproduct_cost_defaults = self.coproduct_cost_settings.create_dict()
 
         # loop through technologies and create cost entries
         for tech in self.tech_config:
@@ -622,7 +699,9 @@ class ProFastComp(om.ExplicitComponent):
                 .get("variable_costs", {})
             )
 
-            # add CapEx cost to tech-specific variable cost entry
+            # add VarOpEx cost to tech-specific variable cost entry
+
+            # if VarOpEx is positive, treat as a feedstock
             varopex_adjusted_tech = inputs[f"varopex_adjusted_{tech}"]
             if np.any(varopex_adjusted_tech) > 0:
                 varopex_cost_per_unit_commodity = varopex_adjusted_tech / total_production
@@ -634,51 +713,33 @@ class ProFastComp(om.ExplicitComponent):
                     tech_varopex_info.setdefault(var_cost_key, var_cost_val)
                 variable_costs[tech] = tech_varopex_info
 
+            # if VarOpEx is negative, treat as a coproduct
+            else:
+                tech_coproduct_info = (
+                    self.tech_config[tech]["model_inputs"]
+                    .get("financial_parameters", {})
+                    .get("coproducts", {})
+                )
+                # make it positive
+                coproduct_cost_per_unit_commodity = -1 * varopex_adjusted_tech / total_production
+                coproduct_dict = dict(zip(years_of_operation, coproduct_cost_per_unit_commodity))
+                tech_coproduct_info.update({"cost": coproduct_dict})
+
+                # update any unset variable cost parameters with the default values
+                for coprod_cost_key, coprod_cost_val in coproduct_cost_defaults.items():
+                    tech_coproduct_info.setdefault(coprod_cost_key, coprod_cost_val)
+                coproduct_costs[tech] = tech_coproduct_info
+
         # add capital costs and fixed costs to pf_dict
         pf_dict["capital_items"] = capital_items
         pf_dict["fixed_costs"] = fixed_costs
         pf_dict["feedstocks"] = variable_costs
+        pf_dict["coproducts"] = coproduct_costs
+
         # create ProFAST object
-
         pf = create_and_populate_profast(pf_dict)
-        # simulate ProFAST
-        sol, summary, price_breakdown = run_profast(pf)
+        return pf
 
-        # Check whether to export profast object to .yaml file
-        save_results = self.options["plant_config"]["finance_parameters"]["model_inputs"].get(
-            "save_profast_results", False
-        )
-        save_config = self.options["plant_config"]["finance_parameters"]["model_inputs"].get(
-            "save_profast_config", False
-        )
-        if save_results or save_config:
-            pf_config_dict = convert_pf_to_dict(pf)
-
-            output_dir = self.options["driver_config"]["general"]["folder_output"]
-            fdesc = self.options["plant_config"]["finance_parameters"]["model_inputs"].get(
-                "profast_output_description", "ProFastComp"
-            )
-
-            fbasename = f"{fdesc}_{self.output_txt}"
-
-            output_dir = Path(output_dir)
-            output_dir.mkdir(parents=True, exist_ok=True)
-            if save_config:
-                pf_config_dict = dict_to_yaml_formatting(pf_config_dict)
-                config_fpath = Path(output_dir) / f"{fbasename}_config.yaml"
-                write_yaml(pf_config_dict, config_fpath)
-            if save_results:
-                lco_breakdown, lco_check = make_price_breakdown(price_breakdown, pf_config_dict)
-                price_breakdown_formatted = format_profast_price_breakdown_per_year(price_breakdown)
-                pf_breakdown_fpath = Path(output_dir) / f"{fbasename}_profast_price_breakdown.csv"
-                lco_breakdown_fpath = Path(output_dir) / f"{fbasename}_LCO_breakdown.yaml"
-                price_breakdown_formatted.to_csv(pf_breakdown_fpath)
-                lco_breakdown = dict_to_yaml_formatting(lco_breakdown)
-                write_yaml(lco_breakdown, lco_breakdown_fpath)
-
-        outputs[self.LCO_str] = sol["lco"]
-        for output_var in self.outputs_to_units.keys():
-            val = sol[output_var.replace("_", " ")]
-            if isinstance(val, (np.ndarray, list, tuple)):  # only for IRR
-                val = val[-1]
-            outputs[f"{output_var}_{self.output_txt}"] = val
+    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
+        """Placeholder for the OpenMDAO compute step."""
+        raise NotImplementedError("This method should be implemented in a subclass.")
