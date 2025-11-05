@@ -11,14 +11,23 @@ from h2integrate.core.validators import contains
 
 @define
 class MartinIronMinePerformanceConfig(BaseConfig):
-    # product_selection
+    """_summary_
+
+    Attributes:
+        taconite_pellet_type (str): type of taconite pellets, options are "std" or "drg".
+        mine (str): name of ore mine. Must be "Hibbing", "Northshore", "United",
+            "Minorca" or "Tilden"
+        max_ore_production_rate_tonnes_per_hr (float): capacity of the pellet plant
+            in units of metric tonnes of pellets produced per hour.
+    """
+
+    max_ore_production_rate_tonnes_per_hr: float = field()
+
     taconite_pellet_type: str = field(
         converter=(str.lower, str.strip), validator=contains(["std", "drg"])
     )
 
     mine: str = field(validator=contains(["Hibbing", "Northshore", "United", "Minorca", "Tilden"]))
-
-    rated_ore_production_capacity_t: float = field(default=6273073.6149312 / 8760)
 
 
 class MartinIronMinePerformanceComponent(om.ExplicitComponent):
@@ -36,8 +45,7 @@ class MartinIronMinePerformanceComponent(om.ExplicitComponent):
 
         self.add_input(
             "system_capacity",
-            val=self.config.rated_ore_production_capacity_t,
-            # shape=n_timesteps,
+            val=self.config.max_ore_production_rate_tonnes_per_hr,
             units="t/h",
             desc="Annual ore production capacity",
         )
@@ -63,7 +71,7 @@ class MartinIronMinePerformanceComponent(om.ExplicitComponent):
         # Default the ore demand input as the rated capacity
         self.add_input(
             "iron_ore_demand",
-            val=self.config.rated_ore_production_capacity_t,
+            val=self.config.max_ore_production_rate_tonnes_per_hr,
             shape=n_timesteps,
             units="t/h",
             desc="Iron ore demand for iron mine",
@@ -90,7 +98,7 @@ class MartinIronMinePerformanceComponent(om.ExplicitComponent):
             val=0.0,
             shape=n_timesteps,
             units="t/h",
-            desc="Electricity consumed",
+            desc="Iron ore pellets produced",
         )
 
         coeff_fpath = (
@@ -101,6 +109,17 @@ class MartinIronMinePerformanceComponent(om.ExplicitComponent):
         self.coeff_df = self.format_coeff_df(coeff_df, self.config.mine)
 
     def format_coeff_df(self, coeff_df, mine):
+        """Update the coefficient dataframe such that values are adjusted to standard units
+            and units are compatible with OpenMDAO units. Also filter the dataframe to include
+            only the data necessary for a given mine and pellet type.
+
+        Args:
+            coeff_df (pd.DataFrame): cost coefficient dataframe.
+            mine (str): name of mine that ore is extracted from.
+
+        Returns:
+            pd.DataFrame: cost coefficient dataframe
+        """
         # only include data for the given product
         coeff_df = coeff_df[
             coeff_df["Product"] == f"{self.config.taconite_pellet_type}_taconite_pellets"

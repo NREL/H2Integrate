@@ -17,7 +17,7 @@ def iron_ore_config_martin_om():
     shared_params = {
         "mine": "Northshore",
         "taconite_pellet_type": "drg",
-        "rated_ore_production_capacity_t": 516.0497610311598,
+        "max_ore_production_rate_tonnes_per_hr": 516.0497610311598,
     }
     # performance_params = {"ore_cf_estimate": 0.9, "model_name": "martin_ore"}
     # cost_params = {
@@ -66,9 +66,7 @@ def driver_config():
     return driver_config
 
 
-def test_baseline_iron_ore_costs_martin(
-    plant_config, driver_config, iron_ore_config_martin_om, subtests
-):
+def test_baseline_iron_ore_costs(plant_config, driver_config, iron_ore_config_martin_om, subtests):
     martin_ore_capex = 1221599018.626594
     # martin_ore_var_om = 441958721.59532887
     martin_ore_fixed_om = 0.0

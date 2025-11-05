@@ -11,14 +11,25 @@ from h2integrate.tools.inflation.inflate import inflate_cpi
 
 @define
 class MartinIronMineCostConfig(BaseConfig):
-    # product_selection
+    """_summary_
+
+    Attributes:
+        taconite_pellet_type (str): type of taconite pellets, options are "std" or "drg".
+        mine (str): name of ore mine. Must be "Hibbing", "Northshore", "United",
+            "Minorca" or "Tilden"
+        max_ore_production_rate_tonnes_per_hr (float): capacity of the pellet plant
+            in units of metric tonnes of pellets produced per hour.
+        cost_year (int): target dollar year to convert costs to
+    """
+
+    max_ore_production_rate_tonnes_per_hr: float = field()
+
     taconite_pellet_type: str = field(
         converter=(str.lower, str.strip), validator=contains(["std", "drg"])
     )
 
     mine: str = field(validator=contains(["Hibbing", "Northshore", "United", "Minorca", "Tilden"]))
     cost_year: int = field(converter=int)
-    rated_ore_production_capacity_t: float = field(default=6273073.6149312 / 8760)
 
 
 class MartinIronMineCostComponent(CostModelBaseClass):
@@ -36,7 +47,7 @@ class MartinIronMineCostComponent(CostModelBaseClass):
 
         self.add_input(
             "system_capacity",
-            val=self.config.rated_ore_production_capacity_t,
+            val=self.config.max_ore_production_rate_tonnes_per_hr,
             # shape=n_timesteps,
             units="t/h",
             desc="Annual ore production capacity",
@@ -46,7 +57,7 @@ class MartinIronMineCostComponent(CostModelBaseClass):
             val=0.0,
             shape=n_timesteps,
             units="t/h",
-            desc="Iron ore produced",
+            desc="Iron ore pellets produced",
         )
 
         coeff_fpath = (
@@ -57,6 +68,18 @@ class MartinIronMineCostComponent(CostModelBaseClass):
         self.coeff_df = self.format_coeff_df(coeff_df, self.config.mine)
 
     def format_coeff_df(self, coeff_df, mine):
+        """Update the coefficient dataframe such that values are adjusted to standard units
+            and units are compatible with OpenMDAO units. Also filter the dataframe to include
+            only the data necessary for a given mine and pellet type.
+
+        Args:
+            coeff_df (pd.DataFrame): cost coefficient dataframe.
+            mine (str): name of mine that ore is extracted from.
+
+        Returns:
+            pd.DataFrame: cost coefficient dataframe
+        """
+
         # only include data for the given product
         coeff_df = coeff_df[
             coeff_df["Product"] == f"{self.config.taconite_pellet_type}_taconite_pellets"
@@ -120,16 +143,19 @@ class MartinIronMineCostComponent(CostModelBaseClass):
             "Value"
         ].values
 
+        # get the capital cost for the reference design
         ref_tot_capex = self.coeff_df[self.coeff_df["Type"] == "capital"]["Value"].sum()
         ref_capex_per_anual_processed_ore = ref_tot_capex / ref_Oreproduced  # USD/t/yr
         ref_capex_per_processed_ore = ref_capex_per_anual_processed_ore * 8760  # USD/t/hr
         tot_capex_2021USD = inputs["system_capacity"] * ref_capex_per_processed_ore  # USD
 
+        # get the variable om cost based on the total pellet production
         total_pellets_produced = sum(inputs["iron_ore_out"])
         var_om_2021USD = (
             self.coeff_df[self.coeff_df["Type"] == "variable opex/pellet"]["Value"]
             * total_pellets_produced
         ).sum()
 
+        # adjust costs to cost year
         outputs["CapEx"] = inflate_cpi(tot_capex_2021USD, 2021, self.config.cost_year)
         outputs["VarOpEx"] = inflate_cpi(var_om_2021USD, 2021, self.config.cost_year)
