@@ -1,8 +1,9 @@
 # Recording and Loading Data From H2I Simulations
 Detailed data from H2Integrate simulations can be saved and loaded later. This section covers:
-1. [How to record data from a simulation](#setting-recorder-parameters)
-2. [How to load data and access recorded data](#loading-recorder-files)
+1. [How to record data from a simulation](setting-recorder-parameters)
+2. [How to load data and access recorded data](loading-recorder-files)
 
+(setting-recorder-parameters)=
 ## Setting Recorder Parameters
 
 Recording data from a simulation can be enabled in the `driver_config` file with the 'recorder' section. The most simple example is shown below:
@@ -32,17 +33,15 @@ recorder:
   flag: True #set to True to record data
   file: "cases.sql" #this is the name of the file to record data to.
   overwrite_recorder: False #create a unique recorder for each simulation
-  recorder_attachment: "model" #"driver" or "model"
+  recorder_attachment: "model" # "driver" or "model"
   includes: ["*"] # include everything
-  excludes: ["*resource_data"] # dont include resource data
+  excludes: ["*resource_data"] # don't include resource data
 ```
 
+- **overwrite_recorder**: If False or not specified, H2I will make a new filename for the recorder that doesn't yet exist in the `outputs` folder. If `cases.sql` exists, it will make a new file named `cases0.sql`. If `cases.sql` and `cases0.sql` exist, it will make a new file named `cases1.sql`, etc. If set to True, it will overwrite an existing `cases.sql` file from previous runs.
+- **recorder_attachment**: Must be `model` or `driver`, defaults to `model`. We recommend attaching the recorder to the driver if running an optimization or design of experiments in parallel.
 
-- **overwrite_recorder**: If False or not specified, it will make a new filename for the recorder that doesn't yet exist in the `outputs` folder. If "cases.sql" exists, it will make a new file names "cases0.sql". If "cases.sql" and "cases0.sql" exist, it will make a new file named "cases1.sql", etc. If set to True, it will overwrite an existing "cases.sql" file from previous runs.
-- **recorder_attachment**: Must be "model" or "driver", defaults to "model". It is recommended to attach the recorder to the driver if running an optimization or design of experiments in parallel. Further information on other recorder options that can be specified are linked below:
-    - ["model" attached recorder](#attaching-a-recorder-to-the-model)
-    - ["driver" attached recorder](#attaching-a-recorder-to-the-driver)
-
+(attaching-a-recorder-to-the-driver)=
 ### Attaching a recorder to the driver
 It is recommended to attach the recorder to the driver if running an optimization or design of experiments in parallel, but can be beneficial if running a design of experiments or optimization in serial as well. Further documentation on driver recording can be found [here](https://openmdao.org/newdocs/versions/latest/features/recording/driver_recording.html).
 
@@ -63,7 +62,7 @@ recorder:
 
   # H2I Default recorder options
   includes: ["*"] # include everything
-  excludes: ["*resource_data"] # dont include resource data
+  excludes: ["*resource_data"] # don't include resource data
 
   # OpenMDAO default for recording options
   record_inputs: True #record inputs
@@ -74,7 +73,7 @@ recorder:
   record_objectives: True #record objectives
 ```
 
-
+(attaching-a-recorder-to-the-model)=
 ### Attaching a recorder to the model
 Further documentation on model recording can be found [here](https://openmdao.org/newdocs/versions/latest/features/recording/system_recording.html). By default, the recorder will be attached to the model unless `recorder_attachment` is set to "driver".
 
@@ -93,7 +92,7 @@ recorder:
 
   # H2I Default recorder options
   includes: ["*"] # include everything
-  excludes: ["*resource_data"] # dont include resource data
+  excludes: ["*resource_data"] # don't include resource data
 
   # OpenMDAO default for recording options
   record_inputs: True #record inputs
@@ -101,9 +100,9 @@ recorder:
   record_residuals: True #record residuals
 ```
 
-
+(loading-recorder-files)=
 ## Loading Recorder Files
-Detailed documentation on OpenMDAO's case read can be found [here](https://openmdao.org/newdocs/versions/latest/features/recording/case_reader.html)
+Detailed documentation on OpenMDAO's case read can be found [here](https://openmdao.org/newdocs/versions/latest/features/recording/case_reader.html).
 
 Example usage of reading and accessing recorded data is shown in Example 8 (`examples/08_wind_electrolyzer/run_wind_electrolyzer.py`).
 
