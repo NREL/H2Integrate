@@ -39,8 +39,8 @@ technologies:
       model: "demand_open_loop_controller"
     model_inputs:
       shared_parameters:
-        resource_name: "electricity"
-        resource_rate_units: "kW"
+        commodity_name: "electricity"
+        commodity_units: "kW"
         max_charge_rate: 25000.0  # kW/time step, 25 MW
         max_capacity: 200000.0  # kWh, 200 MWh
       control_parameters:
@@ -78,9 +78,6 @@ technologies:
     cost_model:
       model: "grid_sell_cost"
     model_inputs:
-      shared_parameters:
-        feedstock_type: "electricity"
-        units: "kW"
       performance_parameters:
         interconnect_limit: 1000000. #kW
       cost_parameters:

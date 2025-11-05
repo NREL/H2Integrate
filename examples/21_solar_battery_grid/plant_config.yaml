@@ -17,7 +17,13 @@ site:
       y: [2000.0, 2000.0, 2500.0],
     }
   ]
-  solar_resource_filepath: "../11_hybrid_energy_plant/tech_inputs/weather/solar/30.6617_-101.7096_psmv3_60_2013.csv"
+  resources:
+    solar_resource:
+      resource_model: "goes_aggregated_solar_v4_api"
+      resource_parameters:
+        resource_year: 2013
+        resource_dir: "../11_hybrid_energy_plant/tech_inputs/weather/solar"
+        resource_filename: "30.6617_-101.7096_psmv3_60_2013.csv"
 
 
 # array of arrays containing left-to-right technology
@@ -28,8 +34,13 @@ site:
 # hence the empty array.
 technology_interconnections: [
     ["solar", "battery", "electricity", "cable"], #connect solar to battery
-    ["battery", "grid_feedstock", ["electricity_missed_load", "electricity_consumed"]], #connect electricity demand to grid
-    ["battery", "grid_selling", ["electricity_curtailed", "electricity_in"]] #connect electricity surplus to grid selling
+    ["battery", "grid_feedstock", ["electricity_unmet_demand", "electricity_consumed"]], #connect electricity demand to grid
+    ["battery", "grid_selling", ["electricity_unused_commodity", "electricity_in"]] #connect electricity surplus to grid selling
+]
+
+resource_to_tech_connections: [
+  # connect the wind resource to the wind technology
+  ['solar_resource', 'solar', 'solar_resource_data'],
 ]
 
 plant:
