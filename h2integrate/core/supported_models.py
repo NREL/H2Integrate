@@ -3,8 +3,10 @@ from h2integrate.core.feedstocks import FeedstockCostModel, FeedstockPerformance
 from h2integrate.transporters.pipe import PipePerformanceModel
 from h2integrate.transporters.cable import CablePerformanceModel
 from h2integrate.converters.steel.steel import SteelPerformanceModel, SteelCostAndFinancialModel
+from h2integrate.converters.grid.grid_sell import GridSellCostModel, GridSellPerformanceModel
 from h2integrate.converters.wind.wind_pysam import PYSAMWindPlantPerformanceModel
 from h2integrate.finances.profast_financial import ProFastComp
+from h2integrate.converters.grid.grid_buying import GridBuyPerformanceModel
 from h2integrate.transporters.generic_summer import GenericSummerPerformanceModel
 from h2integrate.converters.hopp.hopp_wrapper import HOPPComponent
 from h2integrate.converters.solar.solar_pysam import PYSAMSolarPlantPerformanceModel
@@ -182,6 +184,10 @@ supported_models = {
     # Feedstock
     "feedstock_performance": FeedstockPerformanceModel,
     "feedstock_cost": FeedstockCostModel,
+    # Grid
+    "grid_buy_performance": GridBuyPerformanceModel,
+    "grid_sell_performance": GridSellPerformanceModel,
+    "grid_sell_cost": GridSellCostModel,
     # Finance
     "ProFastComp": ProFastComp,
 }
