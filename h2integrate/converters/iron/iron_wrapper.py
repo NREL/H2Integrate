@@ -187,11 +187,6 @@ class IronComponent(CostModelBaseClass):
 
         ### DRI ----------------------------------------------------------------------------
         ### Electrowinning
-        if iron_win_config["iron"]["product_selection"] not in ["ng_dri", "h2_dri"]:
-            raise ValueError(
-                "The product selection for the iron win module must be either \
-                'ng_dri' or 'h2_dri'"
-            )
 
         iron_win_config["iron"]["finances"]["ng_mod"] = ng_mod
         iron_win_config["iron"]["finances"]["ng_price"] = ng_price

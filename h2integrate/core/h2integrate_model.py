@@ -864,9 +864,6 @@ class H2IntegrateModel:
                 tech_configs = group_configs.get("tech_configs")
                 primary_commodity_type = group_configs.get("commodity")
                 commodity_stream = group_configs.get("commodity_stream")
-                # Skip steel finances; it provides its own finances
-                if any(c in tech_configs for c in ("steel", "methanol", "geoh2", "iron")):
-                    continue
 
                 if commodity_stream is not None:
                     # connect commodity stream output to summer input
@@ -1044,5 +1041,6 @@ class H2IntegrateModel:
         We currently exclude any variables with "resource_data" in the name, since those
         are large dictionary variables that are not correctly formatted when printing.
         """
+
         self.prob.model.list_inputs(units=True, print_mean=True, excludes=["*resource_data"])
         self.prob.model.list_outputs(units=True, print_mean=True, excludes=["*resource_data"])
