@@ -89,6 +89,7 @@ def test_baseline_iron_ore_costs(plant_config, driver_config, iron_ore_config_ma
     prob.setup()
 
     ore_annual_production_capacity_tpy = 4520595.90663296  # from old model
+    # 12385.195376438356*365
     annual_crude_ore = 25.0 * 1e6  # 16.9273415*1e6 #t/year
     annual_electricity = 1030.0 * 1e6  # 570.3147999999999*1e6
     ore_rated_capacity = 516.0497610311598  # 515.7075586886752 #t/hr
