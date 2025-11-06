@@ -16,6 +16,22 @@ import pandas as pd
 CD = Path(__file__).parent
 
 
+def capex_calc(a1n, a1d, a1t, a2n, a2d, a2t, a3, T, P, p, z, F, j, A, e, M, Q, V, N):
+    # Pre-costs calculation
+    term1 = a1n / (1 + np.exp(a1d * (T - a1t)))
+    term2 = a2n / (1 + np.exp(a2d * (T - a2t)))
+
+    pre_costs = term1 * P**0.8
+
+    # Electrolysis and product handling contribution to total cost
+    electrolysis_product_handling = term2 * ((p * z * F) / (j * A * e * M)) ** 0.9
+
+    # Power rectifying contribution
+    power_rectifying_contribution = a3 * Q * V**0.15 * N**0.5
+
+    return pre_costs, electrolysis_product_handling, power_rectifying_contribution
+
+
 def main(config):
     """
     Calculates the total direct capital cost of an electrowinning system in 2018 US dollars.
@@ -50,23 +66,31 @@ def main(config):
                 and power rectification.
             total_costs (float): Sum of pre-costs and electrowinning costs.
     """
+    # Load inputs
+    inputs_fp = CD / config.cost_model["inputs_fp"]
+    inputs_df = pd.read_csv(inputs_fp)
+    inputs_df = inputs_df.set_index("Metal")
+
+    # Parse sodium inputs
+    inputs_df.loc["Na"]
+
     # Load coefficients
     coeffs_fp = CD / config.cost_model["coeffs_fp"]
     coeffs_df = pd.read_csv(coeffs_fp)
     coeffs = coeffs_df.set_index("Name")["Coeff"].to_dict()
 
     # Extract coefficients
-    alpha_1_numerator = coeffs["alpha_1_numerator"]
-    alpha_1_denominator = coeffs["alpha_1_denominator"]
-    alpha_1_temp_offset = coeffs["alpha_1_temp_offset"]
-    alpha_2_numerator = coeffs["alpha_2_numerator"]
-    alpha_2_denominator = coeffs["alpha_2_denominator"]
-    alpha_2_temp_offset = coeffs["alpha_2_temp_offset"]
-    alpha_3 = coeffs["alpha_3"]
+    a1n = coeffs["alpha_1_numerator"]
+    a1d = coeffs["alpha_1_denominator"]
+    a1t = coeffs["alpha_1_temp_offset"]
+    a2n = coeffs["alpha_2_numerator"]
+    a2d = coeffs["alpha_2_denominator"]
+    a2t = coeffs["alpha_2_temp_offset"]
+    a3 = coeffs["alpha_3"]
 
     # Assign inputs from config
     T = config.electrolysis_temp  # Electrolysis temperature (°C)
-    P = config.pressure  # Pressure (assumed unit)
+    P = config.capacity  # installed capacity (kt/y)
     p = config.production_rate  # Production rate (kg/s)
     z = config.electron_moles  # Moles of electrons per mole of product
     F = config.faraday_const  # Electric charge per mole of electrons (C/mol)
@@ -78,20 +102,12 @@ def main(config):
     V = config.cell_voltage  # Cell operating voltage (V)
     N = config.rectifier_lines  # Number of rectifier lines
 
-    # Pre-costs calculation
-    term1 = alpha_1_numerator / (1 + np.exp(alpha_1_denominator * (T - alpha_1_temp_offset)))
-    term2 = alpha_2_numerator / (1 + np.exp(alpha_2_denominator * (T - alpha_2_temp_offset)))
-
-    pre_costs = term1 * P**0.8
-
-    # Electrolysis and product handling contribution to total cost
-    electrolysis_product_handling = ((p * z * F) / (j * A * e * M)) ** 0.9
-
-    # Power rectifying contribution
-    power_rectifying_contribution = alpha_3 * Q * V**0.15 * N**0.5
+    pre_costs, electrolysis_product_handling, power_rectifying_contribution = capex_calc(
+        a1n, a1d, a1t, a2n, a2d, a2t, a3, T, P, p, z, F, j, A, e, M, Q, V, N
+    )
 
     # Electrowinning costs
-    electrowinning_costs = term2 * electrolysis_product_handling + power_rectifying_contribution
+    electrowinning_costs = electrolysis_product_handling + power_rectifying_contribution
 
     # Return individual costs for modularity
     return {
@@ -105,10 +121,10 @@ if __name__ == "__main__":
 
     class Config:
         def __init__(self):
-            self.cost_model = {"coeffs_fp": "cost_coeffs.csv"}
+            self.cost_model = {"coeffs_fp": "cost_coeffs.csv", "inputs_fp": "table1.csv"}
             # Example values for each variable (replace with actual values)
             self.electrolysis_temp = 1000  # Temperature in °C, example value
-            self.pressure = 1.5  # Pressure, example value
+            self.capacity = 1.5  # Pressure, example value
             self.production_rate = 1.0  # Total production rate, kg/s
             self.electron_moles = 3  # Moles of electrons per mole of product, example value
             self.faraday_const = (
