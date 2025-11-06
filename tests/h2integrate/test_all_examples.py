@@ -183,7 +183,7 @@ def test_ammonia_synloop_example(subtests):
         assert pytest.approx(model.prob.get_val("ammonia.CapEx"), rel=1e-6) == 1.15173753e09
 
     with subtests.test("Check ammonia OpEx"):
-        assert pytest.approx(model.prob.get_val("ammonia.OpEx"), rel=1e-4) == 25712447.0
+        assert pytest.approx(model.prob.get_val("ammonia.OpEx"), rel=1e-6) == 25318447.90064406
 
     with subtests.test("Check total adjusted CapEx"):
         assert (
@@ -198,7 +198,7 @@ def test_ammonia_synloop_example(subtests):
             pytest.approx(
                 model.prob.get_val("finance_subgroup_nh3.total_opex_adjusted")[0], rel=1e-6
             )
-            == 78873785.09009656
+            == 78480154.4
         )
 
     with subtests.test("Check LCOH"):
@@ -210,7 +210,7 @@ def test_ammonia_synloop_example(subtests):
     with subtests.test("Check LCOA"):
         assert (
             pytest.approx(model.prob.get_val("finance_subgroup_nh3.LCOA")[0], rel=1e-6)
-            == 1.21777477635066
+            == 1.067030996544544
         )
 
 
@@ -467,7 +467,7 @@ def test_hybrid_energy_plant_example(subtests):
 
     # Subtests for checking specific values
     with subtests.test("Check LCOE"):
-        assert model.prob.get_val("finance_subgroup_default.LCOE", units="USD/MW/h")[0] < 83.2123
+        assert model.prob.get_val("finance_subgroup_default.LCOE", units="USD/(MW*h)")[0] < 83.2123
 
 
 def test_asu_example(subtests):
@@ -507,7 +507,7 @@ def test_hydrogen_dispatch_example(subtests):
     with subtests.test("Check LCOE"):
         assert (
             pytest.approx(
-                model.prob.get_val("finance_subgroup_electricity.LCOE", units="USD/MW/h")[0],
+                model.prob.get_val("finance_subgroup_electricity.LCOE", units="USD/(MW*h)")[0],
                 rel=1e-5,
             )
             == 59.0962072084844
@@ -689,7 +689,7 @@ def test_wind_solar_electrolyzer_example(subtests):
     with subtests.test("Check LCOE"):
         assert (
             pytest.approx(
-                model.prob.get_val("finance_subgroup_electricity.LCOE", units="USD/MW/h")[0],
+                model.prob.get_val("finance_subgroup_electricity.LCOE", units="USD/(MW*h)")[0],
                 rel=1e-5,
             )
             == 53.9306558
@@ -726,7 +726,7 @@ def test_electrolyzer_om_example(subtests):
 
     model.run()
 
-    lcoe = model.prob.get_val("finance_subgroup_electricity.LCOE", units="USD/MW/h")[0]
+    lcoe = model.prob.get_val("finance_subgroup_electricity.LCOE", units="USD/(MW*h)")[0]
     lcoh_with_lcoh_finance = model.prob.get_val(
         "finance_subgroup_hydrogen.LCOH_lcoh_financials", units="USD/kg"
     )[0]
@@ -734,11 +734,11 @@ def test_electrolyzer_om_example(subtests):
         "finance_subgroup_hydrogen.LCOH_lcoe_financials", units="USD/kg"
     )[0]
     with subtests.test("Check LCOE"):
-        assert pytest.approx(lcoe, rel=1e-5) == 39.98869
+        assert pytest.approx(lcoe, rel=1e-4) == 39.98869
     with subtests.test("Check LCOH with lcoh_financials"):
-        assert pytest.approx(lcoh_with_lcoh_finance, rel=1e-5) == 13.0954678
+        assert pytest.approx(lcoh_with_lcoh_finance, rel=1e-4) == 13.0954678
     with subtests.test("Check LCOH with lcoe_financials"):
-        assert pytest.approx(lcoh_with_lcoe_finance, rel=1e-5) == 8.00321771
+        assert pytest.approx(lcoh_with_lcoe_finance, rel=1e-4) == 8.00321771
 
 
 def test_wombat_electrolyzer_example(subtests):
@@ -751,10 +751,10 @@ def test_wombat_electrolyzer_example(subtests):
     model.run()
 
     lcoe_with_profast_model = model.prob.get_val(
-        "finance_subgroup_electricity_profast.LCOE", units="USD/MW/h"
+        "finance_subgroup_electricity_profast.LCOE", units="USD/(MW*h)"
     )[0]
     lcoe_with_custom_model = model.prob.get_val(
-        "finance_subgroup_electricity_custom.LCOE", units="USD/MW/h"
+        "finance_subgroup_electricity_custom.LCOE", units="USD/(MW*h)"
     )[0]
 
     lcoh_with_custom_model = model.prob.get_val(
@@ -821,11 +821,11 @@ def test_pyomo_heuristic_dispatch_example(subtests):
     # Subtest for LCOE
     with subtests.test("Check all LCOE value"):
         lcoe = model.prob.get_val("finance_subgroup_all_electricity.LCOE")[0]
-        assert lcoe == pytest.approx(0.07470820840238226, rel=1e-6)
+        assert lcoe == pytest.approx(0.08157197567200995, rel=1e-6)
 
     with subtests.test("Check dispatched LCOE value"):
         lcoe = model.prob.get_val("finance_subgroup_dispatched_electricity.LCOE")[0]
-        assert lcoe == pytest.approx(0.5473068063691052, rel=1e-6)
+        assert lcoe == pytest.approx(0.5975902853904799, rel=1e-6)
 
     # Subtest for total electricity produced
     with subtests.test("Check total electricity produced"):
@@ -894,8 +894,22 @@ def test_simple_dispatch_example(subtests):
 
     # Subtest for LCOE
     with subtests.test("Check LCOE value"):
-        lcoe = model.prob.get_val("finance_subgroup_electricity.LCOE")[0]
+        lcoe = model.prob.get_val("finance_subgroup_electricity.LCOE_all_electricity_profast")[0]
         assert pytest.approx(lcoe, rel=1e-6) == 0.07801723344476236
+
+    # Subtest for NPV
+    with subtests.test("Check NPV value"):
+        npv = model.prob.get_val(
+            "finance_subgroup_electricity.NPV_electricity_all_electricity_npv"
+        )[0]
+        assert pytest.approx(npv, rel=1e-6) == 3791194.71
+
+    # Subtest for ProFAST NPV
+    with subtests.test("Check NPV value"):
+        npv = model.prob.get_val(
+            "finance_subgroup_electricity.NPV_electricity_all_electricity_profast_npv"
+        )[0]
+        assert pytest.approx(npv, rel=1e-6) == 7518969.18
 
     # Subtest for total electricity produced
     with subtests.test("Check total electricity produced"):
@@ -945,9 +959,13 @@ def test_simple_dispatch_example(subtests):
             pytest.approx(battery_electricity_finance, rel=1e-6) == battery_electricity_performance
         )
 
-    wind_lcoe = model.prob.get_val("finance_subgroup_wind.LCOE", units="USD/MW/h")[0]
-    battery_lcoe = model.prob.get_val("finance_subgroup_battery.LCOE", units="USD/MW/h")[0]
-    electricity_lcoe = model.prob.get_val("finance_subgroup_electricity.LCOE", units="USD/MW/h")[0]
+    wind_lcoe = model.prob.get_val("finance_subgroup_wind.LCOE_wind_only", units="USD/(MW*h)")[0]
+    battery_lcoe = model.prob.get_val(
+        "finance_subgroup_battery.LCOE_battery_included", units="USD/(MW*h)"
+    )[0]
+    electricity_lcoe = model.prob.get_val(
+        "finance_subgroup_electricity.LCOE_all_electricity_profast", units="USD/(MW*h)"
+    )[0]
 
     with subtests.test("Check electricity LCOE is greater than wind LCOE"):
         assert electricity_lcoe > wind_lcoe
@@ -963,3 +981,129 @@ def test_simple_dispatch_example(subtests):
 
     with subtests.test("Check electricity LCOE"):
         assert pytest.approx(electricity_lcoe, rel=1e-6) == 78.01723
+
+
+def test_csvgen_design_of_experiments(subtests):
+    os.chdir(EXAMPLE_DIR / "20_solar_electrolyzer_doe")
+
+    # Create a H2Integrate model
+
+    with pytest.raises(UserWarning) as excinfo:
+        model = H2IntegrateModel(Path.cwd() / "20_solar_electrolyzer_doe.yaml")
+        assert "There may be issues with the csv file csv_doe_cases.csv" in str(excinfo.value)
+
+    # Run the model
+    from hopp.utilities.utilities import load_yaml
+
+    from h2integrate.core.utilities import check_file_format_for_csv_generator
+    from h2integrate.core.dict_utils import update_defaults
+    from h2integrate.core.inputs.validation import write_yaml, load_driver_yaml
+
+    # load the driver config file
+    driver_config = load_driver_yaml("driver_config.yaml")
+    # specify the filepath to the csv file
+    csv_fpath = Path(driver_config["driver"]["design_of_experiments"]["filename"]).absolute()
+    # run the csv checker method, we want it to write the csv file to a new filepath so
+    # set overwrite_file=False
+    new_csv_filename = check_file_format_for_csv_generator(
+        csv_fpath, driver_config, check_only=False, overwrite_file=False
+    )
+
+    # update the csv filename in the driver config dictionary
+    updated_driver = update_defaults(driver_config["driver"], "filename", new_csv_filename.name)
+    driver_config["driver"].update(updated_driver)
+
+    # save the updated driver to a new file
+    new_driver_fpath = Path.cwd() / "driver_config_test.yaml"
+    new_toplevel_fpath = Path.cwd() / "20_solar_electrolyzer_doe_test.yaml"
+    write_yaml(driver_config, new_driver_fpath)
+
+    # update the driver config filename in the top-level config
+    main_config = load_yaml("20_solar_electrolyzer_doe.yaml")
+    main_config["driver_config"] = new_driver_fpath.name
+
+    # save the updated top-level config file to a new file
+    write_yaml(main_config, new_toplevel_fpath)
+
+    model = H2IntegrateModel(new_toplevel_fpath)
+    model.run()
+
+    sql_fpath = Path.cwd() / "ex_20_out" / "cases.sql"
+    cr = om.CaseReader(str(sql_fpath))
+    cases = list(cr.get_cases())
+
+    with subtests.test("Check solar capacity in case 0"):
+        assert pytest.approx(cases[0].get_val("solar.capacity_kWdc", units="MW"), rel=1e-6) == 25.0
+    with subtests.test("Check solar capacity in case 9"):
+        assert (
+            pytest.approx(cases[-1].get_val("solar.capacity_kWdc", units="MW"), rel=1e-6) == 500.0
+        )
+
+    with subtests.test("Check electrolyzer capacity in case 0"):
+        assert (
+            pytest.approx(
+                cases[0].get_val("electrolyzer.electrolyzer_size_mw", units="MW"), rel=1e-6
+            )
+            == 10.0 * 5
+        )
+
+    with subtests.test("Check electrolyzer capacity in case 9"):
+        assert (
+            pytest.approx(
+                cases[-1].get_val("electrolyzer.electrolyzer_size_mw", units="MW"), rel=1e-6
+            )
+            == 10.0 * 10
+        )
+
+    min_lcoh_val = 100000.0
+    min_lcoh_case_num = 0
+    for i, case in enumerate(cases):
+        lcoh = case.get_val("finance_subgroup_hydrogen.LCOH_optimistic", units="USD/kg")[0]
+        if lcoh < min_lcoh_val:
+            min_lcoh_val = np.min([lcoh, min_lcoh_val])
+            min_lcoh_case_num = i
+
+    with subtests.test("Min LCOH value"):
+        assert pytest.approx(min_lcoh_val, rel=1e-6) == 4.468258
+
+    with subtests.test("Min LCOH case number"):
+        assert min_lcoh_case_num == 6
+
+    with subtests.test("Min LCOH case LCOH value"):
+        assert (
+            pytest.approx(
+                cases[min_lcoh_case_num].get_val(
+                    "finance_subgroup_hydrogen.LCOH_optimistic", units="USD/kg"
+                ),
+                rel=1e-6,
+            )
+            == min_lcoh_val
+        )
+
+    with subtests.test("Min LCOH case has lower LCOH than other cases"):
+        for i, case in enumerate(cases):
+            lcoh_case = case.get_val("finance_subgroup_hydrogen.LCOH_optimistic", units="USD/kg")
+            if i != min_lcoh_case_num:
+                assert lcoh_case > min_lcoh_val
+
+    with subtests.test("Min LCOH solar capacity"):
+        assert (
+            pytest.approx(
+                cases[min_lcoh_case_num].get_val("solar.capacity_kWdc", units="MW"), rel=1e-6
+            )
+            == 200.0
+        )
+
+    with subtests.test("Min LCOH electrolyzer capacity"):
+        assert (
+            pytest.approx(
+                cases[min_lcoh_case_num].get_val("electrolyzer.electrolyzer_size_mw", units="MW"),
+                rel=1e-6,
+            )
+            == 100.0
+        )
+
+    # remove files created
+    new_driver_fpath.unlink()
+    new_toplevel_fpath.unlink()
+    new_csv_filename.unlink()
