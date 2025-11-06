@@ -17,14 +17,9 @@ parts:
   - file: user_guide/design_optimization_in_h2i
   - file: user_guide/design_of_experiments_in_h2i
   - file: user_guide/postprocessing_results
+  - file: user_guide/recording_and_loading_data
   - file: user_guide/how_to_interface_with_user_defined_model
   - file: user_guide/how_to_run_several_cases_in_sequence
-  - file: user_guide/specifying_finance_parameters
-    sections:
-    - file: user_guide/cost_years
-    - file: finance_models/finance_index
-      sections:
-      - file: finance_models/ProFastComp
 
 - caption: Technology Models
   chapters:
@@ -57,6 +52,18 @@ parts:
   chapters:
   - file: control/control_overview.md
 
+- caption: Finance Models
+  chapters:
+    - file: finance_models/financial_analyses
+    - file: user_guide/specifying_finance_parameters
+    - file: user_guide/cost_years
+    - file: finance_models/finance_index
+      sections:
+      - file: finance_models/ProFastBase
+      - file: finance_models/ProFastComp
+      - file: finance_models/ProFastNPV
+      - file: finance_models/numpy_financial_npv
+
 - caption: Examples
   chapters:
   - file: examples/01-green-hydrogen
@@ -75,6 +82,7 @@ parts:
   chapters:
     - file: misc_resources/FAQ
     - file: misc_resources/glossary
+    - file: misc_resources/defining_filepaths
 
 - caption: API Reference
   maxdepth: 3
