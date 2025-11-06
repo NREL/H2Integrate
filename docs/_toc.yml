@@ -80,6 +80,7 @@ parts:
   chapters:
     - file: misc_resources/FAQ
     - file: misc_resources/glossary
+    - file: misc_resources/defining_filepaths
 
 - caption: API Reference
   maxdepth: 3

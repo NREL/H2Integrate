@@ -11,12 +11,12 @@ import numpy_financial as npf
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import matplotlib.patches as patches
-from hopp.utilities import load_yaml
 from hopp.simulation import HoppInterface
 from hopp.tools.dispatch import plot_tools
 from hopp.simulation.technologies.resource.greet_data import GREETData
 from hopp.simulation.technologies.resource.cambium_data import CambiumData
 
+from h2integrate.core.utilities import load_yaml
 from h2integrate.tools.h2integrate_sim_file_utils import load_dill_pickle
 
 from .finance import adjust_orbit_costs
