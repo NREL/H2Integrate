@@ -1,2 +1,2 @@
 rm -rf _build
-jupyter-book build -W --keep-going .
+jupyter-book build --keep-going .
