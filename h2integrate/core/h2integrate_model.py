@@ -1,11 +1,10 @@
 import importlib.util
-from pathlib import Path
 
-import yaml
 import numpy as np
 import openmdao.api as om
+import matplotlib.pyplot as plt
 
-from h2integrate.core.utilities import create_xdsm_from_config
+from h2integrate.core.utilities import get_path, find_file, load_yaml, create_xdsm_from_config
 from h2integrate.finances.finances import AdjustedCapexOpexComp
 from h2integrate.core.resource_summer import ElectricitySumComp
 from h2integrate.core.supported_models import supported_models, electricity_producing_techs
@@ -20,9 +19,9 @@ except ImportError:
 
 
 class H2IntegrateModel:
-    def __init__(self, config_file):
+    def __init__(self, config_input):
         # read in config file; it's a yaml dict that looks like this:
-        self.load_config(config_file)
+        self.load_config(config_input)
 
         # load in supported models
         self.supported_models = supported_models.copy()
@@ -63,20 +62,122 @@ class H2IntegrateModel:
         # might be an analysis or optimization
         self.create_driver_model()
 
-    def load_config(self, config_file):
-        config_path = Path(config_file)
-        with config_path.open() as file:
-            config = yaml.safe_load(file)
+    def _load_component_config(self, config_key, config_value, config_path, validator_func):
+        """Helper method to load and validate a component configuration.
+
+        Args:
+            config_key (str): Key name for the configuration (e.g., "driver_config")
+            config_value (dict | str): Configuration value from main config
+            config_path (Path | None): Path to main config file (None if dict)
+            validator_func (callable): Validation function to apply
+
+        Returns:
+            tuple: (validated_config, config_file_path, parent_path)
+                - validated_config: Validated configuration dictionary
+                - config_file_path: Path to config file (None if dict)
+                - parent_path: Parent directory of config file (None if dict)
+        """
+        if isinstance(config_value, dict):
+            # Config provided as embedded dictionary
+            return validator_func(config_value), None, None
+        else:
+            # Config provided as filepath - resolve location
+            if config_path is None:
+                file_path = get_path(config_value)
+            else:
+                file_path = find_file(config_value, config_path.parent)
+
+            # Store parent directory for resolving custom model paths later
+            parent_path = file_path.parent
+            return validator_func(file_path), file_path, parent_path
+
+    def load_config(self, config_input):
+        """Load and validate configuration files for the H2I model.
+
+        This method loads the main configuration and the three component configuration files
+        (driver, technology, and plant configurations). Each configuration can be provided
+        either as a dictionary object or as a filepath. When filepaths are provided,
+        the method resolves them using multiple search strategies.
+
+        Args:
+            config_input (dict | str | Path): Main configuration containing references to
+                driver, technology, and plant configurations. Can be:
+                - A dictionary containing the configuration data directly
+                - A string or Path object pointing to a YAML file containing the configuration
+
+        Behavior:
+            - If `config_input` is a dict: Uses it directly as the main configuration
+            - If `config_input` is a path: Uses `get_path()` to resolve and load the YAML file
+              from multiple search locations (absolute path, relative to CWD, relative to
+              H2Integrate package)
+
+            For each component config (driver_config, technology_config, plant_config):
+            - If the config value is a dict: Validates it directly using the appropriate
+              validation function (`load_driver_yaml`, `load_tech_yaml`, `load_plant_yaml`)
+            - If the config value is a path string:
+                - When main config was loaded from file: Uses `find_file()` to search
+                  relative to the main config file's directory first, then falls back
+                  to other search locations (CWD, H2Integrate package, glob patterns)
+                - When main config was provided as dict: Uses `get_path()` with standard
+                  search strategy (absolute, relative to CWD, relative to H2Integrate package)
+
+        Sets:
+            self.name (str): Name of the system from main config
+            self.system_summary (str): Summary description from main config
+            self.driver_config (dict): Validated driver configuration
+            self.technology_config (dict): Validated technology configuration
+            self.plant_config (dict): Validated plant configuration
+            self.driver_config_path (Path | None): Path to driver config file (None if dict)
+            self.tech_config_path (Path | None): Path to technology config file (None if dict)
+            self.plant_config_path (Path | None): Path to plant config file (None if dict)
+            self.tech_parent_path (Path | None): Parent directory of technology config file
+            self.plant_parent_path (Path | None): Parent directory of plant config file
+
+        Note:
+            The parent path attributes (tech_parent_path, plant_parent_path) are used later
+            for resolving relative paths to custom models and other referenced files within
+            the technology and plant configurations.
+
+        Example:
+            >>> # Using filepaths
+            >>> model = H2IntegrateModel("main_config.yaml")
+
+            >>> # Using mixed dict and filepaths
+            >>> config = {
+            ...     "name": "my_system",
+            ...     "driver_config": "driver.yaml",
+            ...     "technology_config": {"technologies": {...}},
+            ...     "plant_config": "plant.yaml",
+            ... }
+            >>> model = H2IntegrateModel(config)
+        """
+        # Load main configuration
+        if isinstance(config_input, dict):
+            config = config_input
+            config_path = None
+        else:
+            config_path = get_path(config_input)
+            config = load_yaml(config_path)
 
         self.name = config.get("name")
         self.system_summary = config.get("system_summary")
 
-        # Load each config file as yaml and save as dict on this object
-        self.driver_config = load_driver_yaml(config_path.parent / config.get("driver_config"))
-        self.tech_config_path = config_path.parent / config.get("technology_config")
-        self.technology_config = load_tech_yaml(self.tech_config_path)
-        self.plant_config = load_plant_yaml(config_path.parent / config.get("plant_config"))
-        self.plant_config_path = config_path.parent / config.get("plant_config")
+        # Load and validate each component configuration using the helper method
+        self.driver_config, self.driver_config_path, _ = self._load_component_config(
+            "driver_config", config.get("driver_config"), config_path, load_driver_yaml
+        )
+
+        self.technology_config, self.tech_config_path, self.tech_parent_path = (
+            self._load_component_config(
+                "technology_config", config.get("technology_config"), config_path, load_tech_yaml
+            )
+        )
+
+        self.plant_config, self.plant_config_path, self.plant_parent_path = (
+            self._load_component_config(
+                "plant_config", config.get("plant_config"), config_path, load_plant_yaml
+            )
+        )
 
     def create_custom_models(self, model_config, config_parent_path, model_types, prefix=""):
         """This method loads custom models from the specified directory and adds them to the
@@ -109,7 +210,10 @@ class H2IntegrateModel:
                             )
 
                         # Resolve the full path of the model location
-                        model_path = config_parent_path / model_location
+                        if config_parent_path is not None:
+                            model_path = find_file(model_location, config_parent_path)
+                        else:
+                            model_path = find_file(model_location)
 
                         if not model_path.exists():
                             raise FileNotFoundError(
@@ -147,7 +251,7 @@ class H2IntegrateModel:
         # check for custom technology models
         self.create_custom_models(
             self.technology_config["technologies"],
-            self.tech_config_path.parent,
+            self.tech_parent_path,
             ["performance_model", "cost_model", "finance_model"],
         )
 
@@ -159,7 +263,7 @@ class H2IntegrateModel:
             if "model_inputs" in finance_groups:
                 self.create_custom_models(
                     self.plant_config,
-                    self.plant_config_path.parent,
+                    self.plant_parent_path,
                     ["finance_groups"],
                     prefix="finance_",
                 )
@@ -170,7 +274,7 @@ class H2IntegrateModel:
                 finance_groups_config = {"finance_groups": finance_groups}
                 self.create_custom_models(
                     finance_groups_config,
-                    self.plant_config_path.parent,
+                    self.plant_parent_path,
                     finance_model_names,
                     prefix="finance_",
                 )
@@ -272,8 +376,8 @@ class H2IntegrateModel:
                 individual_tech_config.get("finance_model", {}).get("model")
                 if (
                     perf_model
-                    and perf_model == cost_model
-                    and perf_model in combined_performance_and_cost_models
+                    and (perf_model == cost_model)
+                    and (perf_model in combined_performance_and_cost_models)
                 ):
                     # Catch dispatch rules for systems that have the same performance & cost models
                     if "dispatch_rule_set" in individual_tech_config:
@@ -294,10 +398,10 @@ class H2IntegrateModel:
                         plant_config=self.plant_config,
                         tech_config=individual_tech_config,
                     )
-                    tech_group.add_subsystem(tech_name, comp, promotes=["*"])
-                    self.performance_models.append(comp)
-                    self.cost_models.append(comp)
-                    self.finance_models.append(comp)
+                    om_model_object = tech_group.add_subsystem(tech_name, comp, promotes=["*"])
+                    self.performance_models.append(om_model_object)
+                    self.cost_models.append(om_model_object)
+                    self.finance_models.append(om_model_object)
 
                     continue
 
@@ -312,14 +416,14 @@ class H2IntegrateModel:
 
                 for model_type in model_types:
                     if model_type in individual_tech_config:
-                        model_object = self._process_model(
+                        om_model_object = self._process_model(
                             model_type, individual_tech_config, tech_group
                         )
                         if "control_strategy" in model_type:
                             plural_model_type_name = "control_strategies"
                         else:
                             plural_model_type_name = model_type + "s"
-                        getattr(self, plural_model_type_name).append(model_object)
+                        getattr(self, plural_model_type_name).append(om_model_object)
                     elif model_type == "performance_model":
                         raise KeyError("Model definition requires 'performance_model'.")
 
@@ -357,7 +461,7 @@ class H2IntegrateModel:
         # Generalized function to process model definitions
         model_name = individual_tech_config[model_type]["model"]
         model_object = self.supported_models[model_name]
-        tech_group.add_subsystem(
+        om_model_object = tech_group.add_subsystem(
             model_name,
             model_object(
                 driver_config=self.driver_config,
@@ -366,7 +470,7 @@ class H2IntegrateModel:
             ),
             promotes=["*"],
         )
-        return model_object
+        return om_model_object
 
     def create_finance_model(self):
         """
@@ -1033,14 +1137,23 @@ class H2IntegrateModel:
 
         self.prob.run_driver()
 
-    def post_process(self):
+    def post_process(self, show_plots=False):
         """
         Post-process the results of the OpenMDAO model.
 
-        Right now, this just means printing the inputs and outputs to all systems in the model.
+        Right now, this means printing the inputs and outputs to all systems in the model.
         We currently exclude any variables with "resource_data" in the name, since those
         are large dictionary variables that are not correctly formatted when printing.
+
+        Also, if `show_plots` is set to True, then any performance models with post-processing
+        plots available will be run and shown.
         """
 
         self.prob.model.list_inputs(units=True, print_mean=True, excludes=["*resource_data"])
         self.prob.model.list_outputs(units=True, print_mean=True, excludes=["*resource_data"])
+
+        for model in self.performance_models:
+            if hasattr(model, "post_process") and callable(model.post_process):
+                model.post_process(show_plots=show_plots)
+                if show_plots:
+                    plt.show()

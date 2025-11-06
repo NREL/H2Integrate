@@ -8,8 +8,8 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from hopp.utilities import load_yaml
 
+from h2integrate.core.utilities import load_yaml
 from h2integrate.simulation.technologies.iron.load_top_down_coeffs import load_top_down_coeffs
 
 

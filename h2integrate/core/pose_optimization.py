@@ -9,6 +9,8 @@ from pathlib import Path
 
 import openmdao.api as om
 
+from h2integrate.core.utilities import check_file_format_for_csv_generator
+
 
 class PoseOptimization:
     """
@@ -163,7 +165,7 @@ class PoseOptimization:
 
         folder_output = self.config["general"]["folder_output"]
 
-        if self.config["driver"]["optimization"]["flag"]:
+        if self.config["driver"].get("optimization", {}).get("flag", False):
             opt_options = self.config["driver"]["optimization"]
             step_size = self._get_step_size()
 
@@ -327,6 +329,20 @@ class PoseOptimization:
                         criterion=doe_options["criterion"],
                         seed=doe_options["seed"],
                     )
+                elif doe_options["generator"].lower() == "csvgen":
+                    valid_file = check_file_format_for_csv_generator(
+                        doe_options["filename"], self.config, check_only=True
+                    )
+                    if not valid_file:
+                        raise UserWarning(
+                            f"There may be issues with the csv file {doe_options['filename']}, "
+                            f"which may cause errors within OpenMDAO. "
+                            "To check this csv file or create a new one, run the function "
+                            "h2integrate.core.utilities.check_file_format_for_csv_generator()."
+                        )
+                    generator = om.CSVGenerator(
+                        filename=doe_options["filename"],
+                    )
                 else:
                     raise Exception(
                         "The generator type {} is unsupported.".format(doe_options["generator"])
@@ -344,7 +360,8 @@ class PoseOptimization:
                     ]
 
                 # options
-                opt_prob.driver.options["run_parallel"] = doe_options["run_parallel"]
+                if "run_parallel" in doe_options:
+                    opt_prob.driver.options["run_parallel"] = doe_options["run_parallel"]
 
         else:
             warnings.warn(
