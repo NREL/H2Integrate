@@ -39,13 +39,13 @@ recorder:
 ```
 
 - **overwrite_recorder**: If False or not specified, H2I will make a new filename for the recorder that doesn't yet exist in the `outputs` folder. If `cases.sql` exists, it will make a new file named `cases0.sql`. If `cases.sql` and `cases0.sql` exist, it will make a new file named `cases1.sql`, etc. If set to True, it will overwrite an existing `cases.sql` file from previous runs.
-- **recorder_attachment**: Must be `model` or `driver`, defaults to `model`. We recommend attaching the recorder to the driver if running an optimization or design of experiments in parallel.
+- **recorder_attachment**: Must be `model` or `driver`, defaults to `model`. We recommend attaching the recorder to the driver if running an optimization or design of experiments in parallel as model-level recording cannot be performed in parallel due to limitations in OpenMDAO.
 
 (attaching-a-recorder-to-the-driver)=
 ### Attaching a recorder to the driver
-It is recommended to attach the recorder to the driver if running an optimization or design of experiments in parallel, but can be beneficial if running a design of experiments or optimization in serial as well. Further documentation on driver recording can be found [here](https://openmdao.org/newdocs/versions/latest/features/recording/driver_recording.html).
-
-
+We recommend attaching the recorder to the driver if running an optimization or design of experiments in parallel as model-level recording cannot be performed in parallel due to limitations in OpenMDAO.
+It can be beneficial if running a design of experiments or optimization in serial as well.
+Further documentation on driver recording can be found [here](https://openmdao.org/newdocs/versions/latest/features/recording/driver_recording.html).
 
 ```yaml
 name: "driver_config"
