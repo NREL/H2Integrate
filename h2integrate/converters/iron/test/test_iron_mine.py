@@ -86,7 +86,7 @@ def plant_config():
 
 @fixture
 def driver_config():
-    driver_config = load_driver_yaml(EXAMPLE_DIR / "20_iron_mn_to_il" / "driver_config.yaml")
+    driver_config = load_driver_yaml(EXAMPLE_DIR / "21_iron_mn_to_il" / "driver_config.yaml")
     return driver_config
 
 

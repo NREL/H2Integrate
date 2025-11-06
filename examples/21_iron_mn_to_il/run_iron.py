@@ -5,8 +5,8 @@ from h2integrate.core.h2integrate_model import H2IntegrateModel
 
 
 # Create H2Integrate models - one with iron_wrapper, one with modular iron components
-model = H2IntegrateModel("20_iron.yaml")
-model_modular = H2IntegrateModel("20_iron_modular.yaml")
+model = H2IntegrateModel("21_iron.yaml")
+model_modular = H2IntegrateModel("21_iron_modular.yaml")
 
 # Load cases
 case_file = Path("test_inputs.csv")
