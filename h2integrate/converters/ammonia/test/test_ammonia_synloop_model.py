@@ -14,6 +14,9 @@ def make_synloop_config():
                 "catalyst_replacement_interval": 3,
             },
             "performance_parameters": {
+                "sizing": {
+                    "size_mode": "normal",
+                },
                 "capacity_factor": 0.9,
                 "energy_demand": 0.530645243,
                 "heat_output": 0.8299956,
@@ -34,7 +37,7 @@ def make_synloop_config():
     }
 
 
-def test_ammonia_synloop_limiting_cases():
+def test_ammonia_synloop_limiting_cases(subtests):
     config = make_synloop_config()
     plant_info = {
         "simulation": {
@@ -45,17 +48,17 @@ def test_ammonia_synloop_limiting_cases():
 
     # Each test is a single array of 4 hours, each with a different limiting case
     # Case 1: N2 limiting
-    cap_mult = 5000
+    cap_mult = 10.0e3
     n2 = np.array([2.0, 5.0, 5.0, 5.0]) * cap_mult  # Only first entry is N2 limiting
     h2 = np.array([2.0, 1.0, 2.0, 2.0]) * cap_mult  # Second entry is H2 limiting
-    elec = np.array([0.006, 0.006, 0.003, 0.006]) * cap_mult  # Third entry is electricity limiting
+    elec = np.array([0.006, 0.006, 0.001, 0.006]) * cap_mult  # Third entry is electricity limiting
     # Fourth entry is capacity-limited
 
     expected_nh3 = np.array(
         [
             21520.21334466,  # N2 limiting
             49840.21632252,  # H2 limiting
-            28267.47285097,  # Electricity limiting
+            18844.98190065,  # Electricity limiting
             52777.6,  # Capacity limiting
         ]
     )
@@ -71,14 +74,23 @@ def test_ammonia_synloop_limiting_cases():
     nh3 = prob.get_val("synloop.ammonia_out")
     total = prob.get_val("synloop.total_ammonia_produced")
 
-    # Check NH3 output
-    assert np.allclose(nh3, expected_nh3, rtol=1e-6)
-    assert np.allclose(total, np.sum(expected_nh3), rtol=1e-6)
+    # Check individual NH3 output values
+    with subtests.test("N2 limiting"):
+        assert pytest.approx(nh3[0], rel=1e-6) == 21520.21334466
+        assert pytest.approx(prob.get_val("synloop.limiting_input")[0]) == 0
 
-    # Check limiting factors
-    # N2 limiting: index 0, H2 limiting: index 1, Electricity limiting: index 2
-    # Capacity limiting: index 3
-    assert pytest.approx(prob.get_val("synloop.limiting_input")[0]) == 0
-    assert pytest.approx(prob.get_val("synloop.limiting_input")[1]) == 1
-    assert pytest.approx(prob.get_val("synloop.limiting_input")[2]) == 2
-    assert pytest.approx(prob.get_val("synloop.limiting_input")[3]) == 3
+    with subtests.test("H2 limiting"):
+        assert pytest.approx(nh3[1], rel=1e-6) == 49840.21632252
+        assert pytest.approx(prob.get_val("synloop.limiting_input")[1]) == 1
+
+    with subtests.test("Electricity limiting"):
+        assert pytest.approx(nh3[2], rel=1e-6) == 18844.98190065
+        assert pytest.approx(prob.get_val("synloop.limiting_input")[2]) == 2
+
+    with subtests.test("Capacity limiting"):
+        assert pytest.approx(nh3[3], rel=1e-6) == 52777.6
+        assert pytest.approx(prob.get_val("synloop.limiting_input")[3]) == 3
+
+    # Check total NH3 output
+    with subtests.test("Total ammonia"):
+        assert np.allclose(total, np.sum(expected_nh3), rtol=1e-6)
