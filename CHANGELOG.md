@@ -20,6 +20,7 @@
 - Added `ProFastNPV`, a finance model using ProFAST to calculate NPV of the commodity
 - Moved `compute()` from `ProFastBase` to `ProFastLCO`.
 - Added `NumpyFinancialNPV`, a finance model that uses NumPy Financial npv to calculate the npv from the cash flows
+- Added `load_yaml()` function and flexibility to input a config dictionary to H2IntegrateModel rather than a filepath
 
 ## 0.4.0 [October 1, 2025]
 
