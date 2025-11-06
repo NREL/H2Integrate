@@ -37,8 +37,11 @@ class HydrogenStorageBaseCostModelConfig(BaseConfig):
         facility_om (float, optional):
     """
 
-    max_capacity: float = field()
-    max_charge_rate: float = field()
+    max_capacity: float | None = field(default=None)
+    max_charge_rate: float | None = field(default=None)
+    sizing_mode: str = field(
+        default="set", converter=(str.strip, str.lower), validator=contains(["auto", "set"])
+    )
 
     commodity_name: str = field(default="hydrogen")
     commodity_units: str = field(default="kg/h", validator=contains(["kg/h", "g/h", "t/h"]))
@@ -50,6 +53,32 @@ class HydrogenStorageBaseCostModelConfig(BaseConfig):
     licensing_permits: float = field(default=0.001, validator=range_val(0, 1))
     compressor_om: float = field(default=0.04, validator=range_val(0, 1))
     facility_om: float = field(default=0.01, validator=range_val(0, 1))
+
+    def __attrs_post_init__(self):
+        undefined_capacities = self.max_capacity is None or self.max_charge_rate is None
+        if undefined_capacities and self.sizing_mode == "set":
+            msg = (
+                "Missing storage attribute(s): max_capacity and/or max_charge_rate, "
+                "for the cost_parameters. These attributes are required if `sizing_mode` "
+                "is 'set'. If storage will be auto-sized by the performance model, set the "
+                "`sizing_mode` cost parameter to 'auto'."
+            )
+            raise ValueError(msg)
+        if not undefined_capacities and self.sizing_mode == "auto":
+            msg = (
+                "Extra storage attribute(s) found: max_capacity and/or max_charge_rate, "
+                "for the cost_parameters. These attributes should not be defined if `sizing_mode` "
+                "is 'auto'. If storage will be auto-sized by the performance model, set the "
+                "`sizing_mode` cost parameter to 'auto' and do not include max_capacity or "
+                "max_charge_rate and a cost parameter. Set `sizing_mode` to 'set' if the storage "
+                "capacity is fixed."
+            )
+            raise ValueError(msg)
+
+        if undefined_capacities and self.sizing_mode == "auto":
+            # set to zero for initialization in setup().
+            self.max_capacity = 0.0
+            self.max_charge_rate = 0.0
 
     def make_model_dict(self):
         params = self.as_dict()

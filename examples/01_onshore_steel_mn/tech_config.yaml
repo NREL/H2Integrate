@@ -51,8 +51,11 @@ technologies:
         commodity_name: "hydrogen"
         commodity_units: "kg/h"
       cost_parameters:
-        max_capacity: 100.0 #unused because using auto-sizing model, only used for initialization purposes
-        max_charge_rate: 1000.0 #unused because using auto-sizing model, only used for initialization purposes
+        # since the storage is being auto-sized by the performance model,
+        # we set the sizing mode to 'auto' rather than defining the capacities
+        # in the input file
+        sizing_mode: "auto" # set as "auto" so storage capacity doesnt have to be defined
+
 
   steel:
     performance_model:
