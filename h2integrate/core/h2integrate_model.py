@@ -1162,24 +1162,11 @@ class H2IntegrateModel:
                     plt.show()
 
     def print_io_means(self, includes=None, excludes=None, show_units=True):
-        """Print a hierarchical summary of inputs and outputs showing only mean values.
+        """Print hierarchical explicit/implicit output means using Rich tables.
 
-        Output format emulates OpenMDAO's hierarchical listing but replaces the value column
-        with our own representation (norm for vectors, bracketed value for scalars) and adds
-        a "mean" column. We suppress OpenMDAO's internal printing by using ``out_stream=None``
-        and reformat the returned metadata.
-
-        Columns:
-            varname | val | units | prom_name | mean
-
-        Parameters
-        ----------
-        includes : None, str, or iter of str
-            Glob patterns of variables to include.
-        excludes : None, str, or iter of str
-            Glob patterns of variables to exclude.
-        show_units : bool
-            If True, include units column in the summary.
+        The printed format matches prior custom formatting but leverages Rich for
+        cleaner code. Group (non-leaf) rows show only the indented name; variable
+        rows show: Variable, Mean, Units, Shape, Promoted name.
         """
 
         def _gather_outputs(explicit=True, implicit=False):
@@ -1199,192 +1186,92 @@ class H2IntegrateModel:
         explicit_meta = _gather_outputs(explicit=True, implicit=False)
         implicit_meta = _gather_outputs(explicit=False, implicit=True)
 
-        def _format_mean(val):
+        def _mean(val):
             if isinstance(val, np.ndarray):
-                if val.size == 0:
-                    return "nan"
-                return f"{np.mean(val)}"
+                return "nan" if val.size == 0 else f"{np.mean(val)}"
             if isinstance(val, (int, float, np.number)):
                 return f"{val}"
-            # non-numeric
             return "n/a"
 
-        def _build_tree(meta_list):
-            tree = {}
+        from rich import box
+        from rich.table import Table
+        from rich.console import Console
+
+        console = Console()
+
+        def _emit_section(title, meta_list):
+            if not meta_list:
+                return
+            console.print(f"\n{len(meta_list)} {title.lower()} outputs:")
+            table = Table(show_header=True, header_style="bold", box=box.MINIMAL, pad_edge=False)
+            table.add_column("Variable", overflow="fold")
+            table.add_column("Mean")
+            if show_units:
+                table.add_column("Units")
+            table.add_column("Shape")
+            table.add_column("Promoted name", overflow="fold")
+
+            emitted_groups = set()
             for abs_name, meta in meta_list:
                 parts = abs_name.split(".")
-                current = tree
-                for p in parts[:-1]:
-                    current = current.setdefault(p, {})
-                # store variable metadata at leaf under special key
-                leaf = parts[-1]
-                current.setdefault("_vars", {})[leaf] = meta
-            return tree
-
-        def _max_widths(tree, prefix=""):
-            # Column headers: Variable, Mean, Units, Shape, Promoted name
-            widths = {
-                "varname": len("Variable"),
-                "mean": len("Mean"),
-                "units": len("Units"),
-                "shape": len("Shape"),
-                "prom_name": len("Promoted name"),
-            }
-
-            def traverse(node, indent_level=0, path_prefix=""):
-                # variables
-                for var, meta in node.get("_vars", {}).items():
-                    name_len = indent_level * 2 + len(var)
-                    mean_str = _format_mean(meta.get("val"))
-                    raw_units = meta.get("units")
-                    # Special handling for cost_year style variables
-                    if var == "cost_year":
-                        units_str = "n/a"
-                    else:
-                        units_str = str(raw_units) if raw_units is not None else "n/a"
-                    prom_name_len = len(meta.get("prom_name", ""))
-                    shape_meta = meta.get("shape", "")
-                    # Assume 1-D arrays; print first dimension only, else empty
-                    if isinstance(shape_meta, (tuple, list)) and len(shape_meta) > 0:
-                        shape_str = str(shape_meta[0])
-                    else:
-                        shape_str = str(shape_meta) if shape_meta not in (None, "", ()) else ""
-                    widths["varname"] = max(widths["varname"], name_len)
-                    widths["units"] = max(widths["units"], len(units_str))
-                    widths["prom_name"] = max(widths["prom_name"], prom_name_len)
-                    widths["mean"] = max(widths["mean"], len(mean_str))
-                    widths["shape"] = max(widths["shape"], len(shape_str))
-                # subgroups
-                for key, sub in node.items():
-                    if key == "_vars":
-                        continue
-                    name_len = indent_level * 2 + len(key)
-                    widths["varname"] = max(widths["varname"], name_len)
-                    traverse(sub, indent_level + 1, path_prefix + key + ".")
-
-            traverse(tree)
-            return widths
-
-        def _print_tree(tree, widths, indent_level=0):
-            indent = "  " * indent_level
-            for key, sub in tree.items():
-                if key == "_vars":
-                    continue
-                print(f"{indent}{key}")
-                _print_tree(sub, widths, indent_level + 1)
-                # after printing subgroups, print variables at this level
-                if "_vars" in sub:
-                    for var, meta in sub["_vars"].items():
-                        var_indent = "  " * (indent_level + 1)
-                        varname_display = f"{var_indent}{var}".ljust(widths["varname"])
-                        units_val = meta.get("units")
-                        if var == "cost_year":
-                            units_display = "n/a".ljust(widths["units"]) if show_units else ""
-                        else:
-                            units_display = (
-                                (str(units_val) if units_val is not None else "n/a").ljust(
-                                    widths["units"]
-                                )
-                                if show_units
-                                else ""
-                            )
-                        prom_display = meta.get("prom_name", "").ljust(widths["prom_name"])
-                        mean_display = _format_mean(meta.get("val")).ljust(widths["mean"])
-                        shape_meta = meta.get("shape", "")
-                        if isinstance(shape_meta, (tuple, list)) and len(shape_meta) > 0:
-                            shape_display = str(shape_meta[0]).ljust(widths["shape"])
-                        else:
-                            shape_display = (
-                                str(shape_meta) if shape_meta not in (None, "", ()) else ""
-                            ).ljust(widths["shape"])
+                # emit group rows
+                for depth in range(len(parts) - 1):
+                    grp_path = ".".join(parts[: depth + 1])
+                    if grp_path not in emitted_groups:
+                        emitted_groups.add(grp_path)
+                        indent = "  " * depth
+                        grp_name = parts[depth]
                         if show_units:
-                            print(
-                                f"{varname_display}  {mean_display}  {units_display}"
-                                f"  {shape_display}  {prom_display}"
-                            )
+                            table.add_row(f"{indent}{grp_name}", "", "", "", "")
                         else:
-                            print(
-                                f"{varname_display}  {mean_display}  "
-                                f"{shape_display}  {prom_display}"
-                            )
-            # variables directly under this node
-            for var, meta in tree.get("_vars", {}).items():
-                var_indent = "  " * indent_level
-                varname_display = f"{var_indent}{var}".ljust(widths["varname"])
-                units_val = meta.get("units")
-                if var == "cost_year":
-                    units_display = "n/a".ljust(widths["units"]) if show_units else ""
-                else:
-                    units_display = (
-                        (str(units_val) if units_val is not None else "n/a").ljust(widths["units"])
-                        if show_units
-                        else ""
-                    )
-                prom_display = meta.get("prom_name", "").ljust(widths["prom_name"])
-                mean_display = _format_mean(meta.get("val")).ljust(widths["mean"])
+                            table.add_row(f"{indent}{grp_name}", "", "", "")
+                var = parts[-1]
+                indent = "  " * (len(parts) - 1)
+                mean_val = _mean(meta.get("val"))
+                units_val = (
+                    "n/a"
+                    if (var == "cost_year" or meta.get("units") is None)
+                    else str(meta.get("units"))
+                    if show_units
+                    else ""
+                )
                 shape_meta = meta.get("shape", "")
-                if isinstance(shape_meta, (tuple, list)) and len(shape_meta) > 0:
-                    shape_display = str(shape_meta[0]).ljust(widths["shape"])
+                if var == "cost_year":
+                    shape_str = "n/a"
+                elif isinstance(shape_meta, (tuple, list)) and len(shape_meta) > 0:
+                    shape_str = str(shape_meta[0])
                 else:
-                    shape_display = (
-                        str(shape_meta) if shape_meta not in (None, "", ()) else ""
-                    ).ljust(widths["shape"])
+                    shape_str = "" if shape_meta in (None, "", ()) else str(shape_meta)
+                promoted = meta.get("prom_name", "")
                 if show_units:
-                    print(
-                        f"{varname_display}  {mean_display}  {units_display}  "
-                        f"{shape_display}  {prom_display}"
-                    )
+                    table.add_row(f"{indent}{var}", mean_val, units_val, shape_str, promoted)
                 else:
-                    print(f"{varname_display}  {mean_display}  {shape_display}  {prom_display}")
+                    table.add_row(f"{indent}{var}", mean_val, shape_str, promoted)
+            console.print(table)
 
-        def _print_section(title, meta_list):
-            count = len(meta_list)
-            if count == 0:
-                return  # Skip empty sections entirely
-            print(f"\n{count} {title.lower()} outputs:")
-            tree = _build_tree(meta_list)
-            widths = _max_widths(tree)
-            # header
-            if show_units:
-                header = (
-                    f"{'Variable'.ljust(widths['varname'])}  "
-                    f"{'Mean'.ljust(widths['mean'])}  "
-                    f"{'Units'.ljust(widths['units'])}  "
-                    f"{'Shape'.ljust(widths['shape'])}  "
-                    f"{'Promoted name'.ljust(widths['prom_name'])}"
-                )
-            else:
-                header = (
-                    f"{'Variable'.ljust(widths['varname'])}  "
-                    f"{'Mean'.ljust(widths['mean'])}  "
-                    f"{'Shape'.ljust(widths['shape'])}  "
-                    f"{'Promoted name'.ljust(widths['prom_name'])}"
-                )
-            print(header)
-            print("-" * len(header))
-            _print_tree(tree, widths)
-
-        _print_section("Explicit", explicit_meta)
-        _print_section("Implicit", implicit_meta)
+        _emit_section("Explicit", explicit_meta)
+        _emit_section("Implicit", implicit_meta)
 
         # structured return
         def _structured(meta_list):
             return {
                 name: {
-                    "mean": _format_mean(meta.get("val")),
+                    "mean": _mean(meta.get("val")),
                     **(
                         {
                             "units": (
                                 "n/a"
-                                if name.split(".")[-1] == "cost_year"
-                                else (meta.get("units") if meta.get("units") is not None else "n/a")
+                                if name.split(".")[-1] == "cost_year" or meta.get("units") is None
+                                else meta.get("units")
                             )
                         }
                         if show_units
                         else {}
                     ),
                     "shape": (
-                        meta.get("shape")[0]
+                        "n/a"
+                        if name.split(".")[-1] == "cost_year"
+                        else meta.get("shape")[0]
                         if isinstance(meta.get("shape"), (tuple, list))
                         and len(meta.get("shape")) > 0
                         else ""
