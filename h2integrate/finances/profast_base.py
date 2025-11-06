@@ -597,7 +597,15 @@ class ProFastBase(om.ExplicitComponent):
             ProFAST: A fully configured ProFAST financial model object ready for execution.
         """
         # determine commodity units
-        mass_commodities = ["hydrogen", "ammonia", "co2", "nitrogen", "methanol"]
+        mass_commodities = [
+            "hydrogen",
+            "ammonia",
+            "co2",
+            "nitrogen",
+            "methanol",
+            "iron_ore",
+            "pig_iron",
+        ]
 
         # create years of operation list
         years_of_operation = create_years_of_operation(
