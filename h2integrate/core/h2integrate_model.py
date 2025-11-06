@@ -1162,11 +1162,10 @@ class H2IntegrateModel:
                     plt.show()
 
     def print_io_means(self, includes=None, excludes=None, show_units=True):
-        """Print hierarchical explicit/implicit output means using Rich tables.
+        """Print hierarchical inputs plus explicit/implicit outputs (means only) using Rich.
 
-        The printed format matches prior custom formatting but leverages Rich for
-        cleaner code. Group (non-leaf) rows show only the indented name; variable
-        rows show: Variable, Mean, Units, Shape, Promoted name.
+        Order of rows preserves OpenMDAO's original ordering from list_inputs/list_outputs.
+        Group rows are emitted lazily the first time a variable within that path appears.
         """
 
         def _gather_outputs(explicit=True, implicit=False):
@@ -1186,6 +1185,18 @@ class H2IntegrateModel:
         explicit_meta = _gather_outputs(explicit=True, implicit=False)
         implicit_meta = _gather_outputs(explicit=False, implicit=True)
 
+        # Gather inputs (no explicit/implicit split in OpenMDAO API)
+        input_meta = self.prob.model.list_inputs(
+            val=True,
+            prom_name=True,
+            units=show_units,
+            shape=True,
+            includes=includes,
+            excludes=excludes,
+            out_stream=None,
+            return_format="list",
+        )
+
         def _mean(val):
             if isinstance(val, np.ndarray):
                 return "nan" if val.size == 0 else f"{np.mean(val)}"
@@ -1199,10 +1210,10 @@ class H2IntegrateModel:
 
         console = Console()
 
-        def _emit_section(title, meta_list):
+        def _emit_section(title, meta_list, kind_label="outputs"):
             if not meta_list:
                 return
-            console.print(f"\n{len(meta_list)} {title.lower()} outputs:")
+            console.print(f"\n{len(meta_list)} {title.lower()} {kind_label}:")
             table = Table(show_header=True, header_style="bold", box=box.MINIMAL, pad_edge=False)
             table.add_column("Variable", overflow="fold")
             table.add_column("Mean")
@@ -1249,8 +1260,10 @@ class H2IntegrateModel:
                     table.add_row(f"{indent}{var}", mean_val, shape_str, promoted)
             console.print(table)
 
-        _emit_section("Explicit", explicit_meta)
-        _emit_section("Implicit", implicit_meta)
+        # Emit sections (inside function scope)
+        _emit_section("Explicit", input_meta, kind_label="inputs")
+        _emit_section("Explicit", explicit_meta, kind_label="outputs")
+        _emit_section("Implicit", implicit_meta, kind_label="outputs")
 
         # structured return
         def _structured(meta_list):
@@ -1284,6 +1297,7 @@ class H2IntegrateModel:
             }
 
         return {
-            "explicit": _structured(explicit_meta),
-            "implicit": _structured(implicit_meta),
+            "inputs": _structured(input_meta),
+            "explicit_outputs": _structured(explicit_meta),
+            "implicit_outputs": _structured(implicit_meta),
         }
