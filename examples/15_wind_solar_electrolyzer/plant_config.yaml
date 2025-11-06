@@ -5,8 +5,6 @@ site:
   latitude: 30.6617
   longitude: -101.7096
 
-
-
   resources:
     wind_resource:
       resource_model: "wind_toolkit_v2_api"
