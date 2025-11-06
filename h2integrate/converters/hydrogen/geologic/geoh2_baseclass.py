@@ -4,6 +4,7 @@ from attrs import field, define
 from h2integrate.core.utilities import BaseConfig
 from h2integrate.core.validators import contains
 from h2integrate.core.model_baseclasses import CostModelBaseClass
+from h2integrate.tools.inflation.inflate import inflate_cepci
 
 
 @define
@@ -16,14 +17,22 @@ class GeoH2PerformanceConfig(BaseConfig):
         technologies/geoh2/model_inputs/performance_parameters all other parameters
 
     Parameters:
-        rock_type:         str - The type of rock being drilled into to extract geologic hydrogen
-                                valid options: "peridotite"
-        *well_lifetime*:   float [years] - The length of time in years that the well will operate
-        grain_size:        float [m] - The grain size of the rocks used to extract hydrogen
+        -*well_lifetime*:   float [years] - The length of time in years that the well will operate
+        -*borehole_depth*:  float [m] - Total depth of borehole (potentially including turns)
+        -*well_diameter*:   str - The relative diameter of the well - see excel sheets for examples
+                                valid options: "small" (OSD3500_FY25.xlsx), "large"
+        -*well_geometry*:   str - The shape and structure of the well being drilled
+                                valid options: "vertical", "horizontal"
+        -rock_type:         str - The type of rock formation being drilled into to extract geoH2
+                                valid options: "peridotite", "bei_troctolite"
+        -grain_size:        float [m] - The grain size of the rocks used to extract hydrogen
     """
 
-    rock_type: str = field(validator=contains(["peridotite"]))
     well_lifetime: float = field()
+    borehole_depth: float = field()
+    well_diameter: str = field(validator=contains(["small", "large"]))
+    well_geometry: str = field(validator=contains(["vertical", "horizontal"]))
+    rock_type: str = field(validator=contains(["peridotite", "bei_troctolite"]))
     grain_size: float = field()
 
 
@@ -38,7 +47,7 @@ class GeoH2PerformanceBaseClass(om.ExplicitComponent):
         well_lifetime: float [years] - The length of time in years that the well will operate
         grain_size:    float [m] - The grain size of the rocks used to extract hydrogen
     Outputs:
-        hydrogen:      array [kg/h] - The hydrogen production profile over 1 year (8760 hours)
+        hydrogen_out:  array [kg/h] - The hydrogen production profile over 1 year (8760 hours)
     """
 
     def initialize(self):
@@ -49,8 +58,8 @@ class GeoH2PerformanceBaseClass(om.ExplicitComponent):
 
     def setup(self):
         self.add_input("well_lifetime", units="year", val=self.config.well_lifetime)
+        self.add_input("borehole_depth", units="m", val=self.config.borehole_depth)
         self.add_input("grain_size", units="m", val=self.config.grain_size)
-
         self.add_output("hydrogen_out", units="kg/h", shape=(8760,))
 
 
@@ -63,30 +72,37 @@ class GeoH2CostConfig(BaseConfig):
         technologies/geoh2/model_inputs/cost_parameters all other parameters
 
     Parameters:
-        *well_lifetime*:   float [years] - the length of time that the wells will operate
-        cost_year:         int [year] - The dollar year in which costs are modeled
-        test_drill_cost:   float [USD] - The CAPEX cost of a test drill for a potential geoH2 well
-        permit_fees:       float [USD] - The CAPEX cost required to obtain permits for drilling
-        acreage:           float [acre] - The amount of land needed for the drilling operation
-        rights_cost:       float [USD/acre] - The CAPEX cost to obtain drilling rights
-        completion_cost:   float [USD] - The CAPEX cost per well required to complete a successful
-                                test drill site into a full-bore production well
-        success_chance:    float [pct] - The chance of success at any particular test drill site
-        fixed_opex:        float [USD/year] - The OPEX cost that does not scale with H2 production
-        variable_opex:     float [USD/kg] - The OPEX cost component that scales with H2 production
-        contracting_pct:   float [pct] - contracting costs as % of bare capital cost
-        contingency_pct:   float [pct] - contingency costs as % of bare capital cost
-        preprod_time:      float [months] - time in preproduction (Fixed OPEX is charged)
-        as_spent_ratio:    float [None] - ratio of as-spent costs to overnight costs
+        -*well_lifetime*:   float [years] - the length of time that the wells will operate
+        -*borehole_depth*:  float [m] - Total depth of borehole (potentially including turns)
+        -*well_diameter*:   str - The relative diameter of the well - see excel sheets for examples
+                                valid options: "small" (OSD3500_FY25.xlsx), "large"
+        -*well_geometry*:   str - The shape and structure of the well being drilled
+                                valid options: "vertical", "horizontal"
+        -cost_year:         int [year] - The dollar year in which costs are modeled
+        -target_dollar_year:int [year] - The dollar year in which costs are modeled
+        -test_drill_cost:   float [USD] - The CAPEX cost of a test drill for a potential geoH2 well
+        -permit_fees:       float [USD] - The CAPEX cost required to obtain permits for drilling
+        -acreage:           float [acre] - The amount of land needed for the drilling operation
+        -rights_cost:       float [USD/acre] - The CAPEX cost to obtain drilling rights
+        -success_chance:    float [pct] - The chance of success at any particular test drill site
+        -fixed_opex:        float [USD/year] - The OPEX cost that does not scale with H2 production
+        -variable_opex:     float [USD/kg] - The OPEX cost component that scales with H2 production
+        -contracting_pct:   float [pct] - contracting costs as % of bare capital cost
+        -contingency_pct:   float [pct] - contingency costs as % of bare capital cost
+        -preprod_time:      float [months] - time in preproduction (Fixed OPEX is charged)
+        -as_spent_ratio:    float [None] - ratio of as-spent costs to overnight costs
     """
 
     well_lifetime: float = field()
+    borehole_depth: float = field()
+    well_diameter: str = field(validator=contains(["small", "large"]))
+    well_geometry: str = field(validator=contains(["vertical", "horizontal"]))
     cost_year: int = field()
+    target_dollar_year: int = field()
     test_drill_cost: float = field()
     permit_fees: float = field()
     acreage: float = field()
     rights_cost: float = field()
-    completion_cost: float = field()
     success_chance: float = field()
     fixed_opex: float = field()
     variable_opex: float = field()
@@ -106,7 +122,8 @@ class GeoH2CostBaseClass(CostModelBaseClass):
 
     Inputs:
         well_lifetime:     float [years] - the length of time that the wells will operate
-        cost_year:         int [year] - The dollar year in which costs are modeled
+        cost_year:         int [year] - The dollar year in which input costs are measured
+        target_dollar_year:int [year] - The dollar year in which costs are modeled
         test_drill_cost:   float [USD] - The CAPEX cost of a test drill for a potential geoH2 well
         permit_fees:       float [USD] - The CAPEX cost required to obtain permits for drilling
         acreage:           float [acre] - The amount of land needed for the drilling operation
@@ -120,7 +137,7 @@ class GeoH2CostBaseClass(CostModelBaseClass):
         contingency_pct:   float [pct] - contingency costs as % of bare capital cost
         preprod_time:      float [months] - time in preproduction (Fixed OPEX is charged)
         as_spent_ratio:    float [None] - ratio of as-spent costs to overnight costs
-        *hydrogen*:        array [kg/h] - The hydrogen production profile over 1 year (8760 hours)
+        *hydrogen_out*:    array [kg/h] - The hydrogen production profile over 1 year (8760 hours)
     Outputs:
         bare_capital_cost  float [USD] - The raw CAPEX cost without any multipliers applied
         CapEx              float [USD] - The effective CAPEX cost with multipliers applied
@@ -134,11 +151,12 @@ class GeoH2CostBaseClass(CostModelBaseClass):
         n_timesteps = self.options["plant_config"]["plant"]["simulation"]["n_timesteps"]
 
         self.add_input("well_lifetime", units="year", val=self.config.well_lifetime)
+        self.add_input("target_dollar_year", units="year", val=self.config.target_dollar_year)
+        self.add_input("borehole_depth", units="m", val=self.config.borehole_depth)
         self.add_input("test_drill_cost", units="USD", val=self.config.test_drill_cost)
         self.add_input("permit_fees", units="USD", val=self.config.permit_fees)
         self.add_input("acreage", units="acre", val=self.config.acreage)
         self.add_input("rights_cost", units="USD/acre", val=self.config.rights_cost)
-        self.add_input("completion_cost", units="USD", val=self.config.completion_cost)
         self.add_input("success_chance", units="percent", val=self.config.success_chance)
         self.add_input("fixed_opex", units="USD/year", val=self.config.fixed_opex)
         self.add_input("variable_opex", units="USD/kg", val=self.config.variable_opex)
@@ -157,6 +175,30 @@ class GeoH2CostBaseClass(CostModelBaseClass):
         self.add_output("Fixed_OpEx", units="USD/year")
         self.add_output("Variable_OpEx", units="USD/kg")
 
+    def calc_drill_cost(self, x):
+        # Calculates drilling costs from pre-fit polynomial curves
+        diameter = self.config.well_diameter
+        geometry = self.config.well_geometry
+        if geometry == "vertical":
+            if diameter == "small":
+                coeffs = [0.224997743, 389.2448848, 745141.2795]
+            elif diameter == "large":
+                coeffs = [0.224897254, 869.2069059, 703617.3915]
+        elif geometry == "horizontal":
+            if diameter == "small":
+                coeffs = [0.247604262, 323.277597, 1058263.661]
+            elif diameter == "large":
+                coeffs = [0.230514884, 941.8801375, 949091.7254]
+        a = coeffs[0]
+        b = coeffs[1]
+        c = coeffs[2]
+        drill_cost = a * x**2 + b * x + c
+
+        year = self.config.cost_year
+        drill_cost = inflate_cepci(drill_cost, 2010, year)
+
+        return drill_cost
+
 
 @define
 class GeoH2FinanceConfig(BaseConfig):
@@ -167,12 +209,20 @@ class GeoH2FinanceConfig(BaseConfig):
         technologies/geoh2/model_inputs/finance_parameters all other parameters
 
     Parameters:
-        *well_lifetime*:   float [years] - the length of time that the wells will operate
-        eff_tax_rate:      float [percent] - effective tax rate
-        atwacc:            float [percent] - after-tax weighted average cost of capital
+        -*well_lifetime*:   float [years] - the length of time that the wells will operate
+        -*borehole_depth*:  float [m] - Total depth of borehole (potentially including turns)
+        -*well_diameter*:   str - The relative diameter of the well - see excel sheets for examples
+                                valid options: "small" (OSD3500_FY25.xlsx), "large"
+        -*well_geometry*:   str - The shape and structure of the well being drilled
+                                valid options: "vertical", "horizontal"
+        -eff_tax_rate:      float [percent] - effective tax rate
+        -atwacc:            float [percent] - after-tax weighted average cost of capital
     """
 
     well_lifetime: float = field()
+    borehole_depth: float = field()
+    well_diameter: str = field(validator=contains(["small", "large"]))
+    well_geometry: str = field(validator=contains(["vertical", "horizontal"]))
     eff_tax_rate: float = field()
     atwacc: float = field()
 
