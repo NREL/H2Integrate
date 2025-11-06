@@ -5,8 +5,6 @@ site:
   latitude: 32.34
   longitude: -98.27
 
-
-
 # array of arrays containing left-to-right technology
 # interconnections; can support bidirectional connections
 # with the reverse definition.

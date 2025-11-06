@@ -21,6 +21,8 @@
 - Moved `compute()` from `ProFastBase` to `ProFastLCO`.
 - Added `NumpyFinancialNPV`, a finance model that uses NumPy Financial npv to calculate the npv from the cash flows
 - Added `load_yaml()` function and flexibility to input a config dictionary to H2IntegrateModel rather than a filepath
+- Removed `boundaries` from the necessary keys in `plant_config` validation
+- Improved the readability of the postprocessing printout
 
 ## 0.4.0 [October 1, 2025]
 

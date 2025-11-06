@@ -5,8 +5,6 @@ site:
   latitude: 32.34
   longitude: -98.27
 
-
-
   resources:
     river_resource:
       resource_model: "river_resource"

@@ -6,8 +6,6 @@ site:
   longitude: -124.816
   elevation_m: 439.0
 
-
-
 plant:
   plant_life: 30
   grid_connection: False # option, can be turned on or off

@@ -5,8 +5,6 @@ site:
   latitude: 29.2
   longitude: -94.6
 
-
-
 # this will naturally grow as we mature the interconnected tech
 technology_interconnections: [
   ["hopp", "electricity_splitter", "electricity", "cable"],
