@@ -3,7 +3,7 @@ name: driver_config
 
 general:
   folder_output: ex_22_out
-  create_om_reports: true
+  create_om_reports: false
 driver:
   design_of_experiments:
     flag: true

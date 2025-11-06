@@ -1117,7 +1117,7 @@ def test_csvgen_design_of_experiments(subtests):
     new_csv_filename.unlink()
 
 
-def test_sweeping_sites_design_of_experiments(subtests):
+def test_sweeping_solar_sites_doe(subtests):
     os.chdir(EXAMPLE_DIR / "22_site_doe")
     import pandas as pd
 
