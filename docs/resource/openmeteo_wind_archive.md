@@ -4,7 +4,7 @@
 This resource class downloads wind resource data from the [OpenMeteo Archive API](https://open-meteo.com/en/docs/historical-weather-api)
 
 This dataset allows for resource data to be downloaded for:
-- **resource years** from 1940 to 2024.
+- **resource years** from 1940 to year before the current calendar year.
 - **locations** across the globe.
 - **resource heights** from 10 and 100 meters.
 - **time intervals** of 60 minutes.

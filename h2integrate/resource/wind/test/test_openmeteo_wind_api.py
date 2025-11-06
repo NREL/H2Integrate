@@ -63,8 +63,6 @@ def site_config_download_from_h2i():
                 "resource_model": "openmeteo_wind_api",
                 "resource_parameters": {
                     "resource_year": 2023,
-                    # "resource_filename":
-                    # "44.04218_-95.19757_2023_openmeteo_archive_60min_local_tz.csv",
                 },
             }
         },

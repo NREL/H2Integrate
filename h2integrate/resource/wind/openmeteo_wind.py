@@ -1,4 +1,5 @@
 from pathlib import Path
+from datetime import datetime
 
 import pandas as pd
 import requests_cache
@@ -18,7 +19,7 @@ class OpenMeteoHistoricalWindAPIConfig(ResourceBaseAPIConfig):
 
     Args:
         resource_year (int): Year to use for resource data.
-            Must been between 1940 and 2024 (inclusive).
+            Must been between 1940 the year before the current calendar year. (inclusive).
         resource_data (dict | object, optional): Dictionary of user-input resource data.
             Defaults to an empty dictionary.
         resource_dir (str | Path, optional): Folder to save resource files to or
@@ -36,7 +37,7 @@ class OpenMeteoHistoricalWindAPIConfig(ResourceBaseAPIConfig):
 
     """
 
-    resource_year: int = field(converter=int, validator=range_val(1940, 2024))
+    resource_year: int = field(converter=int, validator=range_val(1940, datetime.now().year - 1))
     dataset_desc: str = "openmeteo_archive"
     resource_type: str = "wind"
     valid_intervals: list[int] = field(factory=lambda: [60])
@@ -285,7 +286,7 @@ class OpenMeteoHistoricalWindResource(WindResourceBaseAPIModel):
         # convert data to standardized units
         data, data_units = self.compare_units_and_correct(data, data_units)
 
-        # include site data with data
+        # update wind resource data with site data
         data.update(site_data)
 
         return data
