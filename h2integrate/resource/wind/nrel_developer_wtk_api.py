@@ -75,13 +75,19 @@ class WTKNRELDeveloperAPIWindResource(WindResourceBaseAPIModel):
         # get the data dictionary
         data = self.get_data(self.config.latitude, self.config.longitude)
 
-        # add resource data dictionary as an out
+        self.resource_data = data
+
+        # add resource data dictionary as an output
         self.add_discrete_output("wind_resource_data", val=data, desc="Dict of wind resource data")
 
     def create_filename(self, latitude, longitude):
         """Create default filename to save downloaded data to. Filename is formatted as
         "{latitude}_{longitude}_{resource_year}_wtk_v2_{interval}min_{tz_desc}_tz.csv"
         where "tz_desc" is "utc" if the timezone is zero, or "local" otherwise.
+
+        Args:
+            latitude (float): latitude corresponding to location for resource data
+            longitude (float): longitude corresponding to location for resource data
 
         Returns:
             str: filename for resource data to be saved to or loaded from.
@@ -100,6 +106,10 @@ class WTKNRELDeveloperAPIWindResource(WindResourceBaseAPIModel):
 
     def create_url(self, latitude, longitude):
         """Create url for data download.
+
+        Args:
+            latitude (float): latitude corresponding to location for resource data
+            longitude (float): longitude corresponding to location for resource data
 
         Returns:
             str: url to use for API call.

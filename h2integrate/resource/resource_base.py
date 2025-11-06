@@ -35,6 +35,12 @@ class ResourceBaseAPIConfig(BaseConfig):
         timezone (float | int): timezone to output data in. May be used to determine whether
             to download data in UTC or local timezone. This should be populated by the value
             in sim_config['timezone']
+        check_for_location_change (bool): Whether to update resource data in the `compute()` method.
+            Set to True if the site location is being swept, set to False if the resource data
+            should not be updated to the location
+            (plant_config['site']['latitude'], plant_config['site']['longitude']). Set to False
+            to reduce computation time during optimizations or design sweeps if site location is not
+            being swept. Defaults to True.
 
     Attributes:
         dataset_desc (str): description of the dataset, used in file naming.
@@ -48,49 +54,43 @@ class ResourceBaseAPIConfig(BaseConfig):
 
     timezone: int | float = field()
 
+    check_for_location_change: bool = field(default=True, kw_only=True)
     dataset_desc: str = field(default="default", init=False)
     resource_type: str = field(default="none", init=False)
 
 
 class ResourceBaseAPIModel(om.ExplicitComponent):
+    """Base model for downloading resource data from API calls or loading resource
+    data for a single site from a file.
+
+    Attributes
+        resource_data (dict | None): resource data that is created in setup() method.
+        dt (int): timestep in seconds.
+        config (object): configuration class that inherits ResourceBaseAPIConfig.
+
+    Inputs:
+        latitude (float): latitude corresponding to location for resource data
+        longitude (float): longitude corresponding to location for resource data
+
+    Outputs:
+        dict: dictionary of resource data.
+    """
+
     def initialize(self):
         self.options.declare("plant_config", types=dict)
         self.options.declare("resource_config", types=dict)
         self.options.declare("driver_config", types=dict)
 
     def setup(self):
-        self.check_if_sweeping_location()
         # create attributes that will be commonly used for resource classes.
-        self.site_config = self.options["plant_config"]["site"]
-        self.sim_config = self.options["plant_config"]["plant"]["simulation"]
-        self.n_timesteps = int(self.sim_config["n_timesteps"])
-        self.dt = self.sim_config["dt"]
-        self.start_time = self.sim_config["start_time"]
+        self.resource_data = None
+        self.dt = self.options["plant_config"]["plant"]["simulation"]["dt"]
         self.add_input("latitude", self.config.latitude, units="deg")
         self.add_input("longitude", self.config.longitude, units="deg")
 
-    def check_if_sweeping_location(self):
-        # NOTE: this logic will not work if only changing the lat/lon of one resource type
-
-        self.check_for_changing_location = False
-
-        driver = self.options["driver_config"].get("driver", {})
-        running_opt = driver.get("optimization", {}).get("flag", False)
-        running_doe = driver.get("design_of_experiments", {}).get("flag", False)
-        if not running_opt and not running_doe:
-            return
-
-        design_vars = self.options["driver_config"].get("design_variables", {})
-        if bool(design_vars):
-            for variables in design_vars.values():
-                for key, value in variables.items():
-                    if key == "latitude" or key == "longitude":
-                        if value.get("flag") is None:  # was popped out in pose_optimziation
-                            self.check_for_changing_location = True
-
     def helper_setup_method(self):
         """
-        Prepares and configures resource specifications for the GOES API based on plant
+        Prepares and configures resource specifications for the resource API based on plant
         and site configuration options.
 
         This method extracts relevant configuration details from the `self.options` dictionary,
@@ -101,25 +101,23 @@ class ResourceBaseAPIModel(om.ExplicitComponent):
             dict: The resource specifications dictionary with defaults set for latitude,
             longitude, resource_dir, and timezone.
         """
-        self.site_config = self.options["plant_config"]["site"]
-        self.sim_config = self.options["plant_config"]["plant"]["simulation"]
-        self.n_timesteps = int(self.sim_config["n_timesteps"])
-        self.dt = self.sim_config["dt"]
-        self.start_time = self.sim_config["start_time"]
+        site_config = self.options["plant_config"]["site"]
+        sim_config = self.options["plant_config"]["plant"]["simulation"]
+        self.dt = sim_config["dt"]
 
         # create the input dictionary for the resource API config
         resource_specs = self.options["resource_config"]
         # set the default latitude, longitude, and resource_year from the site_config
-        resource_specs.setdefault("latitude", self.site_config["latitude"])
-        resource_specs.setdefault("longitude", self.site_config["longitude"])
+        resource_specs.setdefault("latitude", site_config["latitude"])
+        resource_specs.setdefault("longitude", site_config["longitude"])
         # set the default resource_dir from a directory that can be
         # specified in site_config['resources']['resource_dir']
         resource_specs.setdefault(
-            "resource_dir", self.site_config.get("resources", {}).get("resource_dir", None)
+            "resource_dir", site_config.get("resources", {}).get("resource_dir", None)
         )
 
         # default timezone to UTC because 'timezone' was removed from the plant config schema
-        resource_specs.setdefault("timezone", self.sim_config.get("timezone", 0))
+        resource_specs.setdefault("timezone", sim_config.get("timezone", 0))
         return resource_specs
 
     def create_filename(self, latitude, longitude):
@@ -127,6 +125,10 @@ class ResourceBaseAPIModel(om.ExplicitComponent):
 
         "{latitude}_{longitude}_{resource_year}_{dataset_desc}_{interval}min_{tz_desc}_tz.csv"
         where "tz_desc" is "utc" if the timezone is zero, or "local" otherwise.
+
+        Args:
+            latitude (float): latitude corresponding to location for resource data
+            longitude (float): longitude corresponding to location for resource data
 
         Returns:
             str: filename for resource data to be saved to or loaded from.
@@ -136,6 +138,10 @@ class ResourceBaseAPIModel(om.ExplicitComponent):
 
     def create_url(self, latitude, longitude):
         """Create url for data download.
+
+        Args:
+            latitude (float): latitude corresponding to location for resource data
+            longitude (float): longitude corresponding to location for resource data
 
         Returns:
             str: url to use for API call.
@@ -174,13 +180,15 @@ class ResourceBaseAPIModel(om.ExplicitComponent):
         """
         raise NotImplementedError("This method should be implemented in a subclass.")
 
-    def get_data(self, latitude, longitude):
+    def get_data(self, latitude, longitude, first_call=True):
         """Get resource data to handle any of the expected inputs. This method does the following:
 
+        0) Check if resource data has been already loaded for this site, if so, return,
+            self.resource_data otherwise, continue to Step 1.
         1) Check if resource data was input. If not, continue to Step 2.
         2) Get valid resource_dir with the method `check_resource_dir()`
-        3) Create a filename if resource_filename was not input with the method `create_filename()`.
-            Otherwise, use resource_filename as the filename.
+        3) Create a filename if resource_filename was not input or if the site location changed
+            with the method `create_filename()`. Otherwise, use resource_filename as the filename.
         4) If the resulting resource_dir and filename from Steps 2 and 3 make a valid filepath,
             load data using `load_data()`. Otherwise, continue to Step 5.
         5) Create the url to download data using `create_url()` and continue to Step 6.
@@ -191,6 +199,8 @@ class ResourceBaseAPIModel(om.ExplicitComponent):
         Args:
             latitude (float): latitude corresponding to location for resource data
             longitude (float): longitude corresponding to location for resource data
+            first_call (bool): True if called from `setup()` method, False if called from
+                `compute()` method to prevent unnecessary reloading of data.
 
         Raises:
             ValueError: If data was not successfully downloaded from the API
@@ -204,6 +214,12 @@ class ResourceBaseAPIModel(om.ExplicitComponent):
 
         if self.config.latitude != latitude or self.config.longitude != longitude:
             site_changed = True
+
+        # If site hasn't changed and resource data has already been loaded
+        # just return the resource data that was loaded in the setup() method
+        if not site_changed and not first_call:
+            if self.resource_data is not None:
+                return self.resource_data
 
         # 1) check if user provided data
         if bool(self.config.resource_data):
@@ -261,6 +277,8 @@ class ResourceBaseAPIModel(om.ExplicitComponent):
             raise ValueError("Unexpected situation occurred while trying to load data")
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
-        if self.check_for_changing_location:
-            data = self.get_data(float(inputs["latitude"]), float(inputs["longitude"]))
+        if self.config.check_for_location_change:
+            data = self.get_data(
+                float(inputs["latitude"]), float(inputs["longitude"]), first_call=False
+            )
             discrete_outputs[f"{self.config.resource_type}_resource_data"] = data
