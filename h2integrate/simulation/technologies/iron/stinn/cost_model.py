@@ -11,25 +11,31 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 
 
 CD = Path(__file__).parent
 
+faraday_const = 96485.3321  # Electric charge per mole of electrons (Faraday constant), C/mol
 
-def capex_calc(a1n, a1d, a1t, a2n, a2d, a2t, a3, T, P, p, z, F, j, A, e, M, Q, V, N):
+
+def capex_calc(
+    a1n, a1d, a1t, a2n, a2d, a2t, a3n, e1, e2, e3, e4, T, P, p, z, F, j, A, e, M, Q, V, N
+):
     # Pre-costs calculation
-    term1 = a1n / (1 + np.exp(a1d * (T - a1t)))
-    term2 = a2n / (1 + np.exp(a2d * (T - a2t)))
+    a1 = a1n / (1 + np.exp(a1d * (T - a1t)))
+    a2 = a2n / (1 + np.exp(a2d * (T - a2t)))
+    a3 = a3n * Q
 
-    pre_costs = term1 * P**0.8
+    pre_costs = a1 * P**e1
 
     # Electrolysis and product handling contribution to total cost
-    electrolysis_product_handling = term2 * ((p * z * F) / (j * A * e * M)) ** 0.9
+    electrolysis_product_handling = a2 * ((p * z * F) / (j * A * e * M)) ** e2
 
     # Power rectifying contribution
-    power_rectifying_contribution = a3 * Q * V**0.15 * N**0.5
+    power_rectifying_contribution = a3 * V**e3 * N**e4
 
-    return pre_costs, electrolysis_product_handling, power_rectifying_contribution
+    return pre_costs, electrolysis_product_handling, power_rectifying_contribution, a1, a2, a3
 
 
 def main(config):
@@ -71,9 +77,6 @@ def main(config):
     inputs_df = pd.read_csv(inputs_fp)
     inputs_df = inputs_df.set_index("Metal")
 
-    # Parse sodium inputs
-    inputs_df.loc["Na"]
-
     # Load coefficients
     coeffs_fp = CD / config.cost_model["coeffs_fp"]
     coeffs_df = pd.read_csv(coeffs_fp)
@@ -86,14 +89,58 @@ def main(config):
     a2n = coeffs["alpha_2_numerator"]
     a2d = coeffs["alpha_2_denominator"]
     a2t = coeffs["alpha_2_temp_offset"]
-    a3 = coeffs["alpha_3"]
+    a3n = coeffs["alpha_3"]
+    e1 = coeffs["exp_1"]
+    e2 = coeffs["exp_2"]
+    e3 = coeffs["exp_3"]
+    e4 = coeffs["exp_4"]
+
+    metal_dict = {
+        "Fe": [0.5, 0, 0],
+        "Al": [0, 0, 0],
+        "Mg": [0, 0.5, 1],
+        "Na": [0, 1, 0],
+        "Zn": [0, 1, 1],
+        "Cu": [0, 0.5, 0],
+        "Cl2": [0, 0, 0.5],
+    }
+
+    # Cycle through metals
+    for metal, color in metal_dict.items():
+        metal_df = inputs_df.loc[[metal]]
+        cap = metal_df["Capacity [kt/y]"].values
+        capex_per_cap = metal_df["Capex/ Capacity [2018 USD/ (t/y)]"].values
+        plt.plot(cap, capex_per_cap, ".", color=color)
+
+        T = metal_df["Temperature [C]"].values
+        P = cap * 1000
+        p = P * 1000 / 8760 / 3600
+        z = metal_df["Electrons per product"].values
+        f = faraday_const
+        j = metal_df["Current Density [A/m^2]"].values
+        A = metal_df["Electrode area/ cell [m^2]"].values
+        e = metal_df["Current efficiency"].values
+        M = metal_df["Product molar mass [kg]"].values
+        Q = metal_df["Power / cell [MW]"].values
+        V = metal_df["Operating potential [V]"].values
+        N = metal_df["Cell Count"].values
+        Q = Q * N
+
+        F, E, R, a1, a2, a3 = capex_calc(
+            a1n, a1d, a1t, a2n, a2d, a2t, a3n, e1, e2, e3, e4, T, P, p, z, f, j, A, e, M, Q, V, 1
+        )
+
+        plt.plot(cap, (F + E + R) / P, "-", color=color)
+        # plt.plot(T, a1/10**4, '.', color=metal_dict["Al"])
+        # plt.plot(T, a2/10**6, '.', color=metal_dict["Cl2"])
+        # plt.plot(T, a3/10**6, '.', color=metal_dict["Cu"])
 
     # Assign inputs from config
     T = config.electrolysis_temp  # Electrolysis temperature (°C)
-    P = config.capacity  # installed capacity (kt/y)
+    P = config.capacity  # installed capacity (t/y)
     p = config.production_rate  # Production rate (kg/s)
     z = config.electron_moles  # Moles of electrons per mole of product
-    F = config.faraday_const  # Electric charge per mole of electrons (C/mol)
+    f = faraday_const  # Electric charge per mole of electrons (C/mol)
     j = config.current_density  # Current density (A/m²)
     A = config.electrode_area  # Electrode area (m²)
     e = config.current_efficiency  # Current efficiency (dimensionless)
@@ -102,12 +149,20 @@ def main(config):
     V = config.cell_voltage  # Cell operating voltage (V)
     N = config.rectifier_lines  # Number of rectifier lines
 
-    pre_costs, electrolysis_product_handling, power_rectifying_contribution = capex_calc(
-        a1n, a1d, a1t, a2n, a2d, a2t, a3, T, P, p, z, F, j, A, e, M, Q, V, N
+    pre_costs, electrolysis_product_handling, power_rectifying_contribution, a1, a2, a3 = (
+        capex_calc(
+            a1n, a1d, a1t, a2n, a2d, a2t, a3, e1, e2, e3, e4, T, P, p, z, f, j, A, e, M, Q, V, N
+        )
     )
 
     # Electrowinning costs
     electrowinning_costs = electrolysis_product_handling + power_rectifying_contribution
+
+    # Total costs
+    pre_costs + electrowinning_costs
+
+    plt.xscale("log")
+    plt.show()
 
     # Return individual costs for modularity
     return {
@@ -127,9 +182,6 @@ if __name__ == "__main__":
             self.capacity = 1.5  # Pressure, example value
             self.production_rate = 1.0  # Total production rate, kg/s
             self.electron_moles = 3  # Moles of electrons per mole of product, example value
-            self.faraday_const = (
-                96485  # Electric charge per mole of electrons (Faraday constant), C/mol
-            )
             self.current_density = 5000  # Current density, A/m², example value
             self.electrode_area = 30.0  # Electrode area, m², example value
             self.current_efficiency = 0.95  # Current efficiency (dimensionless), example value
