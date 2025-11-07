@@ -341,7 +341,7 @@ class H2IntegrateModel:
         self.cost_models = []
         self.finance_models = []
 
-        combined_performance_and_cost_models = ["hopp", "h2_storage", "wombat"]
+        combined_performance_and_cost_models = ["hopp", "h2_storage", "wombat", "iron"]
 
         # Create a technology group for each technology
         for tech_name, individual_tech_config in self.technology_config["technologies"].items():
@@ -968,9 +968,6 @@ class H2IntegrateModel:
                 tech_configs = group_configs.get("tech_configs")
                 primary_commodity_type = group_configs.get("commodity")
                 commodity_stream = group_configs.get("commodity_stream")
-                # Skip steel finances; it provides its own finances
-                if any(c in tech_configs for c in ("steel", "geoh2")):
-                    continue
 
                 if commodity_stream is not None:
                     # connect commodity stream output to summer input
@@ -1151,6 +1148,7 @@ class H2IntegrateModel:
         Also, if `show_plots` is set to True, then any performance models with post-processing
         plots available will be run and shown.
         """
+
         self.prob.model.list_inputs(units=True, print_mean=True, excludes=["*resource_data"])
         self.prob.model.list_outputs(units=True, print_mean=True, excludes=["*resource_data"])
 
