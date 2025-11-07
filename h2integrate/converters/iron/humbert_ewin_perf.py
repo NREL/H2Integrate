@@ -1,0 +1,82 @@
+import numpy as np
+import openmdao.api as om
+from attrs import field, define
+
+from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
+from h2integrate.core.validators import contains
+
+
+@define
+class HumbertEwinConfig(BaseConfig):
+    electrolysis_type: str = field(
+        kw_only=True, converter=(str.lower, str.strip), validator=contains(["ahe", "mse", "moe"])
+    )  # product selection
+    ore_fe_wt_pct: float = field(kw_only=True)
+    capacity_mw: float = field(kw_only=True)
+
+
+class HumbertEwinPerformanceComponent(om.ExplicitComponent):
+    """
+    Humbert: doi.org/10.1007/s40831-024-00878-3
+    """
+
+    def initialize(self):
+        self.options.declare("driver_config", types=dict)
+        self.options.declare("plant_config", types=dict)
+        self.options.declare("tech_config", types=dict)
+
+    def setup(self):
+        n_timesteps = self.options["plant_config"]["plant"]["simulation"]["n_timesteps"]
+        self.config = HumbertEwinConfig.from_dict(
+            merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance"),
+            strict=False,
+        )
+
+        ewin_type = self.config.electrolysis_type
+        # Lookup specific energy consumption from Humbert Table 10
+        if ewin_type == "ahe":
+            spec_energy_cons_lo = 2.781
+            spec_energy_cons_hi = 3.779
+        elif ewin_type == "mse":
+            spec_energy_cons_lo = 2.720
+            spec_energy_cons_hi = 3.138
+        elif ewin_type == "moe":
+            spec_energy_cons_lo = 2.89
+            spec_energy_cons_hi = 4.45
+        spec_energy_cons_fe = (spec_energy_cons_lo + spec_energy_cons_hi) / 2  # kWh/kg_Fe
+
+        self.add_input("electricity_in", val=0.0, shape=n_timesteps, units="kW")
+        self.add_input("iron_ore_in", val=0.0, shape=n_timesteps, units="kg")
+        self.add_input("ore_fe_wt_pct", val=self.config.ore_fe_wt_pct, units="percent")
+        self.add_input("spec_energy_cons_fe", val=spec_energy_cons_fe, units="kW*h/kg")
+        self.add_input("capacity", val=self.config.capacity_mw, shape=n_timesteps, units="MW")
+
+        self.add_output("limiting_input", val=0.0, shape=n_timesteps, units="kg")
+        self.add_output("hot_iron_out", val=0.0, shape=n_timesteps, units="kg")
+
+    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
+        # Parse inputs
+        elec_in = inputs["electricity_in"]
+        ore_in = inputs["iron_ore_in"]
+        pct_fe = inputs["ore_fe_wt_pct"]
+        kwh_kg_fe = inputs["spec_energy_cons_fe"]
+        cap_kw = inputs["capacity"] * 1000
+
+        # Calculate max iron production for each input
+        fe_from_ore = ore_in * pct_fe / 100
+        fe_from_elec = elec_in / kwh_kg_fe
+
+        # Limiting iron production per hour by each input
+        fe_prod = np.minimum.reduce([fe_from_ore, fe_from_elec])
+        limiters = np.argmin([fe_from_ore, fe_from_elec], axis=0)
+
+        # Limiting NH3 production per hour by capacity
+        fe_prod = np.minimum.reduce([fe_prod, np.full(len(fe_prod), cap_kw / kwh_kg_fe)])
+        cap_lim = 1 - np.argmax([fe_prod, np.full(len(fe_prod), cap_kw / kwh_kg_fe)], axis=0)
+
+        # Determine what the limiting factor is for each hour
+        limiters = np.maximum.reduce([cap_lim * 2, limiters])
+        outputs["limiting_input"] = limiters
+
+        # Return iron production
+        outputs["hot_iron_out"] = fe_prod
