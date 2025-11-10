@@ -29,7 +29,7 @@ class OpenMeteoHistoricalWindAPIConfig(ResourceBaseAPIConfig):
 
     Attributes:
         dataset_desc (str): description of the dataset, used in file naming.
-            For this dataset, the `dataset_desc` is "openmeteo_historical".
+            For this dataset, the `dataset_desc` is "openmeteo_archive".
         resource_type (str): type of resource data downloaded, used in folder naming.
             For this dataset, the `resource_type` is "wind".
         valid_intervals (list[int]): time interval(s) in minutes that resource data can be

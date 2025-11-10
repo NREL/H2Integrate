@@ -26,7 +26,7 @@ This dataset allows for resource data to be downloaded for:
 | `site_lat`      | X |
 | `site_lon`      | X |
 | `elevation`      |  -- |
-| `site_tz`      |  --  |
+| `site_tz`      |  *see note  |
 | `data_tz`      | X |
 | `filepath`      | X |
 | `year`      | X |
@@ -34,3 +34,7 @@ This dataset allows for resource data to be downloaded for:
 | `day`      | X |
 | `hour`      | X |
 | `minute`      | X |
+
+```{note}
+`site_tz` (the site timezone) is not output explicitly from this model, but `data_tz` would equal the site timezone (specified in plant_config["plant"]["simulation"]["timezone"]) is set as a non-zero value. Otherwise, the resource data is pulled with timestamps given in UTC (this is the default behavior)
+```
