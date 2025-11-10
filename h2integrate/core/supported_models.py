@@ -19,6 +19,7 @@ from h2integrate.converters.hopp.hopp_wrapper import HOPPComponent
 from h2integrate.converters.iron.iron_wrapper import IronComponent
 from h2integrate.converters.solar.solar_pysam import PYSAMSolarPlantPerformanceModel
 from h2integrate.finances.numpy_financial_npv import NumpyFinancialNPV
+from h2integrate.resource.wind.openmeteo_wind import OpenMeteoHistoricalWindResource
 from h2integrate.storage.generic_storage_cost import GenericStorageCostModel
 from h2integrate.storage.hydrogen.eco_storage import H2Storage
 from h2integrate.converters.wind.atb_wind_cost import ATBWindPlantCostModel
@@ -123,6 +124,7 @@ supported_models = {
     # Resources
     "river_resource": RiverResource,
     "wind_toolkit_v2_api": WTKNRELDeveloperAPIWindResource,
+    "openmeteo_wind_api": OpenMeteoHistoricalWindResource,
     "goes_aggregated_solar_v4_api": GOESAggregatedSolarAPI,
     "goes_conus_solar_v4_api": GOESConusSolarAPI,
     "goes_fulldisc_solar_v4_api": GOESFullDiscSolarAPI,
@@ -209,5 +211,6 @@ supported_models = {
     "ProFastNPV": ProFastNPV,
     "NumpyFinancialNPV": NumpyFinancialNPV,
 }
+
 
 electricity_producing_techs = ["wind", "solar", "pv", "river", "hopp", "natural_gas_plant"]
