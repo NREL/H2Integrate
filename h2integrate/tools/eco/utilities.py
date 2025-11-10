@@ -11,12 +11,12 @@ import numpy_financial as npf
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import matplotlib.patches as patches
-from hopp.utilities import load_yaml
 from hopp.simulation import HoppInterface
 from hopp.tools.dispatch import plot_tools
 from hopp.simulation.technologies.resource.greet_data import GREETData
 from hopp.simulation.technologies.resource.cambium_data import CambiumData
 
+from h2integrate.core.utilities import load_yaml
 from h2integrate.tools.h2integrate_sim_file_utils import load_dill_pickle
 
 from .finance import adjust_orbit_costs
@@ -1987,7 +1987,7 @@ def calculate_lca(
             * steel_to_pigiron_ratio
         )
         # metric tonne H2O consumed per metric tonne pig iron produced
-    if iron_performance["Product"].values[0] == "ng_dri_eaf":
+    if iron_performance["Product"].values[0] == "ng_eaf":
         ng_dri_eaf_steel_prod = iron_performance.loc[
             iron_performance["Name"] == "Steel Production", "Model"
         ].item()
@@ -2017,7 +2017,7 @@ def calculate_lca(
             * steel_to_pigiron_ratio
         )
         # MWh electricity consumed per metric tonne pig iron produced
-        (
+        ng_dri_eaf_coke_consume = (
             iron_performance.loc[iron_performance["Name"] == "Carbon (Coke)", "Model"].item()
             * steel_to_pigiron_ratio
         )
@@ -2072,7 +2072,7 @@ def calculate_lca(
             * steel_to_pigiron_ratio
         )
         # metric tonne H2O consume per metric tonne pig iron produced
-    if iron_performance["Product"].values[0] == "h2_dri_eaf":
+    if iron_performance["Product"].values[0] == "h2_eaf":
         h2_dri_eaf_steel_prod = iron_performance.loc[
             iron_performance["Name"] == "Steel Production", "Model"
         ].item()
@@ -2107,7 +2107,7 @@ def calculate_lca(
             * steel_to_pigiron_ratio
         )
         # MWh electricity consumed per metric tonne pig iron produced
-        (
+        h2_dri_eaf_coke_consume = (
             iron_performance.loc[iron_performance["Name"] == "Carbon (Coke)", "Model"].item()
             * steel_to_pigiron_ratio
         )

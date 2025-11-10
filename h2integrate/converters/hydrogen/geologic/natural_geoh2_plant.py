@@ -2,6 +2,7 @@ import numpy as np
 from attrs import field, define
 
 from h2integrate.core.utilities import merge_shared_inputs
+from h2integrate.tools.inflation.inflate import inflate_cpi, inflate_cepci
 from h2integrate.converters.hydrogen.geologic.geoh2_baseclass import (
     GeoH2CostConfig,
     GeoH2CostBaseClass,
@@ -47,8 +48,8 @@ class NaturalGeoH2PerformanceModel(GeoH2PerformanceBaseClass):
     Outputs (in addition to those in geoh2_baseclass.GeoH2PerformanceBaseClass):
         wellhead_h2_conc:          float [percent] - The mass % of H2 in the wellhead fluid
         lifetime_wellhead_flow:    float [kg/h] - The average gas flow over the well lifetime
-        hydrogen_accumulated:      array [kg/h] - The accumulated hydrogen production profile
-                                        over 1 year (8760 hours)
+        hydrogen_out_natural:      array [kg/h] - The hydrogen production profile from natural
+                                        accumulations over 1 year (8760 hours)
     """
 
     def setup(self):
@@ -64,7 +65,7 @@ class NaturalGeoH2PerformanceModel(GeoH2PerformanceBaseClass):
 
         self.add_output("wellhead_h2_conc", units="percent")
         self.add_output("lifetime_wellhead_flow", units="kg/h")
-        self.add_output("hydrogen_accumulated", units="kg/h", shape=(n_timesteps,))
+        self.add_output("hydrogen_out_natural", units="kg/h", shape=(n_timesteps,))
 
     def compute(self, inputs, outputs):
         if self.config.rock_type == "peridotite":  # TODO: sub-models for different rock types
@@ -85,8 +86,8 @@ class NaturalGeoH2PerformanceModel(GeoH2PerformanceBaseClass):
         # Parse outputs
         outputs["wellhead_h2_conc"] = wh_h2_conc
         outputs["lifetime_wellhead_flow"] = avg_wh_flow
-        outputs["hydrogen_accumulated"] = np.full(n_timesteps, h2_accum)
-        outputs["hydrogen_out"] = h2_accum
+        outputs["hydrogen_out_natural"] = np.full(n_timesteps, h2_accum)
+        outputs["hydrogen_out"] = np.full(n_timesteps, h2_accum)
 
 
 @define
@@ -97,12 +98,10 @@ class NaturalGeoH2CostConfig(GeoH2CostConfig):
         technologies/geoh2/model_inputs/shared_parameters for parameters marked with *asterisks*
         technologies/geoh2/model_inputs/cost_parameters all other parameters
 
-    Args:
-        cost_year (int): dollar year corresponding to costs provided in
-            geoh2_baseclass.GeoH2CostConfig
+    Currently no arguments other than those in geoh2_baseclass.GeoH2CostConfig
     """
 
-    cost_year: int = field(converter=int)
+    pass
 
 
 class NaturalGeoH2CostModel(GeoH2CostBaseClass):
@@ -125,22 +124,27 @@ class NaturalGeoH2CostModel(GeoH2CostBaseClass):
         super().setup()
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
+        # Get cost years
+        cost_year = self.config.cost_year
+        dol_year = self.config.target_dollar_year
+
         # Calculate total capital cost per well (successful or unsuccessful)
-        drill = inputs["test_drill_cost"]
-        permit = inputs["permit_fees"]
+        drill = inflate_cepci(inputs["test_drill_cost"], cost_year, dol_year)
+        permit = inflate_cpi(inputs["permit_fees"], cost_year, dol_year)
         acreage = inputs["acreage"]
-        rights_acre = inputs["rights_cost"]
+        rights_acre = inflate_cpi(inputs["rights_cost"], cost_year, dol_year)
         cap_well = drill + permit + acreage * rights_acre
 
         # Calculate total capital cost per SUCCESSFUL well
-        completion = inputs["completion_cost"]
+        completion = self.calc_drill_cost(inputs["borehole_depth"])
+        completion = inflate_cepci(completion, cost_year, dol_year)
         success = inputs["success_chance"]
         bare_capex = cap_well / success * 100 + completion
         outputs["bare_capital_cost"] = bare_capex
 
         # Parse in opex
-        fopex = inputs["fixed_opex"]
-        vopex = inputs["variable_opex"]
+        fopex = inflate_cpi(inputs["fixed_opex"], cost_year, dol_year)
+        vopex = inflate_cpi(inputs["variable_opex"], cost_year, dol_year)
         outputs["Fixed_OpEx"] = fopex
         outputs["Variable_OpEx"] = vopex
         production = np.sum(inputs["hydrogen_out"])
