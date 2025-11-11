@@ -151,7 +151,7 @@ def test_ngcc_cost(ngcc_cost_params, subtests):
     }
 
     # Plant parameters for a 100 MW NGCC plant
-    system_capacity = 100_000  # 100 MW
+    system_capacity = 100.0  # 100 MW
     annual_generation_MWh = 700_000  # ~80% capacity factor
 
     # Create hourly electricity output that sums to annual generation
@@ -200,7 +200,7 @@ def test_ngct_cost(ngct_cost_params, subtests):
     }
 
     # Plant parameters for a 50 MW NGCT plant
-    system_capacity = 50_000  # 50 MW
+    system_capacity = 50.0  # 50 MW
     annual_generation_MWh = 100_000  # ~23% capacity factor (peaking plant)
 
     # Create hourly electricity output that sums to annual generation
