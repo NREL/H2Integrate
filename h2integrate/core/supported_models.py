@@ -5,17 +5,31 @@ from h2integrate.transporters.cable import CablePerformanceModel
 from h2integrate.finances.profast_lco import ProFastLCO
 from h2integrate.finances.profast_npv import ProFastNPV
 from h2integrate.converters.steel.steel import SteelPerformanceModel, SteelCostAndFinancialModel
+from h2integrate.converters.iron.iron_mine import (
+    IronMineCostComponent,
+    IronMinePerformanceComponent,
+)
+from h2integrate.converters.iron.iron_plant import (
+    IronPlantCostComponent,
+    IronPlantPerformanceComponent,
+)
 from h2integrate.converters.wind.wind_pysam import PYSAMWindPlantPerformanceModel
 from h2integrate.transporters.generic_summer import GenericSummerPerformanceModel
 from h2integrate.converters.hopp.hopp_wrapper import HOPPComponent
+from h2integrate.converters.iron.iron_wrapper import IronComponent
 from h2integrate.converters.solar.solar_pysam import PYSAMSolarPlantPerformanceModel
 from h2integrate.finances.numpy_financial_npv import NumpyFinancialNPV
+from h2integrate.resource.wind.openmeteo_wind import OpenMeteoHistoricalWindResource
 from h2integrate.storage.generic_storage_cost import GenericStorageCostModel
 from h2integrate.storage.hydrogen.eco_storage import H2Storage
 from h2integrate.converters.wind.atb_wind_cost import ATBWindPlantCostModel
 from h2integrate.storage.battery.pysam_battery import PySAMBatteryPerformanceModel
 from h2integrate.transporters.generic_combiner import GenericCombinerPerformanceModel
 from h2integrate.transporters.generic_splitter import GenericSplitterPerformanceModel
+from h2integrate.converters.iron.iron_transport import (
+    IronTransportCostComponent,
+    IronTransportPerformanceComponent,
+)
 from h2integrate.converters.nitrogen.simple_ASU import SimpleASUCostModel, SimpleASUPerformanceModel
 from h2integrate.storage.simple_generic_storage import SimpleGenericStorage
 from h2integrate.storage.hydrogen.tank_baseclass import (
@@ -110,6 +124,7 @@ supported_models = {
     # Resources
     "river_resource": RiverResource,
     "wind_toolkit_v2_api": WTKNRELDeveloperAPIWindResource,
+    "openmeteo_wind_api": OpenMeteoHistoricalWindResource,
     "goes_aggregated_solar_v4_api": GOESAggregatedSolarAPI,
     "goes_conus_solar_v4_api": GOESConusSolarAPI,
     "goes_fulldisc_solar_v4_api": GOESFullDiscSolarAPI,
@@ -132,6 +147,11 @@ supported_models = {
     "simple_ASU_cost": SimpleASUCostModel,
     "simple_ASU_performance": SimpleASUPerformanceModel,
     "hopp": HOPPComponent,
+    "iron": IronComponent,
+    "iron_mine_performance": IronMinePerformanceComponent,
+    "iron_mine_cost": IronMineCostComponent,
+    "iron_plant_performance": IronPlantPerformanceComponent,
+    "iron_plant_cost": IronPlantCostComponent,
     "reverse_osmosis_desalination_performance": ReverseOsmosisPerformanceModel,
     "reverse_osmosis_desalination_cost": ReverseOsmosisCostModel,
     "simple_ammonia_performance": SimpleAmmoniaPerformanceModel,
@@ -164,6 +184,8 @@ supported_models = {
     "pipe": PipePerformanceModel,
     "combiner_performance": GenericCombinerPerformanceModel,
     "splitter_performance": GenericSplitterPerformanceModel,
+    "iron_transport_performance": IronTransportPerformanceComponent,
+    "iron_transport_cost": IronTransportCostComponent,
     # Simple Summers
     "summer": GenericSummerPerformanceModel,
     # Storage
@@ -189,5 +211,6 @@ supported_models = {
     "ProFastNPV": ProFastNPV,
     "NumpyFinancialNPV": NumpyFinancialNPV,
 }
+
 
 electricity_producing_techs = ["wind", "solar", "pv", "river", "hopp", "natural_gas_plant"]

@@ -1,5 +1,4 @@
 import os
-import unittest
 import importlib
 from pathlib import Path
 
@@ -248,7 +247,7 @@ def test_co2h_methanol_example(subtests):
         assert pytest.approx(model.prob.get_val("methanol.LCOM")[0], rel=1e-6) == 1.381162
 
 
-@unittest.skipUnless(importlib.util.find_spec("mcm") is not None, "mcm is not installed")
+@pytest.mark.skipif(importlib.util.find_spec("mcm") is None, reason="mcm is not installed")
 def test_doc_methanol_example(subtests):
     # Change the current working directory to the CO2 Hydrogenation example's directory
     os.chdir(EXAMPLE_DIR / "03_methanol" / "co2_hydrogenation_doc")
@@ -371,7 +370,7 @@ def test_paper_example(subtests):
         assert pytest.approx(model.prob.get_val("paper_mill.LCOP"), rel=1e-3) == 51.733275
 
 
-@unittest.skipUnless(importlib.util.find_spec("mcm") is not None, "mcm is not installed")
+@pytest.mark.skipif(importlib.util.find_spec("mcm") is None, reason="mcm is not installed")
 def test_wind_wave_doc_example(subtests):
     # Change the current working directory to the example's directory
     os.chdir(EXAMPLE_DIR / "09_co2/direct_ocean_capture")
@@ -398,7 +397,7 @@ def test_wind_wave_doc_example(subtests):
         )
 
 
-@unittest.skipUnless(importlib.util.find_spec("mcm") is not None, "mcm is not installed")
+@pytest.mark.skipif(importlib.util.find_spec("mcm") is None, reason="mcm is not installed")
 def test_splitter_wind_doc_h2_example(subtests):
     # Change the current working directory to the example's directory
     os.chdir(EXAMPLE_DIR / "17_splitter_wind_doc_h2")
@@ -532,7 +531,7 @@ def test_hydrogen_dispatch_example(subtests):
         )
 
 
-@unittest.skipUnless(importlib.util.find_spec("mcm") is not None, "mcm is not installed")
+@pytest.mark.skipif(importlib.util.find_spec("mcm") is None, reason="mcm is not installed")
 def test_wind_wave_oae_example(subtests):
     # Change the current working directory to the example's directory
     os.chdir(EXAMPLE_DIR / "09_co2/ocean_alkalinity_enhancement")
@@ -558,7 +557,7 @@ def test_wind_wave_oae_example(subtests):
         )
 
 
-@unittest.skipUnless(importlib.util.find_spec("mcm") is not None, "mcm is not installed")
+@pytest.mark.skipif(importlib.util.find_spec("mcm") is None, reason="mcm is not installed")
 def test_wind_wave_oae_example_with_finance(subtests):
     # Change the current working directory to the example's directory
     os.chdir(EXAMPLE_DIR / "09_co2/ocean_alkalinity_enhancement_financials")
