@@ -3,7 +3,7 @@ import openmdao.api as om
 from attrs import field, define
 
 from h2integrate.core.utilities import merge_shared_inputs
-from h2integrate.core.validators import contains
+from h2integrate.core.validators import contains, must_equal
 from h2integrate.core.model_baseclasses import CostModelBaseClass
 
 
@@ -53,6 +53,8 @@ class HumbertStinnEwinCostConfig(CostModelBaseClass):
     electrolysis_type: str = field(
         kw_only=True, converter=(str.lower, str.strip), validator=contains(["ahe", "mse", "moe"])
     )  # product selection
+    # Set cost year to 2018 - fixed for Humbert modeling
+    cost_year: int = field(default=2018, converter=int, validator=must_equal(2018))
 
 
 class HumbertStinnEwinCostComponent(om.ExplicitComponent):
@@ -95,7 +97,7 @@ class HumbertStinnEwinCostComponent(om.ExplicitComponent):
             limestone_ratio = 0  # Ratio of limestone consumption to annual iron production
             anode_ratio = 0  # Ratio of annode mass to annual iron production
             # Anode replacement interval not considered by Humbert, 3 years assumed here
-            anode_replace_year = 3  # Replacement interval of anodes, years
+            anode_replace_int = 3  # Replacement interval of anodes (years)
 
         elif ewin_type == "mse":
             # MSE - Capex
@@ -116,7 +118,7 @@ class HumbertStinnEwinCostComponent(om.ExplicitComponent):
             limestone_ratio = 0  # Ratio of limestone consumption to annual iron production
             anode_ratio = 1589.3 / 2e6  # Ratio of annode mass to annual iron production
             # Anode replacement interval not considered by Humbert, 3 years assumed here
-            anode_replace_year = 3  # Replacement interval of anodes, years
+            anode_replace_int = 3  # Replacement interval of anodes (years)
 
         elif ewin_type == "moe":
             # MOE - Capex
@@ -137,41 +139,61 @@ class HumbertStinnEwinCostComponent(om.ExplicitComponent):
             limestone_ratio = 0  # Ratio of limestone consumption to annual iron production
             anode_ratio = 8365.6 / 2e6  # Ratio of annode mass to annual iron production
             # Anode replacement interval not considered by Humbert, 3 years assumed here
-            anode_replace_year = 3  # Replacement interval of anodes, years
+            anode_replace_int = 3  # Replacement interval of anodes (years)
 
-        self.add_input("electrolysis_temp", val=T, units="C")
         self.add_input("output_capacity", val=0.0, units="Mg/year")  # Mg = tonnes
 
-        # Temporary to make ruff happy
-        self.inputs = [
-            T,
-            z,
-            j,
-            A,
-            e,
-            M,
-            E_spec,
-            V,
-            N,
-            labor,
-            NaOH_ratio,
-            CaCl2_ratio,
-            limestone_ratio,
-            anode_ratio,
-            anode_replace_year,
-        ]
+        # Set inputs for Stinn Capex model
+        self.add_input("electrolysis_temp", val=T, units="C")
+        self.add_input("electron_moles", val=z, units=None)
+        self.add_input("current_density", val=j, units="A/m**2")
+        self.add_input("electrode_area", val=A, units="m**2")
+        self.add_input("current_efficiency", val=e, units=None)
+        self.add_input("cell_voltage", val=V, units="V")
+        self.add_input("rectifier_lines", val=N, units=None)
+        self.add_input("specific_energy", val=E_spec, units="kW*h/kg")
+
+        # Set inputs for Humbert Opex model
+        self.add_input("labor_rate", val=labor, units="hr/Mg")
+        self.add_input("NaOH_ratio", val=NaOH_ratio, units=None)
+        self.add_input("CaCl2_ratio", val=CaCl2_ratio, units=None)
+        self.add_input("limestone_ratio", val=limestone_ratio, units=None)
+        self.add_input("anode_ratio", val=anode_ratio, units=None)
+        self.add_input("anode_replacement_interval", val=anode_replace_int, units="year")
+
+        # Set outputs for Stinn Capex model
+        self.add_output("processing_capex", val=0.0, units="USD")
+        self.add_output("electrolysis_capex", val=0.0, units="USD")
+        self.add_output("rectifier_capex", val=0.0, units="USD")
+
+        # Set outputs for Humbert Opex model
+        self.add_output("labor_opex", val=0.0, units="USD")
+        self.add_output("NaOH_opex", val=0.0, units="USD")
+        self.add_output("CaCl2_opex", val=0.0, units="USD")
+        self.add_output("limestone_opex", val=0.0, units="USD")
+        self.add_output("anode_opex", val=0.0, units="USD")
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
+        # Parse inputs for Stinn Capex model
+        T = inputs["electrolysis_temp"]
+        z = inputs["electron_moles"]
+        j = inputs["current_density"]
+        A = inputs["electrode_area"]
+        e = inputs["current_efficiency"]
+        V = inputs["cell_voltage"]
+        N = inputs["rectifier_lines"]
+        E_spec = inputs["specific_energy"]
+        P = inputs["output_capacity"]
+        p = P * 1000 / 8760 / 3600  # kg/s
+
+        # Calculate total power
+        j_cell = A * j  # current/cell [A]
+        Q_cell = j_cell * V  # power/cell [W]
+        P_cell = Q_cell * 8760 / E_spec  # annual production capacity/cell [kg]
+        N_cell = P * 1e6 / P_cell  # number of cells [-]
+        Q = Q_cell * N_cell / 1e6  # total installed power [MW]
+
+        # Execute Stinn capex model
         stinn_capex_calc(
-            a1n,
-            a1d,
-            a1t,
-            a2n,
-            a2d,
-            a2t,
-            a3n,
-            e1,
-            e2,
-            e3,
-            e4,  # T, P, p, z, F, j, A, e, M, Q, V, N
+            a1n, a1d, a1t, a2n, a2d, a2t, a3n, e1, e2, e3, e4, T, P, p, z, f, j, A, e, M, Q, V, N
         )
