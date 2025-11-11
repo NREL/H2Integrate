@@ -25,7 +25,7 @@ class NaturalGasPerformanceConfig(BaseConfig):
             - NGCC: 6-8 MMBtu/MWh
     """
 
-    system_capacity: float = field(validator=gte_zero)
+    system_capacity_mw: float = field(validator=gte_zero)
     heat_rate_mmbtu_per_mwh: float = field(validator=gt_zero)
 
 
@@ -93,7 +93,7 @@ class NaturalGasPerformanceModel(om.ExplicitComponent):
         # Add rated capacity as an input with config value as default
         self.add_input(
             "system_capacity",
-            val=self.config.system_capacity,
+            val=self.config.system_capacity_mw,
             units="MW",
             desc="Natural gas plant rated capacity in MW",
         )
@@ -101,7 +101,7 @@ class NaturalGasPerformanceModel(om.ExplicitComponent):
         # Default the electricity demand input as the rated capacity
         self.add_input(
             "electricity_demand",
-            val=self.config.system_capacity,
+            val=self.config.system_capacity_mw,
             shape=n_timesteps,
             units="MW",
             desc="Electricity demand for natural gas plant",
@@ -191,7 +191,7 @@ class NaturalGasCostModelConfig(CostModelBaseConfig):
         cost_year (int): Dollar year corresponding to input costs.
     """
 
-    system_capacity: float | int = field(validator=gt_zero)
+    system_capacity_mw: float | int = field(validator=gt_zero)
     capex_per_kw: float | int = field(validator=gte_zero)
     fixed_opex_per_kw_per_year: float | int = field(validator=gte_zero)
     variable_opex_per_mwh: float | int = field(validator=gte_zero)
@@ -239,7 +239,7 @@ class NaturalGasCostModel(CostModelBaseClass):
         # Add inputs specific to the cost model with config values as defaults
         self.add_input(
             "system_capacity",
-            val=self.config.system_capacity,
+            val=self.config.system_capacity_mw,
             units="MW",
             desc="Natural gas plant capacity",
         )
