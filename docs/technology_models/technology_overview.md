@@ -43,6 +43,7 @@ The inputs, outputs, and corresponding technology that are currently available i
 | `methanol`   |  methanol     | ??? |
 | `air_separator`   |  nitrogen     | electricity |
 | `desal`   |  water     | electricity |
+| `natural_gas`   |  electricity     | natural gas |
 
 (transport)=
 ## Transport
@@ -180,6 +181,11 @@ Below summarizes the available performance, cost, and financial models for each 
         + `'reverse_osmosis_desalination_performance'`
     - cost models:
         + `'reverse_osmosis_desalination_cost'`
+- `natural_gas`: natural gas combined cycle and combustion turbine
+    - performance models:
+        + `'natural_gas_performance'`
+    - cost_models:
+        + `'natural_gas_cost'`
 
 (transport-models)=
 ## Transport Models
