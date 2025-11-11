@@ -53,6 +53,8 @@ class HumbertEwinPerformanceComponent(om.ExplicitComponent):
 
         self.add_output("limiting_input", val=0.0, shape=n_timesteps, units="kg")
         self.add_output("hot_iron_out", val=0.0, shape=n_timesteps, units="kg")
+        self.add_output("total_hot_iron_produced", val=0.0, units="kg/year")
+        self.add_output("output_capacity", val=0.0, units="kg/year")
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         # Parse inputs
@@ -80,3 +82,5 @@ class HumbertEwinPerformanceComponent(om.ExplicitComponent):
 
         # Return iron production
         outputs["hot_iron_out"] = fe_prod
+        outputs["total_hot_iron_produced"] = np.sum(fe_prod)
+        outputs["output_capacity"] = cap_kw / kwh_kg_fe * 8760
