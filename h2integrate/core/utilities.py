@@ -808,7 +808,15 @@ def print_results(model, includes=None, excludes=None, show_units=True):
                         table.add_row(f"{indent}{grp_name}", "", "", "")
             var = parts[-1]
             indent = "  " * (len(parts) - 1)
-            mean_val = f"{_mean(meta.get("val")):,.4f}"
+            mean_raw = _mean(meta.get("val"))
+            try:
+                val = float(mean_raw)
+                if abs(val) >= 1e5:
+                    mean_val = f"{val:,.2f}"
+                else:
+                    mean_val = f"{val:,.4f}"
+            except (ValueError, TypeError):
+                mean_val = str(mean_raw)
             units_val = (
                 "n/a"
                 if (var == "cost_year" or meta.get("units") is None)
