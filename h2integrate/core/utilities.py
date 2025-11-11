@@ -786,7 +786,7 @@ def print_results(model, includes=None, excludes=None, show_units=True):
         console.print(f"\n{len(meta_list)} {title.lower()} {kind_label}:")
         table = Table(show_header=True, header_style="bold", box=box.MINIMAL, pad_edge=False)
         table.add_column("Variable", overflow="fold")
-        table.add_column("Mean")
+        table.add_column("Mean", justify="right")
         if show_units:
             table.add_column("Units")
         table.add_column("Shape")
@@ -808,7 +808,7 @@ def print_results(model, includes=None, excludes=None, show_units=True):
                         table.add_row(f"{indent}{grp_name}", "", "", "")
             var = parts[-1]
             indent = "  " * (len(parts) - 1)
-            mean_val = _mean(meta.get("val"))
+            mean_val = f"{_mean(meta.get("val")):,.4f}"
             units_val = (
                 "n/a"
                 if (var == "cost_year" or meta.get("units") is None)
