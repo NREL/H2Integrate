@@ -110,9 +110,6 @@ class ECOElectrolyzerPerformanceModel(ElectrolyzerPerformanceBaseClass):
         hydrogen_production_capacity_required_kgphr = []
         grid_connection_scenario = "off-grid"
 
-        # Need to make sure electricity_in is never exactly zero to prevent NaNs in iterative_mode
-        self.set_val("electricity_in", np.maximum(inputs["electricity_in"], 1e-6))
-
         # Parse in sizing parameters
         size_mode = self.config.sizing["size_mode"]
         if "max_feedstock_ratio" not in self.config.sizing.keys():
