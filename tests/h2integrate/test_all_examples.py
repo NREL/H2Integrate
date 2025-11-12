@@ -1055,13 +1055,11 @@ def test_simple_dispatch_example(subtests):
 def test_csvgen_design_of_experiments(subtests):
     os.chdir(EXAMPLE_DIR / "20_solar_electrolyzer_doe")
 
-    # Create a H2Integrate model
-
     with pytest.raises(UserWarning) as excinfo:
         model = H2IntegrateModel(Path.cwd() / "20_solar_electrolyzer_doe.yaml")
         assert "There may be issues with the csv file csv_doe_cases.csv" in str(excinfo.value)
 
-    # Run the model
+    import pandas as pd
     from hopp.utilities.utilities import load_yaml
 
     from h2integrate.core.utilities import check_file_format_for_csv_generator
@@ -1094,8 +1092,26 @@ def test_csvgen_design_of_experiments(subtests):
     # save the updated top-level config file to a new file
     write_yaml(main_config, new_toplevel_fpath)
 
+    # Run the model
     model = H2IntegrateModel(new_toplevel_fpath)
     model.run()
+
+    # summarize sql file
+    model.post_process(summarize_sql=True)
+
+    with subtests.test("Check that sql file was summarized"):
+        assert model.recorder_path is not None
+        summarized_filepath = model.recorder_path.parent / f"{model.recorder_path.stem}.csv"
+        assert summarized_filepath.is_file()
+    with subtests.test("Check that sql summary file was written as expected"):
+        summary = pd.read_csv(summarized_filepath, index_col="Unnamed: 0")
+        assert len(summary) == 10
+        d_var_cols = ["solar.capacity_kWdc (kW)", "electrolyzer.n_clusters (unitless)"]
+        assert summary.columns.to_list()[0] in d_var_cols
+        assert summary.columns.to_list()[1] in d_var_cols
+        assert "finance_subgroup_hydrogen.LCOH_optimistic (USD/kg)" in summary.columns.to_list()
+    # delete summary file
+    summarized_filepath.unlink()
 
     sql_fpath = Path.cwd() / "ex_20_out" / "cases.sql"
     cr = om.CaseReader(str(sql_fpath))
