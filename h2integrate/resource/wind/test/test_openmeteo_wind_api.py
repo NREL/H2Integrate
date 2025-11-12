@@ -46,6 +46,7 @@ def site_config_download_from_web():
                 "resource_parameters": {
                     "resource_year": 2023,
                     "resource_filename": "open-meteo-44.04N95.20W438m.csv",
+                    "check_for_location_change": False,
                 },
             }
         },
