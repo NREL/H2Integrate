@@ -5,7 +5,13 @@ import networkx as nx
 import openmdao.api as om
 import matplotlib.pyplot as plt
 
-from h2integrate.core.utilities import get_path, find_file, load_yaml, create_xdsm_from_config
+from h2integrate.core.utilities import (
+    get_path,
+    find_file,
+    load_yaml,
+    print_results,
+    create_xdsm_from_config,
+)
 from h2integrate.finances.finances import AdjustedCapexOpexComp
 from h2integrate.core.resource_summer import ElectricitySumComp
 from h2integrate.core.supported_models import supported_models, electricity_producing_techs
@@ -1155,9 +1161,9 @@ class H2IntegrateModel:
         Also, if `show_plots` is set to True, then any performance models with post-processing
         plots available will be run and shown.
         """
-
-        self.prob.model.list_inputs(units=True, print_mean=True, excludes=["*resource_data"])
-        self.prob.model.list_outputs(units=True, print_mean=True, excludes=["*resource_data"])
+        # Use custom summary printer instead of OpenMDAO's built-in printing so we can
+        # suppress internal value printing and display only mean values.
+        print_results(self.prob.model, excludes=["*resource_data"])
 
         for model in self.performance_models:
             if hasattr(model, "post_process") and callable(model.post_process):
