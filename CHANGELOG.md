@@ -25,6 +25,7 @@
 - Added `load_yaml()` function and flexibility to input a config dictionary to H2IntegrateModel rather than a filepath
 - Removed `boundaries` from the necessary keys in `plant_config` validation
 - Improved the readability of the postprocessing printout
+- Added ability for latitude and longitude to be design variables in design sweep
 
 ## 0.4.0 [October 1, 2025]
 
