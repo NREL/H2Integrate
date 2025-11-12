@@ -37,6 +37,7 @@ from h2integrate.storage.hydrogen.tank_baseclass import (
 )
 from h2integrate.converters.hydrogen.wombat_model import WOMBATElectrolyzerModel
 from h2integrate.storage.battery.atb_battery_cost import ATBBatteryCostModel
+from h2integrate.converters.iron.humbert_ewin_perf import HumbertEwinPerformanceComponent
 from h2integrate.converters.ammonia.ammonia_synloop import (
     AmmoniaSynLoopCostModel,
     AmmoniaSynLoopPerformanceModel,
@@ -62,6 +63,7 @@ from h2integrate.converters.ammonia.simple_ammonia_model import (
     SimpleAmmoniaCostModel,
     SimpleAmmoniaPerformanceModel,
 )
+from h2integrate.converters.iron.humbert_stinn_ewin_cost import HumbertStinnEwinCostComponent
 from h2integrate.converters.methanol.co2h_methanol_plant import (
     CO2HMethanolPlantCostModel,
     CO2HMethanolPlantFinanceModel,
@@ -150,6 +152,8 @@ supported_models = {
     "iron_mine_cost": IronMineCostComponent,
     "iron_plant_performance": IronPlantPerformanceComponent,
     "iron_plant_cost": IronPlantCostComponent,
+    "humbert_electrowinning_performance": HumbertEwinPerformanceComponent,
+    "humbert_stinn_electrowinning_cost": HumbertStinnEwinCostComponent,
     "reverse_osmosis_desalination_performance": ReverseOsmosisPerformanceModel,
     "reverse_osmosis_desalination_cost": ReverseOsmosisCostModel,
     "simple_ammonia_performance": SimpleAmmoniaPerformanceModel,

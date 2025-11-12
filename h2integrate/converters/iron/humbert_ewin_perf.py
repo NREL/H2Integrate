@@ -46,13 +46,13 @@ class HumbertEwinPerformanceComponent(om.ExplicitComponent):
         spec_energy_cons_fe = (spec_energy_cons_lo + spec_energy_cons_hi) / 2  # kWh/kg_Fe
 
         self.add_input("electricity_in", val=0.0, shape=n_timesteps, units="kW")
-        self.add_input("iron_ore_in", val=0.0, shape=n_timesteps, units="kg")
+        self.add_input("iron_ore_in", val=0.0, shape=n_timesteps, units="kg/h")
         self.add_input("ore_fe_wt_pct", val=self.config.ore_fe_wt_pct, units="percent")
         self.add_input("spec_energy_cons_fe", val=spec_energy_cons_fe, units="kW*h/kg")
         self.add_input("capacity", val=self.config.capacity_mw, shape=n_timesteps, units="MW")
 
-        self.add_output("limiting_input", val=0.0, shape=n_timesteps, units="kg")
-        self.add_output("hot_iron_out", val=0.0, shape=n_timesteps, units="kg")
+        self.add_output("limiting_input", val=0.0, shape=n_timesteps, units=None)
+        self.add_output("hot_iron_out", val=0.0, shape=n_timesteps, units="kg/h")
         self.add_output("total_hot_iron_produced", val=0.0, units="kg/year")
         self.add_output("output_capacity", val=0.0, units="kg/year")
 

@@ -1,8 +1,7 @@
 import numpy as np
-import openmdao.api as om
 from attrs import field, define
 
-from h2integrate.core.utilities import merge_shared_inputs
+from h2integrate.core.utilities import CostModelBaseConfig, merge_shared_inputs
 from h2integrate.core.validators import contains, must_equal
 from h2integrate.core.model_baseclasses import CostModelBaseClass
 
@@ -48,7 +47,15 @@ def stinn_capex_calc(T, P, p, z, j, A, e, Q, V, N):
 
 
 def humbert_opex_calc(
-    capacity, positions, NaOH_ratio, CaCl2_ratio, limestone_ratio, anode_ratio, anode_interval
+    capacity,
+    positions,
+    NaOH_ratio,
+    CaCl2_ratio,
+    limestone_ratio,
+    anode_ratio,
+    anode_interval,
+    ore_in,
+    ore_price,
 ):
     """
     Calculations in Excel spreadsheet SI of Humbert doi.org/10.1149.2/2.F06202IF
@@ -67,12 +74,13 @@ def humbert_opex_calc(
     CaCl2_varopex = CaCl2_ratio * capacity * CaCl2_cost  # CaCl2 VarOpEx USD/year
     limestone_varopex = limestone_ratio * capacity * limestone_cost  # CaCl2 VarOpEx USD/year
     anode_varopex = anode_ratio * capacity * anode_cost / anode_interval  # Anode VarOpEx USD/year
+    ore_varopex = np.sum(ore_in * ore_price)  # Ore VarOpEx USD/year
 
-    return labor_opex, NaOH_varopex, CaCl2_varopex, limestone_varopex, anode_varopex
+    return labor_opex, NaOH_varopex, CaCl2_varopex, limestone_varopex, anode_varopex, ore_varopex
 
 
 @define
-class HumbertStinnEwinCostConfig(CostModelBaseClass):
+class HumbertStinnEwinCostConfig(CostModelBaseConfig):
     electrolysis_type: str = field(
         kw_only=True, converter=(str.lower, str.strip), validator=contains(["ahe", "mse", "moe"])
     )  # product selection
@@ -80,7 +88,7 @@ class HumbertStinnEwinCostConfig(CostModelBaseClass):
     cost_year: int = field(default=2018, converter=int, validator=must_equal(2018))
 
 
-class HumbertStinnEwinCostComponent(om.ExplicitComponent):
+class HumbertStinnEwinCostComponent(CostModelBaseClass):
     """
     Humbert: doi.org/10.1007/s40831-024-00878-3
     Stinn: doi.org/10.1149.2/2.F06202IF
@@ -97,6 +105,7 @@ class HumbertStinnEwinCostComponent(om.ExplicitComponent):
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance"),
             strict=False,
         )
+        super().setup()
 
         ewin_type = self.config.electrolysis_type
 
@@ -165,6 +174,7 @@ class HumbertStinnEwinCostComponent(om.ExplicitComponent):
             anode_replace_int = 3  # Replacement interval of anodes (years)
 
         self.add_input("output_capacity", val=0.0, units="Mg/year")  # Mg = tonnes
+        self.add_input("price_iron_ore_", val=0.0, units="USD/Mg")
 
         # Set inputs for Stinn Capex model
         self.add_input("electrolysis_temp", val=T, units="C")
@@ -190,11 +200,12 @@ class HumbertStinnEwinCostComponent(om.ExplicitComponent):
         self.add_output("rectifier_capex", val=0.0, units="USD")
 
         # Set outputs for Humbert Opex model
-        self.add_output("labor_opex", val=0.0, units="USD")
-        self.add_output("NaOH_opex", val=0.0, units="USD")
-        self.add_output("CaCl2_opex", val=0.0, units="USD")
-        self.add_output("limestone_opex", val=0.0, units="USD")
-        self.add_output("anode_opex", val=0.0, units="USD")
+        self.add_output("labor_opex", val=0.0, units="USD/year")
+        self.add_output("NaOH_opex", val=0.0, units="USD/year")
+        self.add_output("CaCl2_opex", val=0.0, units="USD/year")
+        self.add_output("limestone_opex", val=0.0, units="USD/year")
+        self.add_output("anode_opex", val=0.0, units="USD/year")
+        self.add_output("ore_opex", val=0.0, units="USD/year")
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         # Parse inputs for Stinn Capex model
