@@ -31,8 +31,9 @@ site:
 # this will naturally grow as we mature the interconnected tech
 technology_interconnections: [
   ["iron_mine","iron_transport","total_iron_ore_produced"],
-  # ["iron_transport","iron_plant","iron_transport_cost"],
+  ["iron_transport","iron_plant","iron_transport_cost"],
   ["finance_subgroup_iron_ore","iron_plant","price_iron_ore_"],
+  ["finance_subgroup_electricity","iron_plant","price_electricity_"],
   ["wind","iron_plant","electricity","cable"]
 ]
 
@@ -70,11 +71,15 @@ finance_parameters:
     cost_year_adjustment_inflation: 0.025
     target_dollar_year: 2022
   finance_subgroups:
+    electricity:
+      commodity: "electricity"
+      commodity_stream: "wind"
+      technologies: ["wind"]
     iron_ore:
       commodity: "iron_ore"
       commodity_stream: "iron_mine"
       technologies: ["iron_mine"]
-    hot_iron:
-      commodity: "hot_iron"
+    sponge_iron:
+      commodity: "sponge_iron"
       commodity_stream: "iron_plant"
       technologies: ["iron_plant"] #

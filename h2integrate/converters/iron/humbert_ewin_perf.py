@@ -49,20 +49,28 @@ class HumbertEwinPerformanceComponent(om.ExplicitComponent):
         self.add_input("iron_ore_in", val=0.0, shape=n_timesteps, units="kg/h")
         self.add_input("ore_fe_wt_pct", val=self.config.ore_fe_wt_pct, units="percent")
         self.add_input("spec_energy_cons_fe", val=spec_energy_cons_fe, units="kW*h/kg")
-        self.add_input("capacity", val=self.config.capacity_mw, shape=n_timesteps, units="MW")
+        self.add_input("capacity", val=self.config.capacity_mw, units="MW")
 
         self.add_output("limiting_input", val=0.0, shape=n_timesteps, units=None)
-        self.add_output("hot_iron_out", val=0.0, shape=n_timesteps, units="kg/h")
-        self.add_output("total_hot_iron_produced", val=0.0, units="kg/year")
+        self.add_output("sponge_iron_out", val=0.0, shape=n_timesteps, units="kg/h")
+        self.add_output("total_sponge_iron_produced", val=0.0, units="kg/year")
         self.add_output("output_capacity", val=0.0, units="kg/year")
 
-    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
+    def compute(self, inputs, outputs):
+        n_timesteps = self.options["plant_config"]["plant"]["simulation"]["n_timesteps"]
+
         # Parse inputs
         elec_in = inputs["electricity_in"]
         ore_in = inputs["iron_ore_in"]
         pct_fe = inputs["ore_fe_wt_pct"]
         kwh_kg_fe = inputs["spec_energy_cons_fe"]
         cap_kw = inputs["capacity"] * 1000
+
+        # If no connected input, set ore / electricity to max needed
+        if self.get_source("electricity_in")[:9] == "_auto_ivc":
+            elec_in = np.full(n_timesteps, cap_kw)
+        if self.get_source("iron_ore_in")[:9] == "_auto_ivc":
+            ore_in = np.full(n_timesteps, cap_kw / kwh_kg_fe / pct_fe * 100)
 
         # Calculate max iron production for each input
         fe_from_ore = ore_in * pct_fe / 100
@@ -81,6 +89,6 @@ class HumbertEwinPerformanceComponent(om.ExplicitComponent):
         outputs["limiting_input"] = limiters
 
         # Return iron production
-        outputs["hot_iron_out"] = fe_prod
-        outputs["total_hot_iron_produced"] = np.sum(fe_prod)
+        outputs["sponge_iron_out"] = fe_prod
+        outputs["total_sponge_iron_produced"] = np.sum(fe_prod)
         outputs["output_capacity"] = cap_kw / kwh_kg_fe * 8760
