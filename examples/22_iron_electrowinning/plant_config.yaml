@@ -17,6 +17,14 @@ site:
     }
   ]
 
+  resources:
+    wind_resource:
+      resource_model: "wind_toolkit_v2_api"
+      resource_parameters:
+        latitude: 35.2018863
+        longitude: -101.945027
+        resource_year: 2012
+
 # array of arrays containing left-to-right technology
 # interconnections; can support bidirectional connections
 # with the reverse definition.
@@ -26,6 +34,11 @@ technology_interconnections: [
   # ["iron_transport","iron_plant","iron_transport_cost"],
   ["finance_subgroup_iron_ore","iron_plant","price_iron_ore_"],
   ["wind","iron_plant","electricity","cable"]
+]
+
+resource_to_tech_connections: [
+  # connect the wind resource to the wind technology
+  ['wind_resource', 'wind', 'wind_resource_data'],
 ]
 
 plant:
