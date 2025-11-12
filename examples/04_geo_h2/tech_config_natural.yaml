@@ -1,18 +1,18 @@
-name: "technology_config"
-description: "This hybrid plant produces geologic hydrogen"
+name: technology_config
+description: This hybrid plant produces geologic hydrogen
 
 technologies:
   geoh2_well_subsurface:
     performance_model:
-      model: "simple_natural_geoh2_performance"
+      model: simple_natural_geoh2_performance
     cost_model:
-      model: "mather_modified_geoh2_cost"
+      model: mather_modified_geoh2_cost
     model_inputs:
       shared_parameters:
         well_lifetime: 20
         borehole_depth: 2000
-        well_diameter: "small"
-        well_geometry: "vertical"
+        well_diameter: small
+        well_geometry: vertical
       performance_parameters:
         rock_type: 'peridotite'
         grain_size: 0.01

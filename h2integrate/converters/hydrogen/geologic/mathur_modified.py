@@ -37,6 +37,11 @@ class GeoH2SubsurfaceCostConfig(GeoH2SubsurfaceCostConfig):
             raise ValueError(
                 "If 'use_cost_curve' is False, 'constant_drill_cost' must be provided."
             )
+        # check if cost curve is true and constant_drill_cost is provided
+        if self.use_cost_curve and self.constant_drill_cost is not None:
+            raise ValueError(
+                "If 'use_cost_curve' is True, 'constant_drill_cost' should not be provided."
+            )
 
 
 class GeoH2SubsurfaceCostModel(GeoH2SubsurfaceCostBaseClass):

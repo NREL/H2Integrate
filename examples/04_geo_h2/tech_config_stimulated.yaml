@@ -1,5 +1,5 @@
-name: "technology_config"
-description: "This hybrid plant produces geologic hydrogen"
+name: technology_config
+description: This hybrid plant produces geologic hydrogen
 
 technologies:
   geoh2_well_subsurface:
@@ -11,10 +11,10 @@ technologies:
       shared_parameters:
         well_lifetime: 20
         borehole_depth: 4000
-        well_diameter: "small"
-        well_geometry: "horizontal"
+        well_diameter: small
+        well_geometry: horizontal
       performance_parameters:
-        rock_type: 'peridotite'
+        rock_type: peridotite
         grain_size: 0.001
         olivine_phase_vol: 50
         olivine_fe_ii_conc: 15
