@@ -19,7 +19,6 @@ class CostModelBaseClass(om.ExplicitComponent):
         self.options.declare("driver_config", types=dict)
         self.options.declare("plant_config", types=dict)
         self.options.declare("tech_config", types=dict)
-        self.options.declare("whole_tech_config", types=dict)
 
     def setup(self):
         plant_life = int(self.options["plant_config"]["plant"]["plant_life"])

@@ -20,7 +20,6 @@ class PaperMillPerformance(om.ExplicitComponent):
         self.options.declare("driver_config", types=dict)
         self.options.declare("plant_config", types=dict)
         self.options.declare("tech_config", types=dict)
-        self.options.declare("whole_tech_config", types=dict)
 
     def setup(self):
         self.config = PaperMillConfig.from_dict(
@@ -73,7 +72,6 @@ class PaperMillFinance(om.ExplicitComponent):
         self.options.declare("driver_config", types=dict)
         self.options.declare("plant_config", types=dict)
         self.options.declare("tech_config", types=dict)
-        self.options.declare("whole_tech_config", types=dict)
 
     def setup(self):
         self.add_input("CapEx", val=0.0, units="USD", desc="Capital expenditure")

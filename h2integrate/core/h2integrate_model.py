@@ -424,7 +424,7 @@ class H2IntegrateModel:
                 for model_type in model_types:
                     if model_type in individual_tech_config:
                         om_model_object = self._process_model(
-                            model_type, individual_tech_config, tech_group, self.technology_config
+                            model_type, individual_tech_config, tech_group
                         )
                         if "control_strategy" in model_type:
                             plural_model_type_name = "control_strategies"
@@ -464,7 +464,7 @@ class H2IntegrateModel:
                 )
                 self.plant.add_subsystem(tech_name, comp)
 
-    def _process_model(self, model_type, individual_tech_config, tech_group, whole_tech_config={}):
+    def _process_model(self, model_type, individual_tech_config, tech_group):
         # Generalized function to process model definitions
         model_name = individual_tech_config[model_type]["model"]
         model_object = self.supported_models[model_name]
@@ -474,7 +474,6 @@ class H2IntegrateModel:
                 driver_config=self.driver_config,
                 plant_config=self.plant_config,
                 tech_config=individual_tech_config,
-                whole_tech_config=whole_tech_config,
             ),
             promotes=["*"],
         )

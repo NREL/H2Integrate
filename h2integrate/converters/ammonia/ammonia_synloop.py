@@ -41,10 +41,6 @@ class AmmoniaSynLoopPerformanceConfig(BaseConfig):
         sizing (dict): A dictionary containing the following model sizing parameters:
             - size_mode (str): The mode in which the component is sized. Options:
                 - "normal": The component size is taken from the tech_config.
-            - iterative_mode (bool): A temporary boolean used to switch between the two methods of
-                executing "resize_by_max_commodity" mode. When true an additional connected variable
-                will be made from the upstream component, making a group with no explicit solution.
-                OM will attempt to solve this but will crash, just here for demonstration purposes.
         *production_capacity (float): The total production capacity of the ammonia synthesis loop
             (in kg ammonia per hour)
         *catalyst_consumption_rate (float): The mass ratio of catalyst consumed by the reactor over
@@ -154,7 +150,6 @@ class AmmoniaSynLoopPerformanceModel(om.ExplicitComponent):
         self.options.declare("plant_config", types=dict)
         self.options.declare("tech_config", types=dict)
         self.options.declare("driver_config", types=dict)
-        self.options.declare("whole_tech_config", types=dict)
 
     def setup(self):
         n_timesteps = self.options["plant_config"]["plant"]["simulation"]["n_timesteps"]
@@ -269,13 +264,8 @@ class AmmoniaSynLoopPerformanceModel(om.ExplicitComponent):
         outputs["total_nitrogen_consumed"] = n2_in.sum()
         outputs["total_electricity_consumed"] = elec_in.sum()
 
-        if "iterative_mode" in self.config.sizing.keys():
-            iter_mode = self.config.sizing["iterative_mode"]
-        else:
-            iter_mode = False
-        if iter_mode:
-            h2_cap = nh3_cap * h2_rate  # kg H2 per houe
-            outputs["max_hydrogen_capacity"] = h2_cap
+        h2_cap = nh3_cap * h2_rate  # kg H2 per hour
+        outputs["max_hydrogen_capacity"] = h2_cap
 
 
 @define
@@ -413,7 +403,6 @@ class AmmoniaSynLoopCostModel(CostModelBaseClass):
         self.options.declare("plant_config", types=dict)
         self.options.declare("tech_config", types=dict)
         self.options.declare("driver_config", types=dict)
-        self.options.declare("whole_tech_config", types=dict)
 
     def setup(self):
         target_cost_year = self.options["plant_config"]["finance_parameters"][

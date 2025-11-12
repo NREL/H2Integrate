@@ -8,7 +8,6 @@ class ElectrolyzerPerformanceBaseClass(om.ExplicitComponent):
         self.options.declare("driver_config", types=dict)
         self.options.declare("plant_config", types=dict)
         self.options.declare("tech_config", types=dict)
-        self.options.declare("whole_tech_config", types=dict)
 
     def setup(self):
         n_timesteps = self.options["plant_config"]["plant"]["simulation"]["n_timesteps"]
@@ -44,7 +43,6 @@ class ElectrolyzerFinanceBaseClass(om.ExplicitComponent):
         self.options.declare("driver_config", types=dict)
         self.options.declare("plant_config", types=dict)
         self.options.declare("tech_config", types=dict)
-        self.options.declare("whole_tech_config", types=dict)
 
     def setup(self):
         self.add_input("CapEx", val=0.0, units="USD")

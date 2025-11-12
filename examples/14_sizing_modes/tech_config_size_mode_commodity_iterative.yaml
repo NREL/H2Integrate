@@ -69,7 +69,6 @@ technologies:
       performance_parameters:
         sizing:
           size_mode: "normal"
-          iterative_mode: True
         capacity_factor: 0.9
         energy_demand: 0.530645243
         heat_output: 0.8299956

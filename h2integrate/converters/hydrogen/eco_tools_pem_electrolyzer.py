@@ -4,7 +4,6 @@ from attrs import field, define
 from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
 from h2integrate.core.validators import gt_zero, contains
 from h2integrate.tools.eco.utilities import ceildiv
-from h2integrate.converters.ammonia.ammonia_synloop import size_hydrogen
 from h2integrate.converters.hydrogen.electrolyzer_baseclass import ElectrolyzerPerformanceBaseClass
 from h2integrate.simulation.technologies.hydrogen.electrolysis.PEM_tools import (
     size_electrolyzer_for_hydrogen_demand,
@@ -33,10 +32,6 @@ class ECOElectrolyzerPerformanceModelConfig(BaseConfig):
                 this component to the max feedstock available.
             - max_commodity_ratio (float): The ratio of the max commodity that can be produced by
                 this component to the max commodity consumed by the downstream tech.
-            - iterative_mode (bool): A temporary boolean used to switch between the two methods of
-                executing "resize_by_max_commodity" mode. When true an additional connected variable
-                will be made from the upstream component, making a group with no explicit solution.
-                OM will attempt to solve this but will crash, just here for demonstration purposes.
         n_clusters (int): number of electrolyzer clusters within the system.
         location (str): The location of the electrolyzer; options include "onshore" or "offshore".
         cluster_rating_MW (float): The rating of the clusters that the electrolyzer is grouped
@@ -136,11 +131,6 @@ class ECOElectrolyzerPerformanceModel(ElectrolyzerPerformanceBaseClass):
                         "'resize_by_tech' must be set in sizing dict when size_mode is "
                         "'resize_by_max_commodity'"
                     )
-        if "iterative_mode" in self.config.sizing.keys():
-            iter_mode = self.config.sizing["iterative_mode"]
-        else:
-            iter_mode = False
-
         # Make changes to computation based on sizing_mode:
         if size_mode == "normal":
             # In this sizing mode, electrolyzer size comes from config
@@ -165,12 +155,7 @@ class ECOElectrolyzerPerformanceModel(ElectrolyzerPerformanceBaseClass):
                     if dest_tech == size_tech and transport_item == size_flow:
                         tech_found = True
                         if dest_tech == "ammonia":
-                            if iter_mode:
-                                h2_kgphr = inputs["max_hydrogen_capacity"]
-                            else:
-                                h2_kgphr = size_hydrogen(
-                                    self.options["whole_tech_config"]["technologies"]["ammonia"]
-                                )
+                            h2_kgphr = inputs["max_hydrogen_capacity"]
                         else:
                             raise ValueError(f"Sizing mode not defined for '{dest_tech}'")
                     else:
