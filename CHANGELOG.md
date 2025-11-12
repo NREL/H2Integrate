@@ -24,6 +24,8 @@
 - Added wind resource model for API calls to Open-Meteo archive
 - Added `load_yaml()` function and flexibility to input a config dictionary to H2IntegrateModel rather than a filepath
 - Fixed stoichiometry mistake in ammonia synloop
+- Removed `boundaries` from the necessary keys in `plant_config` validation
+- Improved the readability of the postprocessing printout
 
 ## 0.4.0 [October 1, 2025]
 
