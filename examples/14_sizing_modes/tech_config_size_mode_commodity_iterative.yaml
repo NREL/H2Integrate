@@ -16,7 +16,6 @@ technologies:
           size_mode: "resize_by_max_commodity"
           resize_by_flow: "hydrogen"
           resize_by_tech: "ammonia"
-          iterative_mode: True
         n_clusters: 16
         cluster_rating_MW: 40
         pem_control_type: 'basic'
