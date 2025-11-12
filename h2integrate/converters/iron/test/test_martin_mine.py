@@ -9,9 +9,6 @@ from h2integrate.converters.iron.martin_mine_cost_model import MartinIronMineCos
 from h2integrate.converters.iron.martin_mine_perf_model import MartinIronMinePerformanceComponent
 
 
-# baseline case
-
-
 @fixture
 def iron_ore_config_martin_om():
     shared_params = {
@@ -19,21 +16,8 @@ def iron_ore_config_martin_om():
         "taconite_pellet_type": "drg",
         "max_ore_production_rate_tonnes_per_hr": 516.0497610311598,
     }
-    # performance_params = {"ore_cf_estimate": 0.9, "model_name": "martin_ore"}
-    # cost_params = {
-    #     # "LCOE": 58.02,
-    #     # "LCOH": 7.10,
-    #     "model_name": "martin_ore",
-    #     "varom_model_name": "martin_ore",
-    #     "installation_years": 3,
-    #     "operational_year": 2035,
-    #     # 'plant_life': 30,
-    # }
-
     tech_config = {
         "model_inputs": {
-            # "cost_parameters": cost_params,
-            # "performance_parameters": performance_params,
             "shared_parameters": shared_params,
         }
     }
@@ -68,7 +52,6 @@ def driver_config():
 
 def test_baseline_iron_ore_costs(plant_config, driver_config, iron_ore_config_martin_om, subtests):
     martin_ore_capex = 1221599018.626594
-    # martin_ore_var_om = 441958721.59532887
     martin_ore_fixed_om = 0.0
 
     prob = om.Problem()
@@ -89,22 +72,17 @@ def test_baseline_iron_ore_costs(plant_config, driver_config, iron_ore_config_ma
     prob.setup()
 
     ore_annual_production_capacity_tpy = 4520595.90663296  # from old model
-    # 12385.195376438356*365
-    annual_crude_ore = 25.0 * 1e6  # 16.9273415*1e6 #t/year
-    annual_electricity = 1030.0 * 1e6  # 570.3147999999999*1e6
-    ore_rated_capacity = 516.0497610311598  # 515.7075586886752 #t/hr
 
-    # 90.51750000000001 is var om from old model in 2021 USD/t/year
-    # 97.76558025830259 is var om from old model in 2022 USD/t/year
+    annual_crude_ore = 25.0 * 1e6
+    annual_electricity = 1030.0 * 1e6
+    ore_rated_capacity = 516.0497610311598
+
     prob.set_val("ore_perf.electricity_in", [annual_electricity / 8760] * 8760, units="kW")
     prob.set_val("ore_perf.crude_ore_in", [annual_crude_ore / 8760] * 8760, units="t/h")
     prob.set_val("ore_perf.iron_ore_demand", [ore_rated_capacity] * 8760, units="t/h")
-    # prob.set_val("ore_perf.system_capacity",ore_rated_capacity*1.5,units="t/h")
 
     prob.run_model()
 
-    # 4520595.906633081 is total pellets produced from my model
-    # 4520595.90663296 is total pellets produced from old model
     with subtests.test("Annual Ore"):
         annual_ore_produced = np.sum(prob.get_val("ore_perf.iron_ore_out", units="t/h"))
         assert pytest.approx(annual_ore_produced, rel=1e-6) == ore_annual_production_capacity_tpy

@@ -11,7 +11,7 @@ from h2integrate.core.validators import contains
 
 @define
 class MartinIronMinePerformanceConfig(BaseConfig):
-    """_summary_
+    """Configuration class for MartinIronMinePerformanceComponent.
 
     Attributes:
         taconite_pellet_type (str): type of taconite pellets, options are "std" or "drg".

@@ -26,6 +26,7 @@
 - Fixed stoichiometry mistake in ammonia synloop
 - Removed `boundaries` from the necessary keys in `plant_config` validation
 - Improved the readability of the postprocessing printout
+- Added standalone iron mine performance and cost model
 
 ## 0.4.0 [October 1, 2025]
 

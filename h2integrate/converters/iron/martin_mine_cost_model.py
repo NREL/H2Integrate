@@ -11,7 +11,7 @@ from h2integrate.tools.inflation.inflate import inflate_cpi
 
 @define
 class MartinIronMineCostConfig(BaseConfig):
-    """_summary_
+    """Configuration class for MartinIronMineCostComponent.
 
     Attributes:
         taconite_pellet_type (str): type of taconite pellets, options are "std" or "drg".
