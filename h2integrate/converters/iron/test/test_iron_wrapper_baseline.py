@@ -109,13 +109,13 @@ def location_iron_tech():
 
 @fixture
 def plant_config():
-    plant_config = load_plant_yaml(EXAMPLE_DIR / "20_iron_mn_to_il" / "plant_config.yaml")
+    plant_config = load_plant_yaml(EXAMPLE_DIR / "21_iron_mn_to_il" / "plant_config.yaml")
     return plant_config
 
 
 @fixture
 def driver_config():
-    driver_config = load_driver_yaml(EXAMPLE_DIR / "20_iron_mn_to_il" / "driver_config.yaml")
+    driver_config = load_driver_yaml(EXAMPLE_DIR / "21_iron_mn_to_il" / "driver_config.yaml")
     return driver_config
 
 

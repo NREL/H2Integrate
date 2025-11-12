@@ -43,6 +43,7 @@ The inputs, outputs, and corresponding technology that are currently available i
 | `methanol`   |  methanol     | ??? |
 | `air_separator`   |  nitrogen     | electricity |
 | `desal`   |  water     | electricity |
+| `natural_gas`   |  electricity     | natural gas |
 
 (transport)=
 ## Transport
@@ -102,10 +103,9 @@ Below summarizes the available performance, cost, and financial models for each 
 ## Converter models
 - `wind`: wind turbine
     - performance models:
-        + `'wind_plant_performance'`
         + `'pysam_wind_plant_performance'`
     - cost models:
-        + `'wind_plant_cost'`
+        + `'atb_wind_cost'`
 - `solar`: solar-PV panels
     - performance models:
         + `'pysam_solar_plant_performance'`
@@ -181,6 +181,11 @@ Below summarizes the available performance, cost, and financial models for each 
         + `'reverse_osmosis_desalination_performance'`
     - cost models:
         + `'reverse_osmosis_desalination_cost'`
+- `natural_gas`: natural gas combined cycle and combustion turbine
+    - performance models:
+        + `'natural_gas_performance'`
+    - cost_models:
+        + `'natural_gas_cost'`
 
 (transport-models)=
 ## Transport Models

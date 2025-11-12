@@ -44,7 +44,7 @@ properties:
                 type: number
               description: Y coordinates of the boundary polygon
           required: ["x", "y"]
-    required: ["latitude", "longitude", "boundaries"]
+    required: ["latitude", "longitude"]
   plant:
     type: object
     properties:

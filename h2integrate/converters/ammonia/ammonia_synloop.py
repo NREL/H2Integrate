@@ -210,10 +210,10 @@ class AmmoniaSynLoopPerformanceModel(om.ExplicitComponent):
         # Calculate output in purge gas
         purge_mw = x_h2_purge * H_MW * 2 + x_n2_purge * N_MW * 2  # g / mol
 
-        w_h2_purge = x_h2_purge * H_MW / purge_mw  # kg H2 / kg purge gas
+        w_h2_purge = x_h2_purge * H_MW * 2 / purge_mw  # kg H2 / kg purge gas
         h2_purge = w_h2_purge * ratio_purge * nh3_prod  # kg H2 / hr
 
-        w_n2_purge = x_n2_purge * H_MW / purge_mw  # kg N2 / kg purge gas
+        w_n2_purge = x_n2_purge * H_MW * 2 / purge_mw  # kg N2 / kg purge gas
         n2_purge = w_n2_purge * ratio_purge * nh3_prod  # kg N2 / hr
 
         # Calculate catalyst mass
