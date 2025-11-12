@@ -514,7 +514,10 @@ class ProFastBase(om.ExplicitComponent):
         self.description = (
             self.options["description"].strip() if "description" in self.options else ""
         )
-        self.output_txt = f"{self.options['commodity_type'].lower()}_{self.description}"
+        if self.description != "":
+            self.output_txt = f"{self.options['commodity_type'].lower()}_{self.description}"
+        else:
+            self.output_txt = f"{self.options['commodity_type'].lower()}"
 
         # Add model-specific outputs defined by subclass
         self.add_model_specific_outputs()
