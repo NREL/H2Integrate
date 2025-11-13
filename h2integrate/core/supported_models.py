@@ -170,7 +170,7 @@ supported_models = {
     "ocean_alkalinity_enhancement_cost_financial": OAECostAndFinancialModel,
     "simple_natural_geoh2_performance": NaturalGeoH2PerformanceModel,
     "templeton_serpentinization_geoh2_performance": StimulatedGeoH2PerformanceModel,
-    "mather_modified_geoh2_cost": GeoH2SubsurfaceCostModel,
+    "mathur_modified_geoh2_cost": GeoH2SubsurfaceCostModel,
     "natural_gas_performance": NaturalGasPerformanceModel,
     "natural_gas_cost": NaturalGasCostModel,
     # Transport
