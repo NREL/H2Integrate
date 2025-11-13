@@ -121,6 +121,15 @@ def test_simple_ammonia_example(subtests):
             pytest.approx(model.prob.get_val("finance_subgroup_hydrogen.LCOH")[0], rel=1e-3)
             == 3.970
         )
+
+    with subtests.test("Check price of hydrogen"):
+        assert (
+            pytest.approx(
+                model.prob.get_val("finance_subgroup_hydrogen.price_hydrogen")[0], rel=1e-3
+            )
+            == 3.970
+        )
+
     # Currently underestimated compared to the Reference Design Doc
     with subtests.test("Check LCOA"):
         assert (
