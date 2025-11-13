@@ -75,13 +75,13 @@ def summarize_case(case, return_units=False):
 
 def convert_sql_to_csv_summary(sql_fpath: Path | str, save_to_file: bool = True):
     """Summarize scalar data from a sql recorder file (if ran in serial) or set of sql
-    recorder files (if ran in parallel) to a DataFrame and same to csv file if
+    recorder files (if ran in parallel) to a DataFrame and save to csv file if
     `save_to_file` is True.
 
     The first columns of the output DataFrame are the design variables.
     Column names are formatted as:
 
-    - "{promoted variable name} ({units})" for continous variables
+    - "{promoted variable name} ({units})" for continuous variables
     - "{promoted variable name}" for discrete variables.
 
     Args:
@@ -137,4 +137,5 @@ def convert_sql_to_csv_summary(sql_fpath: Path | str, save_to_file: bool = True)
     if save_to_file:
         output_fpath = sql_fpath.parent / f"{sql_fpath.stem}.csv"
         results.to_csv(output_fpath)
+
     return results
