@@ -89,7 +89,7 @@ class ECOElectrolyzerPerformanceModel(ElectrolyzerPerformanceBaseClass):
         )
 
         self.add_output(
-            "electrolyzer_size_mw_cost",
+            "electrolyzer_size_mw",
             val=0.0,
             units="MW",
             desc="Size of the electrolyzer in MW",
@@ -203,4 +203,4 @@ class ECOElectrolyzerPerformanceModel(ElectrolyzerPerformanceBaseClass):
         outputs["efficiency"] = H2_Results["Sim: Average Efficiency [%-HHV]"]
         outputs["time_until_replacement"] = H2_Results["Time Until Replacement [hrs]"]
         outputs["rated_h2_production_kg_pr_hr"] = H2_Results["Rated BOL: H2 Production [kg/hr]"]
-        outputs["electrolyzer_size_mw_cost"] = electrolyzer_actual_capacity_MW
+        outputs["electrolyzer_size_mw"] = electrolyzer_actual_capacity_MW

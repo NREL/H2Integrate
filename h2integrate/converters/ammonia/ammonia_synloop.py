@@ -9,27 +9,6 @@ from h2integrate.core.model_baseclasses import CostModelBaseClass
 from h2integrate.tools.inflation.inflate import inflate_cpi, inflate_cepci
 
 
-def size_hydrogen(tech_config):
-    """
-    A method for connected upstream coverters to size themselves to feed ammonia production
-    """
-    # Needs to be rewritten
-    nh3_cap = tech_config["model_inputs"]["shared_parameters"][
-        "production_capacity"
-    ]  # kg NH3 per hour
-    ratio_feed = tech_config["model_inputs"]["performance_parameters"][
-        "feed_gas_mass_ratio"
-    ]  # kg/kg NH3
-    x_h2_feed = tech_config["model_inputs"]["performance_parameters"]["feed_gas_x_h2"]  # mol frac
-    x_n2_feed = tech_config["model_inputs"]["performance_parameters"]["feed_gas_x_n2"]  # mol frac
-    feed_mw = x_h2_feed * H_MW * 2 + x_n2_feed * N_MW * 2  # g / mol
-    w_h2_feed = x_h2_feed * H_MW / feed_mw  # kg H2 / kg feed gas
-    h2_rate = w_h2_feed * ratio_feed  # kg H2 / kg NH3
-    h2_cap = nh3_cap * h2_rate  # kg H2 per houe
-
-    return h2_cap
-
-
 @define
 class AmmoniaSynLoopPerformanceConfig(BaseConfig):
     """
@@ -398,11 +377,6 @@ class AmmoniaSynLoopCostModel(CostModelBaseClass):
     maintenance_cost : float [$]
         Annual maintenance cost
     """
-
-    def initialize(self):
-        self.options.declare("plant_config", types=dict)
-        self.options.declare("tech_config", types=dict)
-        self.options.declare("driver_config", types=dict)
 
     def setup(self):
         target_cost_year = self.options["plant_config"]["finance_parameters"][
