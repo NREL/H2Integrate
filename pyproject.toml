@@ -56,7 +56,12 @@ dependencies = [
     "ruamel.yaml",
     "scipy",
     "wombat>=0.11",
+    "openmeteo-requests",
+    "geopy",
     "pyDOE3",
+    "rich>=13.7.0",
+    "requests-cache",
+    "retry_requests",
 ]
 keywords = [
     "python3",
