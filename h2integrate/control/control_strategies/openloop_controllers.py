@@ -4,7 +4,7 @@ import numpy as np
 from attrs import field, define
 
 from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
-from h2integrate.core.validators import gt_zero, range_val, range_val_or_none
+from h2integrate.core.validators import gte_zero, range_val, range_val_or_none
 from h2integrate.control.control_strategies.controller_baseclass import ControllerBaseClass
 
 
@@ -130,7 +130,7 @@ class DemandOpenLoopControllerConfig(BaseConfig):
     max_charge_percent: float = field(validator=range_val(0, 1))
     min_charge_percent: float = field(validator=range_val(0, 1))
     init_charge_percent: float = field(validator=range_val(0, 1))
-    max_charge_rate: float = field(validator=gt_zero)
+    max_charge_rate: float = field(validator=gte_zero)
     demand_profile: int | float | list = field(default=0.0)
     charge_equals_discharge: bool = field(default=True)
     max_discharge_rate: float | None = field(default=None)
