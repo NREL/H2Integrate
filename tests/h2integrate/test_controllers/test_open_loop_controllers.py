@@ -8,8 +8,10 @@ import openmdao.api as om
 from openmdao.utils.assert_utils import assert_check_totals
 
 from h2integrate.control.control_strategies.openloop_controllers import (
-    DemandOpenLoopController,
     PassThroughOpenLoopController,
+)
+from h2integrate.control.control_strategies.storage.openloop_controllers import (
+    DemandOpenLoopStorageController,
 )
 
 
@@ -113,7 +115,7 @@ def test_demand_controller(subtests):
 
     prob.model.add_subsystem(
         "demand_openloop_controller",
-        DemandOpenLoopController(
+        DemandOpenLoopStorageController(
             plant_config=plant_config, tech_config=tech_config["technologies"]["h2_storage"]
         ),
         promotes=["*"],
@@ -205,7 +207,7 @@ def test_demand_controller_round_trip_efficiency(subtests):
 
         prob.model.add_subsystem(
             "demand_openloop_controller",
-            DemandOpenLoopController(
+            DemandOpenLoopStorageController(
                 plant_config=plant_config, tech_config=config["technologies"]["h2_storage"]
             ),
             promotes=["*"],
@@ -292,7 +294,7 @@ def test_generic_demand_controller(subtests):
 
     prob.model.add_subsystem(
         "demand_openloop_controller",
-        DemandOpenLoopController(
+        DemandOpenLoopStorageController(
             plant_config=plant_config, tech_config=tech_config["technologies"]["h2_storage"]
         ),
         promotes=["*"],

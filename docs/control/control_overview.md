@@ -10,14 +10,14 @@ An example of an N2 diagram for a system using the open-loop control framework f
 
 ![](./figures/open-loop-n2.png)
 
-The open-loop framework currently supports only two control strategy, `pass_through_controller`, and `demand_open_loop_controller`. The `pass_through_controller` simply directly passes the input commodity flow to the output without any modifications. It is useful for testing, as a placeholder for more complex controllers, and for maintaining consistency between controlled and uncontrolled frameworks as this 'controller' does not alter the system output in any way. The `demand_open_loop_controller` uses simple logic to dispatch the storage technology when demand is higher than commodity generation and charges the storage technology when the commodity generation exceeds demand, both cases depending on the storage technology's state of charge. For the `demand_open_loop_controller`, the storage state of charge is an estimate in the control logic and is not informed in any way by the storage technology performance model.
+The open-loop framework currently supports only two control strategy, `pass_through_controller`, and `demand_open_loop_storage_controller`. The `pass_through_controller` simply directly passes the input commodity flow to the output without any modifications. It is useful for testing, as a placeholder for more complex controllers, and for maintaining consistency between controlled and uncontrolled frameworks as this 'controller' does not alter the system output in any way. The `demand_open_loop_storage_controller` uses simple logic to dispatch the storage technology when demand is higher than commodity generation and charges the storage technology when the commodity generation exceeds demand, both cases depending on the storage technology's state of charge. For the `demand_open_loop_storage_controller`, the storage state of charge is an estimate in the control logic and is not informed in any way by the storage technology performance model.
 
 For examples of how to use the open-loop control framework, see the following:
 - For the `pass_through_controller`
     - `examples/01_onshore_steel_mn`
     - `examples/02_texas_ammonia`
     - `examples/12_ammonia_synloop`
-- For the `demand_open_loop_controller`
+- For the `demand_open_loop_storage_controller`
     - `examples/14_wind_hydrogen_dispatch/`
     - `examples/19_simple_dispatch/`
 
