@@ -512,7 +512,9 @@ class ProFastBase(om.ExplicitComponent):
         # Construct output name based on commodity and optional description
         # this is necessary to allow for financial subgroups
         self.description = (
-            f"_{self.options['description'].strip()}" if "description" in self.options else ""
+            f"_{self.options['description'].strip()}"
+            if self.options["description"].strip() != ""
+            else ""
         )
         self.output_txt = f"{self.options['commodity_type'].lower()}{self.description}"
 
