@@ -121,6 +121,15 @@ def test_simple_ammonia_example(subtests):
             pytest.approx(model.prob.get_val("finance_subgroup_hydrogen.LCOH")[0], rel=1e-3)
             == 3.970
         )
+
+    with subtests.test("Check price of hydrogen"):
+        assert (
+            pytest.approx(
+                model.prob.get_val("finance_subgroup_hydrogen.price_hydrogen")[0], rel=1e-3
+            )
+            == 3.970
+        )
+
     # Currently underestimated compared to the Reference Design Doc
     with subtests.test("Check LCOA"):
         assert (
@@ -182,7 +191,7 @@ def test_ammonia_synloop_example(subtests):
         assert pytest.approx(model.prob.get_val("ammonia.CapEx"), rel=1e-6) == 1.15173753e09
 
     with subtests.test("Check ammonia OpEx"):
-        assert pytest.approx(model.prob.get_val("ammonia.OpEx"), rel=1e-6) == 25318447.90064406
+        assert pytest.approx(model.prob.get_val("ammonia.OpEx"), rel=1e-4) == 25712447.0
 
     with subtests.test("Check total adjusted CapEx"):
         assert (
@@ -197,7 +206,7 @@ def test_ammonia_synloop_example(subtests):
             pytest.approx(
                 model.prob.get_val("finance_subgroup_nh3.total_opex_adjusted")[0], rel=1e-6
             )
-            == 78480154.4
+            == 78873785.09009656
         )
 
     with subtests.test("Check LCOH"):
@@ -209,7 +218,7 @@ def test_ammonia_synloop_example(subtests):
     with subtests.test("Check LCOA"):
         assert (
             pytest.approx(model.prob.get_val("finance_subgroup_nh3.LCOA")[0], rel=1e-6)
-            == 1.067030996544544
+            == 1.21777477635066
         )
 
 

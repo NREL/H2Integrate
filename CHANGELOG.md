@@ -23,6 +23,7 @@
 - Add feature for natural gas plant converter to take electricity demand as an input and added system capacity as an input
 - Added wind resource model for API calls to Open-Meteo archive
 - Added `load_yaml()` function and flexibility to input a config dictionary to H2IntegrateModel rather than a filepath
+- Fixed stoichiometry mistake in ammonia synloop
 - Removed `boundaries` from the necessary keys in `plant_config` validation
 - Improved the readability of the postprocessing printout
 - Added ability for latitude and longitude to be design variables in design sweep
