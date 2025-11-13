@@ -93,6 +93,8 @@ class ArdWindPlantModel(om.Group):
             promotes=["cost_year", "VarOpEx"],
         )
 
+        # check if wind resource data is coming from H2Integrate
+
         # add ard sub-problem
         ard_input_dict = self.options["tech_config"]["model_inputs"]["performance_parameters"][
             "ard_system"
