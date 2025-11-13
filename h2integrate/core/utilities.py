@@ -178,6 +178,11 @@ class CostModelBaseConfig(BaseConfig):
     cost_year: int = field(converter=int)
 
 
+@define
+class ResizeablePerformanceModelBaseConfig(BaseConfig):
+    sizing: dict = field()
+
+
 def attr_serializer(inst: type, field: Attribute, value: Any):
     if isinstance(value, np.ndarray):
         return value.tolist()

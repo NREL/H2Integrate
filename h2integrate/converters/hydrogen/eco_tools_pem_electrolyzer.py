@@ -1,7 +1,7 @@
 import numpy as np
 from attrs import field, define
 
-from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
+from h2integrate.core.utilities import ResizeablePerformanceModelBaseConfig, merge_shared_inputs
 from h2integrate.core.validators import gt_zero, contains
 from h2integrate.tools.eco.utilities import ceildiv
 from h2integrate.converters.hydrogen.electrolyzer_baseclass import ElectrolyzerPerformanceBaseClass
@@ -12,26 +12,11 @@ from h2integrate.simulation.technologies.hydrogen.electrolysis.run_h2_PEM import
 
 
 @define
-class ECOElectrolyzerPerformanceModelConfig(BaseConfig):
+class ECOElectrolyzerPerformanceModelConfig(ResizeablePerformanceModelBaseConfig):
     """
     Configuration class for the ECOElectrolyzerPerformanceModel.
 
     Args:
-        sizing (dict): A dictionary containing the following model sizing parameters:
-            - size_mode (str): The mode in which the component is sized. Options:
-                - "normal": The component size is taken from the tech_config.
-                - "resize_by_max_feedstock": The component size is calculated relative to the
-                    maximum available amount of a certain feedstock or feedstocks
-                - "resize_by_max_commodity": The electrolyzer size is calculated relative to the
-                    maximum amount of the commodity used by another tech
-            - resize_by_flow (str): The feedstock/commodity flow used to determine the plant size
-                in "resize_by_max_feedstock" and "resize_by_max_commodity" modes
-            - resize_by_tech (str): A connected tech whose feedstock/commodity flow is used to
-                determine the plant size in "resize_for_max_product" mode
-            - max_feedstock_ratio (float): The ratio of the max feedstock that can be consumed by
-                this component to the max feedstock available.
-            - max_commodity_ratio (float): The ratio of the max commodity that can be produced by
-                this component to the max commodity consumed by the downstream tech.
         n_clusters (int): number of electrolyzer clusters within the system.
         location (str): The location of the electrolyzer; options include "onshore" or "offshore".
         cluster_rating_MW (float): The rating of the clusters that the electrolyzer is grouped
@@ -49,7 +34,6 @@ class ECOElectrolyzerPerformanceModelConfig(BaseConfig):
             (https://www.hydrogen.energy.gov/docs/hydrogenprogramlibraries/pdfs/24005-clean-hydrogen-production-cost-pem-electrolyzer.pdf?sfvrsn=8cb10889_1)
     """
 
-    sizing: dict = field()
     n_clusters: int = field(validator=gt_zero)
     location: str = field(validator=contains(["onshore", "offshore"]))
     cluster_rating_MW: float = field(validator=gt_zero)
@@ -68,11 +52,11 @@ class ECOElectrolyzerPerformanceModel(ElectrolyzerPerformanceBaseClass):
     """
 
     def setup(self):
-        super().setup()
         self.config = ECOElectrolyzerPerformanceModelConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance"),
             strict=False,
         )
+        super().setup()
         self.add_output("efficiency", val=0.0, desc="Average efficiency of the electrolyzer")
         self.add_output(
             "rated_h2_production_kg_pr_hr",
@@ -97,7 +81,7 @@ class ECOElectrolyzerPerformanceModel(ElectrolyzerPerformanceBaseClass):
 
         self.add_input("max_hydrogen_capacity", val=1000.0, units="kg/h")
 
-    def compute(self, inputs, outputs):
+    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         plant_life = self.options["plant_config"]["plant"]["plant_life"]
         electrolyzer_size_mw = inputs["n_clusters"][0] * self.config.cluster_rating_MW
         electrolyzer_capex_kw = self.config.electrolyzer_capex
@@ -105,38 +89,17 @@ class ECOElectrolyzerPerformanceModel(ElectrolyzerPerformanceBaseClass):
         hydrogen_production_capacity_required_kgphr = []
         grid_connection_scenario = "off-grid"
 
-        # Parse in sizing parameters
-        size_mode = self.config.sizing["size_mode"]
-        if "max_feedstock_ratio" not in self.config.sizing.keys():
-            feed_ratio = 1.0
-        else:
-            feed_ratio = self.config.sizing["max_feedstock_ratio"]
-        if "max_commodity_ratio" not in self.config.sizing.keys():
-            comm_ratio = 1.0
-        else:
-            comm_ratio = self.config.sizing["max_commodity_ratio"]
-        if size_mode != "normal":
-            if "resize_by_flow" in self.config.sizing.keys():
-                size_flow = self.config.sizing["resize_by_flow"]
-            else:
-                raise ValueError(
-                    "'resize_by_flow' must be set in sizing dict when size_mode is "
-                    "'resize_by_max_feedstock' or 'resize_by_max_commodity'"
-                )
-            if size_mode == "resize_by_max_commodity":
-                if "resize_by_tech" in self.config.sizing.keys():
-                    size_tech = self.config.sizing["resize_by_tech"]
-                else:
-                    raise ValueError(
-                        "'resize_by_tech' must be set in sizing dict when size_mode is "
-                        "'resize_by_max_commodity'"
-                    )
+        # Resize if necessary based on sizing mode
+        size_mode = discrete_inputs["size_mode"]
         # Make changes to computation based on sizing_mode:
-        if size_mode == "normal":
-            # In this sizing mode, electrolyzer size comes from config
-            electrolyzer_size_mw = inputs["n_clusters"][0] * self.config.cluster_rating_MW
-        elif size_mode == "resize_by_max_feedstock":
+        if size_mode != "normal":
+            size_flow = discrete_inputs["resize_by_flow"]
+        if size_mode == "resize_by_max_feedstock":
             # In this sizing mode, electrolyzer size comes from feedstock
+            feed_ratio = inputs["max_feedstock_ratio"]
+            # Make sure COBLYA doesn't cause any shenanigans trying to set feed_ratio <= 0
+            if feed_ratio <= 1e-6:
+                feed_ratio = 1e-6
             if size_flow == "electricity":
                 electrolyzer_size_mw = np.max(inputs["electricity_in"]) / 1000 * feed_ratio
             else:
@@ -144,6 +107,11 @@ class ECOElectrolyzerPerformanceModel(ElectrolyzerPerformanceBaseClass):
         elif size_mode == "resize_by_max_commodity":
             # In this sizing mode, electrolyzer size comes from a connected tech's capacity
             # to take in one of the electrolyzer's products
+            size_tech = discrete_inputs["resize_by_tech"]
+            comm_ratio = inputs["max_commodity_ratio"]
+            # Make sure COBLYA doesn't cause any shenanigans trying to set comm_ratio <= 0
+            if comm_ratio <= 1e-6:
+                comm_ratio = 1e-6
             if size_flow == "hydrogen":
                 connected_tech = self.options["plant_config"]["technology_interconnections"]
                 tech_found = False
@@ -167,11 +135,12 @@ class ECOElectrolyzerPerformanceModel(ElectrolyzerPerformanceBaseClass):
                         h2_kgphr * comm_ratio
                     )
             else:
-                raise ValueError(f"Cannot resize for '{size_flow}' product")
-        else:
-            raise ValueError("Sizing mode '%s' not found".format())
+                raise ValueError(f"Cannot resize for '{size_flow}' commodity")
+        elif size_mode != "normal":
+            raise NotImplementedError("Sizing mode '%s' not implemented".format())
 
         n_pem_clusters = int(ceildiv(electrolyzer_size_mw, self.config.cluster_rating_MW))
+        self.set_val("n_clusters", n_pem_clusters)
 
         electrolyzer_actual_capacity_MW = n_pem_clusters * self.config.cluster_rating_MW
         ## run using greensteel model
