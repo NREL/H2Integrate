@@ -131,6 +131,7 @@ class StimulatedGeoH2PerformanceModel(GeoH2SubsurfacePerformanceBaseClass):
         h2_prod_avg = h2_produced[-1] / lifetime / n_timesteps
         outputs["hydrogen_out_stim"] = h2_prod_avg
         outputs["hydrogen_out"] = h2_prod_avg
+        outputs["total_hydrogen_produced"] = np.sum(outputs["hydrogen_out"])
 
 
 # class StimulatedGeoH2FinanceModel(GeoH2FinanceBaseClass):

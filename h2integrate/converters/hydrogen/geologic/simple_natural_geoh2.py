@@ -119,6 +119,7 @@ class NaturalGeoH2PerformanceModel(GeoH2SubsurfacePerformanceBaseClass):
         outputs["lifetime_wellhead_flow"] = avg_wh_flow
         outputs["hydrogen_out_natural"] = np.full(n_timesteps, h2_accum)
         outputs["hydrogen_out"] = np.full(n_timesteps, h2_accum)
+        outputs["total_hydrogen_produced"] = np.sum(outputs["hydrogen_out"])
 
 
 # class NaturalGeoH2FinanceModel(GeoH2FinanceBaseClass):

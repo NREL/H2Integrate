@@ -93,6 +93,7 @@ class GeoH2SubsurfacePerformanceBaseClass(om.ExplicitComponent):
 
         # outputs
         self.add_output("hydrogen_out", units="kg/h", shape=(8760,))
+        self.add_output("total_hydrogen_produced", val=0.0, units="kg/year")
 
 
 @define
@@ -118,63 +119,12 @@ class GeoH2SubsurfaceCostConfig(CostModelBaseConfig):
             Structural configuration of the well.
             Valid options: `"vertical"` or `"horizontal"`.
 
-        target_dollar_year (int):
-            The dollar year used for cost normalization and comparison.
-
-        test_drill_cost (float):
-            Capital cost (CAPEX) of conducting a test drill for a potential GeoH2 well,
-            in USD.
-
-        permit_fees (float):
-            Capital cost (CAPEX) associated with obtaining drilling permits, in USD.
-
-        acreage (float):
-            Land area required for drilling operations, in acres.
-
-        rights_cost (float):
-            Capital cost (CAPEX) to acquire drilling rights, in USD per acre.
-
-        success_chance (float):
-            Probability of success at a given test drilling site, expressed as a fraction.
-
-        fixed_opex (float):
-            Fixed annual operating expense (OPEX) that does not scale with hydrogen
-            production, in USD/year.
-
-        variable_opex (float):
-            Variable operating expense (OPEX) that scales with hydrogen production,
-            in USD/kg.
-
-        contracting_pct (float):
-            Contracting costs as a percentage of bare capital cost.
-
-        contingency_pct (float):
-            Contingency allowance as a percentage of bare capital cost.
-
-        preprod_time (float):
-            Duration of the preproduction period during which fixed OPEX is charged,
-            in months.
-
-        as_spent_ratio (float):
-            Ratio of as-spent costs to overnight (instantaneous) costs, dimensionless.
     """
 
     well_lifetime: float = field()
     borehole_depth: float = field()
     well_diameter: str = field(validator=contains(["small", "large"]))
     well_geometry: str = field(validator=contains(["vertical", "horizontal"]))
-    target_dollar_year: int = field()
-    test_drill_cost: float = field()
-    permit_fees: float = field()
-    acreage: float = field()
-    rights_cost: float = field()
-    success_chance: float = field()
-    fixed_opex: float = field()
-    variable_opex: float = field()
-    contracting_pct: float = field()
-    contingency_pct: float = field()
-    preprod_time: float = field()
-    as_spent_ratio: float = field()
 
 
 class GeoH2SubsurfaceCostBaseClass(CostModelBaseClass):
@@ -191,9 +141,6 @@ class GeoH2SubsurfaceCostBaseClass(CostModelBaseClass):
     Inputs:
         well_lifetime (float):
             Operational lifetime of the wells, in years.
-
-        target_dollar_year (int):
-            The dollar year used for cost normalization and comparison.
 
         borehole_depth (float):
             Total borehole depth, in meters (may include directional drilling sections).
@@ -264,39 +211,17 @@ class GeoH2SubsurfaceCostBaseClass(CostModelBaseClass):
             units="year",
             val=self.config.well_lifetime,
         )
-        self.add_input(
-            "target_dollar_year",
-            units="year",
-            # TODO: discuss if we want to pull this from the `plant_config`
-            val=self.config.target_dollar_year,
-        )
         self.add_input("borehole_depth", units="m", val=self.config.borehole_depth)
-        self.add_input("test_drill_cost", units="USD", val=self.config.test_drill_cost)
-        self.add_input("permit_fees", units="USD", val=self.config.permit_fees)
-        self.add_input("acreage", units="acre", val=self.config.acreage)
-        self.add_input("rights_cost", units="USD/acre", val=self.config.rights_cost)
-        self.add_input("success_chance", units="percent", val=self.config.success_chance)
-        self.add_input("fixed_opex", units="USD/year", val=self.config.fixed_opex)
-        self.add_input("variable_opex", units="USD/kg", val=self.config.variable_opex)
-        self.add_input("contracting_pct", units="percent", val=self.config.contracting_pct)
-        self.add_input("contingency_pct", units="percent", val=self.config.contingency_pct)
-        self.add_input("preprod_time", units="month", val=self.config.preprod_time)
-        self.add_input("as_spent_ratio", units=None, val=self.config.as_spent_ratio)
         self.add_input(
             "hydrogen_out",
             shape=n_timesteps,
             units="kg/h",
             desc=f"Hydrogen production rate in kg/h over {n_timesteps} hours.",
         )
+        self.add_input("total_hydrogen_produced", val=0.0, units="kg/year")
 
         # outputs
         self.add_output("bare_capital_cost", units="USD")
-        self.add_output(
-            # TODO: Discuss if we should change to just "OpEx" for consistency with other models
-            "Fixed_OpEx",
-            units="USD/year",
-        )
-        self.add_output("Variable_OpEx", units="USD/kg")
 
     def calc_drill_cost(self, x):
         # Calculates drilling costs from pre-fit polynomial curves

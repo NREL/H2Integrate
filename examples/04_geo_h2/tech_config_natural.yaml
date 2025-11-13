@@ -22,7 +22,6 @@ technologies:
       cost_parameters:
         use_cost_curve: True
         cost_year: 2022
-        target_dollar_year: 2024
         test_drill_cost: 500000
         permit_fees: 905
         acreage: 500

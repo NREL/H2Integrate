@@ -1,8 +1,7 @@
-import numpy as np
 from attrs import field, define
 
 from h2integrate.core.utilities import merge_shared_inputs
-from h2integrate.tools.inflation.inflate import inflate_cpi, inflate_cepci
+from h2integrate.tools.inflation.inflate import inflate_cepci
 from h2integrate.converters.hydrogen.geologic.h2_well_subsurface_baseclass import (
     GeoH2SubsurfaceCostConfig,
     GeoH2SubsurfaceCostBaseClass,
@@ -18,9 +17,47 @@ class GeoH2SubsurfaceCostConfig(GeoH2SubsurfaceCostConfig):
     a built-in drilling cost curve or a manually specified constant drilling cost.
 
     Attributes:
+        test_drill_cost (float):
+            Capital cost (CAPEX) of conducting a test drill for a potential GeoH2 well,
+            in USD.
+
+        permit_fees (float):
+            Capital cost (CAPEX) associated with obtaining drilling permits, in USD.
+
+        acreage (float):
+            Land area required for drilling operations, in acres.
+
+        rights_cost (float):
+            Capital cost (CAPEX) to acquire drilling rights, in USD per acre.
+
+        success_chance (float):
+            Probability of success at a given test drilling site, expressed as a fraction.
+
+        fixed_opex (float):
+            Fixed annual operating expense (OPEX) that does not scale with hydrogen
+            production, in USD/year.
+
+        variable_opex (float):
+            Variable operating expense (OPEX) that scales with hydrogen production,
+            in USD/kg.
+
+        contracting_pct (float):
+            Contracting costs as a percentage of bare capital cost.
+
+        contingency_pct (float):
+            Contingency allowance as a percentage of bare capital cost.
+
+        preprod_time (float):
+            Duration of the preproduction period during which fixed OPEX is charged,
+            in months.
+
+        as_spent_ratio (float):
+            Ratio of as-spent costs to overnight (instantaneous) costs, dimensionless.
+
         use_cost_curve (bool): Flag indicating whether to use the built-in drilling
             cost curve. If `True`, the drilling cost is computed from the cost curve.
             If `False`, a constant drilling cost must be provided.
+
         constant_drill_cost (float | None): Fixed drilling cost to use when
             `use_cost_curve` is `False` [USD]. Defaults to `None`.
 
@@ -28,6 +65,17 @@ class GeoH2SubsurfaceCostConfig(GeoH2SubsurfaceCostConfig):
         ValueError: If `use_cost_curve` is `False` and `constant_drill_cost` is not provided.
     """
 
+    test_drill_cost: float = field()
+    permit_fees: float = field()
+    acreage: float = field()
+    rights_cost: float = field()
+    success_chance: float = field()
+    fixed_opex: float = field()
+    variable_opex: float = field()
+    contracting_pct: float = field()
+    contingency_pct: float = field()
+    preprod_time: float = field()
+    as_spent_ratio: float = field()
     use_cost_curve: bool = field()
     constant_drill_cost: float | None = field(default=None)
 
@@ -90,17 +138,27 @@ class GeoH2SubsurfaceCostModel(GeoH2SubsurfaceCostBaseClass):
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost")
         )
         super().setup()
+        self.add_input("test_drill_cost", units="USD", val=self.config.test_drill_cost)
+        self.add_input("permit_fees", units="USD", val=self.config.permit_fees)
+        self.add_input("acreage", units="acre", val=self.config.acreage)
+        self.add_input("rights_cost", units="USD/acre", val=self.config.rights_cost)
+        self.add_input("success_chance", units="percent", val=self.config.success_chance)
+        self.add_input("fixed_opex", units="USD/year", val=self.config.fixed_opex)
+        self.add_input("variable_opex", units="USD/kg", val=self.config.variable_opex)
+        self.add_input("contracting_pct", units="percent", val=self.config.contracting_pct)
+        self.add_input("contingency_pct", units="percent", val=self.config.contingency_pct)
+        self.add_input("preprod_time", units="month", val=self.config.preprod_time)
+        self.add_input("as_spent_ratio", units=None, val=self.config.as_spent_ratio)
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         # Get cost years
         cost_year = self.config.cost_year
-        dol_year = self.config.target_dollar_year
 
         # Calculate total capital cost per well (successful or unsuccessful)
-        drill = inflate_cepci(inputs["test_drill_cost"], cost_year, dol_year)
-        permit = inflate_cpi(inputs["permit_fees"], cost_year, dol_year)
+        drill = inputs["test_drill_cost"]
+        permit = inputs["permit_fees"]
         acreage = inputs["acreage"]
-        rights_acre = inflate_cpi(inputs["rights_cost"], cost_year, dol_year)
+        rights_acre = inputs["rights_cost"]
         cap_well = drill + permit + acreage * rights_acre
 
         # Calculate total capital cost per SUCCESSFUL well
@@ -109,18 +167,15 @@ class GeoH2SubsurfaceCostModel(GeoH2SubsurfaceCostBaseClass):
         else:
             completion = self.config.constant_drill_cost
             completion = inflate_cepci(completion, 2010, cost_year)
-        completion = inflate_cepci(completion, cost_year, dol_year)
         success = inputs["success_chance"]
         bare_capex = cap_well / success * 100 + completion
         outputs["bare_capital_cost"] = bare_capex
 
         # Parse in opex
-        fopex = inflate_cpi(inputs["fixed_opex"], cost_year, dol_year)
-        vopex = inflate_cpi(inputs["variable_opex"], cost_year, dol_year)
-        outputs["Fixed_OpEx"] = fopex
-        outputs["Variable_OpEx"] = vopex
-        production = np.sum(inputs["hydrogen_out"])
-        outputs["OpEx"] = fopex + vopex * np.sum(production)
+        fopex = inputs["fixed_opex"]
+        vopex = inputs["variable_opex"]
+        outputs["OpEx"] = fopex
+        outputs["VarOpEx"] = vopex * inputs["total_hydrogen_produced"]
 
         # Apply cost multipliers to bare erected cost via NETL-PUB-22580
         contracting = inputs["contracting_pct"]
