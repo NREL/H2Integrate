@@ -37,9 +37,7 @@ technologies:
     model_inputs:
       performance_parameters:
         sizing:
-          resize_for_enduse: False
-          size_for: 'BOL' #'BOL' (generous) or 'EOL' (conservative)
-          hydrogen_dmd:
+          size_mode: "normal"
         n_clusters: 18
         cluster_rating_MW: 10
         pem_control_type: 'basic'
