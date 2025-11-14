@@ -25,6 +25,16 @@ def range_val(min_val, max_val):
     return validator
 
 
+def gt_val(min_val):
+    """Validates that an attribute's value is greater than some minumum value."""
+
+    def validator(instance, attribute, value):
+        if value < min_val:
+            raise ValueError(f"{attribute} must be greater than {min_val} (but has value {value})")
+
+    return validator
+
+
 def range_val_or_none(min_val, max_val):
     """Validates that an attribute's value is between two values, inclusive ([min_val, max_val]).
     Ignores None type values."""
