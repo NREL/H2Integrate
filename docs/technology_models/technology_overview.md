@@ -43,6 +43,7 @@ The inputs, outputs, and corresponding technology that are currently available i
 | `methanol`   |  methanol     | ??? |
 | `air_separator`   |  nitrogen     | electricity |
 | `desal`   |  water     | electricity |
+| `natural_gas`   |  electricity     | natural gas |
 
 (transport)=
 ## Transport
@@ -180,6 +181,11 @@ Below summarizes the available performance, cost, and financial models for each 
         + `'reverse_osmosis_desalination_performance'`
     - cost models:
         + `'reverse_osmosis_desalination_cost'`
+- `natural_gas`: natural gas combined cycle and combustion turbine
+    - performance models:
+        + `'natural_gas_performance'`
+    - cost_models:
+        + `'natural_gas_cost'`
 
 (transport-models)=
 ## Transport Models
@@ -199,13 +205,20 @@ Below summarizes the available performance, cost, and financial models for each 
 (storage-models)=
 ## Storage Models
 - `h2_storage`: hydrogen storage
-    - combined performance and cost
-        + `'h2_storage'`
     - performance models:
         + `'hydrogen_tank_performance'`
     - cost models:
         + `'hydrogen_tank_cost'`
+        + `'lined_rock_cavern_h2_storage_cost'`
+        + `'salt_cavern_h2_storage_cost'`
+        + `'mch_tol_h2_storage_cost'`
+        + `'buried_pipe_h2_storage_cost'`
 - `generic_storage`: any resource storage
+    - performance models:
+        + `'simple_generic_storage'`
+        + `'storage_auto_sizing'`
+    - cost models:
+        + `'generic_storage_cost'`
 - `battery`: battery storage
     - performance models:
         + `'pysam_battery'`
