@@ -1,0 +1,205 @@
+from attrs import field, define
+from openmdao.utils import units
+
+from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
+from h2integrate.core.validators import contains, gte_zero, range_val
+from h2integrate.core.model_baseclasses import CostModelBaseClass
+
+
+# TODO: fix import structure in future refactor
+from h2integrate.simulation.technologies.hydrogen.h2_storage.lined_rock_cavern.lined_rock_cavern import LinedRockCavernStorage  # noqa: E501  # fmt: skip  # isort:skip
+from h2integrate.simulation.technologies.hydrogen.h2_storage.salt_cavern.salt_cavern import SaltCavernStorage  # noqa: E501  # fmt: skip  # isort:skip
+from h2integrate.simulation.technologies.hydrogen.h2_storage.pipe_storage import UndergroundPipeStorage  # noqa: E501  # fmt: skip  # isort:skip
+
+
+@define
+class HydrogenStorageBaseCostModelConfig(BaseConfig):
+    """Base config class for HydrogenStorageBaseCostModel
+
+    Attributes:
+        max_capacity (float): Maximum hydrogen storage capacity (in non-rate units,
+            e.g., "kg" if `commodity_units` is "kg/h").
+        max_charge_rate (float): Maximum rate at which the commodity can be charged (in units
+            per time step, e.g., "kg/time step"). This is the hydrogenation capacity.
+        commodity_name (str, optional): Name of the commodity being controlled (e.g., "hydrogen").
+            Defaults to "hydrogen"
+        commodity_units (str, optional): Units of the commodity (e.g., "kg/h"). Defaults to "kg/h"
+        cost_year (int, optional): Dollar year corresponding to the costs, must be 2018.
+        labor_rate (float, optional): hourly cost of labor in 2018 USD/hr. Defaults to 37.39817.
+        insurance_rate (float, optional): insurance cost as a percent (between 0 and 1) of
+            storage capex. Defaults to 0.01 (or 1.0%).
+        property_taxes (float, optional): property tax cost as a percent (between 0 and 1) of
+            storage capex. Defaults to 0.01 (or 1.0%).
+        licensing_permits (float, optional): licensing and permitting costs as a percent
+            (between 0 and 1) of storage capex. Defaults to 0.001 (or 0.1%).
+        compressor_om (float, optional): Compressor fixed operations and maintenance cost as a
+            percent (between 0 and 1) of compressor capex. Defaults to 0.04 (or 4.0%).
+        facility_om (float, optional):
+    """
+
+    max_capacity: float | None = field(default=None)
+    max_charge_rate: float | None = field(default=None)
+    sizing_mode: str = field(
+        default="set", converter=(str.strip, str.lower), validator=contains(["auto", "set"])
+    )
+
+    commodity_name: str = field(default="hydrogen")
+    commodity_units: str = field(default="kg/h", validator=contains(["kg/h", "g/h", "t/h"]))
+
+    cost_year: int = field(default=2018, converter=int, validator=contains([2018]))
+    labor_rate: float = field(default=37.39817, validator=gte_zero)
+    insurance: float = field(default=0.01, validator=range_val(0, 1))
+    property_taxes: float = field(default=0.01, validator=range_val(0, 1))
+    licensing_permits: float = field(default=0.001, validator=range_val(0, 1))
+    compressor_om: float = field(default=0.04, validator=range_val(0, 1))
+    facility_om: float = field(default=0.01, validator=range_val(0, 1))
+
+    def __attrs_post_init__(self):
+        undefined_capacities = self.max_capacity is None or self.max_charge_rate is None
+        if undefined_capacities and self.sizing_mode == "set":
+            msg = (
+                "Missing storage attribute(s): max_capacity and/or max_charge_rate, "
+                "for the cost_parameters. These attributes are required if `sizing_mode` "
+                "is 'set'. If storage will be auto-sized by the performance model, set the "
+                "`sizing_mode` cost parameter to 'auto'."
+            )
+            raise ValueError(msg)
+        if not undefined_capacities and self.sizing_mode == "auto":
+            msg = (
+                "Extra storage attribute(s) found: max_capacity and/or max_charge_rate, "
+                "for the cost_parameters. These attributes should not be defined if `sizing_mode` "
+                "is 'auto'. If storage will be auto-sized by the performance model, set the "
+                "`sizing_mode` cost parameter to 'auto' and do not include max_capacity or "
+                "max_charge_rate and a cost parameter. Set `sizing_mode` to 'set' if the storage "
+                "capacity is fixed."
+            )
+            raise ValueError(msg)
+
+        if undefined_capacities and self.sizing_mode == "auto":
+            # set to zero for initialization in setup().
+            self.max_capacity = 0.0
+            self.max_charge_rate = 0.0
+
+    def make_model_dict(self):
+        params = self.as_dict()
+        h2i_params = [
+            "max_capacity",
+            "max_charge_rate",
+            "commodity_name",
+            "commodity_units",
+            "cost_year",
+        ]
+        lrc_dict = {k: v for k, v in params.items() if k not in h2i_params}
+        return lrc_dict
+
+
+class HydrogenStorageBaseCostModel(CostModelBaseClass):
+    def initialize(self):
+        super().initialize()
+
+    def setup(self):
+        self.config = HydrogenStorageBaseCostModelConfig.from_dict(
+            merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost"),
+            strict=False,
+        )
+
+        super().setup()
+
+        self.add_input(
+            "max_charge_rate",
+            val=self.config.max_charge_rate,
+            units=f"{self.config.commodity_units}",
+            desc="Hydrogen storage charge rate",
+        )
+
+        self.add_input(
+            "max_capacity",
+            val=self.config.max_capacity,
+            units=f"{self.config.commodity_units}*h",
+            desc="Hydrogen storage capacity",
+        )
+
+    def make_storage_input_dict(self, inputs):
+        storage_input = {}
+
+        storage_input = self.config.make_model_dict()
+
+        # convert capacity to kg
+        max_capacity_kg = units.convert_units(
+            inputs["max_capacity"], f"({self.config.commodity_units})*h", "kg"
+        )
+
+        # convert charge rate to kg/h
+        # TODO: update to kg/day as a bug-fix
+        storage_max_fill_rate = units.convert_units(
+            inputs["max_charge_rate"], f"{self.config.commodity_units}", "kg/h"
+        )
+
+        storage_input["h2_storage_kg"] = max_capacity_kg[0]
+
+        # below should be in kg/day
+        storage_input["system_flow_rate"] = storage_max_fill_rate[0]
+
+        return storage_input
+
+    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
+        # storage_input = self.make_storage_input_dict(inputs)
+
+        raise NotImplementedError("This method should be implemented in a subclass.")
+
+
+class LinedRockCavernStorageCostModel(HydrogenStorageBaseCostModel):
+    def initialize(self):
+        super().initialize()
+
+    def setup(self):
+        super().setup()
+
+    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
+        storage_input = self.make_storage_input_dict(inputs)
+        h2_storage = LinedRockCavernStorage(storage_input)
+
+        h2_storage.lined_rock_cavern_capex()
+        h2_storage.lined_rock_cavern_opex()
+
+        outputs["CapEx"] = h2_storage.output_dict["lined_rock_cavern_storage_capex"]
+        outputs["OpEx"] = h2_storage.output_dict["lined_rock_cavern_storage_opex"]
+
+
+class SaltCavernStorageCostModel(HydrogenStorageBaseCostModel):
+    def initialize(self):
+        super().initialize()
+
+    def setup(self):
+        super().setup()
+
+    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
+        storage_input = self.make_storage_input_dict(inputs)
+        h2_storage = SaltCavernStorage(storage_input)
+
+        h2_storage.salt_cavern_capex()
+        h2_storage.salt_cavern_opex()
+
+        outputs["CapEx"] = h2_storage.output_dict["salt_cavern_storage_capex"]
+        outputs["OpEx"] = h2_storage.output_dict["salt_cavern_storage_opex"]
+
+
+class PipeStorageCostModel(HydrogenStorageBaseCostModel):
+    def initialize(self):
+        super().initialize()
+
+    def setup(self):
+        super().setup()
+
+    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
+        storage_input = self.make_storage_input_dict(inputs)
+
+        # compressor_output_pressure must be 100 bar or else an error will be thrown
+        storage_input.update({"compressor_output_pressure": 100})
+        h2_storage = UndergroundPipeStorage(storage_input)
+
+        h2_storage.pipe_storage_capex()
+        h2_storage.pipe_storage_opex()
+
+        outputs["CapEx"] = h2_storage.output_dict["pipe_storage_capex"]
+        outputs["OpEx"] = h2_storage.output_dict["pipe_storage_opex"]

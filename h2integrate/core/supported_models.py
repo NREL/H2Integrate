@@ -21,7 +21,7 @@ from h2integrate.converters.solar.solar_pysam import PYSAMSolarPlantPerformanceM
 from h2integrate.finances.numpy_financial_npv import NumpyFinancialNPV
 from h2integrate.resource.wind.openmeteo_wind import OpenMeteoHistoricalWindResource
 from h2integrate.storage.generic_storage_cost import GenericStorageCostModel
-from h2integrate.storage.hydrogen.eco_storage import H2Storage
+from h2integrate.storage.hydrogen.mch_storage import MCHTOLStorageCostModel
 from h2integrate.converters.wind.atb_wind_cost import ATBWindPlantCostModel
 from h2integrate.storage.battery.pysam_battery import PySAMBatteryPerformanceModel
 from h2integrate.transporters.generic_combiner import GenericCombinerPerformanceModel
@@ -38,10 +38,16 @@ from h2integrate.storage.hydrogen.tank_baseclass import (
 )
 from h2integrate.converters.hydrogen.wombat_model import WOMBATElectrolyzerModel
 from h2integrate.storage.battery.atb_battery_cost import ATBBatteryCostModel
+from h2integrate.storage.hydrogen.h2_storage_cost import (
+    PipeStorageCostModel,
+    SaltCavernStorageCostModel,
+    LinedRockCavernStorageCostModel,
+)
 from h2integrate.converters.ammonia.ammonia_synloop import (
     AmmoniaSynLoopCostModel,
     AmmoniaSynLoopPerformanceModel,
 )
+from h2integrate.storage.simple_storage_auto_sizing import StorageAutoSizingModel
 from h2integrate.converters.water.desal.desalination import (
     ReverseOsmosisCostModel,
     ReverseOsmosisPerformanceModel,
@@ -184,9 +190,13 @@ supported_models = {
     "summer": GenericSummerPerformanceModel,
     # Storage
     "pysam_battery": PySAMBatteryPerformanceModel,
-    "h2_storage": H2Storage,
     "hydrogen_tank_performance": HydrogenTankPerformanceModel,
     "hydrogen_tank_cost": HydrogenTankCostModel,
+    "storage_auto_sizing": StorageAutoSizingModel,
+    "lined_rock_cavern_h2_storage_cost": LinedRockCavernStorageCostModel,
+    "salt_cavern_h2_storage_cost": SaltCavernStorageCostModel,
+    "mch_tol_h2_storage_cost": MCHTOLStorageCostModel,
+    "buried_pipe_h2_storage_cost": PipeStorageCostModel,
     "atb_battery_cost": ATBBatteryCostModel,
     "generic_storage_cost": GenericStorageCostModel,
     "simple_generic_storage": SimpleGenericStorage,
