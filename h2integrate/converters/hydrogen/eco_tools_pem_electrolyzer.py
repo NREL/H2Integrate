@@ -106,34 +106,14 @@ class ECOElectrolyzerPerformanceModel(ElectrolyzerPerformanceBaseClass):
                 raise ValueError(f"Cannot resize for '{size_flow}' feedstock")
         elif size_mode == "resize_by_max_commodity":
             # In this sizing mode, electrolyzer size comes from a connected tech's capacity
-            # to take in one of the electrolyzer's products
-            size_tech = discrete_inputs["resize_by_tech"]
+            # to take in one of the electrolyzer's commodities
             comm_ratio = inputs["max_commodity_ratio"]
             # Make sure COBLYA doesn't cause any shenanigans trying to set comm_ratio <= 0
             if comm_ratio <= 1e-6:
                 comm_ratio = 1e-6
             if size_flow == "hydrogen":
-                connected_tech = self.options["plant_config"]["technology_interconnections"]
-                tech_found = False
-                tech_index = 0
-                while not tech_found and tech_index < len(connected_tech):
-                    connection = connected_tech[tech_index]
-                    dest_tech = connection[1]
-                    transport_item = connection[2]
-                    if dest_tech == size_tech and transport_item == size_flow:
-                        tech_found = True
-                        if dest_tech == "ammonia":
-                            h2_kgphr = inputs["max_hydrogen_capacity"]
-                        else:
-                            raise ValueError(f"Sizing mode not defined for '{dest_tech}'")
-                    else:
-                        tech_index += 1
-                if tech_index == len(connected_tech):
-                    raise ValueError(f"Cannot find a connection to '{size_tech}'")
-                else:
-                    electrolyzer_size_mw = size_electrolyzer_for_hydrogen_demand(
-                        h2_kgphr * comm_ratio
-                    )
+                h2_kgphr = inputs["max_hydrogen_capacity"]
+                electrolyzer_size_mw = size_electrolyzer_for_hydrogen_demand(h2_kgphr * comm_ratio)
             else:
                 raise ValueError(f"Cannot resize for '{size_flow}' commodity")
         elif size_mode != "normal":
