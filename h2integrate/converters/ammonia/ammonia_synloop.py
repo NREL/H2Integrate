@@ -180,7 +180,7 @@ class AmmoniaSynLoopPerformanceModel(ResizeablePerformanceModelBaseClass):
                 max_cap_ratio = inputs["max_feedstock_ratio"]
                 feed_mw = x_h2_feed * H_MW * 2 + x_n2_feed * N_MW * 2  # g / mol
                 w_h2_feed = x_h2_feed * H_MW * 2 / feed_mw  # kg H2 / kg feed gas
-                nh3_cap = nh3_cap * ratio_feed * w_h2_feed * max_cap_ratio
+                nh3_cap = np.max(inputs["hydrogen_in"]) / (ratio_feed * w_h2_feed) * max_cap_ratio
         else:
             NotImplementedError("This converter only has `normal` sizing mode implemented")
 
