@@ -1,16 +1,22 @@
 import numpy as np
-import openmdao.api as om
 from attrs import field, define
 
-from h2integrate.core.utilities import BaseConfig, CostModelBaseConfig, merge_shared_inputs
+from h2integrate.core.utilities import (
+    CostModelBaseConfig,
+    ResizeablePerformanceModelBaseConfig,
+    merge_shared_inputs,
+)
 from h2integrate.core.validators import gt_zero, range_val
 from h2integrate.tools.constants import H_MW, N_MW
-from h2integrate.core.model_baseclasses import CostModelBaseClass
+from h2integrate.core.model_baseclasses import (
+    CostModelBaseClass,
+    ResizeablePerformanceModelBaseClass,
+)
 from h2integrate.tools.inflation.inflate import inflate_cpi, inflate_cepci
 
 
 @define
-class AmmoniaSynLoopPerformanceConfig(BaseConfig):
+class AmmoniaSynLoopPerformanceConfig(ResizeablePerformanceModelBaseConfig):
     """
     Configuration inputs for the ammonia synthesis loop performance model.
     *Starred inputs are from tech_config/ammonia/model_inputs/shared_parameters
@@ -68,7 +74,7 @@ class AmmoniaSynLoopPerformanceConfig(BaseConfig):
     purge_gas_mass_ratio: float = field(validator=gt_zero)
 
 
-class AmmoniaSynLoopPerformanceModel(om.ExplicitComponent):
+class AmmoniaSynLoopPerformanceModel(ResizeablePerformanceModelBaseClass):
     """
     OpenMDAO component modeling the performance of an ammonia synthesis loop.
 
@@ -125,16 +131,12 @@ class AmmoniaSynLoopPerformanceModel(om.ExplicitComponent):
     conversion efficiency up to the limiting reagent or energy input.
     """
 
-    def initialize(self):
-        self.options.declare("plant_config", types=dict)
-        self.options.declare("tech_config", types=dict)
-        self.options.declare("driver_config", types=dict)
-
     def setup(self):
         n_timesteps = self.options["plant_config"]["plant"]["simulation"]["n_timesteps"]
         self.config = AmmoniaSynLoopPerformanceConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance")
         )
+        super().setup()
 
         self.add_input("hydrogen_in", val=0.0, shape=n_timesteps, units="kg/h")
         self.add_input("nitrogen_in", val=0.0, shape=n_timesteps, units="kg/h")
@@ -155,12 +157,7 @@ class AmmoniaSynLoopPerformanceModel(om.ExplicitComponent):
         )
         self.add_output("max_hydrogen_capacity", val=1000.0, units="kg/h")
 
-    def compute(self, inputs, outputs):
-        if self.config.sizing["size_mode"] == "normal":
-            pass
-        else:
-            NotImplementedError("This converter only has `normal` sizing mode implemented")
-
+    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         # Get config values
         nh3_cap = self.config.production_capacity  # kg NH3 per hour
         cat_consume = self.config.catalyst_consumption_rate  # kg Cat per kg NH3
@@ -173,6 +170,19 @@ class AmmoniaSynLoopPerformanceModel(om.ExplicitComponent):
         x_h2_purge = self.config.purge_gas_x_h2  # mol frac
         x_n2_purge = self.config.purge_gas_x_n2  # mol frac
         ratio_purge = self.config.purge_gas_mass_ratio  # kg/kg NH3
+
+        # Resize if needed
+        size_mode = discrete_inputs["size_mode"]
+        if size_mode == "normal":
+            pass
+        elif size_mode == "resize_by_max_feedstock":
+            if discrete_inputs["resize_by_flow"] == "hydrogen":
+                max_cap_ratio = inputs["max_feedstock_ratio"]
+                feed_mw = x_h2_feed * H_MW * 2 + x_n2_feed * N_MW * 2  # g / mol
+                w_h2_feed = x_h2_feed * H_MW * 2 / feed_mw  # kg H2 / kg feed gas
+                nh3_cap = nh3_cap * ratio_feed * w_h2_feed * max_cap_ratio
+        else:
+            NotImplementedError("This converter only has `normal` sizing mode implemented")
 
         # Inputs (arrays of length n_timesteps)
         h2_in = inputs["hydrogen_in"]

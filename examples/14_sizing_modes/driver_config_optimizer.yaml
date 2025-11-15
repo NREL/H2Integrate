@@ -22,6 +22,12 @@ design_variables:
       lower: 0.1
       upper: 10.
       units: unitless
+  ammonia:
+    max_feedstock_ratio:
+      flag: True
+      lower: 0.1
+      upper: 10.
+      units: unitless
 
 objective:
   name: finance_subgroup_nh3.LCOA

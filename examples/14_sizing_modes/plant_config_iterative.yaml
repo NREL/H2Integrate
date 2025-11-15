@@ -4,8 +4,6 @@ description: "This plant is located in MN, USA..."
 site:
   latitude: 47.5233
   longitude: -92.5366
-  elevation_m: 439.0
-  time_zone: -5
 
   # array of polygons defining boundaries with x/y coords
   boundaries: [
