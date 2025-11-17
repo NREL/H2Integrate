@@ -23,9 +23,7 @@ site:
 # this will naturally grow as we mature the interconnected tech
 technology_interconnections: [
   ["hopp","electrolyzer","electricity","cable"],
-  ["electrolyzer", "h2_storage", "efficiency"],
-  ["electrolyzer", "h2_storage", "hydrogen", "pipe"],
-  ["h2_storage", "ammonia", "hydrogen", "pipe"],
+  ["electrolyzer", "ammonia", "hydrogen", "pipe"],
   ["ammonia", "electrolyzer", "max_hydrogen_capacity"],
 ]
 
@@ -66,7 +64,7 @@ finance_parameters:
   finance_subgroups:
     h2:
       commodity: "hydrogen"
-      technologies: ["hopp", "electrolyzer", "h2_storage"]
+      technologies: ["hopp", "electrolyzer"]
     nh3:
       commodity: "ammonia"
-      technologies: ["hopp", "electrolyzer", "h2_storage", "ammonia"]
+      technologies: ["hopp", "electrolyzer", "ammonia"]

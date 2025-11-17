@@ -80,7 +80,7 @@ class ECOElectrolyzerPerformanceModel(ElectrolyzerPerformanceBaseClass):
         )
 
         self.add_input("max_hydrogen_capacity", val=1000.0, units="kg/h")
-        self.add_output("capacity_factor", val=0.0, units="unitless")
+        self.add_output("hydrogen_capacity_factor", val=0.0, units="unitless")
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         plant_life = self.options["plant_config"]["plant"]["plant_life"]
@@ -160,4 +160,4 @@ class ECOElectrolyzerPerformanceModel(ElectrolyzerPerformanceBaseClass):
             np.mean(H2_Results["Hydrogen Hourly Production [kg/hr]"])
             / H2_Results["Rated BOL: H2 Production [kg/hr]"]
         )
-        outputs["capacity_factor"] = cap_fac
+        outputs["hydrogen_capacity_factor"] = cap_fac
