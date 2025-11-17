@@ -10,6 +10,7 @@ model.technology_config["technologies"]["electrolyzer"]["model_inputs"]["perform
     "resize_by_flow": "hydrogen",
     "max_commodity_ratio": 1.0,
 }
+model.setup()
 
 # Run the model
 model.run()
