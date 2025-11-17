@@ -2,6 +2,7 @@
 # Wind Resource: Model Overview
 
 - [**"wind_toolkit_v2_api"**](wind_resource:wtk_v2_api): this requires an API key for the NREL developer network
+- [**"openmeteo_wind_api"**](wind_resource:openmeteo_archive)
 
 
 ```{note}
@@ -23,6 +24,7 @@ Wind resource models may output wind resource data, site information, informatio
 Not all wind resource models will output all the data keys listed below. Please check the documentation for each wind resource model and wind performance model to ensure compatibility.
 ```
 
+(primary-data-wind-resource-timeseries)=
 ## Primary Data: Wind Resource Timeseries
 The below variables are outputted as arrays, with a length equal to the simulation duration. In the variables listed below, `<height>` is used to indicate the height (in meters) above the ground for the resource parameter. `<height>` should be 0 for surface level wind resource data. The naming convention and standardized units of wind resource variables are listed below:
 - `wind_direction_<height>m`: wind direction in degrees (units are 'deg')

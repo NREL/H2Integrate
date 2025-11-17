@@ -5,12 +5,19 @@ from h2integrate.control.control_rules.pyomo_rule_baseclass import PyomoRuleBase
 
 
 class PyomoRuleStorageBaseclass(PyomoRuleBaseClass):
+    """Base class defining PYomo rules for generic commodity storage components."""
+
     def _create_parameters(self, pyomo_model: pyo.ConcreteModel, t):
-        """Creates storage parameters.
+        """Create storage-related parameters in the Pyomo model.
+
+        This method defines key storage parameters such as capacity limits,
+        state-of-charge (SOC) bounds, efficiencies, and time duration for each
+        time step.
 
         Args:
-            storage: Storage instance.
-
+            pyomo_model (pyo.ConcreteModel): Pyomo model instance representing
+                the storage system.
+            t: Time index or iterable representing time steps (unused in this method).
         """
         ##################################
         # Storage Parameters             #
@@ -99,11 +106,15 @@ class PyomoRuleStorageBaseclass(PyomoRuleBaseClass):
         )
 
     def _create_variables(self, pyomo_model: pyo.ConcreteModel, t):
-        """Creates storage variables.
+        """Create storage-related decision variables in the Pyomo model.
+
+        This method defines binary and continuous variables representing
+        charging/discharging modes, energy flows, and state-of-charge.
 
         Args:
-            storage: Storage instance.
-
+            pyomo_model (pyo.ConcreteModel): Pyomo model instance representing
+                the storage system.
+            t: Time index or iterable representing time steps (unused in this method).
         """
         ##################################
         # Variables                      #
@@ -152,6 +163,18 @@ class PyomoRuleStorageBaseclass(PyomoRuleBaseClass):
         )
 
     def _create_constraints(self, pyomo_model: pyo.ConcreteModel, t):
+        """Create operational and state-of-charge constraints for storage.
+
+        This method defines constraints that enforce:
+        - Mutual exclusivity between charging and discharging.
+        - Upper and lower bounds on charge/discharge flows.
+        - The state-of-charge balance over time.
+
+        Args:
+            pyomo_model (pyo.ConcreteModel): Pyomo model instance representing
+                the storage system.
+            t: Time index or iterable representing time steps (unused in this method).
+        """
         ##################################
         # Charging Constraints           #
         ##################################
@@ -222,11 +245,15 @@ class PyomoRuleStorageBaseclass(PyomoRuleBaseClass):
         # )
 
     def _create_ports(self, pyomo_model: pyo.ConcreteModel, t):
-        """Creates storage port.
+        """Create Pyomo ports for connecting the storage component.
+
+        Ports are used to connect inflows and outflows of the storage system
+        (e.g., charging and discharging commodities) to the overall Pyomo model.
 
         Args:
-            pyomo_model: Pyomo storage instance.
-
+            pyomo_model (pyo.ConcreteModel): Pyomo model instance representing
+                the storage system.
+            t: Time index or iterable representing time steps (unused in this method).
         """
         ##################################
         # Ports                          #

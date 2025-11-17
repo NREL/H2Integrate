@@ -3,10 +3,13 @@ This file is based on the WISDEM file of the same name: https://github.com/WISDE
 and also based off of the H2Integrate file of the same name originally adapted by Jared Thomas.
 """
 
+import re
 import warnings
 from pathlib import Path
 
 import openmdao.api as om
+
+from h2integrate.core.utilities import check_file_format_for_csv_generator
 
 
 class PoseOptimization:
@@ -162,7 +165,7 @@ class PoseOptimization:
 
         folder_output = self.config["general"]["folder_output"]
 
-        if self.config["driver"]["optimization"]["flag"]:
+        if self.config["driver"].get("optimization", {}).get("flag", False):
             opt_options = self.config["driver"]["optimization"]
             step_size = self._get_step_size()
 
@@ -326,6 +329,20 @@ class PoseOptimization:
                         criterion=doe_options["criterion"],
                         seed=doe_options["seed"],
                     )
+                elif doe_options["generator"].lower() == "csvgen":
+                    valid_file = check_file_format_for_csv_generator(
+                        doe_options["filename"], self.config, check_only=True
+                    )
+                    if not valid_file:
+                        raise UserWarning(
+                            f"There may be issues with the csv file {doe_options['filename']}, "
+                            f"which may cause errors within OpenMDAO. "
+                            "To check this csv file or create a new one, run the function "
+                            "h2integrate.core.utilities.check_file_format_for_csv_generator()."
+                        )
+                    generator = om.CSVGenerator(
+                        filename=doe_options["filename"],
+                    )
                 else:
                     raise Exception(
                         "The generator type {} is unsupported.".format(doe_options["generator"])
@@ -343,7 +360,8 @@ class PoseOptimization:
                     ]
 
                 # options
-                opt_prob.driver.options["run_parallel"] = doe_options["run_parallel"]
+                if "run_parallel" in doe_options:
+                    opt_prob.driver.options["run_parallel"] = doe_options["run_parallel"]
 
         else:
             warnings.warn(
@@ -355,7 +373,10 @@ class PoseOptimization:
         return opt_prob
 
     def set_objective(self, opt_prob):
-        """Set merit figure. Each objective has its own scaling.  Check first for user override
+        """Set merit figure. Each objective has its own scaling.  Check first for user override.
+
+        The optimization is always minimizing the objective. If you wish to maximize the objective,
+        use a negative ref or scaler value in the config.
 
         Args:
             opt_prob (openmdao problem instance): openmdao problem instance for
@@ -412,11 +433,12 @@ class PoseOptimization:
             opt_prob (openmdao problem instance): openmdao problem instance for
                 current optimization problem edited to include constraint setup
         """
-        for technology, variables in self.config["constraints"].items():
-            for key, value in variables.items():
-                if value["flag"]:
-                    value.pop("flag")
-                    opt_prob.model.add_constraint(f"{technology}.{key}", **value)
+        if self.config.get("constraints", False):
+            for technology, variables in self.config["constraints"].items():
+                for key, value in variables.items():
+                    if value["flag"]:
+                        value.pop("flag")
+                        opt_prob.model.add_constraint(f"{technology}.{key}", **value)
 
     def set_recorders(self, opt_prob):
         """sets up a recorder for the openmdao problem as desired in the input yaml
@@ -433,20 +455,100 @@ class PoseOptimization:
 
         # Set recorder on the OpenMDAO driver level using the `optimization_log`
         # filename supplied in the optimization yaml
-        if self.config["recorder"]["flag"]:
-            recorder = om.SqliteRecorder(Path(folder_output) / self.config["recorder"]["file_name"])
-            opt_prob.driver.add_recorder(recorder)
-            opt_prob.add_recorder(recorder)
+        recorder_options = ["record_inputs", "record_outputs", "record_residuals"]
 
-            opt_prob.driver.recording_options["excludes"] = ["*_df"]
-            opt_prob.driver.recording_options["record_constraints"] = True
-            opt_prob.driver.recording_options["record_desvars"] = True
-            opt_prob.driver.recording_options["record_objectives"] = True
+        if self.config["recorder"].get("flag", False):
+            # Check that the output folder exists and create it if needed
+            if not Path(folder_output).exists():
+                Path.mkdir(folder_output, parents=True, exist_ok=True)
 
-            if self.config["recorder"]["includes"]:
-                opt_prob.driver.recording_options["includes"] = self.config["recorder"]["includes"]
+            overwrite_recorder = self.config["recorder"].get("overwrite_recorder", False)
+            recorder_path = Path(folder_output) / self.config["recorder"]["file"]
 
-        return opt_prob
+            if not overwrite_recorder:
+                # make a unique filename with the same base as self.config["recorder"]["file"]
+                # separate out the filename without the extension
+                file_base = self.config["recorder"]["file"].split(".sql")[0]
+                # get all the files in the output folder that start with file_base
+                existing_files = list(Path(folder_output).glob(f"{file_base}*"))
+                if len(existing_files) > 0:
+                    # if file(s) exist with the same base name, make a new unique filename
+
+                    # get past numbers that were used to make unique files by matching
+                    # filenames against the file base name followed by a number
+                    past_numbers = [
+                        int(re.findall(f"{file_base}[0-9]+", str(fname))[0].split(file_base)[-1])
+                        for fname in existing_files
+                        if len(re.findall(f"{file_base}[0-9]+", str(fname))) > 0
+                    ]
+
+                    if len(past_numbers) > 0:
+                        # if multiple files have the same basename followed by a number,
+                        # take the maximum unique number and add one
+                        unique_number = int(max(past_numbers) + 1)
+                        recorder_path = Path(folder_output) / f"{file_base}{unique_number}.sql"
+                    else:
+                        # if no files have the same basename followed by a number,
+                        # but do have the same basename, then add a zero to the file basename
+                        recorder_path = Path(folder_output) / f"{file_base}0.sql"
+
+            recorder_attachment = (
+                self.config["recorder"].get("recorder_attachment", "driver").lower()
+            )
+            allowed_attachments = ["driver", "model"]
+            if recorder_attachment not in allowed_attachments:
+                msg = (
+                    f"Invalid recorder attachment '{recorder_attachment}'. "
+                    f"Currently supported options are {allowed_attachments}. "
+                    "We recommend using 'driver' if running an optimization or DOE in parallel."
+                )
+                raise ValueError(msg)
+
+            # Create recorder
+            recorder = om.SqliteRecorder(recorder_path)
+
+            if recorder_attachment == "model":
+                # add the recorder to the model
+                recorder_options += ["options_excludes"]
+
+                opt_prob.model.add_recorder(recorder)
+
+                for recorder_opt in recorder_options:
+                    if recorder_opt in self.config["recorder"]:
+                        opt_prob.model.recording_options[recorder_opt] = self.config[
+                            "recorder"
+                        ].get(recorder_opt)
+
+                opt_prob.model.recording_options["includes"] = self.config["recorder"].get(
+                    "includes", ["*"]
+                )
+                opt_prob.model.recording_options["excludes"] = self.config["recorder"].get(
+                    "excludes", ["*resource_data"]
+                )
+                return
+
+            if recorder_attachment == "driver":
+                recorder_options += [
+                    "record_constraints",
+                    "record_derivative",
+                    "record_desvars",
+                    "record_objectives",
+                ]
+                # add the recorder to the driver
+                opt_prob.driver.add_recorder(recorder)
+
+                for recorder_opt in recorder_options:
+                    if recorder_opt in self.config["recorder"]:
+                        opt_prob.driver.recording_options[recorder_opt] = self.config[
+                            "recorder"
+                        ].get(recorder_opt)
+
+                opt_prob.driver.recording_options["includes"] = self.config["recorder"].get(
+                    "includes", ["*"]
+                )
+                opt_prob.driver.recording_options["excludes"] = self.config["recorder"].get(
+                    "excludes", ["*resource_data"]
+                )
 
     def set_restart(self, opt_prob):
         """

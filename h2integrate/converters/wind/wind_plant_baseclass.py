@@ -58,6 +58,7 @@ class WindPerformanceBaseClass(om.ExplicitComponent):
             if len(params_heights) > 0:
                 heights_per_parameter.update({param: params_heights})
                 allowed_hub_height_meters.update(params_heights)
+
         # Check if any resource height is equal to the hub-height
         if any(float(hh) == float(hub_height_meters) for hh in allowed_hub_height_meters):
             return [int(hub_height_meters)]

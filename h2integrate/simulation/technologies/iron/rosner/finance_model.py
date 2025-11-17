@@ -56,6 +56,13 @@ def main(config):
         ]
     )
 
+    # Workaround for changing ng_price
+    if "ng_mod" in list(config.params.keys()):
+        if config.params["ng_mod"]:
+            ng_prices = coeff_dict["Natural Gas"]["values"]
+            ng_prices = [config.params["ng_price"] for i in ng_prices]
+            coeff_dict["Natural Gas"]["values"] = np.array(ng_prices)
+
     years = list(coeff_dict["years"])
     start_idx = years.index(analysis_start)
     if len(years) > (start_idx + plant_life + install_years + 1):
