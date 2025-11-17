@@ -112,14 +112,15 @@ def test_size_mode_outputs(subtests):
         model.technology_config["technologies"]["ammonia"]["model_inputs"][
             "performance_parameters"
         ]["sizing"] = {
-            "size_mode": "normal",
+            "size_mode": "size_by_max_feedstock",
             "resize_by_flow": "hydrogen",
             "max_feedstock_ratio": 1.0,
         }
         model.setup()
 
         model.run()
+        model.post_process()
         assert (
             pytest.approx(model.prob.get_val("ammonia.max_hydrogen_capacity")[0], rel=1e-3)
-            == 12543.682462158315
+            == 10589.360138101109
         )

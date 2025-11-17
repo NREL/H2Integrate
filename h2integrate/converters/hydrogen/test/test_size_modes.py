@@ -25,6 +25,7 @@ def test_size_mode_outputs(subtests):
         model.setup()
 
         model.run()
+        model.post_process()
         assert (
             pytest.approx(model.prob.get_val("electrolyzer.electrolyzer_size_mw")[0], rel=1e-3)
             == 1080
@@ -41,6 +42,7 @@ def test_size_mode_outputs(subtests):
         model.setup()
 
         model.run()
+        model.post_process()
         assert (
             pytest.approx(model.prob.get_val("electrolyzer.electrolyzer_size_mw")[0], rel=1e-3)
             == 560
