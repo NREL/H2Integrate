@@ -1173,3 +1173,42 @@ def test_csvgen_design_of_experiments(subtests):
     new_driver_fpath.unlink()
     new_toplevel_fpath.unlink()
     new_csv_filename.unlink()
+
+
+def test_size_modes(subtests):
+    # Change the current working directory to the example's directory
+    os.chdir(EXAMPLE_DIR / "22_sizing_modes")
+
+    # Create a H2Integrate model
+    model = H2IntegrateModel(Path.cwd() / "22_size_mode_feedstock.yaml")
+
+    model.run()
+    model.post_process()
+
+    with subtests.test("Check electrolyzer feedstock sizing"):
+        assert (
+            pytest.approx(model.prob.get_val("electrolyzer.electrolyzer_size_mw")[0], rel=1e-3)
+            == 1080
+        )
+
+    model = H2IntegrateModel(Path.cwd() / "22_size_mode_commodity.yaml")
+
+    model.run()
+    model.post_process()
+
+    with subtests.test("Check electrolyzer commodity sizing"):
+        assert (
+            pytest.approx(model.prob.get_val("electrolyzer.electrolyzer_size_mw")[0], rel=1e-3)
+            == 560
+        )
+
+    model = H2IntegrateModel(Path.cwd() / "22_size_mode_ammonia.yaml")
+
+    model.run()
+    model.post_process()
+
+    with subtests.test("Check ammonia feedstock sizing"):
+        assert (
+            pytest.approx(model.prob.get_val("ammonia.max_hydrogen_capacity")[0], rel=1e-3)
+            == 20499.002679502206
+        )
