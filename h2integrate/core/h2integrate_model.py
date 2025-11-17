@@ -354,9 +354,10 @@ class H2IntegrateModel:
         if any(tech == "site" for tech in self.technology_config["technologies"]):
             msg = (
                 "'site' is an invalid technology name and is reserved for top-level "
-                "variables, please change the technology name to something else."
+                "variables. Please change the technology name to something else."
             )
-            raise ValueError(msg)
+            raise NameError(msg)
+
         # Create a technology group for each technology
         for tech_name, individual_tech_config in self.technology_config["technologies"].items():
             perf_model = individual_tech_config.get("performance_model", {}).get("model")

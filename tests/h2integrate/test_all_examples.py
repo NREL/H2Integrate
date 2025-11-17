@@ -1233,7 +1233,7 @@ def test_sweeping_solar_sites_doe(subtests):
     with subtests.test("Two unique sites"):
         assert len(locations) == 2
 
-    with subtests.test("Unique AEPS per case"):
+    with subtests.test("Unique AEPs per case"):
         assert len(list(set(res_df["AEP"].to_list()))) == len(res_df)
 
     with subtests.test("Unique LCOEs per case"):

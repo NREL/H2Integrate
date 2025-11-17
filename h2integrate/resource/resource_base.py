@@ -118,6 +118,7 @@ class ResourceBaseAPIModel(om.ExplicitComponent):
 
         # default timezone to UTC because 'timezone' was removed from the plant config schema
         resource_specs.setdefault("timezone", sim_config.get("timezone", 0))
+
         return resource_specs
 
     def create_filename(self, latitude, longitude):
