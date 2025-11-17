@@ -1,7 +1,12 @@
+import os
+from pathlib import Path
+
 import numpy as np
 import pytest
 import openmdao.api as om
 
+from h2integrate import EXAMPLE_DIR
+from h2integrate.core.h2integrate_model import H2IntegrateModel
 from h2integrate.converters.ammonia.ammonia_synloop import AmmoniaSynLoopPerformanceModel
 
 
@@ -94,3 +99,27 @@ def test_ammonia_synloop_limiting_cases(subtests):
     # Check total NH3 output
     with subtests.test("Total ammonia"):
         assert np.allclose(total, np.sum(expected_nh3), rtol=1e-6)
+
+
+def test_size_mode_outputs(subtests):
+    # Change the current working directory to the example's directory
+    os.chdir(EXAMPLE_DIR / "22_sizing_modes")
+
+    # Create a H2Integrate model
+    model = H2IntegrateModel(Path.cwd() / "22_size_mode_iterative.yaml")
+    # Subtests for checking specific values
+    with subtests.test("Test `resize_by_max_feedstock` mode"):
+        model.technology_config["technologies"]["ammonia"]["model_inputs"][
+            "performance_parameters"
+        ]["sizing"] = {
+            "size_mode": "normal",
+            "resize_by_flow": "hydrogen",
+            "max_feedstock_ratio": 1.0,
+        }
+        model.setup()
+
+        model.run()
+        assert (
+            pytest.approx(model.prob.get_val("ammonia.max_hydrogen_capacity")[0], rel=1e-3)
+            == 12543.682462158315
+        )
