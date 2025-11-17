@@ -26,6 +26,8 @@
 - Fixed stoichiometry mistake in ammonia synloop
 - Removed `boundaries` from the necessary keys in `plant_config` validation
 - Improved the readability of the postprocessing printout
+- Split out cost models from coupled hydrogen storage performance and cost model
+- Added storage auto-sizing performance model based on storage sizing calculations that existed in the coupled hydrogen storage performance and cost model
 
 ## 0.4.0 [October 1, 2025]
 
