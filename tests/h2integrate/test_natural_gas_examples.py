@@ -43,5 +43,5 @@ def test_21_solar_battery_grid_example(subtests):
         assert pytest.approx(energy_for_financials, rel=1e-6) == solar_aep
 
     with subtests.test("Value check on LCOE"):
-        lcoe = model.prob.get_val("finance_subgroup_renewables.LCOE", units="USD/MW/h")[0]
+        lcoe = model.prob.get_val("finance_subgroup_renewables.LCOE", units="USD/(MW*h)")[0]
         assert pytest.approx(lcoe, rel=1e-4) == 66.11939
