@@ -156,6 +156,7 @@ class AmmoniaSynLoopPerformanceModel(ResizeablePerformanceModelBaseClass):
             "limiting_input", val=0, shape_by_conn=True, copy_shape="hydrogen_in", units=None
         )
         self.add_output("max_hydrogen_capacity", val=1000.0, units="kg/h")
+        self.add_output("capacity_factor", val=0.0, units="unitless")
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         # Get config values
@@ -181,8 +182,15 @@ class AmmoniaSynLoopPerformanceModel(ResizeablePerformanceModelBaseClass):
                 feed_mw = x_h2_feed * H_MW * 2 + x_n2_feed * N_MW * 2  # g / mol
                 w_h2_feed = x_h2_feed * H_MW * 2 / feed_mw  # kg H2 / kg feed gas
                 nh3_cap = np.max(inputs["hydrogen_in"]) / (ratio_feed * w_h2_feed) * max_cap_ratio
+            else:
+                NotImplementedError(
+                    f"The sizing mode '{size_mode}' is not implemented for the "
+                    f"'{discrete_inputs["resize_by_flow"]}' flow"
+                )
         else:
-            NotImplementedError("This converter only has `normal` sizing mode implemented")
+            NotImplementedError(
+                f"The sizing mode '{size_mode}' is not implemented for this converter"
+            )
 
         # Inputs (arrays of length n_timesteps)
         h2_in = inputs["hydrogen_in"]
@@ -255,6 +263,9 @@ class AmmoniaSynLoopPerformanceModel(ResizeablePerformanceModelBaseClass):
 
         h2_cap = nh3_cap * h2_rate  # kg H2 per hour
         outputs["max_hydrogen_capacity"] = h2_cap
+
+        # Calculate capacity factor
+        outputs["capacity_factor"] = np.mean(nh3_prod) / nh3_cap
 
 
 @define
