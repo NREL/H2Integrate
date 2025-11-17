@@ -39,22 +39,22 @@ technologies:
 
   h2_storage:
     performance_model:
-      model: "h2_storage"
+      model: "storage_auto_sizing"
     control_strategy:
       model: "pass_through_controller"
     cost_model:
-      model: "h2_storage"
+      model: "salt_cavern_h2_storage_cost"
     model_inputs:
-      performance_parameters:
-        electrolyzer_rating_mw_for_h2_storage_sizing: 640
-        size_capacity_from_demand:
-          flag: True # If True, then storage is sized to provide steady-state storage
-        capacity_from_max_on_turbine_storage: False # if True, then days of storage is ignored and storage capacity is based on how much h2 storage fits on the turbines in the plant using Kottenstete 2003.
-        type: "salt_cavern" # can be one of ["none", "pipe", "turbine", "pressure_vessel", "salt_cavern", "lined_rock_cavern"]
-        days: 0 #how many days worth of production we should be able to store (this is ignored if `capacity_from_max_on_turbine_storage` is set to True)
-      control_parameters:
+      shared_parameters:
         commodity_name: "hydrogen"
         commodity_units: "kg/h"
+      cost_parameters:
+        # since the storage is being auto-sized by the performance model,
+        # we set the sizing mode to 'auto' rather than defining the capacities
+        # in the input file
+        sizing_mode: "auto" # set as "auto" so storage capacity doesnt have to be defined
+
+
   ammonia:
     performance_model:
       model: "simple_ammonia_performance"
