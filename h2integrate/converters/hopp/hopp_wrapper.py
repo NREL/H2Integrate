@@ -65,7 +65,6 @@ class HOPPComponent(CostModelBaseClass):
         self.add_output("percent_load_missed", units="percent", val=0.0)
         self.add_output("curtailment_percent", units="percent", val=0.0)
         self.add_output("aep", units="kW*h", val=0.0)
-        self.add_output("max_electricity_out", units="kW", val=0.0)
         self.add_output(
             "electricity_out", val=np.zeros(n_timesteps), units="kW", desc="Power output"
         )
@@ -173,9 +172,6 @@ class HOPPComponent(CostModelBaseClass):
         outputs["curtailment_percent"] = subset_of_hopp_results["curtailment_percent"]
         outputs["aep"] = subset_of_hopp_results["annual_energies"]["hybrid"]
         outputs["electricity_out"] = subset_of_hopp_results["combined_hybrid_power_production_hopp"]
-        outputs["max_electricity_out"] = max(
-            subset_of_hopp_results["combined_hybrid_power_production_hopp"]
-        )
         outputs["CapEx"] = subset_of_hopp_results["capex"]
         outputs["OpEx"] = subset_of_hopp_results["opex"]
 
