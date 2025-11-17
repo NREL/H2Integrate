@@ -26,6 +26,7 @@
 - Fixed stoichiometry mistake in ammonia synloop
 - Removed `boundaries` from the necessary keys in `plant_config` validation
 - Improved the readability of the postprocessing printout
+- Enabled dynamic plant component sizing modes through the resizeable model class `ResizeablePerformanceModelBaseClass`.
 
 ## 0.4.0 [October 1, 2025]
 

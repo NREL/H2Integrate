@@ -123,6 +123,10 @@ class AmmoniaSynLoopPerformanceModel(ResizeablePerformanceModelBaseClass):
         Total electricity consumed over the modeled period.
     limiting_output: array of ints [-]
         0: nitrogen-limited, 1: hydrogen-limited, 2: electricity-limited 3: capacity-limited
+    max_hydrogen_capacity : float [kg/h]
+        The maximum rate of hydrogen consumption.
+    ammonia_capacity_factor : float [-]
+        The ratio of ammonia produced to the maximum production capacity.
 
     Notes
     -----
