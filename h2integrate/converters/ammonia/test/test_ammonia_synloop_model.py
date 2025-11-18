@@ -106,7 +106,15 @@ def test_size_mode_outputs(subtests):
     os.chdir(EXAMPLE_DIR / "22_sizing_modes")
 
     # Create a H2Integrate model
-    model = H2IntegrateModel(Path.cwd() / "22_size_mode_ammonia.yaml")
+    model = H2IntegrateModel(Path.cwd() / "22_size_mode_iterative.yaml")
+    model.technology_config["technologies"]["ammonia"]["model_inputs"]["performance_parameters"][
+        "sizing"
+    ] = {
+        "size_mode": "size_by_max_feedstock",
+        "resize_by_flow": "hydrogen",
+        "max_feedstock_ratio": 1.0,
+    }
+    model.setup()
 
     model.run()
     model.post_process()
@@ -114,5 +122,5 @@ def test_size_mode_outputs(subtests):
     with subtests.test("Test `resize_by_max_feedstock` mode"):
         assert (
             pytest.approx(model.prob.get_val("ammonia.max_hydrogen_capacity")[0], rel=1e-3)
-            == 20499.002679502206
+            == 10589.360138101109
         )

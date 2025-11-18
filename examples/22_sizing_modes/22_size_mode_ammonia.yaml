@@ -1,7 +1,0 @@
-name: "H2Integrate_config"
-
-system_summary: "This reference hybrid plant contains an ammonia synthesis loop drawing from hydrogen electrolyzer and storage"
-
-driver_config: "driver_config.yaml"
-technology_config: "tech_config_ammonia.yaml"
-plant_config: "plant_config.yaml"
