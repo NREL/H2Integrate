@@ -18,21 +18,28 @@ class GridPerformanceModelConfig(BaseConfig):
 
 
 class GridPerformanceModel(om.ExplicitComponent):
-    """
-    An OpenMDAO component that models a grid interconnection point.
+    """Model a grid interconnection point.
 
     The grid is treated as the interconnection point itself:
-    - electricity_in: Power flowing INTO the grid (selling to grid)
-    - electricity_out: Power flowing OUT OF the grid (buying from grid)
+    - electricity_in: Power flowing INTO the grid (selling to grid).
+    - electricity_out: Power flowing OUT OF the grid (buying from grid).
 
     This unified component handles:
-    - Buying electricity from grid (electricity flows out to downstream technologies)
-    - Selling electricity to grid (electricity flows in from upstream technologies)
-    - Enforcing interconnection limits on both flows
+    - Buying electricity from the grid (electricity flows out to downstream technologies).
+    - Selling electricity to the grid (electricity flows in from upstream technologies).
+    - Enforcing interconnection limits on buying flows.
 
     The component can be instantiated multiple times in a plant to represent
-    different grid connection points (e.g., one for buying upstream, one for
-    selling downstream).
+    different grid connection points (for example, one for buying upstream and
+    another for selling downstream).
+
+    Inputs
+        interconnection_size (float): Maximum power capacity for grid connection (kW).
+        electricity_in (array): Power flowing into the grid (selling) (kW).
+        electricity_demand (array): Downstream electricity demand (kW).
+
+    Outputs
+        electricity_out (array): Power flowing out of the grid (buying) (kW).
     """
 
     def initialize(self):
@@ -112,8 +119,8 @@ class GridCostModelConfig(CostModelBaseConfig):
     interconnection_capex_per_kw: float = field()  # $/kW
     interconnection_opex_per_kw: float = field()  # $/kW/year
     fixed_interconnection_cost: float = field()  # $
-    electricity_buy_price: float = field(default=0.0)  # $/kWh
-    electricity_sell_price: float = field(default=0.0)  # $/kWh
+    electricity_buy_price: float | list[float] | np.ndarray | None = field(default=None)  # $/kWh
+    electricity_sell_price: float | list[float] | np.ndarray | None = field(default=None)  # $/kWh
 
 
 class GridCostModel(CostModelBaseClass):
