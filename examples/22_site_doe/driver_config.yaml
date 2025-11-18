@@ -16,7 +16,7 @@ design_variables:
     capacity_kWdc:
       flag: true
       lower: 5000.0
-      upper: 5000000.0
+      upper: 75000.0
       units: "kW"
   site:
     latitude:
