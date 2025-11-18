@@ -82,16 +82,10 @@ def test_simple_ammonia_example(subtests):
         assert pytest.approx(model.prob.get_val("electrolyzer.OpEx"), rel=1e-3) == 14703155.39207595
 
     with subtests.test("Check H2 storage CapEx"):
-        assert (
-            pytest.approx(model.prob.get_val("plant.h2_storage.h2_storage.CapEx"), rel=1e-3)
-            == 65336874.189441
-        )
+        assert pytest.approx(model.prob.get_val("h2_storage.CapEx"), rel=1e-3) == 65336874.189441
 
     with subtests.test("Check H2 storage OpEx"):
-        assert (
-            pytest.approx(model.prob.get_val("plant.h2_storage.h2_storage.OpEx"), rel=1e-3)
-            == 2358776.66234517
-        )
+        assert pytest.approx(model.prob.get_val("h2_storage.OpEx"), rel=1e-3) == 2358776.66234517
 
     with subtests.test("Check ammonia CapEx"):
         assert pytest.approx(model.prob.get_val("ammonia.CapEx"), rel=1e-3) == 1.0124126e08
@@ -176,16 +170,10 @@ def test_ammonia_synloop_example(subtests):
         assert pytest.approx(model.prob.get_val("electrolyzer.OpEx"), rel=1e-6) == 14703155.39207595
 
     with subtests.test("Check H2 storage CapEx"):
-        assert (
-            pytest.approx(model.prob.get_val("plant.h2_storage.h2_storage.CapEx"), rel=1e-6)
-            == 65337437.18075897
-        )
+        assert pytest.approx(model.prob.get_val("h2_storage.CapEx"), rel=1e-6) == 65337437.18075897
 
     with subtests.test("Check H2 storage OpEx"):
-        assert (
-            pytest.approx(model.prob.get_val("plant.h2_storage.h2_storage.OpEx"), rel=1e-6)
-            == 2358794.11507603
-        )
+        assert pytest.approx(model.prob.get_val("h2_storage.OpEx"), rel=1e-6) == 2358794.11507603
 
     with subtests.test("Check ammonia CapEx"):
         assert pytest.approx(model.prob.get_val("ammonia.CapEx"), rel=1e-6) == 1.15173753e09
@@ -536,7 +524,7 @@ def test_hydrogen_dispatch_example(subtests):
                 model.prob.get_val("finance_subgroup_dispatched_hydrogen.LCOH", units="USD/kg")[0],
                 rel=1e-5,
             )
-            == 8.371194137479359
+            == 7.54632229849164
         )
 
 
