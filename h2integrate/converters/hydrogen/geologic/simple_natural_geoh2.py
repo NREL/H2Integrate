@@ -61,9 +61,6 @@ class NaturalGeoH2PerformanceModel(GeoH2SubsurfacePerformanceBaseClass):
         gas_reservoir_size (float):
             Total mass of hydrogen stored in the subsurface accumulation, in tonnes (t).
 
-        well_lifetime (float):
-            Duration of well operation, in years (inherited from base class).
-
         grain_size (float):
             Rock grain size influencing hydrogen diffusion and reaction rates, in meters
             (inherited from base class).
@@ -106,7 +103,7 @@ class NaturalGeoH2PerformanceModel(GeoH2SubsurfacePerformanceBaseClass):
 
         # Calculated average wellhead gas flow over well lifetime
         init_wh_flow = inputs["initial_wellhead_flow"]
-        lifetime = int(inputs["well_lifetime"][0])
+        lifetime = self.options["plant_config"]["plant"]["plant_life"]
         res_size = inputs["gas_reservoir_size"]
         n_timesteps = self.options["plant_config"]["plant"]["simulation"]["n_timesteps"]
         avg_wh_flow = min(init_wh_flow, res_size / lifetime * 1000 / n_timesteps)

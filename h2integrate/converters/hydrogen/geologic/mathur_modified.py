@@ -106,7 +106,6 @@ class GeoH2SubsurfaceCostModel(GeoH2SubsurfaceCostBaseClass):
         config (GeoH2SubsurfaceCostConfig): Configuration object containing cost parameters.
 
     Inputs:
-        well_lifetime (float): Operational lifetime of the wells [years].
         target_dollar_year (int): The dollar year in which costs are modeled.
         borehole_depth (float): Depth of the wellbore [m].
         test_drill_cost (float): Capital cost of a test drill [USD].

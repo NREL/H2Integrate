@@ -92,7 +92,7 @@ class StimulatedGeoH2PerformanceModel(GeoH2SubsurfacePerformanceBaseClass):
 
     def compute(self, inputs, outputs):
         n_timesteps = self.options["plant_config"]["plant"]["simulation"]["n_timesteps"]
-        lifetime = int(inputs["well_lifetime"][0])
+        lifetime = self.options["plant_config"]["plant"]["plant_life"]
 
         # Calculate serpentinization penetration rate
         grain_size = inputs["grain_size"]

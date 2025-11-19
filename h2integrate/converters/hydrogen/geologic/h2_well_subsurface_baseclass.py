@@ -16,9 +16,6 @@ class GeoH2SubsurfacePerformanceConfig(BaseConfig):
     stimulated subsurface geologic hydrogen models.
 
     Attributes:
-        well_lifetime (float):
-            The operational lifetime of the well in years.
-
         borehole_depth (float):
             Total depth of the borehole in meters, potentially including turns.
 
@@ -38,7 +35,6 @@ class GeoH2SubsurfacePerformanceConfig(BaseConfig):
             The grain size of the rocks used to extract hydrogen, in meters.
     """
 
-    well_lifetime: float = field()
     borehole_depth: float = field()
     well_diameter: str = field(validator=contains(["small", "large"]))
     well_geometry: str = field(validator=contains(["vertical", "horizontal"]))
@@ -65,9 +61,6 @@ class GeoH2SubsurfacePerformanceBaseClass(om.ExplicitComponent):
             Parsed configuration object containing performance model inputs.
 
     Inputs:
-        well_lifetime (float):
-            The operational lifetime of the well, in years.
-
         borehole_depth (float):
             The total borehole depth, in meters (may include directional sections).
 
@@ -87,7 +80,6 @@ class GeoH2SubsurfacePerformanceBaseClass(om.ExplicitComponent):
 
     def setup(self):
         # inputs
-        self.add_input("well_lifetime", units="year", val=self.config.well_lifetime)
         self.add_input("borehole_depth", units="m", val=self.config.borehole_depth)
         self.add_input("grain_size", units="m", val=self.config.grain_size)
 
@@ -105,9 +97,6 @@ class GeoH2SubsurfaceCostConfig(CostModelBaseConfig):
     stimulated (engineered) geologic hydrogen subsurface systems.
 
     Attributes:
-        well_lifetime (float):
-            Operational lifetime of the well, in years.
-
         borehole_depth (float):
             Total depth of the borehole, in meters (may include horizontal turns).
 
@@ -121,7 +110,6 @@ class GeoH2SubsurfaceCostConfig(CostModelBaseConfig):
 
     """
 
-    well_lifetime: float = field()
     borehole_depth: float = field()
     well_diameter: str = field(validator=contains(["small", "large"]))
     well_geometry: str = field(validator=contains(["vertical", "horizontal"]))
@@ -139,9 +127,6 @@ class GeoH2SubsurfaceCostBaseClass(CostModelBaseClass):
             Parsed configuration object containing subsurface cost model parameters.
 
     Inputs:
-        well_lifetime (float):
-            Operational lifetime of the wells, in years.
-
         borehole_depth (float):
             Total borehole depth, in meters (may include directional drilling sections).
 
@@ -205,12 +190,6 @@ class GeoH2SubsurfaceCostBaseClass(CostModelBaseClass):
         n_timesteps = self.options["plant_config"]["plant"]["simulation"]["n_timesteps"]
 
         # inputs
-        self.add_input(
-            # TODO: discuss how this works with "plant_life"
-            "well_lifetime",
-            units="year",
-            val=self.config.well_lifetime,
-        )
         self.add_input("borehole_depth", units="m", val=self.config.borehole_depth)
         self.add_input(
             "hydrogen_out",
