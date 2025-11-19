@@ -170,6 +170,7 @@ class GridCostModel(CostModelBaseClass):
                         f"must match n_timesteps ({n_timesteps})"
                     )
                 buy_price_shape = n_timesteps
+
             else:
                 buy_price_shape = 1
 
