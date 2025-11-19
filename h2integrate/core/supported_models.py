@@ -233,5 +233,5 @@ electricity_producing_techs = [
     "river",
     "hopp",
     "natural_gas_plant",
-    "grid",
+    "grid_buy",
 ]
