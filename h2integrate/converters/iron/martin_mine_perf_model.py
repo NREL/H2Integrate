@@ -101,6 +101,13 @@ class MartinIronMinePerformanceComponent(om.ExplicitComponent):
             desc="Iron ore pellets produced",
         )
 
+        self.add_output(
+            "total_iron_ore_produced",
+            val=1.0,
+            units="t/year",
+            desc="Total iron ore pellets produced anually",
+        )
+
         coeff_fpath = (
             ROOT_DIR / "simulation" / "technologies" / "iron" / "martin_ore" / "perf_coeffs.csv"
         )
@@ -240,5 +247,6 @@ class MartinIronMinePerformanceComponent(om.ExplicitComponent):
         crude_ore_consumption = processed_ore_production * crude_ore_usage_per_processed_ore
 
         outputs["iron_ore_out"] = processed_ore_production
+        outputs["total_iron_ore_produced"] = np.sum(processed_ore_production)
         outputs["electricity_consumed"] = energy_consumed
         outputs["crude_ore_consumed"] = crude_ore_consumption

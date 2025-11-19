@@ -86,9 +86,7 @@ class MartinIronMineCostComponent(CostModelBaseClass):
             desc="Iron ore pellets produced",
         )
 
-        coeff_fpath = (
-            ROOT_DIR / "simulation" / "technologies" / "iron" / "martin_ore" / "cost_coeffs.csv"
-        )
+        coeff_fpath = ROOT_DIR / "converters" / "iron" / "martin_mine_cost_coeffs.csv"
         # martin ore performance model
         coeff_df = pd.read_csv(coeff_fpath, index_col=0)
         self.coeff_df = self.format_coeff_df(coeff_df, self.config.mine)
