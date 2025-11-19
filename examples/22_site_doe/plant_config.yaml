@@ -11,6 +11,7 @@ site:
       resource_model: "goes_aggregated_solar_v4_api"
       resource_parameters:
         resource_year: 2012
+        use_fixed_resource_location: False #set to False since sweeping sites
 
 resource_to_tech_connections: [
   # connect the solar resource to the solar technology

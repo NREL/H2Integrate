@@ -12,14 +12,13 @@ site:
         latitude: 35.2018863
         longitude: -101.945027
         resource_year: 2012
-        check_for_location_change: False #use the data for this location rather than the site
+
     solar_resource:
       resource_model: "goes_aggregated_solar_v4_api"
       resource_parameters:
         resource_year: 2013
         resource_dir: "../11_hybrid_energy_plant/tech_inputs/weather/solar"
         resource_filename: "30.6617_-101.7096_psmv3_60_2013.csv"
-        check_for_location_change: False #use the data from this file rather than update
 # array of arrays containing left-to-right technology
 # interconnections; can support bidirectional connections
 # with the reverse definition.

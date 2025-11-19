@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import numpy as np
 import openmdao.api as om
 from attrs import field, define
 
@@ -35,12 +36,12 @@ class ResourceBaseAPIConfig(BaseConfig):
         timezone (float | int): timezone to output data in. May be used to determine whether
             to download data in UTC or local timezone. This should be populated by the value
             in sim_config['timezone']
-        check_for_location_change (bool): Whether to update resource data in the `compute()` method.
-            Set to True if the site location is being swept, set to False if the resource data
-            should not be updated to the location
-            (plant_config['site']['latitude'], plant_config['site']['longitude']). Set to False
-            to reduce computation time during optimizations or design sweeps if site location is not
-            being swept. Defaults to True.
+        use_fixed_resource_location (bool): Whether to update resource data in the `compute()`
+            method. Set to False if the site location is being swept, set to True if the
+            resource data should not be updated to the location
+            (plant_config['site']['latitude'], plant_config['site']['longitude']). Set to True
+            to reduce computation time during optimizations or design sweeps if site location is
+            not being swept. Defaults to True.
 
     Attributes:
         dataset_desc (str): description of the dataset, used in file naming.
@@ -54,7 +55,7 @@ class ResourceBaseAPIConfig(BaseConfig):
 
     timezone: int | float = field()
 
-    check_for_location_change: bool = field(default=True, kw_only=True)
+    use_fixed_resource_location: bool = field(default=True, kw_only=True)
     dataset_desc: str = field(default="default", init=False)
     resource_type: str = field(default="none", init=False)
 
@@ -213,8 +214,11 @@ class ResourceBaseAPIModel(om.ExplicitComponent):
         data = None
         site_changed = False
 
-        if self.config.latitude != latitude or self.config.longitude != longitude:
-            site_changed = True
+        site_changed = not np.allclose(
+            [latitude, longitude], [self.config.latitude, self.config.longitude], atol=1e-6, rtol=0
+        )
+        # if self.config.latitude != latitude or self.config.longitude != longitude:
+        #     site_changed = True
 
         # If site hasn't changed and resource data has already been loaded
         # just return the resource data that was loaded in the setup() method
@@ -278,7 +282,7 @@ class ResourceBaseAPIModel(om.ExplicitComponent):
             raise ValueError("Unexpected situation occurred while trying to load data")
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
-        if self.config.check_for_location_change:
+        if not self.config.use_fixed_resource_location:
             data = self.get_data(
                 float(inputs["latitude"]), float(inputs["longitude"]), first_call=False
             )

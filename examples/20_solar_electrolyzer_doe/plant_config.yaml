@@ -12,7 +12,6 @@ site:
       resource_parameters:
         resource_year: 2012
         resource_filename: "34.22_-102.75_2012_goes_aggregated_v4_60min_utc_tz.csv"
-        check_for_location_change: False #dont reload resource data for each optimization sweep
 
 # array of arrays containing left-to-right technology
 technology_interconnections: [

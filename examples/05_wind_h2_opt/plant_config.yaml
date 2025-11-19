@@ -10,7 +10,6 @@ site:
       resource_model: "wind_toolkit_v2_api"
       resource_parameters:
         resource_year: 2012
-        check_for_location_change: False #dont reload resource data for each optimization sweep
 
 
 plant:
