@@ -97,11 +97,22 @@ class FlexibleDemandOpenLoopConverterControlConfig(BaseConfig):
     """Config class for flexible demand converter.
 
     Attributes:
-        demand (scalar or list):  The load demand in units of `units`.
+        maximum_demand (scalar or list):  The maximum load demand in units of `units`.
             If scalar, demand is assumed to be constant for each timestep.
             If list, then must be the the demand for each timestep.
         commodity_name (str): Name of the commodity being controlled (e.g., "hydrogen").
         commodity_units (str): Units of the commodity (e.g., "kg/h").
+        turndown_ratio (float): Minimum operating point as a fraction of ``maximum_demand``.
+            Must between in range (0,1).
+        ramp_down_rate_fraction (float): Ramp down rate as a fraction of ``maximum_demand``
+            per timestep. Must between in range (0,1).
+        ramp_up_rate_fraction (float): Ramp up rate as a fraction of ``maximum_demand``
+            per timestep. Must between in range (0,1).
+        min_utilization (float): Minimum total demand that must be met over the simulation
+            based on ``maximum_demand``. Used to ensure that some minimum total demand is met.
+            Must between in range (0,1). Utilization is calculated as:
+
+            ``sum({commodity}_flexible_demand_profile)/sum({commodity}_demand)``
     """
 
     maximum_demand: list | int | float = field()
@@ -237,8 +248,20 @@ class FlexibleDemandOpenLoopConverterControl(om.ExplicitComponent):
     def adjust_remaining_demand_for_min_utilization_by_threshold(
         self, flexible_demand_profile, min_total_demand, demand_bounds, demand_threshold
     ):
+        """_summary_
+
+        Args:
+            flexible_demand_profile (_type_): _description_
+            min_total_demand (_type_): _description_
+            demand_bounds (_type_): _description_
+            demand_threshold (_type_): _description_
+
+        Returns:
+            _type_: _description_
+        """
         min_demand, rated_demand = demand_bounds
         required_extra_demand = min_total_demand - np.sum(flexible_demand_profile)
+
         # add extra demand to timesteps where demand is below some threshold
         i_to_increase = np.argwhere(flexible_demand_profile <= demand_threshold).flatten()
         extra_power_per_timestep = required_extra_demand / len(i_to_increase)
@@ -248,19 +271,32 @@ class FlexibleDemandOpenLoopConverterControl(om.ExplicitComponent):
         return np.clip(flexible_demand_profile, min_demand, rated_demand)
 
     def make_flexible_demand(self, maximum_demand_profile, pre_demand_met, inputs):
-        rated_demand = np.max(maximum_demand_profile)
-        min_demand = rated_demand * inputs["turndown_ratio"][0]
-        ramp_down_rate = rated_demand * inputs["ramp_down_rate"][0]
-        ramp_up_rate = rated_demand * inputs["ramp_up_rate"][0]
-        min_total_demand = rated_demand * len(maximum_demand_profile) * inputs["min_utilization"][0]
+        """Make flexible demand profile from original load met.
 
-        demand_bounds = (min_demand, rated_demand)
-        ramp_rate_bounds = (ramp_down_rate, ramp_up_rate)
-        # make flexible demand from original load met
+        Args:
+            maximum_demand_profile (np.ndarray): _description_
+            pre_demand_met (np.ndarray): _description_
+            inputs (dict): _description_
+
+        Returns:
+            np.ndarray: _description_
+        """
+
+        # Calculate demand constraint values in units of commodity units
+        rated_demand = np.max(maximum_demand_profile)
+        min_demand = rated_demand * inputs["turndown_ratio"][0]  # minimum demand in commodity units
+        ramp_down_rate = (
+            rated_demand * inputs["ramp_down_rate"][0]
+        )  # ramp down rate in commodity units
+        ramp_up_rate = rated_demand * inputs["ramp_up_rate"][0]  # ramp up rate in commodity units
+        min_total_demand = rated_demand * len(maximum_demand_profile) * inputs["min_utilization"][0]
 
         # 1) satisfy turndown constraint
         pre_demand_met_clipped = np.clip(pre_demand_met, min_demand, rated_demand)
+
         # 2) satisfy ramp rate constraint
+        demand_bounds = (min_demand, rated_demand)
+        ramp_rate_bounds = (ramp_down_rate, ramp_up_rate)
         flexible_demand_profile = self.adjust_demand_for_ramping(
             pre_demand_met_clipped, demand_bounds, ramp_rate_bounds
         )
@@ -271,14 +307,15 @@ class FlexibleDemandOpenLoopConverterControl(om.ExplicitComponent):
             demand_threshold_percentages = np.arange(inputs["turndown_ratio"][0], 1.05, 0.05)
             for demand_threshold_percent in demand_threshold_percentages:
                 demand_threshold = demand_threshold_percent * rated_demand
-                # 1) satisfy turndown constraint
+                # 3a) satisfy turndown constraint
                 pre_demand_met_clipped = np.clip(pre_demand_met, min_demand, rated_demand)
-                # 2) satisfy ramp rate constraint
+                # 3b) adjust TODO: finish this comment
                 flexible_demand_profile = (
                     self.adjust_remaining_demand_for_min_utilization_by_threshold(
                         flexible_demand_profile, min_total_demand, demand_bounds, demand_threshold
                     )
                 )
+                # 3c) satisfy ramp rate constraint
                 flexible_demand_profile = self.adjust_demand_for_ramping(
                     flexible_demand_profile, demand_bounds, ramp_rate_bounds
                 )
@@ -306,6 +343,7 @@ class FlexibleDemandOpenLoopConverterControl(om.ExplicitComponent):
             flexible_demand_profile = self.make_flexible_demand(
                 inputs[f"{commodity}_demand"], inflexible_out, inputs
             )
+
             outputs[f"{commodity}_flexible_demand_profile"] = flexible_demand_profile
             flexible_remaining_demand = flexible_demand_profile - inputs[f"{commodity}_in"]
 
