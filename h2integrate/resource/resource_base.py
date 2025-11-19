@@ -219,7 +219,7 @@ class ResourceBaseAPIModel(om.ExplicitComponent):
             [latitude, longitude], [self.config.latitude, self.config.longitude], atol=1e-6, rtol=0
         )
 
-        # If site hasn't changed and resource data has already been loaded
+        # 0) If site hasn't changed and resource data has already been loaded
         # just return the resource data that was loaded in the setup() method
         if not site_changed and not first_call:
             if self.resource_data is not None:
@@ -282,6 +282,7 @@ class ResourceBaseAPIModel(om.ExplicitComponent):
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         if not self.config.use_fixed_resource_location:
+            # update the resource data based on the input latitude and longitude
             data = self.get_data(
                 float(inputs["latitude"]), float(inputs["longitude"]), first_call=False
             )
