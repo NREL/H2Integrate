@@ -45,7 +45,7 @@ technologies:
         taconite_pellet_type: "drg"
         max_ore_production_rate_tonnes_per_hr: 516.0497610311598
       cost_parameters:
-        cost_year: 2018
+        cost_year: 2021 # Not used - converted to target_dollar_year via CEPCI/CPI
   iron_transport:
     performance_model:
       model: "iron_transport_performance"

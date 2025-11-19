@@ -4,8 +4,9 @@ from openmdao.utils import units
 
 from h2integrate import ROOT_DIR
 from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
-from h2integrate.core.validators import contains, must_equal
+from h2integrate.core.validators import contains
 from h2integrate.core.model_baseclasses import CostModelBaseClass
+from h2integrate.tools.inflation.inflate import inflate_cpi
 
 
 @define
@@ -28,7 +29,7 @@ class MartinIronMineCostConfig(BaseConfig):
     )
 
     mine: str = field(validator=contains(["Hibbing", "Northshore", "United", "Minorca", "Tilden"]))
-    cost_year: int = field(default=2013, converter=int, validator=must_equal(2021))
+    cost_year: int = field(converter=int)
 
 
 class MartinIronMineCostComponent(CostModelBaseClass):
@@ -38,7 +39,7 @@ class MartinIronMineCostComponent(CostModelBaseClass):
         ]["target_dollar_year"]
         n_timesteps = self.options["plant_config"]["plant"]["simulation"]["n_timesteps"]
         config_dict = merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost")
-        # config_dict.update({"cost_year": self.target_dollar_year})
+        config_dict.update({"cost_year": self.target_dollar_year})
 
         self.config = MartinIronMineCostConfig.from_dict(config_dict, strict=False)
 
@@ -59,9 +60,7 @@ class MartinIronMineCostComponent(CostModelBaseClass):
             desc="Iron ore pellets produced",
         )
 
-        coeff_fpath = (
-            ROOT_DIR / "simulation" / "technologies" / "iron" / "martin_ore" / "cost_coeffs.csv"
-        )
+        coeff_fpath = ROOT_DIR / "converters" / "iron" / "martin_mine_cost_coeffs.csv"
         # martin ore performance model
         coeff_df = pd.read_csv(coeff_fpath, index_col=0)
         self.coeff_df = self.format_coeff_df(coeff_df, self.config.mine)
@@ -156,5 +155,5 @@ class MartinIronMineCostComponent(CostModelBaseClass):
         ).sum()
 
         # adjust costs to cost year
-        outputs["CapEx"] = tot_capex_2021USD
-        outputs["VarOpEx"] = var_om_2021USD
+        outputs["CapEx"] = inflate_cpi(tot_capex_2021USD, 2021, self.config.cost_year)
+        outputs["VarOpEx"] = inflate_cpi(var_om_2021USD, 2021, self.config.cost_year)
