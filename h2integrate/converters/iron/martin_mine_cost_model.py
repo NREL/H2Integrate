@@ -4,7 +4,7 @@ from openmdao.utils import units
 
 from h2integrate import ROOT_DIR
 from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
-from h2integrate.core.validators import contains
+from h2integrate.core.validators import contains, range_val
 from h2integrate.core.model_baseclasses import CostModelBaseClass
 from h2integrate.tools.inflation.inflate import inflate_cpi
 
@@ -19,7 +19,8 @@ class MartinIronMineCostConfig(BaseConfig):
             "Minorca" or "Tilden"
         max_ore_production_rate_tonnes_per_hr (float): capacity of the pellet plant
             in units of metric tonnes of pellets produced per hour.
-        cost_year (int): target dollar year to convert costs to
+        cost_year (int): target dollar year to convert costs to.
+            Cannot be input under `cost_parameters`.
     """
 
     max_ore_production_rate_tonnes_per_hr: float = field()
@@ -29,21 +30,46 @@ class MartinIronMineCostConfig(BaseConfig):
     )
 
     mine: str = field(validator=contains(["Hibbing", "Northshore", "United", "Minorca", "Tilden"]))
-    cost_year: int = field(converter=int)
+
+    # the cost model is based on costs from 2021 and can be adjusted to another cost year
+    # using CPI adjustment.
+    cost_year: int = field(converter=int, validator=range_val(2010, 2024))
 
 
 class MartinIronMineCostComponent(CostModelBaseClass):
     def setup(self):
-        self.target_dollar_year = self.options["plant_config"]["finance_parameters"][
+        # merge inputs from performance parameters and cost parameters
+        config_dict = merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost")
+
+        if "cost_year" in config_dict:
+            msg = (
+                "This cost model is based on 2021 costs and adjusts costs using CPI. "
+                "The cost year cannot be modified for this cost model. "
+            )
+            raise ValueError(msg)
+
+        target_dollar_year = self.options["plant_config"]["finance_parameters"][
             "cost_adjustment_parameters"
         ]["target_dollar_year"]
-        n_timesteps = self.options["plant_config"]["plant"]["simulation"]["n_timesteps"]
-        config_dict = merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost")
-        config_dict.update({"cost_year": self.target_dollar_year})
 
-        self.config = MartinIronMineCostConfig.from_dict(config_dict, strict=False)
+        if target_dollar_year <= 2024 and target_dollar_year >= 2010:
+            # adjust costs from 2021 to target dollar year using CPI adjustment
+            self.target_dollar_year = target_dollar_year
+
+        elif target_dollar_year < 2010:
+            # adjust costs from 2021 to 2010 using CPI adjustment
+            self.target_dollar_year = 2010
+
+        elif target_dollar_year > 2024:
+            # adjust costs from 2021 to 2024 using CPI adjustment
+            self.target_dollar_year = 2024
+
+        config_dict.update({"cost_year": self.target_dollar_year})
+        self.config = MartinIronMineCostConfig.from_dict(config_dict, strict=True)
 
         super().setup()
+
+        n_timesteps = self.options["plant_config"]["plant"]["simulation"]["n_timesteps"]
 
         self.add_input(
             "system_capacity",
