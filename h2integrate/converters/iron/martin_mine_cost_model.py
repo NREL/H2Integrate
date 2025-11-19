@@ -1,3 +1,5 @@
+import copy
+
 import pandas as pd
 from attrs import field, define
 from openmdao.utils import units
@@ -39,14 +41,17 @@ class MartinIronMineCostConfig(BaseConfig):
 class MartinIronMineCostComponent(CostModelBaseClass):
     def setup(self):
         # merge inputs from performance parameters and cost parameters
-        config_dict = merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost")
+        config_dict = merge_shared_inputs(
+            copy.deepcopy(self.options["tech_config"]["model_inputs"]), "cost"
+        )
 
         if "cost_year" in config_dict:
-            msg = (
-                "This cost model is based on 2021 costs and adjusts costs using CPI. "
-                "The cost year cannot be modified for this cost model. "
-            )
-            raise ValueError(msg)
+            if config_dict.get("cost_year", 2021) != 2021:
+                msg = (
+                    "This cost model is based on 2021 costs and adjusts costs using CPI. "
+                    "The cost year cannot be modified for this cost model. "
+                )
+                raise ValueError(msg)
 
         target_dollar_year = self.options["plant_config"]["finance_parameters"][
             "cost_adjustment_parameters"
