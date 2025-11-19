@@ -14,8 +14,8 @@ h2i = H2IntegrateModel("22_solar_site_doe.yaml")
 # Run the model
 h2i.run()
 
-# Post-process the results
-h2i.post_process()
+# Post-process the results, save the .sql results to a .csv file
+h2i.post_process(summarize_sql=False)
 
 # Specify the filepath to the sql file, the folder and filename are in the driver_config
 sql_fpath = Path(__file__).parent / "ex_22_out" / "cases.sql"

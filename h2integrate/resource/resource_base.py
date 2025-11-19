@@ -95,8 +95,9 @@ class ResourceBaseAPIModel(om.ExplicitComponent):
         and site configuration options.
 
         This method extracts relevant configuration details from the `self.options` dictionary,
-        sets default values for latitude, longitude, resource directory, and timezone if they
-        are not already specified, and returns the updated resource specifications dictionary.
+        pulls values for latitude, longitude, resource directory and timezone from the
+        ``site`` section of ``plant_config`` if these parameters are not specified in the
+        ``resource_config`` and returns the updated resource specifications dictionary.
 
         Returns:
             dict: The resource specifications dictionary with defaults set for latitude,
@@ -217,8 +218,6 @@ class ResourceBaseAPIModel(om.ExplicitComponent):
         site_changed = not np.allclose(
             [latitude, longitude], [self.config.latitude, self.config.longitude], atol=1e-6, rtol=0
         )
-        # if self.config.latitude != latitude or self.config.longitude != longitude:
-        #     site_changed = True
 
         # If site hasn't changed and resource data has already been loaded
         # just return the resource data that was loaded in the setup() method
