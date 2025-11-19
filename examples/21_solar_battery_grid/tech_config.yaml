@@ -56,32 +56,31 @@ technologies:
         energy_capex: 300 # $/kWh
         power_capex: 100 # $/kW
         opex_fraction: 0.05 # percent of capex
-  grid_feedstock:
+  grid_buy:
     performance_model:
-      model: "feedstock_performance"
+      model: "grid_performance"
     cost_model:
-      model: "feedstock_cost"
+      model: "grid_cost"
     model_inputs:
       shared_parameters:
-        feedstock_type: "electricity"
-        units: "kW"
-      performance_parameters:
-        rated_capacity: 1000000. #kW
+        interconnection_size: 100000.0  # kW, 100 MW interconnection
       cost_parameters:
         cost_year: 2022
-        price: 0.10 # $/kWh
-        annual_cost: 0.
-        start_up_cost: 0.
-  grid_selling:
+        electricity_buy_price: 0.10 # $/kWh - only buying, no selling
+        interconnection_capex_per_kw: 50.0  # $/kW capital cost
+        interconnection_opex_per_kw: 2.0  # $/kW/year O&M cost
+        fixed_interconnection_cost: 100000.0  # $ one-time fixed cost
+  grid_sell:
     performance_model:
-      model: "grid_sell_performance"
+      model: "grid_performance"
     cost_model:
-      model: "grid_sell_cost"
+      model: "grid_cost"
     model_inputs:
-      performance_parameters:
-        interconnect_limit: 1000000. #kW
+      shared_parameters:
+        interconnection_size: 150000.0  # kW, 150 MW interconnection
       cost_parameters:
         cost_year: 2022
-        electricity_sell_price: 0.05 # $/kWh
-        annual_cost: 0.
-        start_up_cost: 0.
+        electricity_sell_price: 0.05 # $/kWh - only selling, no buying
+        interconnection_capex_per_kw: 50.0  # $/kW capital cost
+        interconnection_opex_per_kw: 2.0  # $/kW/year O&M cost
+        fixed_interconnection_cost: 100000.0  # $ one-time fixed cost

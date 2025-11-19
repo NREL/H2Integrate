@@ -6,17 +6,6 @@ site:
   longitude: -98.27
   year: 2013
 
-  # array of polygons defining boundaries with x/y coords
-  boundaries: [
-    {
-      x: [0.0, 1000.0, 1000.0, 0.0],
-      y: [0.0, 0.0, 100.0, 1000.0],
-    },
-    {
-      x: [2000.0, 2500.0, 2000.0],
-      y: [2000.0, 2000.0, 2500.0],
-    }
-  ]
   resources:
     solar_resource:
       resource_model: "goes_aggregated_solar_v4_api"
@@ -29,13 +18,14 @@ site:
 # array of arrays containing left-to-right technology
 # interconnections; can support bidirectional connections
 # with the reverse definition.
-# in this example the natural gas combined cycle plant is behind-the-meter
-# and not connected to additional technologies.
-# hence the empty array.
+#
+# This example showcases using two separate grid instances:
+# - grid_buy: purchases electricity to meet unmet demand (upstream)
+# - grid_sell: sells excess electricity back to grid (downstream)
 technology_interconnections: [
-    ["solar", "battery", "electricity", "cable"], #connect solar to battery
-    ["battery", "grid_feedstock", ["electricity_unmet_demand", "electricity_consumed"]], #connect electricity demand to grid
-    ["battery", "grid_selling", ["electricity_unused_commodity", "electricity_in"]] #connect electricity surplus to grid selling
+    ["solar", "battery", "electricity", "cable"], # connect solar to battery
+    ["battery", "grid_buy", ["electricity_unmet_demand", "electricity_demand"]], # connect battery demand to grid buying
+    ["battery", "grid_sell", ["electricity_unused_commodity", "electricity_in"]] # connect battery surplus to grid selling
 ]
 
 resource_to_tech_connections: [
@@ -80,4 +70,4 @@ finance_parameters:
     renewables:
       commodity: "electricity"
       finance_groups: ["profast_model"]
-      technologies: ["solar", "battery", "grid_selling"]
+      technologies: ["solar", "battery", "grid_buy", "grid_sell"]
