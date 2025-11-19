@@ -21,6 +21,20 @@ def test_natural_geoh2(subtests):
             1.72828635, 1e-6
         )  # previous val from custom finance model was 1.2440904
 
+    # failure is expected because we are inflating using general inflation rather than CPI and CEPCI
+    with subtests.test("capex"):
+        capex = h2i_nat.plant.geoh2_well_subsurface.mathur_modified_geoh2_cost.get_val("CapEx")
+        assert capex == approx(12098681.67169586, 1e-6)
+    with subtests.test("fixed Opex"):
+        opex = h2i_nat.plant.geoh2_well_subsurface.mathur_modified_geoh2_cost.get_val("OpEx")
+        assert opex == approx(215100.7857875, 1e-6)
+    with subtests.test("variable"):
+        var = h2i_nat.plant.geoh2_well_subsurface.mathur_modified_geoh2_cost.get_val("VarOpEx")
+        assert var == approx(0.0, 1e-6)
+    with subtests.test("adjusted opex"):
+        op = h2i_nat.prob.get_val("finance_subgroup_default.opex_adjusted_geoh2_well_subsurface")
+        assert op == approx(215100.7857875, 1e-6)
+
 
 def test_stimulated_geoh2(subtests):
     h2i_stim = H2IntegrateModel(EXAMPLE_DIR / "04_geo_h2" / "04_geo_h2_stimulated.yaml")
@@ -39,3 +53,18 @@ def test_stimulated_geoh2(subtests):
         assert lcoh == approx(
             2.35625412, 1e-6
         )  # previous val from custom finance model was 1.74903827
+
+    # failure is expected because we are inflating using general inflation rather than CPI and CEPCI
+    with subtests.test("capex"):
+        capex = h2i_stim.plant.geoh2_well_subsurface.mathur_modified_geoh2_cost.get_val("CapEx")
+        assert capex == approx(19520122.88478073, 1e-6)
+    with subtests.test("fixed Opex"):
+        opex = h2i_stim.plant.geoh2_well_subsurface.mathur_modified_geoh2_cost.get_val("OpEx")
+        assert opex == approx(215100.7857875, 1e-6)
+    with subtests.test("variable"):
+        var = h2i_stim.plant.geoh2_well_subsurface.mathur_modified_geoh2_cost.get_val("VarOpEx")
+        var = var / np.sum(prod)
+        assert var == approx(0.32105362, 1e-6)
+    with subtests.test("adjusted opex"):
+        op = h2i_stim.prob.get_val("finance_subgroup_default.opex_adjusted_geoh2_well_subsurface")
+        assert op == approx(215100.7857875, 1e-6)
