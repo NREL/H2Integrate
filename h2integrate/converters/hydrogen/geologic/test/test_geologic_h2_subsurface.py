@@ -18,7 +18,7 @@ def test_natural_geoh2(subtests):
     with subtests.test("integrate LCOH"):
         lcoh = h2i_nat.prob.get_val("finance_subgroup_default.LCOH")
         assert lcoh == approx(
-            1.72828635, 1e-6
+            1.67288106, 1e-6
         )  # previous val from custom finance model was 1.2440904
 
     # failure is expected because we are inflating using general inflation rather than CPI and CEPCI
@@ -51,7 +51,7 @@ def test_stimulated_geoh2(subtests):
     with subtests.test("integrate LCOH"):
         lcoh = h2i_stim.prob.get_val("finance_subgroup_default.LCOH")
         assert lcoh == approx(
-            2.35625412, 1e-6
+            2.29337734, 1e-6
         )  # previous val from custom finance model was 1.74903827
 
     # failure is expected because we are inflating using general inflation rather than CPI and CEPCI

@@ -1,7 +1,10 @@
+import copy
+
 from attrs import field, define
 
 from h2integrate.core.utilities import merge_shared_inputs
-from h2integrate.tools.inflation.inflate import inflate_cepci
+from h2integrate.core.validators import range_val
+from h2integrate.tools.inflation.inflate import inflate_cpi, inflate_cepci
 from h2integrate.converters.hydrogen.geologic.h2_well_subsurface_baseclass import (
     GeoH2SubsurfaceCostConfig,
     GeoH2SubsurfaceCostBaseClass,
@@ -54,6 +57,11 @@ class GeoH2SubsurfaceCostConfig(GeoH2SubsurfaceCostConfig):
         as_spent_ratio (float):
             Ratio of as-spent costs to overnight (instantaneous) costs, dimensionless.
 
+        cost_year (int): Mathur model uses 2022 as the base year for the cost model.
+            The cost year is updated based on `target_dollar_year` in the plant
+            config to adjust costs based on CPI/CEPCI within the Mathur model. This value
+            cannot be user added under `cost_parameters`.
+
         use_cost_curve (bool): Flag indicating whether to use the built-in drilling
             cost curve. If `True`, the drilling cost is computed from the cost curve.
             If `False`, a constant drilling cost must be provided.
@@ -76,6 +84,7 @@ class GeoH2SubsurfaceCostConfig(GeoH2SubsurfaceCostConfig):
     contingency_pct: float = field()
     preprod_time: float = field()
     as_spent_ratio: float = field()
+    cost_year: int = field(converter=int, validator=range_val(2010, 2024))
     use_cost_curve: bool = field()
     constant_drill_cost: float | None = field(default=None)
 
@@ -133,10 +142,39 @@ class GeoH2SubsurfaceCostModel(GeoH2SubsurfaceCostBaseClass):
     """
 
     def setup(self):
-        self.config = GeoH2SubsurfaceCostConfig.from_dict(
-            merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost")
+        # merge inputs from performance parameters and cost parameters
+        config_dict = merge_shared_inputs(
+            copy.deepcopy(self.options["tech_config"]["model_inputs"]), "cost"
         )
+
+        if "cost_year" in config_dict:
+            msg = (
+                "This cost model is based on 2022 costs and adjusts costs using CPI and CEPCI. "
+                "The cost year cannot be modified for this cost model. "
+            )
+            raise ValueError(msg)
+
+        target_dollar_year = self.options["plant_config"]["finance_parameters"][
+            "cost_adjustment_parameters"
+        ]["target_dollar_year"]
+
+        if target_dollar_year <= 2024 and target_dollar_year >= 2010:
+            # adjust costs from 2021 to target dollar year using CPI/CEPCI adjustment
+            self.target_dollar_year = target_dollar_year
+
+        elif target_dollar_year < 2010:
+            # adjust costs from 2021 to 2010 using CP/CEPCI adjustment
+            self.target_dollar_year = 2010
+
+        elif target_dollar_year > 2024:
+            # adjust costs from 2021 to 2024 using CPI/CEPCI adjustment
+            self.target_dollar_year = 2024
+
+        config_dict.update({"cost_year": self.target_dollar_year})
+        self.config = GeoH2SubsurfaceCostConfig.from_dict(config_dict, strict=True)
+
         super().setup()
+
         self.add_input("test_drill_cost", units="USD", val=self.config.test_drill_cost)
         self.add_input("permit_fees", units="USD", val=self.config.permit_fees)
         self.add_input("acreage", units="acre", val=self.config.acreage)
@@ -154,10 +192,10 @@ class GeoH2SubsurfaceCostModel(GeoH2SubsurfaceCostBaseClass):
         cost_year = self.config.cost_year
 
         # Calculate total capital cost per well (successful or unsuccessful)
-        drill = inputs["test_drill_cost"]
-        permit = inputs["permit_fees"]
+        drill = inflate_cepci(inputs["test_drill_cost"], 2022, cost_year)
+        permit = inflate_cpi(inputs["permit_fees"], 2022, cost_year)
         acreage = inputs["acreage"]
-        rights_acre = inputs["rights_cost"]
+        rights_acre = inflate_cpi(inputs["rights_cost"], 2022, cost_year)
         cap_well = drill + permit + acreage * rights_acre
 
         # Calculate total capital cost per SUCCESSFUL well
@@ -165,14 +203,16 @@ class GeoH2SubsurfaceCostModel(GeoH2SubsurfaceCostBaseClass):
             completion = self.calc_drill_cost(inputs["borehole_depth"])
         else:
             completion = self.config.constant_drill_cost
-            completion = inflate_cepci(completion, 2010, cost_year)
+            completion = inflate_cepci(
+                completion, 2010, cost_year
+            )  # Is this the correct base year?
         success = inputs["success_chance"]
         bare_capex = cap_well / success * 100 + completion
         outputs["bare_capital_cost"] = bare_capex
 
         # Parse in opex
-        fopex = inputs["fixed_opex"]
-        vopex = inputs["variable_opex"]
+        fopex = inflate_cpi(inputs["fixed_opex"], 2022, cost_year)
+        vopex = inflate_cpi(inputs["variable_opex"], 2022, cost_year)
         outputs["OpEx"] = fopex
         outputs["VarOpEx"] = vopex * inputs["total_hydrogen_produced"]
 

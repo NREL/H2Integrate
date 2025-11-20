@@ -23,7 +23,6 @@ technologies:
         bulk_density: 2700
         water_temp: 90
       cost_parameters:
-        cost_year: 2022
         test_drill_cost: 500000
         use_cost_curve: True
         permit_fees: 905
