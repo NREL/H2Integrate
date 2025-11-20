@@ -253,11 +253,13 @@ class FlexibleDemandOpenLoopConverterControl(om.ExplicitComponent):
         Args:
             flexible_demand_profile (_type_): _description_
             min_total_demand (_type_): _description_
-            demand_bounds (_type_): _description_
+            demand_bounds (tuple(float)): two-element tuple representing the lower and upper
+                bounds of the flexible demand profile. Should be formatted as
+                (lower bound, upper bound).
             demand_threshold (_type_): _description_
 
         Returns:
-            _type_: _description_
+            np.ndarray: _description_
         """
         min_demand, rated_demand = demand_bounds
         required_extra_demand = min_total_demand - np.sum(flexible_demand_profile)
