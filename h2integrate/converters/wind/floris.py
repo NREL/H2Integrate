@@ -1,3 +1,8 @@
+import copy
+import hashlib
+from pathlib import Path
+
+import dill
 import numpy as np
 from attrs import field, define
 from floris import TimeSeries, FlorisModel
@@ -27,6 +32,7 @@ class FlorisWindPlantPerformanceConfig(BaseConfig):
     # floris_turbines: dict | list[dict] = field()
     hybrid_turbine_design: bool = field(default=False)
     operational_losses: float = field(default=0.0, validator=gte_zero)
+    enable_caching: bool = field(default=True)
 
     # if using multiple turbines, then need to specify resource reference height
     def __attrs_post_init__(self):
@@ -138,18 +144,64 @@ class FlorisWindPlantPerformanceModel(WindPerformanceBaseClass):
 
         return time_series
 
+    def make_cache_filename(self, resource_data, hub_height, n_turbines):
+        # unique resource data is year, lat, lon, timezone, filepath (perhaps)
+        resource_keys = ["site_lat", "site_lon", "data_tz", "filepath"]
+        time_keys = ["year", "month", "day", "hour", "minute"]
+        resource_info = {resource_data.get(k, None) for k in resource_keys}
+        time_info = {resource_data.get(k, [None])[0] for k in time_keys}
+        resource_info.update(time_info)
+
+        resource_data_included = [k for k, v in resource_data.items() if k not in resource_info]
+        resource_info.update({"resource_data_included": resource_data_included})
+
+        hash_info = copy.deepcopy(self.config.as_dict())
+        hash_info.update({"resource_data": resource_info})
+        hash_info.update(
+            {
+                "hub_height": hub_height,
+                "n_turbines": n_turbines,
+                "wind_turbine_size_kw": self.wind_turbine_rating_kW,
+            }
+        )
+
+        # Create a unique hash for the current configuration to use as a cache key
+        config_hash = hashlib.md5(str(hash_info).encode("utf-8")).hexdigest()
+
+        # Create a cache directory if it doesn't exist
+        cache_dir = Path("cache")
+        if not cache_dir.exists():
+            cache_dir.mkdir(parents=True)
+        cache_file = f"cache/{config_hash}.pkl"
+        return cache_file
+
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         # NOTE: could update air density based on elevation if elevation is included
         # in the resource data.
         # would need to duplicate the `calculate_air_density`` function from HOPP
-        inputs["hub_height"]
-        inputs["num_turbines"]
 
+        # Check if the results for the current configuration are already cached
+        if self.config.enable_caching:
+            cache_filename = self.make_cache_filename(
+                discrete_inputs["wind_resource_data"], inputs["hub_height"], inputs["num_turbines"]
+            )
+            if Path(cache_filename).exists():
+                # Load the cached results
+                cache_path = Path(cache_filename)
+                with cache_path.open("rb") as f:
+                    cached_data = dill.load(f)
+                outputs["electricity_out"] = cached_data["electricity_out"]
+                outputs["total_capacity"] = cached_data["total_capacity"]
+                outputs["annual_energy"] = cached_data["annual_energy"]
+                return
+
+        # If caching is not enabled or a cache file does not exist, run FLORIS
         n_turbs = int(np.round(inputs["num_turbines"][0]))
 
-        floris_config = self.config.floris_config.copy()
+        floris_config = copy.deepcopy(self.config.floris_config)
         turbine_design = floris_config["farm"]["turbine_type"][0]
 
+        # update the turbine hub-height in the floris turbine config
         turbine_design.update({"hub_height": inputs["hub_height"][0]})
 
         # format resource data and input into model
@@ -163,18 +215,21 @@ class FlorisWindPlantPerformanceModel(WindPerformanceBaseClass):
                 turbine_design.get("rotor_diameter"), n_turbs, self.layout_config
             )
 
+        # initialize FLORIS
         self.fi = FlorisModel(floris_config)
 
+        # set the layout and wind data in Floris
         self.fi.set(layout_x=x_pos, layout_y=y_pos, wind_data=time_series)
 
+        # run the model
         self.fi.run()
         # power_turbines = self.fi.get_turbine_powers().reshape(
         #     (n_turbs, self.n_timesteps)
         # ) #W
         power_farm = self.fi.get_farm_power().reshape(self.n_timesteps)  # W
 
-        operational_efficiency = (100 - self.config.operational_losses) / 100
         # Adding losses (excluding turbine and wake losses)
+        operational_efficiency = (100 - self.config.operational_losses) / 100
         gen = power_farm * operational_efficiency / 1000  # kW
 
         outputs["electricity_out"] = gen
@@ -182,6 +237,20 @@ class FlorisWindPlantPerformanceModel(WindPerformanceBaseClass):
 
         max_production = n_turbs * self.wind_turbine_rating_kW * len(gen)
         outputs["annual_energy"] = (np.sum(gen) / max_production) * 8760
+
+        # Cache the results for future use
+        if self.config.enable_caching:
+            cache_path = Path(cache_filename)
+            with cache_path.open("wb") as f:
+                floris_results = {
+                    "electricity_out": outputs["electricity_out"],
+                    "total_capacity": outputs["total_capacity"],
+                    "annual_energy": outputs["total_capacity"],
+                    "layout_x": x_pos,
+                    "layout_y": y_pos,
+                }
+                dill.dump(floris_results, f)
+
         # power_turbines = np.zeros((self.nTurbs, 8760))
         # power_farm = np.zeros(8760)
         # power_turbines[:, 0:self.n_timesteps] = self.fi.get_turbine_powers().reshape(
