@@ -1,3 +1,5 @@
+import copy
+
 import numpy as np
 import pandas as pd
 import openmdao.api as om
@@ -176,19 +178,21 @@ class IronTransportCostComponent(CostModelBaseClass):
             "cost_adjustment_parameters"
         ]["target_dollar_year"]
 
-        config_dict = merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost")
+        config_dict = merge_shared_inputs(
+            copy.deepcopy(self.options["tech_config"]["model_inputs"]), "cost"
+        )
         config_dict.update({"cost_year": target_dollar_year})
 
         self.config = IronTransportCostConfig.from_dict(
             config_dict,
-            strict=False,
+            strict=True,
         )
         super().setup()
 
         self.add_input("land_transport_distance", val=0.0, units="mi")
         self.add_input("water_transport_distance", val=0.0, units="mi")
         self.add_input("total_transport_distance", val=0.0, units="mi")
-        self.add_input("total_iron_ore_produced", val=0.0, units="t/year")
+        self.add_input("iron_ore_in", val=0.0, units="t/h")
 
         self.add_output("iron_transport_cost", val=0.0, units="USD/t")
         self.add_output("ore_profit_margin", val=0.0, units="USD/t")
@@ -205,7 +209,7 @@ class IronTransportCostComponent(CostModelBaseClass):
         water_ship_cost_dol_per_ton = (
             water_ship_cost_dol_tonne_mi * inputs["water_transport_distance"]
         )
-        water_ship_cost_USD = inputs["total_iron_ore_produced"] * water_ship_cost_dol_per_ton
+        water_ship_cost_USD = np.sum(inputs["iron_ore_in"]) * water_ship_cost_dol_per_ton
 
         land_coeff_dict = load_top_down_coeffs(
             ["Land Shipping Cost"], cost_year=self.config.cost_year
@@ -214,7 +218,7 @@ class IronTransportCostComponent(CostModelBaseClass):
         land_ship_cost_dol_tonne_mi = land_coeff_dict["Land Shipping Cost"]["values"][land_year_idx]
 
         land_ship_cost_dol_per_ton = land_ship_cost_dol_tonne_mi * inputs["land_transport_distance"]
-        land_ship_cost_USD = inputs["total_iron_ore_produced"] * land_ship_cost_dol_per_ton
+        land_ship_cost_USD = np.sum(inputs["iron_ore_in"]) * land_ship_cost_dol_per_ton
 
         total_shipment_cost = water_ship_cost_USD + land_ship_cost_USD
 
@@ -224,5 +228,5 @@ class IronTransportCostComponent(CostModelBaseClass):
             pm_year_idx
         ]
 
-        outputs["iron_transport_cost"] = total_shipment_cost / inputs["total_iron_ore_produced"]
+        outputs["iron_transport_cost"] = total_shipment_cost / np.sum(inputs["iron_ore_in"])
         outputs["VarOpEx"] = total_shipment_cost
