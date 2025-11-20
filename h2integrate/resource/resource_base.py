@@ -252,7 +252,6 @@ class ResourceBaseAPIModel(om.ExplicitComponent):
         if filepath.is_file():
             self.filepath = filepath
             data = self.load_data(filepath)
-            self.resource_site = [latitude, longitude]
             return data
 
         # If the filepath (resource_dir/filename) does not exist, download data
@@ -265,7 +264,6 @@ class ResourceBaseAPIModel(om.ExplicitComponent):
         if success:
             # 7) Load data from the file created in Step 6 using `load_data()`
             data = self.load_data(filepath)
-            self.resource_site = [latitude, longitude]
             return data
         if not success:
             raise ValueError("Did not successfully download data")
@@ -278,4 +276,7 @@ class ResourceBaseAPIModel(om.ExplicitComponent):
             data = self.get_data(
                 float(inputs["latitude"]), float(inputs["longitude"]), first_call=False
             )
+            # update the stored resource data and site
+            self.resource_site = [float(inputs["latitude"]), float(inputs["longitude"])]
+            self.resource_data = data
             discrete_outputs[f"{self.config.resource_type}_resource_data"] = data
