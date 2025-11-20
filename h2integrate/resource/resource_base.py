@@ -186,8 +186,10 @@ class ResourceBaseAPIModel(om.ExplicitComponent):
     def get_data(self, latitude, longitude, first_call=True):
         """Get resource data to handle any of the expected inputs. This method does the following:
 
-        0) Check if resource data has been already loaded for this site, if so, return,
-            self.resource_data otherwise, continue to Step 1.
+        0) If this is not the first resource call of the simulation, check if latitude and longitude
+            inputs are different than the config latitude and longitude values. If resource data
+            has been already loaded for the location specified in the config, self.resource_data.
+            Otherwise, continue to Step 1.
         1) Check if resource data was input. If not, continue to Step 2.
         2) Get valid resource_dir with the method `check_resource_dir()`
         3) Create a filename if resource_filename was not input or if the site location changed
