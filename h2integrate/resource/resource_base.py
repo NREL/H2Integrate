@@ -85,6 +85,7 @@ class ResourceBaseAPIModel(om.ExplicitComponent):
     def setup(self):
         # create attributes that will be commonly used for resource classes.
         self.resource_data = None
+        self.resource_site = [self.config.latitude, self.config.longitude]
         self.dt = self.options["plant_config"]["plant"]["simulation"]["dt"]
         self.add_input("latitude", self.config.latitude, units="deg")
         self.add_input("longitude", self.config.longitude, units="deg")
@@ -187,9 +188,8 @@ class ResourceBaseAPIModel(om.ExplicitComponent):
         """Get resource data to handle any of the expected inputs. This method does the following:
 
         0) If this is not the first resource call of the simulation, check if latitude and longitude
-            inputs are different than the config latitude and longitude values. If resource data
-            has been already loaded for the location specified in the config, self.resource_data.
-            Otherwise, continue to Step 1.
+            inputs are different than the previous latitude and longitude values. If resource data
+            has not been already loaded for the, continue to Step 1.
         1) Check if resource data was input. If not, continue to Step 2.
         2) Get valid resource_dir with the method `check_resource_dir()`
         3) Create a filename if resource_filename was not input or if the site location changed
@@ -214,12 +214,9 @@ class ResourceBaseAPIModel(om.ExplicitComponent):
         Returns:
             Any: resource data in the format expected by the subclass.
         """
-        data = None
         site_changed = False
 
-        site_changed = not np.allclose(
-            [latitude, longitude], [self.config.latitude, self.config.longitude], atol=1e-6, rtol=0
-        )
+        site_changed = not np.allclose([latitude, longitude], self.resource_site, atol=1e-6, rtol=0)
 
         # 0) If site hasn't changed and resource data has already been loaded
         # just return the resource data that was loaded in the setup() method
@@ -227,60 +224,53 @@ class ResourceBaseAPIModel(om.ExplicitComponent):
             if self.resource_data is not None:
                 return self.resource_data
 
-        # 1) check if user provided data
+        # 1) check if user provided data, return that
         if bool(self.config.resource_data):
-            # check that data has correct interval and timezone
-            data = self.config.resource_data
+            return self.config.resource_data
+
+        # check if user provided directory or filename
+        provided_filename = False if self.config.resource_filename == "" else True
+        provided_dir = False if self.config.resource_dir is None else True
+
+        # 2) Get valid resource_dir with the method `check_resource_dir()`
+        if provided_dir and Path(self.config.resource_dir).parts[-1] == self.config.resource_type:
+            resource_dir = check_resource_dir(resource_dir=self.config.resource_dir)
+        else:
+            resource_dir = check_resource_dir(
+                resource_dir=self.config.resource_dir, resource_subdir=self.config.resource_type
+            )
+        # 3) Create a filename if resource_filename was input
+        if provided_filename and not site_changed:
+            # If a filename was input, use resource_filename as the filename.
+            filepath = resource_dir / self.config.resource_filename
+        # Otherwise, create a filename with the method `create_filename()`.
+        else:
+            filename = self.create_filename(latitude, longitude)
+            filepath = resource_dir / filename
+        # 4) If the resulting resource_dir and filename from Steps 2 and 3 make a valid
+        # filepath, load data using `load_data()`
+        if filepath.is_file():
+            self.filepath = filepath
+            data = self.load_data(filepath)
+            self.resource_site = [latitude, longitude]
             return data
-
-        if data is None:
-            # check if user provided directory or filename
-            provided_filename = False if self.config.resource_filename == "" else True
-            provided_dir = False if self.config.resource_dir is None else True
-
-            # 2) Get valid resource_dir with the method `check_resource_dir()`
-            if (
-                provided_dir
-                and Path(self.config.resource_dir).parts[-1] == self.config.resource_type
-            ):
-                resource_dir = check_resource_dir(resource_dir=self.config.resource_dir)
-            else:
-                resource_dir = check_resource_dir(
-                    resource_dir=self.config.resource_dir, resource_subdir=self.config.resource_type
-                )
-            # 3) Create a filename if resource_filename was input
-            if provided_filename and not site_changed:
-                # If a filename was input, use resource_filename as the filename.
-                filepath = resource_dir / self.config.resource_filename
-            # Otherwise, create a filename with the method `create_filename()`.
-            else:
-                filename = self.create_filename(latitude, longitude)
-                filepath = resource_dir / filename
-            # 4) If the resulting resource_dir and filename from Steps 2 and 3 make a valid
-            # filepath, load data using `load_data()`
-            if filepath.is_file():
-                self.filepath = filepath
-                data = self.load_data(filepath)
-                return data
 
         # If the filepath (resource_dir/filename) does not exist, download data
-        if data is None:
-            self.filepath = filepath
-            # 5) Create the url to download data using `create_url()` and continue to Step 6.
-            url = self.create_url(latitude, longitude)
-            # 6) Download data from the url created in Step 5 and save to a filepath created from
-            # the resulting resource_dir and filename from Steps 2 and 3.
-            success = self.download_data(url, filepath)
-            if not success:
-                raise ValueError("Did not successfully download data")
+        self.filepath = filepath
+        # 5) Create the url to download data using `create_url()` and continue to Step 6.
+        url = self.create_url(latitude, longitude)
+        # 6) Download data from the url created in Step 5 and save to a filepath created from
+        # the resulting resource_dir and filename from Steps 2 and 3.
+        success = self.download_data(url, filepath)
+        if success:
             # 7) Load data from the file created in Step 6 using `load_data()`
             data = self.load_data(filepath)
+            self.resource_site = [latitude, longitude]
             return data
+        if not success:
+            raise ValueError("Did not successfully download data")
 
-        self.filepath = filepath
-
-        if data is None:
-            raise ValueError("Unexpected situation occurred while trying to load data")
+        raise ValueError("Unexpected situation occurred while trying to load data")
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         if not self.config.use_fixed_resource_location:
