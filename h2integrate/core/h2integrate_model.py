@@ -1062,6 +1062,13 @@ class H2IntegrateModel:
                                     f"finance_subgroup_{group_id}.total_hydrogen_produced",
                                 )
 
+                        if "geoh2" in tech_name:
+                            if primary_commodity_type == "hydrogen":
+                                self.plant.connect(
+                                    f"{tech_name}.total_hydrogen_produced",
+                                    f"finance_subgroup_{group_id}.total_hydrogen_produced",
+                                )
+
                         if "ammonia" in tech_name and primary_commodity_type == "ammonia":
                             self.plant.connect(
                                 f"{tech_name}.total_ammonia_produced",

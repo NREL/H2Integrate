@@ -1,20 +1,17 @@
-name: "technology_config"
-description: "This hybrid plant produces geologic hydrogen"
+name: technology_config
+description: This hybrid plant produces geologic hydrogen
 
 technologies:
-  geoh2:
+  geoh2_well_subsurface:
     performance_model:
-      model: "natural_geoh2_performance"
+      model: simple_natural_geoh2_performance
     cost_model:
-      model: "natural_geoh2_cost"
-    finance_model:
-      model: "natural_geoh2"
+      model: mathur_modified_geoh2_cost
     model_inputs:
       shared_parameters:
-        well_lifetime: 20
         borehole_depth: 2000
-        well_diameter: "small"
-        well_geometry: "vertical"
+        well_diameter: small
+        well_geometry: vertical
       performance_parameters:
         rock_type: 'peridotite'
         grain_size: 0.01
@@ -22,8 +19,7 @@ technologies:
         initial_wellhead_flow: 200
         gas_reservoir_size: 35000
       cost_parameters:
-        cost_year: 2022
-        target_dollar_year: 2024
+        use_cost_curve: True
         test_drill_cost: 500000
         permit_fees: 905
         acreage: 500
@@ -35,6 +31,3 @@ technologies:
         contingency_pct: 50
         preprod_time: 6
         as_spent_ratio: 1.1
-      finance_parameters:
-        eff_tax_rate: 25.74
-        atwacc: 4.73

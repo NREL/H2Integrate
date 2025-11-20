@@ -35,7 +35,7 @@ The inputs, outputs, and corresponding technology that are currently available i
 | `river`          |  electricity  | river resource |
 | `hopp`           |  electricity  | N/A |
 | `electrolyzer`   |  hydrogen     | electricity |
-| `geoh2`          |  hydrogen     | ??? |
+| `geoh2`          |  hydrogen     | rock type |
 | `steel`          |  steel        | hydrogen |
 | `ammonia`        |  ammonia      | nitrogen, hydrogen |
 | `doc`   |  co2     | electricity |
@@ -130,16 +130,12 @@ Below summarizes the available performance, cost, and financial models for each 
         + `'pem_electrolyzer_cost'`
         + `'singlitico_electrolyzer_cost'`
         + `'basic_electrolyzer_cost'`
-- `geoh2`: geologic hydrogen
+- `geoh2_well_subsurface`: geologic hydrogen well subsurface
     - performance models:
-        + `'natural_geoh2_performance'`
-        + `'stimulated_geoh2_performance'`
+        + `'simple_natural_geoh2_performance'`
+        + `'templeton_serpentinization_geoh2_performance'`
     - cost models:
-        + `'natural_geoh2_cost'`
-        + `'stimulated_geoh2_cost'`
-    - finance models:
-        + `'natural_geoh2'`
-        + `'stimulated_geoh2'`
+        + `'mathur_modified_geoh2_cost'`
 - `steel`: steel production
     - performance models:
         + `'steel_performance'`
