@@ -97,7 +97,11 @@ def convert_sql_to_csv_summary(sql_fpath: Path | str, save_to_file: bool = True)
     """
     sql_fpath = Path(sql_fpath)
 
-    sql_files = list(Path(sql_fpath.parent).glob(f"{sql_fpath.name}.sql*"))
+    # find all the sql files with the same base filename
+    sql_files = list(Path(sql_fpath.parent).glob(f"{sql_fpath.name}*"))
+
+    # remove non-sql file types and files with same basename
+    sql_files = [f for f in sql_files if f"{sql_fpath.name}.sql" not in f.name]
 
     # check that file exists
     if len(sql_files) == 0:
