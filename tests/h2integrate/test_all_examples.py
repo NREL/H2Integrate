@@ -82,16 +82,10 @@ def test_simple_ammonia_example(subtests):
         assert pytest.approx(model.prob.get_val("electrolyzer.OpEx"), rel=1e-3) == 14703155.39207595
 
     with subtests.test("Check H2 storage CapEx"):
-        assert (
-            pytest.approx(model.prob.get_val("plant.h2_storage.h2_storage.CapEx"), rel=1e-3)
-            == 65336874.189441
-        )
+        assert pytest.approx(model.prob.get_val("h2_storage.CapEx"), rel=1e-3) == 65336874.189441
 
     with subtests.test("Check H2 storage OpEx"):
-        assert (
-            pytest.approx(model.prob.get_val("plant.h2_storage.h2_storage.OpEx"), rel=1e-3)
-            == 2358776.66234517
-        )
+        assert pytest.approx(model.prob.get_val("h2_storage.OpEx"), rel=1e-3) == 2358776.66234517
 
     with subtests.test("Check ammonia CapEx"):
         assert pytest.approx(model.prob.get_val("ammonia.CapEx"), rel=1e-3) == 1.0124126e08
@@ -176,16 +170,10 @@ def test_ammonia_synloop_example(subtests):
         assert pytest.approx(model.prob.get_val("electrolyzer.OpEx"), rel=1e-6) == 14703155.39207595
 
     with subtests.test("Check H2 storage CapEx"):
-        assert (
-            pytest.approx(model.prob.get_val("plant.h2_storage.h2_storage.CapEx"), rel=1e-6)
-            == 65337437.18075897
-        )
+        assert pytest.approx(model.prob.get_val("h2_storage.CapEx"), rel=1e-6) == 65337437.18075897
 
     with subtests.test("Check H2 storage OpEx"):
-        assert (
-            pytest.approx(model.prob.get_val("plant.h2_storage.h2_storage.OpEx"), rel=1e-6)
-            == 2358794.11507603
-        )
+        assert pytest.approx(model.prob.get_val("h2_storage.OpEx"), rel=1e-6) == 2358794.11507603
 
     with subtests.test("Check ammonia CapEx"):
         assert pytest.approx(model.prob.get_val("ammonia.CapEx"), rel=1e-6) == 1.15173753e09
@@ -536,7 +524,7 @@ def test_hydrogen_dispatch_example(subtests):
                 model.prob.get_val("finance_subgroup_dispatched_hydrogen.LCOH", units="USD/kg")[0],
                 rel=1e-5,
             )
-            == 8.371194137479359
+            == 7.54632229849164
         )
 
 
@@ -1064,13 +1052,11 @@ def test_simple_dispatch_example(subtests):
 def test_csvgen_design_of_experiments(subtests):
     os.chdir(EXAMPLE_DIR / "20_solar_electrolyzer_doe")
 
-    # Create a H2Integrate model
-
     with pytest.raises(UserWarning) as excinfo:
         model = H2IntegrateModel(Path.cwd() / "20_solar_electrolyzer_doe.yaml")
         assert "There may be issues with the csv file csv_doe_cases.csv" in str(excinfo.value)
 
-    # Run the model
+    import pandas as pd
     from hopp.utilities.utilities import load_yaml
 
     from h2integrate.core.utilities import check_file_format_for_csv_generator
@@ -1103,8 +1089,26 @@ def test_csvgen_design_of_experiments(subtests):
     # save the updated top-level config file to a new file
     write_yaml(main_config, new_toplevel_fpath)
 
+    # Run the model
     model = H2IntegrateModel(new_toplevel_fpath)
     model.run()
+
+    # summarize sql file
+    model.post_process(summarize_sql=True)
+
+    with subtests.test("Check that sql file was summarized"):
+        assert model.recorder_path is not None
+        summarized_filepath = model.recorder_path.parent / f"{model.recorder_path.stem}.csv"
+        assert summarized_filepath.is_file()
+    with subtests.test("Check that sql summary file was written as expected"):
+        summary = pd.read_csv(summarized_filepath, index_col="Unnamed: 0")
+        assert len(summary) == 10
+        d_var_cols = ["solar.capacity_kWdc (kW)", "electrolyzer.n_clusters (unitless)"]
+        assert summary.columns.to_list()[0] in d_var_cols
+        assert summary.columns.to_list()[1] in d_var_cols
+        assert "finance_subgroup_hydrogen.LCOH_optimistic (USD/kg)" in summary.columns.to_list()
+    # delete summary file
+    summarized_filepath.unlink()
 
     sql_fpath = Path.cwd() / "ex_20_out" / "cases.sql"
     cr = om.CaseReader(str(sql_fpath))

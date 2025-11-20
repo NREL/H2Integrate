@@ -7,7 +7,7 @@ from h2integrate.simulation.technologies.hydrogen.h2_storage.lined_rock_cavern.l
 
 
 # Test values are based on conclusions of Papadias 2021 and are in 2019 USD
-in_dict = {"h2_storage_kg": 1000000, "system_flow_rate": 100000, "model": "papadias"}
+in_dict = {"h2_storage_kg": 1000000, "system_flow_rate": 100000}
 
 
 @fixture

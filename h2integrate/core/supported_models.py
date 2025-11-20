@@ -21,7 +21,7 @@ from h2integrate.converters.solar.solar_pysam import PYSAMSolarPlantPerformanceM
 from h2integrate.finances.numpy_financial_npv import NumpyFinancialNPV
 from h2integrate.resource.wind.openmeteo_wind import OpenMeteoHistoricalWindResource
 from h2integrate.storage.generic_storage_cost import GenericStorageCostModel
-from h2integrate.storage.hydrogen.eco_storage import H2Storage
+from h2integrate.storage.hydrogen.mch_storage import MCHTOLStorageCostModel
 from h2integrate.converters.wind.atb_wind_cost import ATBWindPlantCostModel
 from h2integrate.storage.battery.pysam_battery import PySAMBatteryPerformanceModel
 from h2integrate.transporters.generic_combiner import GenericCombinerPerformanceModel
@@ -38,10 +38,16 @@ from h2integrate.storage.hydrogen.tank_baseclass import (
 )
 from h2integrate.converters.hydrogen.wombat_model import WOMBATElectrolyzerModel
 from h2integrate.storage.battery.atb_battery_cost import ATBBatteryCostModel
+from h2integrate.storage.hydrogen.h2_storage_cost import (
+    PipeStorageCostModel,
+    SaltCavernStorageCostModel,
+    LinedRockCavernStorageCostModel,
+)
 from h2integrate.converters.ammonia.ammonia_synloop import (
     AmmoniaSynLoopCostModel,
     AmmoniaSynLoopPerformanceModel,
 )
+from h2integrate.storage.simple_storage_auto_sizing import StorageAutoSizingModel
 from h2integrate.converters.water.desal.desalination import (
     ReverseOsmosisCostModel,
     ReverseOsmosisPerformanceModel,
@@ -77,6 +83,7 @@ from h2integrate.converters.co2.marine.direct_ocean_capture import DOCCostModel,
 from h2integrate.control.control_strategies.pyomo_controllers import (
     HeuristicLoadFollowingController,
 )
+from h2integrate.converters.hydrogen.geologic.mathur_modified import GeoH2SubsurfaceCostModel
 from h2integrate.resource.solar.nrel_developer_goes_api_models import (
     GOESTMYSolarAPI,
     GOESConusSolarAPI,
@@ -94,9 +101,7 @@ from h2integrate.converters.water_power.hydro_plant_run_of_river import (
     RunOfRiverHydroCostModel,
     RunOfRiverHydroPerformanceModel,
 )
-from h2integrate.converters.hydrogen.geologic.natural_geoh2_plant import (
-    NaturalGeoH2CostModel,
-    NaturalGeoH2FinanceModel,
+from h2integrate.converters.hydrogen.geologic.simple_natural_geoh2 import (
     NaturalGeoH2PerformanceModel,
 )
 from h2integrate.control.control_rules.converters.generic_converter import (
@@ -110,9 +115,7 @@ from h2integrate.converters.co2.marine.ocean_alkalinity_enhancement import (
 from h2integrate.converters.hydrogen.custom_electrolyzer_cost_model import (
     CustomElectrolyzerCostModel,
 )
-from h2integrate.converters.hydrogen.geologic.stimulated_geoh2_plant import (
-    StimulatedGeoH2CostModel,
-    StimulatedGeoH2FinanceModel,
+from h2integrate.converters.hydrogen.geologic.templeton_serpentinization import (
     StimulatedGeoH2PerformanceModel,
 )
 from h2integrate.control.control_rules.storage.pyomo_storage_rule_baseclass import (
@@ -171,12 +174,9 @@ supported_models = {
     "ocean_alkalinity_enhancement_performance": OAEPerformanceModel,
     "ocean_alkalinity_enhancement_cost": OAECostModel,
     "ocean_alkalinity_enhancement_cost_financial": OAECostAndFinancialModel,
-    "natural_geoh2_performance": NaturalGeoH2PerformanceModel,
-    "natural_geoh2_cost": NaturalGeoH2CostModel,
-    "natural_geoh2": NaturalGeoH2FinanceModel,
-    "stimulated_geoh2_performance": StimulatedGeoH2PerformanceModel,
-    "stimulated_geoh2_cost": StimulatedGeoH2CostModel,
-    "stimulated_geoh2": StimulatedGeoH2FinanceModel,
+    "simple_natural_geoh2_performance": NaturalGeoH2PerformanceModel,
+    "templeton_serpentinization_geoh2_performance": StimulatedGeoH2PerformanceModel,
+    "mathur_modified_geoh2_cost": GeoH2SubsurfaceCostModel,
     "natural_gas_performance": NaturalGasPerformanceModel,
     "natural_gas_cost": NaturalGasCostModel,
     # Transport
@@ -190,9 +190,13 @@ supported_models = {
     "summer": GenericSummerPerformanceModel,
     # Storage
     "pysam_battery": PySAMBatteryPerformanceModel,
-    "h2_storage": H2Storage,
     "hydrogen_tank_performance": HydrogenTankPerformanceModel,
     "hydrogen_tank_cost": HydrogenTankCostModel,
+    "storage_auto_sizing": StorageAutoSizingModel,
+    "lined_rock_cavern_h2_storage_cost": LinedRockCavernStorageCostModel,
+    "salt_cavern_h2_storage_cost": SaltCavernStorageCostModel,
+    "mch_tol_h2_storage_cost": MCHTOLStorageCostModel,
+    "buried_pipe_h2_storage_cost": PipeStorageCostModel,
     "atb_battery_cost": ATBBatteryCostModel,
     "generic_storage_cost": GenericStorageCostModel,
     "simple_generic_storage": SimpleGenericStorage,

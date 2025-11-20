@@ -163,9 +163,9 @@ def test_technology_connections():
 
     new_connection = (["finance_subgroup_electricity", "steel", ("LCOE", "electricity_cost")],)
     new_tech_interconnections = (
-        plant_config_data["technology_interconnections"][0:4]
+        plant_config_data["technology_interconnections"][0:3]
         + list(new_connection)
-        + [plant_config_data["technology_interconnections"][4]]
+        + [plant_config_data["technology_interconnections"][3]]
     )
     plant_config_data["technology_interconnections"] = new_tech_interconnections
 
