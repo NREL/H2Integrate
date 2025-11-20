@@ -145,6 +145,9 @@ class FlorisWindPlantPerformanceModel(WindPerformanceBaseClass):
         return time_series
 
     def make_cache_filename(self, resource_data, hub_height, n_turbines):
+        # inputs
+        # discrete_inputs
+
         # unique resource data is year, lat, lon, timezone, filepath (perhaps)
         resource_keys = ["site_lat", "site_lon", "data_tz", "filepath"]
         time_keys = ["year", "month", "day", "hour", "minute"]

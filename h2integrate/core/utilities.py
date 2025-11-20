@@ -1,6 +1,7 @@
 import re
 import csv
 import copy
+import hashlib
 import operator
 from typing import Any
 from pathlib import Path
@@ -878,3 +879,39 @@ def print_results(model, includes=None, excludes=None, show_units=True):
         "explicit_outputs": _structured(explicit_meta),
         "implicit_outputs": _structured(implicit_meta),
     }
+
+
+def make_cache_hash_filename(config, inputs, discrete_inputs={}):
+    """_summary_
+
+    Args:
+        config (_type_): _description_
+        inputs (_type_): _description_
+        discrete_inputs (dict, optional): _description_. Defaults to {}.
+
+    Returns:
+        _type_: _description_
+    """
+    # NOTE: maybe would be good to add a string input that can specify what model this cache is for,
+    # like "hopp" or "floris", this could be used in the cache filename but perhaps unnecessary
+
+    if not isinstance(config, dict):
+        hash_dict = config.as_dict()
+    else:
+        hash_dict = copy.deepcopy(config)
+
+    input_dict = dict(inputs.items())
+    discrete_input_dict = dict(discrete_inputs.items())
+
+    hash_dict.update(input_dict)
+    hash_dict.update(discrete_input_dict)
+
+    # Create a unique hash for the current configuration to use as a cache key
+    config_hash = hashlib.md5(str(hash_dict).encode("utf-8")).hexdigest()
+
+    # Create a cache directory if it doesn't exist
+    cache_dir = Path("cache")
+    if not cache_dir.exists():
+        cache_dir.mkdir(parents=True)
+    cache_file = cache_dir / f"{config_hash}.pkl"
+    return cache_file
