@@ -97,7 +97,7 @@ def convert_sql_to_csv_summary(sql_fpath: Path | str, save_to_file: bool = True)
     """
     sql_fpath = Path(sql_fpath)
 
-    sql_files = list(Path(sql_fpath.parent).glob(f"{sql_fpath.name}*"))
+    sql_files = list(Path(sql_fpath.parent).glob(f"{sql_fpath.name}.sql*"))
 
     # check that file exists
     if len(sql_files) == 0:
