@@ -9,7 +9,15 @@ class PipePerformanceModel(om.ExplicitComponent):
     def initialize(self):
         self.options.declare(
             "transport_item",
-            values=["hydrogen", "co2", "methanol", "ammonia", "nitrogen", "natural_gas"],
+            values=[
+                "hydrogen",
+                "co2",
+                "methanol",
+                "ammonia",
+                "nitrogen",
+                "natural_gas",
+                "crude_ore",
+            ],
         )
 
     def setup(self):
