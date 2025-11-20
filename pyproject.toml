@@ -59,7 +59,7 @@ dependencies = [
     "openmeteo-requests",
     "geopy",
     "pyDOE3",
-    "ard-nrel"
+    "ard-nrel",
     "rich>=13.7.0",
     "requests-cache",
     "retry_requests",
