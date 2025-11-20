@@ -15,16 +15,12 @@ from h2integrate.converters.wind.layout.simple_grid_layout import (
 )
 
 
-# @define
-# class HybridTurbineFarmConfig(BaseConfig):
-#     turbine_types: dict | list[dict] = field()
-#     turbine_type_to
-
-
 @define
 class FlorisWindPlantPerformanceConfig(BaseConfig):
     num_turbines: int = field(converter=int, validator=gt_zero)
-    floris_config: dict = field()
+    floris_wake_config: dict = field()
+    floris_turbine_config: dict = field()
+    floris_operation_model: str = field(default="cosine-loss")
     hub_height: float = field(default=-1, validator=gt_val(-1))
     layout: dict = field(default={})
     # operation_model: str = field(default="cosine-loss")
@@ -107,7 +103,7 @@ class FlorisWindPlantPerformanceModel(WindPerformanceBaseClass):
         self.n_timesteps = int(self.options["plant_config"]["plant"]["simulation"]["n_timesteps"])
 
         power_curve = (
-            self.config.floris_config.get("farm", {})
+            self.config.floris_turbine_config.get("farm", {})
             .get("turbine_type")[0]
             .get("power_thrust_table")
             .get("power")
@@ -167,8 +163,10 @@ class FlorisWindPlantPerformanceModel(WindPerformanceBaseClass):
         # If caching is not enabled or a cache file does not exist, run FLORIS
         n_turbs = int(np.round(inputs["num_turbines"][0]))
 
-        floris_config = copy.deepcopy(self.config.floris_config)
-        turbine_design = floris_config["farm"]["turbine_type"][0]
+        floris_config = copy.deepcopy(self.config.floris_wake_config)
+        turbine_design = copy.deepcopy(self.config.floris_turbine_config)
+
+        # turbine_design = floris_config["farm"]["turbine_type"][0]
 
         # update the turbine hub-height in the floris turbine config
         turbine_design.update({"hub_height": inputs["hub_height"][0]})
@@ -183,6 +181,10 @@ class FlorisWindPlantPerformanceModel(WindPerformanceBaseClass):
             x_pos, y_pos = make_basic_grid_turbine_layout(
                 turbine_design.get("rotor_diameter"), n_turbs, self.layout_config
             )
+
+        floris_farm = {"layout_x": x_pos, "layout_y": y_pos, "turbine_type": [turbine_design]}
+
+        floris_config["farm"].update(floris_farm)
 
         # initialize FLORIS
         self.fi = FlorisModel(floris_config)

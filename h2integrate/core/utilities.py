@@ -882,15 +882,17 @@ def print_results(model, includes=None, excludes=None, show_units=True):
 
 
 def make_cache_hash_filename(config, inputs, discrete_inputs={}):
-    """_summary_
+    """Make valid filepath to a pickle file with a filename that is unique based on information
+    available in the config, inputs, and discrete inputs.
 
     Args:
-        config (_type_): _description_
-        inputs (_type_): _description_
-        discrete_inputs (dict, optional): _description_. Defaults to {}.
+        config (object | dict): configuration object that inherits `BaseConfig` or dictionary.
+        inputs (om.vectors.default_vector.DefaultVector): OM inputs to `compute()` method
+        discrete_inputs (om.core.component._DictValues, optional): OM discrete inputs to `compute()`
+            method. Defaults to {}.
 
     Returns:
-        _type_: _description_
+        Path: filepath to pickle file with filename as unique cache key.
     """
     # NOTE: maybe would be good to add a string input that can specify what model this cache is for,
     # like "hopp" or "floris", this could be used in the cache filename but perhaps unnecessary
