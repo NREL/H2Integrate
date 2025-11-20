@@ -178,7 +178,7 @@ class FlorisWindPlantPerformanceModel(WindPerformanceBaseClass):
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         # NOTE: could update air density based on elevation if elevation is included
         # in the resource data.
-        # would need to duplicate the `calculate_air_density`` function from HOPP
+        # would need to duplicate the ``calculate_air_density`` function from HOPP
 
         # Check if the results for the current configuration are already cached
         if self.config.enable_caching:
