@@ -1,0 +1,27 @@
+name: "technology_config"
+description: "This plant runs a wind farm using FLORIS"
+
+technologies:
+  wind:
+    performance_model:
+      model: "floris_wind_plant_performance"
+    cost_model:
+      model: "atb_wind_cost"
+    model_inputs:
+      performance_parameters:
+        num_turbines: 100
+        hub_height: 65.0
+        floris_wake_config: !include "floris_v4_default_template.yaml"
+        floris_turbine_config: !include "floris_turbine_Vestas_660kW.yaml"
+        layout:
+          layout_mode: "basicgrid"
+          layout_options:
+            row_D_spacing: 5.0
+            turbine_D_spacing: 5.0
+            rotation_angle_deg: 0.0
+            row_phase_offset: 0.0
+            layout_shape: "square"
+      cost_parameters:
+        capex_per_kW: 1472.0
+        opex_per_kW_per_year: 32
+        cost_year: 2022
