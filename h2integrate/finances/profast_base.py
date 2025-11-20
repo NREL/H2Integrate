@@ -703,7 +703,8 @@ class ProFastBase(om.ExplicitComponent):
 
             # if VarOpEx is positive, treat as a feedstock
             varopex_adjusted_tech = inputs[f"varopex_adjusted_{tech}"]
-            if np.any(varopex_adjusted_tech) > 0:
+
+            if np.any(varopex_adjusted_tech >= 0):
                 varopex_cost_per_unit_commodity = varopex_adjusted_tech / total_production
                 varopex_dict = dict(zip(years_of_operation, varopex_cost_per_unit_commodity))
                 tech_varopex_info.update({"cost": varopex_dict})
