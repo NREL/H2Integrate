@@ -1,5 +1,4 @@
 import copy
-import hashlib
 from pathlib import Path
 
 import dill
@@ -7,7 +6,7 @@ import numpy as np
 from attrs import field, define
 from floris import TimeSeries, FlorisModel
 
-from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
+from h2integrate.core.utilities import BaseConfig, merge_shared_inputs, make_cache_hash_filename
 from h2integrate.core.validators import gt_val, gt_zero, gte_zero
 from h2integrate.converters.wind.wind_plant_baseclass import WindPerformanceBaseClass
 from h2integrate.converters.wind.layout.simple_grid_layout import (
@@ -144,40 +143,6 @@ class FlorisWindPlantPerformanceModel(WindPerformanceBaseClass):
 
         return time_series
 
-    def make_cache_filename(self, resource_data, hub_height, n_turbines):
-        # inputs
-        # discrete_inputs
-
-        # unique resource data is year, lat, lon, timezone, filepath (perhaps)
-        resource_keys = ["site_lat", "site_lon", "data_tz", "filepath"]
-        time_keys = ["year", "month", "day", "hour", "minute"]
-        resource_info = {resource_data.get(k, None) for k in resource_keys}
-        time_info = {resource_data.get(k, [None])[0] for k in time_keys}
-        resource_info.update(time_info)
-
-        resource_data_included = [k for k, v in resource_data.items() if k not in resource_info]
-        resource_info.update({"resource_data_included": resource_data_included})
-
-        hash_info = copy.deepcopy(self.config.as_dict())
-        hash_info.update({"resource_data": resource_info})
-        hash_info.update(
-            {
-                "hub_height": hub_height,
-                "n_turbines": n_turbines,
-                "wind_turbine_size_kw": self.wind_turbine_rating_kW,
-            }
-        )
-
-        # Create a unique hash for the current configuration to use as a cache key
-        config_hash = hashlib.md5(str(hash_info).encode("utf-8")).hexdigest()
-
-        # Create a cache directory if it doesn't exist
-        cache_dir = Path("cache")
-        if not cache_dir.exists():
-            cache_dir.mkdir(parents=True)
-        cache_file = f"cache/{config_hash}.pkl"
-        return cache_file
-
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         # NOTE: could update air density based on elevation if elevation is included
         # in the resource data.
@@ -185,9 +150,10 @@ class FlorisWindPlantPerformanceModel(WindPerformanceBaseClass):
 
         # Check if the results for the current configuration are already cached
         if self.config.enable_caching:
-            cache_filename = self.make_cache_filename(
-                discrete_inputs["wind_resource_data"], inputs["hub_height"], inputs["num_turbines"]
-            )
+            config_dict = self.config.as_dict()
+            config_dict.update({"wind_turbine_size_kw": self.wind_turbine_rating_kW})
+            cache_filename = make_cache_hash_filename(config_dict, inputs, discrete_inputs)
+
             if Path(cache_filename).exists():
                 # Load the cached results
                 cache_path = Path(cache_filename)
@@ -253,12 +219,3 @@ class FlorisWindPlantPerformanceModel(WindPerformanceBaseClass):
                     "layout_y": y_pos,
                 }
                 dill.dump(floris_results, f)
-
-        # power_turbines = np.zeros((self.nTurbs, 8760))
-        # power_farm = np.zeros(8760)
-        # power_turbines[:, 0:self.n_timesteps] = self.fi.get_turbine_powers().reshape(
-        #     (self.nTurbs, self.n_timesteps)
-        # )
-        # power_farm[0:self.n_timesteps] = self.fi.get_farm_power().reshape(
-        #     (self.n_timesteps)
-        # )
