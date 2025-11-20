@@ -29,6 +29,7 @@
 - Split out cost models from coupled hydrogen storage performance and cost model
 - Added storage auto-sizing performance model based on storage sizing calculations that existed in the coupled hydrogen storage performance and cost model
 - Added ability for latitude and longitude to be design variables in design sweep
+- Move geologic hydrogen models into specific geoh2 subsurface converters
 
 ## 0.4.0 [October 1, 2025]
 
