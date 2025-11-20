@@ -22,11 +22,11 @@ def test_21_solar_battery_grid_example(subtests):
         "finance_subgroup_renewables.electricity_sum.total_electricity_produced", units="kW*h/year"
     )
 
-    electricity_bought = sum(model.prob.get_val("grid_feedstock.electricity_consumed", units="kW"))
+    electricity_bought = sum(model.prob.get_val("grid_buy.electricity_out", units="kW"))
     battery_missed_load = sum(model.prob.get_val("battery.electricity_unmet_demand", units="kW"))
 
     battery_curtailed = sum(model.prob.get_val("battery.electricity_unused_commodity", units="kW"))
-    electricity_sold = sum(model.prob.get_val("grid_selling.electricity_consumed", units="kW"))
+    electricity_sold = sum(model.prob.get_val("grid_sell.electricity_in", units="kW"))
 
     solar_aep = sum(model.prob.get_val("solar.electricity_out", units="kW"))
 
@@ -34,14 +34,13 @@ def test_21_solar_battery_grid_example(subtests):
         assert pytest.approx(battery_missed_load, rel=1e-6) == electricity_bought
 
     with subtests.test("Behavior check battery curtailed energy is electricity sold"):
-        assert pytest.approx(battery_curtailed, rel=1e-6) == -1 * electricity_sold
+        assert pytest.approx(battery_curtailed, rel=1e-6) == electricity_sold
 
-    with subtests.test("Behavior check energy for financials it solar aep and electricity bought"):
-        # NOTE: ideally this would include energy bought from grid,
-        # this will be done in the flexible finance streams PR
-        # expected_aep = solar_aep + electricity_bought
-        assert pytest.approx(energy_for_financials, rel=1e-6) == solar_aep
+    with subtests.test(
+        "Behavior check energy for financials; include solar aep and electricity bought"
+    ):
+        assert pytest.approx(energy_for_financials, rel=1e-6) == (solar_aep + electricity_bought)
 
     with subtests.test("Value check on LCOE"):
-        lcoe = model.prob.get_val("finance_subgroup_renewables.LCOE", units="USD/MW/h")[0]
-        assert pytest.approx(lcoe, rel=1e-4) == 66.11939
+        lcoe = model.prob.get_val("finance_subgroup_renewables.LCOE", units="USD/(MW*h)")[0]
+        assert pytest.approx(lcoe, rel=1e-4) == 89.44708366342546
