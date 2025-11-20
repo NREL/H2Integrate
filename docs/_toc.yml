@@ -38,6 +38,7 @@ parts:
   - file: technology_models/methanol.md
   - file: technology_models/ammonia.md
   - file: technology_models/pysam_battery.md
+  - file: technology_models/geologic_hydrogen.md
 
 - caption: Resource Models
   chapters:
