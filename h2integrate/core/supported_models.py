@@ -61,6 +61,8 @@ from h2integrate.converters.hydrogen.pem_electrolyzer import (
 from h2integrate.converters.solar.atb_res_com_pv_cost import ATBResComPVCostModel
 from h2integrate.converters.solar.atb_utility_pv_cost import ATBUtilityPVCostModel
 from h2integrate.resource.wind.nrel_developer_wtk_api import WTKNRELDeveloperAPIWindResource
+from h2integrate.converters.iron.martin_mine_cost_model import MartinIronMineCostComponent
+from h2integrate.converters.iron.martin_mine_perf_model import MartinIronMinePerformanceComponent
 from h2integrate.converters.methanol.smr_methanol_plant import (
     SMRMethanolPlantCostModel,
     SMRMethanolPlantFinanceModel,
@@ -157,6 +159,8 @@ supported_models = {
     "iron_mine_cost": IronMineCostComponent,
     "iron_plant_performance": IronPlantPerformanceComponent,
     "iron_plant_cost": IronPlantCostComponent,
+    "iron_mine_performance_martin": MartinIronMinePerformanceComponent,  # standalone model
+    "iron_mine_cost_martin": MartinIronMineCostComponent,  # standalone model
     "reverse_osmosis_desalination_performance": ReverseOsmosisPerformanceModel,
     "reverse_osmosis_desalination_cost": ReverseOsmosisCostModel,
     "simple_ammonia_performance": SimpleAmmoniaPerformanceModel,
