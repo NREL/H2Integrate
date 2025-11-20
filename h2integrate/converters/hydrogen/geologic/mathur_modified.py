@@ -102,11 +102,11 @@ class GeoH2SubsurfaceCostConfig(GeoH2SubsurfaceCostConfig):
 
 
 class GeoH2SubsurfaceCostModel(GeoH2SubsurfaceCostBaseClass):
-    """An OpenMDAO component for modeling subsurface well costs in stimulated geologic
+    """An OpenMDAO component for modeling subsurface well costs in geologic
         hydrogen plants.
 
     This component estimates the capital and operating costs for subsurface well
-    systems in stimulated geologic hydrogen production. Cost correlations are based on:
+    systems in geologic hydrogen production. Cost correlations are based on:
 
         - Mathur et al. (Stanford): https://doi.org/10.31223/X5599G
         - NETL Quality Guidelines: https://doi.org/10.2172/1567736

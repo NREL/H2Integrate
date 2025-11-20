@@ -71,6 +71,9 @@ class GeoH2SubsurfacePerformanceBaseClass(om.ExplicitComponent):
         hydrogen_out (ndarray):
             The hydrogen production rate profile over a one-year period (8760 hours),
             in kilograms per hour.
+
+        total_hydrogen_produced (float):
+            The total hydrogen produced over the plant lifetime, in kilograms per year.
     """
 
     def initialize(self):
@@ -130,43 +133,11 @@ class GeoH2SubsurfaceCostBaseClass(CostModelBaseClass):
         borehole_depth (float):
             Total borehole depth, in meters (may include directional drilling sections).
 
-        test_drill_cost (float):
-            Capital expenditure (CAPEX) cost of a test drill for a potential GeoH₂ well, in USD.
-
-        permit_fees (float):
-            CAPEX cost required to obtain drilling permits, in USD.
-
-        acreage (float):
-            Land area required for drilling operations, in acres.
-
-        rights_cost (float):
-            CAPEX cost to acquire drilling rights, in USD per acre.
-
-        success_chance (float):
-            Probability of success at a given test drilling site, expressed as a fraction or
-                percent.
-
-        fixed_opex (float):
-            Fixed annual operating expense (OPEX) that does not scale with hydrogen production,
-            in USD/year.
-
-        variable_opex (float):
-            Variable OPEX that scales with hydrogen production, in USD/kg.
-
-        contracting_pct (float):
-            Contracting costs as a percentage of bare capital cost.
-
-        contingency_pct (float):
-            Contingency allowance as a percentage of bare capital cost.
-
-        preprod_time (float):
-            Duration of the preproduction period during which fixed OPEX applies, in months.
-
-        as_spent_ratio (float):
-            Ratio of as-spent costs to overnight (instantaneous) costs, dimensionless.
-
         hydrogen_out (ndarray):
             Hydrogen production rate profile over the simulation period, in kg/h.
+
+        total_hydrogen_produced (float):
+            Total hydrogen produced over the plant lifetime, in kg/year.
 
     Outputs:
         bare_capital_cost (float):
