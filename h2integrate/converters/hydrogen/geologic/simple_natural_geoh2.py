@@ -87,7 +87,7 @@ class NaturalGeoH2PerformanceModel(GeoH2SubsurfacePerformanceBaseClass):
         super().setup()
         n_timesteps = self.options["plant_config"]["plant"]["simulation"]["n_timesteps"]
 
-        self.add_input("site_prospectivity", units=None, val=self.config.site_prospectivity)
+        self.add_input("site_prospectivity", units="unitless", val=self.config.site_prospectivity)
         self.add_input("initial_wellhead_flow", units="kg/h", val=self.config.initial_wellhead_flow)
         self.add_input("gas_reservoir_size", units="t", val=self.config.gas_reservoir_size)
 

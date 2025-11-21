@@ -1,0 +1,48 @@
+name: "driver_config"
+description: "This analysis runs a hybrid plant to match the first example in H2I"
+
+general:
+  folder_output: ex_04_out
+  create_om_reports: false
+driver:
+  design_of_experiments:
+    flag: true
+    debug_print: true
+    generator: "csvgen"
+    filename: "geoh2_doe_natural.csv"
+    run_parallel: false
+design_variables:
+  geoh2_well_subsurface:
+    borehole_depth:
+      flag: true
+      lower: 1000.0
+      upper: 3000.0
+      units: "m"
+    grain_size:
+      flag: True
+      units: "m"
+      lower: 0.005
+      upper: 0.015
+    site_prospectivity:
+      flag: True
+      units: "unitless"
+      lower: 0.5
+      upper: 0.9
+    fixed_opex:
+      flag: True
+      units: "USD/year"
+      lower: 100000
+      upper: 300000
+    variable_opex:
+      flag: True
+      units: "USD/kg"
+      lower: 5
+      upper: 15
+objective:
+  name: finance_subgroup_default.LCOH
+recorder:
+    file: cases.sql
+    overwrite_recorder: true
+    flag: true
+    includes: ['*']
+    excludes: ['*wind_resource*']

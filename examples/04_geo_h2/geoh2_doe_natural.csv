@@ -1,0 +1,10 @@
+geoh2_well_subsurface.borehole_depth,geoh2_well_subsurface.site_prospectivity,geoh2_well_subsurface.fixed_opex,geoh2_well_subsurface.variable_opex
+2000,0.7,200000,0.1
+2000,0.9,200000,0.1
+2000,0.5,200000,0.1
+1000,0.7,200000,0.1
+3000,0.7,200000,0.1
+2000,0.7,100000,0.1
+2000,0.7,300000,0.1
+2000,0.7,200000,0.05
+2000,0.7,200000,0.15
