@@ -43,7 +43,7 @@ class ElectrolyzerPerformanceModel(ElectrolyzerPerformanceBaseClass):
             self.config.include_degradation_penalty,
             self.config.turndown_ratio,
         )
-        self.add_input("cluster_size", val=1.0, units="MW")
+        self.add_input("cluster_size", val=-1.0, units="MW")
 
     def compute(self, inputs, outputs):
         # Run the PEM electrolyzer model using the input power signal

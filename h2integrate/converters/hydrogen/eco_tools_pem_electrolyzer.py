@@ -154,10 +154,4 @@ class ECOElectrolyzerPerformanceModel(ElectrolyzerPerformanceBaseClass):
         outputs["time_until_replacement"] = H2_Results["Time Until Replacement [hrs]"]
         outputs["rated_h2_production_kg_pr_hr"] = H2_Results["Rated BOL: H2 Production [kg/hr]"]
         outputs["electrolyzer_size_mw"] = electrolyzer_actual_capacity_MW
-
-        # Calculate capacity factor
-        cap_fac = (
-            np.mean(H2_Results["Hydrogen Hourly Production [kg/hr]"])
-            / H2_Results["Rated BOL: H2 Production [kg/hr]"]
-        )
-        outputs["hydrogen_capacity_factor"] = cap_fac
+        outputs["hydrogen_capacity_factor"] = H2_Results["Life: Capacity Factor"]

@@ -527,7 +527,7 @@ class ProFastBase(om.ExplicitComponent):
         else:
             self.add_input(
                 f"total_{self.options['commodity_type']}_produced",
-                val=1.0,
+                val=-1.0,
                 units=commodity_units,
             )
 

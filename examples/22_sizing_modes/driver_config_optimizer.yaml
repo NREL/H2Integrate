@@ -34,6 +34,6 @@ objective:
 
 recorder:
   flag: True
-  file: "wind_h2_opt.sql"
+  file: "size_mode_example.sql"
   includes: ["*"]
   excludes: ["wind_resource.wind_resource_data"]

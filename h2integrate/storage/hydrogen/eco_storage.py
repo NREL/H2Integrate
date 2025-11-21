@@ -27,7 +27,7 @@ class H2StorageModelConfig(BaseConfig):
         validator=contains(["salt_cavern", "lined_rock_cavern", "none", "mch"]),
     )
     days: int = field(default=0)
-    cost_year: int = field(default=2018, converter=int, validator=contains([2018, 2021, 2024]))
+    cost_year: int = field(default=2018, converter=int, validator=contains([2018, 2021]))
 
     def __attrs_post_init__(self):
         if self.type == "mch":
@@ -50,18 +50,18 @@ class H2Storage(CostModelBaseClass):
 
         self.add_input(
             "hydrogen_in",
-            val=1.0,
+            val=0.0,
             shape_by_conn=True,
             units="kg/h",
         )
 
         self.add_input(
             "rated_h2_production_kg_pr_hr",
-            val=1.0,
+            val=0.0,
             units="kg/h",
             desc="Rated hydrogen production of electrolyzer",
         )
-        self.add_input("efficiency", val=1.0, desc="Average efficiency of the electrolyzer")
+        self.add_input("efficiency", val=0.0, desc="Average efficiency of the electrolyzer")
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         ########### initialize output dictionary ###########
@@ -80,8 +80,8 @@ class H2Storage(CostModelBaseClass):
             if self.config.electrolyzer_rating_mw_for_h2_storage_sizing is None:
                 raise (
                     ValueError(
-                        "h2 storage input electrolyzer_rating_mw_for_h2_storage_sizing must be"
-                        "specified if size_capacity_from_demand is True."
+                        "h2 storage input battery_electricity_discharge must be specified \
+                                 if size_capacity_from_demand is True."
                     )
                 )
             hydrogen_storage_demand = np.mean(
@@ -143,11 +143,6 @@ class H2Storage(CostModelBaseClass):
             h2_storage_results["storage_opex"] = h2_storage.output_dict["salt_cavern_storage_opex"]
             h2_storage_results["storage_energy"] = 0.0
             h2_storage_results["cost_year"] = 2018
-
-            if np.isnan(h2_storage_results["storage_capex"]):
-                h2_storage_results["storage_capex"] = 0.0
-            if np.isnan(h2_storage_results["storage_opex"]):
-                h2_storage_results["storage_opex"] = 0.0
 
         elif self.config.type == "lined_rock_cavern":
             # initialize dictionary for salt cavern storage parameters
