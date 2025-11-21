@@ -22,10 +22,19 @@ site:
 # with the reverse definition.
 # this will naturally grow as we mature the interconnected tech
 technology_interconnections: [
+  ["grid_feedstock","iron_mine","electricity","cable"],
+  ["mine_feedstock","iron_mine","crude_ore","pipe"],
+  ["iron_mine","iron_transport","total_iron_ore_produced"],
+  ["iron_transport","iron_plant","iron_transport_cost"],
+  ["finance_subgroup_iron_ore","iron_plant","price_iron_ore"],
 ]
 
 plant:
   plant_life: 30
+  simulation:
+    n_timesteps: 8760
+    dt: 3600
+    timezone: 0
 finance_parameters:
   finance_groups:
     finance_model: "ProFastComp"
@@ -53,7 +62,11 @@ finance_parameters:
     cost_year_adjustment_inflation: 0.025
     target_dollar_year: 2022
   finance_subgroups:
-    iron:
-      commodity: "iron"
-      commodity_stream: "iron" #use electricity from wind in finance calc
-      technologies: ["iron"]
+    iron_ore:
+      commodity: "iron_ore"
+      commodity_stream: "iron_mine"
+      technologies: ["iron_mine"]
+    pig_iron:
+      commodity: "pig_iron"
+      commodity_stream: "iron_plant"
+      technologies: ["iron_plant"] #
