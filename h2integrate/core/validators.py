@@ -29,8 +29,16 @@ def gt_val(min_val):
     """Validates that an attribute's value is greater than some minumum value."""
 
     def validator(instance, attribute, value):
-        if value < min_val:
-            raise ValueError(f"{attribute} must be greater than {min_val} (but has value {value})")
+        if value is None:
+            if attribute.default < min_val:
+                raise ValueError(
+                    f"{attribute.name} must be greater than {min_val} (but has value {value})"
+                )
+        else:
+            if value < min_val:
+                raise ValueError(
+                    f"{attribute.name} must be greater than {min_val} (but has value {value})"
+                )
 
     return validator
 

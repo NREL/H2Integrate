@@ -23,24 +23,20 @@ class FlorisWindPlantPerformanceConfig(BaseConfig):
     floris_operation_model: str = field(default="cosine-loss")
     hub_height: float = field(default=-1, validator=gt_val(-1))
     layout: dict = field(default={})
-    # operation_model: str = field(default="cosine-loss")
-    # floris_turbines: dict | list[dict] = field()
     hybrid_turbine_design: bool = field(default=False)
     operational_losses: float = field(default=0.0, validator=gte_zero)
     enable_caching: bool = field(default=True)
 
     # if using multiple turbines, then need to specify resource reference height
     def __attrs_post_init__(self):
-        n_turbine_types = len(self.floris_config.get("farm", {}).get("turbine_type", []))
-        n_pos = len(self.floris_config.get("farm", {}).get("layout_x", []))
+        n_turbine_types = len(self.floris_wake_config.get("farm", {}).get("turbine_type", []))
+        n_pos = len(self.floris_wake_config.get("farm", {}).get("layout_x", []))
         if n_turbine_types > 1 and n_turbine_types != n_pos:
             self.hybrid_turbine_design = True
 
         # use floris_turbines
         if self.hub_height < 0 and not self.hybrid_turbine_design:
-            self.hub_height = (
-                self.floris_config.get("farm", {}).get("turbine_type")[0].get("hub_height")
-            )
+            self.hub_height = self.floris_turbine_config.get("hub_height")
 
 
 class FlorisWindPlantPerformanceModel(WindPerformanceBaseClass):
@@ -91,23 +87,22 @@ class FlorisWindPlantPerformanceModel(WindPerformanceBaseClass):
         )
 
         self.add_output(
-            "annual_energy",
+            "total_electricity_produced",
             val=0.0,
             units="kW*h/year",
-            desc="Annual energy production from WindPlant in kW",
+            desc="Annual energy production from WindPlant",
         )
         self.add_output(
             "total_capacity", val=0.0, units="kW", desc="Wind farm rated capacity in kW"
         )
 
+        self.add_output(
+            "capacity_factor", val=0.0, units="percent", desc="Wind farm capacity factor"
+        )
+
         self.n_timesteps = int(self.options["plant_config"]["plant"]["simulation"]["n_timesteps"])
 
-        power_curve = (
-            self.config.floris_turbine_config.get("farm", {})
-            .get("turbine_type")[0]
-            .get("power_thrust_table")
-            .get("power")
-        )
+        power_curve = self.config.floris_turbine_config.get("power_thrust_table").get("power")
         self.wind_turbine_rating_kW = np.max(power_curve)
 
     def format_resource_data(self, hub_height, wind_resource_data):
@@ -125,15 +120,25 @@ class FlorisWindPlantPerformanceModel(WindPerformanceBaseClass):
             height_difference = [np.abs(hub_height - b) for b in bounding_heights]
             resource_height = bounding_heights[np.argmin(height_difference).flatten()[0]]
 
-        default_ti = self.floris_config.get("flow_field", {}).get("turbulence_intensities", [0.06])
+        default_ti = self.config.floris_wake_config.get("flow_field", {}).get(
+            "turbulence_intensities", 0.06
+        )
+
         ti = wind_resource_data.get("turbulence_intensity", {}).get(
             f"turbulence_intensity_{resource_height}", default_ti
         )
         if isinstance(ti, (int, float)):
-            ti = [ti]
+            ti = float(
+                ti
+            )  # [ti]*len(wind_resource_data[f"wind_direction_{resource_height}m"]) #TODO: update
+        elif isinstance(ti, (list, np.ndarray)):
+            if len(ti) == 1:
+                ti = float(ti[0])
+            if len(ti) == 0:
+                ti = 0.06
         time_series = TimeSeries(
-            wind_directions=wind_resource_data[f"wind_direction_{resource_height}"],
-            wind_speeds=wind_resource_data[f"wind_speed_{resource_height}"],
+            wind_directions=wind_resource_data[f"wind_direction_{resource_height}m"],
+            wind_speeds=wind_resource_data[f"wind_speed_{resource_height}m"],
             turbulence_intensities=ti,
         )
 
@@ -157,13 +162,16 @@ class FlorisWindPlantPerformanceModel(WindPerformanceBaseClass):
                     cached_data = dill.load(f)
                 outputs["electricity_out"] = cached_data["electricity_out"]
                 outputs["total_capacity"] = cached_data["total_capacity"]
-                outputs["annual_energy"] = cached_data["annual_energy"]
+                outputs["total_electricity_produced"] = cached_data["total_electricity_produced"]
+                outputs["capacity_factor"] = cached_data["capacity_factor"]
                 return
 
         # If caching is not enabled or a cache file does not exist, run FLORIS
         n_turbs = int(np.round(inputs["num_turbines"][0]))
 
         floris_config = copy.deepcopy(self.config.floris_wake_config)
+        # make default turbulence intensity
+
         turbine_design = copy.deepcopy(self.config.floris_turbine_config)
 
         # turbine_design = floris_config["farm"]["turbine_type"][0]
@@ -207,7 +215,8 @@ class FlorisWindPlantPerformanceModel(WindPerformanceBaseClass):
         outputs["total_capacity"] = n_turbs * self.wind_turbine_rating_kW
 
         max_production = n_turbs * self.wind_turbine_rating_kW * len(gen)
-        outputs["annual_energy"] = (np.sum(gen) / max_production) * 8760
+        outputs["total_electricity_produced"] = np.sum(gen)
+        outputs["capacity_factor"] = np.sum(gen) / max_production
 
         # Cache the results for future use
         if self.config.enable_caching:
@@ -216,7 +225,8 @@ class FlorisWindPlantPerformanceModel(WindPerformanceBaseClass):
                 floris_results = {
                     "electricity_out": outputs["electricity_out"],
                     "total_capacity": outputs["total_capacity"],
-                    "annual_energy": outputs["total_capacity"],
+                    "total_electricity_produced": outputs["total_electricity_produced"],
+                    "capacity_factor": outputs["capacity_factor"],
                     "layout_x": x_pos,
                     "layout_y": y_pos,
                 }

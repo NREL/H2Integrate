@@ -19,7 +19,7 @@ flow_field:
   wind_shear: 0.33
   wind_speeds: []
   wind_veer: 0.0
-  turbulence_intensities: [0.06]
+  turbulence_intensities: []
 
 wake:
   model_strings:
@@ -88,5 +88,5 @@ wake:
 farm:
   layout_x: []
   layout_y: []
-  turbine_type:
+  # turbine_type:
   # - operation_model: cosine-loss
