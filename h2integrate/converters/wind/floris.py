@@ -7,7 +7,11 @@ from attrs import field, define
 from floris import TimeSeries, FlorisModel
 
 from h2integrate.core.utilities import BaseConfig, merge_shared_inputs, make_cache_hash_filename
-from h2integrate.core.validators import gt_val, gt_zero, gte_zero
+from h2integrate.core.validators import gt_val, gt_zero, contains, gte_zero
+from h2integrate.converters.wind.tools.resource_tools import (
+    average_wind_data_for_hubheight,
+    weighted_average_wind_data_for_hubheight,
+)
 from h2integrate.converters.wind.wind_plant_baseclass import WindPerformanceBaseClass
 from h2integrate.converters.wind.layout.simple_grid_layout import (
     BasicGridLayoutConfig,
@@ -25,6 +29,9 @@ class FlorisWindPlantPerformanceConfig(BaseConfig):
     layout: dict = field(default={})
     hybrid_turbine_design: bool = field(default=False)
     operational_losses: float = field(default=0.0, validator=gte_zero)
+    resource_data_averaging_method: str = field(
+        default="weighted_average", validator=contains(["weighted_average", "average", "nearest"])
+    )
     enable_caching: bool = field(default=True)
 
     # if using multiple turbines, then need to specify resource reference height
@@ -108,37 +115,57 @@ class FlorisWindPlantPerformanceModel(WindPerformanceBaseClass):
     def format_resource_data(self, hub_height, wind_resource_data):
         # NOTE: could weight resource data of bounding heights like
         # `weighted_parse_resource_data` method in HOPP
-        # constant_resource_data = ["wind_shear","wind_veer","reference_wind_height","air_density"]
-        # timeseries_resource_data = ["turbulence_intensity","wind_directions","wind_speeds"]
 
         bounding_heights = self.calculate_bounding_heights_from_resource_data(
             hub_height, wind_resource_data, resource_vars=["wind_speed", "wind_direction"]
         )
         if len(bounding_heights) == 1:
             resource_height = bounding_heights[0]
+            windspeed = wind_resource_data[f"wind_speed_{resource_height}m"]
+            winddir = wind_resource_data[f"wind_direction_{resource_height}m"]
         else:
-            height_difference = [np.abs(hub_height - b) for b in bounding_heights]
-            resource_height = bounding_heights[np.argmin(height_difference).flatten()[0]]
+            if self.config.resource_data_averaging_method == "nearest":
+                height_difference = [np.abs(hub_height - b) for b in bounding_heights]
+                resource_height = bounding_heights[np.argmin(height_difference).flatten()[0]]
+                windspeed = wind_resource_data[f"wind_speed_{resource_height}m"]
+                winddir = wind_resource_data[f"wind_direction_{resource_height}m"]
+            if self.config.resource_data_averaging_method == "weighted_average":
+                windspeed = weighted_average_wind_data_for_hubheight(
+                    wind_resource_data, bounding_heights, hub_height, "wind_speed"
+                )
+                winddir = weighted_average_wind_data_for_hubheight(
+                    wind_resource_data, bounding_heights, hub_height, "wind_direction"
+                )
+            if self.config.resource_data_averaging_method == "average":
+                windspeed = average_wind_data_for_hubheight(
+                    wind_resource_data, bounding_heights, hub_height, "wind_speed"
+                )
+                winddir = average_wind_data_for_hubheight(
+                    wind_resource_data, bounding_heights, hub_height, "wind_direction"
+                )
 
+        # TODO: add in option to weight resource data
         default_ti = self.config.floris_wake_config.get("flow_field", {}).get(
             "turbulence_intensities", 0.06
         )
-
         ti = wind_resource_data.get("turbulence_intensity", {}).get(
-            f"turbulence_intensity_{resource_height}", default_ti
+            f"turbulence_intensity_{resource_height}m", default_ti
         )
-        if isinstance(ti, (int, float)):
-            ti = float(
-                ti
-            )  # [ti]*len(wind_resource_data[f"wind_direction_{resource_height}m"]) #TODO: update
-        elif isinstance(ti, (list, np.ndarray)):
-            if len(ti) == 1:
-                ti = float(ti[0])
+        if not isinstance(ti, (int, float)):
             if len(ti) == 0:
                 ti = 0.06
+            if not isinstance(ti, (float, int)) and len(ti) == 1:
+                ti = float(ti[0])
+            if not isinstance(ti, (float, int)) and len(ti) != self.n_timesteps:
+                msg = (
+                    f"Turbulence intensity is length {len(ti)} but must be "
+                    f"either be length {self.n_timesteps} or a float"
+                )
+                raise ValueError(msg)
+
         time_series = TimeSeries(
-            wind_directions=wind_resource_data[f"wind_direction_{resource_height}m"],
-            wind_speeds=wind_resource_data[f"wind_speed_{resource_height}m"],
+            wind_directions=winddir,
+            wind_speeds=windspeed,
             turbulence_intensities=ti,
         )
 
@@ -169,12 +196,9 @@ class FlorisWindPlantPerformanceModel(WindPerformanceBaseClass):
         # If caching is not enabled or a cache file does not exist, run FLORIS
         n_turbs = int(np.round(inputs["num_turbines"][0]))
 
+        # Copy main config files
         floris_config = copy.deepcopy(self.config.floris_wake_config)
-        # make default turbulence intensity
-
         turbine_design = copy.deepcopy(self.config.floris_turbine_config)
-
-        # turbine_design = floris_config["farm"]["turbine_type"][0]
 
         # update the turbine hub-height in the floris turbine config
         turbine_design.update({"hub_height": inputs["hub_height"][0]})
@@ -202,9 +226,7 @@ class FlorisWindPlantPerformanceModel(WindPerformanceBaseClass):
 
         # run the model
         self.fi.run()
-        # power_turbines = self.fi.get_turbine_powers().reshape(
-        #     (n_turbs, self.n_timesteps)
-        # ) #W
+
         power_farm = self.fi.get_farm_power().reshape(self.n_timesteps)  # W
 
         # Adding losses (excluding turbine and wake losses)

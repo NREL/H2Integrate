@@ -27,6 +27,7 @@ def floris_config():
         },
         "operational_losses": 12.83,
         "enable_caching": False,
+        "resource_data_averaging_method": "nearest",
     }
     return floris_performance_dict
 
