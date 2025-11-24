@@ -89,16 +89,23 @@ class GridPerformanceModel(om.ExplicitComponent):
             desc="Electricity flowing out of grid interconnection point (buying from grid)",
         )
 
+        self.add_output(
+            "electricity_sold",
+            val=0.0,
+            shape=n_timesteps,
+            units="kW",
+            desc="Electricity sold to the grid",
+        )
+
     def compute(self, inputs, outputs):
         interconnection_size = inputs["interconnection_size"]
 
         # Selling: electricity flows into grid, limited by interconnection size
-        # The electricity_in is already limited by the interconnection
-        # No output needed - the amount sold equals electricity_in (up to limit)
+        electricity_sold = np.clip(inputs["electricity_in"], 0, interconnection_size)
+        outputs["electricity_sold"] = electricity_sold
 
         # Buying: electricity flows out of grid to meet demand, limited by interconnection
-        electricity_demand = inputs["electricity_demand"]
-        electricity_bought = np.clip(electricity_demand, 0, interconnection_size)
+        electricity_bought = np.clip(inputs["electricity_demand"], 0, interconnection_size)
         outputs["electricity_out"] = electricity_bought
 
 

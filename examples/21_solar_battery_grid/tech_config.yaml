@@ -80,7 +80,7 @@ technologies:
         interconnection_size: 1.e6  # kW
       cost_parameters:
         cost_year: 2022
-        electricity_sell_price: 0.05 # $/kWh - only selling, no buying
+        electricity_sell_price: 0.0 # $/kWh - only selling, no buying
         interconnection_capex_per_kw: 0.0  # $/kW capital cost
         interconnection_opex_per_kw: 0.0  # $/kW/year O&M cost
         fixed_interconnection_cost: 0.0  # $ one-time fixed cost

@@ -1,5 +1,5 @@
 name: "driver_config"
-description: "This analysis runs a natural gas power plant"
+description: "This analysis runs solar and battery storage systems with buying and selling the grid"
 
 general:
   folder_output: outputs
