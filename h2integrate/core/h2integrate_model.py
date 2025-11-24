@@ -296,9 +296,9 @@ class H2IntegrateModel:
         # Create a site-level component
         site_config = self.plant_config.get("site", {})
         site_component = om.IndepVarComp()
-        site_component.add_output("latitude", val=site_config.get("latitude", 0.0))
-        site_component.add_output("longitude", val=site_config.get("longitude", 0.0))
-        site_component.add_output("elevation_m", val=site_config.get("elevation_m", 0.0))
+        site_component.add_output("latitude", val=site_config.get("latitude", 0.0), units="deg")
+        site_component.add_output("longitude", val=site_config.get("longitude", 0.0), units="deg")
+        site_component.add_output("elevation_m", val=site_config.get("elevation_m", 0.0), units="m")
 
         # Add boundaries if they exist
         site_config = self.plant_config.get("site", {})
@@ -321,9 +321,11 @@ class H2IntegrateModel:
                         resource_config=resource_inputs,
                         driver_config=self.driver_config,
                     )
-                    site_group.add_subsystem(resource_name, resource_component)
+                    site_group.add_subsystem(
+                        resource_name, resource_component, promotes_inputs=["latitude", "longitude"]
+                    )
 
-        self.model.add_subsystem("site", site_group, promotes=["*"])
+        self.model.add_subsystem("site", site_group)
 
     def create_plant_model(self):
         """
@@ -353,6 +355,13 @@ class H2IntegrateModel:
         self.finance_models = []
 
         combined_performance_and_cost_models = ["hopp", "h2_storage", "wombat", "iron"]
+
+        if any(tech == "site" for tech in self.technology_config["technologies"]):
+            msg = (
+                "'site' is an invalid technology name and is reserved for top-level "
+                "variables. Please change the technology name to something else."
+            )
+            raise NameError(msg)
 
         # Create a technology group for each technology
         for tech_name, individual_tech_config in self.technology_config["technologies"].items():
@@ -969,7 +978,7 @@ class H2IntegrateModel:
             resource_name, tech_name, variable = connection
 
             # Connect the resource output to the technology input
-            self.model.connect(f"{resource_name}.{variable}", f"{tech_name}.{variable}")
+            self.model.connect(f"site.{resource_name}.{variable}", f"{tech_name}.{variable}")
 
         # connect outputs of the technology models to the cost and finance models of the
         # same name if the cost and finance models are not None

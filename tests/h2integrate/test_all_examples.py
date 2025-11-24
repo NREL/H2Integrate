@@ -732,6 +732,14 @@ def test_wind_solar_electrolyzer_example(subtests):
     model = H2IntegrateModel(Path.cwd() / "15_wind_solar_electrolyzer.yaml")
     model.run()
 
+    solar_fpath = model.model.get_val("site.solar_resource.solar_resource_data")["filepath"]
+    wind_fpath = model.model.get_val("site.wind_resource.wind_resource_data")["filepath"]
+
+    with subtests.test("Wind resource file"):
+        assert Path(wind_fpath).name == "35.2018863_-101.945027_2012_wtk_v2_60min_utc_tz.csv"
+
+    with subtests.test("Solar resource file"):
+        assert Path(solar_fpath).name == "30.6617_-101.7096_psmv3_60_2013.csv"
     model.post_process()
 
     wind_aep = sum(model.prob.get_val("wind.electricity_out", units="kW"))
@@ -1189,3 +1197,60 @@ def test_csvgen_design_of_experiments(subtests):
     new_driver_fpath.unlink()
     new_toplevel_fpath.unlink()
     new_csv_filename.unlink()
+
+
+def test_sweeping_solar_sites_doe(subtests):
+    os.chdir(EXAMPLE_DIR / "22_site_doe")
+    import pandas as pd
+
+    # Create the model
+    model = H2IntegrateModel("22_solar_site_doe.yaml")
+
+    # Run the model
+    model.run()
+
+    # Specify the filepath to the sql file, the folder and filename are in the driver_config
+    sql_fpath = EXAMPLE_DIR / "22_site_doe" / "ex_22_out" / "cases.sql"
+
+    # load the cases
+    cr = om.CaseReader(sql_fpath)
+
+    cases = list(cr.get_cases())
+
+    res_df = pd.DataFrame()
+    for ci, case in enumerate(cases):
+        solar_resource_data = case.get_val("site.solar_resource.solar_resource_data")
+        lat_lon = f"{case.get_val('site.latitude')[0]} {case.get_val('site.longitude')[0]}"
+        solar_capacity = case.get_design_vars()["solar.capacity_kWdc"]
+        aep = case.get_val("solar.annual_energy", units="MW*h/yr")
+        lcoe = case.get_val("finance_subgroup_electricity.LCOE_optimistic", units="USD/(MW*h)")
+
+        site_res = pd.DataFrame(
+            [aep, lcoe, solar_capacity], index=["AEP", "LCOE", "solar_capacity"], columns=[lat_lon]
+        ).T
+        res_df = pd.concat([site_res, res_df], axis=0)
+
+        with subtests.test(f"Case {ci}: Solar resource latitude matches site latitude"):
+            assert (
+                pytest.approx(case.get_val("site.latitude"), abs=0.1)
+                == solar_resource_data["site_lat"]
+            )
+        with subtests.test(f"Case {ci}: Solar resource longitude matches site longitude"):
+            assert (
+                pytest.approx(case.get_val("site.longitude"), abs=0.1)
+                == solar_resource_data["site_lon"]
+            )
+
+    locations = list(set(res_df.index.to_list()))
+    solar_sizes = list(set(res_df["solar_capacity"].to_list()))
+
+    with subtests.test("Two solar sizes per site"):
+        assert len(solar_sizes) == 2
+    with subtests.test("Two unique sites"):
+        assert len(locations) == 2
+
+    with subtests.test("Unique AEPs per case"):
+        assert len(list(set(res_df["AEP"].to_list()))) == len(res_df)
+
+    with subtests.test("Unique LCOEs per case"):
+        assert len(list(set(res_df["LCOE"].to_list()))) == len(res_df)
