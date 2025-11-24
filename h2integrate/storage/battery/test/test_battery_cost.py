@@ -3,7 +3,7 @@ import openmdao.api as om
 from pytest import fixture
 
 from h2integrate.storage.battery.atb_battery_cost import ATBBatteryCostModel
-from h2integrate.control.control_strategies.storage.openloop_controllers import (
+from h2integrate.control.control_strategies.storage.demand_openloop_controller import (
     DemandOpenLoopStorageController,
 )
 

@@ -111,21 +111,23 @@ from h2integrate.converters.co2.marine.ocean_alkalinity_enhancement import (
 from h2integrate.converters.hydrogen.custom_electrolyzer_cost_model import (
     CustomElectrolyzerCostModel,
 )
-from h2integrate.control.control_strategies.storage.openloop_controllers import (
-    DemandOpenLoopStorageController,
-)
 from h2integrate.converters.hydrogen.geologic.templeton_serpentinization import (
     StimulatedGeoH2PerformanceModel,
 )
 from h2integrate.control.control_rules.storage.pyomo_storage_rule_baseclass import (
     PyomoRuleStorageBaseclass,
 )
-from h2integrate.control.control_strategies.converters.openloop_controllers import (
-    DemandOpenLoopConverterControl,
-    FlexibleDemandOpenLoopConverterControl,
-)
 from h2integrate.control.control_strategies.passthrough_openloop_controller import (
     PassThroughOpenLoopController,
+)
+from h2integrate.control.control_strategies.storage.demand_openloop_controller import (
+    DemandOpenLoopStorageController,
+)
+from h2integrate.control.control_strategies.converters.demand_openloop_controller import (
+    DemandOpenLoopConverterControl,
+)
+from h2integrate.control.control_strategies.converters.flexible_demand_openloop_controller import (
+    FlexibleDemandOpenLoopConverterControl,
 )
 
 
@@ -210,11 +212,11 @@ supported_models = {
     "pass_through_controller": PassThroughOpenLoopController,
     "demand_open_loop_storage_controller": DemandOpenLoopStorageController,
     "heuristic_load_following_controller": HeuristicLoadFollowingController,
+    "demand_open_loop_converter_controller": DemandOpenLoopConverterControl,
+    "flexible_demand_open_loop_converter_controller": FlexibleDemandOpenLoopConverterControl,
     # Dispatch
     "pyomo_dispatch_generic_converter": PyomoDispatchGenericConverter,
     "pyomo_dispatch_generic_storage": PyomoRuleStorageBaseclass,
-    "demand_open_loop_converter_controller": DemandOpenLoopConverterControl,
-    "flexible_demand_open_loop_converter_controller": FlexibleDemandOpenLoopConverterControl,
     # Feedstock
     "feedstock_performance": FeedstockPerformanceModel,
     "feedstock_cost": FeedstockCostModel,

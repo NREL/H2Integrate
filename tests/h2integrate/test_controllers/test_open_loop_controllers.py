@@ -7,11 +7,11 @@ import pytest
 import openmdao.api as om
 from openmdao.utils.assert_utils import assert_check_totals
 
-from h2integrate.control.control_strategies.storage.openloop_controllers import (
-    DemandOpenLoopStorageController,
-)
 from h2integrate.control.control_strategies.passthrough_openloop_controller import (
     PassThroughOpenLoopController,
+)
+from h2integrate.control.control_strategies.storage.demand_openloop_controller import (
+    DemandOpenLoopStorageController,
 )
 
 
