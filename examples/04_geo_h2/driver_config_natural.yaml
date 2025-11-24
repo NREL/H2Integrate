@@ -13,31 +13,16 @@ driver:
     run_parallel: false
 design_variables:
   geoh2_well_subsurface:
-    borehole_depth:
-      flag: true
-      lower: 1000.0
-      upper: 3000.0
-      units: "m"
-    grain_size:
-      flag: True
-      units: "m"
-      lower: 0.005
-      upper: 0.015
     site_prospectivity:
       flag: True
       units: "unitless"
-      lower: 0.5
-      upper: 0.9
-    fixed_opex:
+      lower: 0.0
+      upper: 1.0
+    initial_wellhead_flow:
       flag: True
-      units: "USD/year"
-      lower: 100000
-      upper: 300000
-    variable_opex:
-      flag: True
-      units: "USD/kg"
-      lower: 5
-      upper: 15
+      units: "kg/h"
+      lower: 1
+      upper: 1000
 objective:
   name: finance_subgroup_default.LCOH
 recorder:

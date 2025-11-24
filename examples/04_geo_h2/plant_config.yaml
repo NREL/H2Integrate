@@ -6,7 +6,7 @@ site:
   longitude: -98.27
 
 plant:
-  plant_life: 20
+  plant_life: 10
 
 finance_parameters:
   finance_groups:

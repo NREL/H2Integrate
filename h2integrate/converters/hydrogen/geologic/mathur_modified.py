@@ -213,7 +213,7 @@ class GeoH2SubsurfaceCostModel(GeoH2SubsurfaceCostBaseClass):
         # Parse in opex
         fopex = inflate_cpi(inputs["fixed_opex"], 2022, cost_year)
         vopex = inflate_cpi(inputs["variable_opex"], 2022, cost_year)
-        outputs["OpEx"] = fopex
+        outputs["OpEx"] = fopex  # * (inputs["total_hydrogen_produced"]/425212.3)**0.25 # TEMP
         outputs["VarOpEx"] = vopex * inputs["total_hydrogen_produced"]
 
         # Apply cost multipliers to bare erected cost via NETL-PUB-22580
@@ -229,4 +229,6 @@ class GeoH2SubsurfaceCostModel(GeoH2SubsurfaceCostBaseClass):
         total_overnight_cost = total_plant_cost + preprod_cost
         tasc_toc_multiplier = as_spent_ratio  # simplifying for now - TODO model on well_lifetime
         total_as_spent_cost = total_overnight_cost * tasc_toc_multiplier
-        outputs["CapEx"] = total_as_spent_cost
+        outputs["CapEx"] = (
+            total_as_spent_cost  # * (inputs["total_hydrogen_produced"]/425212.3)**0.6
+        )

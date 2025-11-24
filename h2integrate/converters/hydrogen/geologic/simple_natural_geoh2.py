@@ -99,14 +99,16 @@ class NaturalGeoH2PerformanceModel(GeoH2SubsurfacePerformanceBaseClass):
         if self.config.rock_type == "peridotite":  # TODO: sub-models for different rock types
             # Calculate expected wellhead h2 concentration from prospectivity
             prospectivity = inputs["site_prospectivity"]
-            wh_h2_conc = 58.92981751 * prospectivity**2.460718753  # percent
+            # wh_h2_conc = 58.92981751 * prospectivity**2.460718753  # percent
+            wh_h2_conc = 100 * prospectivity  # temporarily using prospectivity as h2 conc
 
         # Calculated average wellhead gas flow over well lifetime
         init_wh_flow = inputs["initial_wellhead_flow"]
         lifetime = self.options["plant_config"]["plant"]["plant_life"]
-        res_size = inputs["gas_reservoir_size"]
+        inputs["gas_reservoir_size"]
         n_timesteps = self.options["plant_config"]["plant"]["simulation"]["n_timesteps"]
-        avg_wh_flow = min(init_wh_flow, res_size / lifetime * 1000 / n_timesteps)
+        # avg_wh_flow = min(init_wh_flow, res_size / lifetime * 1000 / n_timesteps)
+        avg_wh_flow = (-0.193 * np.log(lifetime) + 0.6871) * init_wh_flow  # temp. fit to Arps data
 
         # Calculate hydrogen flow out from accumulated gas
         h2_accum = wh_h2_conc / 100 * avg_wh_flow
