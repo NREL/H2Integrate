@@ -13,6 +13,9 @@ from h2integrate.control.control_strategies.passthrough_openloop_controller impo
 from h2integrate.control.control_strategies.storage.demand_openloop_controller import (
     DemandOpenLoopStorageController,
 )
+from h2integrate.control.control_strategies.converters.demand_openloop_controller import (
+    DemandOpenLoopConverterControl,
+)
 
 
 def test_pass_through_controller(subtests):
@@ -70,7 +73,7 @@ def test_pass_through_controller(subtests):
         )
 
 
-def test_demand_controller(subtests):
+def test_storage_demand_controller(subtests):
     # Get the directory of the current script
     current_dir = Path(__file__).parent
 
@@ -84,7 +87,7 @@ def test_demand_controller(subtests):
     plant_config = {"plant": {"simulation": {"n_timesteps": 10}}}
 
     tech_config["technologies"]["h2_storage"]["control_strategy"]["model"] = (
-        "demand_openloop_controller"
+        "demand_open_loop_storage_controller"
     )
 
     tech_config["technologies"]["h2_storage"]["model_inputs"]["control_parameters"] = {
@@ -112,7 +115,7 @@ def test_demand_controller(subtests):
     )
 
     prob.model.add_subsystem(
-        "demand_openloop_controller",
+        "demand_open_loop_storage_controller",
         DemandOpenLoopStorageController(
             plant_config=plant_config, tech_config=tech_config["technologies"]["h2_storage"]
         ),
@@ -145,7 +148,7 @@ def test_demand_controller(subtests):
         )
 
 
-def test_demand_controller_round_trip_efficiency(subtests):
+def test_storage_demand_controller_round_trip_efficiency(subtests):
     # Get the directory of the current script
     current_dir = Path(__file__).parent
 
@@ -159,7 +162,7 @@ def test_demand_controller_round_trip_efficiency(subtests):
     plant_config = {"plant": {"simulation": {"n_timesteps": 10}}}
 
     tech_config["technologies"]["h2_storage"]["control_strategy"]["model"] = (
-        "demand_openloop_controller"
+        "demand_open_loop_storage_controller"
     )
     tech_config["technologies"]["h2_storage"]["model_inputs"]["control_parameters"] = {
         "max_capacity": 10.0,  # kg
@@ -234,7 +237,7 @@ def test_demand_controller_round_trip_efficiency(subtests):
         )
 
 
-def test_generic_demand_controller(subtests):
+def test_generic_storage_demand_controller(subtests):
     # Test is the same as the demand controller test test_demand_controller for the "h2_storage"
     # performance model but with the "simple_generic_storage" performance model
 
@@ -253,7 +256,7 @@ def test_generic_demand_controller(subtests):
             "model": "simple_generic_storage",
         },
         "control_strategy": {
-            "model": "demand_openloop_controller",
+            "model": "demand_open_loop_storage_controller",
         },
         "model_inputs": {
             "shared_parameters": {
@@ -287,7 +290,7 @@ def test_generic_demand_controller(subtests):
     )
 
     prob.model.add_subsystem(
-        "demand_openloop_controller",
+        "demand_open_loop_storage_controller",
         DemandOpenLoopStorageController(
             plant_config=plant_config, tech_config=tech_config["technologies"]["h2_storage"]
         ),
@@ -318,3 +321,79 @@ def test_generic_demand_controller(subtests):
         assert pytest.approx([0.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]) == prob.get_val(
             "hydrogen_unmet_demand"
         )
+
+
+def test_demand_converter_controller(subtests):
+    # Test is the same as the demand controller test test_demand_controller for the "h2_storage"
+    # performance model but with the "simple_generic_storage" performance model
+
+    # Get the directory of the current script
+    current_dir = Path(__file__).parent
+
+    # Resolve the paths to the configuration files
+    tech_config_path = current_dir / "inputs" / "tech_config.yaml"
+
+    # Load the technology configuration
+    with tech_config_path.open() as file:
+        tech_config = yaml.safe_load(file)
+
+    tech_config["technologies"]["load"] = {
+        "control_strategy": {
+            "model": "demand_open_loop_converter_controller",
+        },
+        "model_inputs": {
+            "control_parameters": {
+                "commodity_name": "hydrogen",
+                "commodity_units": "kg",
+                "demand_profile": [5.0] * 10,  # Example: 10 time steps with 5 kg/time step demand
+            },
+        },
+    }
+
+    plant_config = {"plant": {"plant_life": 30, "simulation": {"n_timesteps": 10}}}
+
+    # Set up OpenMDAO problem
+    prob = om.Problem()
+
+    prob.model.add_subsystem(
+        name="IVC",
+        subsys=om.IndepVarComp(name="hydrogen_in", val=np.arange(10)),
+        promotes=["*"],
+    )
+
+    prob.model.add_subsystem(
+        "demand_open_loop_storage_controller",
+        DemandOpenLoopConverterControl(
+            plant_config=plant_config, tech_config=tech_config["technologies"]["load"]
+        ),
+        promotes=["*"],
+    )
+
+    prob.setup()
+
+    prob.run_model()
+
+    # # Run the test
+    with subtests.test("Check output"):
+        assert pytest.approx([0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 5.0, 5.0, 5.0, 5.0]) == prob.get_val(
+            "hydrogen_out"
+        )
+
+    with subtests.test("Check curtailment"):
+        assert pytest.approx([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 2.0, 3.0, 4.0]) == prob.get_val(
+            "hydrogen_unused_commodity"
+        )
+
+    with subtests.test("Check missed load"):
+        assert pytest.approx([5.0, 4.0, 3.0, 2.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0]) == prob.get_val(
+            "hydrogen_unmet_demand"
+        )
+
+
+### Add test for flexible load demand controller here
+# test min_utilization is equal to turndown_ratio
+# flexible_demand_profile[i] >= commodity_in[i] (as long as you are not curtailing
+# any commodity in)
+# check ramping constraints and turndown constraints are met
+# give it a min utilization bigger than turndown_ratio such that it changes the demand
+# to be the min in

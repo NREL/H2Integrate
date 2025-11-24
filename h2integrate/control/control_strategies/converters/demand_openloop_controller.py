@@ -2,10 +2,17 @@ import numpy as np
 
 from h2integrate.control.control_strategies.demand_openloop_controller import (
     DemandOpenLoopControlBase,
+    DemandOpenLoopControlBaseConfig,
 )
 
 
 class DemandOpenLoopConverterControl(DemandOpenLoopControlBase):
+    def setup(self):
+        self.config = DemandOpenLoopControlBaseConfig.from_dict(
+            self.options["tech_config"]["model_inputs"]["control_parameters"]
+        )
+        super().setup()
+
     def compute(self, inputs, outputs):
         commodity = self.config.commodity_name
         remaining_demand = inputs[f"{commodity}_demand"] - inputs[f"{commodity}_in"]
