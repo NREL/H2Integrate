@@ -93,9 +93,6 @@ from h2integrate.resource.solar.nrel_developer_goes_api_models import (
 from h2integrate.converters.hydrogen.eco_tools_pem_electrolyzer import (
     ECOElectrolyzerPerformanceModel,
 )
-from h2integrate.control.control_strategies.openloop_controllers import (
-    PassThroughOpenLoopController,
-)
 from h2integrate.converters.water_power.hydro_plant_run_of_river import (
     RunOfRiverHydroCostModel,
     RunOfRiverHydroPerformanceModel,
@@ -114,11 +111,11 @@ from h2integrate.converters.co2.marine.ocean_alkalinity_enhancement import (
 from h2integrate.converters.hydrogen.custom_electrolyzer_cost_model import (
     CustomElectrolyzerCostModel,
 )
-from h2integrate.converters.hydrogen.geologic.templeton_serpentinization import (
-    StimulatedGeoH2PerformanceModel,
-)
 from h2integrate.control.control_strategies.storage.openloop_controllers import (
     DemandOpenLoopStorageController,
+)
+from h2integrate.converters.hydrogen.geologic.templeton_serpentinization import (
+    StimulatedGeoH2PerformanceModel,
 )
 from h2integrate.control.control_rules.storage.pyomo_storage_rule_baseclass import (
     PyomoRuleStorageBaseclass,
@@ -126,6 +123,9 @@ from h2integrate.control.control_rules.storage.pyomo_storage_rule_baseclass impo
 from h2integrate.control.control_strategies.converters.openloop_controllers import (
     DemandOpenLoopConverterControl,
     FlexibleDemandOpenLoopConverterControl,
+)
+from h2integrate.control.control_strategies.passthrough_openloop_controller import (
+    PassThroughOpenLoopController,
 )
 
 

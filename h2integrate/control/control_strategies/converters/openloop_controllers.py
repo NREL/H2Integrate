@@ -1,81 +1,14 @@
 import numpy as np
-import openmdao.api as om
 from attrs import field, define
 
-from h2integrate.core.utilities import BaseConfig
 from h2integrate.core.validators import range_val
+from h2integrate.control.control_strategies.demand_openloop_controller import (
+    DemandOpenLoopControlBase,
+    DemandOpenLoopControlBaseConfig,
+)
 
 
-@define
-class DemandOpenLoopConverterControlConfig(BaseConfig):
-    """Config class for defining a demand profile.
-
-    Attributes:
-        commodity_name (str): Name of the commodity being controlled (e.g., "hydrogen").
-        commodity_units (str): Units of the commodity (e.g., "kg/h").
-        demand_profile (scalar or list): The demand values for each time step (in the same units
-            as `commodity_units`) or a scalar for a constant demand.
-    """
-
-    commodity_name: str = field()
-    commodity_units: str = field()
-    demand_profile: int | float | list = field()
-
-
-class DemandOpenLoopConverterControl(om.ExplicitComponent):
-    def initialize(self):
-        self.options.declare("driver_config", types=dict)
-        self.options.declare("plant_config", types=dict)
-        self.options.declare("tech_config", types=dict)
-
-    def setup(self):
-        n_timesteps = int(self.options["plant_config"]["plant"]["simulation"]["n_timesteps"])
-
-        self.config = DemandOpenLoopConverterControlConfig.from_dict(
-            self.options["tech_config"]["model_inputs"]["performance_parameters"]
-        )
-        commodity = self.config.commodity_name
-
-        self.add_input(
-            f"{commodity}_demand",
-            val=self.config.demand_profile,
-            shape=(n_timesteps),
-            units=self.config.commodity_units,  # NOTE: hardcoded to align with controllers
-            desc=f"Demand profile of {commodity}",
-        )
-
-        self.add_input(
-            f"{commodity}_in",
-            val=0.0,
-            shape=(n_timesteps),
-            units=self.config.commodity_units,
-            desc=f"Amount of {commodity} demand that has already been supplied",
-        )
-
-        self.add_output(
-            f"{commodity}_unmet_demand",
-            val=self.config.demand_profile,
-            shape=(n_timesteps),
-            units=self.config.commodity_units,
-            desc=f"Remaining demand profile of {commodity}",
-        )
-
-        self.add_output(
-            f"{commodity}_unused_commodity",
-            val=0.0,
-            shape=(n_timesteps),
-            units=self.config.commodity_units,
-            desc=f"Excess production of {commodity}",
-        )
-
-        self.add_output(
-            f"{commodity}_out",
-            val=0.0,
-            shape=(n_timesteps),
-            units=self.config.commodity_units,
-            desc=f"Production profile of {commodity}",
-        )
-
+class DemandOpenLoopConverterControl(DemandOpenLoopControlBase):
     def compute(self, inputs, outputs):
         commodity = self.config.commodity_name
         remaining_demand = inputs[f"{commodity}_demand"] - inputs[f"{commodity}_in"]
@@ -93,15 +26,10 @@ class DemandOpenLoopConverterControl(om.ExplicitComponent):
 
 
 @define
-class FlexibleDemandOpenLoopConverterControlConfig(BaseConfig):
+class FlexibleDemandOpenLoopConverterControlConfig(DemandOpenLoopControlBaseConfig):
     """Config class for flexible demand converter.
 
     Attributes:
-        maximum_demand (scalar or list):  The maximum load demand in units of `units`.
-            If scalar, demand is assumed to be constant for each timestep.
-            If list, then must be the the demand for each timestep.
-        commodity_name (str): Name of the commodity being controlled (e.g., "hydrogen").
-        commodity_units (str): Units of the commodity (e.g., "kg/h").
         turndown_ratio (float): Minimum operating point as a fraction of ``maximum_demand``.
             Must between in range (0,1).
         ramp_down_rate_fraction (float): Ramp down rate as a fraction of ``maximum_demand``
@@ -115,44 +43,18 @@ class FlexibleDemandOpenLoopConverterControlConfig(BaseConfig):
             ``sum({commodity}_flexible_demand_profile)/sum({commodity}_demand)``
     """
 
-    maximum_demand: list | int | float = field()
-    commodity_units: str = field(converter=str.strip)
-    commodity_name: str = field(converter=(str.strip, str.lower))
     turndown_ratio: float = field(validator=range_val(0, 1.0))
     ramp_down_rate_fraction: float = field(validator=range_val(0, 1.0))
     ramp_up_rate_fraction: float = field(validator=range_val(0, 1.0))
     min_utilization: float = field(validator=range_val(0, 1.0))
 
 
-class FlexibleDemandOpenLoopConverterControl(om.ExplicitComponent):
-    def initialize(self):
-        self.options.declare("driver_config", types=dict)
-        self.options.declare("plant_config", types=dict)
-        self.options.declare("tech_config", types=dict)
-
+class FlexibleDemandOpenLoopConverterControl(DemandOpenLoopControlBase):
     def setup(self):
+        super().setup()
+
         n_timesteps = int(self.options["plant_config"]["plant"]["simulation"]["n_timesteps"])
-
-        self.config = FlexibleDemandOpenLoopConverterControlConfig.from_dict(
-            self.options["tech_config"]["model_inputs"]["performance_parameters"]
-        )
         commodity = self.config.commodity_name
-
-        self.add_input(
-            f"{commodity}_demand",
-            val=self.config.maximum_demand,
-            shape=(n_timesteps),
-            units=self.config.commodity_units,
-            desc=f"Demand profile of {commodity}",
-        )
-
-        self.add_input(
-            f"{commodity}_in",
-            val=0.0,
-            shape=(n_timesteps),
-            units=self.config.commodity_units,
-            desc=f"Amount of {commodity} demand that has already been supplied",
-        )
 
         self.add_input(
             "ramp_down_rate",
@@ -180,30 +82,6 @@ class FlexibleDemandOpenLoopConverterControl(om.ExplicitComponent):
             val=self.config.turndown_ratio,
             units="percent",
             desc="Minimum operating point as a fraction of the maximum demand",
-        )
-
-        self.add_output(
-            f"{commodity}_unmet_demand",
-            val=self.config.maximum_demand,
-            shape=(n_timesteps),
-            units=self.config.commodity_units,
-            desc=f"Remaining demand profile of {commodity}",
-        )
-
-        self.add_output(
-            f"{commodity}_unused_commodity",
-            val=0.0,
-            shape=(n_timesteps),
-            units=self.config.commodity_units,
-            desc=f"Excess production of {commodity}",
-        )
-
-        self.add_output(
-            f"{commodity}_out",
-            val=0.0,
-            shape=(n_timesteps),
-            units=self.config.commodity_units,
-            desc=f"Production profile of {commodity}",
         )
 
         self.add_output(
