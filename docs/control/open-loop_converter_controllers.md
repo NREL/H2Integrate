@@ -35,6 +35,8 @@ model_inputs:
     commodity_units: kg/h
     demand_profile: [10, 10, 12, 15, 14]
 ```
+For an example of how to use the `demand_open_loop_converter_controller` open-loop control framework, see the following:
+- `examples/23_solar_wind_ng_demand`
 
 (flexible-demand-open-loop-converter-controller)=
 ## Flexible Demand Open-Loop Converter Controller
