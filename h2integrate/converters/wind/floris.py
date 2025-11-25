@@ -138,10 +138,10 @@ class FlorisWindPlantPerformanceModel(WindPerformanceBaseClass):
                 )
             if self.config.resource_data_averaging_method == "average":
                 windspeed = average_wind_data_for_hubheight(
-                    wind_resource_data, bounding_heights, hub_height, "wind_speed"
+                    wind_resource_data, bounding_heights, "wind_speed"
                 )
                 winddir = average_wind_data_for_hubheight(
-                    wind_resource_data, bounding_heights, hub_height, "wind_direction"
+                    wind_resource_data, bounding_heights, "wind_direction"
                 )
 
         # TODO: add in option to weight resource data

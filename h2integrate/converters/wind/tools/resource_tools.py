@@ -67,6 +67,23 @@ def weighted_average_wind_data_for_hubheight(
     hub_height: float | int,
     wind_resource_spec: str,
 ):
+    """Compute the weighted average of wind resource data at two resource heights.
+
+    Args:
+        wind_resource_data (dict): dictionary of wind resource data
+        bounding_resource_heights (tuple[int] | list[int]): resource heights that bound the
+            hub-height, formatted as [lower_resource_height, upper_resource_height]
+        hub_height (float | int): wind turbine hub-height in meters.
+        wind_resource_spec (str): wind resource data key that is unique for
+            each hub-height. Such as `'wind_speed'` or `'wind_direction'`
+
+    Raises:
+        ValueError: if f'{wind_resource_spec}_{lower_resource_height}m' or
+            f'{wind_resource_spec}_{upper_resource_height}m' are not found in `wind_resource_data`
+
+    Returns:
+        np.ndarray: wind resource data averaged between the two bounding heights.
+    """
     height_lower, height_upper = bounding_resource_heights
 
     has_lowerbound = f"{wind_resource_spec}_{height_lower}m" in wind_resource_data
@@ -92,12 +109,26 @@ def weighted_average_wind_data_for_hubheight(
 def average_wind_data_for_hubheight(
     wind_resource_data: dict,
     bounding_resource_heights: tuple[int] | list[int],
-    hub_height: float | int,
     wind_resource_spec: str,
 ):
+    """Compute the average of wind resource data at two resource heights.
+
+    Args:
+        wind_resource_data (dict): dictionary of wind resource data
+        bounding_resource_heights (tuple[int] | list[int]): resource heights that bound the
+            hub-height, formatted as [lower_resource_height, upper_resource_height]
+        wind_resource_spec (str): wind resource data key that is unique for
+            each hub-height. Such as `'wind_speed'` or `'wind_direction'`
+
+    Raises:
+        ValueError: if f'{wind_resource_spec}_{lower_resource_height}m' or
+            f'{wind_resource_spec}_{upper_resource_height}m' are not found in `wind_resource_data`
+
+    Returns:
+        np.ndarray: wind resource data averaged between the two bounding heights.
+    """
     height_lower, height_upper = bounding_resource_heights
-    # wind_resource_spec should be "wind_speed", "wind_directon"
-    # Weights corresponding to difference of resource height and hub-height
+
     has_lowerbound = f"{wind_resource_spec}_{height_lower}m" in wind_resource_data
     has_upperbound = f"{wind_resource_spec}_{height_upper}m" in wind_resource_data
     if not has_lowerbound or not has_upperbound:
