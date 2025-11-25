@@ -124,7 +124,7 @@ def test_profast_comp_coproduct(
     profast_inputs_no1, fake_filtered_tech_config, fake_cost_dict, subtests
 ):
     mean_hourly_production = 500000.0  # kW*h
-    grid_sell_price = 63.8181779 / 1e3  # USD/kW/h
+    grid_sell_price = 63.8181779 / 1e3  # USD/(kW*h)
     wind_sold_USD = [-1 * mean_hourly_production * 8760 * grid_sell_price] * 30
     fake_cost_dict.update({"varopex_adjusted_wind": wind_sold_USD})
 

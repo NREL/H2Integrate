@@ -97,6 +97,22 @@ class GridPerformanceModel(om.ExplicitComponent):
             desc="Electricity sold to the grid",
         )
 
+        self.add_output(
+            "electricity_unmet_demand",
+            val=0.0,
+            shape=n_timesteps,
+            units="kW",
+            desc="Electricity demand that is not met",
+        )
+
+        self.add_output(
+            "electricity_not_sold",
+            val=0.0,
+            shape=n_timesteps,
+            units="kW",
+            desc="Electricity that was not sold due to interconnection limits",
+        )
+
     def compute(self, inputs, outputs):
         interconnection_size = inputs["interconnection_size"]
 
@@ -107,6 +123,12 @@ class GridPerformanceModel(om.ExplicitComponent):
         # Buying: electricity flows out of grid to meet demand, limited by interconnection
         electricity_bought = np.clip(inputs["electricity_demand"], 0, interconnection_size)
         outputs["electricity_out"] = electricity_bought
+
+        # Unmet demand if demand exceeds interconnection size
+        outputs["electricity_unmet_demand"] = inputs["electricity_demand"] - electricity_bought
+
+        # Not sold electricity if demand exceeds interconnection size
+        outputs["electricity_not_sold"] = inputs["electricity_in"] - electricity_sold
 
 
 @define
@@ -191,7 +213,7 @@ class GridCostModel(CostModelBaseClass):
 
         # Electricity flowing INTO grid (selling to grid)
         self.add_input(
-            "electricity_in",
+            "electricity_sold",
             val=0.0,
             shape=n_timesteps,
             units="kW",
@@ -243,11 +265,10 @@ class GridCostModel(CostModelBaseClass):
             varopex += np.sum(electricity_out * buy_price)
 
         # Add selling revenue if sell price is configured
-        # electricity_in represents power flowing INTO grid (selling)
+        # electricity_sold represents power flowing INTO grid (selling)
         if self.config.electricity_sell_price is not None:
-            electricity_in = inputs["electricity_in"]
             sell_price = inputs["electricity_sell_price"]
             # Selling generates revenue (negative VarOpEx)
-            varopex -= np.sum(electricity_in * sell_price)
+            varopex -= np.sum(inputs["electricity_sold"] * sell_price)
 
         outputs["VarOpEx"] = varopex
