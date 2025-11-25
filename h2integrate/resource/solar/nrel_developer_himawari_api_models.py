@@ -2,7 +2,7 @@ from pathlib import Path
 
 from attrs import field, define
 
-from h2integrate.core.validators import range_val
+from h2integrate.core.validators import contains, range_val
 from h2integrate.resource.resource_base import ResourceBaseAPIConfig
 from h2integrate.resource.solar.nrel_developer_goes_api_base import (
     GOESNRELDeveloperAPISolarResourceBase,
@@ -98,4 +98,66 @@ class Himawari8SolarAPI(GOESNRELDeveloperAPISolarResourceBase):
         self.base_url = "https://developer.nrel.gov/api/nsrdb/v2/solar/himawari-download.csv?"
         # create the resource config
         self.config = Himawari8SolarAPIConfig.from_dict(resource_specs)
+        super().setup()
+
+
+@define
+class HimawariTMYAPIConfig(ResourceBaseAPIConfig):
+    """Configuration class to download solar resource data from
+    `Himawari TMY: PSM v3 <https://developer.nrel.gov/docs/solar/nsrdb/himawari-tmy-download/>`_.
+    This dataset covers regions within Asia, Australia & Pacific at a spatial resolution of 4 km.
+
+    Args:
+        resource_year (str): Year to use for resource data. Can be any of the following:
+            tmy-2020, tdy-2020, or tgy-2020
+        resource_data (dict | object, optional): Dictionary of user-input resource data.
+            Defaults to an empty dictionary.
+        resource_dir (str | Path, optional): Folder to save resource files to or
+            load resource files from. Defaults to "".
+        resource_filename (str, optional): Filename to save resource data to or load
+            resource data from. Defaults to None.
+
+    Attributes:
+        dataset_desc (str): description of the dataset, used in file naming.
+            For this dataset, the `dataset_desc` is "himawari_tmy_v3".
+        resource_type (str): type of resource data downloaded, used in folder naming.
+            For this dataset, the `resource_type` is "solar".
+        valid_intervals (list[int]): time interval(s) in minutes that resource data can be
+            downloaded in. For this dataset, `valid_intervals` is minutes.
+
+    """
+
+    resource_year: str = field(
+        converter=str.lower,
+        validator=contains(
+            [
+                "tmy-2020",
+                "tdy-2020",
+                "tgy-2020",
+            ]
+        ),
+    )
+    dataset_desc: str = "himawari_tmy_v4"
+    resource_type: str = "solar"
+    valid_intervals: list[int] = field(factory=lambda: [60])
+    resource_data: dict | object = field(default={})
+    resource_filename: Path | str = field(default="")
+    resource_dir: Path | str | None = field(default=None)
+
+    def __attrs_post_init__(self):
+        if "tmy" in self.resource_year:
+            self.dataset_desc = "himawari_tmy_v3"
+        if "tdy" in self.resource_year:
+            self.dataset_desc = "himawari_tdy_v3"
+        if "tgy" in self.resource_year:
+            self.dataset_desc = "himawari_tgy_v3"
+
+
+class HimawariTMYSolarAPI(GOESNRELDeveloperAPISolarResourceBase):
+    def setup(self):
+        resource_specs = self.helper_setup_method()
+
+        self.base_url = "https://developer.nrel.gov/api/nsrdb/v2/solar/himawari-tmy-download.csv?"
+        # create the resource config
+        self.config = HimawariTMYAPIConfig.from_dict(resource_specs)
         super().setup()
