@@ -81,6 +81,13 @@ class ResizeablePerformanceModelBaseClass(om.ExplicitComponent):
         size_mode = self.config.sizing["size_mode"]
         self.add_discrete_input("size_mode", val=size_mode)
 
+        if size_mode not in ["normal", "resize_by_max_feedstock", "resize_by_max_commodity"]:
+            raise ValueError(
+                f"Sizing mode '{size_mode}' is not a valid sizing mode."
+                " Options are 'normal', 'resize_by_max_feedstock',"
+                "'resize_by_max_commodity'."
+            )
+
         if size_mode != "normal":
             if "resize_by_flow" in self.config.sizing.keys():
                 size_flow = self.config.sizing["resize_by_flow"]
@@ -96,12 +103,6 @@ class ResizeablePerformanceModelBaseClass(om.ExplicitComponent):
             else:
                 feed_ratio = self.config.sizing.get("max_feedstock_ratio", 1.0)
                 self.add_input("max_feedstock_ratio", val=feed_ratio, units="unitless")
-        elif size_mode != "normal":
-            raise ValueError(
-                f"Sizing mode '{size_mode}' is not a valid sizing mode."
-                " Options are 'normal', 'resize_by_max_feedstock',"
-                "'resize_by_max_commodity'."
-            )
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         """
