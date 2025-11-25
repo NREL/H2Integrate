@@ -1,13 +1,13 @@
-# Utilizing Sizing Modes with Resizeable Converters
+# Using Sizing Modes with Resizeable Converters
 
 When the size of one converter is changed, it may be desirable to have other converters in the plant resized to match.
-This can be done manually by setting the sizes of each converter in the  `tech_config`, but it can also be done automatically with resizeable converters.
+This can be done manually by setting the sizes of each converter in the `tech_config`, but it can also be done automatically with resizeable converters.
 Resizeable converters can execute their own built-in sizing methods based on how much of a feedstock can be produced upstream, or how much of a commodity can be offtaken downstream by other converters.
-By connecting the capacities of converters to other converters, one can build a logical re-sizing scheme for a multi-technology plant that will resize all converters by changing just one config parameter.
+By connecting the capacities of converters to other converters, users can build a logical re-sizing scheme for a multi-technology plant that will resize all converters by changing just one config parameter.
 
 ## Setting up a resizeable converter
 
-To set up a resizeable converter, take advantage of the `ResizeablePerformanceModelBaseConfig` and `ResizeablePerformanceModelBaseClass`.
+To set up a resizeable converter, use `ResizeablePerformanceModelBaseConfig` and `ResizeablePerformanceModelBaseClass`.
 The `ResizeablePerformanceModelBaseConfig` will declare a `sizing` performance parameter within the the tech_config, which is a dict that specifies the sizing mode.
 The `ResizeablePerformanceModelBaseClass` will automatically parse this dict into the `inputs` and `discrete_inputs` that the performance model will need for resizing.
 Here is the start of an example `tech_config` for such a converter:
@@ -37,11 +37,11 @@ Currently, there are three different modes defined for `size_mode`:
 - `resize_by_max_feedstock`: In this mode, the size of the converter is adjusted to be able to utilize all of the available feedstock:
     - The size of the asset should be calculated within `compute()` as a function of the maximum value of `<feedstock>_in` - with the `<feedstock>` specified by the `resize_by_flow` parameter.
     - This function will utilizes the `"max_feedstock_ratio"` parameter - e.g., if `"max_feedstock_ratio"` is 1.6, the converter will be resized so that its input capacity is 1.6 times the max of `<feedstock>_in`.
-    - The `set_val` method will over-write any previous sizing varaibles to reflect the adjusted size of the converter.
+    - The `set_val` method will over-write any previous sizing variables to reflect the adjusted size of the converter.
 - `resize_by_max_commodity`: In this mode, the size of the asset is adjusted to be able to supply its product to the full capacity of another downstream converter:
     - The size of the asset should be calculated within `compute()` as a function of the `max_<commodity>_capacity` input - with the `<feedstock>` specified by the `resize by flow` parameter.
     - This function will utilizes the `"max_commodity_ratio"` parameter - e.g., if `"max_commodity_ratio"` is 0.7, the converter will be resized so that its output capacity is 0.7 times a connected `"max_<commodity>_capacity"` input.
-    - The `set_val` method will over-write any previous sizing varaibles to reflect the adjusted size of the converter.
+    - The `set_val` method will over-write any previous sizing variables to reflect the adjusted size of the converter.
 
 To construct a resizeable converter from an existing converter, very few changes must be made, and only to the performance model.
 `ResizeablePerformanceModelBaseConfig` can replace `BaseConfig` and `ResizeablePerformanceModelBaseClass` can replace `om.ExplicitComponent`.
@@ -113,7 +113,7 @@ Follow the examples in `run_size_modes.ipynb` to see how they work.
 Here, there are three technologies in the the `tech_config.yaml`:
 1. A `hopp` plant producing electricity,
 2. An `electrolyzer` producing hydrogen from that electricity, and
-3. An `ammonia` plant producting ammonia from that hydrogen.
+3. An `ammonia` plant producing ammonia from that hydrogen.
 
 The electrolyzer and ammonia technologies are resizeable.
 They are set up in `"normal"` mode in the `tech_config`.
@@ -152,7 +152,7 @@ technology_interconnections: [
 ### `resize_by_max_feedstock` mode
 
 In this case, the electrolyzer will be sized to match the maximum `electricity_in` coming from HOPP.
-This increases the electrolyzer size to 1080 MW, the closest multiple of 40 MW (the cluster size) matching the max HOPP power output of 1048 MW.
+This increases the electrolyzer size to 1080 MW, the smallest multiple of 40 MW (the cluster size) matching the max HOPP power output of 1048 MW.
 
 ```
 technologies:
@@ -179,7 +179,7 @@ technologies:
 
 In this case, the electrolyzer will be sized to match the maximum hydrogen capacity of the ammonia plant.
 This requires the `technology_interconnections` entry to send the `max_hydrogen_capacity` from the ammonia plant to the electrolyzer.
-This decreases the electrolyzer size to 560 MW, the closest multiple of 40 MW (the cluster size) that will ensure an h2 produciton capacity that matches the ammonia plant's h2 intake at its max ammonia produciton capacity.
+This decreases the electrolyzer size to 560 MW, the closest multiple of 40 MW (the cluster size) that will ensure an h2 production capacity that matches the ammonia plant's h2 intake at its max ammonia production capacity.
 
 ```
 technologies:

@@ -80,6 +80,7 @@ class ResizeablePerformanceModelBaseClass(om.ExplicitComponent):
         # Parse in sizing parameters
         size_mode = self.config.sizing["size_mode"]
         self.add_discrete_input("size_mode", val=size_mode)
+
         if size_mode != "normal":
             if "resize_by_flow" in self.config.sizing.keys():
                 size_flow = self.config.sizing["resize_by_flow"]
