@@ -259,8 +259,8 @@ class TestGridCostModel(unittest.TestCase):
         prob.setup()
 
         # Set electricity sold (flowing in)
-        electricity_in = np.full(self.n_timesteps, 40000.0)  # 40 MW
-        prob.set_val("grid.electricity_in", electricity_in)
+        electricity_sold = np.full(self.n_timesteps, 40000.0)  # 40 MW
+        prob.set_val("grid.electricity_sold", electricity_sold)
 
         prob.run_model()
 
@@ -275,7 +275,7 @@ class TestGridCostModel(unittest.TestCase):
         self.assertAlmostEqual(opex, expected_opex)
 
         # Check VarOpEx (selling revenue - negative)
-        expected_varopex = -np.sum(electricity_in * sell_price)
+        expected_varopex = -np.sum(electricity_sold * sell_price)
         varopex = prob.get_val("grid.VarOpEx")[0]
         self.assertAlmostEqual(varopex, expected_varopex)
 
@@ -312,16 +312,16 @@ class TestGridCostModel(unittest.TestCase):
 
         # Set both buying and selling
         electricity_out = np.full(self.n_timesteps, 20000.0)  # 20 MW bought
-        electricity_in = np.full(self.n_timesteps, 30000.0)  # 30 MW sold
+        electricity_sold = np.full(self.n_timesteps, 30000.0)  # 30 MW sold
 
         prob.set_val("grid.electricity_out", electricity_out)
-        prob.set_val("grid.electricity_in", electricity_in)
+        prob.set_val("grid.electricity_sold", electricity_sold)
 
         prob.run_model()
 
         # Check VarOpEx (buying cost - selling revenue)
         buying_cost = np.sum(electricity_out * buy_price)
-        selling_revenue = np.sum(electricity_in * sell_price)
+        selling_revenue = np.sum(electricity_sold * sell_price)
         expected_varopex = buying_cost - selling_revenue
 
         varopex = prob.get_val("grid.VarOpEx")[0]
@@ -401,13 +401,13 @@ class TestGridCostModel(unittest.TestCase):
         prob.setup()
 
         # Set constant electricity sold
-        electricity_in = np.full(self.n_timesteps, 35000.0)  # 35 MW
-        prob.set_val("grid.electricity_in", electricity_in)
+        electricity_sold = np.full(self.n_timesteps, 35000.0)  # 35 MW
+        prob.set_val("grid.electricity_sold", electricity_sold)
 
         prob.run_model()
 
         # Check VarOpEx (negative for revenue)
-        expected_varopex = -np.sum(electricity_in * sell_prices)
+        expected_varopex = -np.sum(electricity_sold * sell_prices)
         varopex = prob.get_val("grid.VarOpEx")[0]
         self.assertAlmostEqual(varopex, expected_varopex)
 
@@ -439,10 +439,10 @@ class TestGridCostModel(unittest.TestCase):
         prob.setup()
 
         electricity_out = np.full(self.n_timesteps, 10000.0)
-        electricity_in = np.full(self.n_timesteps, 20000.0)
+        electricity_sold = np.full(self.n_timesteps, 20000.0)
 
         prob.set_val("grid.electricity_out", electricity_out)
-        prob.set_val("grid.electricity_in", electricity_in)
+        prob.set_val("grid.electricity_sold", electricity_sold)
 
         prob.run_model()
 
@@ -453,7 +453,7 @@ class TestGridCostModel(unittest.TestCase):
         self.assertAlmostEqual(opex, 0.0)
 
         # VarOpEx should still be calculated
-        expected_varopex = np.sum(electricity_out * 0.10) - np.sum(electricity_in * 0.05)
+        expected_varopex = np.sum(electricity_out * 0.10) - np.sum(electricity_sold * 0.05)
         varopex = prob.get_val("grid.VarOpEx")[0]
         self.assertAlmostEqual(varopex, expected_varopex)
 
