@@ -523,12 +523,13 @@ class ProFastBase(om.ExplicitComponent):
 
         # Add production input (CO2 capture or total commodity produced)
         if self.options["commodity_type"] == "co2":
-            self.add_input("co2_capture_kgpy", val=0.0, units="kg/year")
+            self.add_input("co2_capture_kgpy", val=0.0, units="kg/year", require_connection=True)
         else:
             self.add_input(
                 f"total_{self.options['commodity_type']}_produced",
                 val=-1.0,
                 units=commodity_units,
+                require_connection=True,
             )
 
         # Add inputs for CapEx, OpEx, and variable OpEx for each technology
@@ -630,8 +631,6 @@ class ProFastBase(om.ExplicitComponent):
         else:
             capacity = float(inputs["co2_capture_kgpy"]) / 365.0
             total_production = float(inputs["co2_capture_kgpy"])
-        if capacity == 0.0:
-            raise ValueError("Capacity cannot be zero")
 
         # define profast parameters for capacity and utilization
         profast_params["capacity"] = capacity  # TODO: update to actual daily capacity
