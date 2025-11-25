@@ -52,6 +52,9 @@ The controller computes:
 
 Everything remains open-loop—no storage, no intertemporal coupling.
 
+For an example of how to use the `flexible_demand_open_loop_converter_controller` open-loop control framework, see the following:
+- `examples/23_solar_wind_ng_demand`
+
 ### Configuration
 The flexible demand controller is defined within the `tech_config` with the following parameters:
 
