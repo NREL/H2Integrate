@@ -31,6 +31,7 @@
 - Added ability for latitude and longitude to be design variables in design sweep
 - Move geologic hydrogen models into specific geoh2 subsurface converters
 - Added standalone iron mine performance and cost model
+- Add open-loop load demand controllers: `DemandOpenLoopConverterController` and `FlexibleDemandOpenLoopConverterController`
 
 ## 0.4.0 [October 1, 2025]
 

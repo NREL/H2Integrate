@@ -52,6 +52,7 @@ parts:
 - caption: Control
   chapters:
   - file: control/control_overview.md
+  - file: control/open-loop_converter_controllers
 
 - caption: Finance Models
   chapters:
