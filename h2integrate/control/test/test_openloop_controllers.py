@@ -5,6 +5,7 @@ import yaml
 import numpy as np
 import pytest
 import openmdao.api as om
+from pytest import fixture
 from openmdao.utils.assert_utils import assert_check_totals
 
 from h2integrate.control.control_strategies.passthrough_openloop_controller import (
@@ -16,6 +17,25 @@ from h2integrate.control.control_strategies.storage.demand_openloop_controller i
 from h2integrate.control.control_strategies.converters.demand_openloop_controller import (
     DemandOpenLoopConverterController,
 )
+from h2integrate.control.control_strategies.converters.flexible_demand_openloop_controller import (
+    FlexibleDemandOpenLoopConverterController,
+)
+
+
+@fixture
+def variable_h2_production_profile():
+    end_use_rated_demand = 10.0  # kg/h
+    ramp_up_rate_kg = 4.0
+    ramp_down_rate_kg = 2.0
+    slow_ramp_up = np.arange(0, end_use_rated_demand * 1.1, 0.5)
+    slow_ramp_down = np.arange(end_use_rated_demand * 1.1, -0.5, -0.5)
+    fast_ramp_up = np.arange(0, end_use_rated_demand, ramp_up_rate_kg * 1.2)
+    fast_ramp_down = np.arange(end_use_rated_demand, 0.0, ramp_down_rate_kg * 1.1)
+    variable_profile = np.concat(
+        [slow_ramp_up, fast_ramp_down, slow_ramp_up, slow_ramp_down, fast_ramp_up]
+    )
+    variable_h2_profile = np.tile(variable_profile, 2)
+    return variable_h2_profile
 
 
 def test_pass_through_controller(subtests):
@@ -391,9 +411,185 @@ def test_demand_converter_controller(subtests):
 
 
 ### Add test for flexible load demand controller here
-# test min_utilization is equal to turndown_ratio
-# flexible_demand_profile[i] >= commodity_in[i] (as long as you are not curtailing
-# any commodity in)
-# check ramping constraints and turndown constraints are met
-# give it a min utilization bigger than turndown_ratio such that it changes the demand
-# to be the min in
+
+
+def test_flexible_demand_converter_controller(subtests, variable_h2_production_profile):
+    # Get the directory of the current script
+    current_dir = Path(__file__).parent
+
+    # Resolve the paths to the configuration files
+    tech_config_path = current_dir / "inputs" / "tech_config.yaml"
+
+    # Load the technology configuration
+    with tech_config_path.open() as file:
+        tech_config = yaml.safe_load(file)
+
+    end_use_rated_demand = 10.0  # kg/h
+    ramp_up_rate_kg = 4.0
+    ramp_down_rate_kg = 2.0
+    min_demand_kg = 2.5
+    tech_config["technologies"]["load"] = {
+        "control_strategy": {
+            "model": "flexible_demand_open_loop_converter_controller",
+        },
+        "model_inputs": {
+            "control_parameters": {
+                "commodity_name": "hydrogen",
+                "commodity_units": "kg",
+                "demand_profile": end_use_rated_demand,  # flat demand profile
+                "turndown_ratio": min_demand_kg / end_use_rated_demand,
+                "ramp_down_rate_fraction": ramp_down_rate_kg / end_use_rated_demand,
+                "ramp_up_rate_fraction": ramp_up_rate_kg / end_use_rated_demand,
+                "min_utilization": 0.1,
+            },
+        },
+    }
+
+    plant_config = {
+        "plant": {
+            "plant_life": 30,
+            "simulation": {"n_timesteps": len(variable_h2_production_profile)},
+        }
+    }
+
+    # Set up OpenMDAO problem
+    prob = om.Problem()
+
+    prob.model.add_subsystem(
+        name="IVC",
+        subsys=om.IndepVarComp(name="hydrogen_in", val=variable_h2_production_profile),
+        promotes=["*"],
+    )
+
+    prob.model.add_subsystem(
+        "demand_open_loop_storage_controller",
+        FlexibleDemandOpenLoopConverterController(
+            plant_config=plant_config, tech_config=tech_config["technologies"]["load"]
+        ),
+        promotes=["*"],
+    )
+
+    prob.setup()
+
+    prob.run_model()
+
+    flexible_total_demand = prob.get_val("hydrogen_flexible_demand_profile")
+
+    rated_production = end_use_rated_demand * len(variable_h2_production_profile)
+
+    with subtests.test("Check that total demand profile is less than rated"):
+        assert np.all(flexible_total_demand <= end_use_rated_demand)
+
+    with subtests.test("Check curtailment"):  # failed
+        assert pytest.approx(np.sum(prob.get_val("hydrogen_unused_commodity")), rel=1e-3) == 6.6
+
+    # check ramping constraints and turndown constraints are met
+    with subtests.test("Check turndown ratio constraint"):
+        assert np.all(flexible_total_demand >= min_demand_kg)
+
+    ramping_down = np.where(
+        np.diff(flexible_total_demand) < 0, -1 * np.diff(flexible_total_demand), 0
+    )
+    ramping_up = np.where(np.diff(flexible_total_demand) > 0, np.diff(flexible_total_demand), 0)
+
+    with subtests.test("Check ramping down constraint"):
+        assert pytest.approx(np.max(ramping_down), rel=1e-6) == ramp_down_rate_kg
+
+    with subtests.test("Check ramping up constraint"):  # failed
+        assert pytest.approx(np.max(ramping_up), rel=1e-6) == ramp_up_rate_kg
+
+    with subtests.test("Check min utilization constraint"):
+        assert np.sum(flexible_total_demand) / rated_production >= 0.1
+
+    with subtests.test("Check min utilization value"):
+        flexible_demand_utilization = np.sum(flexible_total_demand) / rated_production
+        assert pytest.approx(flexible_demand_utilization, rel=1e-6) == 0.5822142857142857
+
+    # flexible_demand_profile[i] >= commodity_in[i] (as long as you are not curtailing
+    # any commodity in)
+    with subtests.test("Check that flexible demand is greater than hydrogen_in"):
+        hydrogen_available = variable_h2_production_profile - prob.get_val(
+            "hydrogen_unused_commodity"
+        )
+        assert np.all(flexible_total_demand >= hydrogen_available)
+
+    with subtests.test("Check that remaining demand was calculated properly"):
+        unmet_demand = flexible_total_demand - hydrogen_available
+        assert np.all(unmet_demand == prob.get_val("hydrogen_unmet_demand"))
+
+
+def test_flexible_demand_converter_controller_min_utilization(
+    subtests, variable_h2_production_profile
+):
+    # give it a min utilization larger than utilization resulting from above test
+
+    # Get the directory of the current script
+    current_dir = Path(__file__).parent
+
+    # Resolve the paths to the configuration files
+    tech_config_path = current_dir / "inputs" / "tech_config.yaml"
+
+    # Load the technology configuration
+    with tech_config_path.open() as file:
+        tech_config = yaml.safe_load(file)
+
+    end_use_rated_demand = 10.0  # kg/h
+    ramp_up_rate_kg = 4.0
+    ramp_down_rate_kg = 2.0
+    min_demand_kg = 2.5
+    tech_config["technologies"]["load"] = {
+        "control_strategy": {
+            "model": "flexible_demand_open_loop_converter_controller",
+        },
+        "model_inputs": {
+            "control_parameters": {
+                "commodity_name": "hydrogen",
+                "commodity_units": "kg",
+                "demand_profile": end_use_rated_demand,  # flat demand profile
+                "turndown_ratio": min_demand_kg / end_use_rated_demand,
+                "ramp_down_rate_fraction": ramp_down_rate_kg / end_use_rated_demand,
+                "ramp_up_rate_fraction": ramp_up_rate_kg / end_use_rated_demand,
+                "min_utilization": 0.8,
+            },
+        },
+    }
+
+    plant_config = {
+        "plant": {
+            "plant_life": 30,
+            "simulation": {"n_timesteps": len(variable_h2_production_profile)},
+        }
+    }
+
+    # Set up OpenMDAO problem
+    prob = om.Problem()
+
+    prob.model.add_subsystem(
+        name="IVC",
+        subsys=om.IndepVarComp(name="hydrogen_in", val=variable_h2_production_profile),
+        promotes=["*"],
+    )
+
+    prob.model.add_subsystem(
+        "demand_open_loop_storage_controller",
+        FlexibleDemandOpenLoopConverterController(
+            plant_config=plant_config, tech_config=tech_config["technologies"]["load"]
+        ),
+        promotes=["*"],
+    )
+
+    prob.setup()
+
+    prob.run_model()
+
+    flexible_total_demand = prob.get_val("hydrogen_flexible_demand_profile")
+
+    rated_production = end_use_rated_demand * len(variable_h2_production_profile)
+
+    flexible_demand_utilization = np.sum(flexible_total_demand) / rated_production
+
+    with subtests.test("Check min utilization constraint"):
+        assert flexible_demand_utilization >= 0.8
+
+    with subtests.test("Check min utilization value"):
+        assert pytest.approx(flexible_demand_utilization, rel=1e-6) == 0.8010612244
