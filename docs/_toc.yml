@@ -37,6 +37,7 @@ parts:
   - file: technology_models/methanol.md
   - file: technology_models/ammonia.md
   - file: technology_models/pysam_battery.md
+  - file: technology_models/geologic_hydrogen.md
 
 - caption: Resource Models
   chapters:
@@ -51,6 +52,7 @@ parts:
 - caption: Control
   chapters:
   - file: control/control_overview.md
+  - file: control/open-loop_converter_controllers
 
 - caption: Finance Models
   chapters:

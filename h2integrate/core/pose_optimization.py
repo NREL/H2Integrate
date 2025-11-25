@@ -549,6 +549,8 @@ class PoseOptimization:
                 opt_prob.driver.recording_options["excludes"] = self.config["recorder"].get(
                     "excludes", ["*resource_data"]
                 )
+            return recorder_path
+        return None
 
     def set_restart(self, opt_prob):
         """

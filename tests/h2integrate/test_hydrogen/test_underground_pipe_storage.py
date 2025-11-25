@@ -11,7 +11,6 @@ from h2integrate.simulation.technologies.hydrogen.h2_storage.pipe_storage.underg
 in_dict = {
     "h2_storage_kg": 1000000,
     "system_flow_rate": 100000,
-    "model": "papadias",
     "compressor_output_pressure": 100,
 }
 
