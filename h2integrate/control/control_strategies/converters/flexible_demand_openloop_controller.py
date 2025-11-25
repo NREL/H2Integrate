@@ -9,7 +9,7 @@ from h2integrate.control.control_strategies.demand_openloop_controller import (
 
 
 @define
-class FlexibleDemandOpenLoopConverterControlConfig(DemandOpenLoopControlBaseConfig):
+class FlexibleDemandOpenLoopConverterControllerConfig(DemandOpenLoopControlBaseConfig):
     """Config class for flexible demand converter.
 
     Attributes:
@@ -32,7 +32,7 @@ class FlexibleDemandOpenLoopConverterControlConfig(DemandOpenLoopControlBaseConf
     min_utilization: float = field(validator=range_val(0, 1.0))
 
 
-class FlexibleDemandOpenLoopConverterControl(DemandOpenLoopControlBase):
+class FlexibleDemandOpenLoopConverterController(DemandOpenLoopControlBase):
     def setup(self):
         super().setup()
 

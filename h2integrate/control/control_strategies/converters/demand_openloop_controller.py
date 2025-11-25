@@ -6,7 +6,7 @@ from h2integrate.control.control_strategies.demand_openloop_controller import (
 )
 
 
-class DemandOpenLoopConverterControl(DemandOpenLoopControlBase):
+class DemandOpenLoopConverterController(DemandOpenLoopControlBase):
     def setup(self):
         self.config = DemandOpenLoopControlBaseConfig.from_dict(
             self.options["tech_config"]["model_inputs"]["control_parameters"]

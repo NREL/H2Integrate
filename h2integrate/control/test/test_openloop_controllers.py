@@ -14,7 +14,7 @@ from h2integrate.control.control_strategies.storage.demand_openloop_controller i
     DemandOpenLoopStorageController,
 )
 from h2integrate.control.control_strategies.converters.demand_openloop_controller import (
-    DemandOpenLoopConverterControl,
+    DemandOpenLoopConverterController,
 )
 
 
@@ -363,7 +363,7 @@ def test_demand_converter_controller(subtests):
 
     prob.model.add_subsystem(
         "demand_open_loop_storage_controller",
-        DemandOpenLoopConverterControl(
+        DemandOpenLoopConverterController(
             plant_config=plant_config, tech_config=tech_config["technologies"]["load"]
         ),
         promotes=["*"],
