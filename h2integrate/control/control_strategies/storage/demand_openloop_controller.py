@@ -143,6 +143,27 @@ class DemandOpenLoopStorageController(DemandOpenLoopControlBase):
     """
 
     def setup(self):
+        """
+        Set up inputs, outputs, and configuration for the open-loop storage controller.
+
+        This method initializes the controller configuration from the technology
+        configuration, establishes the number of simulation time steps, adds inputs
+        related to storage constraints (e.g., maximum charge rate and storage capacity),
+        and defines outputs such as the commodity state-of-charge (SOC) timeseries
+        and the estimated storage duration.
+
+        Inputs defined:
+            * ``max_charge_rate``: Maximum rate at which storage can charge/discharge.
+            * ``max_capacity``: Maximum total storage capacity.
+
+        Outputs defined:
+            * ``<commodity>_soc``: Timeseries of storage state of charge.
+            * ``storage_duration``: Estimated duration (hours) the storage can
+            discharge at its maximum rate.
+
+        Returns:
+            None
+        """
         self.config = DemandOpenLoopStorageControllerConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "control"),
             strict=False,
@@ -182,8 +203,42 @@ class DemandOpenLoopStorageController(DemandOpenLoopControlBase):
 
     def compute(self, inputs, outputs):
         """
-        Compute the state of charge (SOC) and output flow based on demand and storage constraints.
+        Compute storage state of charge (SOC), delivered output, curtailment, and unmet
+        demand over the simulation horizon.
 
+        This method applies an open-loop storage control strategy to balance the
+        commodity demand and input flow. When input exceeds demand, excess commodity
+        is used to charge storage (subject to rate, efficiency, and SOC limits). When
+        demand exceeds input, storage is discharged to meet the deficit (also subject
+        to constraints). SOC is updated at each time step, ensuring it remains within
+        allowable bounds.
+
+        Expected input keys:
+            * ``<commodity>_in``: Timeseries of commodity available at each time step.
+            * ``<commodity>_demand``: Timeseries demand profile.
+            * ``max_charge_rate``: Maximum charge rate permitted.
+            * ``max_capacity``: Maximum total storage capacity.
+
+        Outputs populated:
+            * ``<commodity>_soc``: State-of-charge timeseries (unitless).
+            * ``<commodity>_out``: Output delivered to meet demand.
+            * ``<commodity>_unused_commodity``: Curtailment timeseries.
+            * ``<commodity>_unmet_demand``: Missed load timeseries.
+            * ``total_<commodity>_unmet_demand``: Aggregated unmet demand.
+            * ``storage_duration``: Estimated discharge duration at maximum rate (hours).
+
+        Control logic includes:
+            * Enforcing SOC limits (min, max, and initial conditions).
+            * Applying charge and discharge efficiencies.
+            * Observing charge/discharge rate limits.
+            * Tracking energy shortfalls and excesses at each time step.
+
+        Raises:
+            UserWarning: If the demand profile is entirely zero.
+            UserWarning: If ``max_charge_rate`` or ``max_capacity`` is negative.
+
+        Returns:
+            None
         """
         commodity = self.config.commodity_name
         if np.all(inputs[f"{commodity}_demand"] == 0.0):

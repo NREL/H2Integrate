@@ -6,13 +6,18 @@ from h2integrate.core.utilities import BaseConfig
 
 @define
 class DemandOpenLoopControlBaseConfig(BaseConfig):
-    """Config class for defining a demand profile.
+    """Configuration for defining an open-loop demand profile.
+
+    This configuration object specifies the commodity being controlled and the
+    demand profile that should be met by downstream components.
 
     Attributes:
-        commodity_name (str): Name of the commodity being controlled (e.g., "hydrogen").
         commodity_units (str): Units of the commodity (e.g., "kg/h").
-        demand_profile (scalar or list): The demand values for each time step (in the same units
-            as `commodity_units`) or a scalar for a constant demand.
+        commodity_name (str): Name of the commodity being controlled
+            (e.g., "hydrogen"). Converted to lowercase and stripped of whitespace.
+        demand_profile (int | float | list): Demand values for each timestep, in
+            the same units as `commodity_units`. May be a scalar for constant
+            demand or a list/array for time-varying demand.
     """
 
     commodity_units: str = field(converter=str.strip)
@@ -21,17 +26,42 @@ class DemandOpenLoopControlBaseConfig(BaseConfig):
 
 
 class DemandOpenLoopControlBase(om.ExplicitComponent):
+    """Base OpenMDAO component for open-loop demand tracking.
+
+    This component defines the interfaces required for open-loop demand
+    controllers, including inputs for demand, supplied commodity, and outputs
+    tracking unmet demand, unused production, and total unmet demand.
+    Subclasses must implement the :meth:`compute` method to define the
+    controller behavior.
+    """
+
     def initialize(self):
+        """Declare component options.
+
+        Options:
+            driver_config (dict): Driver-level configuration parameters.
+            plant_config (dict): Plant-level configuration, including number of
+                simulation timesteps.
+            tech_config (dict): Technology-specific configuration, including
+                controller settings.
+        """
         self.options.declare("driver_config", types=dict)
         self.options.declare("plant_config", types=dict)
         self.options.declare("tech_config", types=dict)
 
     def setup(self):
+        """Define inputs and outputs for demand control.
+
+        Creates time-series inputs and outputs for commodity demand, supply,
+        unmet demand, unused commodity, and total unmet demand. Shapes and units
+        are determined by the plant configuration and controller configuration.
+
+        Raises:
+            KeyError: If required configuration keys are missing from
+                ``plant_config`` or ``tech_config``.
+        """
         n_timesteps = int(self.options["plant_config"]["plant"]["simulation"]["n_timesteps"])
 
-        # self.config = DemandOpenLoopControlBaseConfig.from_dict(
-        #     self.options["tech_config"]["model_inputs"]["control_parameters"]
-        # )
         commodity = self.config.commodity_name
 
         self.add_input(
@@ -81,4 +111,10 @@ class DemandOpenLoopControlBase(om.ExplicitComponent):
         )
 
     def compute():
+        """This method must be implemented by subclasses to define the
+        controller.
+
+        Raises:
+            NotImplementedError: Always, unless implemented in a subclass.
+        """
         raise NotImplementedError("This method should be implemented in a subclass.")

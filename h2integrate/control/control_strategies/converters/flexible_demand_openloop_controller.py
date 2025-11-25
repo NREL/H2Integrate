@@ -10,18 +10,24 @@ from h2integrate.control.control_strategies.demand_openloop_controller import (
 
 @define
 class FlexibleDemandOpenLoopConverterControllerConfig(DemandOpenLoopControlBaseConfig):
-    """Config class for flexible demand converter.
+    """Configuration for defining a flexible demand open-loop controller.
+
+    Extends :class:`DemandOpenLoopControlBaseConfig` with additional parameters
+    required for dynamically adjusting demand based on turndown, ramping, and
+    minimum utilization constraints. These parameters are expressed as fractions
+    of ``maximum_demand`` and must lie within ``(0, 1)``.
 
     Attributes:
-        turndown_ratio (float): Minimum operating point as a fraction of ``maximum_demand``.
-            Must between in range (0,1).
-        ramp_down_rate_fraction (float): Ramp down rate as a fraction of ``maximum_demand``
-            per timestep. Must between in range (0,1).
-        ramp_up_rate_fraction (float): Ramp up rate as a fraction of ``maximum_demand``
-            per timestep. Must between in range (0,1).
-        min_utilization (float): Minimum total demand that must be met over the simulation
-            based on ``maximum_demand``. Used to ensure that some minimum total demand is met.
-            Must between in range (0,1). Utilization is calculated as:
+        turndown_ratio (float): Minimum allowable operating demand expressed as a
+            fraction of the maximum demand. Must be in the range ``(0, 1)``.
+        ramp_down_rate_fraction (float): Maximum allowable ramp-down rate per
+            timestep, expressed as a fraction of maximum demand. Must be in
+            ``(0, 1)``.
+        ramp_up_rate_fraction (float): Maximum allowable ramp-up rate per
+            timestep, expressed as a fraction of maximum demand. Must be in
+            ``(0, 1)``.
+        min_utilization (float): Minimum total fraction of demand that must be met
+            over the entire simulation. Must be in ``(0, 1)``. Utilization is defined as:
 
             ``sum({commodity}_flexible_demand_profile)/sum({commodity}_demand)``
     """
@@ -33,7 +39,21 @@ class FlexibleDemandOpenLoopConverterControllerConfig(DemandOpenLoopControlBaseC
 
 
 class FlexibleDemandOpenLoopConverterController(DemandOpenLoopControlBase):
+    """Open-loop controller for flexible demand with ramping and utilization constraints.
+
+    This controller extends the base demand controller by allowing the effective
+    demand to vary dynamically based on turndown constraints, ramp-rate limits,
+    and minimum-utilization requirements. A flexible demand profile is generated
+    and used to compute unmet demand, unused commodity, and delivered output.
+    """
+
     def setup(self):
+        """Set up component inputs and outputs for flexible demand control.
+
+        Adds inputs for turndown ratio, ramp up/down rates, and minimum
+        utilization, all expressed as fractions of maximum demand. Adds the
+        flexible demand output profile, which will be populated in ``compute``.
+        """
         super().setup()
 
         n_timesteps = int(self.options["plant_config"]["plant"]["simulation"]["n_timesteps"])
@@ -76,6 +96,21 @@ class FlexibleDemandOpenLoopConverterController(DemandOpenLoopControlBase):
         )
 
     def adjust_demand_for_ramping(self, pre_demand_met_clipped, demand_bounds, ramp_rate_bounds):
+        """Apply ramp-rate limits to a demand profile.
+
+        Enforces maximum up-ramp and down-ramp rates across timesteps to ensure
+        that the demand does not change faster than allowed.
+
+        Args:
+            pre_demand_met_clipped (np.ndarray): Demand profile after applying
+                minimum and maximum demand limits.
+            demand_bounds (tuple[float, float]): ``(min_demand, rated_demand)`` bounds.
+            ramp_rate_bounds (tuple[float, float]): ``(ramp_down_rate, ramp_up_rate)``
+                in commodity units per timestep.
+
+        Returns:
+            np.ndarray: Ramped and bounded demand profile.
+        """
         min_demand, rated_demand = demand_bounds
         ramp_down_rate, ramp_up_rate = ramp_rate_bounds
 
@@ -109,21 +144,24 @@ class FlexibleDemandOpenLoopConverterController(DemandOpenLoopControlBase):
     def adjust_remaining_demand_for_min_utilization_by_threshold(
         self, flexible_demand_profile, min_total_demand, demand_bounds, demand_threshold
     ):
-        """_summary_
+        """Increase demand in periods of low <commodity>_in to meet minimum utilization.
+
+        Adds additional demand to timesteps whose flexible demand is at or below
+        a selected threshold, distributing the required adjustment evenly.
 
         Args:
-            flexible_demand_profile (_type_): _description_
-            min_total_demand (_type_): _description_
-            demand_bounds (_type_): _description_
-            demand_threshold (_type_): _description_
+            flexible_demand_profile (np.ndarray): Current flexible demand profile.
+            min_total_demand (float): Required minimum total integrated demand.
+            demand_bounds (tuple[float, float]): ``(min_demand, rated_demand)`` limits.
+            demand_threshold (float): Threshold below which demand should be increased.
 
         Returns:
-            _type_: _description_
+            np.ndarray: Demand profile after applying minimum utilization adjustments.
         """
         min_demand, rated_demand = demand_bounds
         required_extra_demand = min_total_demand - np.sum(flexible_demand_profile)
 
-        # add extra demand to timesteps where demand is below some threshold
+        # add extra demand to timesteps where <commodity>_in is below some threshold
         i_to_increase = np.argwhere(flexible_demand_profile <= demand_threshold).flatten()
         extra_power_per_timestep = required_extra_demand / len(i_to_increase)
         flexible_demand_profile[i_to_increase] = (
@@ -132,15 +170,22 @@ class FlexibleDemandOpenLoopConverterController(DemandOpenLoopControlBase):
         return np.clip(flexible_demand_profile, min_demand, rated_demand)
 
     def make_flexible_demand(self, maximum_demand_profile, pre_demand_met, inputs):
-        """Make flexible demand profile from original load met.
+        """Generate a flexible demand profile satisfying all constraints.
+
+        Applies constraints in the following order:
+        1. Turndown ratio
+        2. Ramp-rate limits
+        3. Minimum-utilization requirement (iteratively increased)
 
         Args:
-            maximum_demand_profile (np.ndarray): _description_
-            pre_demand_met (np.ndarray): _description_
-            inputs (dict): _description_
+            maximum_demand_profile (np.ndarray): Maximum allowable demand at each timestep.
+            pre_demand_met (np.ndarray): Initial demand that can be met without curtailing supply.
+            inputs (dict): Input values containing ramp rates, turndown ratio,
+                and minimum utilization as fractions of maximum demand.
 
         Returns:
-            np.ndarray: _description_
+            np.ndarray: Final flexible demand profile that satisfies all
+            operational constraints.
         """
 
         # Calculate demand constraint values in units of commodity units
@@ -186,6 +231,22 @@ class FlexibleDemandOpenLoopConverterController(DemandOpenLoopControlBase):
         return flexible_demand_profile
 
     def compute(self, inputs, outputs):
+        """Compute unmet demand, unused commodity, and output under flexible demand.
+
+        If ``min_utilization == 1.0``, the behavior matches the regular open-loop
+        controller with no flexible demand adjustments.
+
+        Otherwise:
+            * Construct a flexible demand profile.
+            * Use it to compute unmet demand and unused commodity.
+            * Output is supply minus unused commodity.
+
+        Args:
+            inputs (dict-like): Mapping of model inputs, including
+                ``{commodity}_demand``, ``{commodity}_in``, and flexible-demand parameters.
+            outputs (dict-like): Mapping where computed outputs are written.
+
+        """
         commodity = self.config.commodity_name
         remaining_demand = inputs[f"{commodity}_demand"] - inputs[f"{commodity}_in"]
 
