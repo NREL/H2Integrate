@@ -91,19 +91,17 @@ class ResizeablePerformanceModelBaseClass(om.ExplicitComponent):
                     "'resize_by_max_feedstock' or 'resize_by_max_commodity'"
                 )
             if size_mode == "resize_by_max_commodity":
-                if "max_commodity_ratio" in self.config.sizing.keys():
-                    comm_ratio = self.config.sizing["max_commodity_ratio"]
-                else:
-                    comm_ratio = 1.0
+                comm_ratio = self.config.sizing.get("max_commodity_ratio", 1.0)
                 self.add_input("max_commodity_ratio", val=comm_ratio, units="unitless")
             else:
-                if "max_feedstock_ratio" in self.config.sizing.keys():
-                    feed_ratio = self.config.sizing["max_feedstock_ratio"]
-                else:
-                    feed_ratio = 1.0
+                feed_ratio = self.config.sizing.get("max_feedstock_ratio", 1.0)
                 self.add_input("max_feedstock_ratio", val=feed_ratio, units="unitless")
         elif size_mode != "normal":
-            raise ValueError("Sizing mode '%s' is not a valid sizing mode".format())
+            raise ValueError(
+                f"Sizing mode '{size_mode}' is not a valid sizing mode."
+                " Options are 'normal', 'resize_by_max_feedstock',"
+                "'resize_by_max_commodity'."
+            )
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         """
