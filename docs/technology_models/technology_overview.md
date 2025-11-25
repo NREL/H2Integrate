@@ -229,6 +229,10 @@ Below summarizes the available performance, cost, and financial models for each 
 
 (control-models)=
 ## Control Models
-- `pass_through_controller`
-- `demand_open_loop_storage_controller`
-- `heuristic_load_following_controller`
+- `'pass_through_controller'`
+- Storage Controllers:
+    - `'demand_open_loop_storage_controller'`
+    - `'heuristic_load_following_controller'`
+- Converter Controllers:
+    - `'demand_open_loop_converter_controller`
+    - `'flexible_demand_open_loop_converter_controller'`
