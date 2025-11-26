@@ -881,7 +881,7 @@ def print_results(model, includes=None, excludes=None, show_units=True):
     }
 
 
-def make_cache_hash_filename(config, inputs, discrete_inputs={}):
+def make_cache_hash_filename(config, inputs, discrete_inputs={}, cache_dir=Path("cache")):
     """Make valid filepath to a pickle file with a filename that is unique based on information
     available in the config, inputs, and discrete inputs.
 
@@ -890,6 +890,7 @@ def make_cache_hash_filename(config, inputs, discrete_inputs={}):
         inputs (om.vectors.default_vector.DefaultVector): OM inputs to `compute()` method
         discrete_inputs (om.core.component._DictValues, optional): OM discrete inputs to `compute()`
             method. Defaults to {}.
+        cache_dir (str | Path, optional): folder for cached files. Defaults to Path("cache").
 
     Returns:
         Path: filepath to pickle file with filename as unique cache key.
@@ -911,8 +912,10 @@ def make_cache_hash_filename(config, inputs, discrete_inputs={}):
     # Create a unique hash for the current configuration to use as a cache key
     config_hash = hashlib.md5(str(hash_dict).encode("utf-8")).hexdigest()
 
+    if isinstance(cache_dir, str):
+        cache_dir = Path(cache_dir)
+
     # Create a cache directory if it doesn't exist
-    cache_dir = Path("cache")
     if not cache_dir.exists():
         cache_dir.mkdir(parents=True)
     cache_file = cache_dir / f"{config_hash}.pkl"

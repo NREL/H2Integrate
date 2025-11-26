@@ -7,7 +7,7 @@ from attrs import field, define
 from floris import TimeSeries, FlorisModel
 
 from h2integrate.core.utilities import BaseConfig, merge_shared_inputs, make_cache_hash_filename
-from h2integrate.core.validators import gt_val, gt_zero, contains, gte_zero
+from h2integrate.core.validators import gt_val, gt_zero, contains, range_val
 from h2integrate.converters.wind.tools.resource_tools import (
     average_wind_data_for_hubheight,
     weighted_average_wind_data_for_hubheight,
@@ -21,18 +21,52 @@ from h2integrate.converters.wind.layout.simple_grid_layout import (
 
 @define
 class FlorisWindPlantPerformanceConfig(BaseConfig):
+    """Configuration class for FlorisWindPlantPerformanceModel.
+
+    Attributes:
+        num_turbines (int): number of turbines in farm
+        floris_wake_config (dict): dictionary containing FLORIS inputs for flow_field, wake,
+            solver, and logging.
+        floris_turbine_config (dict): dictionary containing turbine parameters formatted for FLORIS.
+        operational_losses (float | int): non-wake losses represented as a percentage
+            (between 0 and 100).
+        hub_height (float | int, optional): a value of -1 indicates to use the hub-height
+            from the `floris_turbine_config`. Otherwise, is the turbine hub-height
+            in meters. Defaults to -1.
+        floris_operation_model (str, optional): turbine operation model. Defaults to 'cosine-loss'.
+        layout (dict): layout parameters dictionary.
+        resource_data_averaging_method (str): string indicating what method to use to
+            adjust or select resource data if no resource data is available at a height
+            exactly equal to the turbine hub-height. Defaults to 'weighted_average'.
+            The available methods are:
+            - 'weighted_average': average the resource data at the heights that most closely bound
+                the hub-height, weighted by the difference between the resource heights and the
+                hub-height.
+            - 'average': average the resource data at the heights that most closely bound
+                the hub-height.
+            - 'nearest': use the resource data at the height closest to the hub-height.
+        enable_caching (bool, optional): if True, checks if the outputs have be saved to a
+            cached file or saves outputs to a file. Defaults to True.
+        cache_dir (str | Path, optional): folder to use for reading or writing cached results files.
+            Only used if enable_caching is True. Defaults to "cache".
+        hybrid_turbine_design (bool, optional): whether multiple turbine types are included in
+            the farm. Defaults to False. The functionality to use multiple turbine types
+            is not yet implemented. Will result in NotImplementedError if True.
+    """
+
     num_turbines: int = field(converter=int, validator=gt_zero)
     floris_wake_config: dict = field()
     floris_turbine_config: dict = field()
-    floris_operation_model: str = field(default="cosine-loss")
+    operational_losses: float = field(validator=range_val(0.0, 100.0))
     hub_height: float = field(default=-1, validator=gt_val(-1))
+    floris_operation_model: str = field(default="cosine-loss")
     layout: dict = field(default={})
-    hybrid_turbine_design: bool = field(default=False)
-    operational_losses: float = field(default=0.0, validator=gte_zero)
     resource_data_averaging_method: str = field(
         default="weighted_average", validator=contains(["weighted_average", "average", "nearest"])
     )
     enable_caching: bool = field(default=True)
+    cache_dir: str | Path = field(default="cache")
+    hybrid_turbine_design: bool = field(default=False)
 
     # if using multiple turbines, then need to specify resource reference height
     def __attrs_post_init__(self):
@@ -49,7 +83,8 @@ class FlorisWindPlantPerformanceConfig(BaseConfig):
 class FlorisWindPlantPerformanceModel(WindPerformanceBaseClass):
     """
     An OpenMDAO component that wraps a Floris model.
-    It takes wind parameters as input and outputs power generation data.
+    It takes wind turbine model parameters and wind resource data as input and
+    outputs power generation data.
     """
 
     def setup(self):
@@ -180,7 +215,9 @@ class FlorisWindPlantPerformanceModel(WindPerformanceBaseClass):
         if self.config.enable_caching:
             config_dict = self.config.as_dict()
             config_dict.update({"wind_turbine_size_kw": self.wind_turbine_rating_kW})
-            cache_filename = make_cache_hash_filename(config_dict, inputs, discrete_inputs)
+            cache_filename = make_cache_hash_filename(
+                config_dict, inputs, discrete_inputs, cache_dir=self.config.cache_dir
+            )
 
             if Path(cache_filename).exists():
                 # Load the cached results
