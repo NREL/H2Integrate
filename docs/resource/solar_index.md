@@ -6,8 +6,13 @@
     - "goes_conus_solar_v4_api"
     - "goes_fulldisc_solar_v4_api"
     - "goes_tmy_solar_v4_api"
-
-Please see the [GOES PSM v4 API model documentation here for more information on these models.](https://developer.nrel.gov/docs/solar/nsrdb/nsrdb-GOES-full-disc-v4-0-0-download/)
+- [Himawari PSM v4 API](solar_resource:himawari_v3_api): these models require an API key from the [NREL developer network](https://developer.nrel.gov/signup/), the available models are:
+    - "himwari7_solar_v3_api"
+    - "himwari8_solar_v3_api"
+    - "himwari_tmy_solar_v3_api"
+- [Meteosat Prime Meridian PSM v4 API](solar_resource:msg_v4_api): these models require an API key from the [NREL developer network](https://developer.nrel.gov/signup/), the available models are:
+    - "meteosat_solar_v4_api"
+    - "meteosat_tmy_solar_v4_api"
 
 
 ```{note}
