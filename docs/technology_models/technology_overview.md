@@ -182,6 +182,11 @@ Below summarizes the available performance, cost, and financial models for each 
         + `'natural_gas_performance'`
     - cost_models:
         + `'natural_gas_cost'`
+- `grid`: electricity grid connection
+    - performance models:
+        + `'grid_performance'`
+    - cost models:
+        + `'grid_cost'`
 
 (transport-models)=
 ## Transport Models
