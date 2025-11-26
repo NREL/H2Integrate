@@ -18,7 +18,7 @@ h2i_config = {
     "technology_config": tech_config,
     "plant_config": plant_config,
 }
-# Create a GreenHEART model
+# Create a H2I model
 h2i = H2IntegrateModel(h2i_config)
 
 # Run the model

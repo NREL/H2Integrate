@@ -179,13 +179,20 @@ class FlorisWindPlantPerformanceModel(WindPerformanceBaseClass):
                     wind_resource_data, bounding_heights, "wind_direction"
                 )
 
-        # TODO: add in option to weight resource data
+        # get turbulence intensity
+        # check if turbulence intensity is specified in the floris wake config
         default_ti = self.config.floris_wake_config.get("flow_field", {}).get(
             "turbulence_intensities", 0.06
         )
-        ti = wind_resource_data.get("turbulence_intensity", {}).get(
-            f"turbulence_intensity_{resource_height}m", default_ti
-        )
+        # check if turbulence intensity is available in wind resource data
+        if any("turbulence_intensity_" in k for k in wind_resource_data.keys()):
+            for height in bounding_heights:
+                if f"turbulence_intensity_{height}m" in wind_resource_data:
+                    ti = wind_resource_data.get(f"turbulence_intensity_{height}m", default_ti)
+                    break
+        else:
+            ti = wind_resource_data.get("turbulence_intensity", default_ti)
+
         if not isinstance(ti, (int, float)):
             if len(ti) == 0:
                 ti = 0.06

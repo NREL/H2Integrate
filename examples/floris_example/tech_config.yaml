@@ -11,6 +11,7 @@ technologies:
       performance_parameters:
         num_turbines: 100
         hub_height: 65.0
+        operational_losses: 12.83
         floris_wake_config: !include "floris_v4_default_template.yaml"
         floris_turbine_config: !include "floris_turbine_Vestas_660kW.yaml"
         layout:
