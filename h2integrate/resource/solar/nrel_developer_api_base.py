@@ -9,7 +9,7 @@ from h2integrate.resource.utilities.nrel_developer_api_keys import (
 )
 
 
-class GOESNRELDeveloperAPISolarResourceBase(SolarResourceBaseAPIModel):
+class NRELDeveloperAPISolarResourceBase(SolarResourceBaseAPIModel):
     def setup(self):
         super().setup()
 
