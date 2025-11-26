@@ -1,6 +1,8 @@
 # Grid Performance and Cost Models
 
-This page documents the unified `grid_performance` and `grid_cost`, which together represent a flexible, configurable grid interconnection point within an OpenMDAO-based plant simulation. These components support both power flows and cost accounting for buying and selling electricity through a constrained interconnection. This is a single model that can be configured to either sell electricity to the grid or to buy electricity from the grid. If the system you are trying to simulate needs to both buy and sell you would need to have two grid components in the `tech_config`.
+This page documents the unified `grid_performance` and `grid_cost` models, which together represent a flexible, configurable grid interconnection point within an H2I simulation.
+These components support both power flows and cost accounting for buying and selling electricity through a constrained interconnection.
+This is a single model that can be configured to either sell electricity to the grid, buy electricity from the grid, or both.
 
 See `example/23_solar_battery_grid` to see how to set up both buying and selling grid components.
 
@@ -9,13 +11,20 @@ See `example/23_solar_battery_grid` to see how to set up both buying and selling
 
 It supports:
 - Buying electricity from the grid to meet downstream demand.
-- Selling electricity to the grid when power flows upstream.
+- Selling electricity to the grid.
 - Enforcing maximum allowed interconnection power.
 - Computing unmet demand and unsold electricity due to constraints.
 
 ```{note}
-Multiple grid instances may be used within the same plant to represent different interconnection nodes. In the `tech_config` the component **must** be called `grid_buying` for the logic to work appropriately in financial calculations.
+Multiple grid instances may be used within the same plant to represent different interconnection nodes. In the `tech_config` the component **must** be called `grid_buy` for the logic to work appropriately in financial calculations.
 ```
+
+**Inputs**
+| Name                     | Shape    | Units | Description                                                       |
+| ------------------------ | -------- | ----- | ----------------------------------------------------------------- |
+| `interconnection_size`   | scalar   | kW    | Maximum power capacity for grid connection.                       |
+| `electricity_in`         | array[n] | kW    | Electricity flowing into the grid (selling to grid).              |
+| `electricity_demand`     | array[n] | kW    | Electricity demand from downstream technologies.                  |
 
 **Outputs**
 | Name                       | Shape    | Units | Description                                       |
@@ -32,6 +41,18 @@ Multiple grid instances may be used within the same plant to represent different
 - Variable cost of electricity purchased.
 - Revenue from electricity sold.
 - Optional time-varying energy prices.
+
+**Inputs**
+| Name                            | Shape          | Units        | Description                                                            |
+| ------------------------------- | -------------- | ------------ | ---------------------------------------------------------------------- |
+| `interconnection_size`          | scalar         | kW           | Interconnection capacity for cost calculation.                         |
+| `interconnection_capex_per_kw`  | scalar         | $/kW         | Capital cost per kW of interconnection.                                |
+| `interconnection_opex_per_kw`   | scalar         | $/kW/year    | Annual O&M cost per kW of interconnection.                             |
+| `fixed_interconnection_cost`    | scalar         | $            | One-time fixed cost regardless of size.                                |
+| `electricity_out`               | array[n]       | kW           | Electricity flowing out of grid (buying from grid).                    |
+| `electricity_buy_price`         | scalar/array[n]| $/kWh        | Price to buy electricity from grid (optional, time-varying supported). |
+| `electricity_sold`              | array[n]       | kW           | Electricity flowing into grid (selling to grid).                       |
+| `electricity_sell_price`        | scalar/array[n]| $/kWh        | Price to sell electricity to grid (optional, time-varying supported).  |
 
 **Outputs**
 | Name      | Description                                                    |
