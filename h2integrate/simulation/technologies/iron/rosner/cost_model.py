@@ -8,8 +8,8 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from hopp.utilities import load_yaml
 
+from h2integrate.core.utilities import load_yaml
 from h2integrate.simulation.technologies.iron.load_top_down_coeffs import load_top_down_coeffs
 
 
@@ -135,6 +135,19 @@ def main(config):
     product = config.product_selection
 
     prod_coeffs = coeff_df[[product]].reset_index()
+
+    # Workaround for changing capex
+    if "capex_mod" in list(config.params.keys()):
+        if config.params["capex_mod"]:
+            capex_lin = prod_coeffs.iloc[
+                np.where((prod_coeffs["Type"] == "capital") & (prod_coeffs["Coeff"] == "lin"))[0],
+                -1,
+            ].values
+            capex_lin = [i * (1 + config.params["capex_pct"]) for i in capex_lin]
+            prod_coeffs.iloc[
+                np.where((prod_coeffs["Type"] == "capital") & (prod_coeffs["Coeff"] == "lin"))[0],
+                -1,
+            ] = capex_lin
 
     # Add unique capital items based on the "Name" column for product
     for item_name in prod_coeffs[prod_coeffs["Type"] == "capital"]["Name"].unique():

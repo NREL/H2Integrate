@@ -9,6 +9,30 @@
 - Added framework to run heuristic load following dispatch for storage technologies
 - Added PySAM battery model as a storage technology performance model
 - Added `create_om_reports` option to driver config to enable/disable OpenMDAO reports (N2 diagrams, etc.)
+- Added design of experiment functionality
+- Added "csvgen" as generator type for design of experiments
+- Added PySAM Windpower performance model to simulate wind.
+- Added `simple_grid_layout.py` for wind plant layout modeling, can model square or rectangular layouts.
+- Added ability to visualize the wind plant layout for PySAM Windpower model using `post_process(show_plots=True)`.
+- Added Wind Annual Technology Baseline cost model `atb_wind_cost.py`.
+- Updated inputs for the `ATBBatteryCostModel` and `DemandOpenLoopController` so storage capacity and charge rate can be design variables
+- Created `ProFastBase`, a base class for the `ProFastLCO` and `ProFastNPV` models
+- Added `ProFastNPV`, a finance model using ProFAST to calculate NPV of the commodity
+- Moved `compute()` from `ProFastBase` to `ProFastLCO`.
+- Added `NumpyFinancialNPV`, a finance model that uses NumPy Financial npv to calculate the npv from the cash flows
+- Add feature for natural gas plant converter to take electricity demand as an input and added system capacity as an input
+- Added wind resource model for API calls to Open-Meteo archive
+- Added `load_yaml()` function and flexibility to input a config dictionary to H2IntegrateModel rather than a filepath
+- Fixed stoichiometry mistake in ammonia synloop
+- Removed `boundaries` from the necessary keys in `plant_config` validation
+- Improved the readability of the postprocessing printout
+- Split out cost models from coupled hydrogen storage performance and cost model
+- Added storage auto-sizing performance model based on storage sizing calculations that existed in the coupled hydrogen storage performance and cost model
+- Added ability for latitude and longitude to be design variables in design sweep
+- Move geologic hydrogen models into specific geoh2 subsurface converters
+- Added standalone iron mine performance and cost model
+- Added solar resource models for Meteosat Prime Meridian and Himawari datasets available through NSRDB
+- Improved readability of the postprocessing printout by simplifying numerical representation, especially for years
 
 ## 0.4.0 [October 1, 2025]
 

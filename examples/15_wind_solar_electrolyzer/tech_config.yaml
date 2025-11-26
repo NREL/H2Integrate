@@ -1,38 +1,33 @@
 name: "technology_config"
 description: "This hybrid plant produces hydrogen"
 
-
 technologies:
   wind:
     performance_model:
-      model: "wind_plant_performance"
+      model: "pysam_wind_plant_performance"
     cost_model:
-      model: "wind_plant_cost"
+      model: "atb_wind_cost"
     model_inputs:
-      shared_parameters:
+      performance_parameters:
         num_turbines: 100
         turbine_rating_kw: 6000
-      performance_parameters:
         rotor_diameter: 170.
         hub_height: 115.
-        layout_mode: "basicgrid"
-        model_name: "pysam"
-        model_input_file: null
-        layout_params:
-          row_D_spacing: 7.
-          turbine_D_spacing: 7.
-        rating_range_kw: [1000, 9000]
-        floris_config: null
-        operational_losses: 10.0
-        timestep: [1, 60]
-        fin_model: "default"
-        name: "UtilityScaleWindPlant"
-        turbine_name: "2023NREL_Bespoke_6MW_170" #turbine model to use
-        turbine_group: "onshore"
-        override_wind_resource_height: False
-        adjust_air_density_for_elevation: False
+        create_model_from: "default"
+        config_name: "WindPowerSingleOwner"
+        pysam_options: !include "pysam_options_6MW.yaml"
+        run_recalculate_power_curve: False
+        layout:
+          layout_mode: "basicgrid"
+          layout_options:
+            row_D_spacing: 7.0
+            turbine_D_spacing: 7.0
+            rotation_angle_deg: 0.0
+            row_phase_offset: 0.0
+            layout_shape: "square"
       cost_parameters:
-        cost_per_kw: 1500.0
+        capex_per_kW: 1500.0
+        opex_per_kW_per_year: 45
         cost_year: 2019
   solar:
     performance_model:

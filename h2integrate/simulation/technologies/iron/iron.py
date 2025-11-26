@@ -6,7 +6,8 @@ from dataclasses import field
 import pandas as pd
 from attrs import define
 from pandas import DataFrame
-from hopp.utilities import load_yaml
+
+from h2integrate.core.utilities import load_yaml
 
 
 # Get model locations loaded up to refer to
