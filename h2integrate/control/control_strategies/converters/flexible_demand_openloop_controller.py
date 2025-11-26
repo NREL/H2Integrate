@@ -73,7 +73,7 @@ class FlexibleDemandOpenLoopConverterController(DemandOpenLoopControlBase):
             "ramp_up_rate",
             val=self.config.ramp_up_rate_fraction,
             units="percent",
-            desc="Maximum ramp down rate as a fraction of the maximum demand",
+            desc="Maximum ramp up rate as a fraction of the maximum demand",
         )
 
         self.add_input(
