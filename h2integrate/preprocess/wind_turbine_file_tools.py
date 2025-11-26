@@ -27,10 +27,7 @@ def export_turbine_to_pysam_format(
     Returns:
         Path: filepath to .yaml file formatted for PySAM.WindPower Turbine.
     """
-    for group in ["distributed", "offshore", "onshore"]:
-        is_valid = check_turbine_library_for_turbine(turbine_name, turbine_group=group)
-        if is_valid:
-            break
+    is_valid = check_turbine_library_for_turbine(turbine_name)
     if not is_valid:
         msg = (
             f"Turbine {turbine_name} was not found in the turbine-models library. "
@@ -111,10 +108,8 @@ def export_turbine_to_floris_format(
     """
     if isinstance(floris_defaults, dict):
         floris_defaults = FlorisTurbineDefaults.from_dict(floris_defaults)
-    for group in ["distributed", "offshore", "onshore"]:
-        is_valid = check_turbine_library_for_turbine(turbine_name, turbine_group=group)
-        if is_valid:
-            break
+
+    is_valid = check_turbine_library_for_turbine(turbine_name)
     if not is_valid:
         msg = (
             f"Turbine {turbine_name} was not found in the turbine-models library. "

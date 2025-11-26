@@ -63,7 +63,7 @@ dependencies = [
     "rich>=13.7.0",
     "requests-cache",
     "retry_requests",
-    "turbine-models>=0.2.0"
+    "turbine-models>=0.2.1"
 ]
 keywords = [
     "python3",
