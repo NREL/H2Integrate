@@ -28,7 +28,7 @@ class MeteosatPrimeMeridianAPIConfig(ResourceBaseAPIConfig):
 
     Attributes:
         dataset_desc (str): description of the dataset, used in file naming.
-            For this dataset, the `dataset_desc` is "nsrdb_msg_v1".
+            For this dataset, the `dataset_desc` is "nsrdb_msg_v4".
         resource_type (str): type of resource data downloaded, used in folder naming.
             For this dataset, the `resource_type` is "solar".
         valid_intervals (list[int]): time interval(s) in minutes that resource data can be
@@ -37,7 +37,7 @@ class MeteosatPrimeMeridianAPIConfig(ResourceBaseAPIConfig):
     """
 
     resource_year: int = field(converter=int, validator=range_val(2005, 2022))
-    dataset_desc: str = "nsrdb_msg_v1"
+    dataset_desc: str = "nsrdb_msg_v4"
     resource_type: str = "solar"
     valid_intervals: list[int] = field(factory=lambda: [15, 30, 60])
     resource_data: dict | object = field(default={})
