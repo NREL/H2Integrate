@@ -9,8 +9,24 @@ from h2integrate.core.utilities import BaseConfig, get_path, write_yaml_readable
 
 
 def export_turbine_to_pysam_format(
-    turbine_name, output_folder: Path | str | None = None, output_filename: str | None = None
+    turbine_name: str, output_folder: Path | str | None = None, output_filename: str | None = None
 ):
+    """Make a turbine model file for PySAM.Windpower Turbine using data from the turbine-models
+    library.
+
+    Args:
+        turbine_name (str): name of turbine in turbine-models library.
+        output_folder (Path | str | None, optional): Output folder to save turbine model
+            file to. If None, uses the H2I_LIBRARY_DIR. Defaults to None.
+        output_filename (str | None, optional): Output filename for the turbine model file
+            as. If None, filename is f"pysam_options_{turbine_name}.yaml". Defaults to None.
+
+    Raises:
+        ValueError: if turbine_name does match a turbine in the turbine-models library.
+
+    Returns:
+        Path: filepath to .yaml file formatted for PySAM.WindPower Turbine.
+    """
     for group in ["distributed", "offshore", "onshore"]:
         is_valid = check_turbine_library_for_turbine(turbine_name, turbine_group=group)
         if is_valid:
@@ -43,6 +59,20 @@ def export_turbine_to_pysam_format(
 
 @define
 class FlorisTurbineDefaults(BaseConfig):
+    """Config class to specify default turbine parameters that are required by FLORIS.
+
+    Attributes:
+        TSR (float | int): default turbine tip-speed-ratio. Defaults to 8.0
+        ref_air_density (float | int): default air density for power-curve in kg/m**3.
+            Defaults to 1.225.
+        ref_tilt (float | int): default reference turbine shaft tilt angle in degrees.
+            Defaults to 5.0
+        cosine_loss_exponent_yaw (float | int): default cosine loss exponent for yaw.
+            Defaults to 1.88
+        cosine_loss_exponent_tilt (float | int): default cosine loss exponent for tilt.
+            Defaults to 1.88
+    """
+
     TSR: float | int = field(default=8.0)
     ref_air_density: float | int = field(default=1.225)
     ref_tilt: float | int = field(default=5.0)
@@ -56,11 +86,29 @@ class FlorisTurbineDefaults(BaseConfig):
 
 
 def export_turbine_to_floris_format(
-    turbine_name,
+    turbine_name: str,
     output_folder: Path | str | None = None,
     output_filename: str | None = None,
     floris_defaults: dict | FlorisTurbineDefaults = FlorisTurbineDefaults(),
 ):
+    """Make a turbine model file for FLORIS using data from the turbine-models library.
+
+    Args:
+        turbine_name (str): name of turbine in turbine-models library.
+        output_folder (Path | str | None, optional): Output folder to save turbine model
+            file to. If None, uses the H2I_LIBRARY_DIR. Defaults to None.
+        output_filename (str | None, optional): Output filename for the turbine model file
+            as. If None, filename is f"floris_turbine_{turbine_name}.yaml". Defaults to None.
+        floris_defaults (dict | FlorisTurbineDefaults, optional): Default values to use to populate
+            missing parameters from the turbine-models library that are required for the
+            FLORIS turbine model. Defaults to FlorisTurbineDefaults().
+
+    Raises:
+        ValueError: if turbine_name does match a turbine in the turbine-models library.
+
+    Returns:
+        Path: filepath to .yaml file formatted for FLORIS.
+    """
     if isinstance(floris_defaults, dict):
         floris_defaults = FlorisTurbineDefaults.from_dict(floris_defaults)
     for group in ["distributed", "offshore", "onshore"]:

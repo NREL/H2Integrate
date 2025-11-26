@@ -561,6 +561,16 @@ def write_yaml(
 
 
 def write_yaml_readable(instance: dict, foutput: str | Path):
+    """
+    Writes a dictionary to a YAML file using the yaml library.
+
+    Args:
+        instance (dict): Dictionary to be written to the YAML file.
+        foutput (str | Path): Path to the output YAML file.
+
+    Returns:
+        None
+    """
     instance = dict_to_yaml_formatting(instance)
 
     with Path(foutput).open("w", encoding="utf-8") as f:
