@@ -23,9 +23,9 @@ Currently, H2I recognizes four types of models:
 | `goes_tmy_solar_v4_api` | solar resource |
 | `meteosat_solar_v4_api` | solar resource |
 | `meteosat_tmy_solar_v4_api` | solar resource |
-| `himwari7_solar_v3_api` | solar resource |
-| `himwari8_solar_v3_api` | solar resource |
-| `himwari_tmy_solar_v3_api` | solar resource |
+| `himawari7_solar_v3_api` | solar resource |
+| `himawari8_solar_v3_api` | solar resource |
+| `himawari_tmy_solar_v3_api` | solar resource |
 
 
 (converters)=
@@ -118,9 +118,9 @@ Below summarizes the available performance, cost, and financial models for each 
         + `goes_tmy_solar_v4_api`
         + `meteosat_solar_v4_api`
         + `meteosat_tmy_solar_v4_api`
-        + `himwari7_solar_v3_api`
-        + `himwari8_solar_v3_api`
-        + `himwari_tmy_solar_v3_api`
+        + `himawari7_solar_v3_api`
+        + `himawari8_solar_v3_api`
+        + `himawari_tmy_solar_v3_api`
 
 (converter-models)=
 ## Converter models

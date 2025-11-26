@@ -7,9 +7,9 @@
     - "goes_fulldisc_solar_v4_api"
     - "goes_tmy_solar_v4_api"
 - [Himawari PSM v4 API](solar_resource:himawari_v3_api): these models require an API key from the [NREL developer network](https://developer.nrel.gov/signup/), the available models are:
-    - "himwari7_solar_v3_api"
-    - "himwari8_solar_v3_api"
-    - "himwari_tmy_solar_v3_api"
+    - "himawari7_solar_v3_api"
+    - "himawari8_solar_v3_api"
+    - "himawari_tmy_solar_v3_api"
 - [Meteosat Prime Meridian PSM v4 API](solar_resource:msg_v4_api): these models require an API key from the [NREL developer network](https://developer.nrel.gov/signup/), the available models are:
     - "meteosat_solar_v4_api"
     - "meteosat_tmy_solar_v4_api"

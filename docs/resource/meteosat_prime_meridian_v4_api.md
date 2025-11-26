@@ -15,7 +15,7 @@ These datasets allow for resource data to be downloaded for **locations** within
 
 
 ```{note}
-For the meteosat_tmy_solar_v4_api model, the resource_year should be specified as a string formatted as `tdy-yyyy` or `tgy-yyy` or `tmy-yyyy` where yyyy is the year is either 2014 or 2022.
+For the `meteosat_tmy_solar_v4_api` model, the `resource_year` should be specified as a string formatted as `tdy-yyyy` or `tgy-yyy` or `tmy-yyyy` where yyyy is the year is either 2014 or 2022.
 ```
 
 

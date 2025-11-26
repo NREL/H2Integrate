@@ -145,9 +145,9 @@ supported_models = {
     "goes_tmy_solar_v4_api": GOESTMYSolarAPI,
     "meteosat_solar_v4_api": MeteosatPrimeMeridianSolarAPI,
     "meteosat_tmy_solar_v4_api": MeteosatPrimeMeridianTMYSolarAPI,
-    "himwari7_solar_v3_api": Himawari7SolarAPI,
-    "himwari8_solar_v3_api": Himawari8SolarAPI,
-    "himwari_tmy_solar_v3_api": HimawariTMYSolarAPI,
+    "himawari7_solar_v3_api": Himawari7SolarAPI,
+    "himawari8_solar_v3_api": Himawari8SolarAPI,
+    "himawari_tmy_solar_v3_api": HimawariTMYSolarAPI,
     # Converters
     "atb_wind_cost": ATBWindPlantCostModel,
     "pysam_wind_plant_performance": PYSAMWindPlantPerformanceModel,
