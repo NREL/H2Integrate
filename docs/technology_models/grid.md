@@ -1,3 +1,49 @@
 # Grid Performance and Cost Models
 
-This page documents the unified `grid_performance` and `grid_cost`, which together represent a flexible, configurable grid interconnection point within an OpenMDAO-based plant simulation. These components support both power flows and cost accounting for buying and selling electricity through a constrained interconnection.
+This page documents the unified `grid_performance` and `grid_cost`, which together represent a flexible, configurable grid interconnection point within an OpenMDAO-based plant simulation. These components support both power flows and cost accounting for buying and selling electricity through a constrained interconnection. This is a single model that can be configured to either sell electricity to the grid or to buy electricity from the grid. If the system you are trying to simulate needs to both buy and sell you would need to have two grid components in the `tech_config`.
+
+See `example/23_solar_battery_grid` to see how to set up both buying and selling grid components.
+
+## Grid Performance
+`grid_performance` represents a grid interconnection point that can buy or sell electricity subject to a maximum throughput rating (interconnection_size).
+
+It supports:
+- Buying electricity from the grid to meet downstream demand.
+- Selling electricity to the grid when power flows upstream.
+- Enforcing maximum allowed interconnection power.
+- Computing unmet demand and unsold electricity due to constraints.
+
+```{note}
+Multiple grid instances may be used within the same plant to represent different interconnection nodes. In the `tech_config` the component **must** be called `grid_buying` for the logic to work appropriately in financial calculations.
+```
+
+**Outputs**
+| Name                       | Shape    | Units | Description                                       |
+| -------------------------- | -------- | ----- | ------------------------------------------------- |
+| `electricity_out`          | array[n] | kW    | Electricity flowing *out of* the grid (buying).   |
+| `electricity_sold`         | array[n] | kW    | Electricity successfully sold to the grid.        |
+| `electricity_unmet_demand` | array[n] | kW    | Demand not met due to interconnection limits.     |
+| `electricity_not_sold`     | array[n] | kW    | Electricity that could not be sold due to limits. |
+
+## Grid Cost
+`grid_cost` computes all costs associated with the grid interconnection, including:
+- Capital cost based on interconnection rating.
+- Fixed annual O&M.
+- Variable cost of electricity purchased.
+- Revenue from electricity sold.
+- Optional time-varying energy prices.
+
+**Outputs**
+| Name      | Description                                                    |
+| --------- | -------------------------------------------------------------- |
+| `CapEx`   | Total capital expenditure.                                     |
+| `OpEx`    | Annual O&M cost.                                               |
+| `VarOpEx` | Variable operating expenses (buying) OR revenues (selling).    |
+
+The costs of purchasing electricity from the grid are represented as a variable operating expense (`VarOpEx`) and a represented as a positive value. This allows it to be tracked as a feedstock in the financial models.
+
+The revenue of selling electricity to the grid is represented as a variable operating expense (`VarOpEx`) and a represented as a negative value. This is allows it to be tracked as a coproduct in the financial models.
+
+```{note}
+If you're using a price-maker financial model (e.g., calculating the LCOE) and selling all of the electricity to the grid the `electricity_sell_price` should probably be set to zero since you want to know the breakeven price of selling that electricity.
+```
