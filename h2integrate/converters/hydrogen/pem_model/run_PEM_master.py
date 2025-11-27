@@ -185,36 +185,3 @@ class run_PEM_clusters:
         if self.verbose:
             print(f"Took {round(end - start, 3)} sec to run the create clusters")
         return stacks
-
-
-if __name__ == "__main__":
-    system_size_mw = 1000
-    num_clusters = 20
-    cluster_cap_mw = system_size_mw / num_clusters
-    stack_rating_kw = 1000
-    cluster_min_power_kw = 0.1 * stack_rating_kw * cluster_cap_mw
-    num_steps = 200
-    power_rampup = np.arange(
-        cluster_min_power_kw, system_size_mw * stack_rating_kw, cluster_min_power_kw
-    )
-
-    plant_life = 30
-    electrolyzer_model_parameters = {
-        "eol_eff_percent_loss": 10,
-        "uptime_hours_until_eol": 77600,
-        "include_degradation_penalty": True,
-        "turndown_ratio": 0.1,
-    }
-    # power_rampup = np.linspace(cluster_min_power_kw,system_size_mw*1000,num_steps)
-    power_rampdown = np.flip(power_rampup)
-    power_in = np.concatenate((power_rampup, power_rampdown))
-    pem = run_PEM_clusters(
-        power_in,
-        system_size_mw,
-        num_clusters,
-        plant_life,
-        electrolyzer_model_parameters,
-    )
-
-    h2_ts, h2_tot = pem.run()
-    # pem.clusters[0].cell_design(80,1920*2)
