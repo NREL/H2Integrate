@@ -200,7 +200,7 @@ class H2Storage(CostModelBaseClass):
         else:
             msg = (
                 "H2 storage type %s was given, but must be one of ['none', 'turbine', 'pipe',"
-                " 'pressure_vessel', 'salt_cavern', 'lined_rock_cavern', 'mch']"
+                " 'salt_cavern', 'lined_rock_cavern', 'mch']"
             )
             raise ValueError(msg)
 

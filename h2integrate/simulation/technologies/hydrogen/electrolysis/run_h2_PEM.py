@@ -61,7 +61,6 @@ def run_h2_PEM(
     electrolyzer_size,
     useful_life,
     n_pem_clusters,
-    pem_control_type,
     electrolyzer_direct_cost_kw,
     user_defined_pem_param_dictionary,
     grid_connection_scenario,
@@ -86,10 +85,7 @@ def run_h2_PEM(
             electrolyzer_size, hydrogen_production_capacity_required_kgphr
         )
     else:
-        if pem_control_type == "optimize":
-            h2_ts, h2_tot = pem.run(optimize=True)
-        else:
-            h2_ts, h2_tot = pem.run()
+        h2_ts, h2_tot = pem.run()
     # dictionaries of performance during each year of simulation,
     # good to use for a more accurate financial analysis
     annual_avg_performance = combine_cluster_annual_performance_info(h2_tot)
@@ -245,41 +241,3 @@ def run_h2_PEM(
 
     H2_Results.update({"# Stacks Never Used": n_stacks_new})
     return H2_Results, h2_ts, h2_tot, energy_input_to_electrolyzer
-
-
-def run_h2_PEM_IVcurve(
-    energy_to_electrolyzer,
-    electrolyzer_size_mw,
-    kw_continuous,
-    electrolyzer_capex_kw,
-    lcoe,
-    adjusted_installed_cost,
-    useful_life,
-    net_capital_costs=0,
-):
-    # electrical_generation_timeseries = combined_pv_wind_storage_power_production_hopp
-    electrical_generation_timeseries = np.zeros_like(energy_to_electrolyzer)
-    electrical_generation_timeseries[:] = energy_to_electrolyzer[:]
-
-    # system_rating = electrolyzer_size
-    H2_Results, H2A_Results = (
-        kernel_PEM_IVcurve(  # FIXME: undefined, delete whole comment when fixed # noqa: F821
-            electrical_generation_timeseries,
-            electrolyzer_size_mw,
-            useful_life,
-            kw_continuous,
-            electrolyzer_capex_kw,
-            lcoe,
-            adjusted_installed_cost,
-            net_capital_costs,
-        )
-    )
-
-    H2_Results["hydrogen_annual_output"] = H2_Results["hydrogen_annual_output"]
-    H2_Results["cap_factor"] = H2_Results["cap_factor"]
-
-    print(f"Total power input to electrolyzer: {np.sum(electrical_generation_timeseries)}")
-    print("Hydrogen Annual Output (kg): {}".format(H2_Results["hydrogen_annual_output"]))
-    print("Water Consumption (kg) Total: {}".format(H2_Results["water_annual_usage"]))
-
-    return H2_Results, H2A_Results  # , electrical_generation_timeseries

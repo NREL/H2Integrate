@@ -24,10 +24,14 @@ class SteelCostAndFinancialModelConfig(BaseConfig):
     capacity_factor: float = field()
     o2_heat_integration: bool = field()
     lcoh: float = field()
+    natural_gas_prices: dict = field()
+
+    # Financial parameters - flattened from the nested structure
+    grid_prices: dict = field()
+    financial_assumptions: dict = field()
     cost_year: int = field(default=2022, converter=int, validator=must_equal(2022))
 
     # Feedstock parameters - flattened from the nested structure
-    natural_gas_prices: dict = field()
     excess_oxygen: float = field(default=395)
     lime_unitcost: float = field(default=122.1)
     lime_transport_cost: float = field(default=0.0)
@@ -48,10 +52,6 @@ class SteelCostAndFinancialModelConfig(BaseConfig):
     slag_disposal_unitcost: float = field(default=37.63)
     slag_production: float = field(default=0.17433)
     maintenance_materials_unitcost: float = field(default=7.72)
-
-    # Financial parameters - flattened from the nested structure
-    grid_prices: dict = field()
-    financial_assumptions: dict = field()
 
 
 def run_steel_model(plant_capacity_mtpy: float, plant_capacity_factor: float) -> float:

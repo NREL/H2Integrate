@@ -2,7 +2,7 @@ name: Testing
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, develop, remove_more_of_old_greenheart]
   pull_request:
     branches: [main, develop]
   schedule:

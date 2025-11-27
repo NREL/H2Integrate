@@ -25,7 +25,6 @@ class ECOElectrolyzerPerformanceModelConfig(BaseConfig):
         location (str): The location of the electrolyzer; options include "onshore" or "offshore".
         cluster_rating_MW (float): The rating of the clusters that the electrolyzer is grouped
             into, in MW.
-        pem_control_type (str): The control strategy to be used by the electrolyzer.
         eol_eff_percent_loss (float): End-of-life (EOL) defined as a percent change in efficiency
             from beginning-of-life (BOL).
         uptime_hours_until_eol (int): Number of "on" hours until the electrolyzer reaches EOL.
@@ -42,7 +41,6 @@ class ECOElectrolyzerPerformanceModelConfig(BaseConfig):
     n_clusters: int = field(validator=gt_zero)
     location: str = field(validator=contains(["onshore", "offshore"]))
     cluster_rating_MW: float = field(validator=gt_zero)
-    pem_control_type: str = field(validator=contains(["basic"]))
     eol_eff_percent_loss: float = field(validator=gt_zero)
     uptime_hours_until_eol: int = field(validator=gt_zero)
     include_degradation_penalty: bool = field()
@@ -127,7 +125,6 @@ class ECOElectrolyzerPerformanceModel(ElectrolyzerPerformanceBaseClass):
             electrolyzer_size=electrolyzer_size_mw,
             useful_life=plant_life,
             n_pem_clusters=n_pem_clusters,
-            pem_control_type=self.config.pem_control_type,
             electrolyzer_direct_cost_kw=electrolyzer_capex_kw,
             user_defined_pem_param_dictionary=pem_param_dict,
             grid_connection_scenario=grid_connection_scenario,  # if not offgrid, assumes steady h2 demand in kgphr for full year  # noqa: E501
