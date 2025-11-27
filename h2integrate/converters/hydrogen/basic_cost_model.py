@@ -51,7 +51,6 @@ class BasicElectrolyzerCostModel(ElectrolyzerCostBaseClass):
         # unpack inputs
         plant_config = self.options["plant_config"]
 
-        float(inputs["total_hydrogen_produced"][0])
         electrolyzer_size_mw = float(inputs["electrolyzer_size_mw"][0])
         useful_life = plant_config["plant"]["plant_life"]
         electrical_generation_timeseries_kw = inputs["electricity_in"]
