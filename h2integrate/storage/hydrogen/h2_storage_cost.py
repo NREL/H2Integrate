@@ -1,15 +1,11 @@
+import numpy as np
 from attrs import field, define
 from openmdao.utils import units
 
 from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
 from h2integrate.core.validators import contains, gte_zero, range_val
 from h2integrate.core.model_baseclasses import CostModelBaseClass
-
-
-# TODO: fix import structure in future refactor
-from h2integrate.simulation.technologies.hydrogen.h2_storage.lined_rock_cavern.lined_rock_cavern import LinedRockCavernStorage  # noqa: E501  # fmt: skip  # isort:skip
-from h2integrate.simulation.technologies.hydrogen.h2_storage.salt_cavern.salt_cavern import SaltCavernStorage  # noqa: E501  # fmt: skip  # isort:skip
-from h2integrate.simulation.technologies.hydrogen.h2_storage.pipe_storage import UndergroundPipeStorage  # noqa: E501  # fmt: skip  # isort:skip
+from h2integrate.simulation.technologies.hydrogen.h2_transport.h2_compression import Compressor
 
 
 @define
@@ -129,15 +125,14 @@ class HydrogenStorageBaseCostModel(CostModelBaseClass):
             inputs["max_capacity"], f"({self.config.commodity_units})*h", "kg"
         )
 
-        # convert charge rate to kg/h
-        # TODO: update to kg/day as a bug-fix
+        # convert charge rate to kg/day (required for storage models)
         storage_max_fill_rate = units.convert_units(
-            inputs["max_charge_rate"], f"{self.config.commodity_units}", "kg/h"
+            inputs["max_charge_rate"], f"{self.config.commodity_units}", "kg/d"
         )
 
         storage_input["h2_storage_kg"] = max_capacity_kg[0]
 
-        # below should be in kg/day
+        # system_flow_rate must be in kg/day
         storage_input["system_flow_rate"] = storage_max_fill_rate[0]
 
         return storage_input
@@ -157,13 +152,71 @@ class LinedRockCavernStorageCostModel(HydrogenStorageBaseCostModel):
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         storage_input = self.make_storage_input_dict(inputs)
-        h2_storage = LinedRockCavernStorage(storage_input)
 
-        h2_storage.lined_rock_cavern_capex()
-        h2_storage.lined_rock_cavern_opex()
+        h2_storage_kg = storage_input["h2_storage_kg"]
+        system_flow_rate = storage_input["system_flow_rate"]
+        labor_rate = storage_input.get("labor_rate", 37.39817)
+        insurance = storage_input.get("insurance", 1 / 100)
+        property_taxes = storage_input.get("property_taxes", 1 / 100)
+        licensing_permits = storage_input.get("licensing_permits", 0.1 / 100)
+        comp_om = storage_input.get("compressor_om", 4 / 100)
+        facility_om = storage_input.get("facility_om", 1 / 100)
 
-        outputs["CapEx"] = h2_storage.output_dict["lined_rock_cavern_storage_capex"]
-        outputs["OpEx"] = h2_storage.output_dict["lined_rock_cavern_storage_opex"]
+        # Calculate CAPEX
+        # Installed capital cost per kg from Papadias [2]
+        a = 0.095803
+        b = 1.5868
+        c = 10.332
+        lined_rock_cavern_storage_capex_per_kg = np.exp(
+            a * (np.log(h2_storage_kg / 1000)) ** 2 - b * np.log(h2_storage_kg / 1000) + c
+        )  # 2019 [USD] from Papadias [2]
+        installed_capex = lined_rock_cavern_storage_capex_per_kg * h2_storage_kg
+        cepci_overall = 1.29 / 1.30  # Convert from $2019 to $2018
+        installed_capex = cepci_overall * installed_capex
+
+        # Calculate compressor costs
+        outlet_pressure = 200  # Max outlet pressure of lined rock cavern in [1]
+        n_compressors = 2
+        storage_compressor = Compressor(
+            outlet_pressure, system_flow_rate, n_compressors=n_compressors
+        )
+        storage_compressor.compressor_power()
+        motor_rating, power = storage_compressor.compressor_system_power()
+        if motor_rating > 1600:
+            n_compressors += 1
+            storage_compressor = Compressor(
+                outlet_pressure, system_flow_rate, n_compressors=n_compressors
+            )
+            storage_compressor.compressor_power()
+            motor_rating, power = storage_compressor.compressor_system_power()
+        comp_capex, comp_OM = storage_compressor.compressor_costs()
+        cepci = 1.36 / 1.29  # convert from $2016 to $2018
+        comp_capex = comp_capex * cepci
+
+        # Calculate OPEX
+        # Labor - Base case is 1 operator, 24 hours a day, 7 days a week for a 100,000 kg/day
+        # average capacity facility. Scaling factor of 0.25 is used for other sized facilities
+        annual_hours = 8760 * (system_flow_rate / 100000) ** 0.25
+        overhead = 0.5
+        labor = (annual_hours * labor_rate) * (1 + overhead)  # Burdened labor cost
+        insurance_cost = insurance * installed_capex
+        property_taxes_cost = property_taxes * installed_capex
+        licensing_permits_cost = licensing_permits * installed_capex
+        comp_op_maint = comp_om * comp_capex
+        facility_op_maint = facility_om * (installed_capex - comp_capex)
+
+        # O&M excludes electricity requirements
+        total_om = (
+            labor
+            + insurance_cost
+            + licensing_permits_cost
+            + property_taxes_cost
+            + comp_op_maint
+            + facility_op_maint
+        )
+
+        outputs["CapEx"] = installed_capex
+        outputs["OpEx"] = total_om
 
 
 class SaltCavernStorageCostModel(HydrogenStorageBaseCostModel):
@@ -175,13 +228,71 @@ class SaltCavernStorageCostModel(HydrogenStorageBaseCostModel):
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         storage_input = self.make_storage_input_dict(inputs)
-        h2_storage = SaltCavernStorage(storage_input)
 
-        h2_storage.salt_cavern_capex()
-        h2_storage.salt_cavern_opex()
+        h2_storage_kg = storage_input["h2_storage_kg"]
+        system_flow_rate = storage_input["system_flow_rate"]
+        labor_rate = storage_input.get("labor_rate", 37.39817)
+        insurance = storage_input.get("insurance", 1 / 100)
+        property_taxes = storage_input.get("property_taxes", 1 / 100)
+        licensing_permits = storage_input.get("licensing_permits", 0.1 / 100)
+        comp_om = storage_input.get("compressor_om", 4 / 100)
+        facility_om = storage_input.get("facility_om", 1 / 100)
 
-        outputs["CapEx"] = h2_storage.output_dict["salt_cavern_storage_capex"]
-        outputs["OpEx"] = h2_storage.output_dict["salt_cavern_storage_opex"]
+        # Calculate CAPEX
+        # Installed capital cost per kg from Papadias [2]
+        a = 0.092548
+        b = 1.6432
+        c = 10.161
+        salt_cavern_storage_capex_per_kg = np.exp(
+            a * (np.log(h2_storage_kg / 1000)) ** 2 - b * np.log(h2_storage_kg / 1000) + c
+        )  # 2019 [USD] from Papadias [2]
+        installed_capex = salt_cavern_storage_capex_per_kg * h2_storage_kg
+        cepci_overall = 1.29 / 1.30  # Convert from $2019 to $2018
+        installed_capex = cepci_overall * installed_capex
+
+        # Calculate compressor costs
+        outlet_pressure = 120  # Max outlet pressure of salt cavern in [1]
+        n_compressors = 2
+        storage_compressor = Compressor(
+            outlet_pressure, system_flow_rate, n_compressors=n_compressors
+        )
+        storage_compressor.compressor_power()
+        motor_rating, power = storage_compressor.compressor_system_power()
+        if motor_rating > 1600:
+            n_compressors += 1
+            storage_compressor = Compressor(
+                outlet_pressure, system_flow_rate, n_compressors=n_compressors
+            )
+            storage_compressor.compressor_power()
+            motor_rating, power = storage_compressor.compressor_system_power()
+        comp_capex, comp_OM = storage_compressor.compressor_costs()
+        cepci = 1.36 / 1.29  # convert from $2016 to $2018
+        comp_capex = comp_capex * cepci
+
+        # Calculate OPEX
+        # Labor - Base case is 1 operator, 24 hours a day, 7 days a week for a 100,000 kg/day
+        # average capacity facility. Scaling factor of 0.25 is used for other sized facilities
+        annual_hours = 8760 * (system_flow_rate / 100000) ** 0.25
+        overhead = 0.5
+        labor = (annual_hours * labor_rate) * (1 + overhead)  # Burdened labor cost
+        insurance_cost = insurance * installed_capex
+        property_taxes_cost = property_taxes * installed_capex
+        licensing_permits_cost = licensing_permits * installed_capex
+        comp_op_maint = comp_om * comp_capex
+        facility_op_maint = facility_om * (installed_capex - comp_capex)
+
+        # O&M excludes electricity requirements
+        total_om = (
+            labor
+            + insurance_cost
+            + licensing_permits_cost
+            + property_taxes_cost
+            + comp_op_maint
+            + facility_op_maint
+        )
+
+        outputs["CapEx"] = installed_capex
+        outputs["OpEx"] = total_om
 
 
 class PipeStorageCostModel(HydrogenStorageBaseCostModel):
@@ -194,12 +305,72 @@ class PipeStorageCostModel(HydrogenStorageBaseCostModel):
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         storage_input = self.make_storage_input_dict(inputs)
 
-        # compressor_output_pressure must be 100 bar or else an error will be thrown
-        storage_input.update({"compressor_output_pressure": 100})
-        h2_storage = UndergroundPipeStorage(storage_input)
+        h2_storage_kg = storage_input["h2_storage_kg"]
+        system_flow_rate = storage_input["system_flow_rate"]
+        labor_rate = storage_input.get("labor_rate", 37.39817)
+        insurance = storage_input.get("insurance", 1 / 100)
+        property_taxes = storage_input.get("property_taxes", 1 / 100)
+        licensing_permits = storage_input.get("licensing_permits", 0.1 / 100)
+        comp_om = storage_input.get("compressor_om", 4 / 100)
+        facility_om = storage_input.get("facility_om", 1 / 100)
 
-        h2_storage.pipe_storage_capex()
-        h2_storage.pipe_storage_opex()
+        # compressor_output_pressure must be 100 bar for underground pipe storage
+        compressor_output_pressure = 100
 
-        outputs["CapEx"] = h2_storage.output_dict["pipe_storage_capex"]
-        outputs["OpEx"] = h2_storage.output_dict["pipe_storage_opex"]
+        # Calculate CAPEX
+        # Installed capital cost per kg from Papadias [2]
+        a = 0.0041617
+        b = 0.060369
+        c = 6.4581
+        pipe_storage_capex_per_kg = np.exp(
+            a * (np.log(h2_storage_kg / 1000)) ** 2 - b * np.log(h2_storage_kg / 1000) + c
+        )  # 2019 [USD] from Papadias [2]
+        installed_capex = pipe_storage_capex_per_kg * h2_storage_kg
+        cepci_overall = 1.29 / 1.30  # Convert from $2019 to $2018
+        installed_capex = cepci_overall * installed_capex
+
+        # Calculate compressor costs
+        outlet_pressure = (
+            compressor_output_pressure  # Max outlet pressure of underground pipe storage [1]
+        )
+        n_compressors = 2
+        storage_compressor = Compressor(
+            outlet_pressure, system_flow_rate, n_compressors=n_compressors
+        )
+        storage_compressor.compressor_power()
+        motor_rating, power = storage_compressor.compressor_system_power()
+        if motor_rating > 1600:
+            n_compressors += 1
+            storage_compressor = Compressor(
+                outlet_pressure, system_flow_rate, n_compressors=n_compressors
+            )
+            storage_compressor.compressor_power()
+            motor_rating, power = storage_compressor.compressor_system_power()
+        comp_capex, comp_OM = storage_compressor.compressor_costs()
+        cepci = 1.36 / 1.29  # convert from $2016 to $2018
+        comp_capex = comp_capex * cepci
+
+        # Calculate OPEX
+        # Labor - Base case is 1 operator, 24 hours a day, 7 days a week for a 100,000 kg/day
+        # average capacity facility. Scaling factor of 0.25 is used for other sized facilities
+        annual_hours = 8760 * (system_flow_rate / 100000) ** 0.25
+        overhead = 0.5
+        labor = (annual_hours * labor_rate) * (1 + overhead)  # Burdened labor cost
+        insurance_cost = insurance * installed_capex
+        property_taxes_cost = property_taxes * installed_capex
+        licensing_permits_cost = licensing_permits * installed_capex
+        comp_op_maint = comp_om * comp_capex
+        facility_op_maint = facility_om * (installed_capex - comp_capex)
+
+        # O&M excludes electricity requirements
+        total_om = (
+            labor
+            + insurance_cost
+            + licensing_permits_cost
+            + property_taxes_cost
+            + comp_op_maint
+            + facility_op_maint
+        )
+
+        outputs["CapEx"] = installed_capex
+        outputs["OpEx"] = total_om

@@ -1,6 +1,4 @@
-from h2integrate.simulation.technologies.hydrogen.h2_transport.h2_export_pipe import (
-    run_pipe_analysis,
-)
+from h2integrate.converters.hydrogen.pem_model.h2_transport.h2_export_pipe import run_pipe_analysis
 
 
 # test that we the results we got when the code was recieved

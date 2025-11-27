@@ -1,8 +1,6 @@
 from numpy import flip, isnan, nansum
 
-from h2integrate.simulation.technologies.hydrogen.h2_transport.h2_export_pipe import (
-    run_pipe_analysis,
-)
+from h2integrate.converters.hydrogen.pem_model.h2_transport.h2_export_pipe import run_pipe_analysis
 
 
 """

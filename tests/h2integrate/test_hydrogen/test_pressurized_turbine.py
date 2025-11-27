@@ -1,7 +1,7 @@
 import numpy as np
 from pytest import approx
 
-from h2integrate.simulation.technologies.hydrogen.h2_storage.on_turbine.on_turbine_hydrogen_storage import (  # noqa: E501
+from h2integrate.converters.hydrogen.pem_model.h2_storage.on_turbine.on_turbine_hydrogen_storage import (  # noqa: E501
     PressurizedTower,
 )
 

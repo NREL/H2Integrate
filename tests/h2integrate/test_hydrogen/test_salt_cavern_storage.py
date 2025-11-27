@@ -1,7 +1,7 @@
 import pytest
 from pytest import fixture
 
-from h2integrate.simulation.technologies.hydrogen.h2_storage.salt_cavern.salt_cavern import (
+from h2integrate.converters.hydrogen.pem_model.h2_storage.salt_cavern.salt_cavern import (
     SaltCavernStorage,
 )
 

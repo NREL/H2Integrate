@@ -1,12 +1,8 @@
 import numpy as np
 import pandas as pd
 
-from h2integrate.simulation.technologies.hydrogen.electrolysis.run_PEM_master import (
-    run_PEM_clusters,
-)
-from h2integrate.simulation.technologies.hydrogen.electrolysis.PEM_H2_LT_electrolyzer_Clusters import (  # noqa: E501
-    eta_h2_hhv,
-)
+from h2integrate.converters.hydrogen.pem_model.run_PEM_master import run_PEM_clusters
+from h2integrate.converters.hydrogen.pem_model.PEM_H2_LT_electrolyzer_Clusters import eta_h2_hhv
 
 
 def clean_up_final_outputs(h2_tot, h2_ts):

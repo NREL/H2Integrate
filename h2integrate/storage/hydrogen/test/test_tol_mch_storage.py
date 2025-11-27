@@ -4,7 +4,7 @@ import openmdao.api as om
 from pytest import approx, fixture
 
 from h2integrate.storage.hydrogen.mch_storage import MCHTOLStorageCostModel
-from h2integrate.simulation.technologies.hydrogen.h2_storage.mch.mch_cost import MCHStorage
+from h2integrate.converters.hydrogen.pem_model.h2_storage.mch.mch_cost import MCHStorage
 
 
 @fixture
