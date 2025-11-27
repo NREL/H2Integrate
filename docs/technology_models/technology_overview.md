@@ -147,10 +147,8 @@ Below summarizes the available performance, cost, and financial models for each 
     - combined performance and cost:
         + `'wombat'`
     - performance models:
-        + `'pem_electrolyzer_performance'`
         + `'eco_pem_electrolyzer_performance'`
     - cost models:
-        + `'pem_electrolyzer_cost'`
         + `'singlitico_electrolyzer_cost'`
         + `'basic_electrolyzer_cost'`
 - `geoh2_well_subsurface`: geologic hydrogen well subsurface
