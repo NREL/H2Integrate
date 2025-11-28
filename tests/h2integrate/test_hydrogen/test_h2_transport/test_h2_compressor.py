@@ -1,6 +1,6 @@
 from pytest import approx, raises
 
-from h2integrate.converters.hydrogen.pem_model.h2_transport.h2_compression import Compressor
+from h2integrate.storage.hydrogen.h2_transport.h2_compression import Compressor
 
 
 # test that we get the results we got when the code was received

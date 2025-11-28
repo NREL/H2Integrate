@@ -5,7 +5,7 @@ from openmdao.utils import units
 from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
 from h2integrate.core.validators import contains, gte_zero, range_val
 from h2integrate.core.model_baseclasses import CostModelBaseClass
-from h2integrate.simulation.technologies.hydrogen.h2_transport.h2_compression import Compressor
+from h2integrate.storage.hydrogen.h2_transport.h2_compression import Compressor
 
 
 @define
