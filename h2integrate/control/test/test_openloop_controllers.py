@@ -436,6 +436,7 @@ def test_flexible_demand_converter_controller(subtests, variable_h2_production_p
             "control_parameters": {
                 "commodity_name": "hydrogen",
                 "commodity_units": "kg",
+                "rated_demand": end_use_rated_demand,
                 "demand_profile": end_use_rated_demand,  # flat demand profile
                 "turndown_ratio": min_demand_kg / end_use_rated_demand,
                 "ramp_down_rate_fraction": ramp_down_rate_kg / end_use_rated_demand,
@@ -545,6 +546,7 @@ def test_flexible_demand_converter_controller_min_utilization(
             "control_parameters": {
                 "commodity_name": "hydrogen",
                 "commodity_units": "kg",
+                "rated_demand": end_use_rated_demand,
                 "demand_profile": end_use_rated_demand,  # flat demand profile
                 "turndown_ratio": min_demand_kg / end_use_rated_demand,
                 "ramp_down_rate_fraction": ramp_down_rate_kg / end_use_rated_demand,

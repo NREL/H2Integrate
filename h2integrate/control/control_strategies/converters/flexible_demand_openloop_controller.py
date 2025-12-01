@@ -1,7 +1,7 @@
 import numpy as np
 from attrs import field, define
 
-from h2integrate.core.validators import range_val
+from h2integrate.core.validators import gte_zero, range_val
 from h2integrate.control.control_strategies.demand_openloop_controller import (
     DemandOpenLoopControlBase,
     DemandOpenLoopControlBaseConfig,
@@ -18,6 +18,9 @@ class FlexibleDemandOpenLoopConverterControllerConfig(DemandOpenLoopControlBaseC
     of ``maximum_demand`` and must lie within ``(0, 1)``.
 
     Attributes:
+        rated_demand (float): maximum demand in the same units as
+            `commodity_units`, used to convert the constraint parameters from
+            fractions to units of `commodity_units`.
         turndown_ratio (float): Minimum allowable operating demand expressed as a
             fraction of the maximum demand. Must be in the range ``(0, 1)``.
         ramp_down_rate_fraction (float): Maximum allowable ramp-down rate per
@@ -32,6 +35,7 @@ class FlexibleDemandOpenLoopConverterControllerConfig(DemandOpenLoopControlBaseC
             ``sum({commodity}_flexible_demand_profile)/sum({commodity}_demand)``
     """
 
+    rated_demand: float = field(validator=gte_zero)
     turndown_ratio: float = field(validator=range_val(0, 1.0))
     ramp_down_rate_fraction: float = field(validator=range_val(0, 1.0))
     ramp_up_rate_fraction: float = field(validator=range_val(0, 1.0))
@@ -61,6 +65,14 @@ class FlexibleDemandOpenLoopConverterController(DemandOpenLoopControlBase):
 
         n_timesteps = int(self.options["plant_config"]["plant"]["simulation"]["n_timesteps"])
         commodity = self.config.commodity_name
+
+        self.add_input(
+            f"rated_{commodity}_demand",
+            val=self.config.demand_profile,
+            shape=(n_timesteps),
+            units=self.config.commodity_units,
+            desc=f"Rated demand of {commodity}",
+        )
 
         self.add_input(
             "ramp_down_rate",
@@ -192,7 +204,7 @@ class FlexibleDemandOpenLoopConverterController(DemandOpenLoopControlBase):
         """
 
         # Calculate demand constraint values in units of commodity units
-        rated_demand = np.max(maximum_demand_profile)
+        rated_demand = inputs[f"rated_{self.config.commodity_name}_demand"][0]
         min_demand = rated_demand * inputs["turndown_ratio"][0]  # minimum demand in commodity units
         ramp_down_rate = (
             rated_demand * inputs["ramp_down_rate"][0]
