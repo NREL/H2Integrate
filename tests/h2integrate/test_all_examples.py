@@ -1287,7 +1287,7 @@ def test_floris_example(subtests):
             == 125.4133009
         )
 
-    with subtests.test("Wind capacity factor"):
+    with subtests.test("Wind plant capacity"):
         assert pytest.approx(h2i.prob.get_val("wind.total_capacity", units="MW"), rel=1e-6) == 66.0
 
     with subtests.test("Total electricity production"):
