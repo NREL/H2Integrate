@@ -49,6 +49,8 @@ parts:
       - file: resource/openmeteo_wind_archive
       - file: resource/solar_index
       - file: resource/goes_solar_v4_api
+      - file: resource/himawari_v3_api
+      - file: resource/meteosat_prime_meridian_v4_api
 
 - caption: Control
   chapters:
