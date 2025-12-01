@@ -14,6 +14,10 @@ technologies:
         operational_losses: 12.83
         floris_wake_config: !include "floris_v4_default_template.yaml"
         floris_turbine_config: !include "floris_turbine_Vestas_660kW.yaml"
+        resource_data_averaging_method: "weighted_average"
+        floris_operation_model: "cosine-loss"
+        enable_caching: True
+        cache_dir: "cache"
         layout:
           layout_mode: "basicgrid"
           layout_options:
