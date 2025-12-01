@@ -102,6 +102,11 @@ from h2integrate.converters.water_power.hydro_plant_run_of_river import (
 from h2integrate.converters.hydrogen.geologic.simple_natural_geoh2 import (
     NaturalGeoH2PerformanceModel,
 )
+from h2integrate.resource.solar.nrel_developer_himawari_api_models import (
+    Himawari7SolarAPI,
+    Himawari8SolarAPI,
+    HimawariTMYSolarAPI,
+)
 from h2integrate.control.control_rules.converters.generic_converter import (
     PyomoDispatchGenericConverter,
 )
@@ -121,6 +126,10 @@ from h2integrate.control.control_rules.storage.pyomo_storage_rule_baseclass impo
 )
 from h2integrate.control.control_strategies.passthrough_openloop_controller import (
     PassThroughOpenLoopController,
+)
+from h2integrate.resource.solar.nrel_developer_meteosat_prime_meridian_models import (
+    MeteosatPrimeMeridianSolarAPI,
+    MeteosatPrimeMeridianTMYSolarAPI,
 )
 from h2integrate.control.control_strategies.storage.demand_openloop_controller import (
     DemandOpenLoopStorageController,
@@ -142,6 +151,11 @@ supported_models = {
     "goes_conus_solar_v4_api": GOESConusSolarAPI,
     "goes_fulldisc_solar_v4_api": GOESFullDiscSolarAPI,
     "goes_tmy_solar_v4_api": GOESTMYSolarAPI,
+    "meteosat_solar_v4_api": MeteosatPrimeMeridianSolarAPI,
+    "meteosat_tmy_solar_v4_api": MeteosatPrimeMeridianTMYSolarAPI,
+    "himawari7_solar_v3_api": Himawari7SolarAPI,
+    "himawari8_solar_v3_api": Himawari8SolarAPI,
+    "himawari_tmy_solar_v3_api": HimawariTMYSolarAPI,
     # Converters
     "atb_wind_cost": ATBWindPlantCostModel,
     "pysam_wind_plant_performance": PYSAMWindPlantPerformanceModel,
