@@ -79,7 +79,7 @@ The controller computes:
 - Unused commodity
 - Delivered output
 
-Everything remains open-loop—no storage, no intertemporal coupling.
+Everything remains open-loop no storage, no intertemporal coupling.
 
 For an example of how to use the `flexible_demand_open_loop_converter_controller` open-loop control framework, see the following:
 - `examples/23_solar_wind_ng_demand`
