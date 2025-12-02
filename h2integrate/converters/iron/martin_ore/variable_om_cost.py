@@ -1,9 +1,9 @@
 import numpy as np
 
-from h2integrate.simulation.technologies.iron.load_top_down_coeffs import load_top_down_coeffs
+from h2integrate.converters.iron.load_top_down_coeffs import load_top_down_coeffs
 
 
-def rosner_ore_variable_om_cost(mine_name, cost_df, analysis_start, cost_year, plant_life):
+def martin_ore_variable_om_cost(mine_name, cost_df, analysis_start, cost_year, plant_life):
     cost_ds = cost_df.loc[:, mine_name]
     cost_names = cost_df.index.values
     cost_types = cost_df.loc[:, "Type"].values

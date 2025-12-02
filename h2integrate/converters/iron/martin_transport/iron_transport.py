@@ -7,7 +7,7 @@ from pathlib import Path
 import pandas as pd
 import geopy.distance
 
-from h2integrate.simulation.technologies.iron.load_top_down_coeffs import load_top_down_coeffs
+from h2integrate.converters.iron.load_top_down_coeffs import load_top_down_coeffs
 
 
 CD = Path(__file__).parent

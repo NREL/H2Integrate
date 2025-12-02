@@ -4,7 +4,7 @@ from pathlib import Path
 
 from pytest import approx, fixture
 
-from h2integrate.simulation.technologies.iron import iron
+from h2integrate.converters.iron import iron
 
 
 @fixture

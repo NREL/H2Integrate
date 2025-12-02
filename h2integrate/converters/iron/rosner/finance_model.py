@@ -3,7 +3,7 @@ import ProFAST
 
 import h2integrate.tools.profast_tools as pf_tools
 from h2integrate.tools.inflation.inflate import inflate_cpi, inflate_cepci
-from h2integrate.simulation.technologies.iron.load_top_down_coeffs import load_top_down_coeffs
+from h2integrate.converters.iron.load_top_down_coeffs import load_top_down_coeffs
 
 
 def main(config):
