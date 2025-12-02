@@ -89,6 +89,8 @@ Connection: `[source_tech, dest_tech, transport_commodity, transport_technology]
 | :----------------------------- | :---------------: |
 | `pass_through_controller`      |  open-loop control. directly passes the input resource flow to the output without any modifications         |
 | `demand_open_loop_storage_controller`  |  open-loop control. manages resource flow based on demand and storage constraints     |
+| `demand_open_loop_converter_controller`  |  open-loop control. manages resource flow based on demand constraints     |
+| `flexible_demand_open_loop_converter_controller`  |  open-loop control. manages resource flow based on demand and flexibility constraints     |
 | `heuristic_load_following_controller` | open-loop control that works on a time window basis to set dispatch commands. Uses pyomo |
 
 # Technology Models Overview
