@@ -39,9 +39,9 @@ This page documents two core controller types:
 ### Demand Open-Loop Converter Controller
 The `demand_open_loop_converter_controller` allocates commodity input to meet a defined demand profile. It does not contain energy storage logic, only **instantaneous** matching of supply and demand.
 
-The controller computes:
-- Unmet demand (if supply < demand)
-- Unused commodity (if supply > demand)
+The controller computes each value per timestep:
+- Unmet demand (non-zero when supply < demand, otherwise 0.)
+- Unused commodity (non-zero when supply > demand, otherwise 0.)
 - Delivered output (commodity supplied to demand sink)
 
 This provides a simple baseline for understanding supply–demand balance before adding complex controls.
@@ -85,6 +85,8 @@ For an example of how to use the `flexible_demand_open_loop_converter_controller
 - `examples/23_solar_wind_ng_demand`
 
 The flexible demand component takes an input commodity production profile, the maximum demand profile, and various constraints (listed below), and creates a "flexible demand profile" that follows the original input commodity production profile while satisfying varying constraint.
+Please see the figure below for an example of how the flexible demand profile can vary from the original demand profile based on the input commodity production profile and the ramp rates.
+The axes are unlabeled to allow for generalization to any commodity and unit type.
 
 | ![Flexible Demand Example](figures/flex_demand_fig.png) |
 |-|

@@ -13,7 +13,6 @@ Supported controllers:
 - [`flexible_demand_open_loop_converter_controller`](#flexible-demand-open-loop-converter-controller)
 
 
-
 (pyomo-control-framework)=
 ## Pyomo control framework
 The second systematic control approach, [pyomo control](#pyomo-control), allows for the possibility of feedback control at specified intervals, but can also be used for open-loop control if desired. [Pyomo](https://www.pyomo.org/about) is an open-source optimization software package. It is used in H2Integrate to facilitate modeling and solving control problems, specifically to determine optimal dispatch strategies for dispatchable technologies.
