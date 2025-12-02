@@ -1256,10 +1256,10 @@ def test_sweeping_solar_sites_doe(subtests):
         assert len(list(set(res_df["LCOE"].to_list()))) == len(res_df)
 
 
-def test_23_solar_battery_grid_example(subtests):
+def test_24_solar_battery_grid_example(subtests):
     # NOTE: would be good to compare LCOE against the same example without grid selling
     # and see that LCOE reduces with grid selling
-    os.chdir(EXAMPLE_DIR / "23_solar_battery_grid")
+    os.chdir(EXAMPLE_DIR / "24_solar_battery_grid")
 
     model = H2IntegrateModel(Path.cwd() / "solar_battery_grid.yaml")
 
