@@ -53,8 +53,9 @@ parts:
 
 - caption: Control
   chapters:
-  - file: control/control_overview.md
-  - file: control/open-loop_converter_controllers
+  - file: control/control_overview
+  - file: control/open-loop_controllers
+  - file: control/pyomo_controllers
 
 - caption: Finance Models
   chapters:
