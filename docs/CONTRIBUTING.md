@@ -40,7 +40,7 @@ In addition to generating the documentation, be sure to check the results by ope
 path in your browser: `file:///<path-to-h2integrate>/H2Integrate/docs/_build/html/index.html`.
 
 ```{note}
-If the browser appears to be out of date from what you expected to built, please try the following, roughly in order:
+If the browser appears to be out of date from what you expected to be built, please try the following, roughly in order:
 1. Reload the page a few times
 2. Clear your browser's cache and open the page again.
 3. Delete the `_build` folder and rebuild the docs
