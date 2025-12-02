@@ -194,7 +194,7 @@ class FlexibleDemandOpenLoopConverterController(DemandOpenLoopControlBase):
 
         Args:
             maximum_demand_profile (np.ndarray): Maximum allowable demand at each timestep.
-            pre_demand_met (np.ndarray): Initial demand that can be met without curtailing supply.
+            pre_demand_met (np.ndarray): Initial demand that can be met with the available input.
             inputs (dict): Input values containing ramp rates, turndown ratio,
                 and minimum utilization as fractions of maximum demand.
 
@@ -274,7 +274,11 @@ class FlexibleDemandOpenLoopConverterController(DemandOpenLoopControlBase):
                 remaining_demand < 0, -1 * remaining_demand, 0
             )
         else:
+            # when remaining demand is less than 0, that means input exceeds demand
+            # multiply by -1 to make it positive
             curtailed = np.where(remaining_demand < 0, -1 * remaining_demand, 0)
+
+            # subtract out the excess input commodity
             inflexible_out = inputs[f"{commodity}_in"] - curtailed
 
             flexible_demand_profile = self.make_flexible_demand(
