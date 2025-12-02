@@ -102,7 +102,7 @@ develop = [
     "pytest-subtests",
     "responses",
     "Plotly",
-    "jupyter-book",
+    "jupyter-book<2",
     "sphinxcontrib-napoleon"
 ]
 examples = ["jupyterlab"]
