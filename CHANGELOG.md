@@ -32,6 +32,9 @@
 - Move geologic hydrogen models into specific geoh2 subsurface converters
 - Enabled dynamic plant component sizing modes through the resizeable model class `ResizeablePerformanceModelBaseClass`.
 - Added standalone iron mine performance and cost model
+- Added solar resource models for Meteosat Prime Meridian and Himawari datasets available through NSRDB
+- Improved readability of the postprocessing printout by simplifying numerical representation, especially for years
+- Add open-loop load demand controllers: `DemandOpenLoopConverterController` and `FlexibleDemandOpenLoopConverterController`
 
 ## 0.4.0 [October 1, 2025]
 

@@ -15,10 +15,18 @@ Currently, H2I recognizes four types of models:
 | Resource name     | Resource Type  |
 | :---------------- | :---------------: |
 | `river_resource`  | river resource |
+| `wind_toolkit_v2_api` | wind resource |
+| `openmeteo_wind_api` | wind resource |
+| `goes_aggregated_solar_v4_api` | solar resource |
+| `goes_conus_solar_v4_api` | solar resource |
+| `goes_fulldisc_solar_v4_api` | solar resource |
+| `goes_tmy_solar_v4_api` | solar resource |
+| `meteosat_solar_v4_api` | solar resource |
+| `meteosat_tmy_solar_v4_api` | solar resource |
+| `himawari7_solar_v3_api` | solar resource |
+| `himawari8_solar_v3_api` | solar resource |
+| `himawari_tmy_solar_v3_api` | solar resource |
 
-```{note}
-The `Resource` models are under development. Many of the resources are currently integrated into the `Converter` model directly, notably this is true for the wind resource used in the `wind` converter and solar resource used in the `solar` converter.
-```
 
 (converters)=
 ## Converters
@@ -80,7 +88,9 @@ Connection: `[source_tech, dest_tech, transport_commodity, transport_technology]
 | Controller        | Control Method |
 | :----------------------------- | :---------------: |
 | `pass_through_controller`      |  open-loop control. directly passes the input resource flow to the output without any modifications         |
-| `demand_open_loop_controller`  |  open-loop control. manages resource flow based on demand and storage constraints     |
+| `demand_open_loop_storage_controller`  |  open-loop control. manages resource flow based on demand and storage constraints     |
+| `demand_open_loop_converter_controller`  |  open-loop control. manages resource flow based on demand constraints     |
+| `flexible_demand_open_loop_converter_controller`  |  open-loop control. manages resource flow based on demand and flexibility constraints     |
 | `heuristic_load_following_controller` | open-loop control that works on a time window basis to set dispatch commands. Uses pyomo |
 
 # Technology Models Overview
@@ -96,8 +106,23 @@ Below summarizes the available performance, cost, and financial models for each 
 (resource-models)=
 ## Resource models
 - `river`:
-    - performance models:
+    - resource models:
         + `river_resource`
+- `wind_resource`:
+    - resource models:
+        + `wind_toolkit_v2_api`
+        + `openmeteo_wind_api`
+- `solar_resource`:
+    - resource models:
+        + `goes_aggregated_solar_v4_api`
+        + `goes_conus_solar_v4_api`
+        + `goes_fulldisc_solar_v4_api`
+        + `goes_tmy_solar_v4_api`
+        + `meteosat_solar_v4_api`
+        + `meteosat_tmy_solar_v4_api`
+        + `himawari7_solar_v3_api`
+        + `himawari8_solar_v3_api`
+        + `himawari_tmy_solar_v3_api`
 
 (converter-models)=
 ## Converter models
@@ -229,6 +254,10 @@ Below summarizes the available performance, cost, and financial models for each 
 
 (control-models)=
 ## Control Models
-- `pass_through_controller`
-- `demand_open_loop_controller`
-- `heuristic_load_following_controller`
+- `'pass_through_controller'`
+- Storage Controllers:
+    - `'demand_open_loop_storage_controller'`
+    - `'heuristic_load_following_controller'`
+- Converter Controllers:
+    - `'demand_open_loop_converter_controller`
+    - `'flexible_demand_open_loop_converter_controller'`
