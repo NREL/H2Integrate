@@ -122,11 +122,7 @@ def test_run_martin_iron_ore(iron_ore, subtests):
 def test_refit_coefficients(iron_ore, subtests):
     # Determine the model directory based on the model name
     iron_tech_dir = (
-        Path(__file__).parent.parent.parent.parent
-        / "h2integrate"
-        / "simulation"
-        / "technologies"
-        / "iron"
+        Path(__file__).parent.parent.parent.parent / "h2integrate" / "converters" / "iron"
     )
     model_name = iron_ore["iron"]["cost_model"]["name"]
     model_dir = iron_tech_dir / model_name
