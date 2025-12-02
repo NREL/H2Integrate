@@ -80,12 +80,7 @@ class IronTransportPerformanceComponent(om.ExplicitComponent):
         lon = self.options["plant_config"].get("site", {}).get("longitude")
         site_location = (lat, lon)
         shipping_coord_fpath = (
-            ROOT_DIR
-            / "simulation"
-            / "technologies"
-            / "iron"
-            / "martin_transport"
-            / "shipping_coords.csv"
+            ROOT_DIR / "converters" / "iron" / "martin_transport" / "shipping_coords.csv"
         )
         shipping_locations = pd.read_csv(shipping_coord_fpath, index_col="Unnamed: 0")
 
