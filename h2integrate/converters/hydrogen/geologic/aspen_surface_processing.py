@@ -322,7 +322,7 @@ class AspenGeoH2SurfacePerformanceModel(GeoH2SurfacePerformanceBaseClass):
         wellhead_flow_kg_hr = inputs["wellhead_gas_in"]
         wellhead_cap_kg_hr = inputs["max_flow_in"]
         if self.config.size_from_wellhead_flow:
-            wellhead_cap_kg_hr = inputs["max_wellhead_gas"]
+            wellhead_cap_kg_hr = np.max(wellhead_flow_kg_hr)
         wellhead_h2_conc = inputs["wellhead_hydrogen_concentration"] / 100
         outputs["max_flow_size"] = wellhead_cap_kg_hr
 

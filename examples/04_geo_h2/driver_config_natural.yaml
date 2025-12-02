@@ -9,7 +9,7 @@ driver:
     flag: true
     debug_print: true
     generator: "csvgen"
-    filename: "geoh2_doe_natural.csv"
+    filename: "geoh2_doe_natural_sensitivity.csv"
     run_parallel: true
 design_variables:
   geoh2_well_subsurface:
@@ -23,6 +23,22 @@ design_variables:
       units: "kg/h"
       lower: 1
       upper: 1000
+    borehole_depth:
+      flag: True
+      units: "m"
+      lower: 1
+      upper: 1000
+  geoh2_well_surface:
+    electricity_price:
+      flag: True
+      units: "USD/kW/h"
+      lower: 0
+      upper: 1
+    op_labor_rate:
+      flag: True
+      units: "USD/h"
+      lower: 15
+      upper: 100
 objective:
   name: finance_subgroup_h2.LCOH
 recorder:

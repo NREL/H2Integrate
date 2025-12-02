@@ -111,10 +111,18 @@ class NaturalGeoH2PerformanceModel(GeoH2SubsurfacePerformanceBaseClass):
         # avg_wh_flow = min(init_wh_flow, res_size / lifetime * 1000 / n_timesteps)
         avg_wh_flow = (-0.193 * np.log(lifetime) + 0.6871) * init_wh_flow  # temp. fit to Arps data
 
+        # Calcuated hydrogen flow out
+        balance_mw = 23.32
+        h2_mw = 2.016
+        x_h2 = wh_h2_conc / 100
+        avg_h2_flow = x_h2 * h2_mw / (x_h2 * h2_mw + (1 - x_h2) * balance_mw) * avg_wh_flow
+
         # Parse outputs
         outputs["wellhead_hydrogen_concentration"] = wh_h2_conc
         outputs["lifetime_wellhead_flow"] = avg_wh_flow
         outputs["wellhead_gas_out_natural"] = np.full(n_timesteps, avg_wh_flow)
         outputs["wellhead_gas_out"] = np.full(n_timesteps, avg_wh_flow)
+        outputs["hydrogen_out"] = np.full(n_timesteps, avg_h2_flow)
         outputs["max_wellhead_gas"] = init_wh_flow
         outputs["total_wellhead_gas_produced"] = np.sum(outputs["wellhead_gas_out"])
+        outputs["total_hydrogen_produced"] = np.sum(outputs["hydrogen_out"])

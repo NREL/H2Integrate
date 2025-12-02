@@ -10,7 +10,6 @@ plant:
 
 technology_interconnections: [
   ["geoh2_well_subsurface", "geoh2_well_surface", "wellhead_hydrogen_concentration"],
-  ["geoh2_well_subsurface", "geoh2_well_surface", "max_wellhead_gas"],
   ["geoh2_well_subsurface", "geoh2_well_surface", "wellhead_gas", "pipe"],
 ]
 
@@ -40,7 +39,7 @@ finance_parameters:
   finance_subgroups:
     h2:
       commodity: "hydrogen"
-      commodity_stream: "geoh2_well_surface"
+      commodity_stream: "geoh2_well_subsurface"
       technologies: ["geoh2_well_subsurface", "geoh2_well_surface"]
   cost_adjustment_parameters:
     cost_year_adjustment_inflation: 0.025 # used to adjust modeled costs to target_dollar_year

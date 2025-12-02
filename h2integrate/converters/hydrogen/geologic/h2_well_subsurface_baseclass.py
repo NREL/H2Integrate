@@ -72,8 +72,15 @@ class GeoH2SubsurfacePerformanceBaseClass(om.ExplicitComponent):
             The wellhead gas production rate profile over a one-year period (8760 hours),
             in kilograms per hour.
 
+        hydrogen_out (ndarray):
+            The hydrogen production rate profile over a one-year period (8760 hours),
+            in kilograms per hour.
+
         total_wellhead_gas_produced (float):
             The total wellhead gas produced over the plant lifetime, in kilograms per year.
+
+        total_hydrogen_produced (float):
+            The total hydrogen produced over the plant lifetime, in kilograms per year.
     """
 
     def initialize(self):
@@ -88,7 +95,9 @@ class GeoH2SubsurfacePerformanceBaseClass(om.ExplicitComponent):
 
         # outputs
         self.add_output("wellhead_gas_out", units="kg/h", shape=(8760,))
+        self.add_output("hydrogen_out", units="kg/h", shape=(8760,))
         self.add_output("total_wellhead_gas_produced", val=0.0, units="kg/year")
+        self.add_output("total_hydrogen_produced", val=0.0, units="kg/year")
 
 
 @define
