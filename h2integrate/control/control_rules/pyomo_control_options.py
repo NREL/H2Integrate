@@ -61,7 +61,7 @@ class PyomoControlOptions(BaseConfig):
     """
 
     solver: str = field(
-        default="cbc",
+        default="glpk",
         validator=contains(["glpk", "cbc", "xpress", "xpress_persistent", "gurobi_ampl", "gurobi"]),
     )
     solver_options: dict = field(default_factory=dict)

@@ -82,6 +82,7 @@ from h2integrate.converters.hydrogen.singlitico_cost_model import SingliticoCost
 from h2integrate.converters.co2.marine.direct_ocean_capture import DOCCostModel, DOCPerformanceModel
 from h2integrate.control.control_strategies.pyomo_controllers import (
     HeuristicLoadFollowingController,
+    OptimizedDispatchController,
 )
 from h2integrate.resource.solar.nrel_developer_goes_api_models import (
     GOESTMYSolarAPI,
@@ -123,6 +124,12 @@ from h2integrate.converters.hydrogen.geologic.stimulated_geoh2_plant import (
 )
 from h2integrate.control.control_rules.storage.pyomo_storage_rule_baseclass import (
     PyomoRuleStorageBaseclass,
+)
+from h2integrate.control.control_rules.storage.pyomo_storage_rule_min_operating_cost import (
+    PyomoRuleStorageMinOperatingCosts,
+)
+from h2integrate.control.control_rules.converters.generic_converter_opt import (
+    PyomoDispatchGenericConverterMinOperatingCosts,
 )
 
 
@@ -210,9 +217,16 @@ supported_models = {
     "pass_through_controller": PassThroughOpenLoopController,
     "demand_open_loop_controller": DemandOpenLoopController,
     "heuristic_load_following_controller": HeuristicLoadFollowingController,
+    "optimized_dispatch_controller": OptimizedDispatchController,
     # Dispatch
     "pyomo_dispatch_generic_converter": PyomoDispatchGenericConverter,
     "pyomo_dispatch_generic_storage": PyomoRuleStorageBaseclass,
+    "pyomo_dispatch_battery_min_operating_cost": (
+        PyomoRuleStorageMinOperatingCosts
+    ),
+    "pyomo_dispatch_generic_converter_min_operating_cost": (
+        PyomoDispatchGenericConverterMinOperatingCosts
+    ),
     # Feedstock
     "feedstock_performance": FeedstockPerformanceModel,
     "feedstock_cost": FeedstockCostModel,
