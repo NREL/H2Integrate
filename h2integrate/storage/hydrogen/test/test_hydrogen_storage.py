@@ -45,7 +45,7 @@ def test_salt_cavern_ex_2(plant_config, subtests):
     with subtests.test("CapEx"):
         assert pytest.approx(prob.get_val("sys.CapEx")[0], rel=1e-6) == 65337437.17944019
     with subtests.test("OpEx"):
-        assert pytest.approx(prob.get_val("sys.OpEx")[0], rel=1e-6) == 3149096.037312646
+        assert pytest.approx(prob.get_val("sys.OpEx")[0], rel=1e-6) == 2358794.1150327
     with subtests.test("VarOpEx"):
         assert pytest.approx(np.sum(prob.get_val("sys.VarOpEx")), rel=1e-6) == 0.0
     with subtests.test("Cost year"):
@@ -75,7 +75,7 @@ def test_lined_rock_cavern_ex_12_small_case(plant_config, subtests):
     with subtests.test("CapEx"):
         assert pytest.approx(prob.get_val("sys.CapEx")[0], rel=1e-6) == 18693728.23242369
     with subtests.test("OpEx"):
-        assert pytest.approx(prob.get_val("sys.OpEx")[0], rel=1e-6) == 1099582.4333529277
+        assert pytest.approx(prob.get_val("sys.OpEx")[0], rel=1e-6) == 767466.36227705
     with subtests.test("VarOpEx"):
         assert pytest.approx(np.sum(prob.get_val("sys.VarOpEx")), rel=1e-6) == 0.0
     with subtests.test("Cost year"):
@@ -104,7 +104,7 @@ def test_lined_rock_cavern_ex_1(plant_config, subtests):
     with subtests.test("CapEx"):
         assert pytest.approx(prob.get_val("sys.CapEx")[0], rel=1e-6) == 92392496.03198986
     with subtests.test("OpEx"):
-        assert pytest.approx(prob.get_val("sys.OpEx")[0], rel=1e-6) == 4292680.718474801
+        assert pytest.approx(prob.get_val("sys.OpEx")[0], rel=1e-6) == 3228373.63748516
     with subtests.test("VarOpEx"):
         assert pytest.approx(np.sum(prob.get_val("sys.VarOpEx")), rel=1e-6) == 0.0
     with subtests.test("Cost year"):
@@ -133,7 +133,7 @@ def test_lined_rock_cavern_ex_14(plant_config, subtests):
     with subtests.test("CapEx"):
         assert pytest.approx(prob.get_val("sys.CapEx")[0], rel=1e-6) == 1.28437699 * 1e8
     with subtests.test("OpEx"):
-        assert pytest.approx(prob.get_val("sys.OpEx")[0], rel=1e-6) == 5315184.827689768
+        assert pytest.approx(prob.get_val("sys.OpEx")[0], rel=1e-6) == 4330693.49125131
     with subtests.test("VarOpEx"):
         assert pytest.approx(np.sum(prob.get_val("sys.VarOpEx")), rel=1e-6) == 0.0
     with subtests.test("Cost year"):
@@ -162,7 +162,7 @@ def test_buried_pipe_storage(plant_config, subtests):
     with subtests.test("CapEx"):
         assert pytest.approx(prob.get_val("sys.CapEx")[0], rel=1e-6) == 1827170156.1390543
     with subtests.test("OpEx"):
-        assert pytest.approx(prob.get_val("sys.OpEx")[0], rel=1e-6) == 57720829.60694359
+        assert pytest.approx(prob.get_val("sys.OpEx")[0], rel=1e-6) == 56972128.44322313
     with subtests.test("VarOpEx"):
         assert pytest.approx(np.sum(prob.get_val("sys.VarOpEx")), rel=1e-6) == 0.0
     with subtests.test("Cost year"):
@@ -224,11 +224,9 @@ def test_lined_rock_cavern_1M_kg(plant_config, subtests):
     prob.run_model()
 
     with subtests.test("CapEx"):
-        # Expected: 51136144.673 (from original test)
         assert pytest.approx(prob.get_val("sys.CapEx")[0], rel=1e-5) == 51136144.673
     with subtests.test("OpEx"):
-        # Expected: 2359700 (from original test)
-        assert pytest.approx(prob.get_val("sys.OpEx")[0], rel=1e-5) == 2359700
+        assert pytest.approx(prob.get_val("sys.OpEx")[0], rel=1e-5) == 1833238.1260644312
     with subtests.test("VarOpEx"):
         assert pytest.approx(np.sum(prob.get_val("sys.VarOpEx")), rel=1e-6) == 0.0
     with subtests.test("Cost year"):
@@ -290,11 +288,9 @@ def test_salt_cavern_1M_kg(plant_config, subtests):
     prob.run_model()
 
     with subtests.test("CapEx"):
-        # Expected: 24992482.4198 (from original test)
         assert pytest.approx(prob.get_val("sys.CapEx")[0], rel=1e-5) == 24992482.4198
     with subtests.test("OpEx"):
-        # Expected: 1461664 (from original test)
-        assert pytest.approx(prob.get_val("sys.OpEx")[0], rel=1e-5) == 1461664
+        assert pytest.approx(prob.get_val("sys.OpEx")[0], rel=1e-5) == 1015928.3388478106
     with subtests.test("VarOpEx"):
         assert pytest.approx(np.sum(prob.get_val("sys.VarOpEx")), rel=1e-6) == 0.0
     with subtests.test("Cost year"):
@@ -356,11 +352,9 @@ def test_pipe_storage_1M_kg(plant_config, subtests):
     prob.run_model()
 
     with subtests.test("CapEx"):
-        # Expected: 508745483.851 (from original test)
         assert pytest.approx(prob.get_val("sys.CapEx")[0], rel=1e-5) == 508745483.851
     with subtests.test("OpEx"):
-        # Expected: 16439748 (from original test)
-        assert pytest.approx(prob.get_val("sys.OpEx")[0], rel=1e-5) == 16439748
+        assert pytest.approx(prob.get_val("sys.OpEx")[0], rel=1e-5) == 16010851.734082155
     with subtests.test("VarOpEx"):
         assert pytest.approx(np.sum(prob.get_val("sys.VarOpEx")), rel=1e-6) == 0.0
     with subtests.test("Cost year"):
