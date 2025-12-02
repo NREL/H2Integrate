@@ -59,6 +59,8 @@ class GeoH2SurfacePerformanceBaseClass(om.ExplicitComponent):
             The molar concentration of hydrogen in the wellhead gas (unitless).
         total_hydrogen_produced (float):
             The total hydrogen produced over the plant lifetime, in kilograms per year.
+        max_flow_size (float):
+            The wellhead gas flow in kg/hour used for sizing the system - passed to the cost model.
     """
 
     def initialize(self):
@@ -67,16 +69,18 @@ class GeoH2SurfacePerformanceBaseClass(om.ExplicitComponent):
         self.options.declare("driver_config", types=dict)
 
     def setup(self):
+        super().setup()
         n_timesteps = self.options["plant_config"]["plant"]["simulation"]["n_timesteps"]
         # inputs
         self.add_input("wellhead_gas_in", units="kg/h", val=-1.0, shape=(n_timesteps,))
-        self.add_input("max_flow_in", units="kg/h", val=-1.0)
+        self.add_input("max_flow_in", units="kg/h", val=self.config.max_flow_in)
         self.add_input("wellhead_hydrogen_concentration", units="mol/mol", val=-1.0)
 
         # outputs
         self.add_output("hydrogen_out", units="kg/h", shape=(n_timesteps,))
         self.add_output("hydrogen_concentration_out", units="kg/h", val=-1.0)
         self.add_output("total_hydrogen_produced", val=-1.0, units="kg/year")
+        self.add_output("max_flow_size", units="kg/h", val=self.config.max_flow_in)
 
 
 @define
@@ -92,16 +96,16 @@ class GeoH2SurfaceCostConfig(CostModelBaseConfig):
             Whether to cost the processing system from curves (if True) or `capex` and `opex`
         refit_coeffs (bool):
             Whether to re-fit cost curves to ASPEN data
-        capex (float):
+        custom_capex (float):
             A custom capex to use if cost_from_fit is False
-        opex (float):
+        custom_opex (float):
             A custom opex to use if cost_from_fit is False
     """
 
     cost_from_fit: bool = field()
     refit_coeffs: bool = field()
-    capex: float = field()
-    opex: float = field()
+    custom_capex: float = field()
+    custom_opex: float = field()
 
 
 class GeoH2SurfaceCostBaseClass(CostModelBaseClass):
@@ -119,8 +123,8 @@ class GeoH2SurfaceCostBaseClass(CostModelBaseClass):
         wellhead_gas_in (ndarray):
             The production rate profile of the well over a one-year period (8760 hours),
             in kilograms per hour.
-        max_flow_in (float):
-            The intake capacity limit of the processing system for wellhead gas in kg/hour.
+        max_flow_size (float):
+            The wellhead gas flow in kg/hour used for sizing the system.
         wellhead_hydrogen_concentration (float)
             The molar concentration of hydrogen in the wellhead gas (unitless).
 
@@ -147,7 +151,7 @@ class GeoH2SurfaceCostBaseClass(CostModelBaseClass):
 
         # inputs
         self.add_input("wellhead_gas_in", units="kg/h", val=-1.0, shape=(n_timesteps,))
-        self.add_input("max_flow_in", units="kg/h", val=-1.0)
+        self.add_input("max_flow_size", units="kg/h", val=-1.0)
         self.add_input("wellhead_hydrogen_concentration", units="mol/mol", val=-1.0)
         self.add_input(
             "hydrogen_out",
@@ -156,6 +160,8 @@ class GeoH2SurfaceCostBaseClass(CostModelBaseClass):
             desc=f"Hydrogen production rate in kg/h over {n_timesteps} hours.",
         )
         self.add_input("total_hydrogen_produced", val=0.0, units="kg/year")
+        self.add_input("custom_capex", val=self.config.custom_capex, units="USD")
+        self.add_input("custom_opex", val=self.config.custom_opex, units="USD/year")
 
         # outputs
         self.add_output("bare_capital_cost", units="USD")

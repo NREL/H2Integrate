@@ -31,3 +31,26 @@ technologies:
         contingency_pct: 50
         preprod_time: 6
         as_spent_ratio: 1.1
+  geoh2_well_surface:
+    performance_model:
+      model: aspen_geoh2_performance
+    cost_model:
+      model: aspen_geoh2_cost
+    model_inputs:
+      shared_parameters:
+        refit_coeffs: false
+        curve_input_fn: "aspen_results.csv"
+      performance_parameters:
+        size_from_wellhead_flow: True
+        max_flow_in: 0
+        perf_coeff_fn: "aspen_perf_coeffs.csv"
+      cost_parameters:
+        cost_year: 2022
+        cost_from_fit: True
+        custom_capex: 0
+        custom_opex: 0
+        cost_coeff_fn: "aspen_cost_coeffs.csv"
+        op_labor_rate: 69.52
+        overhead_rate: 0.5
+        electricity_price: 0.0832
+        water_price: 0.0

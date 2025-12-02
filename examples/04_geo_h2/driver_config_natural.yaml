@@ -10,7 +10,7 @@ driver:
     debug_print: true
     generator: "csvgen"
     filename: "geoh2_doe_natural.csv"
-    run_parallel: false
+    run_parallel: true
 design_variables:
   geoh2_well_subsurface:
     site_prospectivity:
@@ -24,7 +24,7 @@ design_variables:
       lower: 1
       upper: 1000
 objective:
-  name: finance_subgroup_default.LCOH
+  name: finance_subgroup_h2.LCOH
 recorder:
     file: cases.sql
     overwrite_recorder: true

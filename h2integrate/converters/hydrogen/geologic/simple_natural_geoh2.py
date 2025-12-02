@@ -66,18 +66,18 @@ class NaturalGeoH2PerformanceModel(GeoH2SubsurfacePerformanceBaseClass):
             (inherited from base class).
 
     Outputs:
-        wellhead_h2_conc (float):
+        wellhead_hydrogen_concentration (float):
             Mass percentage of hydrogen in the wellhead gas mixture.
 
         lifetime_wellhead_flow (float):
             Average gas flow rate over the operational lifetime of the well, in kg/h.
 
-        hydrogen_out_natural (ndarray):
-            Hourly hydrogen production profile from natural accumulations,
+        wellhead_gas_out_natural (ndarray):
+            Hourly wellhead gas production profile from natural accumulations,
             covering one simulated year (8760 hours), in kg/h.
 
-        hydrogen_out (ndarray):
-            Total hydrogen output array used by downstream system models, in kg/h.
+        max_wellhead_gas (float):
+            Maximum wellhead gas output over the system lifetime, in kg/h.
     """
 
     def setup(self):
@@ -91,9 +91,10 @@ class NaturalGeoH2PerformanceModel(GeoH2SubsurfacePerformanceBaseClass):
         self.add_input("initial_wellhead_flow", units="kg/h", val=self.config.initial_wellhead_flow)
         self.add_input("gas_reservoir_size", units="t", val=self.config.gas_reservoir_size)
 
-        self.add_output("wellhead_h2_conc", units="percent")
+        self.add_output("wellhead_hydrogen_concentration", units="percent")
         self.add_output("lifetime_wellhead_flow", units="kg/h")
-        self.add_output("hydrogen_out_natural", units="kg/h", shape=(n_timesteps,))
+        self.add_output("wellhead_gas_out_natural", units="kg/h", shape=(n_timesteps,))
+        self.add_output("max_wellhead_gas", units="kg/h")
 
     def compute(self, inputs, outputs):
         if self.config.rock_type == "peridotite":  # TODO: sub-models for different rock types
@@ -110,12 +111,10 @@ class NaturalGeoH2PerformanceModel(GeoH2SubsurfacePerformanceBaseClass):
         # avg_wh_flow = min(init_wh_flow, res_size / lifetime * 1000 / n_timesteps)
         avg_wh_flow = (-0.193 * np.log(lifetime) + 0.6871) * init_wh_flow  # temp. fit to Arps data
 
-        # Calculate hydrogen flow out from accumulated gas
-        h2_accum = wh_h2_conc / 100 * avg_wh_flow
-
         # Parse outputs
-        outputs["wellhead_h2_conc"] = wh_h2_conc
+        outputs["wellhead_hydrogen_concentration"] = wh_h2_conc
         outputs["lifetime_wellhead_flow"] = avg_wh_flow
-        outputs["hydrogen_out_natural"] = np.full(n_timesteps, h2_accum)
-        outputs["hydrogen_out"] = np.full(n_timesteps, h2_accum)
-        outputs["total_hydrogen_produced"] = np.sum(outputs["hydrogen_out"])
+        outputs["wellhead_gas_out_natural"] = np.full(n_timesteps, avg_wh_flow)
+        outputs["wellhead_gas_out"] = np.full(n_timesteps, avg_wh_flow)
+        outputs["max_wellhead_gas"] = init_wh_flow
+        outputs["total_wellhead_gas_produced"] = np.sum(outputs["wellhead_gas_out"])

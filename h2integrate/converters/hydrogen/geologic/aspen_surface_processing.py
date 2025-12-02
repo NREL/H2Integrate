@@ -198,6 +198,7 @@ def refit_coeffs(input_fn, coeff_fn, output_names, plot_flag=False):
             plt.show()
 
     # Lop off first row with flow
+    fit_coeffs.index = labels
     fit_coeffs = fit_coeffs.iloc[1:]
 
     # Save coeffs to file
@@ -239,14 +240,14 @@ class AspenGeoH2SurfacePerformanceConfig(GeoH2SurfacePerformanceConfig):
             Filename of ASPEN model results file used to generate curve fits. Only used if
             `refit_coeffs` is True. Must be located in the ./inputs directory.
 
-        curve_coeff_fn (str):
-            Filename of performance (and cost) curve coefficients. Will be loaded if `refit_coeffs`
+        perf_coeff_fn (str):
+            Filename of performance curve coefficients. Will be loaded if `refit_coeffs`
             is False and overwritten if `refit_coeffs` is True. Located in the ./inputs directory.
     """
 
     refit_coeffs: bool = field()
     curve_input_fn: str = field()
-    curve_coeff_fn: str = field()
+    perf_coeff_fn: str = field()
 
 
 class AspenGeoH2SurfacePerformanceModel(GeoH2SurfacePerformanceBaseClass):
@@ -265,7 +266,7 @@ class AspenGeoH2SurfacePerformanceModel(GeoH2SurfacePerformanceBaseClass):
             hydrogen systems.
 
     Inputs:
-        curve_coeffs (dict):
+        perf_coeffs (dict):
             Performance curve coefficients, structured like so:
             {"<output name>": [<list, of, curve, coefficients>]}
 
@@ -296,7 +297,7 @@ class AspenGeoH2SurfacePerformanceModel(GeoH2SurfacePerformanceBaseClass):
                 "Steam [kt/h]",
             ]
             coeffs = refit_coeffs(
-                self.config.curve_input_fn, self.config.curve_coeff_fn, output_names
+                self.config.curve_input_fn, self.config.perf_coeff_fn, output_names
             )
         else:
             output_names = [
@@ -306,9 +307,10 @@ class AspenGeoH2SurfacePerformanceModel(GeoH2SurfacePerformanceBaseClass):
                 "Cooling Water [kt/h/(kg/hr H2 in)]",
                 "Steam [kt/h/(kg/hr H2 in)]",
             ]
-            coeffs = load_coeffs(self.config.curve_coeff_fn, output_names)
+            coeffs = load_coeffs(self.config.perf_coeff_fn, output_names)
 
-        self.add_discrete_input("curve_coeffs", val=coeffs)
+        self.add_input("max_wellhead_gas", val=-1.0)
+        self.add_discrete_input("perf_coeffs", val=coeffs)
 
         self.add_output("electricity_consumed", val=-1.0, shape=(n_timesteps,))
         self.add_output("water_consumed", val=-1.0, shape=(n_timesteps,))
@@ -316,10 +318,13 @@ class AspenGeoH2SurfacePerformanceModel(GeoH2SurfacePerformanceBaseClass):
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         # Parse inputs
-        curve_coeffs = discrete_inputs["curve_coeffs"]
+        perf_coeffs = discrete_inputs["perf_coeffs"]
         wellhead_flow_kg_hr = inputs["wellhead_gas_in"]
         wellhead_cap_kg_hr = inputs["max_flow_in"]
-        wellhead_h2_conc = inputs["wellhead_hydrogen_concentration"]
+        if self.config.size_from_wellhead_flow:
+            wellhead_cap_kg_hr = inputs["max_wellhead_gas"]
+        wellhead_h2_conc = inputs["wellhead_hydrogen_concentration"] / 100
+        outputs["max_flow_size"] = wellhead_cap_kg_hr
 
         # Calculate performance curves
         curve_names = [
@@ -329,19 +334,19 @@ class AspenGeoH2SurfacePerformanceModel(GeoH2SurfacePerformanceBaseClass):
             "Cooling Water [kt/h/(kg/hr H2 in)]",
             "Steam [kt/h/(kg/hr H2 in)]",
         ]
-        curve_results = []
+        curve_results = {}
         for curve_name in curve_names:
-            x = wellhead_h2_conc / curve_coeffs[curve_name]["scale_x"]
-            y = wellhead_cap_kg_hr / curve_coeffs[curve_name]["scale_y"]
-            flow_out_coeffs = curve_coeffs[curve_name]["a1", "a2", "a3", "a4", "a5"]
-            fit_type = curve_coeffs[curve_name]["fit_type"]
+            x = wellhead_h2_conc / perf_coeffs[curve_name]["scale_x"]
+            y = wellhead_cap_kg_hr / perf_coeffs[curve_name]["scale_y"]
+            flow_out_coeffs = [perf_coeffs[curve_name][i] for i in ["a1", "a2", "a3", "a4", "a5"]]
+            fit_type = perf_coeffs[curve_name]["fit_type"]
             if fit_type == "double_exp":
                 z = double_exp((x, y), *flow_out_coeffs)
             elif fit_type == "exp_power":
                 z = exp_power((x, y), *flow_out_coeffs)
             else:  # Steam
                 z = 0
-            curve_results.append(z * curve_coeffs[curve_name]["scale_z"])
+            curve_results[curve_name] = z * perf_coeffs[curve_name]["scale_z"]
 
         # Parse outputs
         h2_out_kg_hr = curve_results["H2 Flow Out [kg/hr/(kg/hr H2 in)]"] * wellhead_flow_kg_hr
@@ -354,6 +359,7 @@ class AspenGeoH2SurfacePerformanceModel(GeoH2SurfacePerformanceBaseClass):
         outputs["electricity_consumed"] = elec_in_kw
         outputs["water_consumed"] = water_in_kt_h
         outputs["steam_out"] = steam_out_kt_h
+        outputs["total_hydrogen_produced"] = np.sum(h2_out_kg_hr)
 
 
 @define
@@ -373,8 +379,8 @@ class AspenGeoH2SurfaceCostConfig(GeoH2SurfaceCostConfig):
             Filename of ASPEN model results file used to generate curve fits. Only used if
             `refit_coeffs` is True. Must be located in the ./inputs directory.
 
-        curve_coeff_fn (str):
-            Filename of performance (and cost) curve coefficients. Will be loaded if `refit_coeffs`
+        cost_coeff_fn (str):
+            Filename of cost curve coefficients. Will be loaded if `refit_coeffs`
             is False and overwritten if `refit_coeffs` is True. Located in the ./inputs directory.
 
         op_labor_rate (float):
@@ -392,7 +398,7 @@ class AspenGeoH2SurfaceCostConfig(GeoH2SurfaceCostConfig):
 
     refit_coeffs: bool = field()
     curve_input_fn: str = field()
-    curve_coeff_fn: str = field()
+    cost_coeff_fn: str = field()
     op_labor_rate: float = field()
     overhead_rate: float = field()
     electricity_price: float = field()
@@ -415,7 +421,7 @@ class AspenGeoH2SurfaceCostModel(GeoH2SurfaceCostBaseClass):
             hydrogen systems.
 
     Inputs:
-        curve_coeffs (dict):
+        cost_coeffs (dict):
             Performance curve coefficients, structured like so:
             {"<output name>": [<list, of, curve, coefficients>]}
 
@@ -443,7 +449,7 @@ class AspenGeoH2SurfaceCostModel(GeoH2SurfaceCostBaseClass):
 
     def setup(self):
         self.config = AspenGeoH2SurfaceCostConfig.from_dict(
-            merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance")
+            merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost")
         )
         super().setup()
         n_timesteps = self.options["plant_config"]["plant"]["simulation"]["n_timesteps"]
@@ -451,16 +457,16 @@ class AspenGeoH2SurfaceCostModel(GeoH2SurfaceCostBaseClass):
         if self.config.refit_coeffs:
             output_names = ["Capex [USD]", "Labor [op/shift]"]
             coeffs = refit_coeffs(
-                self.config.curve_input_fn, self.config.curve_coeff_fn, output_names
+                self.config.curve_input_fn, self.config.cost_coeff_fn, output_names
             )
         else:
             output_names = [
                 "Capex [USD/(kg/hr H2 in)]",
                 "Labor [op/shift/(kg/hr H2 in)]",
             ]
-            coeffs = load_coeffs(self.config.curve_coeff_fn, output_names)
+            coeffs = load_coeffs(self.config.cost_coeff_fn, output_names)
 
-        self.add_discrete_input("curve_coeffs", val=coeffs)
+        self.add_discrete_input("cost_coeffs", val=coeffs)
 
         self.add_input("op_labor_rate", val=self.config.op_labor_rate, units="USD/h")
         self.add_input("overhead_rate", val=self.config.overhead_rate, units="unitless")
@@ -470,50 +476,57 @@ class AspenGeoH2SurfaceCostModel(GeoH2SurfaceCostBaseClass):
         self.add_input("water_consumed", val=-1.0, shape=(n_timesteps,))
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
-        # Parse inputs
-        curve_coeffs = discrete_inputs["curve_coeffs"]
-        wellhead_cap_kg_hr = inputs["max_flow_in"]
-        wellhead_h2_conc = inputs["wellhead_hydrogen_concentration"]
-        op_labor_rate = inputs["op_labor_rate"]
-        overhead_rate = inputs["overhead_rate"]
-        electricity_price = inputs["electricity_price"]
-        water_price = inputs["water_price"]
-        electricity_consumed = inputs["electricity_consumed"]
-        water_consumed = inputs["water_consumed"]
+        if self.config.cost_from_fit:
+            # Parse inputs
+            cost_coeffs = discrete_inputs["cost_coeffs"]
+            wellhead_cap_kg_hr = inputs["max_flow_size"]
+            wellhead_h2_conc = inputs["wellhead_hydrogen_concentration"] / 100
+            op_labor_rate = inputs["op_labor_rate"]
+            overhead_rate = inputs["overhead_rate"]
+            electricity_price = inputs["electricity_price"]
+            water_price = inputs["water_price"]
+            electricity_consumed = inputs["electricity_consumed"]
+            water_consumed = inputs["water_consumed"]
 
-        # Calculate performance curves
-        curve_names = [
-            "Capex [USD/(kg/hr H2 in)]",
-            "Labor [op/shift/(kg/hr H2 in)]",
-        ]
-        curve_results = []
-        for curve_name in curve_names:
-            x = wellhead_h2_conc / curve_coeffs[curve_name]["scale_x"]
-            y = wellhead_cap_kg_hr / curve_coeffs[curve_name]["scale_y"]
-            flow_out_coeffs = curve_coeffs[curve_name]["a1", "a2", "a3", "a4", "a5"]
-            fit_type = curve_coeffs[curve_name]["fit_type"]
-            if fit_type == "double_exp":
-                z = double_exp((x, y), *flow_out_coeffs)
-            elif fit_type == "exp_power":
-                z = exp_power((x, y), *flow_out_coeffs)
-            else:  # Steam
-                z = 0
-            curve_results.append(z * curve_coeffs[curve_name]["scale_z"])
+            # Calculate performance curves
+            curve_names = [
+                "Capex [USD/(kg/hr H2 in)]",
+                "Labor [op/shift/(kg/hr H2 in)]",
+            ]
+            curve_results = {}
+            for curve_name in curve_names:
+                x = wellhead_h2_conc / cost_coeffs[curve_name]["scale_x"]
+                y = wellhead_cap_kg_hr / cost_coeffs[curve_name]["scale_y"]
+                flow_out_coeffs = [
+                    cost_coeffs[curve_name][i] for i in ["a1", "a2", "a3", "a4", "a5"]
+                ]
+                fit_type = cost_coeffs[curve_name]["fit_type"]
+                if fit_type == "double_exp":
+                    z = double_exp((x, y), *flow_out_coeffs)
+                elif fit_type == "exp_power":
+                    z = exp_power((x, y), *flow_out_coeffs)
+                else:  # Steam
+                    z = 0
+                curve_results[curve_name] = z * cost_coeffs[curve_name]["scale_z"]
 
-        # Parse outputs
-        capex_usd = curve_results["Capex [USD/(kg/hr H2 in)]"] * wellhead_cap_kg_hr
-        labor_op_shift = curve_results["Labor [op/shift/(kg/hr H2 in)]"] * wellhead_cap_kg_hr
-        outputs["CapEx"] = capex_usd
+            # Parse outputs
+            capex_usd = curve_results["Capex [USD/(kg/hr H2 in)]"] * wellhead_cap_kg_hr
+            # labor_op_shift = curve_results["Labor [op/shift/(kg/hr H2 in)]"] * wellhead_cap_kg_hr
+            outputs["CapEx"] = capex_usd
 
-        # Calculate opex
-        labor_usd_year = labor_op_shift * 8760 * op_labor_rate
-        overhead_usd_year = labor_usd_year * overhead_rate
-        outputs["OpEx"] = labor_usd_year + overhead_usd_year
+            # Calculate opex
+            labor_usd_year = 5 * 8760 * op_labor_rate  # ignoring labor_op_shift for now
+            overhead_usd_year = labor_usd_year * overhead_rate
+            outputs["OpEx"] = labor_usd_year + overhead_usd_year
 
-        # Calculate variable opex
-        elec_varopex = np.sum(electricity_consumed) * electricity_price
-        water_varopex = np.sum(water_consumed) * water_price
-        outputs["VarOpEx"] = elec_varopex + water_varopex
+            # Calculate variable opex
+            elec_varopex = np.sum(electricity_consumed) * electricity_price
+            water_varopex = np.sum(water_consumed) * water_price
+            outputs["VarOpEx"] = elec_varopex + water_varopex
+
+        else:
+            outputs["CapEx"] = inputs["custom_capex"]
+            outputs["OpEx"] = inputs["custom_opex"]
 
 
 if __name__ == "__main__":

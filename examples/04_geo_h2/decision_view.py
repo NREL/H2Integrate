@@ -57,7 +57,8 @@ inputs_df = pd.read_csv(ROOT_DIR / "ex_04_out" / fn, index_col=0, header=0)
 
 x_data = inputs_df.loc[:, "geoh2_well_subsurface.site_prospectivity (unitless)"].values.ravel()
 y_data = inputs_df.loc[:, "geoh2_well_subsurface.initial_wellhead_flow (kg/h)"].values.ravel()
-z_data = np.log(inputs_df.loc[:, "finance_subgroup_default.LCOH (USD/kg)"].values.ravel())
+z_data = np.log(inputs_df.loc[:, "finance_subgroup_h2.LCOH (USD/kg)"].values.ravel())
+# z_data = np.log(inputs_df.loc[:, "finance_subgroup_h2.total_capex_adjusted (USD)"].values.ravel())
 
 xy_data = np.vstack((x_data, y_data))
 
@@ -65,14 +66,14 @@ xy_data = np.vstack((x_data, y_data))
 popt, pcov = curve_fit(double_log, xy_data, z_data)  # , p0=guess)
 # popt, pcov = curve_fit(polynom, xy_data, z_data)#, p0=guess)
 
-y_axis_pts = np.exp(np.linspace(np.log(100), np.log(100000), 100))
-x_axis_pts = np.linspace(0.001, 1, 100)
+y_axis_pts = np.exp(np.linspace(np.log(1000), np.log(100000), 100))
+x_axis_pts = np.linspace(0.1, 1, 100)
 
 x_grid, y_grid = np.meshgrid(x_axis_pts, y_axis_pts)
 z_surf = double_log((x_grid, y_grid), *popt)
 # z_surf = polynom((x_grid, y_grid), *popt)
 
-levels = np.arange(0, 5, 0.01)
+levels = np.arange(0, 10, 0.1)
 cplot = plt.contourf(x_axis_pts * 100, y_axis_pts, np.exp(z_surf), cmap="turbo", levels=levels)
 
 cmap_min = np.min(cplot.levels)
@@ -98,7 +99,7 @@ plt.contour(x_axis_pts * 100, y_axis_pts, np.exp(z_surf), levels=[1.5])
 plt.grid("on")
 
 plt.xlim((0, 100))
-plt.ylim((0, 10000))
+plt.ylim((1000, 100000))
 
 plt.title("Natural GeoH2, Drill Depth = 300m")
 plt.xlabel("Wellhead Hydrogen Concentration [mol %]")
