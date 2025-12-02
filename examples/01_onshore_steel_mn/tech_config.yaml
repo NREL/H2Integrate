@@ -69,7 +69,7 @@ technologies:
         plant_capacity_mtpy: 1000000.
       cost_parameters:
         operational_year: 2035
-        o2_heat_integration: false
+        o2_heat_integration: True
         lcoh: 7.37
         installation_time: 36 # months
         inflation_rate: 0.0 # 0 for nominal analysis
