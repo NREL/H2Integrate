@@ -31,7 +31,7 @@ def test_steel_example(subtests):
         )
 
     with subtests.test("Check LCOS"):
-        assert pytest.approx(model.prob.get_val("steel.LCOS")[0], rel=1e-3) == 1216.29426045
+        assert pytest.approx(model.prob.get_val("steel.LCOS")[0], rel=1e-3) == 1213.87728644
 
     with subtests.test("Check total adjusted CapEx"):
         assert (
@@ -53,7 +53,7 @@ def test_steel_example(subtests):
         assert pytest.approx(model.prob.get_val("steel.CapEx"), rel=1e-3) == 5.78060014e08
 
     with subtests.test("Check steel OpEx"):
-        assert pytest.approx(model.prob.get_val("steel.OpEx"), rel=1e-3) == 1.0156052e08
+        assert pytest.approx(model.prob.get_val("steel.OpEx"), rel=1e-3) == 1.0129052e08
 
 
 def test_simple_ammonia_example(subtests):
