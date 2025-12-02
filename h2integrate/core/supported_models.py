@@ -31,6 +31,7 @@ from h2integrate.converters.iron.iron_transport import (
     IronTransportPerformanceComponent,
 )
 from h2integrate.converters.nitrogen.simple_ASU import SimpleASUCostModel, SimpleASUPerformanceModel
+from h2integrate.converters.wind.wind_plant_ard import ArdWindPlantModel
 from h2integrate.storage.simple_generic_storage import SimpleGenericStorage
 from h2integrate.storage.hydrogen.tank_baseclass import (
     HydrogenTankCostModel,
@@ -152,6 +153,7 @@ supported_models = {
     "atb_wind_cost": ATBWindPlantCostModel,
     "pysam_wind_plant_performance": PYSAMWindPlantPerformanceModel,
     "pysam_solar_plant_performance": PYSAMSolarPlantPerformanceModel,
+    "wind_plant_ard": ArdWindPlantModel,
     "atb_utility_pv_cost": ATBUtilityPVCostModel,
     "atb_comm_res_pv_cost": ATBResComPVCostModel,
     "run_of_river_hydro_performance": RunOfRiverHydroPerformanceModel,

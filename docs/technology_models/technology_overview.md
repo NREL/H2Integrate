@@ -129,6 +129,8 @@ Below summarizes the available performance, cost, and financial models for each 
         + `'pysam_wind_plant_performance'`
     - cost models:
         + `'atb_wind_cost'`
+    - combined models:
+        + `'wind_plant_ard'`
 - `solar`: solar-PV panels
     - performance models:
         + `'pysam_solar_plant_performance'`
