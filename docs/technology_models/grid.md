@@ -27,20 +27,19 @@ Multiple grid instances may be used within the same plant to represent different
 | `electricity_demand`     | array[n_timesteps] | kW    | Electricity demand from downstream technologies.                  |
 
 **Outputs**
-| Name                       | Shape              | Units | Description                                       |
-| -------------------------- | ------------------ | ----- | ------------------------------------------------- |
-| `electricity_out`          | array[n_timesteps] | kW    | Electricity flowing *out of* the grid (buying).   |
-| `electricity_sold`         | array[n_timesteps] | kW    | Electricity successfully sold to the grid.        |
-| `electricity_unmet_demand` | array[n_timesteps] | kW    | Demand not met due to interconnection limits.     |
-| `electricity_not_sold`     | array[n_timesteps] | kW    | Electricity that could not be sold due to limits. |
+| Name                       | Shape              | Units | Description                                                         |
+| -------------------------- | ------------------ | ----- | ------------------------------------------------------------------- |
+| `electricity_out`          | array[n_timesteps] | kW    | Electricity flowing *out of* the grid (buying).                     |
+| `electricity_sold`         | array[n_timesteps] | kW    | Electricity successfully sold to the grid.                          |
+| `electricity_unmet_demand` | array[n_timesteps] | kW    | Downstream technology demand not met due to interconnection limits. |
+| `electricity_excess`     | array[n_timesteps] | kW    | Electricity that could not be sold due to limits.                   |
 
 ## Grid Cost
-`grid_cost` computes all costs associated with the grid interconnection, including:
+`grid_cost` computes all costs and revenues associated with the grid interconnection, including:
 - Capital cost based on interconnection rating.
 - Fixed annual O&M.
 - Variable cost of electricity purchased.
 - Revenue from electricity sold.
-- Optional time-varying energy prices.
 
 **Inputs**
 | Name                            | Shape                        | Units     | Description                                                            |
@@ -55,11 +54,11 @@ Multiple grid instances may be used within the same plant to represent different
 | `electricity_sell_price`        | scalar/array[n_timesteps]    | $/kWh     | Price to sell electricity to grid (optional, time-varying supported).  |
 
 **Outputs**
-| Name      | Description                                                    |
-| --------- | -------------------------------------------------------------- |
-| `CapEx`   | Total capital expenditure.                                     |
-| `OpEx`    | Annual O&M cost.                                               |
-| `VarOpEx` | Variable operating expenses (buying) OR revenues (selling).    |
+| Name      | Description                                                                                                     |
+| --------- | --------------------------------------------------------------------------------------------------------------- |
+| `CapEx`   | Total capital expenditure.                                                                                      |
+| `OpEx`    | Annual O&M cost.                                                                                                |
+| `VarOpEx` | Variable operating expenses (buying), revenues (selling), or net of expenses and revenues (buying and selling). |
 
 The **costs** of purchasing electricity from the grid are represented as a variable operating expense (`VarOpEx`) and are represented as a positive value. This allows it to be tracked as an expense in the financial models.
 

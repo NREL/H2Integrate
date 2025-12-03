@@ -2,7 +2,7 @@
 
 ## Overview
 
-This example demonstrates a solar + battery + grid system that showcases the new unified grid component. The system can both buy electricity from the grid and sell excess electricity back to the grid using separate grid connection instances.
+This example demonstrates a solar + battery + grid system that showcases the unified grid component. The system can both buy electricity from the grid and sell excess electricity back to the grid using separate grid connection instances.
 
 ## System Description
 
@@ -30,6 +30,10 @@ This example demonstrates a solar + battery + grid system that showcases the new
    - Sell price: $0.00/kWh (no revenue in this configuration)
    - No interconnection costs (set to $0)
 
+```{note}
+We use two separate grid instances here: one for buying electricity and one for selling electricity so that there is not a feedback loop in the execution order of the technologies. You could use a single grid instance in this case, but it would require resolving the circular coupling using a nonlinear solver on the model. We generally recommend using separate grid instances for buying and selling to avoid this complexity, though this may vary based on your plant architecture.
+```
+
 ## Key Features Demonstrated
 
 ### Unified Grid Component
@@ -48,9 +52,9 @@ The grid component in this example is designed to handle both electricity purcha
 The grid performance model handles:
 - `electricity_in`: Power flowing INTO the grid (selling to grid) - limited by interconnection size
 - `electricity_out`: Power flowing OUT OF the grid (buying from grid) - limited by interconnection size
-- `electricity_sold`: Actual electricity sold (after interconnection limit)
+- `electricity_sold`: Actual electricity sold (up to interconnection limit)
 - `electricity_unmet_demand`: Demand that couldn't be met due to interconnection limit
-- `electricity_not_sold`: Electricity that couldn't be sold due to interconnection limit
+- `electricity_excess`: Electricity that couldn't be sold due to interconnection limit
 
 **Cost Model:**
 - CapEx: Based on interconnection size ($/kW) plus fixed costs

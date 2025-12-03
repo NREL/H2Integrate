@@ -8,7 +8,7 @@ from h2integrate.core.model_baseclasses import CostModelBaseClass
 
 @define
 class GridPerformanceModelConfig(BaseConfig):
-    """Configuration for unified grid performance model.
+    """Configuration for the grid performance model.
 
     Attributes:
         interconnection_size: Maximum power capacity for grid connection in kW
@@ -24,7 +24,7 @@ class GridPerformanceModel(om.ExplicitComponent):
     - electricity_in: Power flowing INTO the grid (selling to grid).
     - electricity_out: Power flowing OUT OF the grid (buying from grid).
 
-    This unified component handles:
+    This component handles:
     - Buying electricity from the grid (electricity flows out to downstream technologies).
     - Selling electricity to the grid (electricity flows in from upstream technologies).
     - Enforcing interconnection limits on buying flows.
@@ -106,7 +106,7 @@ class GridPerformanceModel(om.ExplicitComponent):
         )
 
         self.add_output(
-            "electricity_not_sold",
+            "electricity_excess",
             val=0.0,
             shape=n_timesteps,
             units="kW",
@@ -128,20 +128,20 @@ class GridPerformanceModel(om.ExplicitComponent):
         outputs["electricity_unmet_demand"] = inputs["electricity_demand"] - electricity_bought
 
         # Not sold electricity if demand exceeds interconnection size
-        outputs["electricity_not_sold"] = inputs["electricity_in"] - electricity_sold
+        outputs["electricity_excess"] = inputs["electricity_in"] - electricity_sold
 
 
 @define
 class GridCostModelConfig(CostModelBaseConfig):
-    """Configuration for unified grid cost model.
+    """Configuration for the grid cost model.
 
     Attributes:
         interconnection_size: Maximum power capacity for grid connection in kW
         interconnection_capex_per_kw: Capital cost per kW of interconnection ($/kW)
         interconnection_opex_per_kw: Annual O&M cost per kW of interconnection ($/kW/year)
+        fixed_interconnection_cost: One-time fixed cost regardless of size ($)
         electricity_buy_price: Price to buy electricity from grid ($/kWh), optional
         electricity_sell_price: Price to sell electricity to grid ($/kWh), optional
-        fixed_interconnection_cost: One-time fixed cost regardless of size ($)
     """
 
     interconnection_size: float = field()  # kW
@@ -162,6 +162,9 @@ class GridCostModel(CostModelBaseClass):
     - Variable costs for electricity purchases (buy mode)
     - Revenue from electricity sales (sell mode)
     - Support for time-varying electricity prices
+
+    Note: Although the electricity units are in kW and the prices are in USD/kWh,
+    this model assumes that each timestep represents 1 hour.
     """
 
     def setup(self):
