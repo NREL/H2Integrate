@@ -94,7 +94,7 @@ class ECOElectrolyzerPerformanceModel(ElectrolyzerPerformanceBaseClass):
         size_mode = discrete_inputs["size_mode"]
         # Make changes to computation based on sizing_mode:
         if size_mode != "normal":
-            size_flow = discrete_inputs["resize_by_flow"]
+            size_flow = discrete_inputs["flow_used_for_sizing"]
         if size_mode == "resize_by_max_feedstock":
             # In this sizing mode, electrolyzer size comes from feedstock
             feed_ratio = inputs["max_feedstock_ratio"]

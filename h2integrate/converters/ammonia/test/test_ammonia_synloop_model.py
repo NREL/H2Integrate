@@ -111,7 +111,7 @@ def test_size_mode_outputs(subtests):
         "sizing"
     ] = {
         "size_mode": "resize_by_max_feedstock",
-        "resize_by_flow": "hydrogen",
+        "flow_used_for_sizing": "hydrogen",
         "max_feedstock_ratio": 1.0,
     }
     model.setup()

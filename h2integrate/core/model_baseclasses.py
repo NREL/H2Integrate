@@ -61,7 +61,7 @@ class ResizeablePerformanceModelBaseClass(om.ExplicitComponent):
                 maximum available amount of a certain feedstock or feedstocks
             - "resize_by_max_commodity": The electrolyzer size is calculated relative to the
                 maximum amount of the commodity used by another tech
-        - resize_by_flow (str): The feedstock/commodity flow used to determine the plant size
+        - flow_used_for_sizing (str): The feedstock/commodity flow used to determine the plant size
             in "resize_by_max_feedstock" and "resize_by_max_commodity" modes
 
     Inputs:
@@ -89,12 +89,12 @@ class ResizeablePerformanceModelBaseClass(om.ExplicitComponent):
             )
 
         if size_mode != "normal":
-            if "resize_by_flow" in self.config.sizing.keys():
-                size_flow = self.config.sizing["resize_by_flow"]
-                self.add_discrete_input("resize_by_flow", val=size_flow)
+            if "flow_used_for_sizing" in self.config.sizing.keys():
+                size_flow = self.config.sizing["flow_used_for_sizing"]
+                self.add_discrete_input("flow_used_for_sizing", val=size_flow)
             else:
                 raise ValueError(
-                    "'resize_by_flow' must be set in sizing dict when size_mode is "
+                    "'flow_used_for_sizing' must be set in sizing dict when size_mode is "
                     "'resize_by_max_feedstock' or 'resize_by_max_commodity'"
                 )
             if size_mode == "resize_by_max_commodity":

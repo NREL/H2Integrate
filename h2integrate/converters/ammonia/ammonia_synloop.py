@@ -181,13 +181,13 @@ class AmmoniaSynLoopPerformanceModel(ResizeablePerformanceModelBaseClass):
         if size_mode == "normal":
             pass
         elif size_mode == "resize_by_max_feedstock":
-            if discrete_inputs["resize_by_flow"] == "hydrogen":
+            if discrete_inputs["flow_used_for_sizing"] == "hydrogen":
                 max_cap_ratio = inputs["max_feedstock_ratio"]
                 feed_mw = x_h2_feed * H_MW * 2 + x_n2_feed * N_MW * 2  # g / mol
                 w_h2_feed = x_h2_feed * H_MW * 2 / feed_mw  # kg H2 / kg feed gas
                 nh3_cap = np.max(inputs["hydrogen_in"]) / (ratio_feed * w_h2_feed) * max_cap_ratio
             else:
-                flow = discrete_inputs["resize_by_flow"]
+                flow = discrete_inputs["flow_used_for_sizing"]
                 NotImplementedError(
                     f"The sizing mode '{size_mode}' is not implemented for the '{flow}' flow"
                 )

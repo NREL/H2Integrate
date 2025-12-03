@@ -35,7 +35,7 @@ for mode in sizing_modes:
             "sizing"
         ] = {
             "size_mode": "resize_by_max_commodity",
-            "resize_by_flow": "hydrogen",
+            "flow_used_for_sizing": "hydrogen",
             "max_hydrogen_ratio": 1.0,
         }
         tech_config["technologies"]["ammonia"]["model_inputs"]["performance_parameters"][
@@ -50,14 +50,14 @@ for mode in sizing_modes:
             "sizing"
         ] = {
             "size_mode": "resize_by_max_feedstock",
-            "resize_by_flow": "electricity",
+            "flow_used_for_sizing": "electricity",
             "max_hydrogen_ratio": 1.0,
         }
         tech_config["technologies"]["ammonia"]["model_inputs"]["performance_parameters"][
             "sizing"
         ] = {
             "size_mode": "resize_by_max_feedstock",
-            "resize_by_flow": "hydrogen",
+            "flow_used_for_sizing": "hydrogen",
             "max_feedstock_ratio": 1.0,
         }
 
