@@ -60,6 +60,8 @@ from h2integrate.converters.hydrogen.pem_electrolyzer import (
 from h2integrate.converters.solar.atb_res_com_pv_cost import ATBResComPVCostModel
 from h2integrate.converters.solar.atb_utility_pv_cost import ATBUtilityPVCostModel
 from h2integrate.resource.wind.nrel_developer_wtk_api import WTKNRELDeveloperAPIWindResource
+from h2integrate.converters.iron.martin_mine_cost_model import MartinIronMineCostComponent
+from h2integrate.converters.iron.martin_mine_perf_model import MartinIronMinePerformanceComponent
 from h2integrate.converters.methanol.smr_methanol_plant import (
     SMRMethanolPlantCostModel,
     SMRMethanolPlantFinanceModel,
@@ -83,6 +85,7 @@ from h2integrate.converters.co2.marine.direct_ocean_capture import DOCCostModel,
 from h2integrate.control.control_strategies.pyomo_controllers import (
     HeuristicLoadFollowingController,
 )
+from h2integrate.converters.hydrogen.geologic.mathur_modified import GeoH2SubsurfaceCostModel
 from h2integrate.resource.solar.nrel_developer_goes_api_models import (
     GOESTMYSolarAPI,
     GOESConusSolarAPI,
@@ -92,18 +95,17 @@ from h2integrate.resource.solar.nrel_developer_goes_api_models import (
 from h2integrate.converters.hydrogen.eco_tools_pem_electrolyzer import (
     ECOElectrolyzerPerformanceModel,
 )
-from h2integrate.control.control_strategies.openloop_controllers import (
-    DemandOpenLoopController,
-    PassThroughOpenLoopController,
-)
 from h2integrate.converters.water_power.hydro_plant_run_of_river import (
     RunOfRiverHydroCostModel,
     RunOfRiverHydroPerformanceModel,
 )
-from h2integrate.converters.hydrogen.geologic.natural_geoh2_plant import (
-    NaturalGeoH2CostModel,
-    NaturalGeoH2FinanceModel,
+from h2integrate.converters.hydrogen.geologic.simple_natural_geoh2 import (
     NaturalGeoH2PerformanceModel,
+)
+from h2integrate.resource.solar.nrel_developer_himawari_api_models import (
+    Himawari7SolarAPI,
+    Himawari8SolarAPI,
+    HimawariTMYSolarAPI,
 )
 from h2integrate.control.control_rules.converters.generic_converter import (
     PyomoDispatchGenericConverter,
@@ -116,13 +118,27 @@ from h2integrate.converters.co2.marine.ocean_alkalinity_enhancement import (
 from h2integrate.converters.hydrogen.custom_electrolyzer_cost_model import (
     CustomElectrolyzerCostModel,
 )
-from h2integrate.converters.hydrogen.geologic.stimulated_geoh2_plant import (
-    StimulatedGeoH2CostModel,
-    StimulatedGeoH2FinanceModel,
+from h2integrate.converters.hydrogen.geologic.templeton_serpentinization import (
     StimulatedGeoH2PerformanceModel,
 )
 from h2integrate.control.control_rules.storage.pyomo_storage_rule_baseclass import (
     PyomoRuleStorageBaseclass,
+)
+from h2integrate.control.control_strategies.passthrough_openloop_controller import (
+    PassThroughOpenLoopController,
+)
+from h2integrate.resource.solar.nrel_developer_meteosat_prime_meridian_models import (
+    MeteosatPrimeMeridianSolarAPI,
+    MeteosatPrimeMeridianTMYSolarAPI,
+)
+from h2integrate.control.control_strategies.storage.demand_openloop_controller import (
+    DemandOpenLoopStorageController,
+)
+from h2integrate.control.control_strategies.converters.demand_openloop_controller import (
+    DemandOpenLoopConverterController,
+)
+from h2integrate.control.control_strategies.converters.flexible_demand_openloop_controller import (
+    FlexibleDemandOpenLoopConverterController,
 )
 
 
@@ -135,6 +151,11 @@ supported_models = {
     "goes_conus_solar_v4_api": GOESConusSolarAPI,
     "goes_fulldisc_solar_v4_api": GOESFullDiscSolarAPI,
     "goes_tmy_solar_v4_api": GOESTMYSolarAPI,
+    "meteosat_solar_v4_api": MeteosatPrimeMeridianSolarAPI,
+    "meteosat_tmy_solar_v4_api": MeteosatPrimeMeridianTMYSolarAPI,
+    "himawari7_solar_v3_api": Himawari7SolarAPI,
+    "himawari8_solar_v3_api": Himawari8SolarAPI,
+    "himawari_tmy_solar_v3_api": HimawariTMYSolarAPI,
     # Converters
     "atb_wind_cost": ATBWindPlantCostModel,
     "pysam_wind_plant_performance": PYSAMWindPlantPerformanceModel,
@@ -158,6 +179,8 @@ supported_models = {
     "iron_mine_cost": IronMineCostComponent,
     "iron_plant_performance": IronPlantPerformanceComponent,
     "iron_plant_cost": IronPlantCostComponent,
+    "iron_mine_performance_martin": MartinIronMinePerformanceComponent,  # standalone model
+    "iron_mine_cost_martin": MartinIronMineCostComponent,  # standalone model
     "reverse_osmosis_desalination_performance": ReverseOsmosisPerformanceModel,
     "reverse_osmosis_desalination_cost": ReverseOsmosisCostModel,
     "simple_ammonia_performance": SimpleAmmoniaPerformanceModel,
@@ -177,12 +200,9 @@ supported_models = {
     "ocean_alkalinity_enhancement_performance": OAEPerformanceModel,
     "ocean_alkalinity_enhancement_cost": OAECostModel,
     "ocean_alkalinity_enhancement_cost_financial": OAECostAndFinancialModel,
-    "natural_geoh2_performance": NaturalGeoH2PerformanceModel,
-    "natural_geoh2_cost": NaturalGeoH2CostModel,
-    "natural_geoh2": NaturalGeoH2FinanceModel,
-    "stimulated_geoh2_performance": StimulatedGeoH2PerformanceModel,
-    "stimulated_geoh2_cost": StimulatedGeoH2CostModel,
-    "stimulated_geoh2": StimulatedGeoH2FinanceModel,
+    "simple_natural_geoh2_performance": NaturalGeoH2PerformanceModel,
+    "templeton_serpentinization_geoh2_performance": StimulatedGeoH2PerformanceModel,
+    "mathur_modified_geoh2_cost": GeoH2SubsurfaceCostModel,
     "natural_gas_performance": NaturalGasPerformanceModel,
     "natural_gas_cost": NaturalGasCostModel,
     # Transport
@@ -208,8 +228,10 @@ supported_models = {
     "simple_generic_storage": SimpleGenericStorage,
     # Control
     "pass_through_controller": PassThroughOpenLoopController,
-    "demand_open_loop_controller": DemandOpenLoopController,
+    "demand_open_loop_storage_controller": DemandOpenLoopStorageController,
     "heuristic_load_following_controller": HeuristicLoadFollowingController,
+    "demand_open_loop_converter_controller": DemandOpenLoopConverterController,
+    "flexible_demand_open_loop_converter_controller": FlexibleDemandOpenLoopConverterController,
     # Dispatch
     "pyomo_dispatch_generic_converter": PyomoDispatchGenericConverter,
     "pyomo_dispatch_generic_storage": PyomoRuleStorageBaseclass,

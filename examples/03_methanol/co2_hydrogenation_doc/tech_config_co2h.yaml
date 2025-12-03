@@ -51,7 +51,7 @@ technologies:
     cost_model:
       model: "generic_storage_cost"
     control_strategy:
-      model: "demand_open_loop_controller"
+      model: "demand_open_loop_storage_controller"
     model_inputs:
       shared_parameters:
         commodity_name: "hydrogen"
@@ -104,7 +104,7 @@ technologies:
     cost_model:
       model: "generic_storage_cost"
     control_strategy:
-      model: "demand_open_loop_controller"
+      model: "demand_open_loop_storage_controller"
     model_inputs:
       shared_parameters:
         commodity_name: "co2"
