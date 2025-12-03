@@ -21,7 +21,7 @@ tech_config = {
         "performance_parameters": {
             "sizing": {
                 "size_mode": "normal",  # Always required
-                "resize_by_flow": "electricity",  # Not required in "normal" mode
+                "flow_used_for_sizing": "electricity",  # Not required in "normal" mode
                 "max_feedstock_ratio": 1.6,  # Only used in "resize_by_max_feedstock"
                 "max_commodity_ratio": 0.7,  # Only used in "resize_by_max_commodity"
             },
@@ -35,7 +35,7 @@ Currently, there are three different modes defined for `size_mode`:
 - `normal`: In this mode, converters function as they always have previously:
     - The size of the asset is fixed within `compute()`.
 - `resize_by_max_feedstock`: In this mode, the size of the converter is adjusted to be able to utilize all of the available feedstock:
-    - The size of the asset should be calculated within `compute()` as a function of the maximum value of `<feedstock>_in` - with the `<feedstock>` specified by the `resize_by_flow` parameter.
+    - The size of the asset should be calculated within `compute()` as a function of the maximum value of `<feedstock>_in` - with the `<feedstock>` specified by the `flow_used_for_sizing` parameter.
     - This function will utilizes the `"max_feedstock_ratio"` parameter - e.g., if `"max_feedstock_ratio"` is 1.6, the converter will be resized so that its input capacity is 1.6 times the max of `<feedstock>_in`.
     - The `set_val` method will over-write any previous sizing variables to reflect the adjusted size of the converter.
 - `resize_by_max_commodity`: In this mode, the size of the asset is adjusted to be able to supply its product to the full capacity of another downstream converter:
@@ -90,14 +90,14 @@ class TechPerformanceModel(ResizeablePerformanceModelBaseClass):
         if size_mode != "normal":
             size = inputs["size"]
             if size_mode == "resize_by_max_feedstock":
-                if inputs["resize_by_flow"] == "<feedstock>":
+                if inputs["flow_used_for_sizing"] == "<feedstock>":
                     feed_ratio = inputs["max_feedstock_ratio"]
                     size_for_max_feed = self.feedstock_sizing_function(
                         np.max(inputs["<feedstock>_in"])
                     )
                     size = size_for_max_feed * feed_ratio
             elif size_mode == "resize_by_max_commodity":
-                if inputs["resize_by_flow"] == "<commodity>":
+                if inputs["flow_used_for_sizing"] == "<commodity>":
                     comm_ratio = inputs["max_commodity_ratio"]
                     size_for_max_comm = self.commodity_sizing_function(
                         np.max(inputs["max_<commodity>_capacity"])
@@ -166,7 +166,7 @@ technologies:
       performance_parameters:
         sizing:
           size_mode: "size_by_max_feedstock"
-          resize_by_flow: "electricity"
+          flow_used_for_sizing: "electricity"
           max_feedstock_ratio: 1.0
   ammonia:
     model_inputs:
@@ -193,7 +193,7 @@ technologies:
       performance_parameters:
         sizing:
           size_mode: "size_by_max_commodity"
-          resize_by_flow: "hydrogen"
+          flow_used_for_sizing: "hydrogen"
           max_commodity_ratio: 1.0
   ammonia:
     model_inputs:
@@ -219,14 +219,14 @@ technologies:
       performance_parameters:
         sizing:
           size_mode: "size_by_max_feedstock"
-          resize_by_flow: "electricity"
+          flow_used_for_sizing: "electricity"
           max_feedstock_ratio: 1.0
   ammonia:
     model_inputs:
       performance_parameters:
         sizing:
           size_mode: "size_by_max_feedstock"
-          resize_by_flow: "hydrogen"
+          flow_used_for_sizing: "hydrogen"
           max_feedstock_ratio: 1.0
 ```
 And in the `driver_config`:

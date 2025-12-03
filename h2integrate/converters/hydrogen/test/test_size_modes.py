@@ -18,7 +18,7 @@ def test_resize_by_max_feedstock(subtests):
         "performance_parameters"
     ]["sizing"] = {
         "size_mode": "resize_by_max_feedstock",
-        "resize_by_flow": "electricity",
+        "flow_used_for_sizing": "electricity",
         "max_feedstock_ratio": 1.0,
     }
     model.setup()
@@ -44,7 +44,7 @@ def test_resize_by_max_commodity(subtests):
         "performance_parameters"
     ]["sizing"] = {
         "size_mode": "resize_by_max_commodity",
-        "resize_by_flow": "hydrogen",
+        "flow_used_for_sizing": "hydrogen",
         "max_commodity_ratio": 1.0,
     }
     model.setup()
