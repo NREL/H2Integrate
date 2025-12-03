@@ -34,6 +34,7 @@
 - Added solar resource models for Meteosat Prime Meridian and Himawari datasets available through NSRDB
 - Improved readability of the postprocessing printout by simplifying numerical representation, especially for years
 - Add open-loop load demand controllers: `DemandOpenLoopConverterController` and `FlexibleDemandOpenLoopConverterController`
+- Removed a large portion of the old GreenHEART code that was no longer being used
 
 ## 0.4.0 [October 1, 2025]
 
