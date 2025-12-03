@@ -7,7 +7,7 @@ general:
 
 driver:
   optimization:
-    flag: True
+    flag: False
     solver: COBYLA
     tol: 0.01
     catol: 15000
@@ -18,13 +18,13 @@ driver:
 design_variables:
   electrolyzer:
     max_feedstock_ratio:
-      flag: True
+      flag: False
       lower: 0.1
       upper: 10.
       units: unitless
   ammonia:
     max_feedstock_ratio:
-      flag: True
+      flag: False
       lower: 0.1
       upper: 10.
       units: unitless
@@ -33,7 +33,7 @@ objective:
   name: finance_subgroup_nh3.LCOA
 
 recorder:
-  flag: True
+  flag: False
   file: "size_mode_example.sql"
   includes: ["*"]
   excludes: ["wind_resource.wind_resource_data"]

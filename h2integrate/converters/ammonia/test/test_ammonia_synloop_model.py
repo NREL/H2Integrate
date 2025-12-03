@@ -1,5 +1,4 @@
 import os
-from pathlib import Path
 
 import numpy as np
 import pytest
@@ -7,6 +6,7 @@ import openmdao.api as om
 
 from h2integrate import EXAMPLE_DIR
 from h2integrate.core.h2integrate_model import H2IntegrateModel
+from h2integrate.core.inputs.validation import load_tech_yaml, load_plant_yaml, load_driver_yaml
 from h2integrate.converters.ammonia.ammonia_synloop import AmmoniaSynLoopPerformanceModel
 
 
@@ -103,21 +103,30 @@ def test_ammonia_synloop_limiting_cases(subtests):
 
 def test_size_mode_outputs(subtests):
     # Change the current working directory to the example's directory
-    os.chdir(EXAMPLE_DIR / "22_sizing_modes")
+    os.chdir(EXAMPLE_DIR / "24_sizing_modes")
 
-    # Create a H2Integrate model
-    model = H2IntegrateModel(Path.cwd() / "22_size_mode_iterative.yaml")
-    model.technology_config["technologies"]["ammonia"]["model_inputs"]["performance_parameters"][
-        "sizing"
-    ] = {
+    # Load the 'base' configs needed to create the H2I model
+    driver_config = load_driver_yaml(EXAMPLE_DIR / "24_sizing_modes" / "driver_config.yaml")
+    plant_config = load_plant_yaml(EXAMPLE_DIR / "24_sizing_modes" / "plant_config.yaml")
+    tech_config = load_tech_yaml(EXAMPLE_DIR / "24_sizing_modes" / "tech_config.yaml")
+    input_config = {
+        "name": "H2Integrate_config",
+        "system_summary": "hybrid plant containing ammonia plant and electrolyzer",
+        "driver_config": driver_config,
+        "plant_config": plant_config,
+        "technology_config": tech_config,
+    }
+
+    # Create a H2Integrate model, modifying tech_config as necessary
+    tech_config["technologies"]["ammonia"]["model_inputs"]["performance_parameters"]["sizing"] = {
         "size_mode": "resize_by_max_feedstock",
         "flow_used_for_sizing": "hydrogen",
         "max_feedstock_ratio": 1.0,
     }
-    model.setup()
+    input_config["technology_config"] = tech_config
+    model = H2IntegrateModel(input_config)
 
     model.run()
-    model.post_process()
 
     with subtests.test("Test `resize_by_max_feedstock` mode"):
         assert (
