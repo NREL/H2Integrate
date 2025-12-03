@@ -443,8 +443,6 @@ class H2IntegrateModel:
                         else:
                             plural_model_type_name = model_type + "s"
                         getattr(self, plural_model_type_name).append(om_model_object)
-                    elif model_type == "performance_model":
-                        raise KeyError("Model definition requires 'performance_model'.")
 
                 # Process the finance models
                 if "finance_model" in individual_tech_config:
