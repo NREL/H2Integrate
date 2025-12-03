@@ -151,7 +151,7 @@ class ProFastLCO(ProFastBase):
             pf_config_dict = dict_to_yaml_formatting(pf_config_dict)
 
             if save_config:
-                config_fpath = Path(output_dir) / f"{fbasename}config.yaml"
+                config_fpath = Path(output_dir) / f"{fbasename}_config.yaml"
                 write_yaml(pf_config_dict, config_fpath)
 
             if save_results:

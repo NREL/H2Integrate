@@ -4,12 +4,19 @@ import numpy as np
 import openmdao.api as om
 import matplotlib.pyplot as plt
 
-from h2integrate.core.utilities import get_path, find_file, load_yaml, create_xdsm_from_config
+from h2integrate.core.utilities import (
+    get_path,
+    find_file,
+    load_yaml,
+    print_results,
+    create_xdsm_from_config,
+)
 from h2integrate.finances.finances import AdjustedCapexOpexComp
 from h2integrate.core.resource_summer import ElectricitySumComp
 from h2integrate.core.supported_models import supported_models, electricity_producing_techs
 from h2integrate.core.inputs.validation import load_tech_yaml, load_plant_yaml, load_driver_yaml
 from h2integrate.core.pose_optimization import PoseOptimization
+from h2integrate.postprocess.sql_to_csv import convert_sql_to_csv_summary
 
 
 try:
@@ -36,6 +43,9 @@ class H2IntegrateModel:
 
         # track if setup has been called via boolean
         self.setup_has_been_called = False
+
+        # initialize recorder_path attribute
+        self.recorder_path = None
 
         # create site-level model
         # this is an OpenMDAO group that contains all the site information
@@ -345,8 +355,8 @@ class H2IntegrateModel:
             "hopp",
             "h2_storage",
             "wombat",
-            "iron",
             "wind_plant_ard",
+            "iron",
         ]
 
         # Create a technology group for each technology
@@ -1049,6 +1059,13 @@ class H2IntegrateModel:
                                     f"finance_subgroup_{group_id}.total_hydrogen_produced",
                                 )
 
+                        if "geoh2" in tech_name:
+                            if primary_commodity_type == "hydrogen":
+                                self.plant.connect(
+                                    f"{tech_name}.total_hydrogen_produced",
+                                    f"finance_subgroup_{group_id}.total_hydrogen_produced",
+                                )
+
                         if "ammonia" in tech_name and primary_commodity_type == "ammonia":
                             self.plant.connect(
                                 f"{tech_name}.total_ammonia_produced",
@@ -1125,7 +1142,7 @@ class H2IntegrateModel:
             myopt.set_constraints(self.prob)
         # Add a recorder if specified in the driver config
         if "recorder" in self.driver_config:
-            myopt.set_recorders(self.prob)
+            self.recorder_path = myopt.set_recorders(self.prob)
 
     def setup(self):
         """
@@ -1143,7 +1160,7 @@ class H2IntegrateModel:
 
         self.prob.run_driver()
 
-    def post_process(self, show_plots=False):
+    def post_process(self, summarize_sql=False, show_plots=False):
         """
         Post-process the results of the OpenMDAO model.
 
@@ -1151,12 +1168,18 @@ class H2IntegrateModel:
         We currently exclude any variables with "resource_data" in the name, since those
         are large dictionary variables that are not correctly formatted when printing.
 
+        If `summarize_sql` is set to True and a recorder file was written, the results
+        in the recorder file will be summarized and saved as a .csv file.
+
         Also, if `show_plots` is set to True, then any performance models with post-processing
         plots available will be run and shown.
         """
+        # Use custom summary printer instead of OpenMDAO's built-in printing so we can
+        # suppress internal value printing and display only mean values.
+        print_results(self.prob.model, excludes=["*resource_data"])
 
-        self.prob.model.list_inputs(units=True, print_mean=True, excludes=["*resource_data"])
-        self.prob.model.list_outputs(units=True, print_mean=True, excludes=["*resource_data"])
+        if summarize_sql and self.recorder_path is not None:
+            convert_sql_to_csv_summary(self.recorder_path, save_to_file=True)
 
         for model in self.performance_models:
             if hasattr(model, "post_process") and callable(model.post_process):

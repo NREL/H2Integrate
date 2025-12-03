@@ -37,7 +37,6 @@ class UndergroundPipeStorage:
                 - flow_rate_kg_hr (float): (optional if h2_storage_kg set) [kg/hr]
                 - compressor_output_pressure (float): 100 bar required [bar]
                 - system_flow_rate (float): [kg/day]
-                - model (str): ('papadias' or 'hdsam')
                 - labor_rate (float): (optional, default: 37.40) [$2018/hr]
                 - insurance (float): (optional, default: 1%) [decimal percent]
                 - property_taxes (float): (optional, default: 1%) [decimal percent]
@@ -79,11 +78,6 @@ class UndergroundPipeStorage:
         else:
             self.system_flow_rate = input_dict["system_flow_rate"]
 
-        if "model" in input_dict:
-            self.model = input_dict["model"]  # [papadias, hdsam]
-        else:
-            raise Exception("input_dict must contain model type of either `papadias` or `hdsam`")
-
         self.labor_rate = input_dict.get("labor_rate", 37.39817)  # $(2018)/hr
         self.insurance = input_dict.get("insurance", 1 / 100)  # % of total capital investment
         self.property_taxes = input_dict.get(
@@ -113,42 +107,38 @@ class UndergroundPipeStorage:
                 - pipe_storage_capex (float): installed capital cost in 2018 [USD]
         """
 
-        if self.model == "papadias":
-            # Installed capital cost
-            a = 0.0041617
-            b = 0.060369
-            c = 6.4581
-            self.pipe_storage_capex_per_kg = np.exp(
-                a * (np.log(self.h2_storage_kg / 1000)) ** 2
-                - b * np.log(self.h2_storage_kg / 1000)
-                + c
-            )  # 2019 [USD] from Papadias [2]
-            self.installed_capex = self.pipe_storage_capex_per_kg * self.h2_storage_kg
-            cepci_overall = 1.29 / 1.30  # Convert from $2019 to $2018
-            self.installed_capex = cepci_overall * self.installed_capex
-            self.output_dict["pipe_storage_capex"] = self.installed_capex
+        # Installed capital cost
+        a = 0.0041617
+        b = 0.060369
+        c = 6.4581
+        self.pipe_storage_capex_per_kg = np.exp(
+            a * (np.log(self.h2_storage_kg / 1000)) ** 2 - b * np.log(self.h2_storage_kg / 1000) + c
+        )  # 2019 [USD] from Papadias [2]
+        self.installed_capex = self.pipe_storage_capex_per_kg * self.h2_storage_kg
+        cepci_overall = 1.29 / 1.30  # Convert from $2019 to $2018
+        self.installed_capex = cepci_overall * self.installed_capex
+        self.output_dict["pipe_storage_capex"] = self.installed_capex
 
-            outlet_pressure = (
-                self.compressor_output_pressure
-            )  # Max outlet pressure of underground pipe storage [1]
-            n_compressors = 2
+        outlet_pressure = (
+            self.compressor_output_pressure
+        )  # Max outlet pressure of underground pipe storage [1]
+        n_compressors = 2
+        storage_compressor = Compressor(
+            outlet_pressure, self.system_flow_rate, n_compressors=n_compressors
+        )
+        storage_compressor.compressor_power()
+        motor_rating, power = storage_compressor.compressor_system_power()
+        if motor_rating > 1600:
+            n_compressors += 1
             storage_compressor = Compressor(
                 outlet_pressure, self.system_flow_rate, n_compressors=n_compressors
             )
             storage_compressor.compressor_power()
             motor_rating, power = storage_compressor.compressor_system_power()
-            if motor_rating > 1600:
-                n_compressors += 1
-                storage_compressor = Compressor(
-                    outlet_pressure, self.system_flow_rate, n_compressors=n_compressors
-                )
-                storage_compressor.compressor_power()
-                motor_rating, power = storage_compressor.compressor_system_power()
-            comp_capex, comp_OM = storage_compressor.compressor_costs()
-            cepci = 1.36 / 1.29  # convert from $2016 to $2018
-            self.comp_capex = comp_capex * cepci
-        elif self.model == "hdsam":
-            raise NotImplementedError
+        comp_capex, comp_OM = storage_compressor.compressor_costs()
+        cepci = 1.36 / 1.29  # convert from $2016 to $2018
+        self.comp_capex = comp_capex * cepci
+
         return self.pipe_storage_capex_per_kg, self.installed_capex, self.comp_capex
 
     def pipe_storage_opex(self):

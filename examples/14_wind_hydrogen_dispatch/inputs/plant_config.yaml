@@ -5,17 +5,7 @@ site:
   latitude: 35.2018863
   longitude: -101.945027
 
-  # array of polygons defining boundaries with x/y coords
-  boundaries: [
-    {
-      x: [0.0, 1000.0, 1000.0, 0.0],
-      y: [0.0, 0.0, 100.0, 1000.0],
-    },
-    {
-      x: [2000.0, 2500.0, 2000.0],
-      y: [2000.0, 2000.0, 2500.0],
-    }
-  ]
+
   resources:
     wind_resource:
       resource_model: "wind_toolkit_v2_api"
@@ -28,7 +18,6 @@ site:
 # this will naturally grow as we mature the interconnected tech
 technology_interconnections: [
   ["wind", "electrolyzer", "electricity", "cable"],
-  ["electrolyzer", "h2_storage", "efficiency"],
   ["electrolyzer", "h2_storage", "hydrogen", "pipe"],
 ]
 
