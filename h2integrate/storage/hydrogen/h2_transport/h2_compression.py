@@ -22,8 +22,8 @@ class Compressor:
         """
         Parameters:
         ---------------
-        p_outlet: oulet pressure (bar)
-        flow_Rate_kg_d: mass flow rate in kg/day
+        p_outlet: outlet pressure (bar)
+        flow_rate_kg_d: mass flow rate in kg/day
         """
         self.p_inlet = p_inlet  # bar
         self.p_outlet = p_outlet  # bar
