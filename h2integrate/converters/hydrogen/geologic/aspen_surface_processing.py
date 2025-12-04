@@ -149,7 +149,7 @@ def refit_coeffs(input_fn, coeff_fn, output_names, plot_flag=False):
         if plot_flag:
             # Create an input grid
             x_axis_pts = np.arange(0.01, 1, 0.01)
-            y_axis_pts = np.exp(np.linspace(np.log(1000), np.log(1000000), 100))
+            y_axis_pts = np.exp(np.linspace(np.log(1000), np.log(100000), 100))
             x_grid, y_grid = np.meshgrid(x_axis_pts, y_axis_pts)
 
             # Scale the input grid

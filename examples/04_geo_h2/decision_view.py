@@ -137,8 +137,6 @@ cbar = plt.colorbar()
 cbar_label = cbar.set_label("Levelized Cost of Hydrogen [$/kg]", loc="center")
 # cbar_title.set_rotation = 90
 
-# plt.semilogy()
-
 plt.grid("on", alpha=0.5)
 
 plt.xlim((0, 100))
@@ -157,5 +155,10 @@ plt.text(95, 35, msg, horizontalalignment="right", color="m")
 
 plt.plot([0, 100], [1521.864] * 2, "k:")
 plt.text(1, 1600, "Dotted line:\nInitial flow of typical\nnatural gas well (for reference)")
+
+plt.plot([25, 50, 75, 25, 50], [23607.54, 13330.20, 6053.04, 70817.80, 20000.87], "ko")
+
+# plt.ylim([1000,100000])
+# plt.semilogy()
 
 plt.show()
