@@ -82,16 +82,10 @@ def test_simple_ammonia_example(subtests):
         assert pytest.approx(model.prob.get_val("electrolyzer.OpEx"), rel=1e-3) == 14703155.39207595
 
     with subtests.test("Check H2 storage CapEx"):
-        assert (
-            pytest.approx(model.prob.get_val("plant.h2_storage.h2_storage.CapEx"), rel=1e-3)
-            == 65336874.189441
-        )
+        assert pytest.approx(model.prob.get_val("h2_storage.CapEx"), rel=1e-3) == 65336874.189441
 
     with subtests.test("Check H2 storage OpEx"):
-        assert (
-            pytest.approx(model.prob.get_val("plant.h2_storage.h2_storage.OpEx"), rel=1e-3)
-            == 2358776.66234517
-        )
+        assert pytest.approx(model.prob.get_val("h2_storage.OpEx"), rel=1e-3) == 2358776.66234517
 
     with subtests.test("Check ammonia CapEx"):
         assert pytest.approx(model.prob.get_val("ammonia.CapEx"), rel=1e-3) == 1.0124126e08
@@ -121,6 +115,15 @@ def test_simple_ammonia_example(subtests):
             pytest.approx(model.prob.get_val("finance_subgroup_hydrogen.LCOH")[0], rel=1e-3)
             == 3.970
         )
+
+    with subtests.test("Check price of hydrogen"):
+        assert (
+            pytest.approx(
+                model.prob.get_val("finance_subgroup_hydrogen.price_hydrogen")[0], rel=1e-3
+            )
+            == 3.970
+        )
+
     # Currently underestimated compared to the Reference Design Doc
     with subtests.test("Check LCOA"):
         assert (
@@ -167,22 +170,16 @@ def test_ammonia_synloop_example(subtests):
         assert pytest.approx(model.prob.get_val("electrolyzer.OpEx"), rel=1e-6) == 14703155.39207595
 
     with subtests.test("Check H2 storage CapEx"):
-        assert (
-            pytest.approx(model.prob.get_val("plant.h2_storage.h2_storage.CapEx"), rel=1e-6)
-            == 65337437.18075897
-        )
+        assert pytest.approx(model.prob.get_val("h2_storage.CapEx"), rel=1e-6) == 65337437.18075897
 
     with subtests.test("Check H2 storage OpEx"):
-        assert (
-            pytest.approx(model.prob.get_val("plant.h2_storage.h2_storage.OpEx"), rel=1e-6)
-            == 2358794.11507603
-        )
+        assert pytest.approx(model.prob.get_val("h2_storage.OpEx"), rel=1e-6) == 2358794.11507603
 
     with subtests.test("Check ammonia CapEx"):
         assert pytest.approx(model.prob.get_val("ammonia.CapEx"), rel=1e-6) == 1.15173753e09
 
     with subtests.test("Check ammonia OpEx"):
-        assert pytest.approx(model.prob.get_val("ammonia.OpEx"), rel=1e-6) == 25318447.90064406
+        assert pytest.approx(model.prob.get_val("ammonia.OpEx"), rel=1e-4) == 25712447.0
 
     with subtests.test("Check total adjusted CapEx"):
         assert (
@@ -197,7 +194,7 @@ def test_ammonia_synloop_example(subtests):
             pytest.approx(
                 model.prob.get_val("finance_subgroup_nh3.total_opex_adjusted")[0], rel=1e-6
             )
-            == 78480154.4
+            == 78873785.09009656
         )
 
     with subtests.test("Check LCOH"):
@@ -209,7 +206,7 @@ def test_ammonia_synloop_example(subtests):
     with subtests.test("Check LCOA"):
         assert (
             pytest.approx(model.prob.get_val("finance_subgroup_nh3.LCOA")[0], rel=1e-6)
-            == 1.067030996544544
+            == 1.21777477635066
         )
 
 
@@ -527,7 +524,7 @@ def test_hydrogen_dispatch_example(subtests):
                 model.prob.get_val("finance_subgroup_dispatched_hydrogen.LCOH", units="USD/kg")[0],
                 rel=1e-5,
             )
-            == 8.371194137479359
+            == 7.54632229849164
         )
 
 
@@ -735,6 +732,14 @@ def test_wind_solar_electrolyzer_example(subtests):
     model = H2IntegrateModel(Path.cwd() / "15_wind_solar_electrolyzer.yaml")
     model.run()
 
+    solar_fpath = model.model.get_val("site.solar_resource.solar_resource_data")["filepath"]
+    wind_fpath = model.model.get_val("site.wind_resource.wind_resource_data")["filepath"]
+
+    with subtests.test("Wind resource file"):
+        assert Path(wind_fpath).name == "35.2018863_-101.945027_2012_wtk_v2_60min_utc_tz.csv"
+
+    with subtests.test("Solar resource file"):
+        assert Path(solar_fpath).name == "30.6617_-101.7096_psmv3_60_2013.csv"
     model.post_process()
 
     wind_aep = sum(model.prob.get_val("wind.electricity_out", units="kW"))
@@ -1055,13 +1060,11 @@ def test_simple_dispatch_example(subtests):
 def test_csvgen_design_of_experiments(subtests):
     os.chdir(EXAMPLE_DIR / "20_solar_electrolyzer_doe")
 
-    # Create a H2Integrate model
-
     with pytest.raises(UserWarning) as excinfo:
         model = H2IntegrateModel(Path.cwd() / "20_solar_electrolyzer_doe.yaml")
         assert "There may be issues with the csv file csv_doe_cases.csv" in str(excinfo.value)
 
-    # Run the model
+    import pandas as pd
     from hopp.utilities.utilities import load_yaml
 
     from h2integrate.core.utilities import check_file_format_for_csv_generator
@@ -1094,8 +1097,26 @@ def test_csvgen_design_of_experiments(subtests):
     # save the updated top-level config file to a new file
     write_yaml(main_config, new_toplevel_fpath)
 
+    # Run the model
     model = H2IntegrateModel(new_toplevel_fpath)
     model.run()
+
+    # summarize sql file
+    model.post_process(summarize_sql=True)
+
+    with subtests.test("Check that sql file was summarized"):
+        assert model.recorder_path is not None
+        summarized_filepath = model.recorder_path.parent / f"{model.recorder_path.stem}.csv"
+        assert summarized_filepath.is_file()
+    with subtests.test("Check that sql summary file was written as expected"):
+        summary = pd.read_csv(summarized_filepath, index_col="Unnamed: 0")
+        assert len(summary) == 10
+        d_var_cols = ["solar.capacity_kWdc (kW)", "electrolyzer.n_clusters (unitless)"]
+        assert summary.columns.to_list()[0] in d_var_cols
+        assert summary.columns.to_list()[1] in d_var_cols
+        assert "finance_subgroup_hydrogen.LCOH_optimistic (USD/kg)" in summary.columns.to_list()
+    # delete summary file
+    summarized_filepath.unlink()
 
     sql_fpath = Path.cwd() / "ex_20_out" / "cases.sql"
     cr = om.CaseReader(str(sql_fpath))
@@ -1176,3 +1197,99 @@ def test_csvgen_design_of_experiments(subtests):
     new_driver_fpath.unlink()
     new_toplevel_fpath.unlink()
     new_csv_filename.unlink()
+
+
+def test_sweeping_solar_sites_doe(subtests):
+    os.chdir(EXAMPLE_DIR / "22_site_doe")
+    import pandas as pd
+
+    # Create the model
+    model = H2IntegrateModel("22_solar_site_doe.yaml")
+
+    # Run the model
+    model.run()
+
+    # Specify the filepath to the sql file, the folder and filename are in the driver_config
+    sql_fpath = EXAMPLE_DIR / "22_site_doe" / "ex_22_out" / "cases.sql"
+
+    # load the cases
+    cr = om.CaseReader(sql_fpath)
+
+    cases = list(cr.get_cases())
+
+    res_df = pd.DataFrame()
+    for ci, case in enumerate(cases):
+        solar_resource_data = case.get_val("site.solar_resource.solar_resource_data")
+        lat_lon = f"{case.get_val('site.latitude')[0]} {case.get_val('site.longitude')[0]}"
+        solar_capacity = case.get_design_vars()["solar.capacity_kWdc"]
+        aep = case.get_val("solar.annual_energy", units="MW*h/yr")
+        lcoe = case.get_val("finance_subgroup_electricity.LCOE_optimistic", units="USD/(MW*h)")
+
+        site_res = pd.DataFrame(
+            [aep, lcoe, solar_capacity], index=["AEP", "LCOE", "solar_capacity"], columns=[lat_lon]
+        ).T
+        res_df = pd.concat([site_res, res_df], axis=0)
+
+        with subtests.test(f"Case {ci}: Solar resource latitude matches site latitude"):
+            assert (
+                pytest.approx(case.get_val("site.latitude"), abs=0.1)
+                == solar_resource_data["site_lat"]
+            )
+        with subtests.test(f"Case {ci}: Solar resource longitude matches site longitude"):
+            assert (
+                pytest.approx(case.get_val("site.longitude"), abs=0.1)
+                == solar_resource_data["site_lon"]
+            )
+
+    locations = list(set(res_df.index.to_list()))
+    solar_sizes = list(set(res_df["solar_capacity"].to_list()))
+
+    with subtests.test("Two solar sizes per site"):
+        assert len(solar_sizes) == 2
+    with subtests.test("Two unique sites"):
+        assert len(locations) == 2
+
+    with subtests.test("Unique AEPs per case"):
+        assert len(list(set(res_df["AEP"].to_list()))) == len(res_df)
+
+    with subtests.test("Unique LCOEs per case"):
+        assert len(list(set(res_df["LCOE"].to_list()))) == len(res_df)
+
+
+def test_24_solar_battery_grid_example(subtests):
+    # NOTE: would be good to compare LCOE against the same example without grid selling
+    # and see that LCOE reduces with grid selling
+    os.chdir(EXAMPLE_DIR / "24_solar_battery_grid")
+
+    model = H2IntegrateModel(Path.cwd() / "solar_battery_grid.yaml")
+
+    model.run()
+
+    model.post_process()
+
+    energy_for_financials = model.prob.get_val(
+        "finance_subgroup_renewables.electricity_sum.total_electricity_produced", units="kW*h/year"
+    )
+
+    electricity_bought = sum(model.prob.get_val("grid_buy.electricity_out", units="kW"))
+    battery_missed_load = sum(model.prob.get_val("battery.electricity_unmet_demand", units="kW"))
+
+    battery_curtailed = sum(model.prob.get_val("battery.electricity_unused_commodity", units="kW"))
+    electricity_sold = sum(model.prob.get_val("grid_sell.electricity_in", units="kW"))
+
+    solar_aep = sum(model.prob.get_val("solar.electricity_out", units="kW"))
+
+    with subtests.test("Behavior check battery missed load is electricity bought"):
+        assert pytest.approx(battery_missed_load, rel=1e-6) == electricity_bought
+
+    with subtests.test("Behavior check battery curtailed energy is electricity sold"):
+        assert pytest.approx(battery_curtailed, rel=1e-6) == electricity_sold
+
+    with subtests.test(
+        "Behavior check energy for financials; include solar aep and electricity bought"
+    ):
+        assert pytest.approx(energy_for_financials, rel=1e-6) == (solar_aep + electricity_bought)
+
+    with subtests.test("Value check on LCOE"):
+        lcoe = model.prob.get_val("finance_subgroup_renewables.LCOE", units="USD/(MW*h)")[0]
+        assert pytest.approx(lcoe, rel=1e-4) == 91.7057887

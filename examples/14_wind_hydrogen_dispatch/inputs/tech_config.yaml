@@ -15,7 +15,7 @@ technologies:
         hub_height: 130.
         create_model_from: "default"
         config_name: "WindPowerSingleOwner"
-        pysam_options: !include pysam_options_8300MW.yaml
+        pysam_options: !include "pysam_options_8.3MW.yaml"
         run_recalculate_power_curve: False
         layout:
           layout_mode: "basicgrid"
@@ -57,29 +57,22 @@ technologies:
           replacement_cost_percent: 0.15 # percent of capex - H2A default case
   h2_storage:
     performance_model:
-      model: "h2_storage"
+      model: "simple_generic_storage"
     cost_model:
-      model: "h2_storage"
+      model: "lined_rock_cavern_h2_storage_cost"
     control_strategy:
-      model: "demand_open_loop_controller"
+      model: "demand_open_loop_storage_controller"
     model_inputs:
       shared_parameters:
         commodity_name: "hydrogen"
-      performance_parameters:
-        electrolyzer_rating_mw_for_h2_storage_sizing: 720. # electrolyzer rating for sizing
-        size_capacity_from_demand:
-          flag: False # If True, then storage is sized to provide steady-state storage
-        capacity_from_max_on_turbine_storage: False # if True, then days of storage is ignored and storage capacity is based on how much h2 storage fits on the turbines in the plant using Kottenstete 2003.
-        type: "lined_rock_cavern" # can be one of ["none", "pipe", "turbine", "pressure_vessel", "salt_cavern", "lined_rock_cavern"]
-        days: 10 #how many days worth of production we should be able to store (this is ignored if `capacity_from_max_on_turbine_storage` is set to True)
-      control_parameters:
         commodity_units: "kg/h"
-        max_capacity: 60000.0  # kg
+        max_charge_rate: 12446.00729773  # kg/time step
+        max_capacity: 2987042.0  # kg
+      control_parameters:
         max_charge_percent: 1.0  # percent as decimal
         min_charge_percent: 0.1  # percent as decimal
         init_charge_percent: 0.25  # percent as decimal
-        max_charge_rate: 10000.0  # kg/time step
-        max_discharge_rate: 10000.0  # kg/time step
+        max_discharge_rate: 12446.00729773  # kg/time step
         charge_efficiency: 1.0 # percent as decimal
         discharge_efficiency: 1.0 # percent as decimal
         demand_profile: 5000 # constant demand of 5000 kg per hour (see commodity_units)

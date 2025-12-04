@@ -512,9 +512,11 @@ class ProFastBase(om.ExplicitComponent):
         # Construct output name based on commodity and optional description
         # this is necessary to allow for financial subgroups
         self.description = (
-            self.options["description"].strip() if "description" in self.options else ""
+            f"_{self.options['description'].strip()}"
+            if self.options["description"].strip() != ""
+            else ""
         )
-        self.output_txt = f"{self.options['commodity_type'].lower()}_{self.description}"
+        self.output_txt = f"{self.options['commodity_type'].lower()}{self.description}"
 
         # Add model-specific outputs defined by subclass
         self.add_model_specific_outputs()
@@ -712,7 +714,8 @@ class ProFastBase(om.ExplicitComponent):
 
             # if VarOpEx is positive, treat as a feedstock
             varopex_adjusted_tech = inputs[f"varopex_adjusted_{tech}"]
-            if np.any(varopex_adjusted_tech) > 0:
+
+            if np.any(varopex_adjusted_tech >= 0):
                 varopex_cost_per_unit_commodity = varopex_adjusted_tech / total_production
                 varopex_dict = dict(zip(years_of_operation, varopex_cost_per_unit_commodity))
                 tech_varopex_info.update({"cost": varopex_dict})

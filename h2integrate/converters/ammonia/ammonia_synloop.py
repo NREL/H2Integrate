@@ -180,11 +180,11 @@ class AmmoniaSynLoopPerformanceModel(om.ExplicitComponent):
         # Calculate max NH3 production for each input
         feed_mw = x_h2_feed * H_MW * 2 + x_n2_feed * N_MW * 2  # g / mol
 
-        w_h2_feed = x_h2_feed * H_MW / feed_mw  # kg H2 / kg feed gas
+        w_h2_feed = x_h2_feed * H_MW * 2 / feed_mw  # kg H2 / kg feed gas
         h2_rate = w_h2_feed * ratio_feed  # kg H2 / kg NH3
         nh3_from_h2 = h2_in / h2_rate  # kg nh3 / hr
 
-        w_n2_feed = x_n2_feed * N_MW / feed_mw  # kg N2 / kg feed gas
+        w_n2_feed = x_n2_feed * N_MW * 2 / feed_mw  # kg N2 / kg feed gas
         n2_rate = w_n2_feed * ratio_feed  # kg N2 / kg NH3
         nh3_from_n2 = n2_in / n2_rate  # kg nh3 / hr
 
@@ -210,10 +210,10 @@ class AmmoniaSynLoopPerformanceModel(om.ExplicitComponent):
         # Calculate output in purge gas
         purge_mw = x_h2_purge * H_MW * 2 + x_n2_purge * N_MW * 2  # g / mol
 
-        w_h2_purge = x_h2_purge * H_MW / purge_mw  # kg H2 / kg purge gas
+        w_h2_purge = x_h2_purge * H_MW * 2 / purge_mw  # kg H2 / kg purge gas
         h2_purge = w_h2_purge * ratio_purge * nh3_prod  # kg H2 / hr
 
-        w_n2_purge = x_n2_purge * H_MW / purge_mw  # kg N2 / kg purge gas
+        w_n2_purge = x_n2_purge * H_MW * 2 / purge_mw  # kg N2 / kg purge gas
         n2_purge = w_n2_purge * ratio_purge * nh3_prod  # kg N2 / hr
 
         # Calculate catalyst mass

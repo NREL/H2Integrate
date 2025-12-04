@@ -15,10 +15,18 @@ Currently, H2I recognizes four types of models:
 | Resource name     | Resource Type  |
 | :---------------- | :---------------: |
 | `river_resource`  | river resource |
+| `wind_toolkit_v2_api` | wind resource |
+| `openmeteo_wind_api` | wind resource |
+| `goes_aggregated_solar_v4_api` | solar resource |
+| `goes_conus_solar_v4_api` | solar resource |
+| `goes_fulldisc_solar_v4_api` | solar resource |
+| `goes_tmy_solar_v4_api` | solar resource |
+| `meteosat_solar_v4_api` | solar resource |
+| `meteosat_tmy_solar_v4_api` | solar resource |
+| `himawari7_solar_v3_api` | solar resource |
+| `himawari8_solar_v3_api` | solar resource |
+| `himawari_tmy_solar_v3_api` | solar resource |
 
-```{note}
-The `Resource` models are under development. Many of the resources are currently integrated into the `Converter` model directly, notably this is true for the wind resource used in the `wind` converter and solar resource used in the `solar` converter.
-```
 
 (converters)=
 ## Converters
@@ -35,7 +43,7 @@ The inputs, outputs, and corresponding technology that are currently available i
 | `river`          |  electricity  | river resource |
 | `hopp`           |  electricity  | N/A |
 | `electrolyzer`   |  hydrogen     | electricity |
-| `geoh2`          |  hydrogen     | ??? |
+| `geoh2`          |  hydrogen     | rock type |
 | `steel`          |  steel        | hydrogen |
 | `ammonia`        |  ammonia      | nitrogen, hydrogen |
 | `doc`   |  co2     | electricity |
@@ -80,7 +88,9 @@ Connection: `[source_tech, dest_tech, transport_commodity, transport_technology]
 | Controller        | Control Method |
 | :----------------------------- | :---------------: |
 | `pass_through_controller`      |  open-loop control. directly passes the input resource flow to the output without any modifications         |
-| `demand_open_loop_controller`  |  open-loop control. manages resource flow based on demand and storage constraints     |
+| `demand_open_loop_storage_controller`  |  open-loop control. manages resource flow based on demand and storage constraints     |
+| `demand_open_loop_converter_controller`  |  open-loop control. manages resource flow based on demand constraints     |
+| `flexible_demand_open_loop_converter_controller`  |  open-loop control. manages resource flow based on demand and flexibility constraints     |
 | `heuristic_load_following_controller` | open-loop control that works on a time window basis to set dispatch commands. Uses pyomo |
 
 # Technology Models Overview
@@ -96,8 +106,23 @@ Below summarizes the available performance, cost, and financial models for each 
 (resource-models)=
 ## Resource models
 - `river`:
-    - performance models:
+    - resource models:
         + `river_resource`
+- `wind_resource`:
+    - resource models:
+        + `wind_toolkit_v2_api`
+        + `openmeteo_wind_api`
+- `solar_resource`:
+    - resource models:
+        + `goes_aggregated_solar_v4_api`
+        + `goes_conus_solar_v4_api`
+        + `goes_fulldisc_solar_v4_api`
+        + `goes_tmy_solar_v4_api`
+        + `meteosat_solar_v4_api`
+        + `meteosat_tmy_solar_v4_api`
+        + `himawari7_solar_v3_api`
+        + `himawari8_solar_v3_api`
+        + `himawari_tmy_solar_v3_api`
 
 (converter-models)=
 ## Converter models
@@ -130,16 +155,12 @@ Below summarizes the available performance, cost, and financial models for each 
         + `'pem_electrolyzer_cost'`
         + `'singlitico_electrolyzer_cost'`
         + `'basic_electrolyzer_cost'`
-- `geoh2`: geologic hydrogen
+- `geoh2_well_subsurface`: geologic hydrogen well subsurface
     - performance models:
-        + `'natural_geoh2_performance'`
-        + `'stimulated_geoh2_performance'`
+        + `'simple_natural_geoh2_performance'`
+        + `'templeton_serpentinization_geoh2_performance'`
     - cost models:
-        + `'natural_geoh2_cost'`
-        + `'stimulated_geoh2_cost'`
-    - finance models:
-        + `'natural_geoh2'`
-        + `'stimulated_geoh2'`
+        + `'mathur_modified_geoh2_cost'`
 - `steel`: steel production
     - performance models:
         + `'steel_performance'`
@@ -186,6 +207,11 @@ Below summarizes the available performance, cost, and financial models for each 
         + `'natural_gas_performance'`
     - cost_models:
         + `'natural_gas_cost'`
+- `grid`: electricity grid connection
+    - performance models:
+        + `'grid_performance'`
+    - cost models:
+        + `'grid_cost'`
 
 (transport-models)=
 ## Transport Models
@@ -205,13 +231,20 @@ Below summarizes the available performance, cost, and financial models for each 
 (storage-models)=
 ## Storage Models
 - `h2_storage`: hydrogen storage
-    - combined performance and cost
-        + `'h2_storage'`
     - performance models:
         + `'hydrogen_tank_performance'`
     - cost models:
         + `'hydrogen_tank_cost'`
+        + `'lined_rock_cavern_h2_storage_cost'`
+        + `'salt_cavern_h2_storage_cost'`
+        + `'mch_tol_h2_storage_cost'`
+        + `'buried_pipe_h2_storage_cost'`
 - `generic_storage`: any resource storage
+    - performance models:
+        + `'simple_generic_storage'`
+        + `'storage_auto_sizing'`
+    - cost models:
+        + `'generic_storage_cost'`
 - `battery`: battery storage
     - performance models:
         + `'pysam_battery'`
@@ -226,6 +259,10 @@ Below summarizes the available performance, cost, and financial models for each 
 
 (control-models)=
 ## Control Models
-- `pass_through_controller`
-- `demand_open_loop_controller`
-- `heuristic_load_following_controller`
+- `'pass_through_controller'`
+- Storage Controllers:
+    - `'demand_open_loop_storage_controller'`
+    - `'heuristic_load_following_controller'`
+- Converter Controllers:
+    - `'demand_open_loop_converter_controller`
+    - `'flexible_demand_open_loop_converter_controller'`
