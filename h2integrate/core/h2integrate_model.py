@@ -13,7 +13,7 @@ from h2integrate.core.utilities import (
 )
 from h2integrate.finances.finances import AdjustedCapexOpexComp
 from h2integrate.core.resource_summer import ElectricitySumComp
-from h2integrate.core.supported_models import supported_models, electricity_producing_techs
+from h2integrate.core.supported_models import supported_models, is_electricity_producer
 from h2integrate.core.inputs.validation import load_tech_yaml, load_plant_yaml, load_driver_yaml
 from h2integrate.core.pose_optimization import PoseOptimization
 from h2integrate.postprocess.sql_to_csv import convert_sql_to_csv_summary
@@ -32,6 +32,9 @@ class H2IntegrateModel:
 
         # load in supported models
         self.supported_models = supported_models.copy()
+
+        # initialize custom models
+        self.included_custom_models = {}
 
         # load custom models
         self.collect_custom_models()
@@ -209,6 +212,12 @@ class H2IntegrateModel:
             for model_type in model_types:
                 if model_type in config:
                     model_name = config[model_type].get(f"{prefix}model")
+
+                    # don't create or raise error if the current model has already been processed.
+                    # this can happen if there are 2 or more instances of the same custom model
+                    if model_name in self.included_custom_models:
+                        continue
+
                     if (model_name not in self.supported_models) and (model_name is not None):
                         model_class_name = config[model_type].get(f"{prefix}model_class_name")
                         model_location = config[model_type].get(f"{prefix}model_location")
@@ -238,6 +247,9 @@ class H2IntegrateModel:
 
                         # Add the custom model to the supported models dictionary
                         self.supported_models[model_name] = custom_model_class
+
+                        # Add the custom model to custom models dictionary
+                        self.included_custom_models[model_name] = custom_model_class
 
                     else:
                         if (
@@ -1009,7 +1021,7 @@ class H2IntegrateModel:
                     # and in this finance group
                     for tech_name in tech_configs.keys():
                         if (
-                            tech_name in electricity_producing_techs
+                            is_electricity_producer(tech_name)
                             and primary_commodity_type == "electricity"
                         ):
                             self.plant.connect(

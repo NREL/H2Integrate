@@ -257,3 +257,7 @@ electricity_producing_techs = [
     "natural_gas_plant",
     "grid_buy",
 ]
+
+
+def is_electricity_producer(tech_name: str) -> bool:
+    return any(tech_name.startswith(elem) for elem in electricity_producing_techs)
