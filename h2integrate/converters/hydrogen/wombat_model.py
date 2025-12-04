@@ -65,7 +65,7 @@ class WOMBATElectrolyzerModel(ECOElectrolyzerPerformanceModel):
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         super().compute(inputs, outputs, discrete_inputs, discrete_outputs)
 
-        # Ensure library_path is a Path objec
+        # Ensure library_path is a Path object
         library_path = self.config.library_path
         if not isinstance(library_path, Path):
             library_path = Path(library_path)
