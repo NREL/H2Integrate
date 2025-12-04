@@ -2,6 +2,7 @@ from h2integrate.resource.river import RiverResource
 from h2integrate.core.feedstocks import FeedstockCostModel, FeedstockPerformanceModel
 from h2integrate.transporters.pipe import PipePerformanceModel
 from h2integrate.transporters.cable import CablePerformanceModel
+from h2integrate.converters.grid.grid import GridCostModel, GridPerformanceModel
 from h2integrate.finances.profast_lco import ProFastLCO
 from h2integrate.finances.profast_npv import ProFastNPV
 from h2integrate.converters.steel.steel import SteelPerformanceModel, SteelCostAndFinancialModel
@@ -232,11 +233,21 @@ supported_models = {
     # Feedstock
     "feedstock_performance": FeedstockPerformanceModel,
     "feedstock_cost": FeedstockCostModel,
+    # Grid
+    "grid_performance": GridPerformanceModel,
+    "grid_cost": GridCostModel,
     # Finance
     "ProFastComp": ProFastLCO,
     "ProFastNPV": ProFastNPV,
     "NumpyFinancialNPV": NumpyFinancialNPV,
 }
 
-
-electricity_producing_techs = ["wind", "solar", "pv", "river", "hopp", "natural_gas_plant"]
+electricity_producing_techs = [
+    "wind",
+    "solar",
+    "pv",
+    "river",
+    "hopp",
+    "natural_gas_plant",
+    "grid_buy",
+]
