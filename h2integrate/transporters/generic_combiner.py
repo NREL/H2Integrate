@@ -11,10 +11,12 @@ class GenericCombinerPerformanceConfig(BaseConfig):
     Attributes:
         commodity (str): name of commodity type
         commodity_units (str): units of commodity production profile
+        in_streams (int): how many inflow streams will be connected
     """
 
     commodity: str = field(converter=(str.lower, str.strip))
     commodity_units: str = field()
+    in_streams: int = field(default=2)
 
 
 class GenericCombinerPerformanceModel(om.ExplicitComponent):
@@ -37,18 +39,14 @@ class GenericCombinerPerformanceModel(om.ExplicitComponent):
 
         n_timesteps = int(self.options["plant_config"]["plant"]["simulation"]["n_timesteps"])
 
-        self.add_input(
-            f"{self.config.commodity}_in1",
-            val=0.0,
-            shape=n_timesteps,
-            units=self.config.commodity_units,
-        )
-        self.add_input(
-            f"{self.config.commodity}_in2",
-            val=0.0,
-            shape=n_timesteps,
-            units=self.config.commodity_units,
-        )
+        for i in range(1, self.config.in_streams + 1):
+            self.add_input(
+                f"{self.config.commodity}_in{i}",
+                val=0.0,
+                shape=n_timesteps,
+                units=self.config.commodity_units,
+            )
+
         self.add_output(
             f"{self.config.commodity}_out",
             val=0.0,
@@ -57,6 +55,8 @@ class GenericCombinerPerformanceModel(om.ExplicitComponent):
         )
 
     def compute(self, inputs, outputs):
-        outputs[f"{self.config.commodity}_out"] = (
-            inputs[f"{self.config.commodity}_in1"] + inputs[f"{self.config.commodity}_in2"]
-        )
+        total = 0.0
+        for key, value in inputs.items():
+            if "_in" in key:
+                total = total + value
+        outputs[f"{self.config.commodity}_out"] = total
