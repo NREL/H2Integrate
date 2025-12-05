@@ -33,7 +33,7 @@ class ElectricitySumComp(om.ExplicitComponent):
         )
 
     def compute(self, inputs, outputs):
-        # Sum up all electricity streams for technologies is an electricity producer
+        # Sum up all electricity streams for electricity-producing technologies
         outputs["total_electricity_produced"] = np.sum(
             [
                 inputs[f"electricity_{tech}"]

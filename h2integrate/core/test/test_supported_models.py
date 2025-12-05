@@ -10,3 +10,9 @@ def test_is_electricity_producer(subtests):
 
     with subtests.test("partial ends-with match fails"):
         assert not is_electricity_producer("wrong_grid_buy")
+
+    with subtests.test("empty string fails"):
+        assert not is_electricity_producer("")
+
+    with subtests.test("non-electricity producing tech fails"):
+        assert not is_electricity_producer("battery")

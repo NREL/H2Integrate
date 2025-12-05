@@ -33,9 +33,6 @@ class H2IntegrateModel:
         # load in supported models
         self.supported_models = supported_models.copy()
 
-        # initialize custom models
-        self.included_custom_models = {}
-
         # load custom models
         self.collect_custom_models()
 
@@ -208,15 +205,33 @@ class H2IntegrateModel:
                 Defaults to "". Should be "finance_" if looking for custom general finance models.
         """
 
+        included_custom_models = {}
+
         for name, config in model_config.items():
             for model_type in model_types:
                 if model_type in config:
                     model_name = config[model_type].get(f"{prefix}model")
 
-                    # don't create or raise error if the current model has already been processed.
-                    # this can happen if there are 2 or more instances of the same custom model
-                    if model_name in self.included_custom_models:
-                        continue
+                    # Don't create new custom model or raise an error if the current custom model
+                    # has already been processed. This can happen if there are 2 or more instances
+                    # of the same custom model. Also check that all instances of the same custom
+                    # model tech name use the same class definition.
+                    if model_name in included_custom_models:
+                        model_class_name = config[model_type].get(f"{prefix}model_class_name")
+                        if (
+                            model_class_name
+                            != included_custom_models[model_name]["model_class_name"]
+                        ):
+                            raise (
+                                ValueError(
+                                    "User has specified two custom models using the same model"
+                                    "name ({model_name}), but with different model classes. "
+                                    "Technologies defined with different classes must have "
+                                    "different technology names."
+                                )
+                            )
+                        else:
+                            continue
 
                     if (model_name not in self.supported_models) and (model_name is not None):
                         model_class_name = config[model_type].get(f"{prefix}model_class_name")
@@ -249,7 +264,9 @@ class H2IntegrateModel:
                         self.supported_models[model_name] = custom_model_class
 
                         # Add the custom model to custom models dictionary
-                        self.included_custom_models[model_name] = custom_model_class
+                        included_custom_models[model_name] = {
+                            "model_class_name": model_class_name,
+                        }
 
                     else:
                         if (
