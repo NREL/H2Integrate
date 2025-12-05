@@ -13,27 +13,36 @@ def test_natural_geoh2(subtests):
         h2_prod = h2i_nat.plant.geoh2_well_subsurface.simple_natural_geoh2_performance.get_val(
             "hydrogen_out"
         )
-        assert np.mean(h2_prod) == approx(117.72509205764842, 1e-6)
+        assert np.mean(h2_prod) == approx(603.4286677531819, 1e-6)
 
     with subtests.test("integrate LCOH"):
-        lcoh = h2i_nat.prob.get_val("finance_subgroup_default.LCOH")
-        assert lcoh == approx(
-            1.67288106, 1e-6
-        )  # previous val from custom finance model was 1.2440904
+        lcoh = h2i_nat.prob.get_val("finance_subgroup_h2.LCOH")
+        assert lcoh == approx(1.59307314, 1e-6)
 
-    # failure is expected because we are inflating using general inflation rather than CPI and CEPCI
-    with subtests.test("capex"):
+    with subtests.test("subsurface capex"):
         capex = h2i_nat.plant.geoh2_well_subsurface.mathur_modified_geoh2_cost.get_val("CapEx")
-        assert capex == approx(12098681.67169586, 1e-6)
-    with subtests.test("fixed Opex"):
+        assert capex == approx(7667341.11417252, 1e-6)
+    with subtests.test("subsurface fixed Opex"):
         opex = h2i_nat.plant.geoh2_well_subsurface.mathur_modified_geoh2_cost.get_val("OpEx")
         assert opex == approx(215100.7857875, 1e-6)
-    with subtests.test("variable"):
+    with subtests.test("subsurface variable"):
         var = h2i_nat.plant.geoh2_well_subsurface.mathur_modified_geoh2_cost.get_val("VarOpEx")
-        assert var == approx(0.0, 1e-6)
-    with subtests.test("adjusted opex"):
-        op = h2i_nat.prob.get_val("finance_subgroup_default.opex_adjusted_geoh2_well_subsurface")
+        assert var == approx(0, 1e-6)
+    with subtests.test("subsurface adjusted opex"):
+        op = h2i_nat.prob.get_val("finance_subgroup_h2.opex_adjusted_geoh2_well_subsurface")
         assert op == approx(215100.7857875, 1e-6)
+    with subtests.test("surface capex"):
+        capex = h2i_nat.plant.geoh2_well_surface.aspen_geoh2_cost.get_val("CapEx")
+        assert capex == approx(1795733.55, 1e-6)
+    with subtests.test("surface fixed Opex"):
+        opex = h2i_nat.plant.geoh2_well_surface.aspen_geoh2_cost.get_val("OpEx")
+        assert opex == approx(4567464, 1e-6)
+    with subtests.test("surface variable"):
+        var = h2i_nat.plant.geoh2_well_surface.aspen_geoh2_cost.get_val("VarOpEx")
+        assert var == approx(984842.53, 1e-6)
+    with subtests.test("surface adjusted opex"):
+        op = h2i_nat.prob.get_val("finance_subgroup_h2.opex_adjusted_geoh2_well_surface")
+        assert op == approx(4798691.865, 1e-6)
 
 
 def test_stimulated_geoh2(subtests):
