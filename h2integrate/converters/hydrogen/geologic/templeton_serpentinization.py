@@ -132,3 +132,4 @@ class StimulatedGeoH2PerformanceModel(GeoH2SubsurfacePerformanceBaseClass):
         outputs["hydrogen_out_stim"] = h2_prod_avg
         outputs["hydrogen_out"] = h2_prod_avg
         outputs["total_hydrogen_produced"] = np.sum(outputs["hydrogen_out"])
+        outputs["total_wellhead_gas_produced"] = np.sum(outputs["hydrogen_out"])
