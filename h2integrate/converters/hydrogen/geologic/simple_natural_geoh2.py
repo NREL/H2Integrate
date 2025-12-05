@@ -18,9 +18,15 @@ class NaturalGeoH2PerformanceConfig(GeoH2SubsurfacePerformanceConfig):
         GeoH2SubsurfacePerformanceConfig
 
     Attributes:
+        use_prospectivity (bool):
+            Whether to use prospectivity parameter (if true), or manually enter H2 conc. (if false)
+
         site_prospectivity (float):
             Dimensionless site assessment factor representing the natural hydrogen
             production potential of the location.
+
+        wellhead_h2_concentration (float):
+            Conecentration of hydrogen at the wellhead in mol %.
 
         initial_wellhead_flow (float):
             Hydrogen flow rate measured immediately after well completion, in kilograms
@@ -30,7 +36,9 @@ class NaturalGeoH2PerformanceConfig(GeoH2SubsurfacePerformanceConfig):
             Total amount of hydrogen stored in the geologic accumulation, in tonnes (t).
     """
 
+    use_prospectivity: bool = field()
     site_prospectivity: float = field()
+    wellhead_h2_concentration: float = field()
     initial_wellhead_flow: float = field()
     gas_reservoir_size: float = field()
 
@@ -55,6 +63,13 @@ class NaturalGeoH2PerformanceModel(GeoH2SubsurfacePerformanceBaseClass):
         site_prospectivity (float):
             Dimensionless measure of natural hydrogen production potential at a given site.
 
+        wellhead_h2_concentration (float):
+            Conecentration of hydrogen at the wellhead in mol %.
+
+        initial_wellhead_flow (float):
+            Hydrogen flow rate measured immediately after well completion, in kilograms
+            per hour (kg/h).
+
         initial_wellhead_flow (float):
             Hydrogen flow rate immediately after well completion, in kilograms per hour (kg/h).
 
@@ -66,8 +81,11 @@ class NaturalGeoH2PerformanceModel(GeoH2SubsurfacePerformanceBaseClass):
             (inherited from base class).
 
     Outputs:
-        wellhead_hydrogen_concentration (float):
+        wellhead_h2_concentration_mass (float):
             Mass percentage of hydrogen in the wellhead gas mixture.
+
+        wellhead_h2_concentration_mol (float):
+            Molar percentage of hydrogen in the wellhead gas mixture.
 
         lifetime_wellhead_flow (float):
             Average gas flow rate over the operational lifetime of the well, in kg/h.
@@ -88,10 +106,14 @@ class NaturalGeoH2PerformanceModel(GeoH2SubsurfacePerformanceBaseClass):
         n_timesteps = self.options["plant_config"]["plant"]["simulation"]["n_timesteps"]
 
         self.add_input("site_prospectivity", units="unitless", val=self.config.site_prospectivity)
+        self.add_input(
+            "wellhead_h2_concentration", units="percent", val=self.config.wellhead_h2_concentration
+        )
         self.add_input("initial_wellhead_flow", units="kg/h", val=self.config.initial_wellhead_flow)
         self.add_input("gas_reservoir_size", units="t", val=self.config.gas_reservoir_size)
 
-        self.add_output("wellhead_hydrogen_concentration", units="percent")
+        self.add_output("wellhead_h2_concentration_mass", units="percent")
+        self.add_output("wellhead_h2_concentration_mol", units="percent")
         self.add_output("lifetime_wellhead_flow", units="kg/h")
         self.add_output("wellhead_gas_out_natural", units="kg/h", shape=(n_timesteps,))
         self.add_output("max_wellhead_gas", units="kg/h")
@@ -100,8 +122,10 @@ class NaturalGeoH2PerformanceModel(GeoH2SubsurfacePerformanceBaseClass):
         if self.config.rock_type == "peridotite":  # TODO: sub-models for different rock types
             # Calculate expected wellhead h2 concentration from prospectivity
             prospectivity = inputs["site_prospectivity"]
-            # wh_h2_conc = 58.92981751 * prospectivity**2.460718753  # percent
-            wh_h2_conc = 100 * prospectivity  # temporarily using prospectivity as h2 conc
+            if self.config.use_prospectivity:
+                wh_h2_conc = 58.92981751 * prospectivity**2.460718753  # percent
+            else:
+                wh_h2_conc = inputs["wellhead_h2_concentration"]
 
         # Calculated average wellhead gas flow over well lifetime
         init_wh_flow = inputs["initial_wellhead_flow"]
@@ -115,10 +139,12 @@ class NaturalGeoH2PerformanceModel(GeoH2SubsurfacePerformanceBaseClass):
         balance_mw = 23.32
         h2_mw = 2.016
         x_h2 = wh_h2_conc / 100
-        avg_h2_flow = x_h2 * h2_mw / (x_h2 * h2_mw + (1 - x_h2) * balance_mw) * avg_wh_flow
+        w_h2 = x_h2 * h2_mw / (x_h2 * h2_mw + (1 - x_h2) * balance_mw)
+        avg_h2_flow = w_h2 * avg_wh_flow
 
         # Parse outputs
-        outputs["wellhead_hydrogen_concentration"] = wh_h2_conc
+        outputs["wellhead_h2_concentration_mass"] = w_h2 * 100
+        outputs["wellhead_h2_concentration_mol"] = wh_h2_conc
         outputs["lifetime_wellhead_flow"] = avg_wh_flow
         outputs["wellhead_gas_out_natural"] = np.full(n_timesteps, avg_wh_flow)
         outputs["wellhead_gas_out"] = np.full(n_timesteps, avg_wh_flow)

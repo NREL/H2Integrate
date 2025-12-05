@@ -15,8 +15,10 @@ technologies:
       performance_parameters:
         rock_type: 'peridotite'
         grain_size: 0.01
+        use_prospectivity: False
         site_prospectivity: 0.7
-        initial_wellhead_flow: 200
+        wellhead_h2_concentration: 95
+        initial_wellhead_flow: 4000
         gas_reservoir_size: 1000000
       cost_parameters:
         use_cost_curve: True

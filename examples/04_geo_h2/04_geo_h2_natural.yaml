@@ -2,6 +2,6 @@ name: "H2Integrate_config"
 
 system_summary: "This reference hybrid plant contains a simple geologic hydrogen plant"
 
-driver_config: "driver_config_natural.yaml"
+driver_config: "driver_config.yaml"
 technology_config: "tech_config_natural.yaml"
-plant_config: "plant_config.yaml"
+plant_config: "plant_config_natural.yaml"

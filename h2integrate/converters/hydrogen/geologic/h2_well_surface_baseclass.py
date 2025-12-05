@@ -48,7 +48,7 @@ class GeoH2SurfacePerformanceBaseClass(om.ExplicitComponent):
             in kilograms per hour.
         max_flow_in (float):
             The intake capacity limit of the processing system for wellhead gas in kg/hour.
-        wellhead_hydrogen_concentration (float)
+        wellhead_h2_concentration_mol (float)
             The molar concentration of hydrogen in the wellhead gas (unitless).
 
     Outputs:
@@ -74,7 +74,7 @@ class GeoH2SurfacePerformanceBaseClass(om.ExplicitComponent):
         # inputs
         self.add_input("wellhead_gas_in", units="kg/h", val=-1.0, shape=(n_timesteps,))
         self.add_input("max_flow_in", units="kg/h", val=self.config.max_flow_in)
-        self.add_input("wellhead_hydrogen_concentration", units="mol/mol", val=-1.0)
+        self.add_input("wellhead_h2_concentration_mol", units="mol/mol", val=-1.0)
 
         # outputs
         self.add_output("hydrogen_out", units="kg/h", shape=(n_timesteps,))
