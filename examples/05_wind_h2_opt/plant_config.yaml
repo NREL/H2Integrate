@@ -20,7 +20,6 @@ plant:
 # this will naturally grow as we mature the interconnected tech
 technology_interconnections: [
   ["wind", "electrolyzer", "electricity", "cable"],
-  ["wind", "electrolyzer", ["electricity_out", "electricity_in"]],
   # etc
 ]
 resource_to_tech_connections: [
