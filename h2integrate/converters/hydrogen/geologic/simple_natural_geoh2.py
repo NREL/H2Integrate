@@ -53,6 +53,7 @@ class NaturalGeoH2PerformanceModel(GeoH2SubsurfacePerformanceBaseClass):
     The modeling approach is informed by the following studies:
         - Mathur et al. (Stanford): https://doi.org/10.31223/X5599G
         - Gelman et al. (USGS): https://doi.org/10.3133/pp1900
+        - Tang et al. (Southwest Petroluem University): https://doi.org/10.1016/j.petsci.2024.07.029
 
     Attributes:
         config (NaturalGeoH2PerformanceConfig):
@@ -132,11 +133,10 @@ class NaturalGeoH2PerformanceModel(GeoH2SubsurfacePerformanceBaseClass):
         lifetime = self.options["plant_config"]["plant"]["plant_life"]
         inputs["gas_reservoir_size"]
         n_timesteps = self.options["plant_config"]["plant"]["simulation"]["n_timesteps"]
-        # avg_wh_flow = min(init_wh_flow, res_size / lifetime * 1000 / n_timesteps)
         avg_wh_flow = (-0.193 * np.log(lifetime) + 0.6871) * init_wh_flow  # temp. fit to Arps data
 
         # Calcuated hydrogen flow out
-        balance_mw = 23.32
+        balance_mw = 23.32  # Note: this is based on Aspen models in aspen_surface_processing.py
         h2_mw = 2.016
         x_h2 = wh_h2_conc / 100
         w_h2 = x_h2 * h2_mw / (x_h2 * h2_mw + (1 - x_h2) * balance_mw)

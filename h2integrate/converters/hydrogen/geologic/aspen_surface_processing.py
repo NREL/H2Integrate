@@ -1,3 +1,16 @@
+"""
+This file contains the curve fitting tools needed to fit cost and performance curves to indiviual
+data points produced from Aspen processing modeling, used to develop the geologic hydrogen surface
+processing models `aspen_geoh2_performance` and `aspen_geoh2_cost`.
+
+The file can be run as a script to re-fit the curve coefficients independently of running H2I if
+any of the inputs change, and the resulting cost/performance surfaces will be plotted to check fit.
+
+Associated files:
+./inputs/aspen_results.csv - The indiviudal data points from Aspen process modeling.
+./inputs/aspen_perf_coeffs.csv - The performance curve coefficients resulting from curve fitting.
+"""
+
 from pathlib import Path
 
 import numpy as np
@@ -46,8 +59,10 @@ def exp_power(xy, a1, a2, a3, a4, a5):
 
 def double_exp(xy, a1, a2, a3, a4, a5):
     """
-    Defines a two-variable fitting function to fit performance and costs curves,
-    With the first variable fit to an exponential function and the second to a power function.
+    Defines a two-variable fitting function to fit performance and costs curves.
+    In this case, only the first variable is used, and fit the sum of two exponential functions.
+    The y variable is kept just to keep the logic simple when defining inputs to the curve_fit
+    function in refit_coeffs
     """
 
     x, y = xy
@@ -164,7 +179,7 @@ def refit_coeffs(input_fn, coeff_fn, output_names, plot_flag=False):
             z_surf = z_surf_scaled * out_scale_factors[i]
             if name == "H2 Flow Out [kg/hr]":
                 h2_out_surf = z_surf * y_grid
-            elif name == "Steam [kt/h]":
+            elif name == "Steam [kt/h]":  # Steam has no variance between data points for now
                 z_surf = 0.61 / h2_out_surf
             elif name != "H2 Conc Out [% mol]":
                 if h2_out_surf is not None:
@@ -234,7 +249,8 @@ class AspenGeoH2SurfacePerformanceConfig(GeoH2SurfacePerformanceConfig):
 
     Attributes:
         refit_coeffs (bool):
-            Whether to re-fit performance curves to ASPEN data
+            Whether to re-fit performance curves to ASPEN data. Set to False unless new Aspen data
+            has been generated.
 
         curve_input_fn (str):
             Filename of ASPEN model results file used to generate curve fits. Only used if
@@ -373,7 +389,8 @@ class AspenGeoH2SurfaceCostConfig(GeoH2SurfaceCostConfig):
 
     Attributes:
         refit_coeffs (bool):
-            Whether to re-fit performance curves to ASPEN data
+            Whether to re-fit cost curves to ASPEN data. Set to False unless new Aspen data
+            has been generated.
 
         curve_input_fn (str):
             Filename of ASPEN model results file used to generate curve fits. Only used if
