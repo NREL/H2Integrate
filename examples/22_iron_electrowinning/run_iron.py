@@ -13,9 +13,9 @@ cases = load_tech_config_cases(case_file)
 
 # Modify and run the model for different cases
 casenames = [
-    "Case 1",
-    "Case 2",
-    "Case 3",
+    "AHE",
+    "MSE",
+    "MOE",
 ]
 lcois = []
 
@@ -23,7 +23,7 @@ for casename in casenames:
     model = modify_tech_config(model, cases[casename])
     model.run()
     model.post_process()
-    lcois.append(float(model.model.get_val("finance_subgroup_sponge_iron.price_sponge_iron_")[0]))
+    lcois.append(float(model.model.get_val("finance_subgroup_sponge_iron.price_sponge_iron")[0]))
 
 # Compare the LCOIs from iron_wrapper and modular iron
 print(lcois)

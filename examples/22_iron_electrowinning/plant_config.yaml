@@ -32,8 +32,8 @@ site:
 technology_interconnections: [
   ["iron_mine","iron_transport","total_iron_ore_produced"],
   ["iron_transport","iron_plant","iron_transport_cost"],
-  ["finance_subgroup_iron_ore","iron_plant","price_iron_ore_"],
-  ["finance_subgroup_electricity","iron_plant","price_electricity_"],
+  ["finance_subgroup_iron_ore","iron_plant","price_iron_ore"],
+  ["finance_subgroup_electricity","iron_plant","price_electricity"],
   ["wind","iron_plant","electricity","cable"]
 ]
 

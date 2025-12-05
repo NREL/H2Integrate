@@ -188,9 +188,9 @@ class HumbertStinnEwinCostComponent(CostModelBaseClass):
         self.add_input("output_capacity", val=0.0, units="Mg/year")  # Mg = tonnes
         self.add_input("iron_ore_in", val=0.0, shape=n_timesteps, units="kg/h")
         self.add_input("iron_transport_cost", val=0.0, units="USD/t")
-        self.add_input("price_iron_ore_", val=0.0, units="USD/Mg")
+        self.add_input("price_iron_ore", val=0.0, units="USD/Mg")
         self.add_input("electricity_in", val=0.0, shape=n_timesteps, units="kW")
-        self.add_input("price_electricity_", val=0.0, units="USD/kW/h")
+        self.add_input("price_electricity", val=0.0, units="USD/kW/h")
 
         # Set inputs for Stinn Capex model
         self.add_input("electrolysis_temp", val=T, units="C")
@@ -256,10 +256,10 @@ class HumbertStinnEwinCostComponent(CostModelBaseClass):
         anode_ratio = inputs["anode_ratio"]
         anode_interval = inputs["anode_replacement_interval"]
         ore_in = inputs["iron_ore_in"]
-        ore_price = inputs["price_iron_ore_"]
+        ore_price = inputs["price_iron_ore"]
         ore_transport_cost = inputs["iron_transport_cost"]
         elec_in = inputs["electricity_in"]
-        elec_price = inputs["price_electricity_"]
+        elec_price = inputs["price_electricity"]
 
         # Add ore transport cost TODO: turn iron_transport into proper transporter
         ore_price += ore_transport_cost
