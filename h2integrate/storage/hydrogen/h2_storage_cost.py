@@ -146,29 +146,74 @@ class HydrogenStorageBaseCostModel(CostModelBaseClass):
 
 
 class LinedRockCavernStorageCostModel(HydrogenStorageBaseCostModel):
-    def initialize(self):
-        super().initialize()
+    """
+    Author: Kaitlin Brunik
+    Created: 7/20/2023
+    Institution: National Renewable Energy Lab
+    Description: This file outputs capital and operational costs of lined rock cavern
+    hydrogen storage.
+    It needs to be updated to with operational dynamics.
+    Costs are in 2018 USD
 
-    def setup(self):
-        super().setup()
+    Sources:
+        - [1] Papadias 2021: https://www.sciencedirect.com/science/article/pii/S0360319921030834?via%3Dihub
+        - [2] Papadias 2021: Bulk Hydrogen as Function of Capacity.docx documentation at
+              hydrogen_storage.md in the docs
+        - [3] HDSAM V4.0 Gaseous H2 Geologic Storage sheet
+    """
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
+        """
+        Calculates the installed capital cost and operation and maintenance costs for lined rock
+        cavern hydrogen storage.
+
+        Args:
+            inputs: OpenMDAO inputs containing:
+                - max_capacity: total capacity of hydrogen storage [kg]
+                - max_charge_rate: hydrogen storage charge rate [kg/h]
+
+        Returns via outputs:
+            - CapEx (float): the installed capital cost in 2018 [USD] (including compressor)
+            - OpEx (float): the OPEX (annual, fixed) in 2018 excluding electricity costs [USD/yr]
+
+        Additional parameters from storage_input:
+            - h2_storage_kg (float): total capacity of hydrogen storage [kg]
+            - system_flow_rate (float): [kg/day]
+            - labor_rate (float): (default: 37.40) [$2018/hr]
+            - insurance (float): (default: 1%) [decimal percent] - % of total investment
+            - property_taxes (float): (default: 1%) [decimal percent] - % of total investment
+            - licensing_permits (float): (default: 0.1%) [decimal percent] - % of total investment
+            - compressor_om (float): (default: 4%) [decimal percent] - % of compressor investment
+            - facility_om (float): (default: 1%) [decimal percent] - % of facility investment
+                minus compressor investment
+        """
         storage_input = self.make_storage_input_dict(inputs)
 
-        h2_storage_kg = storage_input["h2_storage_kg"]
-        system_flow_rate = storage_input["system_flow_rate"]
-        labor_rate = storage_input.get("labor_rate", 37.39817)
-        insurance = storage_input.get("insurance", 1 / 100)
-        property_taxes = storage_input.get("property_taxes", 1 / 100)
-        licensing_permits = storage_input.get("licensing_permits", 0.1 / 100)
-        comp_om = storage_input.get("compressor_om", 4 / 100)
-        facility_om = storage_input.get("facility_om", 1 / 100)
+        # Extract input parameters
+        h2_storage_kg = storage_input["h2_storage_kg"]  # [kg]
+        system_flow_rate = storage_input["system_flow_rate"]  # [kg/day]
+        labor_rate = storage_input.get("labor_rate", 37.39817)  # $(2018)/hr
+        insurance = storage_input.get("insurance", 1 / 100)  # % of total capital investment
+        property_taxes = storage_input.get(
+            "property_taxes", 1 / 100
+        )  # % of total capital investment
+        licensing_permits = storage_input.get(
+            "licensing_permits", 0.1 / 100
+        )  # % of total capital investment
+        comp_om = storage_input.get("compressor_om", 4 / 100)  # % of compressor capital investment
+        facility_om = storage_input.get(
+            "facility_om", 1 / 100
+        )  # % of facility capital investment minus compressor capital investment
 
+        # ============================================================================
         # Calculate CAPEX
+        # ============================================================================
         # Installed capital cost per kg from Papadias [2]
+        # Coefficients for lined rock cavern storage cost equation
         a = 0.095803
         b = 1.5868
         c = 10.332
+        # Calculate installed capital cost per kg using exponential fit
         lined_rock_cavern_storage_capex_per_kg = np.exp(
             a * (np.log(h2_storage_kg / 1000)) ** 2 - b * np.log(h2_storage_kg / 1000) + c
         )  # 2019 [USD] from Papadias [2]
@@ -176,14 +221,17 @@ class LinedRockCavernStorageCostModel(HydrogenStorageBaseCostModel):
         cepci_overall = 1.29 / 1.30  # Convert from $2019 to $2018
         installed_capex = cepci_overall * installed_capex
 
+        # ============================================================================
         # Calculate compressor costs
-        outlet_pressure = 200  # Max outlet pressure of lined rock cavern in [1]
+        # ============================================================================
+        outlet_pressure = 200  # Max outlet pressure of lined rock cavern in [1] [bar]
         n_compressors = 2
         storage_compressor = Compressor(
             outlet_pressure, system_flow_rate, n_compressors=n_compressors
         )
         storage_compressor.compressor_power()
         motor_rating, power = storage_compressor.compressor_system_power()
+        # Check if motor rating exceeds maximum, add additional compressor if needed
         if motor_rating > 1600:
             n_compressors += 1
             storage_compressor = Compressor(
@@ -195,8 +243,12 @@ class LinedRockCavernStorageCostModel(HydrogenStorageBaseCostModel):
         cepci = 1.36 / 1.29  # convert from $2016 to $2018
         comp_capex = comp_capex * cepci
 
+        # ============================================================================
         # Calculate OPEX
-        # Labor - Base case is 1 operator, 24 hours a day, 7 days a week for a 100,000 kg/day
+        # ============================================================================
+        # Operations and Maintenance costs [3]
+        # Labor
+        # Base case is 1 operator, 24 hours a day, 7 days a week for a 100,000 kg/day
         # average capacity facility. Scaling factor of 0.25 is used for other sized facilities
         annual_hours = 8760 * (system_flow_rate / 100000) ** 0.25
         overhead = 0.5
@@ -222,29 +274,73 @@ class LinedRockCavernStorageCostModel(HydrogenStorageBaseCostModel):
 
 
 class SaltCavernStorageCostModel(HydrogenStorageBaseCostModel):
-    def initialize(self):
-        super().initialize()
+    """
+    Author: Kaitlin Brunik
+    Created: 7/20/2023
+    Institution: National Renewable Energy Lab
+    Description: This file outputs capital and operational costs of salt cavern hydrogen storage.
+    It needs to be updated to with operational dynamics.
+    Costs are in 2018 USD
 
-    def setup(self):
-        super().setup()
+    Sources:
+        - [1] Papadias 2021: https://www.sciencedirect.com/science/article/pii/S0360319921030834?via%3Dihub
+        - [2] Papadias 2021: Bulk Hydrogen as Function of Capacity.docx documentation at
+              hydrogen_storage.md in the docs
+        - [3] HDSAM V4.0 Gaseous H2 Geologic Storage sheet
+    """
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
+        """
+        Calculates the installed capital cost and operation and maintenance costs for salt cavern
+        hydrogen storage.
+
+        Args:
+            inputs: OpenMDAO inputs containing:
+                - max_capacity: total capacity of hydrogen storage [kg]
+                - max_charge_rate: hydrogen storage charge rate [kg/h]
+
+        Returns via outputs:
+            - CapEx (float): the installed capital cost in 2018 [USD] (including compressor)
+            - OpEx (float): the OPEX (annual, fixed) in 2018 excluding electricity costs [USD/yr]
+
+        Additional parameters from storage_input:
+            - h2_storage_kg (float): total capacity of hydrogen storage [kg]
+            - system_flow_rate (float): [kg/day]
+            - labor_rate (float): (default: 37.40) [$2018/hr]
+            - insurance (float): (default: 1%) [decimal percent] - % of total investment
+            - property_taxes (float): (default: 1%) [decimal percent] - % of total investment
+            - licensing_permits (float): (default: 0.1%) [decimal percent] - % of total investment
+            - compressor_om (float): (default: 4%) [decimal percent] - % of compressor investment
+            - facility_om (float): (default: 1%) [decimal percent] - % of facility investment
+                minus compressor investment
+        """
         storage_input = self.make_storage_input_dict(inputs)
 
-        h2_storage_kg = storage_input["h2_storage_kg"]
-        system_flow_rate = storage_input["system_flow_rate"]
-        labor_rate = storage_input.get("labor_rate", 37.39817)
-        insurance = storage_input.get("insurance", 1 / 100)
-        property_taxes = storage_input.get("property_taxes", 1 / 100)
-        licensing_permits = storage_input.get("licensing_permits", 0.1 / 100)
-        comp_om = storage_input.get("compressor_om", 4 / 100)
-        facility_om = storage_input.get("facility_om", 1 / 100)
+        # Extract input parameters
+        h2_storage_kg = storage_input["h2_storage_kg"]  # [kg]
+        system_flow_rate = storage_input["system_flow_rate"]  # [kg/day]
+        labor_rate = storage_input.get("labor_rate", 37.39817)  # $(2018)/hr
+        insurance = storage_input.get("insurance", 1 / 100)  # % of total capital investment
+        property_taxes = storage_input.get(
+            "property_taxes", 1 / 100
+        )  # % of total capital investment
+        licensing_permits = storage_input.get(
+            "licensing_permits", 0.1 / 100
+        )  # % of total capital investment
+        comp_om = storage_input.get("compressor_om", 4 / 100)  # % of compressor capital investment
+        facility_om = storage_input.get(
+            "facility_om", 1 / 100
+        )  # % of facility capital investment minus compressor capital investment
 
+        # ============================================================================
         # Calculate CAPEX
+        # ============================================================================
         # Installed capital cost per kg from Papadias [2]
+        # Coefficients for salt cavern storage cost equation
         a = 0.092548
         b = 1.6432
         c = 10.161
+        # Calculate installed capital cost per kg using exponential fit
         salt_cavern_storage_capex_per_kg = np.exp(
             a * (np.log(h2_storage_kg / 1000)) ** 2 - b * np.log(h2_storage_kg / 1000) + c
         )  # 2019 [USD] from Papadias [2]
@@ -252,14 +348,17 @@ class SaltCavernStorageCostModel(HydrogenStorageBaseCostModel):
         cepci_overall = 1.29 / 1.30  # Convert from $2019 to $2018
         installed_capex = cepci_overall * installed_capex
 
+        # ============================================================================
         # Calculate compressor costs
-        outlet_pressure = 120  # Max outlet pressure of salt cavern in [1]
+        # ============================================================================
+        outlet_pressure = 120  # Max outlet pressure of salt cavern in [1] [bar]
         n_compressors = 2
         storage_compressor = Compressor(
             outlet_pressure, system_flow_rate, n_compressors=n_compressors
         )
         storage_compressor.compressor_power()
         motor_rating, power = storage_compressor.compressor_system_power()
+        # Check if motor rating exceeds maximum, add additional compressor if needed
         if motor_rating > 1600:
             n_compressors += 1
             storage_compressor = Compressor(
@@ -271,8 +370,12 @@ class SaltCavernStorageCostModel(HydrogenStorageBaseCostModel):
         cepci = 1.36 / 1.29  # convert from $2016 to $2018
         comp_capex = comp_capex * cepci
 
+        # ============================================================================
         # Calculate OPEX
-        # Labor - Base case is 1 operator, 24 hours a day, 7 days a week for a 100,000 kg/day
+        # ============================================================================
+        # Operations and Maintenance costs [3]
+        # Labor
+        # Base case is 1 operator, 24 hours a day, 7 days a week for a 100,000 kg/day
         # average capacity facility. Scaling factor of 0.25 is used for other sized facilities
         annual_hours = 8760 * (system_flow_rate / 100000) ** 0.25
         overhead = 0.5
@@ -298,32 +401,83 @@ class SaltCavernStorageCostModel(HydrogenStorageBaseCostModel):
 
 
 class PipeStorageCostModel(HydrogenStorageBaseCostModel):
-    def initialize(self):
-        super().initialize()
+    """
+    Author: Kaitlin Brunik
+    Updated: 7/20/2023
+    Institution: National Renewable Energy Lab
+    Description: This file outputs capital and operational costs of underground pipeline hydrogen
+    storage. It needs to be updated to with operational dynamics and physical size
+    (footprint and mass).
+    Oversize pipe: pipe OD = 24'' schedule 60 [1]
+    Max pressure: 100 bar
+    Costs are in 2018 USD
 
-    def setup(self):
-        super().setup()
+    Sources:
+        - [1] Papadias 2021: https://www.sciencedirect.com/science/article/pii/S0360319921030834?via%3Dihub
+        - [2] Papadias 2021: Bulk Hydrogen as Function of Capacity.docx documentation at
+              hydrogen_storage.md in the docs
+        - [3] HDSAM V4.0 Gaseous H2 Geologic Storage sheet
+    """
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
+        """
+        Calculates the installed capital cost and operation and maintenance costs for underground
+        pipe hydrogen storage.
+
+        Args:
+            inputs: OpenMDAO inputs containing:
+                - max_capacity: total capacity of hydrogen storage [kg]
+                - max_charge_rate: hydrogen storage charge rate [kg/h]
+
+        Returns via outputs:
+            - CapEx (float): the installed capital cost in 2018 [USD] (including compressor)
+            - OpEx (float): the OPEX (annual, fixed) in 2018 excluding electricity costs [USD/yr]
+
+        Additional parameters from storage_input:
+            - h2_storage_kg (float): total capacity of hydrogen storage [kg]
+            - system_flow_rate (float): [kg/day]
+            - labor_rate (float): (default: 37.40) [$2018/hr]
+            - insurance (float): (default: 1%) [decimal percent] - % of total investment
+            - property_taxes (float): (default: 1%) [decimal percent] - % of total investment
+            - licensing_permits (float): (default: 0.1%) [decimal percent] - % of total investment
+            - compressor_om (float): (default: 4%) [decimal percent] - % of compressor investment
+            - facility_om (float): (default: 1%) [decimal percent] - % of facility investment
+                minus compressor investment
+        Notes:
+            - Oversize pipe: pipe OD = 24'' schedule 60
+            - Max pressure: 100 bar
+            - compressor_output_pressure must be 100 bar for underground pipe storage
+        """
         storage_input = self.make_storage_input_dict(inputs)
 
-        h2_storage_kg = storage_input["h2_storage_kg"]
-        system_flow_rate = storage_input["system_flow_rate"]
-        labor_rate = storage_input.get("labor_rate", 37.39817)
-        insurance = storage_input.get("insurance", 1 / 100)
-        property_taxes = storage_input.get("property_taxes", 1 / 100)
-        licensing_permits = storage_input.get("licensing_permits", 0.1 / 100)
-        comp_om = storage_input.get("compressor_om", 4 / 100)
-        facility_om = storage_input.get("facility_om", 1 / 100)
+        # Extract input parameters
+        h2_storage_kg = storage_input["h2_storage_kg"]  # [kg]
+        system_flow_rate = storage_input["system_flow_rate"]  # [kg/day]
+        labor_rate = storage_input.get("labor_rate", 37.39817)  # $(2018)/hr
+        insurance = storage_input.get("insurance", 1 / 100)  # % of total capital investment
+        property_taxes = storage_input.get(
+            "property_taxes", 1 / 100
+        )  # % of total capital investment
+        licensing_permits = storage_input.get(
+            "licensing_permits", 0.1 / 100
+        )  # % of total capital investment
+        comp_om = storage_input.get("compressor_om", 4 / 100)  # % of compressor capital investment
+        facility_om = storage_input.get(
+            "facility_om", 1 / 100
+        )  # % of facility capital investment minus compressor capital investment
 
         # compressor_output_pressure must be 100 bar for underground pipe storage
-        compressor_output_pressure = 100
+        compressor_output_pressure = 100  # [bar]
 
+        # ============================================================================
         # Calculate CAPEX
+        # ============================================================================
         # Installed capital cost per kg from Papadias [2]
+        # Coefficients for underground pipe storage cost equation
         a = 0.0041617
         b = 0.060369
         c = 6.4581
+        # Calculate installed capital cost per kg using exponential fit
         pipe_storage_capex_per_kg = np.exp(
             a * (np.log(h2_storage_kg / 1000)) ** 2 - b * np.log(h2_storage_kg / 1000) + c
         )  # 2019 [USD] from Papadias [2]
@@ -331,9 +485,11 @@ class PipeStorageCostModel(HydrogenStorageBaseCostModel):
         cepci_overall = 1.29 / 1.30  # Convert from $2019 to $2018
         installed_capex = cepci_overall * installed_capex
 
+        # ============================================================================
         # Calculate compressor costs
+        # ============================================================================
         outlet_pressure = (
-            compressor_output_pressure  # Max outlet pressure of underground pipe storage [1]
+            compressor_output_pressure  # Max outlet pressure of underground pipe storage [1] [bar]
         )
         n_compressors = 2
         storage_compressor = Compressor(
@@ -341,6 +497,7 @@ class PipeStorageCostModel(HydrogenStorageBaseCostModel):
         )
         storage_compressor.compressor_power()
         motor_rating, power = storage_compressor.compressor_system_power()
+        # Check if motor rating exceeds maximum, add additional compressor if needed
         if motor_rating > 1600:
             n_compressors += 1
             storage_compressor = Compressor(
@@ -352,8 +509,12 @@ class PipeStorageCostModel(HydrogenStorageBaseCostModel):
         cepci = 1.36 / 1.29  # convert from $2016 to $2018
         comp_capex = comp_capex * cepci
 
+        # ============================================================================
         # Calculate OPEX
-        # Labor - Base case is 1 operator, 24 hours a day, 7 days a week for a 100,000 kg/day
+        # ============================================================================
+        # Operations and Maintenance costs [3]
+        # Labor
+        # Base case is 1 operator, 24 hours a day, 7 days a week for a 100,000 kg/day
         # average capacity facility. Scaling factor of 0.25 is used for other sized facilities
         annual_hours = 8760 * (system_flow_rate / 100000) ** 0.25
         overhead = 0.5
