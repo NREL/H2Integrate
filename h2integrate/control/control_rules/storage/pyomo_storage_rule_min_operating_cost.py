@@ -232,18 +232,18 @@ class PyomoRuleStorageMinOperatingCosts(PyomoRuleStorageBaseclass):
         # SOC Linking Constraints        #
         ##################################
 
-        # TODO: Make work for pyomo optimization, not needed for heuristic method
-        # # Linking time periods together
-        # def storage_soc_linking_rule(m, t):
-        #     if t == m.blocks.index_set().first():
-        #         return m.blocks[t].soc0 == m.initial_soc
-        #     return m.blocks[t].soc0 == self.blocks[t - 1].soc
+        TODO: Make work for pyomo optimization, not needed for heuristic method
+        # Linking time periods together
+        def storage_soc_linking_rule(m, t):
+            if t == m.blocks.index_set().first():
+                return m.blocks[t].soc0 == m.initial_soc
+            return m.blocks[t].soc0 == self.blocks[t - 1].soc
 
-        # pyomo_model.soc_linking = pyo.Constraint(
-        #     pyomo_model.blocks.index_set(),
-        #     doc=self.block_set_name + " state-of-charge block linking constraint",
-        #     rule=storage_soc_linking_rule,
-        # )
+        pyomo_model.soc_linking = pyo.Constraint(
+            pyomo_model.blocks.index_set(),
+            doc=self.block_set_name + " state-of-charge block linking constraint",
+            rule=storage_soc_linking_rule,
+        )
 
     def _create_ports(self, pyomo_model: pyo.ConcreteModel, t):
         """Create Pyomo ports for connecting the storage component.
@@ -262,25 +262,3 @@ class PyomoRuleStorageMinOperatingCosts(PyomoRuleStorageBaseclass):
         pyomo_model.port = Port()
         pyomo_model.port.add(pyomo_model.charge_commodity)
         pyomo_model.port.add(pyomo_model.discharge_commodity)
-
-    def min_operating_cost_objective(self, pyomo_model: pyo.ConcreteModel, hybrid_blocks):
-        """Sets the min operating cost objective for the dispatch.
-
-        Args:
-            hybrid_blocks (Pyomo.block): A generalized container for defining hierarchical
-                models by adding modeling components as attributes.
-
-        """
-        objective = sum(
-            pyomo_model.time_weighting_factor[t]
-            * pyomo_model.time_duration
-            * (
-                pyomo_model.cost_per_discharge * pyomo_model.charge_commodity[t]
-                - pyomo_model.cost_per_charge * pyomo_model.discharge_commodity[t]
-            )  # Try to incentivize battery charging
-            for t in hybrid_blocks.index_set()
-        )
-        # if self.options.include_lifecycle_count:
-        #     objective += self.model.lifecycle_cost * sum(self.model.lifecycles)
-
-        self.obj = objective

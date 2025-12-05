@@ -34,22 +34,6 @@ class PyomoDispatchGenericConverterMinOperatingCosts(PyomoDispatchGenericConvert
             self.config["commodity_cost_per_generation"]
         )
 
-    def min_operating_cost_objective(self, pyomo_model: pyo.ConcreteModel, hybrid_blocks):
-        """ Create generice converter objective call to add to Pyomo model instance.
-
-        Args:
-            pyomo_model (pyo.ConcreteModel): pyomo_model the variables should be added to.
-            tech_name (str): The name or key identifying the technology for which
-            variables are created.
-        """
-        self.obj = sum(
-            pyomo_model.time_weighting_factor[t]
-            * pyomo_model.time_duration
-            * pyomo_model.cost_per_generation
-            * hybrid_blocks[t].generic_generation
-            for t in hybrid_blocks.index_set()
-        )
-
     def _create_variables(self, pyomo_model: pyo.ConcreteModel, tech_name: str):
         """Create generic converter variables to add to Pyomo model instance.
 
@@ -147,8 +131,28 @@ class PyomoDispatchGenericConverterMinOperatingCosts(PyomoDispatchGenericConvert
 
         pass
 
-    def initialize_parameters(self):
-        """Initialize parameters method."""
-        self.cost_per_generation = (
-            self._financial_model.value("om_capacity")[0] * 1e3 / 8760
-        )    
+    def update_time_series_parameters(self, start_time: int, commodity_in:list):
+        """Update time series parameters method.
+
+        Args:
+            start_time (int): Start time.
+
+        Returns:
+            None
+
+        """
+        n_horizon = len(self.blocks.index_set())
+        generation = commodity_in
+        if start_time + n_horizon > len(generation):
+            horizon_gen = list(generation[start_time:])
+            horizon_gen.extend(list(generation[0 : n_horizon - len(horizon_gen)]))
+        else:
+            horizon_gen = generation[start_time : start_time + n_horizon]
+
+        if len(horizon_gen) < len(self.blocks):
+            raise RuntimeError(
+                f"Dispatch parameter update error at start_time {start_time}: System model "
+                f"{type(self._system_model)} generation profile should have at least {len(self.blocks)} "
+                f"length but has only {len(generation)}"
+            )
+        self.available_generation = [gen_kw / 1e3 for gen_kw in horizon_gen]

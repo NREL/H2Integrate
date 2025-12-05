@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 import numpy as np
-import pyomo.environ as pyomo
+import pyomo.environ as pyomo, Expression
 from attrs import field, define
 
 from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
@@ -151,6 +151,8 @@ class PyomoControllerBaseClass(ControllerBaseClass):
 
         index_set = pyomo.Set(initialize=range(self.config.n_control_window))
 
+        self.source_techs = []
+
         # run each pyomo rule set up function for each technology
         for connection in self.dispatch_connections:
             # get connection definition
@@ -169,6 +171,7 @@ class PyomoControllerBaseClass(ControllerBaseClass):
                 blocks = pyomo.Block(index_set, rule=dispatch_block_rule_function)
                 print("HIII", blocks)
                 setattr(self.pyomo_model, source_tech, blocks)
+                self.source_techs.append(source_tech)
             else:
                 continue
 
@@ -259,7 +262,7 @@ class PyomoControllerBaseClass(ControllerBaseClass):
                         demand_in,
                     )
 
-                if "optimized" in control_strategy:
+                elif "optimized" in control_strategy:
                     # Run dispatch optimzation to minimize costs while meeting demand
                     self.solve_dispatch_model(
                         commodity_in,
@@ -817,6 +820,7 @@ class OptimizedDispatchControllerConfig(PyomoControllerBaseConfig):
     discharge_efficiency: float = field(default=None)
     include_lifecycle_count: bool = field(default=False)
     demand_profile: list = field(default=None)
+    time_weighting_factor: float = 0.995
 
 
 class OptimizedDispatchController(SimpleBatteryControllerHeuristic):
@@ -842,7 +846,13 @@ class OptimizedDispatchController(SimpleBatteryControllerHeuristic):
         if self.config.discharge_efficiency is not None:
             self.discharge_efficiency = self.config.discharge_efficiency
 
+
         # Create objective from pyomo blocks
+    def initialize_parameters(self):
+        self.time_weighting_factor = (
+            self.config.time_weighting_factor
+        )  # Discount factor
+        self._create_objective_function()
 
     def solve_dispatch_model(
         self,
@@ -920,10 +930,40 @@ class OptimizedDispatchController(SimpleBatteryControllerHeuristic):
 
         def operating_cost_objective_rule(m) -> float:
             obj = 0.0
-            for tech in self.power_sources.keys():
+            for source_tech in self.source_techs:
+                pyomo_block = getattr(self.pyomo_model, source_tech)
+                if source_tech in converters:
+                    # Create the min_operating_cost_objective for converter technologies
+                    self.obj = Expression(
+                        expr = sum(
+                            self.time_weighting_factor[t]
+                            * pyomo_block.time_duration
+                            * pyomo_block.cost_per_generation
+                            * pyomo_block[t].generic_generation
+                            for t in self.blocks.index_set()
+                            )
+                    )
+                    # Copy the technology objective to the pyomo model.
+                    setattr(m, source_tech + "_obj", self.obj)
+                else:
+                    # Create the min_operating_cost_objective for storage technologies
+                    self.obj = Expression(
+                        expr = sum(
+                            self.time_weighting_factor[t]
+                            * pyomo_block.time_duration
+                            * (
+                                pyomo_block.cost_per_discharge * pyomo_block.charge_commodity[t]
+                                - pyomo_block.cost_per_charge * pyomo_block.discharge_commodity[t]
+                            )  # Try to incentivize battery charging
+                            for t in self.blocks.index_set()
+                            )
+                    )
+                    # Copy the technology objective to the pyomo model.
+                    setattr(m, source_tech + "_obj", self.obj)
+
                 # Create the min_operating_cost_objective within each of the technology
                 # dispatch classes.
-                self.power_sources[tech]._dispatch.min_operating_cost_objective(
+                self.pyomo_model[source_tech].min_operating_cost_objective(
                     self.blocks
                 )
 
@@ -1041,6 +1081,38 @@ class OptimizedDispatchController(SimpleBatteryControllerHeuristic):
                 self.blocks[t].demand_profile = round(
                     electricity_demand_profile[t], self.round_digits
                 )
+    @property
+    def cost_per_discharge(self) -> float:
+        """Cost per discharge."""
+        for t in self.blocks.index_set():
+            return self.blocks[t].cost_per_discharge.value
+
+    @cost_per_discharge.setter
+    def cost_per_discharge(self, cost_per_discharge: float):
+        for t in self.blocks.index_set():
+            self.blocks[t].cost_per_discharge = round(cost_per_discharge, self.round_digits)
+    @property
+    def cost_per_charge(self) -> float:
+        """Cost per charge."""
+        for t in self.blocks.index_set():
+            return self.blocks[t].cost_per_charge.value
+
+    @cost_per_charge.setter
+    def cost_per_charge(self, cost_per_charge: float):
+        for t in self.blocks.index_set():
+            self.blocks[t].cost_per_charge = round(cost_per_charge, self.round_digits)
+
+    @property
+    def time_weighting_factor(self) -> float:
+        for t in self.blocks.index_set():
+            return self.blocks[t + 1].time_weighting_factor.value
+
+    @time_weighting_factor.setter
+    def time_weighting_factor(self, weighting: float):
+        for t in self.blocks.index_set():
+            self.blocks[t].time_weighting_factor = round(
+                weighting**t, self.round_digits
+            )
 
 class SolverOptions:
     """Class for housing solver options"""
@@ -1061,4 +1133,5 @@ class SolverOptions:
             self.constructed[solver_spec_log_key] = self.instance_log
         if user_solver_options is not None:
             self.constructed.update(user_solver_options)
+
 
