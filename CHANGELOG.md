@@ -28,6 +28,13 @@
 - Improved the readability of the postprocessing printout
 - Split out cost models from coupled hydrogen storage performance and cost model
 - Added storage auto-sizing performance model based on storage sizing calculations that existed in the coupled hydrogen storage performance and cost model
+- Added ability for latitude and longitude to be design variables in design sweep
+- Move geologic hydrogen models into specific geoh2 subsurface converters
+- Added standalone iron mine performance and cost model
+- Added solar resource models for Meteosat Prime Meridian and Himawari datasets available through NSRDB
+- Improved readability of the postprocessing printout by simplifying numerical representation, especially for years
+- Added grid converter performance and cost model which can be used to buy, sell, or buy and sell electricity to/from the grid
+- Add open-loop load demand controllers: `DemandOpenLoopConverterController` and `FlexibleDemandOpenLoopConverterController`
 
 ## 0.4.0 [October 1, 2025]
 
