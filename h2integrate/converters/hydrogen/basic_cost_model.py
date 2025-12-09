@@ -49,13 +49,11 @@ class BasicElectrolyzerCostModel(ElectrolyzerCostBaseClass):
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         # unpack inputs
-        plant_config = self.options["plant_config"]
+        self.options["plant_config"]
 
         electrolyzer_size_mw = float(inputs["electrolyzer_size_mw"][0])
-        useful_life = plant_config["plant"]["plant_life"]
         electrical_generation_timeseries_kw = inputs["electricity_in"]
         electrolyzer_capex_kw = self.config.electrolyzer_capex
-        time_between_replacement = self.config.time_between_replacement
 
         # run hydrogen production cost model - from hopp examples
         if self.config.location == "onshore":
@@ -86,7 +84,6 @@ class BasicElectrolyzerCostModel(ElectrolyzerCostBaseClass):
 
         # Capital costs provide by Hydrogen Production Cost From PEM Electrolysis - 2019 (HFTO
         # Program Record)
-        stack_capital_cost = 342  # [$/kW]
         mechanical_bop_cost = 36  # [$/kW] for a compressor
         electrical_bop_cost = 82  # [$/kW] for a rectifier
 
@@ -107,24 +104,11 @@ class BasicElectrolyzerCostModel(ElectrolyzerCostBaseClass):
         permitting = 15 / 100  # [%]
         land = 250000  # [$]
 
-        stack_replacment_cost = 15 / 100  # [% of installed capital cost]
-        fixed_OM = 0.24  # [$/kg H2]
-
-        program_record = False
-
-        # Chose to use numbers provided by GPRA pathways
-        if program_record:
-            total_direct_electrolyzer_cost_kw = (
-                (stack_capital_cost * (1 + stack_installation_factor))
-                + mechanical_bop_cost
-                + (electrical_bop_cost * (1 + elec_installation_factor))
-            )
-        else:
-            total_direct_electrolyzer_cost_kw = (
-                (electrolyzer_capex_kw * (1 + stack_installation_factor))
-                + mechanical_bop_cost
-                + (electrical_bop_cost * (1 + elec_installation_factor))
-            )
+        total_direct_electrolyzer_cost_kw = (
+            (electrolyzer_capex_kw * (1 + stack_installation_factor))
+            + mechanical_bop_cost
+            + (electrical_bop_cost * (1 + elec_installation_factor))
+        )
 
         # Assign CapEx for electrolyzer from capacity based installed CapEx
         electrolyzer_total_installed_capex = (
@@ -155,28 +139,11 @@ class BasicElectrolyzerCostModel(ElectrolyzerCostBaseClass):
         property_tax_insurance = 1.5 / 100  # [% of Cap/y]
         variable_OM = 1.30  # [$/MWh]
 
-        # Amortized refurbishment expense [$/MWh]
-        include_refurb_in_opex = False
-        if not include_refurb_in_opex:
-            amortized_refurbish_cost = 0.0
-        else:
-            amortized_refurbish_cost = (
-                (total_direct_electrolyzer_cost_kw * stack_replacment_cost)
-                * max(((useful_life * 8760 * cap_factor) / time_between_replacement - 1), 0)
-                / useful_life
-                / 8760
-                / cap_factor
-                * 1000
-            )
-
         # Total O&M costs [% of installed cap/year]
         total_OM_costs = (
             fixed_OM + (property_tax_insurance * total_direct_electrolyzer_cost_kw)
         ) / total_direct_electrolyzer_cost_kw + (
-            (variable_OM + amortized_refurbish_cost)
-            / 1000
-            * 8760
-            * (cap_factor / total_direct_electrolyzer_cost_kw)
+            variable_OM / 1000 * 8760 * (cap_factor / total_direct_electrolyzer_cost_kw)
         )
 
         electrolyzer_OM_cost = electrolyzer_total_installed_capex * total_OM_costs  # Capacity based

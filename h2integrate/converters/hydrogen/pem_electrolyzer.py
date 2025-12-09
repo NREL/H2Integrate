@@ -87,24 +87,6 @@ class ECOElectrolyzerPerformanceModel(ElectrolyzerPerformanceBaseClass):
         electrolyzer_size_mw = inputs["n_clusters"][0] * self.config.cluster_rating_MW
         electrolyzer_capex_kw = self.config.electrolyzer_capex
 
-        # # IF GRID CONNECTED
-        # if plant_config["plant"]["grid_connection"]:
-        #     # NOTE: if grid-connected, it assumes that hydrogen demand is input and there is not
-        #     # multi-cluster control strategies.
-        # This capability exists at the cluster level, not at the
-        #     # system level.
-        #     if config["sizing"]["hydrogen_dmd"] is not None:
-        #         grid_connection_scenario = "grid-only"
-        #         hydrogen_production_capacity_required_kgphr = config[
-        #             "sizing"
-        #         ]["hydrogen_dmd"]
-        #         energy_to_electrolyzer_kw = []
-        #     else:
-        #         grid_connection_scenario = "off-grid"
-        #         hydrogen_production_capacity_required_kgphr = []
-        #         energy_to_electrolyzer_kw = np.ones(8760) * electrolyzer_size_mw * 1e3
-        # # IF NOT GRID CONNECTED
-        # else:
         hydrogen_production_capacity_required_kgphr = []
         grid_connection_scenario = "off-grid"
         energy_to_electrolyzer_kw = inputs["electricity_in"]
