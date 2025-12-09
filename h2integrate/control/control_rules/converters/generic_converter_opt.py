@@ -1,5 +1,5 @@
 import pyomo.environ as pyo
-from pyomo.network import Port
+from pyomo.network import Port, Expression
 from attrs import field, define
 
 from h2integrate.control.control_rules.converters.generic_converter import (
@@ -15,10 +15,10 @@ class PyomoDispatchGenericConverterMinOperatingCostsConfig(PyomoRuleBaseConfig):
     This class defines the parameters required to configure the `PyomoRuleBaseConfig`.
 
     Attributes:
-        commodity_cost_per_generation (float): cost of the commodity per generation (in $/kWh).
+        commodity_cost_per_production (float): cost of the commodity per production (in $/kWh).
     """
 
-    commodity_cost_per_generation: str = field()
+    commodity_cost_per_production: str = field()
 
 
 class PyomoDispatchGenericConverterMinOperatingCosts(PyomoDispatchGenericConverter):
@@ -28,10 +28,10 @@ class PyomoDispatchGenericConverterMinOperatingCosts(PyomoDispatchGenericConvert
         )
         super().setup()
 
-    def initialize_parameters(self):
+    def initialize_parameters(self, commodity_in: list, commodity_demand: list):
         """Initialize parameters method."""
-        self.cost_per_generation = (
-            self.config["commodity_cost_per_generation"]
+        self.cost_per_production = (
+            self.config["commodity_cost_per_production"]
         )
 
     def _create_variables(self, pyomo_model: pyo.ConcreteModel, tech_name: str):
@@ -47,14 +47,18 @@ class PyomoDispatchGenericConverterMinOperatingCosts(PyomoDispatchGenericConvert
             pyomo_model,
             f"{tech_name}_{self.config.commodity_name}",
             pyo.Var(
-                doc=f"{self.config.commodity_name} generation \
+                doc=f"{self.config.commodity_name} production \
                     from {tech_name} [{self.config.commodity_storage_units}]",
                 domain=pyo.NonNegativeReals,
-                bounds=(0, pyomo_model.available_generation),
+                bounds=(0, pyomo_model.available_production),
                 units=eval("pyo.units." + self.config.commodity_storage_units),
                 initialize=0.0,
             ),
         )
+        return getattr(
+            pyomo_model,
+            f"{tech_name}_{self.config.commodity_name}",
+        ), 0.0  # load var is zero for converters
 
     def _create_ports(self, pyomo_model: pyo.ConcreteModel, tech_name: str):
         """Create generic converter port to add to pyomo model instance.
@@ -75,6 +79,10 @@ class PyomoDispatchGenericConverterMinOperatingCosts(PyomoDispatchGenericConvert
                     )
                 }
             ),
+        )
+        return getattr(
+            pyomo_model,
+            f"{tech_name}_port",
         )
 
     def _create_parameters(self, pyomo_model: pyo.ConcreteModel, tech_name: str):
@@ -99,19 +107,23 @@ class PyomoDispatchGenericConverterMinOperatingCosts(PyomoDispatchGenericConvert
             mutable=True,
             units=pyo.units.hr,
         )
-        pyomo_model.cost_per_generation = pyo.Param(
-            doc="Generation cost for generator [$/MWh]",
+        pyomo_model.cost_per_production = pyo.Param(
+            doc="Production cost for generator [$/"
+            + self.config.commodity_storage_units
+            + "]",
             default=0.0,
             within=pyo.NonNegativeReals,
             mutable=True,
-            units=pyo.units.USD / pyo.units.MWh,
+            units=eval("pyo.units.USD / pyo.units." + self.config.commodity_storage_units),
         )
-        pyomo_model.available_generation = pyo.Param(
-            doc="Available generation for the generator [MW]",
+        pyomo_model.available_production = pyo.Param(
+            doc="Available production for the generator ["
+            + self.config.commodity_storage_units
+            + "]",
             default=0.0,
             within=pyo.Reals,
             mutable=True,
-            units=pyo.units.MW,
+            units=eval("pyo.units." + self.config.commodity_storage_units),
         )
 
         pass
@@ -131,28 +143,75 @@ class PyomoDispatchGenericConverterMinOperatingCosts(PyomoDispatchGenericConvert
 
         pass
 
-    def update_time_series_parameters(self, start_time: int, commodity_in:list):
+    def update_time_series_parameters(self, start_time: int,
+                                      commodity_in:list,
+                                      commodity_demand:list,
+                                      time_commodity_met_value:list
+                                      ):
         """Update time series parameters method.
 
         Args:
-            start_time (int): Start time.
+            start_time (int): The starting time index for the update.
+            commodity_in (list): List of commodity input values for each time step.
+        """
+        self.available_production = [commodity_in[t]
+                                        for t in self.blocks.index_set()]
+
+    @property
+    def available_production(self) -> list:
+        """Available generation.
 
         Returns:
-            None
+            list: List of available generation.
 
         """
-        n_horizon = len(self.blocks.index_set())
-        generation = commodity_in
-        if start_time + n_horizon > len(generation):
-            horizon_gen = list(generation[start_time:])
-            horizon_gen.extend(list(generation[0 : n_horizon - len(horizon_gen)]))
-        else:
-            horizon_gen = generation[start_time : start_time + n_horizon]
+        return [
+            self.blocks[t].available_production.value for t in self.blocks.index_set()
+        ]
 
-        if len(horizon_gen) < len(self.blocks):
-            raise RuntimeError(
-                f"Dispatch parameter update error at start_time {start_time}: System model "
-                f"{type(self._system_model)} generation profile should have at least {len(self.blocks)} "
-                f"length but has only {len(generation)}"
+    @available_production.setter
+    def available_production(self, resource: list):
+        if len(resource) == len(self.blocks):
+            for t, gen in zip(self.blocks, resource):
+                self.blocks[t].available_production.set_value(
+                    round(gen, self.round_digits)
+                )
+        else:
+            raise ValueError(
+                f"'resource' list ({len(resource)}) must be the same length as\
+                time horizon ({len(self.blocks)})"
             )
-        self.available_generation = [gen_kw / 1e3 for gen_kw in horizon_gen]
+
+    @property
+    def cost_per_production(self) -> float:
+        """Cost per generation [$/commodity_storage_units]."""
+        for t in self.blocks.index_set():
+            return self.blocks[t].cost_per_production.value
+
+    @cost_per_production.setter
+    def cost_per_production(self, om_dollar_per_kwh: float):
+        for t in self.blocks.index_set():
+            self.blocks[t].cost_per_production.set_value(
+                round(om_dollar_per_kwh, self.round_digits)
+            )
+
+    def min_operating_cost_objective(self, hybrid_blocks, tech_name: str):
+        """Wind instance of minimum operating cost objective.
+
+        Args:
+            hybrid_blocks (Pyomo.block): A generalized container for defining hierarchical
+                models by adding modeling components as attributes.
+
+        """
+        self.obj = Expression(
+            expr=sum(
+            hybrid_blocks[t].time_weighting_factor
+            * self.blocks[t].time_duration
+            * self.blocks[t].cost_per_production
+            * getattr(
+            hybrid_blocks,
+            f"{tech_name}_{self.config.commodity_name}",
+            )[t]
+            for t in hybrid_blocks.index_set()
+            )
+        )

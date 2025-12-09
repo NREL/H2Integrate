@@ -32,6 +32,8 @@ class PyomoRuleBaseClass(om.ExplicitComponent):
             self.options["tech_config"]["model_inputs"]["dispatch_rule_parameters"]
         )
 
+        self.round_digits = int(4)
+
         self.add_discrete_output(
             "dispatch_block_rule_function",
             val=self.dispatch_block_rule_function,

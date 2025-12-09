@@ -1,13 +1,14 @@
 from typing import TYPE_CHECKING
 
 import numpy as np
-import pyomo.environ as pyomo, Expression
+import pyomo.environ as pyomo, Expression, del_component, assert_units_consistent
 from attrs import field, define
 
 from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
 from h2integrate.core.validators import range_val
 from h2integrate.control.control_strategies.controller_baseclass import ControllerBaseClass
 from h2integrate.control.control_strategies.controller_opt_problem_state import DispatchProblemState
+from h2integrate.control.control_rules.hybrid_rule import PyomoDispatchPlantRule
 
 
 if TYPE_CHECKING:  # to avoid circular imports
@@ -230,7 +231,8 @@ class PyomoControllerBaseClass(ControllerBaseClass):
             Notes:
                 1. Arrays returned have length self.n_timesteps (full simulation period).
             """
-            self.initialize_parameters()
+            self.initialize_parameters(inputs[f"{commodity_name}_in"],
+                                       inputs[f"{commodity_name}_demand"])
 
             # initialize outputs
             unmet_demand = np.zeros(self.n_timesteps)
@@ -846,12 +848,22 @@ class OptimizedDispatchController(SimpleBatteryControllerHeuristic):
         if self.config.discharge_efficiency is not None:
             self.discharge_efficiency = self.config.discharge_efficiency
 
+        self.hybrid_dispatch_model = self._create_dispatch_optimization_model()
+        self._create_objective_function()
+        self.hybrid_dispatch_model.create_arcs()
+        assert_
+
+
 
         # Create objective from pyomo blocks
-    def initialize_parameters(self):
+    def initialize_parameters(self, commodity_in, commodity_demand):
         self.time_weighting_factor = (
             self.config.time_weighting_factor
         )  # Discount factor
+        for source_tech in self.source_techs:
+            pyomo_block = getattr(self.pyomo_model, source_tech)
+            pyomo_block.initialize_parameters(commodity_in, commodity_demand)
+
         self._create_objective_function()
 
     def solve_dispatch_model(
@@ -873,8 +885,6 @@ class OptimizedDispatchController(SimpleBatteryControllerHeuristic):
 
         """
 
-
-        self._create_objective_function(commodity_in, commodity_demand)
         self.problem_state = DispatchProblemState()
         solver_results = self.glpk_solve()
         self.problem_state.store_problem_metrics(
@@ -905,30 +915,14 @@ class OptimizedDispatchController(SimpleBatteryControllerHeuristic):
                     fd = -self.max_charge_fraction[t]
             self._fixed_dispatch[t] = fd
 
-    def _create_objective_function(self, commodity_in, commodity_demand):
-        """Creates objective function to minimize unmet demand over control window, while also
-         minimizing costs.
-
-        Args:
-            commodity_in: commodity generation profile.
-            commodity_demand: Goal amount of commodity.
-
+    def _create_objective_function(self):
+        """Operating cost objective rule.
+        Returns:
+            expression: Operating cost objective rule.
         """
-        def objective_rule(m):
-            return sum(
-                (
-                    commodity_demand[t]
-                    - (
-                        self.blocks[t].discharge_commodity
-                        - self.blocks[t].charge_commodity
-                        + commodity_in[t]
-                    )
-                )
-                for t in self.blocks.index_set()
-            )
+        self._delete_objective()
 
-
-        def operating_cost_objective_rule(m) -> float:
+        def min_operating_cost_objective_rule(m):
             obj = 0.0
             for source_tech in self.source_techs:
                 pyomo_block = getattr(self.pyomo_model, source_tech)
@@ -939,7 +933,9 @@ class OptimizedDispatchController(SimpleBatteryControllerHeuristic):
                             self.time_weighting_factor[t]
                             * pyomo_block.time_duration
                             * pyomo_block.cost_per_generation
-                            * pyomo_block[t].generic_generation
+                            * getattr(
+                            pyomo_block, f"{source_tech}_{self.commodity_name}"
+                            )[t]
                             for t in self.blocks.index_set()
                             )
                     )
@@ -954,39 +950,26 @@ class OptimizedDispatchController(SimpleBatteryControllerHeuristic):
                             * (
                                 pyomo_block.cost_per_discharge * pyomo_block.charge_commodity[t]
                                 - pyomo_block.cost_per_charge * pyomo_block.discharge_commodity[t]
+                                + (pyomo_block.commodity_load_demand[t]
+                                - pyomo_block.commodity_out
+                                    ) * pyomo_block.penalty_cost_per_unmet_demand
                             )  # Try to incentivize battery charging
                             for t in self.blocks.index_set()
-                            )
+                        )
                     )
                     # Copy the technology objective to the pyomo model.
                     setattr(m, source_tech + "_obj", self.obj)
-
-                # Create the min_operating_cost_objective within each of the technology
-                # dispatch classes.
-                self.pyomo_model[source_tech].min_operating_cost_objective(
-                    self.blocks
-                )
-
-                # Assemble the objective as a linear summation.
-                obj += self.power_sources[tech]._dispatch.obj
-            # hybrid_blocks = getattr(self.pyomo_model, "HybridDispatch")
-            # for t in self.blocks.index_set():
-            #     obj += sum(
-            #     hybrid_blocks[t].time_weighting_factor
-            #     * self.blocks[t].time_duration
-            #     * self.blocks[t].electricity_sell_price
-            #     * (
-            #         self.blocks[t].generation_transmission_limit
-            #         - hybrid_blocks[t].electricity_sold
-            #     )
-            #     )
-            print(f"Objective value: {obj}")
+                obj += getattr(m, source_tech + "_obj")
 
             return obj
 
-        self.objective = pyomo.Objective(
-            rule=operating_cost_objective_rule, sense=pyomo.minimize
+        self.pyomo_model.objective = pyomo.Objective(
+            expr=min_operating_cost_objective_rule, sense=pyomo.minimize
         )
+
+    def _delete_objective(self):
+        if hasattr(self.pyomo_model, "objective"):
+            self.pyomo_model.del_component(self.model.objective)
 
     def update_time_series_parameters(self, start_time: int):
         """Update time series parameters method.
@@ -1019,6 +1002,26 @@ class OptimizedDispatchController(SimpleBatteryControllerHeuristic):
                 f"length but has only {len(generation)}"
             )
         self.available_generation = [gen_kw / 1e3 for gen_kw in horizon_gen]      
+
+    def _create_dispatch_optimization_model(self):
+        """
+        Creates monolith dispatch model
+        """
+        model = pyomo.ConcreteModel(name="hybrid_dispatch")
+        #################################
+        # Sets                          #
+        #################################
+        model.forecast_horizon = pyomo.Set(
+            doc="Set of time periods in time horizon",
+            initialize=range(self.n_horizon_window),
+        )
+        #################################
+        # Blocks (technologies)         #
+        ################################# 
+        self.hybrid_dispatch_model = PyomoDispatchPlantRule(
+            model, model.forecast_horizon, self.source_techs, self.pyomo_model, self.options
+        )
+        return model
 
     @staticmethod
     def glpk_solve_call(
