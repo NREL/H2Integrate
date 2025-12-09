@@ -34,6 +34,7 @@
 - Added standalone iron mine performance and cost model
 - Added solar resource models for Meteosat Prime Meridian and Himawari datasets available through NSRDB
 - Improved readability of the postprocessing printout by simplifying numerical representation, especially for years
+- Added grid converter performance and cost model which can be used to buy, sell, or buy and sell electricity to/from the grid
 - Add open-loop load demand controllers: `DemandOpenLoopConverterController` and `FlexibleDemandOpenLoopConverterController`
 
 ## 0.4.0 [October 1, 2025]
