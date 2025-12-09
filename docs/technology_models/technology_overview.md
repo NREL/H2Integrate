@@ -88,7 +88,9 @@ Connection: `[source_tech, dest_tech, transport_commodity, transport_technology]
 | Controller        | Control Method |
 | :----------------------------- | :---------------: |
 | `pass_through_controller`      |  open-loop control. directly passes the input resource flow to the output without any modifications         |
-| `demand_open_loop_controller`  |  open-loop control. manages resource flow based on demand and storage constraints     |
+| `demand_open_loop_storage_controller`  |  open-loop control. manages resource flow based on demand and storage constraints     |
+| `demand_open_loop_converter_controller`  |  open-loop control. manages resource flow based on demand constraints     |
+| `flexible_demand_open_loop_converter_controller`  |  open-loop control. manages resource flow based on demand and flexibility constraints     |
 | `heuristic_load_following_controller` | open-loop control that works on a time window basis to set dispatch commands. Uses pyomo |
 
 # Technology Models Overview
@@ -205,6 +207,11 @@ Below summarizes the available performance, cost, and financial models for each 
         + `'natural_gas_performance'`
     - cost_models:
         + `'natural_gas_cost'`
+- `grid`: electricity grid connection
+    - performance models:
+        + `'grid_performance'`
+    - cost models:
+        + `'grid_cost'`
 
 (transport-models)=
 ## Transport Models
@@ -252,6 +259,10 @@ Below summarizes the available performance, cost, and financial models for each 
 
 (control-models)=
 ## Control Models
-- `pass_through_controller`
-- `demand_open_loop_controller`
-- `heuristic_load_following_controller`
+- `'pass_through_controller'`
+- Storage Controllers:
+    - `'demand_open_loop_storage_controller'`
+    - `'heuristic_load_following_controller'`
+- Converter Controllers:
+    - `'demand_open_loop_converter_controller`
+    - `'flexible_demand_open_loop_converter_controller'`

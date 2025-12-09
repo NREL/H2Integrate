@@ -38,6 +38,7 @@ parts:
   - file: technology_models/ammonia.md
   - file: technology_models/pysam_battery.md
   - file: technology_models/geologic_hydrogen.md
+  - file: technology_models/grid
 
 - caption: Resource Models
   chapters:
@@ -53,7 +54,9 @@ parts:
 
 - caption: Control
   chapters:
-  - file: control/control_overview.md
+  - file: control/control_overview
+  - file: control/open-loop_controllers
+  - file: control/pyomo_controllers
 
 - caption: Finance Models
   chapters:

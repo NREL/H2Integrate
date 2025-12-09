@@ -2,6 +2,7 @@ from h2integrate.resource.river import RiverResource
 from h2integrate.core.feedstocks import FeedstockCostModel, FeedstockPerformanceModel
 from h2integrate.transporters.pipe import PipePerformanceModel
 from h2integrate.transporters.cable import CablePerformanceModel
+from h2integrate.converters.grid.grid import GridCostModel, GridPerformanceModel
 from h2integrate.finances.profast_lco import ProFastLCO
 from h2integrate.finances.profast_npv import ProFastNPV
 from h2integrate.converters.steel.steel import SteelPerformanceModel, SteelCostAndFinancialModel
@@ -96,10 +97,6 @@ from h2integrate.resource.solar.nrel_developer_goes_api_models import (
 from h2integrate.converters.hydrogen.eco_tools_pem_electrolyzer import (
     ECOElectrolyzerPerformanceModel,
 )
-from h2integrate.control.control_strategies.openloop_controllers import (
-    DemandOpenLoopController,
-    PassThroughOpenLoopController,
-)
 from h2integrate.converters.water_power.hydro_plant_run_of_river import (
     RunOfRiverHydroCostModel,
     RunOfRiverHydroPerformanceModel,
@@ -129,9 +126,21 @@ from h2integrate.converters.hydrogen.geologic.templeton_serpentinization import 
 from h2integrate.control.control_rules.storage.pyomo_storage_rule_baseclass import (
     PyomoRuleStorageBaseclass,
 )
+from h2integrate.control.control_strategies.passthrough_openloop_controller import (
+    PassThroughOpenLoopController,
+)
 from h2integrate.resource.solar.nrel_developer_meteosat_prime_meridian_models import (
     MeteosatPrimeMeridianSolarAPI,
     MeteosatPrimeMeridianTMYSolarAPI,
+)
+from h2integrate.control.control_strategies.storage.demand_openloop_controller import (
+    DemandOpenLoopStorageController,
+)
+from h2integrate.control.control_strategies.converters.demand_openloop_controller import (
+    DemandOpenLoopConverterController,
+)
+from h2integrate.control.control_strategies.converters.flexible_demand_openloop_controller import (
+    FlexibleDemandOpenLoopConverterController,
 )
 
 
@@ -222,19 +231,31 @@ supported_models = {
     "simple_generic_storage": SimpleGenericStorage,
     # Control
     "pass_through_controller": PassThroughOpenLoopController,
-    "demand_open_loop_controller": DemandOpenLoopController,
+    "demand_open_loop_storage_controller": DemandOpenLoopStorageController,
     "heuristic_load_following_controller": HeuristicLoadFollowingController,
+    "demand_open_loop_converter_controller": DemandOpenLoopConverterController,
+    "flexible_demand_open_loop_converter_controller": FlexibleDemandOpenLoopConverterController,
     # Dispatch
     "pyomo_dispatch_generic_converter": PyomoDispatchGenericConverter,
     "pyomo_dispatch_generic_storage": PyomoRuleStorageBaseclass,
     # Feedstock
     "feedstock_performance": FeedstockPerformanceModel,
     "feedstock_cost": FeedstockCostModel,
+    # Grid
+    "grid_performance": GridPerformanceModel,
+    "grid_cost": GridCostModel,
     # Finance
     "ProFastComp": ProFastLCO,
     "ProFastNPV": ProFastNPV,
     "NumpyFinancialNPV": NumpyFinancialNPV,
 }
 
-
-electricity_producing_techs = ["wind", "solar", "pv", "river", "hopp", "natural_gas_plant"]
+electricity_producing_techs = [
+    "wind",
+    "solar",
+    "pv",
+    "river",
+    "hopp",
+    "natural_gas_plant",
+    "grid_buy",
+]
