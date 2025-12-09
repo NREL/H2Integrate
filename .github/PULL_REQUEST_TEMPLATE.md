@@ -35,6 +35,7 @@ IMPORTANT NOTES
   - [ ] New Model
   - [ ] Updated Model
   - [ ] Tools/Utilities
+  - [ ] Other (please describe):
 - [ ] Bug Fix
 - [ ] Documentation Update
 - [ ] CI Changes
