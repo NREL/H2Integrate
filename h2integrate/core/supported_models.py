@@ -54,10 +54,7 @@ from h2integrate.converters.water.desal.desalination import (
     ReverseOsmosisPerformanceModel,
 )
 from h2integrate.converters.hydrogen.basic_cost_model import BasicElectrolyzerCostModel
-from h2integrate.converters.hydrogen.pem_electrolyzer import (
-    ElectrolyzerCostModel,
-    ElectrolyzerPerformanceModel,
-)
+from h2integrate.converters.hydrogen.pem_electrolyzer import ECOElectrolyzerPerformanceModel
 from h2integrate.converters.solar.atb_res_com_pv_cost import ATBResComPVCostModel
 from h2integrate.converters.solar.atb_utility_pv_cost import ATBUtilityPVCostModel
 from h2integrate.resource.wind.nrel_developer_wtk_api import WTKNRELDeveloperAPIWindResource
@@ -92,9 +89,6 @@ from h2integrate.resource.solar.nrel_developer_goes_api_models import (
     GOESConusSolarAPI,
     GOESFullDiscSolarAPI,
     GOESAggregatedSolarAPI,
-)
-from h2integrate.converters.hydrogen.eco_tools_pem_electrolyzer import (
-    ECOElectrolyzerPerformanceModel,
 )
 from h2integrate.converters.water_power.hydro_plant_run_of_river import (
     RunOfRiverHydroCostModel,
@@ -165,8 +159,6 @@ supported_models = {
     "atb_comm_res_pv_cost": ATBResComPVCostModel,
     "run_of_river_hydro_performance": RunOfRiverHydroPerformanceModel,
     "run_of_river_hydro_cost": RunOfRiverHydroCostModel,
-    "pem_electrolyzer_performance": ElectrolyzerPerformanceModel,
-    "pem_electrolyzer_cost": ElectrolyzerCostModel,
     "eco_pem_electrolyzer_performance": ECOElectrolyzerPerformanceModel,
     "singlitico_electrolyzer_cost": SingliticoCostModel,
     "basic_electrolyzer_cost": BasicElectrolyzerCostModel,
