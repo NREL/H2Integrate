@@ -56,6 +56,7 @@ dependencies = [
     "ruamel.yaml",
     "scipy",
     "wombat>=0.11",
+    "geopy",
     "openmeteo-requests",
     "geopy",
     "pyDOE3",
@@ -101,7 +102,7 @@ develop = [
     "pytest-subtests",
     "responses",
     "Plotly",
-    "jupyter-book",
+    "jupyter-book<2",
     "sphinxcontrib-napoleon"
 ]
 examples = ["jupyterlab"]

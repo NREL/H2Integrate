@@ -811,10 +811,25 @@ def print_results(model, includes=None, excludes=None, show_units=True):
             mean_raw = _mean(meta.get("val"))
             try:
                 val = float(mean_raw)
-                if abs(val) >= 1e5:
-                    mean_val = f"{val:,.2f}"
+                units_val_raw = meta.get("units")
+                # Format as integer if units are 'year' or variable name is 'cost_year'
+                if units_val_raw == "year" or var == "cost_year":
+                    mean_val = str(int(val))
+                elif abs(val) >= 1e5:
+                    formatted = f"{val:,.2f}"
+                    mean_val = formatted.rstrip("0")
+                    if mean_val.endswith("."):
+                        mean_val = mean_val  # Keep e.g. "520." format
+                    else:
+                        mean_val = mean_val + "." if "." not in mean_val else mean_val
                 else:
-                    mean_val = f"{val:,.4f}"
+                    formatted = f"{val:,.4f}"
+                    mean_val = formatted.rstrip("0")
+                    # Ensure we end with "." if all decimals were zeros
+                    if mean_val.endswith("."):
+                        pass  # Keep as e.g. "520." or "0."
+                    elif "." not in mean_val:
+                        mean_val = mean_val + "."
             except (ValueError, TypeError):
                 mean_val = str(mean_raw)
             units_val = (
