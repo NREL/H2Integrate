@@ -48,14 +48,14 @@ class GeoH2SurfacePerformanceBaseClass(om.ExplicitComponent):
             in kilograms per hour.
         max_flow_in (float):
             The intake capacity limit of the processing system for wellhead gas in kg/hour.
-        wellhead_h2_concentration_mol (float)
+        wellhead_h2_concentration_mol (float):
             The molar concentration of hydrogen in the wellhead gas (unitless).
 
     Outputs:
         hydrogen_out (ndarray):
             The production rate profile of surface processing over a one-year period (8760 hours),
             in kilograms per hour of produced gas (H2 with purity of `hydrogen_concentration_out`)
-        hydrogen_concentration_out (float)
+        hydrogen_concentration_out (float):
             The molar concentration of hydrogen in the wellhead gas (unitless).
         total_hydrogen_produced (float):
             The total hydrogen produced over the plant lifetime, in kilograms per year.
@@ -78,7 +78,7 @@ class GeoH2SurfacePerformanceBaseClass(om.ExplicitComponent):
 
         # outputs
         self.add_output("hydrogen_out", units="kg/h", shape=(n_timesteps,))
-        self.add_output("hydrogen_concentration_out", units="kg/h", val=-1.0)
+        self.add_output("hydrogen_concentration_out", units="mol/mol", val=-1.0)
         self.add_output("total_hydrogen_produced", val=-1.0, units="kg/year")
         self.add_output("max_flow_size", units="kg/h", val=self.config.max_flow_in)
 
@@ -125,7 +125,7 @@ class GeoH2SurfaceCostBaseClass(CostModelBaseClass):
             in kilograms per hour.
         max_flow_size (float):
             The wellhead gas flow in kg/hour used for sizing the system.
-        wellhead_hydrogen_concentration (float)
+        wellhead_hydrogen_concentration (float):
             The molar concentration of hydrogen in the wellhead gas (unitless).
 
     Outputs:

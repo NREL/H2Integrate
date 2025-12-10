@@ -45,7 +45,7 @@ There is one performance model and one cost model available to model the hydroge
 
 - [`"aspen_geoh2_performance"`](#aspen-geoh2-surface-performance): A series of empirical relations between wellhead flow/concentration and processing plant performance, based on the Aspen process models.
 
-- [`"aspen_geoh2_cost"`](#aspen-geoh2-surface-performance): A series of empirical relations between wellhead flow/concentration and processing plant cost, based on the Aspen process models.
+- [`"aspen_geoh2_cost"`](#aspen-geoh2-surface-cost): A series of empirical relations between wellhead flow/concentration and processing plant cost, based on the Aspen process models.
 
 (aspen-geoh2-surface-performance)=
 ### Aspen GeoH2 Performance
