@@ -1,13 +1,11 @@
+import math
+
 from attrs import field, define
 
 from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
 from h2integrate.core.validators import gt_zero, contains
 from h2integrate.converters.hydrogen.pem_model.run_h2_PEM import run_h2_PEM
 from h2integrate.converters.hydrogen.electrolyzer_baseclass import ElectrolyzerPerformanceBaseClass
-
-
-def ceildiv(a, b):
-    return -(a // -b)
 
 
 @define
@@ -91,10 +89,9 @@ class ECOElectrolyzerPerformanceModel(ElectrolyzerPerformanceBaseClass):
         grid_connection_scenario = "off-grid"
         energy_to_electrolyzer_kw = inputs["electricity_in"]
 
-        n_pem_clusters = int(ceildiv(electrolyzer_size_mw, self.config.cluster_rating_MW))
+        n_pem_clusters = int(math.ceil(electrolyzer_size_mw / self.config.cluster_rating_MW))
 
         electrolyzer_actual_capacity_MW = n_pem_clusters * self.config.cluster_rating_MW
-        ## run using greensteel model
         pem_param_dict = {
             "eol_eff_percent_loss": self.config.eol_eff_percent_loss,
             "uptime_hours_until_eol": self.config.uptime_hours_until_eol,

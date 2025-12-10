@@ -15,6 +15,23 @@ class SteelPerformanceModelConfig(BaseConfig):
     capacity_factor: float = field()
 
 
+class SteelPerformanceModel(SteelPerformanceBaseClass):
+    """
+    An OpenMDAO component for modeling the performance of an steel plant.
+    Computes annual steel production based on plant capacity and capacity factor.
+    """
+
+    def setup(self):
+        super().setup()
+        self.config = SteelPerformanceModelConfig.from_dict(
+            merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance")
+        )
+
+    def compute(self, inputs, outputs):
+        steel_production_mtpy = self.config.plant_capacity_mtpy * self.config.capacity_factor
+        outputs["steel"] = steel_production_mtpy / len(inputs["electricity_in"])
+
+
 @define
 class SteelCostAndFinancialModelConfig(BaseConfig):
     installation_time: int = field()
@@ -54,42 +71,11 @@ class SteelCostAndFinancialModelConfig(BaseConfig):
     maintenance_materials_unitcost: float = field(default=7.72)
 
 
-def run_steel_model(plant_capacity_mtpy: float, plant_capacity_factor: float) -> float:
-    """Calculate annual steel production."""
-    return plant_capacity_mtpy * plant_capacity_factor
-
-
-class SteelPerformanceModel(SteelPerformanceBaseClass):
-    """
-    An OpenMDAO component for modeling the performance of an steel plant.
-    Computes annual steel production based on plant capacity and capacity factor.
-    """
-
-    def initialize(self):
-        super().initialize()
-
-    def setup(self):
-        super().setup()
-        self.config = SteelPerformanceModelConfig.from_dict(
-            merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance")
-        )
-
-    def compute(self, inputs, outputs):
-        steel_production_mtpy = run_steel_model(
-            self.config.plant_capacity_mtpy,
-            self.config.capacity_factor,
-        )
-        outputs["steel"] = steel_production_mtpy / len(inputs["electricity_in"])
-
-
 class SteelCostAndFinancialModel(SteelCostBaseClass):
     """
     An OpenMDAO component for calculating the costs associated with steel production.
     Includes CapEx, OpEx, and byproduct credits.
     """
-
-    def initialize(self):
-        super().initialize()
 
     def setup(self):
         self.config = SteelCostAndFinancialModelConfig.from_dict(
