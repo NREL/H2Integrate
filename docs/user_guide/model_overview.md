@@ -53,6 +53,10 @@ The inputs, outputs, and corresponding technology that are currently available i
 | `desal`   |  water     | electricity |
 | `natural_gas`   |  electricity     | natural gas |
 
+```{note}
+When the Primary Commodity is electricity, those converters are considered electricity producing technologies and their electricity production is summed for financial calculations.
+```
+
 (transport)=
 ## Transport
 `Transport` models are used to either:
