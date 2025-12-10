@@ -6,7 +6,6 @@ from openmdao.utils import units
 
 from h2integrate import ROOT_DIR
 from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
-from h2integrate.core.validators import contains
 
 
 @define
@@ -23,11 +22,11 @@ class RosnerIronPlantPerformanceConfig(BaseConfig):
 
     pig_iron_production_rate_tonnes_per_hr: float = field()
 
-    reduction_chemical: str = field(
-        converter=(str.lower, str.strip), validator=contains(["ng", "h2"])
-    )
+    # reduction_chemical: str = field(
+    #     converter=(str.lower, str.strip), validator=contains(["ng", "h2"])
+    # )
 
-    mine: str = field(validator=contains(["Hibbing", "Northshore", "United", "Minorca", "Tilden"]))
+    water_density: float = field(default=1000)  # kg/m3
 
 
 class NaturalGasIronReudctionPlantPerformanceComponent(om.ExplicitComponent):
@@ -53,7 +52,7 @@ class NaturalGasIronReudctionPlantPerformanceComponent(om.ExplicitComponent):
 
         feedstocks_to_units = {
             "natural_gas": "MMBtu",
-            "water": "gal/h",
+            "water": "galUS/h",
             "iron_ore": "t/h",
             "electricity": "kW",
             "reformer_catalyst": "(m**3)/h",
@@ -67,8 +66,8 @@ class NaturalGasIronReudctionPlantPerformanceComponent(om.ExplicitComponent):
                 units=feedstock_units,
                 desc=f"{feedstock} available for iron reduction",
             )
-            self.add_input(
-                f"{feedstock}_in",
+            self.add_output(
+                f"{feedstock}_consumed",
                 val=0.0,
                 shape=n_timesteps,
                 units=feedstock_units,
@@ -78,13 +77,6 @@ class NaturalGasIronReudctionPlantPerformanceComponent(om.ExplicitComponent):
         # Add iron ore input, default to 0 --> set using feedstock component
 
         # Default the reduced iron demand input as the rated capacity
-        self.add_input(
-            "system_capacity",
-            val=self.config.pig_iron_production_rate_tonnes_per_hr,
-            # shape=n_timesteps,
-            units="t/h",
-            desc="Annual ore production capacity",
-        )
 
         self.add_input(
             "pig_iron_demand",
@@ -107,7 +99,8 @@ class NaturalGasIronReudctionPlantPerformanceComponent(om.ExplicitComponent):
         )
         # martin ore performance model
         coeff_df = pd.read_csv(coeff_fpath, index_col=0)
-        self.coeff_df = self.format_coeff_df(coeff_df, self.config.mine)
+        self.coeff_df = self.format_coeff_df(coeff_df)
+        self.feedstock_to_units = feedstocks_to_units
 
     def format_coeff_df(self, coeff_df):
         """Update the coefficient dataframe such that values are adjusted to standard units
@@ -132,8 +125,8 @@ class NaturalGasIronReudctionPlantPerformanceComponent(om.ExplicitComponent):
         # ng DRI needs natural gas, water, electricity, iron ore and reformer catalyst
         # h2_dri needs natural gas, water, hydrogen, iron ore.
         # hm.loc["ng_dri","feed"][hm.loc["ng_dri","feed"]["Model"]>0]
-        steel_plant_capacity = coeff_df[coeff_df["Name"] == "Steel Production"]
-        iron_plant_capacity = coeff_df[coeff_df["Name"] == "Pig Iron Production"]
+        steel_plant_capacity = coeff_df[coeff_df["Name"] == "Steel Production"]["Value"].values[0]
+        iron_plant_capacity = coeff_df[coeff_df["Name"] == "Pig Iron Production"]["Value"].values[0]
 
         steel_to_iron_ratio = steel_plant_capacity / iron_plant_capacity  # both in metric tons/year
         unit_rename_mapper = {"mtpy": "t/yr", "%": "unitless"}
@@ -151,37 +144,50 @@ class NaturalGasIronReudctionPlantPerformanceComponent(om.ExplicitComponent):
                 feedstock_unit, capacity_unit = old_unit.split("/")
 
                 i_update = coeff_df[coeff_df["Unit"] == old_unit].index
+
                 # convert from feedstock per unit steel to feedstock per unit pig iron
-                coeff_df.loc[i_update]["Model"] = (
-                    coeff_df.loc[i_update]["Model"] * steel_to_iron_ratio
+                coeff_df.loc[i_update]["Value"] = (
+                    coeff_df.loc[i_update]["Value"] * steel_to_iron_ratio
                 )
-                # TODO: update name
 
-                # if 'mtpy' in capacity_unit:
-                #     # convert from amount/annual steel to amount/unit pig iron
-                #     total_feedstock_usage = coeff_df.loc[i_update]["Model"]*steel_plant_capacity
-                #     feedstock_usage_ratio = total_feedstock_usage/iron_plant_capacity
-                # if 'mt ' in capacity_unit:
+                capacity_unit = capacity_unit.replace("steel", "").strip()
+                feedstock_unit = feedstock_unit.strip()
+                coeff_df.loc[i_update]["Type"] = f"{coeff_df.loc[i_update]['Type'].values[0]}/iron"
 
-            if "MWh" in old_unit:
-                old_unit = old_unit.replace("MWh", "(MW*h)")
-            if "mlt" in old_unit:  # millon long tons
-                old_unit = old_unit.replace("mlt", "(2240*Mlb)")
-            if "lt" in old_unit:  # dry long tons
-                old_unit = old_unit.replace("lt", "(2240*lb)")
-            if "mt" in old_unit:  # metric tonne
-                old_unit = old_unit.replace("mt", "t")
-            if "wt %" in old_unit:
-                old_unit = old_unit.replace("wt %", "unitless")
-            if "deg N" in old_unit or "deg E" in old_unit:
-                old_unit = "deg"
+                if capacity_unit == "mtpy":
+                    # some feedstocks had mislead units,
+                    # where 'kW/ mtpy steel' is actually 'kW/mt steel'
+                    # NOTE: perhaps these ones need to be modified with the steel efficiency?
+                    capacity_unit = "mt"
+
+                old_unit = f"{feedstock_unit}/{capacity_unit}"
+
+            if "H2O" in old_unit:
+                # convert t to kg then convert cubic meters to liters
+                coeff_df.loc[i_update]["Value"] = (
+                    coeff_df.loc[i_update]["Value"] * 1e3 * 1e3 / self.config.water_density
+                )
+                old_unit = f"L/{capacity_unit}"
+
+            old_unit = old_unit.replace("-LHV NG", "").replace("%", "percent")
+            old_unit = (
+                old_unit.replace("m3 catalyst", "(m**3)")
+                .replace("MWh", "(MW*h)")
+                .replace(" ore", "")
+            )
+            old_unit = (
+                old_unit.replace("mtpy", "(t/yr)").replace("mt", "t").replace("kW/", "(kW*h)/")
+            )
+            # NOTE: how would 'kW / mtpy steel' be different than 'kW / mt steel'
+            # replace % with "unitless"
             unit_rename_mapper.update({old_units[ii]: old_unit})
         coeff_df["Unit"] = coeff_df["Unit"].replace(to_replace=unit_rename_mapper)
 
         convert_units_dict = {
-            "(kW*h)/(2240*lb)": "(kW*h)/t",
-            "(2240*Mlb)": "t",
-            "(2240*lb)/yr": "t/yr",
+            "GJ/t": "MMBtu/t",
+            "L/t": "galUS/t",
+            "(MW*h)/t": "(kW*h)/t",
+            "percent": "unitless",
         }
         for i in coeff_df.index.to_list():
             if coeff_df.loc[i, "Unit"] in convert_units_dict:
@@ -191,70 +197,69 @@ class NaturalGasIronReudctionPlantPerformanceComponent(om.ExplicitComponent):
                     coeff_df.loc[i, "Value"], current_units, desired_units
                 )
                 coeff_df.loc[i, "Unit"] = desired_units
-
+                # NOTE: not sure if percent is actually being converted to unitless
         return coeff_df
 
     def compute(self, inputs, outputs):
-        # calculate crude ore required per amount of ore processed
-        ref_Orefeedstock = self.coeff_df[self.coeff_df["Name"] == "Crude ore processed"][
-            "Value"
-        ].values
-        ref_Oreproduced = self.coeff_df[self.coeff_df["Name"] == "Ore pellets produced"][
-            "Value"
-        ].values
-        crude_ore_usage_per_processed_ore = ref_Orefeedstock / ref_Oreproduced
+        feedstocks = self.coeff_df[self.coeff_df["Type"] == "feed"].copy()
+        feedstocks_usage_rates = {
+            "natural_gas": feedstocks[feedstocks["Unit"] == "MMBtu/t"]["Value"].sum(),
+            "water": feedstocks[feedstocks["Unit"] == "galUS/t"]["Value"].sum(),
+            "iron_ore": feedstocks[feedstocks["Name"] == "Iron Ore"]["Value"].sum(),
+            "electricity": feedstocks[feedstocks["Unit"] == "(kW*h)/t"]["Value"].sum(),
+            "reformer_catalyst": feedstocks[feedstocks["Name"] == "Reformer Catalyst"][
+                "Value"
+            ].sum(),
+        }
 
-        # energy consumption based on ore production
-        energy_usage_per_processed_ore = self.coeff_df[
-            self.coeff_df["Type"] == "energy use/pellet"
-        ]["Value"].sum()
-        # check that units work out
-        energy_usage_unit = self.coeff_df[self.coeff_df["Type"] == "energy use/pellet"][
-            "Unit"
-        ].values[0]
-        energy_usage_per_processed_ore = units.convert_units(
-            energy_usage_per_processed_ore, f"(t/h)*({energy_usage_unit})", "(kW*h)/h"
-        )
-
-        # calculate max inputs/outputs based on rated capacity
-        max_crude_ore_consumption = inputs["system_capacity"] * crude_ore_usage_per_processed_ore
-        max_energy_consumption = inputs["system_capacity"] * energy_usage_per_processed_ore
+        inputs["system_capacity"]
 
         # iron ore demand, saturated at maximum rated system capacity
-        processed_ore_demand = np.where(
-            inputs["iron_ore_demand"] > inputs["system_capacity"],
+        pig_iron_demand = np.where(
+            inputs["pig_iron_demand"] > inputs["system_capacity"],
             inputs["system_capacity"],
-            inputs["iron_ore_demand"],
+            inputs["pig_iron_demand"],
         )
 
-        # available feedstocks, saturated at maximum system feedstock consumption
-        crude_ore_available = np.where(
-            inputs["crude_ore_in"] > max_crude_ore_consumption,
-            max_crude_ore_consumption,
-            inputs["crude_ore_in"],
+        pig_iron_from_feedstocks = np.zeros(
+            (len(feedstocks_usage_rates) + 1, len(inputs["pig_iron_demand"]))
         )
-
-        energy_available = np.where(
-            inputs["electricity_in"] > max_energy_consumption,
-            max_energy_consumption,
-            inputs["electricity_in"],
-        )
-
-        # how much output can be produced from each of the feedstocks
-        processed_ore_from_electricity = energy_available / energy_usage_per_processed_ore
-        processed_ore_from_crude_ore = crude_ore_available / crude_ore_usage_per_processed_ore
+        pig_iron_from_feedstocks[0] = pig_iron_demand
+        ii = 1
+        for feedstock_type, consumption_rate in feedstocks_usage_rates.items():
+            # calculate max inputs/outputs based on rated capacity
+            max_feedstock_consumption = inputs["system_capacity"] * consumption_rate
+            # available feedstocks, saturated at maximum system feedstock consumption
+            feedstock_available = np.where(
+                inputs[f"{feedstock_type}_in"] > max_feedstock_consumption,
+                max_feedstock_consumption,
+                inputs[f"{feedstock_type}_in"],
+            )
+            # how much output can be produced from each of the feedstocks
+            pig_iron_from_feedstocks[ii] = feedstock_available / consumption_rate
 
         # output is minimum between available feedstocks and output demand
-        processed_ore_production = np.minimum.reduce(
-            [processed_ore_from_crude_ore, processed_ore_from_electricity, processed_ore_demand]
-        )
+        pig_iron_production = np.minimum.reduce(pig_iron_from_feedstocks)
 
-        # energy consumption
-        energy_consumed = processed_ore_production * energy_usage_per_processed_ore
+        # feedstock consumption
+        for feedstock_type, consumption_rate in feedstocks_usage_rates.items():
+            outputs[f"{feedstock_type}_consumed"] = pig_iron_production * consumption_rate
 
-        # crude ore consumption
-        crude_ore_consumption = processed_ore_production * crude_ore_usage_per_processed_ore
 
-        outputs["iron_ore_out"] = processed_ore_production
-        outputs["electricity_consumed"] = energy_consumed
-        outputs["crude_ore_consumed"] = crude_ore_consumption
+if __name__ == "__main__":
+    prob = om.Problem()
+
+    plant_config = {"plant": {"simulation": {"n_timesteps": 8760}}}
+    iron_dri_config_rosner_ng = {
+        # 'plant_capacity_mtpy': 1418095
+        "pig_iron_production_rate_tonnes_per_hr": 1418095 / 8760,
+        "reduction_chemical": "ng",
+    }
+    iron_dri_perf = NaturalGasIronReudctionPlantPerformanceComponent(
+        plant_config=plant_config,
+        tech_config={"model_inputs": {"performance_parameters": iron_dri_config_rosner_ng}},
+        driver_config={},
+    )
+    prob.model.add_subsystem("dri", iron_dri_perf, promotes=["*"])
+    prob.setup()
+    prob.run_model()

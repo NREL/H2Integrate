@@ -67,14 +67,13 @@ class RosnerIronPlantCostComponent(CostModelBaseClass):
         coeff_df = pd.read_csv(coeff_fpath, index_col=0)
         self.coeff_df = self.format_coeff_df(coeff_df, self.config.mine)
 
-    def format_coeff_df(self, coeff_df, mine):
+    def format_coeff_df(self, coeff_df):
         """Update the coefficient dataframe such that values are adjusted to standard units
             and units are compatible with OpenMDAO units. Also filter the dataframe to include
-            only the data necessary for a given mine and pellet type.
+            only the data necessary for a given dri type.
 
         Args:
             coeff_df (pd.DataFrame): cost coefficient dataframe.
-            mine (str): name of mine that ore is extracted from.
 
         Returns:
             pd.DataFrame: cost coefficient dataframe
@@ -84,9 +83,9 @@ class RosnerIronPlantCostComponent(CostModelBaseClass):
         coeff_df = coeff_df[
             coeff_df["Product"] == f"{self.config.taconite_pellet_type}_taconite_pellets"
         ]
-        data_cols = ["Name", "Type", "Coeff", "Unit", mine]
+        data_cols = ["Name", "Type", "Coeff", "Unit", "Model"]
         coeff_df = coeff_df[data_cols]
-        coeff_df = coeff_df.rename(columns={mine: "Value"})
+        coeff_df = coeff_df.rename(columns={"Model": "Value"})
 
         # convert wet to dry
         moisture_percent = 2.0
