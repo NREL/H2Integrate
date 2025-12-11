@@ -53,6 +53,10 @@ The inputs, outputs, and corresponding technology that are currently available i
 | `desal`   |  water     | electricity |
 | `natural_gas`   |  electricity     | natural gas |
 
+```{note}
+When the Primary Commodity is electricity, those converters are considered electricity producing technologies and their electricity production is summed for financial calculations.
+```
+
 (transport)=
 ## Transport
 `Transport` models are used to either:
@@ -149,10 +153,8 @@ Below summarizes the available performance, cost, and financial models for each 
     - combined performance and cost:
         + `'wombat'`
     - performance models:
-        + `'pem_electrolyzer_performance'`
         + `'eco_pem_electrolyzer_performance'`
     - cost models:
-        + `'pem_electrolyzer_cost'`
         + `'singlitico_electrolyzer_cost'`
         + `'basic_electrolyzer_cost'`
 - `geoh2_well_subsurface`: geologic hydrogen well subsurface
