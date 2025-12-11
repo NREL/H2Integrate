@@ -42,7 +42,6 @@ technologies:
           size_mode: "normal"
         n_clusters: 1
         cluster_rating_MW: 40
-        pem_control_type: 'basic'
         eol_eff_percent_loss: 13 #eol defined as x% change in efficiency from bol
         uptime_hours_until_eol: 80000. #number of 'on' hours until electrolyzer reaches eol
         include_degradation_penalty: True #include degradation
