@@ -46,10 +46,10 @@ class NaturalGasIronReudctionPlantPerformanceComponent(om.ExplicitComponent):
 
         feedstocks_to_units = {
             "natural_gas": "MMBtu",
-            "water": "galUS/h",
+            "water": "galUS",  # "galUS/h"
             "iron_ore": "t/h",
             "electricity": "kW",
-            "reformer_catalyst": "(m**3)/h",
+            "reformer_catalyst": "(m**3)",  # "(m**3)/h"
         }
 
         # Add feedstock inputs and outputs, default to 0 --> set using feedstock component
@@ -239,6 +239,7 @@ class NaturalGasIronReudctionPlantPerformanceComponent(om.ExplicitComponent):
             )
             # how much output can be produced from each of the feedstocks
             pig_iron_from_feedstocks[ii] = feedstock_available / consumption_rate
+            ii += 1
 
         # output is minimum between available feedstocks and output demand
         pig_iron_production = np.minimum.reduce(pig_iron_from_feedstocks)
