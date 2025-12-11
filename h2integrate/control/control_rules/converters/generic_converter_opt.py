@@ -18,7 +18,7 @@ class PyomoDispatchGenericConverterMinOperatingCostsConfig(PyomoRuleBaseConfig):
         commodity_cost_per_production (float): cost of the commodity per production (in $/kWh).
     """
 
-    commodity_cost_per_production: str = field()
+    commodity_cost_per_production: float = field()
 
 
 class PyomoDispatchGenericConverterMinOperatingCosts(PyomoDispatchGenericConverter):
@@ -34,6 +34,7 @@ class PyomoDispatchGenericConverterMinOperatingCosts(PyomoDispatchGenericConvert
             self.config["commodity_cost_per_production"]
         )
 
+    # Base model setup
     def _create_variables(self, pyomo_model: pyo.ConcreteModel, tech_name: str):
         """Create generic converter variables to add to Pyomo model instance.
 
@@ -55,10 +56,6 @@ class PyomoDispatchGenericConverterMinOperatingCosts(PyomoDispatchGenericConvert
                 initialize=0.0,
             ),
         )
-        return getattr(
-            pyomo_model,
-            f"{tech_name}_{self.config.commodity_name}",
-        ), 0.0  # load var is zero for converters
 
     def _create_ports(self, pyomo_model: pyo.ConcreteModel, tech_name: str):
         """Create generic converter port to add to pyomo model instance.
@@ -69,20 +66,11 @@ class PyomoDispatchGenericConverterMinOperatingCosts(PyomoDispatchGenericConvert
             ports are created.
 
         """
-        setattr(
-            pyomo_model,
-            f"{tech_name}_port",
-            Port(
-                initialize={
-                    f"{tech_name}_{self.config.commodity_name}": getattr(
-                        pyomo_model, f"{tech_name}_{self.config.commodity_name}"
-                    )
-                }
+        pyomo_model.port = Port()
+        pyomo_model.port.add(
+            getattr(
+                pyomo_model, f"{tech_name}_{self.config.commodity_name}"
             ),
-        )
-        return getattr(
-            pyomo_model,
-            f"{tech_name}_port",
         )
 
     def _create_parameters(self, pyomo_model: pyo.ConcreteModel, tech_name: str):
@@ -143,6 +131,7 @@ class PyomoDispatchGenericConverterMinOperatingCosts(PyomoDispatchGenericConvert
 
         pass
 
+    # Update time series parameters for next optimization window
     def update_time_series_parameters(self, start_time: int,
                                       commodity_in:list,
                                       commodity_demand:list,
@@ -157,6 +146,78 @@ class PyomoDispatchGenericConverterMinOperatingCosts(PyomoDispatchGenericConvert
         self.available_production = [commodity_in[t]
                                         for t in self.blocks.index_set()]
 
+    # Objective functions
+    def min_operating_cost_objective(self, hybrid_blocks, tech_name: str):
+        """Wind instance of minimum operating cost objective.
+
+        Args:
+            hybrid_blocks (Pyomo.block): A generalized container for defining hierarchical
+                models by adding modeling components as attributes.
+
+        """
+        self.obj = Expression(
+            expr=sum(
+            hybrid_blocks[t].time_weighting_factor
+            * self.blocks[t].time_duration
+            * self.blocks[t].cost_per_production
+            * getattr(
+            hybrid_blocks,
+            f"{tech_name}_{self.config.commodity_name}",
+            )[t]
+            for t in hybrid_blocks.index_set()
+            )
+        )
+
+    # System-level functions
+    def _create_hybrid_port(self, hybrid_model: pyo.ConcreteModel, tech_name: str):
+        """Create hybrid ports for storage to add to pyomo model instance.
+
+        Args:
+            hybrid_model (pyo.ConcreteModel): hybrid_model the ports should be added to.
+            tech_name (str): The name or key identifying the technology for which
+            ports are created.
+        """
+        setattr(
+            hybrid_model,
+            f"{tech_name}_port",
+            Port(
+                initialize={
+                    f"{tech_name}_{self.config.commodity_name}": getattr(
+                        hybrid_model, f"{tech_name}_{self.config.commodity_name}"
+                    )
+                }
+            ),
+        )
+        return getattr(
+            hybrid_model,
+            f"{tech_name}_port",
+        )
+
+    def _create_hybrid_variables(self, hybrid_model: pyo.ConcreteModel, tech_name: str):
+        """Create hybrid variables for generic converter technology to add to pyomo model instance.
+
+        Args:
+            hybrid_model (pyo.ConcreteModel): hybrid_model the variables should be added to.
+            tech_name (str): The name or key identifying the technology for which
+            variables are created.
+        """
+        setattr(
+            hybrid_model,
+            f"{tech_name}_{self.config.commodity_name}",
+            pyo.Var(
+                doc=f"{self.config.commodity_name} production \
+                    from {tech_name} [{self.config.commodity_storage_units}]",
+                domain=pyo.NonNegativeReals,
+                units=eval("pyo.units." + self.config.commodity_storage_units),
+                initialize=0.0,
+            ),
+        )
+        return getattr(
+            hybrid_model,
+            f"{tech_name}_{self.config.commodity_name}",
+        ), 0.0  # load var is zero for converters
+
+    # Property getters and setters for time series parameters
     @property
     def available_production(self) -> list:
         """Available generation.
@@ -195,23 +256,4 @@ class PyomoDispatchGenericConverterMinOperatingCosts(PyomoDispatchGenericConvert
                 round(om_dollar_per_kwh, self.round_digits)
             )
 
-    def min_operating_cost_objective(self, hybrid_blocks, tech_name: str):
-        """Wind instance of minimum operating cost objective.
 
-        Args:
-            hybrid_blocks (Pyomo.block): A generalized container for defining hierarchical
-                models by adding modeling components as attributes.
-
-        """
-        self.obj = Expression(
-            expr=sum(
-            hybrid_blocks[t].time_weighting_factor
-            * self.blocks[t].time_duration
-            * self.blocks[t].cost_per_production
-            * getattr(
-            hybrid_blocks,
-            f"{tech_name}_{self.config.commodity_name}",
-            )[t]
-            for t in hybrid_blocks.index_set()
-            )
-        )

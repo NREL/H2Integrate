@@ -50,8 +50,6 @@ class PyomoDispatchPlantRule:
         setattr(self.model, self.block_set_name, self.blocks)
 
 
-        super().setup()
-
     def dispatch_block_rule(self, hybrid, t):
         ##################################
         # Parameters                     #
@@ -79,12 +77,12 @@ class PyomoDispatchPlantRule:
     def _create_variables_and_ports(self, hybrid, t):
         for tech in self.source_techs.keys():
             pyomo_block = getattr(self.tech_dispatch_models, tech)
-            gen_var, load_var = pyomo_block._create_variables(hybrid, tech)
+            gen_var, load_var = pyomo_block._create_hybrid_variables(hybrid, tech)
 
             self.power_source_gen_vars[t].append(gen_var)
             self.load_vars[t].append(load_var)
             self.ports[t].append(
-                pyomo_block._create_port(hybrid)
+                pyomo_block._create_hybrid_port(hybrid)
             )
 
     @staticmethod
@@ -133,31 +131,26 @@ class PyomoDispatchPlantRule:
             pyomo_block = getattr(self.tech_dispatch_models, tech)
             pyomo_block.update_time_series_parameters(start_time)
 
-    def update_time_series_parameters(self, start_time: int, commodity_in:list):
-        """Update time series parameters method.
+    def create_min_operating_cost_expression(self):
+        self._delete_objective()
 
-        Args:
-            start_time (int): Start time.
+        def operationg_cost_objective_rule(m) -> float:
+            obj = 0.0
+            for tech in self.source_techs.keys():
+                # Create the min_operating_cost expression for each technology
+                pyomo_block = getattr(self.tech_dispatch_models, tech)
+                # Add to the overall hybrid operating cost expression
+                obj += pyomo_block.operating_cost_expression( self.blocks, tech)
+            return obj
 
-        Returns:
-            None
+        # Set operating cost rule in Pyomo problem objective
+        self.model.objective = pyo.Objective(
+            rule=operationg_cost_objective_rule, sense=pyo.minimize
+        )
 
-        """
-        n_horizon = len(self.blocks.index_set())
-        production = commodity_in
-        if start_time + n_horizon > len(production):
-            horizon_gen = list(production[start_time:])
-            horizon_gen.extend(list(production[0 : n_horizon - len(horizon_gen)]))
-        else:
-            horizon_gen = production[start_time : start_time + n_horizon]
-
-        if len(horizon_gen) < len(self.blocks):
-            raise RuntimeError(
-                f"Dispatch parameter update error at start_time {start_time}: System model "
-                f"{type(self._system_model)} production profile should have at least {len(self.blocks)} "
-                f"length but has only {len(production)}"
-            )
-        self.available_production = [gen_kw / 1e3 for gen_kw in horizon_gen]
+    def _delete_objective(self):
+        if hasattr(self.model, "objective"):
+            self.model.del_component(self.model.objective)
 
     @property
     def blocks(self) -> pyo.Block:
