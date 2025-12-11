@@ -878,6 +878,15 @@ class H2IntegrateModel:
                     source_tech = f"{source_tech}_source"
 
                 # Create the transport object
+                if (
+                    transport_type not in self.supported_models
+                    and transport_type in self.technology_config["technologies"]
+                ):
+                    # if transport_type IS included in tech_config, it'll be created there.
+                    # the transport_type is a technology name in the tech_config
+                    continue
+
+                # transport_type is not included in tech_config and is found in supported_models
                 connection_component = self.supported_models[transport_type](
                     transport_item=transport_item
                 )
