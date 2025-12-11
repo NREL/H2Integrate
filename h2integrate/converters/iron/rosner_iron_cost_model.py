@@ -196,7 +196,7 @@ class NaturalGasIronPlantCostComponent(CostModelBaseClass):
             work_hrs_per_day_per_step * fixed_items_df.loc["Processing Steps"]["Value"].values
         )
         labor_cost_per_day = labor_cost_per_hr * work_hrs_per_day
-        annual_labor_cost = labor_cost_per_day * 365  # units.convert_units(1, "yr", "d")
+        annual_labor_cost = labor_cost_per_day * units.convert_units(1, "yr", "d")
         maintenance_labor_cost = (
             total_capex_usd * fixed_items_df.loc["Maintenance Labor Cost"]["Value"].values
         )

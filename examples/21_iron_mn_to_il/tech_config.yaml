@@ -87,7 +87,7 @@ technologies:
         rated_capacity: 40. # need 38.71049649 galUS/h
       cost_parameters:
         cost_year: 2022
-        price: 1670.0 # cost is $0.441167535/t, equal to $1670.0004398318847/galUS
+        price: 0.0016700004398318847 # cost is USD0.441167535/t, converted to USD/gal
         annual_cost: 0.
         start_up_cost: 0.
 

@@ -160,9 +160,9 @@ class NaturalGasIronReudctionPlantPerformanceComponent(om.ExplicitComponent):
                 # convert metric tonnes to kg (value*1e3)
                 # convert mass to volume in cubic meters (value*1e3)/density
                 # then convert cubic meters to liters 1e3*(value*1e3)/density
-                coeff_df.loc[i_update]["Value"] = (
-                    coeff_df.loc[i_update]["Value"] * 1e3 * 1e3 / self.config.water_density
-                )
+                water_volume_m3 = coeff_df.loc[i_update]["Value"] * 1e3 / self.config.water_density
+                water_volume_L = units.convert_units(water_volume_m3.values, "m**3", "L")
+                coeff_df.loc[i_update]["Value"] = water_volume_L
                 old_unit = f"L/{capacity_unit}"
 
             old_unit = old_unit.replace("-LHV NG", "").replace("%", "percent")
