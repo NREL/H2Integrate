@@ -88,9 +88,7 @@ class NaturalGasIronPlantCostComponent(CostModelBaseClass):
             desc="Pig iron produced",
         )
 
-        coeff_fpath = (
-            ROOT_DIR / "simulation" / "technologies" / "iron" / "rosner" / "cost_coeffs.csv"
-        )
+        coeff_fpath = ROOT_DIR / "converters" / "iron" / "rosner" / "cost_coeffs.csv"
         # rosner cost model
         coeff_df = pd.read_csv(coeff_fpath, index_col=0)
         self.coeff_df = self.format_coeff_df(coeff_df)
@@ -108,9 +106,7 @@ class NaturalGasIronPlantCostComponent(CostModelBaseClass):
         """
         product = "ng_dri"  # h2_dri
 
-        perf_coeff_fpath = (
-            ROOT_DIR / "simulation" / "technologies" / "iron" / "rosner" / "perf_coeffs.csv"
-        )
+        perf_coeff_fpath = ROOT_DIR / "converters" / "iron" / "rosner" / "perf_coeffs.csv"
 
         perf_df = pd.read_csv(perf_coeff_fpath, index_col=0)
         perf_df = perf_df[perf_df["Product"] == product]
