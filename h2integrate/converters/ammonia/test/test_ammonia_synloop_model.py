@@ -103,12 +103,12 @@ def test_ammonia_synloop_limiting_cases(subtests):
 
 def test_size_mode_outputs(subtests):
     # Change the current working directory to the example's directory
-    os.chdir(EXAMPLE_DIR / "24_sizing_modes")
+    os.chdir(EXAMPLE_DIR / "25_sizing_modes")
 
     # Load the 'base' configs needed to create the H2I model
-    driver_config = load_driver_yaml(EXAMPLE_DIR / "24_sizing_modes" / "driver_config.yaml")
-    plant_config = load_plant_yaml(EXAMPLE_DIR / "24_sizing_modes" / "plant_config.yaml")
-    tech_config = load_tech_yaml(EXAMPLE_DIR / "24_sizing_modes" / "tech_config.yaml")
+    driver_config = load_driver_yaml(EXAMPLE_DIR / "25_sizing_modes" / "driver_config.yaml")
+    plant_config = load_plant_yaml(EXAMPLE_DIR / "25_sizing_modes" / "plant_config.yaml")
+    tech_config = load_tech_yaml(EXAMPLE_DIR / "25_sizing_modes" / "tech_config.yaml")
     input_config = {
         "name": "H2Integrate_config",
         "system_summary": "hybrid plant containing ammonia plant and electrolyzer",

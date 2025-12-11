@@ -8,9 +8,9 @@ from h2integrate.core.inputs.validation import load_tech_yaml, load_plant_yaml, 
 
 
 # Load the 'base' configs needed to create the H2I model
-driver_config = load_driver_yaml(EXAMPLE_DIR / "24_sizing_modes" / "driver_config.yaml")
-plant_config = load_plant_yaml(EXAMPLE_DIR / "24_sizing_modes" / "plant_config.yaml")
-tech_config = load_tech_yaml(EXAMPLE_DIR / "24_sizing_modes" / "tech_config.yaml")
+driver_config = load_driver_yaml(EXAMPLE_DIR / "25_sizing_modes" / "driver_config.yaml")
+plant_config = load_plant_yaml(EXAMPLE_DIR / "25_sizing_modes" / "plant_config.yaml")
+tech_config = load_tech_yaml(EXAMPLE_DIR / "25_sizing_modes" / "tech_config.yaml")
 input_config = {
     "name": "H2Integrate_config",
     "system_summary": "hybrid plant containing ammonia plant and electrolyzer",
@@ -22,7 +22,7 @@ input_config = {
 
 def test_resize_by_max_feedstock(subtests):
     # Change the current working directory to the example's directory
-    os.chdir(EXAMPLE_DIR / "24_sizing_modes")
+    os.chdir(EXAMPLE_DIR / "25_sizing_modes")
 
     # Create a H2Integrate model, modifying tech_config as necessary
     tech_config["technologies"]["electrolyzer"]["model_inputs"]["performance_parameters"][
@@ -46,7 +46,7 @@ def test_resize_by_max_feedstock(subtests):
 
 def test_resize_by_max_commodity(subtests):
     # Change the current working directory to the example's directory
-    os.chdir(EXAMPLE_DIR / "24_sizing_modes")
+    os.chdir(EXAMPLE_DIR / "25_sizing_modes")
 
     # Create a H2Integrate model, modifying tech_config as necessary
     tech_config["technologies"]["electrolyzer"]["model_inputs"]["performance_parameters"][
