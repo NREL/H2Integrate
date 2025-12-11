@@ -39,7 +39,6 @@ class IronTransportPerformanceComponent(om.ExplicitComponent):
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance"),
             strict=False,
         )
-
         self.add_output("land_transport_distance", val=0.0, units="km")
         self.add_output("water_transport_distance", val=0.0, units="km")
         self.add_output("total_transport_distance", val=0.0, units="km")
@@ -191,6 +190,7 @@ class IronTransportCostComponent(CostModelBaseClass):
         self.add_input("total_transport_distance", val=0.0, units="mi")
         self.add_input("iron_ore_in", val=0.0, shape=n_timesteps, units="t/h")
 
+        self.add_output("iron_ore_out", val=0.0, shape=n_timesteps, units="t/h")
         self.add_output("iron_transport_cost", val=0.0, units="USD/t")
         self.add_output("ore_profit_margin", val=0.0, units="USD/t")
 
@@ -225,5 +225,6 @@ class IronTransportCostComponent(CostModelBaseClass):
             pm_year_idx
         ]
 
+        outputs["iron_ore_out"] = inputs["iron_ore_in"]  # assume lossless
         outputs["iron_transport_cost"] = total_shipment_cost / np.sum(inputs["iron_ore_in"])
         outputs["VarOpEx"] = total_shipment_cost
