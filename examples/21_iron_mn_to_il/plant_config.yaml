@@ -25,6 +25,7 @@ technology_interconnections: [
   ["grid_feedstock","iron_mine","electricity","cable"],
   ["mine_feedstock","iron_mine","crude_ore","pipe"],
   ["iron_mine","iron_plant","iron_ore","iron_transport"],
+  ["iron_transport","iron_plant","iron_transport_cost"],
   ["finance_subgroup_iron_ore","iron_plant","price_iron_ore"],
 ]
 
