@@ -8,7 +8,7 @@ from h2integrate import ROOT_DIR
 from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
 from h2integrate.core.validators import contains, range_val
 from h2integrate.core.model_baseclasses import CostModelBaseClass
-from h2integrate.simulation.technologies.iron.load_top_down_coeffs import load_top_down_coeffs
+from h2integrate.converters.iron.load_top_down_coeffs import load_top_down_coeffs
 
 
 @define
@@ -80,12 +80,7 @@ class IronTransportPerformanceComponent(om.ExplicitComponent):
         lon = self.options["plant_config"].get("site", {}).get("longitude")
         site_location = (lat, lon)
         shipping_coord_fpath = (
-            ROOT_DIR
-            / "simulation"
-            / "technologies"
-            / "iron"
-            / "martin_transport"
-            / "shipping_coords.csv"
+            ROOT_DIR / "converters" / "iron" / "martin_transport" / "shipping_coords.csv"
         )
         shipping_locations = pd.read_csv(shipping_coord_fpath, index_col="Unnamed: 0")
 
