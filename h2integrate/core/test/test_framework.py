@@ -50,15 +50,60 @@ def test_custom_model_name_clash(subtests):
     with temp_highlevel_yaml.open("w") as f:
         yaml.safe_dump(highlevel_data, f)
 
-    # Assert that a ValueError is raised with the expected message when running the model
-    error_msg = (
-        r"Custom model_class_name or model_location specified for 'basic_electrolyzer_cost', "
-        r"but 'basic_electrolyzer_cost' is a built-in H2Integrate model\. "
-        r"Using built-in model instead is not allowed\. "
-        r"If you want to use a custom model, please rename it in your configuration\."
-    )
-    with pytest.raises(ValueError, match=error_msg):
-        H2IntegrateModel(temp_highlevel_yaml)
+    with subtests.test("custom model name should not match built-in model names"):
+        # Assert that a ValueError is raised with the expected message when running the model
+        error_msg = (
+            r"Custom model_class_name or model_location specified for 'basic_electrolyzer_cost', "
+            r"but 'basic_electrolyzer_cost' is a built-in H2Integrate model\. "
+            r"Using built-in model instead is not allowed\. "
+            r"If you want to use a custom model, please rename it in your configuration\."
+        )
+        with pytest.raises(ValueError, match=error_msg):
+            H2IntegrateModel(temp_highlevel_yaml)
+
+    with subtests.test(
+        "custom models must use different model names for different class definitions"
+    ):
+        # Load the tech_config YAML content
+        tech_config_data = load_tech_yaml(temp_tech_config)
+
+        tech_config_data["technologies"]["electrolyzer"]["cost_model"] = {
+            "model": "new_electrolyzer_cost",
+            "model_location": "dummy_path",  # path doesn't matter; `model_location` must exist
+        }
+
+        from copy import deepcopy
+
+        tech_config_data["technologies"]["electrolyzer2"] = deepcopy(
+            tech_config_data["technologies"]["electrolyzer"]
+        )
+        tech_config_data["technologies"]["electrolyzer2"]["cost_model"] = {
+            "model": "new_electrolyzer_cost",
+            "model_class_name": "DummyClass",
+            "model_location": "dummy_path",  # path doesn't matter; `model_location` must exist
+        }
+        # Save the modified tech_config YAML back
+        with temp_tech_config.open("w") as f:
+            yaml.safe_dump(tech_config_data, f)
+
+        # Load the high-level YAML content
+        with temp_highlevel_yaml.open() as f:
+            highlevel_data = yaml.safe_load(f)
+
+        # Modify the high-level YAML to point to the temp tech_config file
+        highlevel_data["technology_config"] = str(temp_tech_config.name)
+
+        # Save the modified high-level YAML back
+        with temp_highlevel_yaml.open("w") as f:
+            yaml.safe_dump(highlevel_data, f)
+
+        # Assert that a ValueError is raised with the expected message when running the model
+        error_msg = (
+            r"User has specified two custom models using the same model"
+            r"name ('new_electrolyzer_cost'), but with different model classes\. "
+            r"Technologies defined with different"
+            r"classes must have different technology names\."
+        )
 
     # Clean up temporary YAML files
     temp_tech_config.unlink(missing_ok=True)
