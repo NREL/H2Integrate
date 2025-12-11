@@ -255,9 +255,7 @@ if __name__ == "__main__":
 
     plant_config = {"plant": {"simulation": {"n_timesteps": 8760}}}
     iron_dri_config_rosner_ng = {
-        # 'plant_capacity_mtpy': 1418095
         "pig_iron_production_rate_tonnes_per_hr": 1418095 / 8760,
-        # "reduction_chemical": "ng",
     }
     iron_dri_perf = NaturalGasIronReudctionPlantPerformanceComponent(
         plant_config=plant_config,

@@ -78,4 +78,4 @@ finance_parameters:
     pig_iron:
       commodity: "pig_iron"
       commodity_stream: "iron_plant"
-      technologies: ["iron_plant"] #
+      technologies: ["iron_plant", "dri_grid_feedstock", "catalyst_feedstock", "water_feedstock", "natural_gas_feedstock"] #

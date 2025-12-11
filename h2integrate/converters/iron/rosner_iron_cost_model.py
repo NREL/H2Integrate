@@ -155,7 +155,7 @@ class NaturalGasIronPlantCostComponent(CostModelBaseClass):
         # Calculate Owners Costs
         # owner_costs_frac_tpc = self.coeff_df[self.coeff_df["Type"]=="owner"]["Value"].sum()
 
-        # Calculated Fixed OpEx
+        # Calculate Fixed OpEx, includes:
         fixed_items = list(
             set(self.coeff_df[self.coeff_df["Type"] == "fixed opex"].index.to_list())
         )
@@ -196,13 +196,13 @@ class NaturalGasIronPlantCostComponent(CostModelBaseClass):
             work_hrs_per_day_per_step * fixed_items_df.loc["Processing Steps"]["Value"].values
         )
         labor_cost_per_day = labor_cost_per_hr * work_hrs_per_day
-        annual_labor_cost = labor_cost_per_day * units.convert_units(1, "yr", "d")
+        annual_labor_cost = labor_cost_per_day * 365  # units.convert_units(1, "yr", "d")
         maintenance_labor_cost = (
-            total_capex_usd * fixed_items_df.loc["Maintenance Labor Cost"]["Value"]
+            total_capex_usd * fixed_items_df.loc["Maintenance Labor Cost"]["Value"].values
         )
-        admin_labor_cost = fixed_items_df.loc["Administrative & Support Labor Cost"]["Value"] * (
-            annual_labor_cost + maintenance_labor_cost
-        )
+        admin_labor_cost = fixed_items_df.loc["Administrative & Support Labor Cost"][
+            "Value"
+        ].values * (annual_labor_cost + maintenance_labor_cost)
 
         total_labor_related_cost = admin_labor_cost + maintenance_labor_cost + annual_labor_cost
         tot_fixed_om = total_labor_related_cost + property_om
