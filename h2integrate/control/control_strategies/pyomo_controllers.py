@@ -110,6 +110,9 @@ class PyomoControllerBaseClass(ControllerBaseClass):
         # get technology group name
         self.tech_group_name = self.pathname.split(".")
 
+        # initalize dispatch inputs to None
+        self.dispatch_options = None
+
         # create inputs for all pyomo object creation functions from all connected technologies
         self.dispatch_connections = self.options["plant_config"]["tech_to_dispatch_connections"]
         for connection in self.dispatch_connections:
@@ -231,6 +234,7 @@ class PyomoControllerBaseClass(ControllerBaseClass):
             Notes:
                 1. Arrays returned have length self.n_timesteps (full simulation period).
             """
+            # TODO: implement optional kwargs for this method
             self.initialize_parameters(inputs[f"{commodity_name}_in"],
                                        inputs[f"{commodity_name}_demand"])
 
@@ -248,6 +252,7 @@ class PyomoControllerBaseClass(ControllerBaseClass):
 
             # loop over all control windows, where t is the starting index of each window
             for t in window_start_indices:
+                # TODO: add inputs for update_time_series_parameters
                 self.update_time_series_parameters()
                 # get the inputs over the current control window
                 commodity_in = inputs[self.config.commodity_name + "_in"][
@@ -298,6 +303,7 @@ class PyomoControllerBaseClass(ControllerBaseClass):
                 for j in window_indices:
                     # save the output for the control window to the output for the full
                     # simulation
+                    # TODO: connect soc properly over multiple windows
                     storage_commodity_out[j] = storage_commodity_out_control_window[j - t]
                     soc[j] = soc_control_window[j - t]
                     total_commodity_out[j] = np.minimum(
@@ -386,34 +392,6 @@ class SimpleBatteryControllerHeuristic(PyomoControllerBaseClass):
         self.minimum_soc = self.config.min_charge_percent
         self.maximum_soc = self.config.max_charge_percent
         self.initial_soc = self.config.init_charge_percent
-
-    # def _create_soc_linking_constraint(self):
-    #     """Creates state-of-charge linking constraint."""
-    #     ##################################
-    #     # Parameters                     #
-    #     ##################################
-    #     # self.model.initial_soc = pyomo.Param(
-    #     #     doc=self.block_set_name + " initial state-of-charge at beginning of the horizon[-]",
-    #     #     within=pyomo.PercentFraction,
-    #     #     default=0.5,
-    #     #     mutable=True,
-    #     #     units=u.dimensionless,
-    #     # )
-    #     ##################################
-    #     # Constraints                    #
-    #     ##################################
-
-    #     # Linking time periods together
-    #     def storage_soc_linking_rule(m, t):
-    #         if t == self.blocks.index_set().first():
-    #             return self.blocks[t].soc0 == self.model.initial_soc
-    #         return self.blocks[t].soc0 == self.blocks[t - 1].soc
-
-    #     self.model.soc_linking = pyomo.Constraint(
-    #         self.blocks.index_set(),
-    #         doc=self.block_set_name + " state-of-charge block linking constraint",
-    #         rule=storage_soc_linking_rule,
-    #     )
 
     def update_time_series_parameters(self, start_time: int = 0):
         """Updates time series parameters.
@@ -820,7 +798,6 @@ class OptimizedDispatchControllerConfig(PyomoControllerBaseConfig):
     max_charge_rate: int | float = field()
     charge_efficiency: float = field(default=None)
     discharge_efficiency: float = field(default=None)
-    include_lifecycle_count: bool = field(default=False)
     demand_profile: list = field(default=None)
     time_weighting_factor: float = 0.995
 
@@ -848,23 +825,29 @@ class OptimizedDispatchController(SimpleBatteryControllerHeuristic):
         if self.config.discharge_efficiency is not None:
             self.discharge_efficiency = self.config.discharge_efficiency
 
+        self.dispatch_inputs = {
+            "max_capacity": self.config.max_capacity,
+            "max_charge_percent": self.config.max_charge_percent,
+            "min_charge_percent": self.config.min_charge_percent,
+            "initial_soc_percent": self.config.init_charge_percent,
+            "charge_efficiency": self.charge_efficiency,
+            "discharge_efficiency": self.discharge_efficiency,
+        }
+
         self.hybrid_dispatch_model = self._create_dispatch_optimization_model()
-        self._create_objective_function()
-        self.hybrid_dispatch_model.create_arcs()
-        assert_
+        self.hybrid_dispatch_rule.create_min_operating_cost_expression()
+        self.hybrid_dispatch_rule.create_arcs()
+        assert_units_consistent(self.hybrid_dispatch_model)
+        self.problem_state = DispatchProblemState()
 
 
-
-        # Create objective from pyomo blocks
+    # Initialize parameters for optimization model
     def initialize_parameters(self, commodity_in, commodity_demand):
-        self.time_weighting_factor = (
-            self.config.time_weighting_factor
-        )  # Discount factor
-        for source_tech in self.source_techs:
-            pyomo_block = getattr(self.pyomo_model, source_tech)
-            pyomo_block.initialize_parameters(commodity_in, commodity_demand)
+        self.hybrid_dispatch_rule.initialize_parameters(commodity_in, commodity_demand)
 
-        self._create_objective_function()
+    def update_time_series_parameters(self, start_time = 0):
+        # TODO: connect input blocks to pyomo rules for updating time series parameters
+        self.hybrid_dispatch_rule.update_time_series_parameters(start_time)
 
     def solve_dispatch_model(
         self,
@@ -891,117 +874,12 @@ class OptimizedDispatchController(SimpleBatteryControllerHeuristic):
             solver_results, start_time, n_days, pyomo.value(self.model.objective)
         )
 
-        self.check_commodity_in_discharge_limit(commodity_in, system_commodity_interface_limit)
-        self._set_commodity_fraction_limits(commodity_in, system_commodity_interface_limit)
-        self._heuristic_method(commodity_in, commodity_demand)
-        self._fix_dispatch_model_variables()
+        # TODO: Check that these function calls are appropriate for optimization model
+        # self.check_commodity_in_discharge_limit(commodity_in, system_commodity_interface_limit)
+        # self._set_commodity_fraction_limits(commodity_in, system_commodity_interface_limit)
+        # self._heuristic_method(commodity_in, commodity_demand)
+        # self._fix_dispatch_model_variables()
 
-    def _heuristic_method(self, commodity_in, commodity_demand):
-        """Enforces storage fraction limits and sets _fixed_dispatch attribute.
-        Sets the _fixed_dispatch based on commodity_demand and commodity_in.
-
-        Args:
-            commodity_in: commodity generation profile.
-            commodity_demand: Goal amount of commodity.
-
-        """
-        for t in self.blocks.index_set():
-            fd = (commodity_demand[t] - commodity_in[t]) / self.maximum_storage
-            if fd > 0.0:  # Discharging
-                if fd > self.max_discharge_fraction[t]:
-                    fd = self.max_discharge_fraction[t]
-            elif fd < 0.0:  # Charging
-                if -fd > self.max_charge_fraction[t]:
-                    fd = -self.max_charge_fraction[t]
-            self._fixed_dispatch[t] = fd
-
-    def _create_objective_function(self):
-        """Operating cost objective rule.
-        Returns:
-            expression: Operating cost objective rule.
-        """
-        self._delete_objective()
-
-        def min_operating_cost_objective_rule(m):
-            obj = 0.0
-            for source_tech in self.source_techs:
-                pyomo_block = getattr(self.pyomo_model, source_tech)
-                if source_tech in converters:
-                    # Create the min_operating_cost_objective for converter technologies
-                    self.obj = Expression(
-                        expr = sum(
-                            self.time_weighting_factor[t]
-                            * pyomo_block.time_duration
-                            * pyomo_block.cost_per_generation
-                            * getattr(
-                            pyomo_block, f"{source_tech}_{self.commodity_name}"
-                            )[t]
-                            for t in self.blocks.index_set()
-                            )
-                    )
-                    # Copy the technology objective to the pyomo model.
-                    setattr(m, source_tech + "_obj", self.obj)
-                else:
-                    # Create the min_operating_cost_objective for storage technologies
-                    self.obj = Expression(
-                        expr = sum(
-                            self.time_weighting_factor[t]
-                            * pyomo_block.time_duration
-                            * (
-                                pyomo_block.cost_per_discharge * pyomo_block.charge_commodity[t]
-                                - pyomo_block.cost_per_charge * pyomo_block.discharge_commodity[t]
-                                + (pyomo_block.commodity_load_demand[t]
-                                - pyomo_block.commodity_out
-                                    ) * pyomo_block.penalty_cost_per_unmet_demand
-                            )  # Try to incentivize battery charging
-                            for t in self.blocks.index_set()
-                        )
-                    )
-                    # Copy the technology objective to the pyomo model.
-                    setattr(m, source_tech + "_obj", self.obj)
-                obj += getattr(m, source_tech + "_obj")
-
-            return obj
-
-        self.pyomo_model.objective = pyomo.Objective(
-            expr=min_operating_cost_objective_rule, sense=pyomo.minimize
-        )
-
-    def _delete_objective(self):
-        if hasattr(self.pyomo_model, "objective"):
-            self.pyomo_model.del_component(self.model.objective)
-
-    def update_time_series_parameters(self, start_time: int):
-        """Update time series parameters method.
-
-        Args:
-            start_time (int): Start time.
-
-        Returns:
-            None
-
-        """
-        # Update time series parameters for blocks
-        for t in self.blocks:
-            t.update_time_series_parameters(start_time)
-
-        # Update local time series parameters
-
-        n_horizon = len(self.blocks.index_set())
-        generation = self._system_model.value("gen")
-        if start_time + n_horizon > len(generation):
-            horizon_gen = list(generation[start_time:])
-            horizon_gen.extend(list(generation[0 : n_horizon - len(horizon_gen)]))
-        else:
-            horizon_gen = generation[start_time : start_time + n_horizon]
-
-        if len(horizon_gen) < len(self.blocks):
-            raise RuntimeError(
-                f"Dispatch parameter update error at start_time {start_time}: System model "
-                f"{type(self._system_model)} generation profile should have at least {len(self.blocks)} "
-                f"length but has only {len(generation)}"
-            )
-        self.available_generation = [gen_kw / 1e3 for gen_kw in horizon_gen]      
 
     def _create_dispatch_optimization_model(self):
         """
@@ -1018,7 +896,7 @@ class OptimizedDispatchController(SimpleBatteryControllerHeuristic):
         #################################
         # Blocks (technologies)         #
         ################################# 
-        self.hybrid_dispatch_model = PyomoDispatchPlantRule(
+        self.hybrid_dispatch_rule = PyomoDispatchPlantRule(
             model, model.forecast_horizon, self.source_techs, self.pyomo_model, self.options
         )
         return model
@@ -1066,56 +944,7 @@ class OptimizedDispatchController(SimpleBatteryControllerHeuristic):
     #     HybridDispatchBuilderSolver.check_solve_condition(
     #         solver_termination_condition, pyomo_model
     #     )
-    @property
-    def demand_profile(self) -> float:
-        """Demand profile for the dispatch.
-        Returns:
-            list: List of demand profile."""
-        return [
-            self.blocks[t].demand_profile.value for t in self.blocks.index_set()
-        ]
 
-    @demand_profile.setter
-    def demand_profile(self, electricity_demand_profile: list):
-        if len(electricity_demand_profile) != len(self.blocks.index_set()):
-            raise ValueError("demand_profile must be the same length as dispatch index set.")
-        else:
-            for t in self.blocks.index_set():
-                self.blocks[t].demand_profile = round(
-                    electricity_demand_profile[t], self.round_digits
-                )
-    @property
-    def cost_per_discharge(self) -> float:
-        """Cost per discharge."""
-        for t in self.blocks.index_set():
-            return self.blocks[t].cost_per_discharge.value
-
-    @cost_per_discharge.setter
-    def cost_per_discharge(self, cost_per_discharge: float):
-        for t in self.blocks.index_set():
-            self.blocks[t].cost_per_discharge = round(cost_per_discharge, self.round_digits)
-    @property
-    def cost_per_charge(self) -> float:
-        """Cost per charge."""
-        for t in self.blocks.index_set():
-            return self.blocks[t].cost_per_charge.value
-
-    @cost_per_charge.setter
-    def cost_per_charge(self, cost_per_charge: float):
-        for t in self.blocks.index_set():
-            self.blocks[t].cost_per_charge = round(cost_per_charge, self.round_digits)
-
-    @property
-    def time_weighting_factor(self) -> float:
-        for t in self.blocks.index_set():
-            return self.blocks[t + 1].time_weighting_factor.value
-
-    @time_weighting_factor.setter
-    def time_weighting_factor(self, weighting: float):
-        for t in self.blocks.index_set():
-            self.blocks[t].time_weighting_factor = round(
-                weighting**t, self.round_digits
-            )
 
 class SolverOptions:
     """Class for housing solver options"""
