@@ -4,7 +4,7 @@ from pathlib import Path
 
 from pytest import approx, fixture
 
-from h2integrate.simulation.technologies.iron import iron
+from h2integrate.converters.iron import iron
 
 
 @fixture
@@ -165,11 +165,7 @@ def test_rosner_override(iron_post, subtests):
 def test_refit_coefficients(iron_post, subtests):
     # Determine the model directory based on the model name
     iron_tech_dir = (
-        Path(__file__).parent.parent.parent.parent
-        / "h2integrate"
-        / "simulation"
-        / "technologies"
-        / "iron"
+        Path(__file__).parent.parent.parent.parent / "h2integrate" / "converters" / "iron"
     )
     model_name = iron_post["iron"]["cost_model"]["name"]
     model_dir = iron_tech_dir / model_name
