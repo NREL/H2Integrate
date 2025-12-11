@@ -6,7 +6,7 @@ from wombat import Simulation
 from wombat.core.library import load_yaml
 
 from h2integrate.core.utilities import merge_shared_inputs
-from h2integrate.converters.hydrogen.eco_tools_pem_electrolyzer import (
+from h2integrate.converters.hydrogen.pem_electrolyzer import (
     ECOElectrolyzerPerformanceModel,
     ECOElectrolyzerPerformanceModelConfig,
 )
