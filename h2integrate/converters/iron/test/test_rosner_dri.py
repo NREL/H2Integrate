@@ -153,17 +153,6 @@ def test_ng_dri_performance_cost(
     # IronPlantCostComponent: maintenance_materials is included in Fixed OpEx
     # NaturalGasIronPlantCostComponent: maintenance_materials is the variable O&M
 
-    # expected values from old model:
-    # labor_cost_annual_operation: 34892517.01488541, new is > difference of 23153.24035203
-    # labor_cost_maintenance: 3180865.1610519094, new is > difference of 1416.57
-    # labor_cost_admin_support: 9518345.54398433, new is > difference of 6142.454
-    # property_tax_insurance: 8076161.253962645, new is > by 3596.66923786
-    # maintenance_materials: 4435872.62570034 #exactly
-    # 365.242199 days/year vs 365
-    # -> this fixed annual_labor_cost
-    # -> maintenance labor cost is fraction of CapEx
-    # -> admin labor cost depends on maintenance labor cost
-    # -> property om depends on CapEx
     annual_pig_iron = np.sum(prob.get_val("perf.pig_iron_out", units="t/h"))
     with subtests.test("Annual Pig Iron"):
         assert (
