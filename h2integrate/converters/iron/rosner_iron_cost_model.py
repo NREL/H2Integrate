@@ -1,45 +1,73 @@
 import pandas as pd
+import openmdao.api as om
 from attrs import field, define
 from openmdao.utils import units
 
 from h2integrate import ROOT_DIR
-from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
-from h2integrate.core.validators import contains
+from h2integrate.core.utilities import CostModelBaseConfig, merge_shared_inputs
+from h2integrate.core.validators import gte_zero
 from h2integrate.core.model_baseclasses import CostModelBaseClass
-from h2integrate.tools.inflation.inflate import inflate_cpi
+from h2integrate.tools.inflation.inflate import inflate_cpi, inflate_cepci
 
 
 @define
-class RosnerIronPlantCostConfig(BaseConfig):
+class RosnerIronPlantCostConfig(CostModelBaseConfig):
     """Configuration class for RosnerIronPlantCostComponent.
 
     Attributes:
-        taconite_pellet_type (str): type of taconite pellets, options are "std" or "drg".
-        mine (str): name of ore mine. Must be "Hibbing", "Northshore", "United",
-            "Minorca" or "Tilden"
-        max_ore_production_rate_tonnes_per_hr (float): capacity of the pellet plant
-            in units of metric tonnes of pellets produced per hour.
-        cost_year (int): target dollar year to convert costs to
+        pig_iron_production_rate_tonnes_per_hr (float): capacity of the iron processing plant
+            in units of metric tonnes of pig iron produced per hour.
+        cost_year (int): This model uses 2022 as the base year for the cost model.
+            The cost year is updated based on `target_dollar_year` in the plant
+            config to adjust costs based on CPI/CEPCI within this model. This value
+            cannot be user added under `cost_parameters`.
+        skilled_labor_cost (float): Skilled labor cost in 2022 USD/hr
+        unskilled_labor_cost (float): Unskilled labor cost in 2022 USD/hr
     """
 
-    max_ore_production_rate_tonnes_per_hr: float = field()
-
-    taconite_pellet_type: str = field(
-        converter=(str.lower, str.strip), validator=contains(["std", "drg"])
-    )
-
-    mine: str = field(validator=contains(["Hibbing", "Northshore", "United", "Minorca", "Tilden"]))
+    pig_iron_production_rate_tonnes_per_hr: float = field()
     cost_year: int = field(converter=int)
+    skilled_labor_cost: float = field(validator=gte_zero)
+    unskilled_labor_cost: float = field(validator=gte_zero)
 
 
-class RosnerIronPlantCostComponent(CostModelBaseClass):
+class NaturalGasIronPlantCostComponent(CostModelBaseClass):
+    """_summary_
+
+    Attributes:
+        config (RosnerIronPlantCostConfig): configuration class
+        coeff_df (pd.DataFrame): cost coefficient dataframe
+        steel_to_iron_ratio (float): steel/pig iron ratio
+    """
+
     def setup(self):
-        self.target_dollar_year = self.options["plant_config"]["finance_parameters"][
-            "cost_adjustment_parameters"
-        ]["target_dollar_year"]
         n_timesteps = self.options["plant_config"]["plant"]["simulation"]["n_timesteps"]
         config_dict = merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost")
-        config_dict.update({"cost_year": self.target_dollar_year})
+
+        if "cost_year" in config_dict:
+            msg = (
+                "This cost model is based on 2022 costs and adjusts costs using CPI and CEPCI. "
+                "The cost year cannot be modified for this cost model. "
+            )
+            raise ValueError(msg)
+
+        target_dollar_year = self.options["plant_config"]["finance_parameters"][
+            "cost_adjustment_parameters"
+        ]["target_dollar_year"]
+
+        if target_dollar_year <= 2024 and target_dollar_year >= 2010:
+            # adjust costs from 2022 to target dollar year using CPI/CEPCI adjustment
+            target_dollar_year = target_dollar_year
+
+        elif target_dollar_year < 2010:
+            # adjust costs from 2022 to 2010 using CP/CEPCI adjustment
+            target_dollar_year = 2010
+
+        elif target_dollar_year > 2024:
+            # adjust costs from 2022 to 2024 using CPI/CEPCI adjustment
+            target_dollar_year = 2024
+
+        config_dict.update({"cost_year": target_dollar_year})
 
         self.config = RosnerIronPlantCostConfig.from_dict(config_dict, strict=False)
 
@@ -47,30 +75,30 @@ class RosnerIronPlantCostComponent(CostModelBaseClass):
 
         self.add_input(
             "system_capacity",
-            val=self.config.max_ore_production_rate_tonnes_per_hr,
+            val=self.config.pig_iron_production_rate_tonnes_per_hr,
             # shape=n_timesteps,
             units="t/h",
-            desc="Annual ore production capacity",
+            desc="Pig ore production capacity",
         )
         self.add_input(
-            "iron_ore_out",
+            "pig_iron_out",
             val=0.0,
             shape=n_timesteps,
             units="t/h",
-            desc="Iron ore pellets produced",
+            desc="Pig iron produced",
         )
 
         coeff_fpath = (
-            ROOT_DIR / "simulation" / "technologies" / "iron" / "martin_ore" / "cost_coeffs.csv"
+            ROOT_DIR / "simulation" / "technologies" / "iron" / "rosner" / "cost_coeffs.csv"
         )
-        # martin ore performance model
+        # rosner cost model
         coeff_df = pd.read_csv(coeff_fpath, index_col=0)
-        self.coeff_df = self.format_coeff_df(coeff_df, self.config.mine)
+        self.coeff_df = self.format_coeff_df(coeff_df)
 
     def format_coeff_df(self, coeff_df):
         """Update the coefficient dataframe such that values are adjusted to standard units
             and units are compatible with OpenMDAO units. Also filter the dataframe to include
-            only the data necessary for a given dri type.
+            only the data necessary for natural gas DRI type.
 
         Args:
             coeff_df (pd.DataFrame): cost coefficient dataframe.
@@ -78,83 +106,144 @@ class RosnerIronPlantCostComponent(CostModelBaseClass):
         Returns:
             pd.DataFrame: cost coefficient dataframe
         """
+        product = "ng_dri"  # h2_dri
+
+        perf_coeff_fpath = (
+            ROOT_DIR / "simulation" / "technologies" / "iron" / "rosner" / "perf_coeffs.csv"
+        )
+
+        perf_df = pd.read_csv(perf_coeff_fpath, index_col=0)
+        perf_df = perf_df[perf_df["Product"] == product]
+        steel_plant_capacity = perf_df[perf_df["Name"] == "Steel Production"]["Model"].values[0]
+        iron_plant_capacity = perf_df[perf_df["Name"] == "Pig Iron Production"]["Model"].values[0]
+        steel_to_iron_ratio = steel_plant_capacity / iron_plant_capacity  # both in metric tons/year
+        self.steel_to_iron_ratio = steel_to_iron_ratio
 
         # only include data for the given product
-        coeff_df = coeff_df[
-            coeff_df["Product"] == f"{self.config.taconite_pellet_type}_taconite_pellets"
-        ]
-        data_cols = ["Name", "Type", "Coeff", "Unit", "Model"]
+
+        data_cols = ["Type", "Coeff", "Unit", product]
         coeff_df = coeff_df[data_cols]
-        coeff_df = coeff_df.rename(columns={"Model": "Value"})
 
-        # convert wet to dry
-        moisture_percent = 2.0
-        dry_fraction = (100 - moisture_percent) / 100
-
-        # convert wet long tons per year to dry long tons per year
-        i_wlt = coeff_df[coeff_df["Unit"] == "wltpy"].index.to_list()
-        coeff_df.loc[i_wlt, "Value"] = coeff_df.loc[i_wlt, "Value"] * dry_fraction
-        coeff_df.loc[i_wlt, "Unit"] = "lt/yr"
-
-        # convert kWh/wet long ton to kWh/dry long ton
-        i_per_wlt = coeff_df[coeff_df["Unit"] == "2021 $ per wlt pellet"].index.to_list()
-        coeff_df.loc[i_per_wlt, "Value"] = coeff_df.loc[i_per_wlt, "Value"] / dry_fraction
-        coeff_df.loc[i_per_wlt, "Unit"] = "USD/lt"
-        coeff_df.loc[i_per_wlt, "Type"] = "variable opex/pellet"
-
-        # convert units to standardized units
-        unit_rename_mapper = {}
-        old_units = list(set(coeff_df["Unit"].to_list()))
-        for ii, old_unit in enumerate(old_units):
-            if "2021 $" in old_unit:
-                old_unit = old_unit.replace("2021 $", "USD")
-            if "mlt" in old_unit:  # millon long tons
-                old_unit = old_unit.replace("mlt", "(2240*Mlb)")
-            if "lt" in old_unit:  # dry long tons
-                old_unit = old_unit.replace("lt", "(2240*lb)")
-            if "mt" in old_unit:  # metric tonne
-                old_unit = old_unit.replace("mt", "t")
-            if "wt %" in old_unit:
-                old_unit = old_unit.replace("wt %", "unitless")
-            if "deg N" in old_unit or "deg E" in old_unit:
-                old_unit = "deg"
-            unit_rename_mapper.update({old_units[ii]: old_unit})
-        coeff_df["Unit"] = coeff_df["Unit"].replace(to_replace=unit_rename_mapper)
-
-        convert_units_dict = {
-            "USD/(2240*lb)": "USD/t",
-            "(2240*Mlb)": "t",
-            "(2240*lb)/yr": "t/yr",
-        }
-        for i in coeff_df.index.to_list():
-            if coeff_df.loc[i, "Unit"] in convert_units_dict:
-                current_units = coeff_df.loc[i, "Unit"]
-                desired_units = convert_units_dict[current_units]
-                coeff_df.loc[i, "Value"] = units.convert_units(
-                    coeff_df.loc[i, "Value"], current_units, desired_units
-                )
-                coeff_df.loc[i, "Unit"] = desired_units
+        coeff_df = coeff_df.rename(columns={product: "Value"})
 
         return coeff_df
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
-        ref_Oreproduced = self.coeff_df[self.coeff_df["Name"] == "Ore pellets produced"][
+        # Calculate the capital cost for the item
+        dollar_year = self.coeff_df.loc["Dollar Year", "Value"].astype(int)
+
+        # Calculate
+        capital_items = list(set(self.coeff_df[self.coeff_df["Type"] == "capital"].index.to_list()))
+        capital_items_df = self.coeff_df.loc[capital_items].copy()
+        capital_items_df = capital_items_df.reset_index(drop=False)
+        capital_items_df = capital_items_df.set_index(
+            keys=["Name", "Coeff"]
+        )  # costs are in USD/steel plant capacity
+        capital_items_df = capital_items_df.drop(columns=["Unit", "Type"])
+
+        ref_steel_plant_capacity_tpy = units.convert_units(
+            inputs["system_capacity"] * self.steel_to_iron_ratio, "t/h", "t/yr"
+        )
+
+        total_capex_usd = 0.0
+        for item in capital_items:
+            if (
+                capital_items_df.loc[item, "exp"]["Value"] > 0
+                and capital_items_df.loc[item, "lin"]["Value"] > 0
+            ):
+                capex = capital_items_df.loc[item, "lin"]["Value"] * (
+                    (ref_steel_plant_capacity_tpy) ** capital_items_df.loc[item, "exp"]["Value"]
+                )
+                total_capex_usd += inflate_cepci(capex, dollar_year, self.config.cost_year)
+
+        # Calculate Owners Costs
+        # owner_costs_frac_tpc = self.coeff_df[self.coeff_df["Type"]=="owner"]["Value"].sum()
+
+        # Calculated Fixed OpEx
+        fixed_items = list(
+            set(self.coeff_df[self.coeff_df["Type"] == "fixed opex"].index.to_list())
+        )
+        fixed_items_df = self.coeff_df.loc[fixed_items].copy()
+        fixed_items_df = fixed_items_df.reset_index(drop=False)
+        fixed_items_df = fixed_items_df.set_index(keys=["Name", "Coeff"])
+        fixed_items_df = fixed_items_df.drop(columns=["Type"])
+
+        property_om = (
+            total_capex_usd * fixed_items_df.loc["Property Tax & Insurance"]["Value"].sum()
+        )
+
+        # Calculate labor costs
+        skilled_labor_cost = self.config.skilled_labor_cost * (
+            fixed_items_df.loc["% Skilled Labor"]["Value"].values / 100
+        )
+        unskilled_labor_cost = self.config.unskilled_labor_cost * (
+            fixed_items_df.loc["% Unskilled Labor"]["Value"].values / 100
+        )
+        labor_cost_per_hr = skilled_labor_cost + unskilled_labor_cost  # USD/hr
+
+        ref_steel_plant_capacity_kgpd = units.convert_units(
+            inputs["system_capacity"] * self.steel_to_iron_ratio, "t/h", "kg/d"
+        )
+        scaled_steel_plant_capacity_kgpd = (
+            ref_steel_plant_capacity_kgpd
+            ** fixed_items_df.loc["Annual Operating Labor Cost", "exp"]["Value"]
+        )
+
+        # employee-hours/day/process step = ((employee-hours/day/process step)/(kg/day))*(kg/day)
+        work_hrs_per_day_per_step = (
+            scaled_steel_plant_capacity_kgpd
+            * fixed_items_df.loc["Annual Operating Labor Cost", "lin"]["Value"]
+        )
+
+        # employee-hours/day = employee-hours/day/process step * # of process steps
+        work_hrs_per_day = (
+            work_hrs_per_day_per_step * fixed_items_df.loc["Processing Steps"]["Value"].values
+        )
+        labor_cost_per_day = labor_cost_per_hr * work_hrs_per_day
+        annual_labor_cost = labor_cost_per_day * units.convert_units(1, "yr", "d")
+        maintenance_labor_cost = (
+            total_capex_usd * fixed_items_df.loc["Maintenance Labor Cost"]["Value"]
+        )
+        admin_labor_cost = fixed_items_df.loc["Administrative & Support Labor Cost"]["Value"] * (
+            annual_labor_cost + maintenance_labor_cost
+        )
+
+        total_labor_related_cost = admin_labor_cost + maintenance_labor_cost + annual_labor_cost
+        tot_fixed_om = total_labor_related_cost + property_om
+
+        # Calculate Variable O&M
+        varom = self.coeff_df[self.coeff_df["Type"] == "variable opex"][
             "Value"
-        ].values
+        ].sum()  # units are USD/mtpy steel
+        tot_varopex = varom * self.steel_to_iron_ratio * inputs["pig_iron_out"].sum()
 
-        # get the capital cost for the reference design
-        ref_tot_capex = self.coeff_df[self.coeff_df["Type"] == "capital"]["Value"].sum()
-        ref_capex_per_anual_processed_ore = ref_tot_capex / ref_Oreproduced  # USD/t/yr
-        ref_capex_per_processed_ore = ref_capex_per_anual_processed_ore * 8760  # USD/t/hr
-        tot_capex_2021USD = inputs["system_capacity"] * ref_capex_per_processed_ore  # USD
+        # Adjust costs to target dollar year
+        tot_capex_adjusted = inflate_cepci(total_capex_usd, dollar_year, self.config.cost_year)
+        tot_fixed_om_adjusted = inflate_cpi(tot_fixed_om, dollar_year, self.config.cost_year)
+        tot_varopex_adjusted = inflate_cpi(tot_varopex, dollar_year, self.config.cost_year)
 
-        # get the variable om cost based on the total pellet production
-        total_pellets_produced = sum(inputs["iron_ore_out"])
-        var_om_2021USD = (
-            self.coeff_df[self.coeff_df["Type"] == "variable opex/pellet"]["Value"]
-            * total_pellets_produced
-        ).sum()
+        outputs["CapEx"] = tot_capex_adjusted
+        outputs["VarOpEx"] = tot_varopex_adjusted
+        outputs["OpEx"] = tot_fixed_om_adjusted
 
-        # adjust costs to cost year
-        outputs["CapEx"] = inflate_cpi(tot_capex_2021USD, 2021, self.config.cost_year)
-        outputs["VarOpEx"] = inflate_cpi(var_om_2021USD, 2021, self.config.cost_year)
+
+if __name__ == "__main__":
+    prob = om.Problem()
+
+    plant_config = {
+        "plant": {"plant_life": 30, "simulation": {"n_timesteps": 8760}},
+        "finance_parameters": {"cost_adjustment_parameters": {"target_dollar_year": 2022}},
+    }
+    iron_dri_config_rosner_ng = {
+        "pig_iron_production_rate_tonnes_per_hr": 1418095 / 8760,
+        "skilled_labor_cost": 1.0,
+        "unskilled_labor_cost": 1.0,
+    }
+    iron_dri_perf = NaturalGasIronPlantCostComponent(
+        plant_config=plant_config,
+        tech_config={"model_inputs": {"shared_parameters": iron_dri_config_rosner_ng}},
+        driver_config={},
+    )
+    prob.model.add_subsystem("dri", iron_dri_perf, promotes=["*"])
+    prob.setup()
+    prob.run_model()
