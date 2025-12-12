@@ -15,7 +15,7 @@ from h2integrate.core.model_baseclasses import (
 from h2integrate.tools.inflation.inflate import inflate_cpi, inflate_cepci
 
 
-@define
+@define(kw_only=True)
 class AmmoniaSynLoopPerformanceConfig(ResizeablePerformanceModelBaseConfig):
     """
     Configuration inputs for the ammonia synthesis loop performance model.

@@ -3,7 +3,7 @@ import math
 import numpy as np
 from attrs import field, define
 
-from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
+from h2integrate.core.utilities import ResizeablePerformanceModelBaseConfig, merge_shared_inputs
 from h2integrate.core.validators import gt_zero, contains
 from h2integrate.converters.hydrogen.utilities import size_electrolyzer_for_hydrogen_demand
 from h2integrate.converters.hydrogen.pem_model.run_h2_PEM import run_h2_PEM
@@ -11,11 +11,21 @@ from h2integrate.converters.hydrogen.electrolyzer_baseclass import ElectrolyzerP
 
 
 @define
-class ECOElectrolyzerPerformanceModelConfig(BaseConfig):
+class ECOElectrolyzerPerformanceModelConfig(ResizeablePerformanceModelBaseConfig):
     """
     Configuration class for the ECOElectrolyzerPerformanceModel.
 
     Args:
+        size_mode (str): The mode in which the component is sized. Options:
+            - "normal": The component size is taken from the tech_config.
+            - "resize_by_max_feedstock": Resize based on maximum feedstock availability.
+            - "resize_by_max_commodity": Resize based on maximum commodity demand.
+        flow_used_for_sizing (str | None): The feedstock/commodity flow used for sizing.
+            Required when size_mode is not "normal".
+        max_feedstock_ratio (float): Ratio for sizing in "resize_by_max_feedstock" mode.
+            Defaults to 1.0.
+        max_commodity_ratio (float): Ratio for sizing in "resize_by_max_commodity" mode.
+            Defaults to 1.0.
         n_clusters (int): number of electrolyzer clusters within the system.
         location (str): The location of the electrolyzer; options include "onshore" or "offshore".
         cluster_rating_MW (float): The rating of the clusters that the electrolyzer is grouped
@@ -32,7 +42,6 @@ class ECOElectrolyzerPerformanceModelConfig(BaseConfig):
             (https://www.hydrogen.energy.gov/docs/hydrogenprogramlibraries/pdfs/24005-clean-hydrogen-production-cost-pem-electrolyzer.pdf?sfvrsn=8cb10889_1)
     """
 
-    sizing: dict = field()
     n_clusters: int = field(validator=gt_zero)
     location: str = field(validator=contains(["onshore", "offshore"]))
     cluster_rating_MW: float = field(validator=gt_zero)

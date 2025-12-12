@@ -19,9 +19,7 @@ def make_synloop_config():
                 "catalyst_replacement_interval": 3,
             },
             "performance_parameters": {
-                "sizing": {
-                    "size_mode": "normal",
-                },
+                "size_mode": "normal",
                 "capacity_factor": 0.9,
                 "energy_demand": 0.530645243,
                 "heat_output": 0.8299956,
