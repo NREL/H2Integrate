@@ -26,12 +26,14 @@ def test_resize_by_max_feedstock(subtests):
 
     # Create a H2Integrate model, modifying tech_config as necessary
     tech_config["technologies"]["electrolyzer"]["model_inputs"]["performance_parameters"][
-        "sizing"
-    ] = {
-        "size_mode": "resize_by_max_feedstock",
-        "flow_used_for_sizing": "electricity",
-        "max_feedstock_ratio": 1.0,
-    }
+        "size_mode"
+    ] = "resize_by_max_feedstock"
+    tech_config["technologies"]["electrolyzer"]["model_inputs"]["performance_parameters"][
+        "flow_used_for_sizing"
+    ] = "electricity"
+    tech_config["technologies"]["electrolyzer"]["model_inputs"]["performance_parameters"][
+        "max_feedstock_ratio"
+    ] = 1.0
     input_config["technology_config"] = tech_config
     model = H2IntegrateModel(input_config)
 
@@ -50,12 +52,14 @@ def test_resize_by_max_commodity(subtests):
 
     # Create a H2Integrate model, modifying tech_config as necessary
     tech_config["technologies"]["electrolyzer"]["model_inputs"]["performance_parameters"][
-        "sizing"
-    ] = {
-        "size_mode": "resize_by_max_commodity",
-        "flow_used_for_sizing": "hydrogen",
-        "max_commodity_ratio": 1.0,
-    }
+        "size_mode"
+    ] = "resize_by_max_commodity"
+    tech_config["technologies"]["electrolyzer"]["model_inputs"]["performance_parameters"][
+        "flow_used_for_sizing"
+    ] = "hydrogen"
+    tech_config["technologies"]["electrolyzer"]["model_inputs"]["performance_parameters"][
+        "max_commodity_ratio"
+    ] = 1.0
     input_config["technology_config"] = tech_config
     plant_config["technology_interconnections"] = [
         ["hopp", "electrolyzer", "electricity", "cable"],

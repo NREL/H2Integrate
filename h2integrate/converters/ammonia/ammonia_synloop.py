@@ -23,9 +23,16 @@ class AmmoniaSynLoopPerformanceConfig(ResizeablePerformanceModelBaseConfig):
     The other inputs are from tech_config/ammonia/model_inputs/performance_parameters
 
     Attributes:
-        sizing (dict): A dictionary containing the following model sizing parameters:
-            - size_mode (str): The mode in which the component is sized. Options:
-                - "normal": The component size is taken from the tech_config.
+        size_mode (str): The mode in which the component is sized. Options:
+            - "normal": The component size is taken from the tech_config.
+            - "resize_by_max_feedstock": Resize based on maximum feedstock availability.
+            - "resize_by_max_commodity": Resize based on maximum commodity demand.
+        flow_used_for_sizing (str | None): The feedstock/commodity flow used for sizing.
+            Required when size_mode is not "normal".
+        max_feedstock_ratio (float): Ratio for sizing in "resize_by_max_feedstock" mode.
+            Defaults to 1.0.
+        max_commodity_ratio (float): Ratio for sizing in "resize_by_max_commodity" mode.
+            Defaults to 1.0.
         *production_capacity (float): The total production capacity of the ammonia synthesis loop
             (in kg ammonia per hour)
         *catalyst_consumption_rate (float): The mass ratio of catalyst consumed by the reactor over
@@ -53,7 +60,6 @@ class AmmoniaSynLoopPerformanceConfig(ResizeablePerformanceModelBaseConfig):
             decimal)
     """
 
-    sizing: dict = field()
     production_capacity: float = field(validator=gt_zero)
     catalyst_consumption_rate: float = field(validator=gt_zero)
     catalyst_replacement_interval: float = field(validator=gt_zero)
