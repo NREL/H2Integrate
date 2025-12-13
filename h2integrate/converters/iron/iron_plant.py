@@ -159,7 +159,7 @@ class IronPlantCostComponent(CostModelBaseClass):
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         iron_plant_performance = IronPerformanceModelOutputs(
-            discrete_inputs["iron_plant_performance"]
+            performances_df=discrete_inputs["iron_plant_performance"]
         )
 
         iron_plant_cost_inputs = {

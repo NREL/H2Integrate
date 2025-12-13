@@ -96,7 +96,7 @@ def run_size_iron_plant_performance(
     model_outputs = model.main(config)
     performances_df = model_outputs
 
-    return IronPerformanceModelOutputs(performances_df)
+    return IronPerformanceModelOutputs(performances_df=performances_df)
 
 
 @define(kw_only=True)

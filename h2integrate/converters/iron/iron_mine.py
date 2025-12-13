@@ -146,7 +146,9 @@ class IronMineCostComponent(CostModelBaseClass):
         self.add_discrete_output("iron_mine_cost", val=pd.DataFrame, desc="iron mine cost results")
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
-        ore_performance = IronPerformanceModelOutputs(discrete_inputs["iron_mine_performance"])
+        ore_performance = IronPerformanceModelOutputs(
+            performances_df=discrete_inputs["iron_mine_performance"]
+        )
 
         ore_cost_inputs = {
             "lcoe": inputs["LCOE"][0] / 1e3,
