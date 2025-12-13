@@ -12,7 +12,7 @@ from h2integrate.converters.hydrogen.pem_electrolyzer import (
 )
 
 
-@define
+@define(kw_only=True)
 class WOMBATModelConfig(ECOElectrolyzerPerformanceModelConfig):
     """
     library_path: Path to the WOMBAT library directory, relative from this file

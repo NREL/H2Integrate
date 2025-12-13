@@ -123,7 +123,7 @@ def check_parameter_inputs(finance_params, plant_config):
     return fin_params
 
 
-@define
+@define(kw_only=True)
 class BasicProFASTParameterConfig(BaseConfig):
     """Configuration class for financial parameters used in ProFAST models.
 
@@ -286,7 +286,7 @@ class BasicProFASTParameterConfig(BaseConfig):
         return params
 
 
-@define
+@define(kw_only=True)
 class ProFASTDefaultCapitalItem(BaseConfig):
     """Default configuration for ProFAST capital cost items.
 
@@ -324,7 +324,7 @@ class ProFASTDefaultCapitalItem(BaseConfig):
         return d
 
 
-@define
+@define(kw_only=True)
 class ProFASTDefaultFixedCost(BaseConfig):
     """Default configuration for ProFAST fixed operating costs.
 
@@ -353,7 +353,7 @@ class ProFASTDefaultFixedCost(BaseConfig):
         return self.as_dict()
 
 
-@define
+@define(kw_only=True)
 class ProFASTDefaultVariableCost(BaseConfig):
     """Default configuration for ProFAST variable costs.
 
@@ -383,7 +383,7 @@ class ProFASTDefaultVariableCost(BaseConfig):
         return self.as_dict()
 
 
-@define
+@define(kw_only=True)
 class ProFASTDefaultCoproduct(BaseConfig):
     """Default configuration for ProFAST coproduct settings.
 
@@ -413,7 +413,7 @@ class ProFASTDefaultCoproduct(BaseConfig):
         return self.as_dict()
 
 
-@define
+@define(kw_only=True)
 class ProFASTDefaultIncentive(BaseConfig):
     """Default configuration for ProFAST production-based incentives.
 

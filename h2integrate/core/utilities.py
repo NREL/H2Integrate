@@ -113,7 +113,7 @@ def merge_shared_inputs(config, input_type):
         return config["shared_parameters"]
 
 
-@define
+@define(kw_only=True)
 class BaseConfig:
     """
     A Mixin class to allow for kwargs overloading when a data class doesn't
@@ -173,12 +173,12 @@ class BaseConfig:
         return attrs.asdict(self, filter=attr_filter, value_serializer=attr_serializer)
 
 
-@define
+@define(kw_only=True)
 class CostModelBaseConfig(BaseConfig):
     cost_year: int = field(converter=int)
 
 
-@define
+@define(kw_only=True)
 class ResizeablePerformanceModelBaseConfig(BaseConfig):
     size_mode: str = field(default="normal")
     flow_used_for_sizing: str | None = field(default=None)

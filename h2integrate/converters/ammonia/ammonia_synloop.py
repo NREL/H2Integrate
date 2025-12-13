@@ -278,7 +278,7 @@ class AmmoniaSynLoopPerformanceModel(ResizeablePerformanceModelBaseClass):
         outputs["ammonia_capacity_factor"] = np.mean(nh3_prod) / nh3_cap
 
 
-@define
+@define(kw_only=True)
 class AmmoniaSynLoopCostConfig(CostModelBaseConfig):
     """
     Configuration inputs for the ammonia synthesis loop cost model.

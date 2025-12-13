@@ -17,7 +17,7 @@ from h2integrate.tools.inflation.inflate import inflate_cpi, inflate_cepci
 from h2integrate.converters.iron.load_top_down_coeffs import load_top_down_coeffs
 
 
-@define
+@define(kw_only=True)
 class IronPlantBaseConfig(BaseConfig):
     winning_type: str = field(
         kw_only=True, converter=(str.lower, str.strip), validator=contains(["h2", "ng"])
@@ -45,7 +45,7 @@ class IronPlantBaseConfig(BaseConfig):
         return {"name": self.site_name}
 
 
-@define
+@define(kw_only=True)
 class IronPlantPerformanceConfig(IronPlantBaseConfig):
     def make_model_dict(self):
         keys = ["model_fp", "inputs_fp", "coeffs_fp", "refit_coeffs"]
@@ -99,7 +99,7 @@ class IronPlantPerformanceComponent(om.ExplicitComponent):
         discrete_outputs["iron_plant_performance"] = iron_plant_performance.performances_df
 
 
-@define
+@define(kw_only=True)
 class IronPlantCostConfig(IronPlantBaseConfig):
     LCOE: float = field(kw_only=True)  # $/MWh
     LCOH: float = field(kw_only=True)  # $/kg

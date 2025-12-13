@@ -10,7 +10,7 @@ from h2integrate.converters.hydrogen.pem_model.run_h2_PEM import run_h2_PEM
 from h2integrate.converters.hydrogen.electrolyzer_baseclass import ElectrolyzerPerformanceBaseClass
 
 
-@define
+@define(kw_only=True)
 class ECOElectrolyzerPerformanceModelConfig(ResizeablePerformanceModelBaseConfig):
     """
     Configuration class for the ECOElectrolyzerPerformanceModel.
