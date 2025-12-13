@@ -147,7 +147,7 @@ class EAFPlantCostComponent(CostModelBaseClass):
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         steel_plant_performance = IronPerformanceModelOutputs(
-            discrete_inputs["steel_plant_performance"]
+            performances_df=discrete_inputs["steel_plant_performance"]
         )
 
         steel_plant_cost_inputs = {
