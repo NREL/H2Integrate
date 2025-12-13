@@ -2,8 +2,7 @@ name: Testing
 
 on:
   push:
-    branches:
-      - '**'
+    branches: [main, develop]
   pull_request:
     branches: [main, develop]
   schedule:
