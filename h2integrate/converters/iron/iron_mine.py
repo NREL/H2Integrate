@@ -5,21 +5,17 @@ from attrs import field, define
 
 from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
 from h2integrate.core.validators import contains, range_val
-from h2integrate.core.model_baseclasses import CostModelBaseClass
-from h2integrate.tools.inflation.inflate import inflate_cpi
-from h2integrate.simulation.technologies.iron.iron import (
+from h2integrate.converters.iron.iron import (
     IronCostModelConfig,
     IronPerformanceModelConfig,
     IronPerformanceModelOutputs,
     run_iron_cost_model,
     run_size_iron_plant_performance,
 )
-from h2integrate.simulation.technologies.iron.martin_ore.variable_om_cost import (
-    martin_ore_variable_om_cost,
-)
-from h2integrate.simulation.technologies.iron.rosner_ore.variable_om_cost import (
-    rosner_ore_variable_om_cost,
-)
+from h2integrate.core.model_baseclasses import CostModelBaseClass
+from h2integrate.tools.inflation.inflate import inflate_cpi
+from h2integrate.converters.iron.martin_ore.variable_om_cost import martin_ore_variable_om_cost
+from h2integrate.converters.iron.rosner_ore.variable_om_cost import rosner_ore_variable_om_cost
 
 
 @define

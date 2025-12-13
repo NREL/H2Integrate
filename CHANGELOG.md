@@ -35,6 +35,9 @@
 - Improved readability of the postprocessing printout by simplifying numerical representation, especially for years
 - Added grid converter performance and cost model which can be used to buy, sell, or buy and sell electricity to/from the grid
 - Add open-loop load demand controllers: `DemandOpenLoopConverterController` and `FlexibleDemandOpenLoopConverterController`
+- Allow multiple instances of the same electricity producing technologies using prefix-based matching
+- Allow multiple instances of custom models in the same hybrid system
+- Removed a large portion of the old GreenHEART code that was no longer being used
 
 ## 0.4.0 [October 1, 2025]
 
