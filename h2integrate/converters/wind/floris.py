@@ -3,11 +3,11 @@ from pathlib import Path
 
 import dill
 import numpy as np
-from attrs import field, define
+from attrs import field, define, validators
 from floris import TimeSeries, FlorisModel
 
 from h2integrate.core.utilities import BaseConfig, merge_shared_inputs, make_cache_hash_filename
-from h2integrate.core.validators import gt_val, gt_zero, contains, range_val
+from h2integrate.core.validators import gt_zero, contains, range_val
 from h2integrate.converters.wind.tools.resource_tools import (
     average_wind_data_for_hubheight,
     weighted_average_wind_data_for_hubheight,
@@ -34,6 +34,8 @@ class FlorisWindPlantPerformanceConfig(BaseConfig):
             from the `floris_turbine_config`. Otherwise, is the turbine hub-height
             in meters. Defaults to -1.
         floris_operation_model (str, optional): turbine operation model. Defaults to 'cosine-loss'.
+        default_turbulence_intensity (float): default turbulence intensity to use if not found
+            in wind resource data.
         layout (dict): layout parameters dictionary.
         resource_data_averaging_method (str): string indicating what method to use to
             adjust or select resource data if no resource data is available at a height
@@ -57,8 +59,9 @@ class FlorisWindPlantPerformanceConfig(BaseConfig):
     num_turbines: int = field(converter=int, validator=gt_zero)
     floris_wake_config: dict = field()
     floris_turbine_config: dict = field()
+    default_turbulence_intensity: float = field()
     operational_losses: float = field(validator=range_val(0.0, 100.0))
-    hub_height: float = field(default=-1, validator=gt_val(-1))
+    hub_height: float = field(default=-1, validator=validators.ge(-1))
     floris_operation_model: str = field(default="cosine-loss")
     layout: dict = field(default={})
     resource_data_averaging_method: str = field(
@@ -111,7 +114,8 @@ class FlorisWindPlantPerformanceModel(WindPerformanceBaseClass):
 
         if self.config.hybrid_turbine_design:
             raise NotImplementedError(
-                "H2I does not currently support running multiple wind turbines with Floris."
+                "H2I does not currently support running multiple different wind turbine "
+                "designs with Floris."
             )
 
         self.add_input(
@@ -125,7 +129,7 @@ class FlorisWindPlantPerformanceModel(WindPerformanceBaseClass):
             "hub_height",
             val=self.config.hub_height,
             units="m",
-            desc="turbine hub-height in meters",
+            desc="turbine hub-height",
         )
 
         self.add_output(
@@ -134,9 +138,7 @@ class FlorisWindPlantPerformanceModel(WindPerformanceBaseClass):
             units="kW*h/year",
             desc="Annual energy production from WindPlant",
         )
-        self.add_output(
-            "total_capacity", val=0.0, units="kW", desc="Wind farm rated capacity in kW"
-        )
+        self.add_output("total_capacity", val=0.0, units="kW", desc="Wind farm rated capacity")
 
         self.add_output(
             "capacity_factor", val=0.0, units="percent", desc="Wind farm capacity factor"
@@ -180,30 +182,19 @@ class FlorisWindPlantPerformanceModel(WindPerformanceBaseClass):
                 )
 
         # get turbulence intensity
-        # check if turbulence intensity is specified in the floris wake config
-        default_ti = self.config.floris_wake_config.get("flow_field", {}).get(
-            "turbulence_intensities", 0.06
-        )
+
         # check if turbulence intensity is available in wind resource data
         if any("turbulence_intensity_" in k for k in wind_resource_data.keys()):
             for height in bounding_heights:
                 if f"turbulence_intensity_{height}m" in wind_resource_data:
-                    ti = wind_resource_data.get(f"turbulence_intensity_{height}m", default_ti)
+                    ti = wind_resource_data.get(
+                        f"turbulence_intensity_{height}m", self.config.default_turbulence_intensity
+                    )
                     break
         else:
-            ti = wind_resource_data.get("turbulence_intensity", default_ti)
-
-        if not isinstance(ti, (int, float)):
-            if len(ti) == 0:
-                ti = 0.06
-            if not isinstance(ti, (float, int)) and len(ti) == 1:
-                ti = float(ti[0])
-            if not isinstance(ti, (float, int)) and len(ti) != self.n_timesteps:
-                msg = (
-                    f"Turbulence intensity is length {len(ti)} but must be "
-                    f"either be length {self.n_timesteps} or a float"
-                )
-                raise ValueError(msg)
+            ti = wind_resource_data.get(
+                "turbulence_intensity", self.config.default_turbulence_intensity
+            )
 
         time_series = TimeSeries(
             wind_directions=winddir,
@@ -247,6 +238,9 @@ class FlorisWindPlantPerformanceModel(WindPerformanceBaseClass):
         # update the turbine hub-height in the floris turbine config
         turbine_design.update({"hub_height": inputs["hub_height"][0]})
 
+        # update the operation model in the floris turbine config
+        turbine_design.update({"operation_model": self.config.floris_operation_model})
+
         # format resource data and input into model
         time_series = self.format_resource_data(
             inputs["hub_height"][0], discrete_inputs["wind_resource_data"]
@@ -263,6 +257,7 @@ class FlorisWindPlantPerformanceModel(WindPerformanceBaseClass):
         floris_config["farm"].update(floris_farm)
 
         # initialize FLORIS
+        floris_config["flow_field"].update({"turbulence_intensities": []})
         self.fi = FlorisModel(floris_config)
 
         # set the layout and wind data in Floris

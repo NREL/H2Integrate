@@ -19,7 +19,6 @@ flow_field:
   wind_shear: 0.33
   wind_speeds: []
   wind_veer: 0.0
-  turbulence_intensities: []
 
 wake:
   model_strings:

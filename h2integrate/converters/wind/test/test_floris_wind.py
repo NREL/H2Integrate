@@ -17,6 +17,8 @@ def floris_config():
         "num_turbines": 20,
         "floris_wake_config": floris_wake_config,
         "floris_turbine_config": floris_turbine_config,
+        "default_turbulence_intensity": 0.06,
+        "floris_operation_model": "cosine-loss",
         "hub_height": -1,
         "layout": {
             "layout_mode": "basicgrid",
@@ -87,12 +89,6 @@ def test_floris_wind_performance(plant_config, floris_config, subtests):
     prob.model.add_subsystem("wind_plant", wind_plant, promotes=["*"])
     prob.setup()
     prob.run_model()
-
-    with subtests.test("wind farm capacity"):
-        assert (
-            pytest.approx(prob.get_val("wind_plant.total_capacity", units="kW")[0], rel=1e-6)
-            == 660 * 20
-        )
 
     with subtests.test("wind farm capacity"):
         assert (
