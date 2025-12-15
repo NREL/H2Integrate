@@ -88,9 +88,9 @@ And automatically connects:
 - `electricity_splitter.electricity_out1` → `electricity_splitter_to_electrolyzer_cable.electricity_in`
 - `electricity_splitter.electricity_out2` → `electricity_splitter_to_doc_cable.electricity_in`
 
-## Power combiner
+## Generic combiner
 
-The power combiner is a simple but essential component that takes electricity from multiple sources and combines them into a single output without losses.
+The generic combiner is a simple but essential component that takes a single commodity from multiple sources and combines the sources into a single output without losses. The following example uses power (kW) as the commodity, but streams of any single commodity can be combined. Any number of sources may be combined, not just two as in the example.
 
 ### Configuration
 
@@ -98,7 +98,7 @@ Add the combiner to your `tech_config.yaml`:
 
 ```yaml
 technologies:
-  electricity_combiner:
+  combiner:
     performance_model:
       model: "combiner_performance"
     model_inputs:
@@ -112,20 +112,20 @@ No additional configuration parameters are needed in the `tech_config.yaml` - th
 ### Inputs and outputs
 
 - **Inputs**:
-  - `electricity_in1`: Power from the first source (kW)
-  - `electricity_in2`: Power from the second source (kW)
+  - `<commidty_name>_in1`: Power from the first source (kW)
+  - `<commidty_name>_in2`: Power from the second source (kW)
 - **Output**:
-  - `electricity_out`: Combined power output (kW)
+  - `<commidty_name>_out`: Combined power output (kW)
 
-The relationship is straightforward: `electricity_out = electricity_in1 + electricity_in2`
+The relationship is straightforward: `<commidty_name>_out = <commidty_name>_in1 + <commidty_name>_in2`
 
 ### Usage example
 
 ```yaml
 technology_interconnections: [
-  ["wind_farm", "electricity_combiner", "electricity", "cable"],
-  ["solar_farm", "electricity_combiner", "electricity", "cable"],
-  ["electricity_combiner", "electrolyzer", "electricity", "cable"],
+  ["wind_farm", "combiner", "electricity", "cable"],
+  ["solar_farm", "combiner", "electricity", "cable"],
+  ["combiner", "electrolyzer", "electricity", "cable"],
 ]
 ```
 
