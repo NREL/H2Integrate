@@ -560,6 +560,23 @@ def write_yaml(
         yaml.dump(instance, f)
 
 
+def write_yaml_readable(instance: dict, foutput: str | Path):
+    """
+    Writes a dictionary to a YAML file using the yaml library.
+
+    Args:
+        instance (dict): Dictionary to be written to the YAML file.
+        foutput (str | Path): Path to the output YAML file.
+
+    Returns:
+        None
+    """
+    instance = dict_to_yaml_formatting(instance)
+
+    with Path(foutput).open("w", encoding="utf-8") as f:
+        yaml.dump(instance, f, sort_keys=False, encoding=None, default_flow_style=False)
+
+
 def make_unique_case_name(folder, proposed_fname, fext):
     """Generate a filename that does not already exist in a user-defined folder.
 
