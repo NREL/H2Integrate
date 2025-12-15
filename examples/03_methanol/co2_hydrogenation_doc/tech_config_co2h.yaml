@@ -36,7 +36,6 @@ technologies:
           hydrogen_dmd:
         n_clusters: 4
         cluster_rating_MW: 40
-        pem_control_type: 'basic'
         eol_eff_percent_loss: 10 #eol defined as x% change in efficiency from bol
         uptime_hours_until_eol: 80000 #number of 'on' hours until electrolyzer reaches eol
         include_degradation_penalty: True #include degradation
@@ -51,7 +50,7 @@ technologies:
     cost_model:
       model: "generic_storage_cost"
     control_strategy:
-      model: "demand_open_loop_controller"
+      model: "demand_open_loop_storage_controller"
     model_inputs:
       shared_parameters:
         commodity_name: "hydrogen"
@@ -104,7 +103,7 @@ technologies:
     cost_model:
       model: "generic_storage_cost"
     control_strategy:
-      model: "demand_open_loop_controller"
+      model: "demand_open_loop_storage_controller"
     model_inputs:
       shared_parameters:
         commodity_name: "co2"

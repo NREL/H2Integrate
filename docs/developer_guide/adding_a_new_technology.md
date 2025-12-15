@@ -165,13 +165,14 @@ Here's what the updated `supported_models.py` file looks like with our new solar
 from h2integrate.converters.solar.solar_pysam import PYSAMSolarPlantPerformanceComponent
 
 supported_models = {
-    'pysam_solar_plant_performance' : PYSAMSolarPlantPerformanceComponent,
+    "pysam_solar_plant_performance" : PYSAMSolarPlantPerformanceComponent,
 
-    'pem_electrolyzer_performance': ElectrolyzerPerformanceModel,
-    'pem_electrolyzer_cost': ElectrolyzerCostModel,
-
-    'eco_pem_electrolyzer_performance': ECOElectrolyzerPerformanceModel,
-    'eco_pem_electrolyzer_cost': ECOElectrolyzerCostModel,
+    "run_of_river_hydro_performance": RunOfRiverHydroPerformanceModel,
+    "run_of_river_hydro_cost": RunOfRiverHydroCostModel,
+    "eco_pem_electrolyzer_performance": ECOElectrolyzerPerformanceModel,
+    "singlitico_electrolyzer_cost": SingliticoCostModel,
+    "basic_electrolyzer_cost": BasicElectrolyzerCostModel,
+    "custom_electrolyzer_cost": CustomElectrolyzerCostModel,
 
     ...
 }
