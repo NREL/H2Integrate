@@ -90,7 +90,7 @@ And automatically connects:
 
 ## Power combiner
 
-The power combiner is a simple but essential component that takes electricity from two sources and combines them into a single output without losses.
+The power combiner is a simple but essential component that takes electricity from multiple sources and combines them into a single output without losses.
 
 ### Configuration
 
@@ -107,7 +107,7 @@ technologies:
         commodity_units: "kW"
 ```
 
-No additional configuration parameters are needed - the combiner simply adds the two input streams.
+No additional configuration parameters are needed in the `tech_config.yaml` - the combiner simply adds the input streams.
 
 ### Inputs and outputs
 
@@ -212,5 +212,5 @@ technology_interconnections: [
 This sends part of the offshore wind power to a direct ocean capture system and the remainder to an electrolyzer.
 
 ```{note}
-Each combiner handles exactly two inputs, and each splitter handles exactly two outputs. For more complex architectures, you can chain multiple components together.
+Each splitter handles exactly two inputs. For more complex architectures, you can chain multiple components together.
 ```
