@@ -19,9 +19,7 @@ def make_synloop_config():
                 "catalyst_replacement_interval": 3,
             },
             "performance_parameters": {
-                "sizing": {
-                    "size_mode": "normal",
-                },
+                "size_mode": "normal",
                 "capacity_factor": 0.9,
                 "energy_demand": 0.530645243,
                 "heat_output": 0.8299956,
@@ -118,11 +116,15 @@ def test_size_mode_outputs(subtests):
     }
 
     # Create a H2Integrate model, modifying tech_config as necessary
-    tech_config["technologies"]["ammonia"]["model_inputs"]["performance_parameters"]["sizing"] = {
-        "size_mode": "resize_by_max_feedstock",
-        "flow_used_for_sizing": "hydrogen",
-        "max_feedstock_ratio": 1.0,
-    }
+    tech_config["technologies"]["ammonia"]["model_inputs"]["performance_parameters"][
+        "size_mode"
+    ] = "resize_by_max_feedstock"
+    tech_config["technologies"]["ammonia"]["model_inputs"]["performance_parameters"][
+        "flow_used_for_sizing"
+    ] = "hydrogen"
+    tech_config["technologies"]["ammonia"]["model_inputs"]["performance_parameters"][
+        "max_feedstock_ratio"
+    ] = 1.0
     input_config["technology_config"] = tech_config
     model = H2IntegrateModel(input_config)
 

@@ -9,7 +9,7 @@ from h2integrate.resource.utilities.file_tools import check_resource_dir
 from h2integrate.resource.utilities.download_tools import download_from_api
 
 
-@define
+@define(kw_only=True)
 class ResourceBaseAPIConfig(BaseConfig):
     """Base configuration class for resource data downloaded from an API.
 

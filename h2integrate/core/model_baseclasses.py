@@ -51,8 +51,8 @@ class ResizeablePerformanceModelBaseClass(om.ExplicitComponent):
     """Baseclass to be used for all resizeable performance models. The built-in inputs
     are used by the performance models to resize themselves.
 
-    These parameters are all set as dictionary items within the `sizing` config parameter,
-    which is declared in h2integrate.core.utilities.ResizeablePerformanceModelBaseConfig
+    These parameters are all set as attributes within the config class, which inherits from
+    h2integrate.core.utilities.ResizeablePerformanceModelBaseConfig
 
     Discrete Inputs:
         - size_mode (str): The mode in which the component is sized. Options:
@@ -78,7 +78,7 @@ class ResizeablePerformanceModelBaseClass(om.ExplicitComponent):
 
     def setup(self):
         # Parse in sizing parameters
-        size_mode = self.config.sizing["size_mode"]
+        size_mode = self.config.size_mode
         self.add_discrete_input("size_mode", val=size_mode)
 
         if size_mode not in ["normal", "resize_by_max_feedstock", "resize_by_max_commodity"]:
@@ -89,19 +89,19 @@ class ResizeablePerformanceModelBaseClass(om.ExplicitComponent):
             )
 
         if size_mode != "normal":
-            if "flow_used_for_sizing" in self.config.sizing.keys():
-                size_flow = self.config.sizing["flow_used_for_sizing"]
+            if self.config.flow_used_for_sizing is not None:
+                size_flow = self.config.flow_used_for_sizing
                 self.add_discrete_input("flow_used_for_sizing", val=size_flow)
             else:
                 raise ValueError(
-                    "'flow_used_for_sizing' must be set in sizing dict when size_mode is "
+                    "'flow_used_for_sizing' must be set when size_mode is "
                     "'resize_by_max_feedstock' or 'resize_by_max_commodity'"
                 )
             if size_mode == "resize_by_max_commodity":
-                comm_ratio = self.config.sizing.get("max_commodity_ratio", 1.0)
+                comm_ratio = self.config.max_commodity_ratio
                 self.add_input("max_commodity_ratio", val=comm_ratio, units="unitless")
             else:
-                feed_ratio = self.config.sizing.get("max_feedstock_ratio", 1.0)
+                feed_ratio = self.config.max_feedstock_ratio
                 self.add_input("max_feedstock_ratio", val=feed_ratio, units="unitless")
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):

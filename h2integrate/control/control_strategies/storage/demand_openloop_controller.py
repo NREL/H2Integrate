@@ -11,7 +11,7 @@ from h2integrate.control.control_strategies.demand_openloop_controller import (
 )
 
 
-@define
+@define(kw_only=True)
 class DemandOpenLoopStorageControllerConfig(DemandOpenLoopControlBaseConfig):
     """
     Configuration class for the DemandOpenLoopStorageController.
