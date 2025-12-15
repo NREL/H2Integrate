@@ -11,7 +11,7 @@ class GenericCombinerPerformanceConfig(BaseConfig):
     Attributes:
         commodity (str): name of commodity type
         commodity_units (str): units of commodity production profile
-        in_streams (int): how many inflow streams will be connected
+        in_streams (int): how many inflow streams will be connected, defaults to 2
     """
 
     commodity: str = field(converter=(str.lower, str.strip))
@@ -21,7 +21,7 @@ class GenericCombinerPerformanceConfig(BaseConfig):
 
 class GenericCombinerPerformanceModel(om.ExplicitComponent):
     """
-    Combine any commodity or resource from two sources into one output without losses.
+    Combine any commodity or resource from multiple sources into one output without losses.
 
     This component is purposefully simple; a more realistic case might include
     losses or other considerations from system components.

@@ -38,6 +38,7 @@
 - Allow multiple instances of the same electricity producing technologies using prefix-based matching
 - Allow multiple instances of custom models in the same hybrid system
 - Removed a large portion of the old GreenHEART code that was no longer being used
+- Updated generic combiner to accept any number of inflow streams instead of just 2
 
 ## 0.4.0 [October 1, 2025]
 
