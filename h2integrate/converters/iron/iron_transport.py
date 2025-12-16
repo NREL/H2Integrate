@@ -11,7 +11,7 @@ from h2integrate.core.model_baseclasses import CostModelBaseClass
 from h2integrate.converters.iron.load_top_down_coeffs import load_top_down_coeffs
 
 
-@define
+@define(kw_only=True)
 class IronTransportPerformanceConfig(BaseConfig):
     find_closest_ship_site: bool = field()
     shipment_site: str = field(
@@ -154,7 +154,7 @@ class IronTransportPerformanceComponent(om.ExplicitComponent):
             outputs["water_transport_distance"] = water_distance_km
 
 
-@define
+@define(kw_only=True)
 class IronTransportCostConfig(BaseConfig):
     transport_year: int = field(converter=int, validator=range_val(2022, 2065))
     cost_year: int = field(converter=int, validator=range_val(2010, 2024))

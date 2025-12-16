@@ -24,11 +24,7 @@ def test_wombat_model_outputs(subtests):
                     "shared_parameters": {
                         "location": "onshore",
                         "electrolyzer_capex": 1295,
-                        "sizing": {
-                            "resize_for_enduse": False,
-                            "size_for": "BOL",
-                            "hydrogen_dmd": None,
-                        },
+                        "size_mode": "normal",
                         "n_clusters": 1,
                         "cluster_rating_MW": 40,
                         "eol_eff_percent_loss": 13,
@@ -85,11 +81,7 @@ def test_wombat_error(subtests):
                     "shared_parameters": {
                         "location": "onshore",
                         "electrolyzer_capex": 1295,
-                        "sizing": {
-                            "resize_for_enduse": False,
-                            "size_for": "BOL",
-                            "hydrogen_dmd": None,
-                        },
+                        "size_mode": "normal",
                         "n_clusters": 0.75,
                         "cluster_rating_MW": 40,
                         "eol_eff_percent_loss": 13,
