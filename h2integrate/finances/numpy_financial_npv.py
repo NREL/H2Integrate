@@ -10,7 +10,7 @@ from h2integrate.core.utilities import BaseConfig, check_plant_config_and_profas
 from h2integrate.core.validators import gte_zero, range_val
 
 
-@define
+@define(kw_only=True)
 class NumpyFinancialNPVFinanceConfig(BaseConfig):
     """Configuration for NumpyFinancialNPVFinance.
 

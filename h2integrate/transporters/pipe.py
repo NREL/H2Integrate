@@ -41,14 +41,14 @@ class PipePerformanceModel(om.ExplicitComponent):
 
         self.add_input(
             self.input_name,
-            val=0.0,
+            val=-1.0,
             shape_by_conn=True,
             copy_shape=self.output_name,
             units=units,
         )
         self.add_output(
             self.output_name,
-            val=0.0,
+            val=-1.0,
             shape_by_conn=True,
             copy_shape=self.input_name,
             units=units,
