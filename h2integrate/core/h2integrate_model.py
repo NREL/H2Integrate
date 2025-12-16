@@ -1,6 +1,7 @@
 import importlib.util
 
 import numpy as np
+import networkx as nx
 import openmdao.api as om
 import matplotlib.pyplot as plt
 
@@ -1124,15 +1125,20 @@ class H2IntegrateModel:
 
         self.plant.options["auto_order"] = True
 
-        # Check if there are any connections FROM a finance group to ammonia
-        # This handles the case where LCOH is computed in the finance group and passed to ammonia
+        # Check if there are any loops in the technology interconnections
+        # If loops are present, add solvers to resolve the coupling
+        # Create a directed graph from the technology interconnections
+        G = nx.DiGraph()
         for connection in technology_interconnections:
-            if connection[0].startswith("finance_subgroup_") and connection[1] == "ammonia":
-                # If the connection is from a finance group, set solvers for the
-                # plant to resolve the coupling
-                self.plant.nonlinear_solver = om.NonlinearBlockGS()
-                self.plant.linear_solver = om.DirectSolver()
-                break
+            source = connection[0]
+            destination = connection[1]
+            G.add_edge(source, destination)
+
+        # Check if there are any cycles (loops) in the graph
+        if list(nx.simple_cycles(G)):
+            # If cycles are found, set solvers for the plant to resolve the coupling
+            self.plant.nonlinear_solver = om.NonlinearBlockGS()
+            self.plant.linear_solver = om.DirectSolver()
 
         # initialize dispatch rules connection list
         tech_to_dispatch_connections = self.plant_config.get("tech_to_dispatch_connections", [])
