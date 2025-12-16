@@ -10,6 +10,7 @@ from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 from shapely.geometry import LineString
 
 from h2integrate.postprocess.sql_to_csv import convert_sql_to_csv_summary
+from h2integrate.core.utilities import find_file
 
 
 def plot_geospatial_point_heat_map(
@@ -22,7 +23,7 @@ def plot_geospatial_point_heat_map(
     ax: plt.Axes | None = None,
     base_layer_gdf: gpd.GeoDataFrame | list[gpd.GeoDataFrame] | tuple[gpd.GeoDataFrame, ...] | None = None,
     show_plot: bool = True,
-    save_plot_fpath: Path | str | None,
+    save_plot_fpath: Path | str | None = None,
     map_preferences: dict | None = None,
     save_sql_file_to_csv: bool = False,
 ):
@@ -33,6 +34,7 @@ def plot_geospatial_point_heat_map(
 
     
     """
+    #TODO: Confirm in PR if there is a better way to display this as default (in doc strings or in argument definitions)
     # Default map preferences
     map_preferences_default = {
         'lat_long_crs': 'EPSG:4326',
@@ -90,9 +92,7 @@ def plot_geospatial_point_heat_map(
     map_preferences = {**map_preferences_default, **(map_preferences or {})}
 
     # Load data
-    # If case_results_fpath = str, convert to Path object
-    if isinstance(case_results_fpath, str):
-        case_results_fpath = Path(case_results_fpath)
+    case_results_fpath = find_file(case_results_fpath)
 
     # If case_results_fpath is a .csv file read in with pandas
     if (".csv") in case_results_fpath.suffix:
@@ -277,7 +277,7 @@ def plot_straight_line_shipping_routes(
         ax: plt.Axes | None = None,
         base_layer_gdf: gpd.GeoDataFrame | list[gpd.GeoDataFrame] | tuple[gpd.GeoDataFrame, ...] | None = None,
         show_plot: bool = True,
-        save_plot_fpath: Path | str | None,
+        save_plot_fpath: Path | str | None = None,
         map_preferences: dict | None = None,
 ):
     """
@@ -286,6 +286,7 @@ def plot_straight_line_shipping_routes(
     NOTE: this function will likely be altered as more shipping / transport functionality becomes available in H2I
     This was developed for ITO Iron Electrowinning proof of concept work"""
 
+    #TODO: Confirm in PR if there is a better way to display this as default (in doc strings or in argument definitions)
     # Default map preferences
     map_preferences_default = {
         'lat_long_crs': 'EPSG:4326',
@@ -309,9 +310,7 @@ def plot_straight_line_shipping_routes(
     map_preferences = {**map_preferences_default, **(map_preferences or {})}
 
     # Load data
-    # If case_results_fpath = str, convert to Path object
-    if isinstance(shipping_coords_fpath, str):
-        shipping_coords_fpath = Path(shipping_coords_fpath)
+    shipping_coords_fpath = find_file(shipping_coords_fpath)
 
     # If case_results_fpath is a .csv file read in with pandas
     if (".csv") in shipping_coords_fpath.suffix:
@@ -364,6 +363,7 @@ def plot_straight_line_shipping_routes(
             figsize=map_preferences['figsize'],
             constrained_layout=map_preferences['constrained_layout'],
         )
+    # else set provided fig and ax as current figure / axis
     else:
         plt.figure(fig.number)
         plt.sca(ax)
