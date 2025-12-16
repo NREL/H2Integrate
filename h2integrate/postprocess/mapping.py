@@ -22,7 +22,7 @@ def plot_geospatial_point_heat_map(
     ax: plt.Axes | None = None,
     base_layer_gdf: gpd.GeoDataFrame | list[gpd.GeoDataFrame] | tuple[gpd.GeoDataFrame, ...] | None = None,
     show_plot: bool = True,
-    save_plot: bool = True,
+    save_plot_fpath: Path | str | None,
     map_preferences: dict | None = None,
     save_sql_file_to_csv: bool = False,
 ):
@@ -246,7 +246,7 @@ def plot_geospatial_point_heat_map(
     ax.set_axis_off()
     ax.set_title(map_preferences['figure_title'])
 
-    # Basemap (only once per axes)
+    # Plot basemap with contextily
     ctx.add_basemap(
         ax,
         crs=map_preferences['web_map_crs'],
@@ -254,11 +254,15 @@ def plot_geospatial_point_heat_map(
         zoom=map_preferences['basemap_zoom'],
     )
 
+    #NOTE: when plotting multiple layers, set this to True only when plotting the last layer
     if show_plot:
         plt.show()
 
-    if save_plot:
-        fig.savefig("./test")
+    # Save figure if save_plot_fpath is present
+    if save_plot_fpath is not None:
+        if isinstance(save_plot_fpath, str):
+            save_plot_fpath = Path(save_plot_fpath)
+        fig.savefig(save_plot_fpath)
         
 
     return fig, ax, results_gdf
@@ -273,7 +277,7 @@ def plot_straight_line_shipping_routes(
         ax: plt.Axes | None = None,
         base_layer_gdf: gpd.GeoDataFrame | list[gpd.GeoDataFrame] | tuple[gpd.GeoDataFrame, ...] | None = None,
         show_plot: bool = True,
-        save_plot: bool = True,
+        save_plot_fpath: Path | str | None,
         map_preferences: dict | None = None,
 ):
     """
@@ -399,11 +403,15 @@ def plot_straight_line_shipping_routes(
         zoom=map_preferences['basemap_zoom'],
     )
 
+    #NOTE: when plotting multiple layers, set this to True only when plotting the last layer
     if show_plot:
         plt.show()
 
-    if save_plot:
-        fig.savefig("./test")
+    # Save figure if save_plot_fpath is present
+    if save_plot_fpath is not None:
+        if isinstance(save_plot_fpath, str):
+            save_plot_fpath = Path(save_plot_fpath)
+        fig.savefig(save_plot_fpath)
         
 
     return fig, ax, shipping_route_gdf
@@ -411,14 +419,17 @@ def plot_straight_line_shipping_routes(
 def calculate_geodataframe_total_bounds(*gdfs: gpd.GeoDataFrame):
     """Calculate combined bounds for one or more GeoDataFrames."""
 
+    # raise error if no gdf is provided as keyword argument
     if not gdfs:
         raise ValueError("Must provide at least one GeoDataFrame.")
 
+    # Validate all gdfs are in the same CRS
     base_crs = gdfs[0].crs
     for gdf in gdfs:
         if gdf.crs != base_crs:
             raise ValueError("All GeoDataFrames must have the same CRS.")
 
+    # Extract the min and max X (Longitude) and Y (Latitude) from the total bounds of all gdfs
     min_xs, min_ys, max_xs, max_ys = zip(
         *(gdf.total_bounds for gdf in gdfs)
     )
@@ -429,6 +440,8 @@ def calculate_geodataframe_total_bounds(*gdfs: gpd.GeoDataFrame):
     max_y = max(max_ys)
     x_range = (max_x - min_x) 
     y_range = (max_y - min_y)
+
+    #Construct dictionary with relevant values
     coord_range_dict = {'min_x':min_x,
                         'min_y':min_y,
                         'max_x':max_x,
@@ -446,14 +459,18 @@ def auto_detect_lat_long_columns(results_df: pd.DataFrame):
     # regex expression provides case insensitive search of the keywords
     keywords = ['lat','latitude']
     regex = "(?i)" + "|".join(keywords)
+    # return dataframe column names that match regex expression
     matching_columns = results_df.filter(regex=regex).columns
+    # raise error if unable to detect a singular latitude column
     if len(matching_columns) == 0 or len(matching_columns) > 1:
         raise KeyError("Unable to automatically detect the latitude variable / column in the data. Please specify the exact variable / column name using the latitude_var_name argument")
     latitude_var_name = str(matching_columns[0])
 
     keywords = ['lon','long','longitude']
     regex = "(?i)" + "|".join(keywords)
+    # return dataframe column names that match regex expression
     matching_columns = results_df.filter(regex=regex).columns
+    # raise error if unable to detect a singular latitude column
     if len(matching_columns) == 0 or len(matching_columns) > 1:
         raise KeyError("Unable to automatically detect the longitude variable / column in the data. Please specify the exact variable / column name using the longitude_var_name argument")
     longitude_var_name = str(matching_columns[0])
