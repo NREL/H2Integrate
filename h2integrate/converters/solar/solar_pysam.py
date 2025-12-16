@@ -6,7 +6,7 @@ from h2integrate.core.validators import contains, range_val_or_none
 from h2integrate.converters.solar.solar_baseclass import SolarPerformanceBaseClass
 
 
-@define
+@define(kw_only=True)
 class PYSAMSolarPlantPerformanceModelDesignConfig(BaseConfig):
     """Configuration class for design parameters of the solar pv plant.
         PYSAMSolarPlantPerformanceModel which uses the Pvwattsv8 module
