@@ -43,7 +43,7 @@ plant
     ProFastComp_0
       LCOH                            [7.47944016]          USD/kg     finance_subgroup_default.LCOH
     ProFastComp_1
-      LCOE                            [0.09795931]          USD/kW/h   finance_subgroup_default.LCOE
+      LCOE                            [0.09795931]          USD/(kW*h)   finance_subgroup_default.LCOE
   steel
     steel_performance
       steel                           |9615.91147134|       t/year     steel.steel
