@@ -30,6 +30,7 @@
 - Added storage auto-sizing performance model based on storage sizing calculations that existed in the coupled hydrogen storage performance and cost model
 - Added ability for latitude and longitude to be design variables in design sweep
 - Move existing geologic hydrogen models into geoh2 subsurface converters and add surface processing converter
+- Enabled dynamic plant component sizing modes through the resizeable model class `ResizeablePerformanceModelBaseClass`.
 - Added standalone iron mine performance and cost model
 - Added solar resource models for Meteosat Prime Meridian and Himawari datasets available through NSRDB
 - Improved readability of the postprocessing printout by simplifying numerical representation, especially for years
@@ -38,6 +39,7 @@
 - Allow multiple instances of the same electricity producing technologies using prefix-based matching
 - Allow multiple instances of custom models in the same hybrid system
 - Removed a large portion of the old GreenHEART code that was no longer being used
+- Updated generic combiner to accept any number of inflow streams instead of just 2
 
 ## 0.4.0 [October 1, 2025]
 

@@ -8,7 +8,7 @@ from h2integrate.converters.hydrogen.geologic.h2_well_subsurface_baseclass impor
 )
 
 
-@define
+@define(kw_only=True)
 class NaturalGeoH2PerformanceConfig(GeoH2SubsurfacePerformanceConfig):
     """Configuration for performance parameters for a natural geologic hydrogen subsurface well.
     This class defines performance parameters specific to **natural** geologic hydrogen

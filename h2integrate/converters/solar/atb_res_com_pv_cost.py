@@ -5,7 +5,7 @@ from h2integrate.core.validators import gt_zero
 from h2integrate.core.model_baseclasses import CostModelBaseClass
 
 
-@define
+@define(kw_only=True)
 class ATBResComPVCostModelConfig(CostModelBaseConfig):
     """Configuration class for the ATBResComPVCostModel with costs based on DC capacity.
     Recommended to use with commercial or residential PV models. More information on

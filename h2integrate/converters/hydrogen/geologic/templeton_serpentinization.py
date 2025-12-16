@@ -13,7 +13,7 @@ M_Fe = 55.8  # kg/kmol
 M_H2 = 1.00  # kg/kmol
 
 
-@define
+@define(kw_only=True)
 class StimulatedGeoH2PerformanceConfig(GeoH2SubsurfacePerformanceConfig):
     """Configuration parameters for stimulated geologic hydrogen well subsurface
         performance models.
