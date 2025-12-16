@@ -20,7 +20,8 @@ class PyomoDispatchStorageMinOperatingCostsConfig(PyomoRuleBaseConfig):
 
     cost_per_charge: float = field()
     cost_per_discharge: float = field()
-    roundtrip_efficiency: float = field(default=0.88)
+    # roundtrip_efficiency: float = field(default=0.88)
+    commodity_met_value = float = field()
 
 class PyomoRuleStorageMinOperatingCosts(PyomoRuleStorageBaseclass):
     """Class defining Pyomo rules for the optimized dispatch for load following
@@ -41,6 +42,9 @@ class PyomoRuleStorageMinOperatingCosts(PyomoRuleStorageBaseclass):
         self.cost_per_discharge = (
             self.config["cost_per_discharge"]
         )
+        self.commodity_met_value = (
+            self.config["commodity_met_value"]
+        )
         self.minimum_storage = 0.0
         self.maximum_storage = dispatch_inputs["max_capacity"]
         self.minimum_soc = dispatch_inputs["min_charge_percent"]
@@ -49,6 +53,9 @@ class PyomoRuleStorageMinOperatingCosts(PyomoRuleStorageBaseclass):
         self.charge_efficiency = dispatch_inputs.get("charge_efficiency", 0.94)
         self.discharge_commodity_efficiency = dispatch_inputs.get("discharge_efficiency", 0.94)
 
+        # Set charge and discharge rate equal to eachother for now
+        self.max_charge_rate = dispatch_inputs["max_charge_rate"]
+        self.max_discharge_rate = dispatch_inputs["max_charge_rate"]
 
         # System parameters
         self.commodity_load_demand = [commodity_demand[t]
@@ -115,7 +122,7 @@ class PyomoRuleStorageMinOperatingCosts(PyomoRuleStorageBaseclass):
             + "]",
             within=pyo.NonNegativeReals,
             mutable=True,
-            units=eval("pyo.units." + self.config.commodity_storage_units),
+            units=eval("pyo.units." + self.config.commodity_storage_units + "*pyo.units.hr"),
         )
         pyomo_model.minimum_soc = pyo.Param(
             doc=pyomo_model.name + " minimum state-of-charge [-]",
@@ -152,9 +159,15 @@ class PyomoRuleStorageMinOperatingCosts(PyomoRuleStorageBaseclass):
         ##################################
         # Capacity Parameters            #
         ##################################
-
-        pyomo_model.capacity = pyo.Param(
-            doc=pyomo_model.name + " capacity [" + self.config.commodity_storage_units + "]",
+        pyomo_model.max_charge = pyo.Param(
+            doc=pyomo_model.name + " maximum charge [" + self.config.commodity_storage_units + "]",
+            within=pyo.NonNegativeReals,
+            mutable=True,
+            units=eval("pyo.units." + self.config.commodity_storage_units),
+        )
+        pyomo_model.max_discharge = pyo.Param(
+            doc=pyomo_model.name + " maximum discharge [" + \
+            self.config.commodity_storage_units + "]",
             within=pyo.NonNegativeReals,
             mutable=True,
             units=eval("pyo.units." + self.config.commodity_storage_units),
@@ -317,7 +330,7 @@ class PyomoRuleStorageMinOperatingCosts(PyomoRuleStorageBaseclass):
         pyomo_model.charge_commodity_ub = pyo.Constraint(
             doc=pyomo_model.name + " charging storage upper bound",
             expr=pyomo_model.charge_commodity
-            <= pyomo_model.maximum_storage * pyomo_model.is_charging,
+            <= pyomo_model.max_charge * pyomo_model.is_charging,
         )
         pyomo_model.charge_commodity_lb = pyo.Constraint(
             doc=pyomo_model.name + " charging storage lower bound",
@@ -333,7 +346,7 @@ class PyomoRuleStorageMinOperatingCosts(PyomoRuleStorageBaseclass):
         pyomo_model.discharge_commodity_ub = pyo.Constraint(
             doc=pyomo_model.name + " Discharging storage upper bound",
             expr=pyomo_model.discharge_commodity
-            <= pyomo_model.maximum_storage * pyomo_model.is_discharging,
+            <= pyomo_model.max_discharge * pyomo_model.is_discharging,
         )
         # Storage packing constraint
         pyomo_model.charge_discharge_packing = pyo.Constraint(
@@ -375,7 +388,7 @@ class PyomoRuleStorageMinOperatingCosts(PyomoRuleStorageBaseclass):
                     m.charge_efficiency * m.charge_commodity
                     - (1 / m.discharge_efficiency) * m.discharge_commodity
                 )
-                / m.capacity
+                / m.maximum_storage
             )
 
         # Storage State-of-charge balance
@@ -409,8 +422,8 @@ class PyomoRuleStorageMinOperatingCosts(PyomoRuleStorageBaseclass):
     # Update time series parameters for next optimization window
     def update_time_series_parameters(self, start_time: int,
                                       commodity_in:list,
-                                      commodity_demand:list,
-                                      time_commodity_met_value:list
+                                      commodity_demand:list
+                                    #   time_commodity_met_value:list
                                       ):
         """Update time series parameters method.
 
@@ -423,8 +436,9 @@ class PyomoRuleStorageMinOperatingCosts(PyomoRuleStorageBaseclass):
                                         for t in self.blocks.index_set()]
         self.load_production_limit = [commodity_demand[t]
                                         for t in self.blocks.index_set()]
-        self.commodity_met_value = [time_commodity_met_value[t]
-                                        for t in self.blocks.index_set()]
+        # TODO: add back in if needed, needed for variable time series pricing
+        # self.commodity_met_value = [time_commodity_met_value[t]
+        #                                 for t in self.blocks.index_set()]
 
     # Objective functions
     def min_operating_cost_objective(self, hybrid_blocks, tech_name: str):
@@ -612,15 +626,25 @@ class PyomoRuleStorageMinOperatingCosts(PyomoRuleStorageBaseclass):
 
     # Property getters and setters for time series parameters
     @property
-    def capacity(self) -> float:
-        """Capacity."""
+    def max_charge(self) -> float:
+        """Maximum charge amount."""
         for t in self.blocks.index_set():
-            return self.blocks[t].capacity.value
+            return self.blocks[t].max_charge.value
 
-    @capacity.setter
-    def capacity(self, capacity_value: float):
+    @max_charge.setter
+    def max_charge(self, max_charge: float):
         for t in self.blocks.index_set():
-            self.blocks[t].capacity = round(capacity_value, self.round_digits)
+            self.blocks[t].max_charge = round(max_charge, self.round_digits)
+
+    def max_discharge(self) -> float:
+        """Maximum discharge amount."""
+        for t in self.blocks.index_set():
+            return self.blocks[t].max_discharge.value
+
+    @max_discharge.setter
+    def max_discharge(self, max_discharge: float):
+        for t in self.blocks.index_set():
+            self.blocks[t].max_discharge = round(max_discharge, self.round_digits)
 
     @property
     def initial_soc(self) -> float:

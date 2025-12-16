@@ -252,8 +252,6 @@ class PyomoControllerBaseClass(ControllerBaseClass):
 
             # loop over all control windows, where t is the starting index of each window
             for t in window_start_indices:
-                # TODO: add inputs for update_time_series_parameters
-                self.update_time_series_parameters()
                 # get the inputs over the current control window
                 commodity_in = inputs[self.config.commodity_name + "_in"][
                     t : t + self.config.n_control_window
@@ -261,6 +259,8 @@ class PyomoControllerBaseClass(ControllerBaseClass):
                 demand_in = inputs[f"{commodity_name}_demand"][t : t + self.config.n_control_window]
 
                 if "heuristic" in control_strategy:
+                    # Update time series parameters for the heuristic method
+                    self.update_time_series_parameters()
                     # determine dispatch commands for the current control window
                     # using the heuristic method
                     self.set_fixed_dispatch(
@@ -270,6 +270,9 @@ class PyomoControllerBaseClass(ControllerBaseClass):
                     )
 
                 elif "optimized" in control_strategy:
+                    # Update time series parameters for the optimization method
+                    self.update_time_series_parameters(commodity_in=commodity_in, 
+                                                       commodity_demand=demand_in)
                     # Run dispatch optimzation to minimize costs while meeting demand
                     self.solve_dispatch_model(
                         commodity_in,
@@ -825,6 +828,7 @@ class OptimizedDispatchController(SimpleBatteryControllerHeuristic):
         if self.config.discharge_efficiency is not None:
             self.discharge_efficiency = self.config.discharge_efficiency
 
+        # Is this the best place to put this???
         self.dispatch_inputs = {
             "max_capacity": self.config.max_capacity,
             "max_charge_percent": self.config.max_charge_percent,
@@ -832,6 +836,7 @@ class OptimizedDispatchController(SimpleBatteryControllerHeuristic):
             "initial_soc_percent": self.config.init_charge_percent,
             "charge_efficiency": self.charge_efficiency,
             "discharge_efficiency": self.discharge_efficiency,
+            "max_charge_rate": self.config.max_charge_rate,
         }
 
         self.hybrid_dispatch_model = self._create_dispatch_optimization_model()
@@ -843,11 +848,13 @@ class OptimizedDispatchController(SimpleBatteryControllerHeuristic):
 
     # Initialize parameters for optimization model
     def initialize_parameters(self, commodity_in, commodity_demand):
-        self.hybrid_dispatch_rule.initialize_parameters(commodity_in, commodity_demand)
+        self.hybrid_dispatch_rule.initialize_parameters(commodity_in, commodity_demand, 
+                                                       self.dispatch_inputs)
 
-    def update_time_series_parameters(self, start_time = 0):
-        # TODO: connect input blocks to pyomo rules for updating time series parameters
-        self.hybrid_dispatch_rule.update_time_series_parameters(start_time)
+    def update_time_series_parameters(self, start_time = 0, commodity_in = None, commodity_demand = None):
+        self.hybrid_dispatch_rule.update_time_series_parameters(start_time,
+                                                                commodity_in,
+                                                                commodity_demand)
 
     def solve_dispatch_model(
         self,

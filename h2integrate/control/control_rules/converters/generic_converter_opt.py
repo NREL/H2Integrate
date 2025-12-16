@@ -135,7 +135,7 @@ class PyomoDispatchGenericConverterMinOperatingCosts(PyomoDispatchGenericConvert
     def update_time_series_parameters(self, start_time: int,
                                       commodity_in:list,
                                       commodity_demand:list,
-                                      time_commodity_met_value:list
+                                    #   time_commodity_met_value:list
                                       ):
         """Update time series parameters method.
 
