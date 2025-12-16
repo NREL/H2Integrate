@@ -125,6 +125,7 @@ from h2integrate.control.control_rules.storage.pyomo_storage_rule_min_operating_
 )
 from h2integrate.control.control_rules.converters.generic_converter_opt import (
     PyomoDispatchGenericConverterMinOperatingCosts,
+)
 from h2integrate.control.control_strategies.passthrough_openloop_controller import (
     PassThroughOpenLoopController,
 )
