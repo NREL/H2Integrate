@@ -1,5 +1,5 @@
 import pyomo.environ as pyo
-from pyomo.network import Port, Expression
+from pyomo.network import Port
 from attrs import field, define
 
 from h2integrate.control.control_rules.storage.pyomo_storage_rule_baseclass import PyomoRuleStorageBaseclass
@@ -449,7 +449,7 @@ class PyomoRuleStorageMinOperatingCosts(PyomoRuleStorageBaseclass):
                 models by adding modeling components as attributes.
 
         """
-        self.obj = Expression(
+        self.obj = pyo.Expression(
                     expr = sum(
                         hybrid_blocks[t].time_weighting_factor
                         * self.blocks[t].time_duration
@@ -636,6 +636,7 @@ class PyomoRuleStorageMinOperatingCosts(PyomoRuleStorageBaseclass):
         for t in self.blocks.index_set():
             self.blocks[t].max_charge = round(max_charge, self.round_digits)
 
+    @property
     def max_discharge(self) -> float:
         """Maximum discharge amount."""
         for t in self.blocks.index_set():

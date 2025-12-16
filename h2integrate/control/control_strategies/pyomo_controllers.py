@@ -1,7 +1,8 @@
 from typing import TYPE_CHECKING
 
 import numpy as np
-import pyomo.environ as pyomo, Expression, del_component, assert_units_consistent
+import pyomo.environ as pyomo
+from pyomo.util.check_units import assert_units_consistent
 from attrs import field, define
 
 from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
