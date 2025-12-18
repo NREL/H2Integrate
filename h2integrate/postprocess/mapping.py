@@ -18,9 +18,9 @@ from h2integrate.postprocess.sql_to_csv import convert_sql_to_csv_summary
 @define
 class GeospatialMapConfig(BaseConfig):
     """
-    Configuration class for plot_geospatial_point_heat_map() Arg: map_preferences.
-    Represents necessary paramaters for formatting and plotting a geospatial point heat map with
-    GeoPandas, matplotlib, and contextily.
+    Configuration class for plot_geospatial_point_heat_map and plot_straight_line_shipping_routes
+    function's argument map_preferences. Represents necessary paramaters for formatting and
+    plotting with GeoPandas, matplotlib, and contextily.
 
     Args:
         lat_long_crs (str, optional): A string representing the CRS of the (longitude,latitude) data
@@ -59,10 +59,10 @@ class GeospatialMapConfig(BaseConfig):
             percentage of the figure height. Defaults to '2.5%'.
         colorbar_location (str, optional): A string used to set the location of the colorbar in
             conjunction with the colorbar_bbox_to_anchor.
-            See mpl_toolkits.axes_grid1.inset_locator.inset_axes documentation for additional
-            details. Defaults to 'lower_left'
+            See mpl_toolkits.axes_grid1.inset_locator.inset_axes documentation for more info.
+            Defaults to 'lower_left'
         colorbar_bbox_to_anchor (tuple, optional): A tuple of floats used to set the location of the
-            bounding box to anchor the colorbar. Defaults to (0.75, 0.97, 1.0, 1.0), top right.
+            bounding box to anchor the colorbar. Defaults to (0.75, 0.97, 1.0, 1.0), upper right.
             The values represent normalized coordinates relative to the parent figure where.
             Example: (0,0,1,1) would be the bottom left corner and (1,1,1,1) would be the top right.
             See mpl_toolkits.axes_grid1.inset_locator.inset_axes() documentation for more info.
