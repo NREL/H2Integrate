@@ -1,17 +1,12 @@
-# -*- coding: utf-8 -*-
 """
 Created on Wed Dec 10 09:34:19 2025
 
 @author: psaini
 """
 
-import numpy as np
-from math import log, exp
+from math import log
 
-# ----------------------------------------------------------------------
-# CoolProp imports
-# ----------------------------------------------------------------------
-import CoolProp.CoolProp as cp
+import numpy as np
 from CoolProp.CoolProp import PropsSI
 
 
@@ -34,11 +29,11 @@ def make_coolprop_fluid(fluid_name="Water", P_bar=1.0):
     fluid_fun : callable
         fluid_fun(T_c) -> dict(rho, mu, cp, k, Pr)
         where T_c is in degC and properties are SI units:
-          - rho : density [kg/m^3]
-          - mu  : dynamic viscosity [Pa·s]
-          - cp  : specific heat at constant pressure [J/kg-K]
-          - k   : thermal conductivity [W/m-K]
-          - Pr  : Prandtl number [-]
+            - rho : density [kg/m^3]
+            - mu  : dynamic viscosity [Pa·s]
+            - cp  : specific heat at constant pressure [J/kg-K]
+            - k   : thermal conductivity [W/m-K]
+            - Pr  : Prandtl number [-]
     """
     P_Pa = P_bar * 1e5  # bar -> Pa
 
@@ -46,13 +41,13 @@ def make_coolprop_fluid(fluid_name="Water", P_bar=1.0):
         T_c_arr = np.asarray(T_c, dtype=float)
         T_K = T_c_arr + 273.15
 
-        rho = PropsSI("D", "T", T_K, "P", P_Pa, fluid_name)       # density [kg/m^3]
-        mu  = PropsSI("V", "T", T_K, "P", P_Pa, fluid_name)       # dyn. visc. [Pa·s]
-        cp_ = PropsSI("C", "T", T_K, "P", P_Pa, fluid_name)       # cp [J/kg-K]
-        k   = PropsSI("L", "T", T_K, "P", P_Pa, fluid_name)       # k [W/m-K]
-        Pr  = PropsSI("Prandtl", "T", T_K, "P", P_Pa, fluid_name) # Pr [-]
+        rho = PropsSI("D", "T", T_K, "P", P_Pa, fluid_name)  # density [kg/m^3]
+        mu = PropsSI("V", "T", T_K, "P", P_Pa, fluid_name)  # dyn. visc. [Pa·s]
+        cp_ = PropsSI("C", "T", T_K, "P", P_Pa, fluid_name)  # cp [J/kg-K]
+        k = PropsSI("L", "T", T_K, "P", P_Pa, fluid_name)  # k [W/m-K]
+        Pr = PropsSI("Prandtl", "T", T_K, "P", P_Pa, fluid_name)  # Pr [-]
 
-        return dict(rho=rho, mu=mu, cp=cp_, k=k, Pr=Pr)
+        return {"rho": rho, "mu": mu, "cp": cp_, "k": k, "Pr": Pr}
 
     return fluid_fun
 
@@ -113,7 +108,7 @@ def shell_h_local(cold_props, m_dot_c, geom, shell, F_shell, model):
             Nu_s = Nu_fd * (1.0 - np.exp(-Gz_s / 20.0))
             Nu_s = max(1.0, min(Nu_fd, Nu_s))
         else:
-            Nu_s = 0.36 * Re_s**0.55 * Pr_c**(1.0/3.0)
+            Nu_s = 0.36 * Re_s**0.55 * Pr_c ** (1.0 / 3.0)
     elif model_l == "bell_delaware":
         # Placeholder: same as Kern, can refine later
         if Re_s < 2000.0:
@@ -123,7 +118,7 @@ def shell_h_local(cold_props, m_dot_c, geom, shell, F_shell, model):
             Nu_s = Nu_fd * (1.0 - np.exp(-Gz_s / 20.0))
             Nu_s = max(1.0, min(Nu_fd, Nu_s))
         else:
-            Nu_s = 0.36 * Re_s**0.55 * Pr_c**(1.0/3.0)
+            Nu_s = 0.36 * Re_s**0.55 * Pr_c ** (1.0 / 3.0)
     else:
         raise ValueError(f"Unknown shell_model '{model}'")
 
@@ -144,7 +139,7 @@ def shell_dp_Kern(m_dot_c, cold_props, geom, shell):
     if Re_s < 2000.0:
         f_s = 64.0 / Re_s
     else:
-        f_s = 0.14 * Re_s**(-0.2)
+        f_s = 0.14 * Re_s ** (-0.2)
 
     N_b = max(1, int(geom["L_tube"] / shell["baffle_spacing"]) - 1)
     dp_shell = 4.0 * f_s * (G_s**2 / (2.0 * cold_props["rho"])) * N_b
@@ -152,7 +147,7 @@ def shell_dp_Kern(m_dot_c, cold_props, geom, shell):
 
 
 # ----------------------------------------------------------------------
-# 3) Main HX model 
+# 3) Main HX model
 # ----------------------------------------------------------------------
 def hx_shell_tube_steady(params=None):
     if params is None:
@@ -255,22 +250,22 @@ def hx_shell_tube_steady(params=None):
 
     S_m = D_shell * shell["baffle_spacing"] * (1.0 - shell["baffle_cut"])
 
-    geom = dict(
-        N_tubes=N_tubes,
-        N_passes=N_passes,
-        L_tube=L_tube,
-        D_i=D_i,
-        D_o=D_o,
-        D_shell=D_shell,
-        A_tube_flow=A_tube_flow,
-        A_shell_free=A_shell_free,
-        D_h_shell=D_h_shell,
-        A_o_total=A_o_total,
-        A_seg=A_seg,
-        N_seg=N_seg,
-        A_shell_outer_total=np.pi * D_shell * L_tube,
-        S_m=S_m,
-    )
+    geom = {
+        "N_tubes": N_tubes,
+        "N_passes": N_passes,
+        "L_tube": L_tube,
+        "D_i": D_i,
+        "D_o": D_o,
+        "D_shell": D_shell,
+        "A_tube_flow": A_tube_flow,
+        "A_shell_free": A_shell_free,
+        "D_h_shell": D_h_shell,
+        "A_o_total": A_o_total,
+        "A_seg": A_seg,
+        "N_seg": N_seg,
+        "A_shell_outer_total": np.pi * D_shell * L_tube,
+        "S_m": S_m,
+    }
     geom["A_shell_outer_seg"] = geom["A_shell_outer_total"] / N_seg
 
     # ------------------------------------------------------------------
@@ -332,7 +327,7 @@ def hx_shell_tube_steady(params=None):
                         mu_w = wall_hot["mu"]
                     else:
                         mu_w = mu_b
-                    Nu_t = 0.027 * Re_t**0.8 * Pr_h**(1.0/3.0) * (mu_b / mu_w)**0.14
+                    Nu_t = 0.027 * Re_t**0.8 * Pr_h ** (1.0 / 3.0) * (mu_b / mu_w) ** 0.14
                 else:
                     Nu_t = 0.023 * Re_t**0.8 * Pr_h**0.4
             h_i = Nu_t * hot["k"] / D_i
@@ -366,8 +361,8 @@ def hx_shell_tube_steady(params=None):
             cp_c = cold["cp"]
 
             # Energy balances
-            Th[i+1] = Th_i - Q_i / (m_dot_h * cp_h)
-            Tc[i+1] = Tc_i - (Q_i - Q_loss_i) / (m_dot_c * cp_c)
+            Th[i + 1] = Th_i - Q_i / (m_dot_h * cp_h)
+            Tc[i + 1] = Tc_i - (Q_i - Q_loss_i) / (m_dot_c * cp_c)
 
             # Wall temperature
             Tw[i] = (h_i * Th_i + h_o * Tc_i) / (h_i + h_o)
@@ -379,9 +374,19 @@ def hx_shell_tube_steady(params=None):
             S_gen_seg[i] = Q_i * (1.0 / Tc_iK - 1.0 / Th_iK)
 
         return (
-            Th, Tc, Tw, U_seg, Q_seg, Q_loss_seg,
-            Re_t_seg, Re_s_seg, h_i_seg, h_o_seg,
-            Nu_t_seg, Nu_s_seg, S_gen_seg
+            Th,
+            Tc,
+            Tw,
+            U_seg,
+            Q_seg,
+            Q_loss_seg,
+            Re_t_seg,
+            Re_s_seg,
+            h_i_seg,
+            h_o_seg,
+            Nu_t_seg,
+            Nu_s_seg,
+            S_gen_seg,
         )
 
     def residual_Tc_out(Tc_out0):
@@ -389,7 +394,7 @@ def hx_shell_tube_steady(params=None):
         Tc_at_L = Tc_[-1]
         return Tc_at_L - Tc_in
 
-    # Simple bisection 
+    # Simple bisection
     def find_root_bisect(f, a, b, tol, maxit):
         fa = f(a)
         fb = f(b)
@@ -491,9 +496,7 @@ def hx_shell_tube_steady(params=None):
                 mu_w = wall_hot_mean["mu"]
             else:
                 mu_w = mu_b
-            Nu_t_mean = (
-                0.027 * Re_t_mean**0.8 * Pr_h_mean**(1.0/3.0) * (mu_b / mu_w) ** 0.14
-            )
+            Nu_t_mean = 0.027 * Re_t_mean**0.8 * Pr_h_mean ** (1.0 / 3.0) * (mu_b / mu_w) ** 0.14
         else:
             Nu_t_mean = 0.023 * Re_t_mean**0.8 * Pr_h_mean**0.4
     h_i_mean = Nu_t_mean * hot_m["k"] / D_i
@@ -520,7 +523,7 @@ def hx_shell_tube_steady(params=None):
     if Re_t < Re_laminar_max:
         f_t = 64.0 / Re_t
     else:
-        f_t = 0.3164 * Re_t**(-0.25)
+        f_t = 0.3164 * Re_t ** (-0.25)
 
     L_equiv_tube = L_tube * N_passes
     dp_fric_tube = f_t * (L_equiv_tube / D_i) * 0.5 * hot_mean["rho"] * V_tube**2
@@ -581,9 +584,8 @@ def hx_shell_tube_steady(params=None):
     cp_h_bar = 0.5 * (hot_in2["cp"] + hot_out2["cp"])
     cp_c_bar = 0.5 * (cold_in2["cp"] + cold_out2["cp"])
 
-    S_gen_dot_bulk = (
-        m_dot_h * cp_h_bar * log(Th_out_K / Th_in_K)
-        + m_dot_c * cp_c_bar * log(Tc_out_K / Tc_in_K)
+    S_gen_dot_bulk = m_dot_h * cp_h_bar * log(Th_out_K / Th_in_K) + m_dot_c * cp_c_bar * log(
+        Tc_out_K / Tc_in_K
     )
     Ex_dest_dot_bulk = T0_env * S_gen_dot_bulk
 
@@ -603,136 +605,136 @@ def hx_shell_tube_steady(params=None):
     G_s_mean = m_dot_c / S_m
     V_shell_mean = G_s_mean / cold_mean["rho"]
 
-    flags = dict(
-        has_cross=has_cross,
-        small_pinch=pinch_warning,
-        tube_laminar=(tube_regime == "laminar"),
-        shell_laminar=(shell_regime == "laminar"),
-        low_NTU=(NTU < 0.1),
-        high_dp_tube=(dp_tube_total > 1e5),
-        high_dp_shell=(dp_shell_total > 1e4),
-        Q_LMTD_mismatch=(abs(Q_error_frac) > 0.05),
-        shooting_ok=shooting_bracket_ok,
-        V_tube_low=(V_tube_mean2 < 1.0),
-        V_tube_high=(V_tube_mean2 > 3.0),
-        V_shell_low=(V_shell_mean < 0.3),
-        V_shell_high=(V_shell_mean > 1.5),
-    )
+    flags = {
+        "has_cross": has_cross,
+        "small_pinch": pinch_warning,
+        "tube_laminar": (tube_regime == "laminar"),
+        "shell_laminar": (shell_regime == "laminar"),
+        "low_NTU": (NTU < 0.1),
+        "high_dp_tube": (dp_tube_total > 1e5),
+        "high_dp_shell": (dp_shell_total > 1e4),
+        "Q_LMTD_mismatch": (abs(Q_error_frac) > 0.05),
+        "shooting_ok": shooting_bracket_ok,
+        "V_tube_low": (V_tube_mean2 < 1.0),
+        "V_tube_high": (V_tube_mean2 > 3.0),
+        "V_shell_low": (V_shell_mean < 0.3),
+        "V_shell_high": (V_shell_mean > 1.5),
+    }
 
-    inventory = dict(
-        tube_material=tube_material,
-        shell_material=shell_material,
-        t_shell=t_shell,
-        V_tube_metal=V_tube_metal,
-        V_shell_metal=V_shell_metal,
-        V_tube_fluid=V_tube_fluid,
-        V_shell_fluid=V_shell_fluid,
-        m_tube_metal=m_tube_metal,
-        m_shell_metal=m_shell_metal,
-        m_tube_fluid=m_tube_fluid,
-        m_shell_fluid=m_shell_fluid,
-        C_tube_metal=C_tube_metal,
-        C_shell_metal=C_shell_metal,
-        C_tube_fluid=C_tube_fluid,
-        C_shell_fluid=C_shell_fluid,
-        C_hot_total=C_hot_total,
-        C_cold_total=C_cold_total,
-    )
+    inventory = {
+        "tube_material": tube_material,
+        "shell_material": shell_material,
+        "t_shell": t_shell,
+        "V_tube_metal": V_tube_metal,
+        "V_shell_metal": V_shell_metal,
+        "V_tube_fluid": V_tube_fluid,
+        "V_shell_fluid": V_shell_fluid,
+        "m_tube_metal": m_tube_metal,
+        "m_shell_metal": m_shell_metal,
+        "m_tube_fluid": m_tube_fluid,
+        "m_shell_fluid": m_shell_fluid,
+        "C_tube_metal": C_tube_metal,
+        "C_shell_metal": C_shell_metal,
+        "C_tube_fluid": C_tube_fluid,
+        "C_shell_fluid": C_shell_fluid,
+        "C_hot_total": C_hot_total,
+        "C_cold_total": C_cold_total,
+    }
 
-    res = dict(
-        x=x,
-        x_mid=x_mid,
-        Th=Th,
-        Tc=Tc,
-        Tw=Tw,
-        Q_seg=Q_seg,
-        Q_total=Q_total,
-        Q_loss_seg=Q_loss_seg,
-        Q_loss_tot=Q_loss_tot,
-        U_seg=U_seg,
-        U_global=U_global,
-        LMTD_global=LMTD_global,
-        epsilon=epsilon,
-        NTU=NTU,
-        C_r=C_r,
-        Q_hot=Q_hot,
-        Q_cold=Q_cold,
-        energy_balance_error_hot=energy_balance_error_hot,
-        energy_balance_error_cold=energy_balance_error_cold,
-        dp_tube_total=dp_tube_total,
-        dp_shell_total=dp_shell_total,
-        P_pump_tube=P_pump_tube,
-        P_pump_shell=P_pump_shell,
-        P_pump_total=P_pump_total,
-        min_deltaT=min_deltaT,
-        has_cross=has_cross,
-        pinch_warning=pinch_warning,
-        Re_tube=Re_t_seg,
-        Re_shell=Re_s_seg,
-        Re_tube_min=Re_tube_min,
-        Re_tube_max=Re_tube_max,
-        Re_shell_min=Re_shell_min,
-        Re_shell_max=Re_shell_max,
-        tube_regime=tube_regime,
-        shell_regime=shell_regime,
-        h_i_seg=h_i_seg,
-        h_o_seg=h_o_seg,
-        Nu_t_seg=Nu_t_seg,
-        Nu_s_seg=Nu_s_seg,
-        U_lumped=U_lumped,
-        Q_LMTD_lumped=Q_LMTD_lumped,
-        Q_error_frac=Q_error_frac,
-        S_gen_seg=S_gen_seg,
-        S_gen_dot=S_gen_dot_seg,
-        Ex_dest_dot=Ex_dest_dot_seg,
-        S_gen_dot_bulk=S_gen_dot_bulk,
-        Ex_dest_dot_bulk=Ex_dest_dot_bulk,
-        tau_hot=tau_hot,
-        tau_cold=tau_cold,
-        inventory=inventory,
-        V_tube_mean=V_tube_mean2,
-        V_shell_mean=V_shell_mean,
-        flags=flags,
-        geom=geom,
-        shell=shell,
-        params=dict(
-            Th_in=Th_in,
-            Tc_in=Tc_in,
-            m_dot_h=m_dot_h,
-            m_dot_c=m_dot_c,
-            N_tubes=N_tubes,
-            N_passes=N_passes,
-            L_tube=L_tube,
-            D_o=D_o,
-            t_wall=t_wall,
-            D_i=D_i,
-            D_shell=D_shell,
-            N_seg=N_seg,
-            R_fi=R_fi,
-            R_fo=R_fo,
-            eta_pump=eta_pump,
-            pinch_threshold=pinch_threshold,
-            use_SiederTate_tube=use_SiederTate_tube,
-            use_wall_viscosity_correction=use_wall_viscosity_correction,
-            F_shell=F_shell,
-            shell_model=shell_model,
-            T0_env=T0_env,
-            U_loss=U_loss,
-            T_amb=T_amb,
-            fzero_tol=fzero_tol,
-            fzero_maxit=fzero_maxit,
-            tube_material=tube_material,
-            shell_material=shell_material,
-            t_shell=t_shell,
-            Re_laminar_max=Re_laminar_max,
-            Re_turb_min=Re_turb_min,
-        ),
-    )
+    res = {
+        "x": x,
+        "x_mid": x_mid,
+        "Th": Th,
+        "Tc": Tc,
+        "Tw": Tw,
+        "Q_seg": Q_seg,
+        "Q_total": Q_total,
+        "Q_loss_seg": Q_loss_seg,
+        "Q_loss_tot": Q_loss_tot,
+        "U_seg": U_seg,
+        "U_global": U_global,
+        "LMTD_global": LMTD_global,
+        "epsilon": epsilon,
+        "NTU": NTU,
+        "C_r": C_r,
+        "Q_hot": Q_hot,
+        "Q_cold": Q_cold,
+        "energy_balance_error_hot": energy_balance_error_hot,
+        "energy_balance_error_cold": energy_balance_error_cold,
+        "dp_tube_total": dp_tube_total,
+        "dp_shell_total": dp_shell_total,
+        "P_pump_tube": P_pump_tube,
+        "P_pump_shell": P_pump_shell,
+        "P_pump_total": P_pump_total,
+        "min_deltaT": min_deltaT,
+        "has_cross": has_cross,
+        "pinch_warning": pinch_warning,
+        "Re_tube": Re_t_seg,
+        "Re_shell": Re_s_seg,
+        "Re_tube_min": Re_tube_min,
+        "Re_tube_max": Re_tube_max,
+        "Re_shell_min": Re_shell_min,
+        "Re_shell_max": Re_shell_max,
+        "tube_regime": tube_regime,
+        "shell_regime": shell_regime,
+        "h_i_seg": h_i_seg,
+        "h_o_seg": h_o_seg,
+        "Nu_t_seg": Nu_t_seg,
+        "Nu_s_seg": Nu_s_seg,
+        "U_lumped": U_lumped,
+        "Q_LMTD_lumped": Q_LMTD_lumped,
+        "Q_error_frac": Q_error_frac,
+        "S_gen_seg": S_gen_seg,
+        "S_gen_dot": S_gen_dot_seg,
+        "Ex_dest_dot": Ex_dest_dot_seg,
+        "S_gen_dot_bulk": S_gen_dot_bulk,
+        "Ex_dest_dot_bulk": Ex_dest_dot_bulk,
+        "tau_hot": tau_hot,
+        "tau_cold": tau_cold,
+        "inventory": inventory,
+        "V_tube_mean": V_tube_mean2,
+        "V_shell_mean": V_shell_mean,
+        "flags": flags,
+        "geom": geom,
+        "shell": shell,
+        "params": {
+            "Th_in": Th_in,
+            "Tc_in": Tc_in,
+            "m_dot_h": m_dot_h,
+            "m_dot_c": m_dot_c,
+            "N_tubes": N_tubes,
+            "N_passes": N_passes,
+            "L_tube": L_tube,
+            "D_o": D_o,
+            "t_wall": t_wall,
+            "D_i": D_i,
+            "D_shell": D_shell,
+            "N_seg": N_seg,
+            "R_fi": R_fi,
+            "R_fo": R_fo,
+            "eta_pump": eta_pump,
+            "pinch_threshold": pinch_threshold,
+            "use_SiederTate_tube": use_SiederTate_tube,
+            "use_wall_viscosity_correction": use_wall_viscosity_correction,
+            "F_shell": F_shell,
+            "shell_model": shell_model,
+            "T0_env": T0_env,
+            "U_loss": U_loss,
+            "T_amb": T_amb,
+            "fzero_tol": fzero_tol,
+            "fzero_maxit": fzero_maxit,
+            "tube_material": tube_material,
+            "shell_material": shell_material,
+            "t_shell": t_shell,
+            "Re_laminar_max": Re_laminar_max,
+            "Re_turb_min": Re_turb_min,
+        },
+    }
     return res
 
 
 # ----------------------------------------------------------------------
-# 4) Printing summary 
+# 4) Printing summary
 # ----------------------------------------------------------------------
 def print_summary(res, label="Python + CoolProp"):
     Th_in = res["params"]["Th_in"]
@@ -747,8 +749,10 @@ def print_summary(res, label="Python + CoolProp"):
     print(f"Q_total          = {res['Q_total']/1e3:8.1f} kW")
     print(f"Q_hot (bulk)     = {res['Q_hot']/1e3:8.1f} kW")
     print(f"Q_cold (bulk)    = {res['Q_cold']/1e3:8.1f} kW")
-    print(f"Q_loss_tot       = {res['Q_loss_tot']/1e3:8.1f} kW "
-          f"({100*res['Q_loss_tot']/max(1e-9,res['Q_total']):.2f} %)\n")
+    print(
+        f"Q_loss_tot       = {res['Q_loss_tot']/1e3:8.1f} kW "
+        f"({100*res['Q_loss_tot']/max(1e-9,res['Q_total']):.2f} %)\n"
+    )
 
     print(f"epsilon          = {res['epsilon']:.3f}")
     print(f"NTU              = {res['NTU']:.3f}")
@@ -757,17 +761,20 @@ def print_summary(res, label="Python + CoolProp"):
     print(f"U_global         = {res['U_global']:.1f} W/m^2-K")
     print(f"U_lumped         = {res['U_lumped']:.1f} W/m^2-K")
     print(f"Q_LMTD_lumped    = {res['Q_LMTD_lumped']/1e3:8.1f} kW")
-    print(f"Q_error_frac     = {res['Q_error_frac']:.3f} "
-          f"({100*res['Q_error_frac']:.1f} %)\n")
+    print(f"Q_error_frac     = {res['Q_error_frac']:.3f} " f"({100*res['Q_error_frac']:.1f} %)\n")
 
     print(f"U_seg  min / max = {res['U_seg'].min():.1f} / {res['U_seg'].max():.1f} W/m^2-K")
     print(f"h_i    min / max = {res['h_i_seg'].min():.1f} / {res['h_i_seg'].max():.1f} W/m^2-K")
     print(f"h_o    min / max = {res['h_o_seg'].min():.1f} / {res['h_o_seg'].max():.1f} W/m^2-K\n")
 
-    print(f"Re_tube   min/max = {int(res['Re_tube_min']):6d} / {int(res['Re_tube_max']):6d}   "
-          f"(regime: {res['tube_regime']})")
-    print(f"Re_shell  min/max = {int(res['Re_shell_min']):6d} / {int(res['Re_shell_max']):6d}   "
-          f"(regime: {res['shell_regime']})")
+    print(
+        f"Re_tube   min/max = {int(res['Re_tube_min']):6d} / {int(res['Re_tube_max']):6d}   "
+        f"(regime: {res['tube_regime']})"
+    )
+    print(
+        f"Re_shell  min/max = {int(res['Re_shell_min']):6d} / {int(res['Re_shell_max']):6d}   "
+        f"(regime: {res['shell_regime']})"
+    )
     print(f"V_tube_mean      = {res['V_tube_mean']:.3f} m/s")
     print(f"V_shell_mean     = {res['V_shell_mean']:.3f} m/s\n")
 
@@ -782,8 +789,10 @@ def print_summary(res, label="Python + CoolProp"):
 
     print(f"min_deltaT       = {res['min_deltaT']:.2f} K")
     print(f"has_cross        = {int(res['has_cross'])}")
-    print(f"pinch_warning    = {int(res['pinch_warning'])} "
-          f"(threshold = {res['params']['pinch_threshold']:.1f} K)\n")
+    print(
+        f"pinch_warning    = {int(res['pinch_warning'])} "
+        f"(threshold = {res['params']['pinch_threshold']:.1f} K)\n"
+    )
 
     print(f"S_gen_dot (seg)  = {res['S_gen_dot']:.2f} W/K")
     print(f"Ex_dest_dot (seg)= {res['Ex_dest_dot']/1e3:.2f} kW")
@@ -797,7 +806,7 @@ def print_summary(res, label="Python + CoolProp"):
 
 
 # ----------------------------------------------------------------------
-# 5) Plotting 
+# 5) Plotting
 # ----------------------------------------------------------------------
 def plot_results(res):
     import matplotlib.pyplot as plt
@@ -871,10 +880,8 @@ def plot_results(res):
     plt.figure(figsize=(6, 4))
     plt.plot(x_mid, Re_t, "-r", label="Re_tube")
     plt.plot(x_mid, Re_s, "-b", label="Re_shell")
-    plt.axhline(res["params"]["Re_laminar_max"],
-                linestyle="--", color="k", label="Re_laminar,max")
-    plt.axhline(res["params"]["Re_turb_min"],
-                linestyle="--", color="k", label="Re_turb,min")
+    plt.axhline(res["params"]["Re_laminar_max"], linestyle="--", color="k", label="Re_laminar,max")
+    plt.axhline(res["params"]["Re_turb_min"], linestyle="--", color="k", label="Re_turb,min")
     plt.yscale("log")
     plt.grid(True, which="both", axis="y")
     plt.xlabel("Axial position x [m]")
@@ -892,7 +899,7 @@ if __name__ == "__main__":
     # res = hx_shell_tube_steady({})
 
     # Example 2: custom CoolProp fluids (e.g., hot water @ 5 bar, cold water @ 2 bar)
-    hot_fluid  = make_coolprop_fluid("Water", P_bar=5.0)
+    hot_fluid = make_coolprop_fluid("Water", P_bar=5.0)
     cold_fluid = make_coolprop_fluid("Water", P_bar=2.0)
 
     params = {
@@ -900,7 +907,7 @@ if __name__ == "__main__":
         "Tc_in": 30.0,
         "m_dot_h": 18.0,
         "m_dot_c": 40.0,
-        "fluid_hot":  hot_fluid,
+        "fluid_hot": hot_fluid,
         "fluid_cold": cold_fluid,
     }
 

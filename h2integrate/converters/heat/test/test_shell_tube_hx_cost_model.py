@@ -1,8 +1,7 @@
-import numpy as np
 import openmdao.api as om
 from pytest import approx, fixture
 
-from h2integrate.converters.heat.shell_tube_hx_cost_model import (ShellTubeHXCostModel)
+from h2integrate.converters.heat.shell_tube_hx_cost_model import ShellTubeHXCostModel
 
 
 @fixture
@@ -20,12 +19,9 @@ def shell_tube_hx_cost_model_config():
         }
     }
 
-    plant_config = {
-        "plant": {
-            "plant_life": 30
-        }
-    }
+    plant_config = {"plant": {"plant_life": 30}}
     return tech_config, plant_config
+
 
 class TestShellTubeHXCostModel:
     def _create_problem(self, config):

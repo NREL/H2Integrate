@@ -29,6 +29,7 @@ class ShellTubeHXCostModel(CostModelBaseClass):
     - Scale CapEx ~ (Q / Q_ref)^0.8
     - OpEx = 4% of CapEx per year
     """
+
     def setup(self):
         print(self.options["tech_config"])
         self.config = ShellTubeHXCostModelConfig.from_dict(
@@ -41,19 +42,19 @@ class ShellTubeHXCostModel(CostModelBaseClass):
             "Q_ref",
             val=self.config.Q_ref,
             units="W",
-            desc="Reference heat transfer rate for cost scaling"
+            desc="Reference heat transfer rate for cost scaling",
         )
         self.add_input(
             "C_ref",
             val=self.config.C_ref,
             units="USD",
-            desc="Reference capital cost for cost scaling"
+            desc="Reference capital cost for cost scaling",
         )
         self.add_input(
             "exp_Q",
             val=self.config.exp_Q,
             units="unitless",
-            desc="Exponent for heat transfer cost scaling"
+            desc="Exponent for heat transfer cost scaling",
         )
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):

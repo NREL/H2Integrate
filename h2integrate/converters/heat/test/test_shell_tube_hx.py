@@ -1,9 +1,7 @@
 import openmdao.api as om
 from pytest import approx, fixture
 
-from h2integrate.converters.heat.shell_tube_hx import (
-    ShellTubeHXPerformanceModel,
-)
+from h2integrate.converters.heat.shell_tube_hx import ShellTubeHXPerformanceModel
 
 
 @fixture
@@ -28,15 +26,14 @@ def shell_tube_hx_config():
         }
     }
     return tech_config
-    
+
+
 class TestShellTubeHXPerformanceModel:
     def _create_problem(self, config):
         prob = om.Problem()
         prob.model.add_subsystem(
             "shell_tube_hx",
-            ShellTubeHXPerformanceModel(
-                tech_config=config
-            ),
+            ShellTubeHXPerformanceModel(tech_config=config),
             promotes=["*"],
         )
         prob.setup()

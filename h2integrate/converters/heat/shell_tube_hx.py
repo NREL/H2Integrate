@@ -1,12 +1,10 @@
-import numpy as np
+import openmdao.api as om
 from attrs import field, define
 
-import openmdao.api as om
-
-from h2integrate.core.utilities import merge_shared_inputs, BaseConfig
+from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
 from h2integrate.core.validators import gt_zero
 from h2integrate.converters.heat.heat_exchanger_model.hx_shell_tube_steady import (
-    hx_shell_tube_steady
+    hx_shell_tube_steady,
 )
 
 
@@ -69,52 +67,30 @@ class ShellTubeHXPerformanceModel(om.ExplicitComponent):
             "m_dot_h_kg_s",
             val=self.config.m_dot_h_kg_s,
             units="kg/s",
-            desc="Hot fluid mass flow rate"
+            desc="Hot fluid mass flow rate",
         )
         self.add_input(
             "m_dot_c_kg_s",
             val=self.config.m_dot_c_kg_s,
             units="kg/s",
-            desc="Cold fluid mass flow rate"
+            desc="Cold fluid mass flow rate",
         )
 
         # Setup OpenMDAO outputs
-        self.add_output(
-            "Th_out_C", val=0.0, units="C", desc="Hot fluid outlet temperature"
-        )
-        self.add_output(
-            "Tc_out_C", val=0.0, units="C", desc="Cold fluid outlet temperature"
-        )
-        self.add_output(
-            "Q_total_kW", val=0.0, units="kW", desc="Total heat transfer rate"
-        )
-        self.add_output(
-            "epsilon", val=0.0, desc="Effectiveness of the heat exchanger"
-        )
-        self.add_output(
-            "NTU", val=0.0, desc="Number of transfer units"
-        )
-        self.add_output(
-            "C_r", val=0.0, desc="Heat capacity rate ratio"
-        )
+        self.add_output("Th_out_C", val=0.0, units="C", desc="Hot fluid outlet temperature")
+        self.add_output("Tc_out_C", val=0.0, units="C", desc="Cold fluid outlet temperature")
+        self.add_output("Q_total_kW", val=0.0, units="kW", desc="Total heat transfer rate")
+        self.add_output("epsilon", val=0.0, desc="Effectiveness of the heat exchanger")
+        self.add_output("NTU", val=0.0, desc="Number of transfer units")
+        self.add_output("C_r", val=0.0, desc="Heat capacity rate ratio")
         self.add_output(
             "U_global_W_m2K", val=0.0, units="W/m**2/K", desc="Overall heat transfer coefficient"
         )
-        self.add_output(
-            "dp_hot_Pa", val=0.0, units="Pa", desc="Pressure drop on the hot side"
-        )
-        self.add_output(
-            "dp_cold_Pa", val=0.0, units="Pa", desc="Pressure drop on the cold side"
-        )
-        self.add_output(
-            "pump_power_kW", val=0.0, units="kW", desc="Total pump power required"
-        )
-        self.add_output(
-            "S_gen_dot_W_per_K", val=0.0, units="W/K", desc="Entropy generation rate"
-        )
-        self.add_output(
-            "Ex_dest_dot_kW", val=0.0, units="kW", desc="Exergy destruction rate"
-        )
+        self.add_output("dp_hot_Pa", val=0.0, units="Pa", desc="Pressure drop on the hot side")
+        self.add_output("dp_cold_Pa", val=0.0, units="Pa", desc="Pressure drop on the cold side")
+        self.add_output("pump_power_kW", val=0.0, units="kW", desc="Total pump power required")
+        self.add_output("S_gen_dot_W_per_K", val=0.0, units="W/K", desc="Entropy generation rate")
+        self.add_output("Ex_dest_dot_kW", val=0.0, units="kW", desc="Exergy destruction rate")
 
     def compute(self, inputs, outputs):
         params = {
