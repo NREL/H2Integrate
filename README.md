@@ -179,6 +179,12 @@ pip install -e ".[all]"
 
     Windows users will have to manually install Cbc: https://github.com/coin-or/Cbc.
 
+    - If you would like to use geospatial plotting functionality install Geopandas and Contextily
+
+    ```bash
+    conda install -y -c conda-forge geopandas contextily
+    ```
+
     - If you want to just use H2Integrate:
 
        ```bash
