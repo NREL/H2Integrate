@@ -4,10 +4,10 @@ from attrs import field, define
 from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
 
 
-@define
+@define(kw_only=True)
 class SimpleGenericStorageConfig(BaseConfig):
-    resource_name: str = field()
-    resource_rate_units: str = field()
+    commodity_name: str = field()
+    commodity_units: str = field()
 
 
 class SimpleGenericStorage(om.ExplicitComponent):
@@ -26,9 +26,9 @@ class SimpleGenericStorage(om.ExplicitComponent):
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance"),
             strict=False,
         )
-        resource_name = self.config.resource_name
-        resource_rate_units = self.config.resource_rate_units
-        self.add_input(f"{resource_name}_in", val=0.0, shape=n_timesteps, units=resource_rate_units)
+        commodity_name = self.config.commodity_name
+        commodity_units = self.config.commodity_units
+        self.add_input(f"{commodity_name}_in", val=0.0, shape=n_timesteps, units=commodity_units)
 
     def compute(self, inputs, outputs):
         pass

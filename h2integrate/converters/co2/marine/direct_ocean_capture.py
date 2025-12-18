@@ -33,7 +33,7 @@ def setup_electrodialysis_inputs(config):
     )
 
 
-@define
+@define(kw_only=True)
 class DOCPerformanceConfig(MarineCarbonCapturePerformanceConfig):
     """Extended configuration for Direct Ocean Capture (DOC) performance model.
 
@@ -76,8 +76,10 @@ class DOCPerformanceModel(MarineCarbonCapturePerformanceBaseClass):
         MarineCarbonCapturePerformanceBaseClass
 
     Computes:
-        - Hourly CO2 capture rate (t/h)
-        - Annual CO2 capture (t/year)
+        - co2_out: Hourly CO2 capture rate (kg/h)
+        - co2_capture_mtpy: Annual CO2 capture (t/year)
+        - total_tank_volume_m3: Total tank volume (m^3)
+        - plant_mCC_capacity_mtph: Plant carbon capture capacity (t/h)
     """
 
     def initialize(self):
@@ -126,13 +128,13 @@ class DOCPerformanceModel(MarineCarbonCapturePerformanceBaseClass):
             plot_range=[3910, 4030],
         )
 
-        outputs["co2_capture_rate_mt"] = ed_outputs.ED_outputs["mCC"]
-        outputs["co2_capture_mtpy"] = ed_outputs.mCC_yr
+        outputs["co2_out"] = ed_outputs.ED_outputs["mCC"] * 1000
+        outputs["co2_capture_mtpy"] = max(ed_outputs.mCC_yr, 1e-6)  # Must be >0
         outputs["total_tank_volume_m3"] = range_outputs.V_aT_max + range_outputs.V_bT_max
         outputs["plant_mCC_capacity_mtph"] = max(range_outputs.S1["mCC"])
 
 
-@define
+@define(kw_only=True)
 class DOCCostModelConfig(DOCPerformanceConfig):
     """Configuration for the DOC cost model.
 

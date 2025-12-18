@@ -20,7 +20,7 @@ authors = [
   {name = "Cameron Irmas"},
   {name = "Sanjana Vijayshankar"},
   {name = "Nicholas Riccobono"},
-  {name = "Corey Frontin"},
+  {name = "Cory Frontin"},
   {name = "Caitlyn Clark"},
   {name = "Aaron Barker"},
   {name = "Abhineet Gupta"},
@@ -56,6 +56,13 @@ dependencies = [
     "ruamel.yaml",
     "scipy",
     "wombat>=0.11",
+    "geopy",
+    "openmeteo-requests",
+    "geopy",
+    "pyDOE3",
+    "rich>=13.7.0",
+    "requests-cache",
+    "retry_requests",
 ]
 keywords = [
     "python3",
@@ -95,7 +102,7 @@ develop = [
     "pytest-subtests",
     "responses",
     "Plotly",
-    "jupyter-book",
+    "jupyter-book<2",
     "sphinxcontrib-napoleon"
 ]
 examples = ["jupyterlab"]

@@ -53,7 +53,7 @@ constraints:
       units: kg/year
 
 objective:
-  name: financials_group_default.LCOH
+  name: finance_subgroup_default.LCOH
 ```
 
 ```{note}
@@ -122,7 +122,7 @@ See [this doc page](https://openmdao.org/newdocs/versions/latest/features/core_f
 
 Lastly, as you might expect, the `objective` section of the driver config file defines the objective function for the optimization problem.
 The objective function is the quantity that we are trying to minimize during the optimization process.
-In this example, we have a single objective function, `financials_group_default.LCOH`, which is the levelized cost of hydrogen (LCOH) produced by the electrolyzer.
+In this example, we have a single objective function, `finance_subgroup_default.LCOH`, which is the levelized cost of hydrogen (LCOH) produced by the electrolyzer.
 The objective function is defined as a string that specifies the name of the objective function in the analysis.
 
 The `promoted_name` of the objective function is used to identify the objective function in the analysis.
@@ -135,9 +135,9 @@ varname                               val                  units      prom_name
 ------------------------------------  -------------------  ---------  -------------------------------------------------------------
 <...cut for brevity...>
     ProFastComp_0
-      LCOE                            [0.09009908]         USD/kW/h   financials_group_default.LCOE
+      LCOE                            [0.09009908]         USD/(kW*h)   finance_subgroup_default.LCOE
     ProFastComp_1
-      LCOH                            [4.63528661]         USD/kg     financials_group_default.LCOH
+      LCOH                            [4.63528661]         USD/kg     finance_subgroup_default.LCOH
 ```
 
 This is the name that you will use to reference the objective function in the driver config file and it is useful to refer to this output when you are setting up your optimization problem.

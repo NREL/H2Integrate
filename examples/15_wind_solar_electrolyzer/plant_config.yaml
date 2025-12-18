@@ -4,19 +4,6 @@ description: "This plant is located in MN, USA..."
 site:
   latitude: 30.6617
   longitude: -101.7096
-  year: 2013
-
-  # array of polygons defining boundaries with x/y coords
-  boundaries: [
-    {
-      x: [0.0, 1000.0, 1000.0, 0.0],
-      y: [0.0, 0.0, 100.0, 1000.0],
-    },
-    {
-      x: [2000.0, 2500.0, 2000.0],
-      y: [2000.0, 2000.0, 2500.0],
-    }
-  ]
 
   resources:
     wind_resource:
@@ -26,14 +13,17 @@ site:
         longitude: -101.945027
         resource_year: 2012
 
-  solar_resource_filepath: "../11_hybrid_energy_plant/tech_inputs/weather/solar/30.6617_-101.7096_psmv3_60_2013.csv"
-
+    solar_resource:
+      resource_model: "goes_aggregated_solar_v4_api"
+      resource_parameters:
+        resource_year: 2013
+        resource_dir: "../11_hybrid_energy_plant/tech_inputs/weather/solar"
+        resource_filename: "30.6617_-101.7096_psmv3_60_2013.csv"
 # array of arrays containing left-to-right technology
 # interconnections; can support bidirectional connections
 # with the reverse definition.
 # this will naturally grow as we mature the interconnected tech
 technology_interconnections: [
-  # ["hopp", "electrolyzer", "electricity", "cable"],
   ["wind", "combiner", "electricity", "cable"], #source_tech, dest_tech, transport_item, transport_type = connection
   ["solar", "combiner", "electricity", "cable"],
   ["combiner", "electrolyzer", "electricity", "cable"],
@@ -42,6 +32,7 @@ technology_interconnections: [
 resource_to_tech_connections: [
   # connect the wind resource to the wind technology
   ['wind_resource', 'wind', 'wind_resource_data'],
+  ['solar_resource', 'solar', 'solar_resource_data'],
 ]
 
 plant:
@@ -75,6 +66,7 @@ finance_parameters:
   finance_subgroups:
     electricity:
       commodity: "electricity"
+      commodity_stream: "combiner" #use the total electricity output from the combiner for the finance calc
       technologies: ["wind", "solar"]
     hydrogen:
       commodity: "hydrogen"

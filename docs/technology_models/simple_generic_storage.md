@@ -7,7 +7,7 @@ The Simple Generic Storage model provides a flexible framework for modeling vari
 The Simple Generic Storage model consists of two main components:
 
 1. **SimpleGenericStorage**: A minimal component that defines the input interface for the storage system
-2. **DemandOpenLoopController**: The core logic component that handles storage operations, state of charge calculations, and resource management
+2. **DemandOpenLoopStorageController**: The core logic component that handles storage operations, state of charge calculations, and resource management
 
 This architecture allows the storage system to work with any resource type by simply configuring the resource name and units, making it quite versatile.
 
@@ -31,8 +31,8 @@ The example produces detailed plots showing:
 
 The model can be configured for hydrogen storage systems by setting:
 ```yaml
-resource_name: "hydrogen"
-resource_rate_units: "kg/h"
+commodity_name: "hydrogen"
+commodity_units: "kg/h" # commodity_units must by a rate
 max_capacity: 1000.0  # kg
 ```
 
@@ -42,8 +42,8 @@ This is useful for modeling hydrogen production from electrolyzers with variable
 
 For carbon capture and utilization systems:
 ```yaml
-resource_name: "co2"
-resource_rate_units: "kg/h"
+commodity_name: "co2"
+commodity_units: "kg/h"
 max_capacity: 50000.0  # kg
 ```
 

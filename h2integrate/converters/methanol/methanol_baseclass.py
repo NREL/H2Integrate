@@ -6,7 +6,7 @@ from h2integrate.core.validators import contains
 from h2integrate.core.model_baseclasses import CostModelBaseClass
 
 
-@define
+@define(kw_only=True)
 class MethanolPerformanceConfig(BaseConfig):
     plant_capacity_kgpy: float = field()
     plant_capacity_flow: str = field(validator=contains(["hydrogen", "methanol"]))
@@ -29,6 +29,7 @@ class MethanolPerformanceBaseClass(om.ExplicitComponent):
         - h2o_consume_ratio: (float) ratio of kg h2o consumed to kg methanol produced
     Outputs:
         - methanol_out: methanol production in kg/h
+        - total_methanol_produced: annual methanol production in kg/year
         - co2e_emissions: co2e emissions in kg/h
         - h2o_consumption: h2o consumption in kg/h
     """
@@ -46,11 +47,12 @@ class MethanolPerformanceBaseClass(om.ExplicitComponent):
         self.add_input("h2o_consume_ratio", units="kg/kg", val=self.config.h2o_consume_ratio)
 
         self.add_output("methanol_out", units="kg/h", shape=n_timesteps)
+        self.add_output("total_methanol_produced", units="kg/year")
         self.add_output("co2e_emissions", units="kg/h", shape=n_timesteps)
         self.add_output("h2o_consumption", units="kg/h", shape=n_timesteps)
 
 
-@define
+@define(kw_only=True)
 class MethanolCostConfig(BaseConfig):
     plant_capacity_kgpy: float = field()
     plant_capacity_flow: str = field(validator=contains(["hydrogen", "methanol"]))
@@ -98,7 +100,7 @@ class MethanolCostBaseClass(CostModelBaseClass):
         self.add_output("Variable_OpEx", units="USD/year")
 
 
-@define
+@define(kw_only=True)
 class MethanolFinanceConfig(BaseConfig):
     tasc_toc_multiplier: float = field()
     fixed_charge_rate: float = field()
