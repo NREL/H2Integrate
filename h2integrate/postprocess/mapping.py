@@ -175,7 +175,7 @@ def plot_geospatial_point_heat_map(
     | list[gpd.GeoDataFrame]
     | tuple[gpd.GeoDataFrame, ...]
     | None = None,
-    show_plot: bool = True,
+    show_plot: bool = False,
     save_plot_fpath: Path | str | None = None,
     map_preferences: dict | GeospatialMapConfig | None = {},
     save_sql_file_to_csv: bool = False,
@@ -215,7 +215,7 @@ def plot_geospatial_point_heat_map(
             Defaults to None.
         show_plot (bool, optional): A boolean to control whether the plot is displayed. When adding
             multiple layers to the same figure, this should be set to False until the final layer
-            is added. Defaults to True.
+            is added. Defaults to False.
         save_plot_fpath (Path | str, optional): A string or Path object specifying where to save the
             generated plot. If None, the plot is not saved. Defaults to None.
         map_preferences (dict | GeospatialMapConfig, optional): A dictionary or GeospatialMapConfig
@@ -429,7 +429,7 @@ def plot_straight_line_shipping_routes(
     | list[gpd.GeoDataFrame]
     | tuple[gpd.GeoDataFrame, ...]
     | None = None,
-    show_plot: bool = True,
+    show_plot: bool = False,
     save_plot_fpath: Path | str | None = None,
     map_preferences: dict | GeospatialMapConfig | None = {},
 ):
@@ -472,7 +472,7 @@ def plot_straight_line_shipping_routes(
             Defaults to None.
         show_plot (bool, optional): A boolean to control whether the plot is displayed. When adding
             multiple layers to the same figure, this should be set to False until the final layer
-            is added. Defaults to True.
+            is added. Defaults to False.
         save_plot_fpath (Path | str, optional): A string or Path object specifying where to save the
             generated plot. If None, the plot is not saved. Defaults to None.
         map_preferences (dict | GeospatialMapConfig, optional): A dictionary or GeospatialMapConfig
