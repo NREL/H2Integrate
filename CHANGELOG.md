@@ -4,10 +4,10 @@
 
 ### New Features and Technology Models
 
-- Added PySAM Windpower performance model to simulate wind. [PR 306](https://github.com/NREL/H2Integrate/pull/306)
-- Added `simple_grid_layout.py` for wind plant layout modeling, can model square or rectangular layouts. [PR 306](https://github.com/NREL/H2Integrate/pull/306)
-- Added ability to visualize the wind plant layout for PySAM Windpower model using `post_process(show_plots=True)`. [PR 306](https://github.com/NREL/H2Integrate/pull/306)
-- Added Wind Annual Technology Baseline cost model `atb_wind_cost.py`. [PR 306](https://github.com/NREL/H2Integrate/pull/306)
+- Added PySAM Windpower performance model to simulate wind [PR 306](https://github.com/NREL/H2Integrate/pull/306)
+- Added `simple_grid_layout.py` for wind plant layout modeling, can model square or rectangular layouts [PR 306](https://github.com/NREL/H2Integrate/pull/306)
+- Added ability to visualize the wind plant layout for PySAM Windpower model using `post_process(show_plots=True)` [PR 306](https://github.com/NREL/H2Integrate/pull/306)
+- Added Wind Annual Technology Baseline cost model `atb_wind_cost.py` [PR 306](https://github.com/NREL/H2Integrate/pull/306)
 - Added resource models to make solar resource API calls to the NREL Developer GOES dataset [PR 279](https://github.com/NREL/H2Integrate/pull/279)
 - Added solar resource models for Meteosat Prime Meridian and Himawari datasets available through NSRDB [PR 377](https://github.com/NREL/H2Integrate/pull/377)
 - Added wind resource model for API calls to Open-Meteo archive [PR 332](https://github.com/NREL/H2Integrate/pull/332)
@@ -25,10 +25,10 @@
 - Split out cost models from coupled hydrogen storage performance and cost model [PR 324](https://github.com/NREL/H2Integrate/pull/324)
 - Created `ProFastBase`, a base class for the `ProFastLCO` and `ProFastNPV` models [PR 310](https://github.com/NREL/H2Integrate/pull/310)
 - Added `ProFastNPV`, a finance model using ProFAST to calculate NPV of the commodity [PR 310](https://github.com/NREL/H2Integrate/pull/310)
-- Moved `compute()` from `ProFastBase` to `ProFastLCO`. [PR 310](https://github.com/NREL/H2Integrate/pull/310)
+- Moved `compute()` from `ProFastBase` to `ProFastLCO` [PR 310](https://github.com/NREL/H2Integrate/pull/310)
 - Added `NumpyFinancialNPV`, a finance model that uses NumPy Financial npv to calculate the npv from the cash flows [PR 310](https://github.com/NREL/H2Integrate/pull/310)
 - Added capability for user-defined finance models in the H2Integrate framework [PR 247](https://github.com/NREL/H2Integrate/pull/247)
-- Enabled dynamic plant component sizing modes through the resizeable model class `ResizeablePerformanceModelBaseClass`. [PR 198](https://github.com/NREL/H2Integrate/pull/198)
+- Enabled dynamic plant component sizing modes through the resizeable model class `ResizeablePerformanceModelBaseClass` [PR 198](https://github.com/NREL/H2Integrate/pull/198)
 - Move geologic hydrogen models into specific geoh2 subsurface converters [PR 367](https://github.com/NREL/H2Integrate/pull/367)
 - Updated generic combiner to accept any number of inflow streams instead of just 2 [PR 406](https://github.com/NREL/H2Integrate/pull/406)
 - Allow multiple instances of the same electricity producing technologies using prefix-based matching [PR 397](https://github.com/NREL/H2Integrate/pull/397)
