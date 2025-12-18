@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.1 [December 18, 2025]
+
+- Fixed tagged version number for release
+
 ## 0.5.0 [December 18, 2025]
 
 ### New Features and Technology Models
