@@ -540,9 +540,9 @@ class ProFastBase(om.ExplicitComponent):
             self.add_input(f"opex_adjusted_{tech}", val=0.0, units="USD/year")
             self.add_input(f"varopex_adjusted_{tech}", val=0.0, shape=plant_life, units="USD/year")
 
-        # Include electrolyzer replacement time if applicable
-        if "electrolyzer" in tech_config:
-            self.add_input("electrolyzer_time_until_replacement", units="h")
+            # Include electrolyzer replacement time if applicable
+            if tech.startswith("electrolyzer"):
+                self.add_input(f"{tech}_time_until_replacement", units="h")
 
         # Load plant configuration and financial parameters
         plant_config = self.options["plant_config"]
