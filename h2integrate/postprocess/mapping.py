@@ -71,6 +71,8 @@ class GeospatialMapConfig(BaseConfig):
         colorbar_orientation (str, optional): A string used to set the orientation of the colorbar.
             Defaults to 'horizontal'.
             See matplotlib.pyplot.colorbar orientation parameter documentation for more info.
+        colorbar_limits (tuple | None, optional): A tuple used to set the lower and upper limits of
+            the colorbar ticks and colormap normalization. Defaults to None.
         colorbar_tick_location (str, optional): A string used to set the location of the tick marks
             for the colorbar. Defaults to 'bottom'.
             See matplotlib.pyplot.colorbar ticklocation parameter documentation for more info.
@@ -146,6 +148,7 @@ class GeospatialMapConfig(BaseConfig):
     colorbar_bbox_to_anchor: tuple[float, ...] = field(default=(0.75, 0.97, 1.0, 1.0))
     colorbar_borderpad: float = field(default=0.0)
     colorbar_orientation: str = field(default="horizontal")
+    colorbar_limits: tuple[float, ...] | None = field(default=None)
     colorbar_tick_location: str = field(default="bottom")
     colorbar_tick_direction: str = field(default="inout")
     colorbar_tick_label_font_size: float = field(default=8.0)
@@ -301,6 +304,18 @@ def plot_geospatial_point_heat_map(
         # Validate base_layer_gdf(s) is in the same CRS as the results_gdf
         base_layer_gdf = validate_gdfs_are_same_crs(base_layer_gdf, results_gdf)
 
+    # Determine appropriate lower and upper bounds for the colormap and legend
+    # If no colorbar_limits provided, attempt to automatically set limits
+    if map_preferences.colorbar_limits is None:
+        vmin, vmax = auto_colorbar_limits(results_gdf[metric_to_plot])
+    # Otherwise use colorbar_limits provided
+    else:
+        vmin = map_preferences.colorbar_limits[0]
+        vmax = map_preferences.colorbar_limits[1]
+
+    # Create normalized value-to-color mapping object for the colormap and legend
+    norm = plt.Normalize(vmin=vmin, vmax=vmax)
+
     # Plot point heat map layer
     results_gdf.plot(
         ax=ax,
@@ -310,6 +325,7 @@ def plot_geospatial_point_heat_map(
         marker=map_preferences.marker,
         markersize=map_preferences.markersize,
         edgecolor=map_preferences.edgecolor,
+        norm=norm,
         # zorder=1,
     )
 
@@ -325,14 +341,7 @@ def plot_geospatial_point_heat_map(
     )
 
     # Create scalar mappable object for color bar legend
-    # normalized between min and max value of metric_to_plot
-    sm = plt.cm.ScalarMappable(
-        cmap=map_preferences.colormap,
-        norm=plt.Normalize(
-            vmin=math.floor(results_gdf[metric_to_plot].min() / 100) * 100,
-            vmax=math.ceil(results_gdf[metric_to_plot].max() / 100) * 100,
-        ),
-    )
+    sm = plt.cm.ScalarMappable(cmap=map_preferences.colormap, norm=norm)
 
     # plot the color bar legend
     cbar = plt.colorbar(
@@ -761,3 +770,75 @@ def validate_gdfs_are_same_crs(
         base_layer_gdf = [base_layer_gdf]
 
     return base_layer_gdf
+
+
+def auto_colorbar_limits(values: gpd.GeoSeries | pd.Series | np.ndarray):
+    """
+    Automatically compute colorbar limits.
+
+    This function calculates lower (`vmin`) and upper (`vmax`) limits for a colorbar
+    based on the range of the input data. It ensures that the limits:
+      - Extend slightly beyond the data's minimum and maximum.
+      - Are rounded to "nice" numbers for readability and colorbar tick placement.
+      - Handles very small or nearly constant data ranges gracefully.
+
+    Args:
+        values (gpd.GeoSeries | pd.Series | np.ndarray): Numeric data to compute colorbar limits.
+
+    Returns:
+        vmin (float): computed lower limit of colorbar
+        vmax (float): computed upper limit of colorbar
+
+    Raises:
+        ValueError: If `values` is empty or contains no finite numbers.
+
+    Examples:
+        # Normal range
+        >>> auto_colorbar_limits([0.62, 0.93])
+        (0.6, 1.0)
+
+        >>> auto_colorbar_limits([12.3, 87.9])
+        (10.0, 90.0)
+
+        >>> auto_colorbar_limits([0.0042, 0.0091])
+        (0.004, 0.01)
+
+        # Nearly constant data (np.isclose is True)
+        >>> auto_colorbar_limits([5.0, 5.00001])
+        (4.9, 5.1)
+
+        >>> auto_colorbar_limits([0.0, 1e-7])
+        (-0.1, 0.1)
+
+        >>> auto_colorbar_limits([42.0, 42.0])
+        (41.9, 42.1)
+    """
+
+    # Convert input to numpy array and filter out any non-finite numbers (NaN, inf)
+    values = np.asarray(values)
+    values = values[np.isfinite(values)]
+
+    # Raise ValueError if values no valid data (metric_to_plot)
+    if values.size == 0:
+        raise ValueError("Cannot determine colorbar limits from empty or non-finite data.")
+
+    # Determine min, max, and range of values
+    data_min = values.min()
+    data_max = values.max()
+    data_range = abs(data_max - data_min)
+
+    # Handle small ranges of data, abs(data_max-data_min) <= 1e-5
+    if np.isclose(data_min, data_max):
+        return data_min - 0.1, data_max + 0.1
+
+    # Determine order of magnitude of data_range
+    magnitude = math.floor(math.log10(data_range))
+    # Create multiplier value based off of magnitude
+    multiplier = 10 ** (-magnitude)
+
+    # Scale data_min / data_max, round to nearest decimal to remove excess floating point precision
+    # take floor / ceil, and rescale to original magnitude
+    vmin = math.floor(round(data_min * multiplier, 1)) / multiplier
+    vmax = math.ceil(round(data_max * multiplier, 1)) / multiplier
+
+    return vmin, vmax
