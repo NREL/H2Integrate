@@ -60,10 +60,10 @@ from h2integrate.converters.solar.atb_utility_pv_cost import ATBUtilityPVCostMod
 from h2integrate.resource.wind.nrel_developer_wtk_api import WTKNRELDeveloperAPIWindResource
 from h2integrate.converters.iron.martin_mine_cost_model import MartinIronMineCostComponent
 from h2integrate.converters.iron.martin_mine_perf_model import MartinIronMinePerformanceComponent
-from h2integrate.converters.iron.rosner_iron_cost_model import (
+from h2integrate.converters.iron.ng_iron_dri_cost_model import (
     NaturalGasIronReductionPlantCostComponent,
 )
-from h2integrate.converters.iron.rosner_iron_perf_model import (
+from h2integrate.converters.iron.ng_iron_dri_perf_model import (
     NaturalGasIronReductionPlantPerformanceComponent,
 )
 from h2integrate.converters.methanol.smr_methanol_plant import (

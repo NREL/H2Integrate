@@ -5,10 +5,10 @@ from pytest import fixture
 
 from h2integrate import EXAMPLE_DIR
 from h2integrate.core.inputs.validation import load_driver_yaml
-from h2integrate.converters.iron.rosner_iron_cost_model import (
+from h2integrate.converters.iron.ng_iron_dri_cost_model import (
     NaturalGasIronReductionPlantCostComponent,
 )
-from h2integrate.converters.iron.rosner_iron_perf_model import (
+from h2integrate.converters.iron.ng_iron_dri_perf_model import (
     NaturalGasIronReductionPlantPerformanceComponent,
 )
 
