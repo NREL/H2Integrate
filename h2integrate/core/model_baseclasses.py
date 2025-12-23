@@ -122,7 +122,21 @@ class ResizeablePerformanceModelBaseClass(om.ExplicitComponent):
 class CacheModelBaseClass(om.ExplicitComponent):
     """Baseclass to be used for any model that may cache results."""
 
-    def load_outputs(self, inputs, outputs, discrete_inputs):
+    def load_outputs(self, inputs, outputs, discrete_inputs={}):
+        """Create filename for cached results using data from inputs and discrete_inputs.
+        If the filepathe exists for the cached results, then sets the outputs values to the
+        values in the cached results file and returns True. Otherwise, returns False.
+
+        Args:
+            inputs (om.vectors.default_vector.DefaultVector): OM inputs to `compute()` method
+            outputs (om.vectors.default_vector.DefaultVector): OM outputs of `compute()` method
+            discrete_inputs (om.core.component._DictValues, optional): OM discrete inputs to
+                `compute()` method. Defaults to {}.
+
+        Returns:
+            bool: True if outputs were set to cached results. False if cache file
+                doesnt't exist and the model still needs to calculate and set the outputs.
+        """
         if self.config.enable_caching:
             config_dict = self.config.as_dict()
 
@@ -141,7 +155,16 @@ class CacheModelBaseClass(om.ExplicitComponent):
                 outputs[output_name] = cached_data.get(output_name, default_output_val)
             return True
 
-    def cache_outputs(self, inputs, outputs, discrete_inputs):
+    def cache_outputs(self, inputs, outputs, discrete_inputs={}):
+        """Create filename for cached results using data from inputs and discrete_inputs.
+        Save dictionary of outputs to the file.
+
+        Args:
+            inputs (om.vectors.default_vector.DefaultVector): OM inputs to `compute()` method
+            outputs (om.vectors.default_vector.DefaultVector): OM outputs of `compute()` method
+            discrete_inputs (om.core.component._DictValues, optional): OM discrete inputs to
+                `compute()` method. Defaults to {}.
+        """
         # Cache the results for future use
         if self.config.enable_caching:
             config_dict = self.config.as_dict()
@@ -162,16 +185,16 @@ class CacheModelBaseClass(om.ExplicitComponent):
     #     of this component within a model.
 
     #     For a template class this is not implement and raises an error.
-    #     """
+    #         """
 
-    # 1. check if this case has been run before
-    # loaded_results = self.load_outputs(inputs, outputs, discrete_inputs)
-    # if loaded_results:
-    #     return
+    #     # 1. check if this case has been run before
+    #     loaded_results = self.load_outputs(inputs, outputs, discrete_inputs)
+    #     if loaded_results:
+    #         return
 
-    # # 2. run model as normal and set outputs
+    #     # 2. run model as normal and set outputs
 
-    # # 3. save outputs to cache directory
-    # self.cache_outputs(inputs, outputs, discrete_inputs)
+    #     # 3. save outputs to cache directory
+    #     self.cache_outputs(inputs, outputs, discrete_inputs)
 
-    # raise NotImplementedError("This method should be implemented in a subclass.")
+    #     raise NotImplementedError("This method should be implemented in a subclass.")
