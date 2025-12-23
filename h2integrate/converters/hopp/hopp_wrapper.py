@@ -11,6 +11,7 @@ from h2integrate.converters.hopp.hopp_mgmt import run_hopp, setup_hopp
 class HOPPComponentModelConfig(CacheModelBaseConfig):
     hopp_config: dict = field()
     cost_year: int = field(converter=int)
+    electrolyzer_rating: int | float | None = field(default=None)
 
 
 class HOPPComponent(CostModelBaseClass, CacheModelBaseClass):
@@ -33,15 +34,15 @@ class HOPPComponent(CostModelBaseClass, CacheModelBaseClass):
 
         super().setup()
 
-        if "simulation_options" in self.config.hopp_config["config"]:
-            if "cache" in self.config.hopp_config["config"]["simulation_options"]:
-                self.config.enable_caching = self.config.hopp_config["config"][
-                    "simulation_options"
-                ]["cache"]
-            else:
-                self.config.enable_caching = True
-        else:
-            self.config.enable_caching = True
+        # if "simulation_options" in self.config.hopp_config["config"]:
+        #     if "cache" in self.config.hopp_config["config"]["simulation_options"]:
+        #         self.config.enable_caching = self.config.hopp_config["config"][
+        #             "simulation_options"
+        #         ]["cache"]
+        #     else:
+        #         self.config.enable_caching = True
+        # else:
+        #     self.config.enable_caching = True
 
         if "wind" in self.config.hopp_config["technologies"]:
             wind_turbine_rating_kw_init = self.config.hopp_config["technologies"]["wind"].get(
@@ -105,9 +106,6 @@ class HOPPComponent(CostModelBaseClass, CacheModelBaseClass):
             "capex",
             "opex",
         ]
-        electrolyzer_rating = None
-        if "electrolyzer_rating" in self.options["tech_config"]:
-            electrolyzer_rating = self.options["tech_config"]["electrolyzer_rating"]
 
         if "pv" in self.config.hopp_config["technologies"]:
             pv_capacity_kw = float(inputs["pv_capacity_kw"])
@@ -132,7 +130,7 @@ class HOPPComponent(CostModelBaseClass, CacheModelBaseClass):
             pv_rating_kw=pv_capacity_kw,
             battery_rating_kw=battery_capacity_kw,
             battery_rating_kwh=battery_capacity_kwh,
-            electrolyzer_rating=electrolyzer_rating,
+            electrolyzer_rating=self.config.electrolyzer_rating,
             n_timesteps=self.options["plant_config"]["plant"]["simulation"]["n_timesteps"],
         )
 
