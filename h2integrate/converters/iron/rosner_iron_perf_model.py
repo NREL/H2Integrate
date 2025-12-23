@@ -9,8 +9,8 @@ from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
 
 
 @define
-class RosnerIronPlantPerformanceConfig(BaseConfig):
-    """Configuration class for NaturalGasIronReudctionPlantPerformanceComponent.
+class NaturalGasIronReductionPerformanceConfig(BaseConfig):
+    """Configuration class for NaturalGasIronReductionPlantPerformanceComponent.
 
     Attributes:
         pig_iron_production_rate_tonnes_per_hr (float): capacity of the iron processing plant
@@ -23,7 +23,7 @@ class RosnerIronPlantPerformanceConfig(BaseConfig):
     water_density: float = field(default=1000)  # kg/m3
 
 
-class NaturalGasIronReudctionPlantPerformanceComponent(om.ExplicitComponent):
+class NaturalGasIronReductionPlantPerformanceComponent(om.ExplicitComponent):
     def initialize(self):
         self.options.declare("driver_config", types=dict)
         self.options.declare("plant_config", types=dict)
@@ -32,7 +32,7 @@ class NaturalGasIronReudctionPlantPerformanceComponent(om.ExplicitComponent):
     def setup(self):
         n_timesteps = self.options["plant_config"]["plant"]["simulation"]["n_timesteps"]
 
-        self.config = RosnerIronPlantPerformanceConfig.from_dict(
+        self.config = NaturalGasIronReductionPerformanceConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance"),
             strict=True,
         )
@@ -257,7 +257,7 @@ if __name__ == "__main__":
     iron_dri_config_rosner_ng = {
         "pig_iron_production_rate_tonnes_per_hr": 1418095 / 8760,
     }
-    iron_dri_perf = NaturalGasIronReudctionPlantPerformanceComponent(
+    iron_dri_perf = NaturalGasIronReductionPlantPerformanceComponent(
         plant_config=plant_config,
         tech_config={"model_inputs": {"performance_parameters": iron_dri_config_rosner_ng}},
         driver_config={},

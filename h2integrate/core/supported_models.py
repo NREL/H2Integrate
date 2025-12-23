@@ -60,9 +60,11 @@ from h2integrate.converters.solar.atb_utility_pv_cost import ATBUtilityPVCostMod
 from h2integrate.resource.wind.nrel_developer_wtk_api import WTKNRELDeveloperAPIWindResource
 from h2integrate.converters.iron.martin_mine_cost_model import MartinIronMineCostComponent
 from h2integrate.converters.iron.martin_mine_perf_model import MartinIronMinePerformanceComponent
-from h2integrate.converters.iron.rosner_iron_cost_model import NaturalGasIronPlantCostComponent
+from h2integrate.converters.iron.rosner_iron_cost_model import (
+    NaturalGasIronReductionPlantCostComponent,
+)
 from h2integrate.converters.iron.rosner_iron_perf_model import (
-    NaturalGasIronReudctionPlantPerformanceComponent,
+    NaturalGasIronReductionPlantPerformanceComponent,
 )
 from h2integrate.converters.methanol.smr_methanol_plant import (
     SMRMethanolPlantCostModel,
@@ -178,8 +180,8 @@ supported_models = {
     "iron_plant_cost": IronPlantCostComponent,
     "iron_mine_performance_martin": MartinIronMinePerformanceComponent,  # standalone model
     "iron_mine_cost_martin": MartinIronMineCostComponent,  # standalone model
-    "ng_dri_performance_rosner": NaturalGasIronReudctionPlantPerformanceComponent,
-    "ng_dri_cost_rosner": NaturalGasIronPlantCostComponent,  # standalone model
+    "ng_dri_performance_rosner": NaturalGasIronReductionPlantPerformanceComponent,
+    "ng_dri_cost_rosner": NaturalGasIronReductionPlantCostComponent,  # standalone model
     "reverse_osmosis_desalination_performance": ReverseOsmosisPerformanceModel,
     "reverse_osmosis_desalination_cost": ReverseOsmosisCostModel,
     "simple_ammonia_performance": SimpleAmmoniaPerformanceModel,

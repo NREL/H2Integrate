@@ -5,9 +5,11 @@ from pytest import fixture
 
 from h2integrate import EXAMPLE_DIR
 from h2integrate.core.inputs.validation import load_driver_yaml
-from h2integrate.converters.iron.rosner_iron_cost_model import NaturalGasIronPlantCostComponent
+from h2integrate.converters.iron.rosner_iron_cost_model import (
+    NaturalGasIronReductionPlantCostComponent,
+)
 from h2integrate.converters.iron.rosner_iron_perf_model import (
-    NaturalGasIronReudctionPlantPerformanceComponent,
+    NaturalGasIronReductionPlantPerformanceComponent,
 )
 
 
@@ -92,7 +94,7 @@ def test_ng_dri_performance(
 
     prob = om.Problem()
 
-    iron_dri_perf = NaturalGasIronReudctionPlantPerformanceComponent(
+    iron_dri_perf = NaturalGasIronReductionPlantPerformanceComponent(
         plant_config=plant_config,
         tech_config=ng_dri_base_config,
         driver_config={},
@@ -125,12 +127,12 @@ def test_ng_dri_performance_cost(
 
     prob = om.Problem()
 
-    iron_dri_perf = NaturalGasIronReudctionPlantPerformanceComponent(
+    iron_dri_perf = NaturalGasIronReductionPlantPerformanceComponent(
         plant_config=plant_config,
         tech_config=ng_dri_base_config,
         driver_config={},
     )
-    iron_dri_cost = NaturalGasIronPlantCostComponent(
+    iron_dri_cost = NaturalGasIronReductionPlantCostComponent(
         plant_config=plant_config,
         tech_config=ng_dri_base_config,
         driver_config={},
@@ -151,7 +153,7 @@ def test_ng_dri_performance_cost(
 
     # difference from IronPlantCostComponent:
     # IronPlantCostComponent: maintenance_materials is included in Fixed OpEx
-    # NaturalGasIronPlantCostComponent: maintenance_materials is the variable O&M
+    # NaturalGasIronReductionPlantCostComponent: maintenance_materials is the variable O&M
 
     annual_pig_iron = np.sum(prob.get_val("perf.pig_iron_out", units="t/h"))
     with subtests.test("Annual Pig Iron"):

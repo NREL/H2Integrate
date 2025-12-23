@@ -11,7 +11,7 @@ from h2integrate.tools.inflation.inflate import inflate_cpi, inflate_cepci
 
 
 @define
-class RosnerIronPlantCostConfig(CostModelBaseConfig):
+class NaturalGasIronReductionCostConfig(CostModelBaseConfig):
     """Configuration class for RosnerIronPlantCostComponent.
 
     Attributes:
@@ -31,11 +31,11 @@ class RosnerIronPlantCostConfig(CostModelBaseConfig):
     unskilled_labor_cost: float = field(validator=gte_zero)
 
 
-class NaturalGasIronPlantCostComponent(CostModelBaseClass):
+class NaturalGasIronReductionPlantCostComponent(CostModelBaseClass):
     """_summary_
 
     Attributes:
-        config (RosnerIronPlantCostConfig): configuration class
+        config (NaturalGasIronReductionCostConfig): configuration class
         coeff_df (pd.DataFrame): cost coefficient dataframe
         steel_to_iron_ratio (float): steel/pig iron ratio
     """
@@ -69,7 +69,7 @@ class NaturalGasIronPlantCostComponent(CostModelBaseClass):
 
         config_dict.update({"cost_year": target_dollar_year})
 
-        self.config = RosnerIronPlantCostConfig.from_dict(config_dict, strict=False)
+        self.config = NaturalGasIronReductionCostConfig.from_dict(config_dict, strict=False)
 
         super().setup()
 
@@ -235,7 +235,7 @@ if __name__ == "__main__":
         "skilled_labor_cost": 1.0,
         "unskilled_labor_cost": 1.0,
     }
-    iron_dri_perf = NaturalGasIronPlantCostComponent(
+    iron_dri_perf = NaturalGasIronReductionPlantCostComponent(
         plant_config=plant_config,
         tech_config={"model_inputs": {"shared_parameters": iron_dri_config_rosner_ng}},
         driver_config={},
