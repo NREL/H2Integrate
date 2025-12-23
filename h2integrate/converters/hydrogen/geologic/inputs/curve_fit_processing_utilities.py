@@ -60,15 +60,15 @@ class CurveCoefficients:
         }
 
 
-def scale_inputs(input_vars: list[np.ndarray]) -> tuple[list[np.ndarray], list[float]]:
+def scale_variables(input_vars: list[np.ndarray]) -> tuple[list[np.ndarray], list[float]]:
     """
-    Scale inputs to the range [0, 1] for better numerical conditioning during curve fitting.
+    Scale variables to the range [0, 1] for better numerical conditioning during curve fitting.
 
     Args:
-        input_vars: List of input arrays to scale (must contain positive values).
+        input_vars: List of arrays to scale (must contain positive values).
 
     Returns:
-        Tuple of (scaled_inputs, scale_factors) where scale_factors are the max values.
+        Tuple of (scaled_variables, scale_factors) where scale_factors are the max values.
     """
     scaled_inputs = []
     scale_factors = []
@@ -160,68 +160,6 @@ def load_aspen_data(input_fn: str) -> tuple[np.ndarray, np.ndarray, pd.DataFrame
     return h2_conc, flow, inputs_df
 
 
-def prepare_fitting_data(
-    inputs_df: pd.DataFrame, h2_conc: np.ndarray, flow: np.ndarray, output_names: list[str]
-) -> tuple[np.ndarray, np.ndarray, list[np.ndarray], list[float]]:
-    """
-    Prepare and scale data for curve fitting.
-
-    Args:
-        inputs_df: DataFrame containing ASPEN results.
-        h2_conc: H2 concentration at wellhead.
-        flow: Mass flow rate at wellhead.
-        output_names: List of output variables to fit.
-
-    Returns:
-        Tuple of (scaled_input_data, h2_output_flow, scaled_outputs, output_scale_factors).
-    """
-    # Extract and normalize outputs
-    outputs = []
-    output_names_with_flow = ["H2 Flow Out [kg/hr]", *output_names]
-
-    for name in output_names_with_flow:
-        output = inputs_df.loc[name].values.ravel()
-        # Normalize by flow rate except for concentration
-        if "H2 Conc" not in name:
-            output = output / flow
-        outputs.append(output)
-
-    # Store H2 output flow for later use
-    h2_out = outputs[0] * flow
-
-    # Scale data for numerical conditioning
-    scaled_inputs, _ = scale_inputs([h2_conc, flow])
-    scaled_outputs, out_scale_factors = scale_inputs(outputs)
-    fit_input_data = np.vstack(scaled_inputs)
-
-    return fit_input_data, h2_out, scaled_outputs, out_scale_factors
-
-
-def determine_fit_configuration(output_name: str) -> tuple[str, int]:
-    """
-    Determine which curve fitting function and how many data points to use.
-
-    Data points 0-4 are from Aspen modeling.
-    Data points 5-6 at H2 conc. = 100% and 0% are empirically correlated.
-
-    Args:
-        output_name: Name of the output variable being fit.
-
-    Returns:
-        Tuple of (fit_type, num_points_to_use).
-    """
-    if output_name == "H2 Flow Out [kg/hr]":
-        return CURVE_FIT_TYPE_DOUBLE_EXP, 6
-    elif output_name in ["H2 Conc Out [% mol]", "Labor [op/shift]"]:
-        return CURVE_FIT_TYPE_DOUBLE_EXP, 5
-    elif output_name == "Capex [USD]":
-        return CURVE_FIT_TYPE_EXP_POWER, 7
-    elif output_name in ["Electricity [kW]", "Cooling Water [kt/h]"]:
-        return CURVE_FIT_TYPE_EXP_POWER, 6
-    else:  # Steam
-        return CURVE_FIT_TYPE_NONE, 5
-
-
 def fit_single_curve(
     output_name: str,
     scaled_output: np.ndarray,
@@ -242,7 +180,19 @@ def fit_single_curve(
     Returns:
         CurveCoefficients object with fitted parameters.
     """
-    fit_type, n_points = determine_fit_configuration(output_name)
+    # Determine which curve fitting function and how many data points to use
+    # Data points 0-4 are from Aspen modeling.
+    # Data points 5-6 at H2 conc. = 100% and 0% are empirically correlated.
+    if output_name == "H2 Flow Out [kg/hr]":
+        fit_type, n_points = CURVE_FIT_TYPE_DOUBLE_EXP, 6
+    elif output_name in ["H2 Conc Out [% mol]", "Labor [op/shift]"]:
+        fit_type, n_points = CURVE_FIT_TYPE_DOUBLE_EXP, 5
+    elif output_name == "Capex [USD]":
+        fit_type, n_points = CURVE_FIT_TYPE_EXP_POWER, 7
+    elif output_name in ["Electricity [kW]", "Cooling Water [kt/h]"]:
+        fit_type, n_points = CURVE_FIT_TYPE_EXP_POWER, 6
+    else:  # Steam
+        fit_type, n_points = CURVE_FIT_TYPE_NONE, 5
 
     # Select appropriate fitting function
     if fit_type == CURVE_FIT_TYPE_DOUBLE_EXP:
@@ -384,12 +334,25 @@ def refit_coeffs(
     """
     # Load and prepare data
     h2_conc, flow, inputs_df = load_aspen_data(input_fn)
-    fit_input_data, h2_out, scaled_outputs, out_scale_factors = prepare_fitting_data(
-        inputs_df, h2_conc, flow, output_names
-    )
 
-    # Get scale factors from the prepared data
-    scaled_inputs, in_scale_factors = scale_inputs([h2_conc, flow])
+    # Extract and normalize outputs
+    outputs = []
+    output_names_with_flow = ["H2 Flow Out [kg/hr]", *output_names]
+
+    for name in output_names_with_flow:
+        output = inputs_df.loc[name].values.ravel()
+        # Normalize by flow rate except for concentration
+        if "H2 Conc" not in name:
+            output = output / flow
+        outputs.append(output)
+
+    # Store H2 output flow for later use
+    h2_out = outputs[0] * flow
+
+    # Scale data for numerical conditioning
+    scaled_inputs, in_scale_factors = scale_variables([h2_conc, flow])
+    scaled_outputs, out_scale_factors = scale_variables(outputs)
+    fit_input_data = np.vstack(scaled_inputs)
 
     # Fit curves for each output
     output_names_with_flow = ["H2 Flow Out [kg/hr]", *output_names]
