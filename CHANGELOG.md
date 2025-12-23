@@ -2,6 +2,9 @@
 ## 0.5.x [TBD]
 - Updates models for NumPy version 2.4.0
 
+## 0.5.x [TBD]
+- Add existing geologic hydrogen surface processing converter
+
 ## 0.5.1 [December 18, 2025]
 
 - Fixed tagged version number for release
