@@ -304,6 +304,7 @@ class DemandOpenLoopStorageController(DemandOpenLoopControlBase):
                 discharge = min(
                     discharge_needed, available_discharge, max_discharge_rate / discharge_efficiency
                 )
+
                 soc -= discharge / max_capacity  # soc is a ratio with value between 0 and 1
                 # output is as observed outside the storage, so we need to adjust `discharge` by
                 # applying `discharge_efficiency`.
@@ -312,6 +313,7 @@ class DemandOpenLoopStorageController(DemandOpenLoopControlBase):
                 # Charge storage with unused input
                 # `unused_input` is as seen outside the storage
                 unused_input = input_flow - demand_t
+                unused_input = unused_input.item()
                 # `charge` is as seen by the storage, but the things being compared should all be as
                 # seen outside the storage so we need to adjust `available_charge` outside the
                 # storage view and the final result back into the storage view.
@@ -323,6 +325,7 @@ class DemandOpenLoopStorageController(DemandOpenLoopControlBase):
                 output_array[t] = demand_t
 
             # Ensure SOC stays within bounds
+            soc = soc.item()
             soc = max(min_charge_percent, min(max_charge_percent, soc))
 
             # Record the SOC for the current time step
@@ -330,7 +333,7 @@ class DemandOpenLoopStorageController(DemandOpenLoopControlBase):
 
             # Record the curtailment at the current time step. Adjust `charge` from storage view to
             # outside view for curtailment
-            unused_commodity_array[t] = max(0, float(unused_input - charge / charge_efficiency))
+            unused_commodity_array[t] = max(0, unused_input - charge / charge_efficiency)
 
             # Record the missed load at the current time step
             unmet_demand_array[t] = max(0, (demand_t - output_array[t]))
