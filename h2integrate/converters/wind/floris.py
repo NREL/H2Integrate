@@ -82,6 +82,19 @@ class FlorisWindPlantPerformanceConfig(BaseConfig):
         if self.hub_height < 0 and not self.hybrid_turbine_design:
             self.hub_height = self.floris_turbine_config.get("hub_height")
 
+        # check that user did not provide a layout in the floris_wake_config
+        gave_x_coords = len(self.floris_wake_config.get("farm", {}).get("layout_x", [])) > 0
+        gave_y_coords = len(self.floris_wake_config.get("farm", {}).get("layout_y", [])) > 0
+        if gave_x_coords or gave_y_coords:
+            msg = (
+                "Layout provided in `floris_wake_config['farm']` but layout will be created "
+                "based on the `layout_mode` and `layout_options` provided in the "
+                "`layout` dictionary. Please set the layout in "
+                "floris_wake_config['farm']['layout_x'] and floris_wake_config['farm']['layout_y']"
+                " to empty lists"
+            )
+            raise ValueError(msg)
+
 
 class FlorisWindPlantPerformanceModel(WindPerformanceBaseClass):
     """
