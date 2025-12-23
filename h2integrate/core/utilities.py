@@ -1,6 +1,7 @@
 import re
 import csv
 import copy
+import hashlib
 import operator
 from typing import Any
 from pathlib import Path
@@ -200,6 +201,12 @@ class ResizeablePerformanceModelBaseConfig(BaseConfig):
                     "'flow_used_for_sizing' must be set when size_mode is "
                     "'resize_by_max_feedstock' or 'resize_by_max_commodity'"
                 )
+
+
+@define(kw_only=True)
+class CacheModelBaseConfig(BaseConfig):
+    enable_caching: bool = field()
+    cache_dir: str | Path = field()
 
 
 def attr_serializer(inst: type, field: Attribute, value: Any):
@@ -917,3 +924,51 @@ def print_results(model, includes=None, excludes=None, show_units=True):
         "explicit_outputs": _structured(explicit_meta),
         "implicit_outputs": _structured(implicit_meta),
     }
+
+
+def make_cache_hash_filename(config, inputs, discrete_inputs={}, cache_dir=Path("cache")):
+    """Make valid filepath to a pickle file with a filename that is unique based on information
+    available in the config, inputs, and discrete inputs.
+
+    Args:
+        config (object | dict): configuration object that inherits `BaseConfig` or dictionary.
+        inputs (om.vectors.default_vector.DefaultVector): OM inputs to `compute()` method
+        discrete_inputs (om.core.component._DictValues, optional): OM discrete inputs to `compute()`
+            method. Defaults to {}.
+        cache_dir (str | Path, optional): folder for cached files. Defaults to Path("cache").
+
+    Returns:
+        Path: filepath to pickle file with filename as unique cache key.
+    """
+    # NOTE: maybe would be good to add a string input that can specify what model this cache is for,
+    # like "hopp" or "floris", this could be used in the cache filename but perhaps unnecessary
+
+    if not isinstance(config, dict):
+        hash_dict = config.as_dict()
+    else:
+        hash_dict = copy.deepcopy(config)
+
+    hash_dict_str = str(hash_dict)
+    hash_dict_str += str(dict(inputs.items()))
+    hash_dict_str += str(dict(discrete_inputs.items()))
+
+    # input_dict = dict(inputs.items())
+    # discrete_input_dict = dict(discrete_inputs.items())
+
+    # hash_dict.update(input_dict)
+    # # alternative to above would be inputs.get_hash()
+    # hash_dict.update(discrete_input_dict)
+
+    # # Create a unique hash for the current configuration to use as a cache key
+    # config_hash = hashlib.md5(str(hash_dict).encode("utf-8")).hexdigest()
+
+    config_hash = hashlib.md5(hash_dict_str.encode("utf-8")).hexdigest()
+
+    if isinstance(cache_dir, str):
+        cache_dir = Path(cache_dir)
+
+    # Create a cache directory if it doesn't exist
+    if not cache_dir.exists():
+        cache_dir.mkdir(parents=True)
+    cache_file = cache_dir / f"{config_hash}.pkl"
+    return cache_file

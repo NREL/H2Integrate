@@ -1,4 +1,9 @@
+from pathlib import Path
+
+import dill
 import openmdao.api as om
+
+from h2integrate.core.utilities import make_cache_hash_filename
 
 
 class CostModelBaseClass(om.ExplicitComponent):
@@ -112,3 +117,61 @@ class ResizeablePerformanceModelBaseClass(om.ExplicitComponent):
         """
 
         raise NotImplementedError("This method should be implemented in a subclass.")
+
+
+class CacheModelBaseClass(om.ExplicitComponent):
+    """Baseclass to be used for any model that may cache results."""
+
+    def load_outputs(self, inputs, outputs, discrete_inputs):
+        if self.config.enable_caching:
+            config_dict = self.config.as_dict()
+
+            cache_filename = make_cache_hash_filename(
+                config_dict, inputs, discrete_inputs, cache_dir=self.config.cache_dir
+            )
+
+            if not cache_filename.exists():
+                return False
+
+            # Load the cached results
+            cache_path = Path(cache_filename)
+            with cache_path.open("rb") as f:
+                cached_data = dill.load(f)
+            for output_name, default_output_val in outputs.items():
+                outputs[output_name] = cached_data.get(output_name, default_output_val)
+            return True
+
+    def cache_outputs(self, inputs, outputs, discrete_inputs):
+        # Cache the results for future use
+        if self.config.enable_caching:
+            config_dict = self.config.as_dict()
+
+            cache_filename = make_cache_hash_filename(
+                config_dict, inputs, discrete_inputs, cache_dir=self.config.cache_dir
+            )
+
+            cache_path = Path(cache_filename)
+            with cache_path.open("wb") as f:
+                output_dict = dict(outputs.items())
+                dill.dump(output_dict, f)
+
+    # def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
+    #     """
+    #     Computation for the OM component.
+    #     This template includes commented out code on how to use the functionality
+    #     of this component within a model.
+
+    #     For a template class this is not implement and raises an error.
+    #     """
+
+    # 1. check if this case has been run before
+    # loaded_results = self.load_outputs(inputs, outputs, discrete_inputs)
+    # if loaded_results:
+    #     return
+
+    # # 2. run model as normal and set outputs
+
+    # # 3. save outputs to cache directory
+    # self.cache_outputs(inputs, outputs, discrete_inputs)
+
+    # raise NotImplementedError("This method should be implemented in a subclass.")
