@@ -1,3 +1,4 @@
+import copy
 import unittest
 from pathlib import Path
 
@@ -74,9 +75,14 @@ class TestProFastComp(unittest.TestCase):
 
     def test_electrolyzer_refurb_results(self):
         prob = om.Problem()
+
+        # change name of tech to make sure that the refurb works with names
+        # that contain, not just match "electrolyzer"
+        edited_tech_config = {"electrolyzer1": copy.deepcopy(self.tech_config["electrolyzer"])}
+
         comp = ProFastLCO(
             plant_config=self.plant_config,
-            tech_config=self.tech_config,
+            tech_config=edited_tech_config,
             driver_config=self.driver_config,
             commodity_type="hydrogen",
         )
@@ -87,10 +93,10 @@ class TestProFastComp(unittest.TestCase):
 
         prob.setup()
 
-        prob.set_val("capex_adjusted_electrolyzer", 1.0e7, units="USD")
-        prob.set_val("opex_adjusted_electrolyzer", 1.0e4, units="USD/year")
+        prob.set_val("capex_adjusted_electrolyzer1", 1.0e7, units="USD")
+        prob.set_val("opex_adjusted_electrolyzer1", 1.0e4, units="USD/year")
 
-        prob.set_val("electrolyzer_time_until_replacement", 5.0e3, units="h")
+        prob.set_val("electrolyzer1_time_until_replacement", 5.0e3, units="h")
 
         prob.run_model()
 
