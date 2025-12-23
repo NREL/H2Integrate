@@ -10,6 +10,10 @@ from h2integrate.core.validators import range_val
 from h2integrate.control.control_strategies.controller_baseclass import ControllerBaseClass
 from h2integrate.control.control_strategies.controller_opt_problem_state import DispatchProblemState
 from h2integrate.control.control_rules.hybrid_rule import PyomoDispatchPlantRule
+from h2integrate.control.control_rules.converters.generic_converter_opt \
+import PyomoDispatchGenericConverterMinOperatingCosts
+from h2integrate.control.control_rules.storage.pyomo_storage_rule_min_operating_cost \
+import PyomoRuleStorageMinOperatingCosts
 
 
 if TYPE_CHECKING:  # to avoid circular imports
@@ -157,6 +161,7 @@ class PyomoControllerBaseClass(ControllerBaseClass):
         index_set = pyomo.Set(initialize=range(self.config.n_control_window))
 
         self.source_techs = []
+        self.dispatch_tech = []
 
         # run each pyomo rule set up function for each technology
         for connection in self.dispatch_connections:
@@ -168,6 +173,7 @@ class PyomoControllerBaseClass(ControllerBaseClass):
                 # connecting from an external tech group. This facilitates OM connections
                 if source_tech == intended_dispatch_tech:
                     dispatch_block_rule_function = discrete_inputs["dispatch_block_rule_function"]
+                    self.dispatch_tech.append(source_tech)
                 else:
                     dispatch_block_rule_function = discrete_inputs[
                         f"{'dispatch_block_rule_function'}_{source_tech}"
@@ -177,6 +183,7 @@ class PyomoControllerBaseClass(ControllerBaseClass):
                 print("HIII", blocks)
                 setattr(self.pyomo_model, source_tech, blocks)
                 self.source_techs.append(source_tech)
+                print(getattr(self.pyomo_model, source_tech))
             else:
                 continue
 
@@ -253,6 +260,7 @@ class PyomoControllerBaseClass(ControllerBaseClass):
 
             # loop over all control windows, where t is the starting index of each window
             for t in window_start_indices:
+                print("Iteration tracker:", t)
                 # get the inputs over the current control window
                 commodity_in = inputs[self.config.commodity_name + "_in"][
                     t : t + self.config.n_control_window
@@ -686,42 +694,42 @@ class SimpleBatteryControllerHeuristic(PyomoControllerBaseClass):
         for t in self.blocks.index_set():
             self.blocks[t].maximum_soc = round(maximum_soc, self.round_digits)
 
-    @property
-    def charge_efficiency(self) -> float:
-        """Charge efficiency."""
-        for t in self.blocks.index_set():
-            return self.blocks[t].charge_efficiency.value
+    # @property
+    # def charge_efficiency(self) -> float:
+    #     """Charge efficiency."""
+    #     for t in self.blocks.index_set():
+    #         return self.blocks[t].charge_efficiency.value
 
-    @charge_efficiency.setter
-    def charge_efficiency(self, efficiency: float):
-        efficiency = self._check_efficiency_value(efficiency)
-        for t in self.blocks.index_set():
-            self.blocks[t].charge_efficiency = round(efficiency, self.round_digits)
+    # @charge_efficiency.setter
+    # def charge_efficiency(self, efficiency: float):
+    #     efficiency = self._check_efficiency_value(efficiency)
+    #     for t in self.blocks.index_set():
+    #         self.blocks[t].charge_efficiency = round(efficiency, self.round_digits)
 
-    @property
-    def discharge_efficiency(self) -> float:
-        """Discharge efficiency."""
-        for t in self.blocks.index_set():
-            return self.blocks[t].discharge_efficiency.value
+    # @property
+    # def discharge_efficiency(self) -> float:
+    #     """Discharge efficiency."""
+    #     for t in self.blocks.index_set():
+    #         return self.blocks[t].discharge_efficiency.value
 
-    @discharge_efficiency.setter
-    def discharge_efficiency(self, efficiency: float):
-        efficiency = self._check_efficiency_value(efficiency)
-        for t in self.blocks.index_set():
-            self.blocks[t].discharge_efficiency = round(efficiency, self.round_digits)
+    # @discharge_efficiency.setter
+    # def discharge_efficiency(self, efficiency: float):
+    #     efficiency = self._check_efficiency_value(efficiency)
+    #     for t in self.blocks.index_set():
+    #         self.blocks[t].discharge_efficiency = round(efficiency, self.round_digits)
 
-    @property
-    def round_trip_efficiency(self) -> float:
-        """Round trip efficiency."""
-        return self.charge_efficiency * self.discharge_efficiency
+    # @property
+    # def round_trip_efficiency(self) -> float:
+    #     """Round trip efficiency."""
+    #     return self.charge_efficiency * self.discharge_efficiency
 
-    @round_trip_efficiency.setter
-    def round_trip_efficiency(self, round_trip_efficiency: float):
-        round_trip_efficiency = self._check_efficiency_value(round_trip_efficiency)
-        # Assumes equal charge and discharge efficiencies
-        efficiency = round_trip_efficiency ** (1 / 2)
-        self.charge_efficiency = efficiency
-        self.discharge_efficiency = efficiency
+    # @round_trip_efficiency.setter
+    # def round_trip_efficiency(self, round_trip_efficiency: float):
+    #     round_trip_efficiency = self._check_efficiency_value(round_trip_efficiency)
+    #     # Assumes equal charge and discharge efficiencies
+    #     efficiency = round_trip_efficiency ** (1 / 2)
+    #     self.charge_efficiency = efficiency
+    #     self.discharge_efficiency = efficiency
 
 
 @define
@@ -804,7 +812,12 @@ class OptimizedDispatchControllerConfig(PyomoControllerBaseConfig):
     discharge_efficiency: float = field(default=None)
     demand_profile: list = field(default=None)
     time_weighting_factor: float = 0.995
-
+    commodity_name: str = field(default=None)
+    commodity_storage_units: str = field(default=None)
+    cost_per_production: float = field(default=None)
+    cost_per_charge: float = field(default=None)
+    cost_per_discharge: float = field(default=None)
+    commodity_met_value: float = field(default=None)
 
 class OptimizedDispatchController(SimpleBatteryControllerHeuristic):
     """Operates the battery based on heuristic rules to meet the demand profile based power
@@ -830,7 +843,18 @@ class OptimizedDispatchController(SimpleBatteryControllerHeuristic):
             self.discharge_efficiency = self.config.discharge_efficiency
 
         # Is this the best place to put this???
+        self.commodity_info = {
+            "commodity_name": self.config.commodity_name,
+            "commodity_storage_units": self.config.commodity_storage_units,
+        }
+        # TODO: note that this definition of cost_per_production is not generalizable to multiple
+        #       production technologies. Would need a name adjustment to connect it to 
+        #       production tech
         self.dispatch_inputs = {
+            "cost_per_production": self.config.cost_per_production,
+            "cost_per_charge": self.config.cost_per_charge,
+            "cost_per_discharge": self.config.cost_per_discharge,
+            "commodity_met_value": self.config.commodity_met_value,
             "max_capacity": self.config.max_capacity,
             "max_charge_percent": self.config.max_charge_percent,
             "min_charge_percent": self.config.min_charge_percent,
@@ -840,15 +864,18 @@ class OptimizedDispatchController(SimpleBatteryControllerHeuristic):
             "max_charge_rate": self.config.max_charge_rate,
         }
 
+        self.n_control_window = self.config.n_control_window
+        self.n_horizon_window = self.config.n_control_window
+
+
+    # Initialize parameters for optimization model
+    def initialize_parameters(self, commodity_in, commodity_demand):
         self.hybrid_dispatch_model = self._create_dispatch_optimization_model()
         self.hybrid_dispatch_rule.create_min_operating_cost_expression()
         self.hybrid_dispatch_rule.create_arcs()
         assert_units_consistent(self.hybrid_dispatch_model)
         self.problem_state = DispatchProblemState()
 
-
-    # Initialize parameters for optimization model
-    def initialize_parameters(self, commodity_in, commodity_demand):
         self.hybrid_dispatch_rule.initialize_parameters(commodity_in, commodity_demand, 
                                                        self.dispatch_inputs)
 
@@ -876,10 +903,10 @@ class OptimizedDispatchController(SimpleBatteryControllerHeuristic):
 
         """
 
-        self.problem_state = DispatchProblemState()
+        # self.problem_state = DispatchProblemState()
         solver_results = self.glpk_solve()
         self.problem_state.store_problem_metrics(
-            solver_results, start_time, n_days, pyomo.value(self.model.objective)
+            solver_results, start_time, n_days, pyomo.value(self.hybrid_dispatch_model.objective)
         )
 
         # TODO: Check that these function calls are appropriate for optimization model
@@ -901,11 +928,33 @@ class OptimizedDispatchController(SimpleBatteryControllerHeuristic):
             doc="Set of time periods in time horizon",
             initialize=range(self.n_horizon_window),
         )
+        for tech in self.source_techs:
+            if tech == self.dispatch_tech[0]:
+                # tech.dispatch = PyomoRuleStorageMinOperatingCosts()
+                name = tech+"_rule"
+                dispatch = PyomoRuleStorageMinOperatingCosts(
+                    self.commodity_info,
+                    model,
+                    model.forecast_horizon,
+                    block_set_name=name
+                )
+                setattr(self.pyomo_model, name, dispatch)
+            else:
+                name = tech+"_rule"
+                dispatch = PyomoDispatchGenericConverterMinOperatingCosts(
+                    self.commodity_info,
+                    model,
+                    model.forecast_horizon,
+                    block_set_name=name
+                )
+                # tech.dispatch = PyomoDispatchGenericConverterMinOperatingCosts()
+                setattr(self.pyomo_model, name, dispatch)
+
         #################################
         # Blocks (technologies)         #
-        ################################# 
+        #################################
         self.hybrid_dispatch_rule = PyomoDispatchPlantRule(
-            model, model.forecast_horizon, self.source_techs, self.pyomo_model, self.options
+            model, model.forecast_horizon, self.source_techs, self.pyomo_model, self.config
         )
         return model
 
@@ -940,8 +989,11 @@ class OptimizedDispatchController(SimpleBatteryControllerHeuristic):
 
     def glpk_solve(self):
         return self.glpk_solve_call(
-            self.pyomo_model, self.options.log_name, self.options.solver_options
+            # self.pyomo_model
+            self.hybrid_dispatch_model
         )
+                # self.pyomo_model, log_name='', user_solver_options=dict({})
+
 
     # @staticmethod
     # def log_and_solution_check(
@@ -952,6 +1004,14 @@ class OptimizedDispatchController(SimpleBatteryControllerHeuristic):
     #     HybridDispatchBuilderSolver.check_solve_condition(
     #         solver_termination_condition, pyomo_model
     #     )
+
+    @property
+    def storage_dispatch_commands(self) -> list:
+        """
+        Commanded dispatch including available commodity at current time step that has not
+        been used to charge the battery.
+        """
+        return self.hybrid_dispatch_rule.storage_commodity_out
 
 
 class SolverOptions:

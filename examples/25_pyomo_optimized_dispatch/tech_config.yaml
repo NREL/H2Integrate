@@ -8,7 +8,7 @@ technologies:
     cost_model:
       model: "atb_wind_cost"
     dispatch_rule_set:
-      model: "pyomo_dispatch_generic_converter_min_operating_cost"
+      model: "pyomo_dispatch_generic_converter"
     resource:
       type: "pysam_wind"
       wind_speed: 9.
@@ -37,10 +37,9 @@ technologies:
       dispatch_rule_parameters:
         commodity_name: "electricity"
         commodity_storage_units: "kW"
-        commodity_cost_per_production: 5
   battery:
     dispatch_rule_set:
-      model: "pyomo_dispatch_battery_min_operating_cost"
+      model: "pyomo_dispatch_generic_storage"
     control_strategy:
       model: "optimized_dispatch_controller"
     performance_model:
@@ -61,6 +60,11 @@ technologies:
         time_weighting_factor: 0.995
         charge_efficiency: 0.938
         discharge_efficiency: 0.938
+        commodity_storage_units: "kW"
+        cost_per_charge: 10
+        cost_per_discharge: 10
+        commodity_met_value: 20        
+        cost_per_production: 5
       performance_parameters:
         system_model_source: "pysam"
         chemistry: "LFPGraphite"
@@ -71,11 +75,5 @@ technologies:
         power_capex: 311 # $/kW from 2024 ATB year 2025
         opex_fraction: 0.25 # 0.25% of capex per year from 2024 ATB
       control_parameters:
-        commodity_storage_units: "kW"
+        # commodity_storage_units: "kW"
         tech_name: "battery"
-      dispatch_rule_parameters:
-        commodity_name: "electricity"
-        commodity_storage_units: "kW"
-        cost_per_charge: 10
-        cost_per_discharge: 10
-        commodity_met_value: 20
