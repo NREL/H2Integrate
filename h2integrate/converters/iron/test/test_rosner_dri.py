@@ -5,6 +5,12 @@ from pytest import fixture
 
 from h2integrate import EXAMPLE_DIR
 from h2integrate.core.inputs.validation import load_driver_yaml
+from h2integrate.converters.iron.h2_iron_dri_cost_model import (
+    HydrogenIronReductionPlantCostComponent,
+)
+from h2integrate.converters.iron.h2_iron_dri_perf_model import (
+    HydrogenIronReductionPlantPerformanceComponent,
+)
 from h2integrate.converters.iron.ng_iron_dri_cost_model import (
     NaturalGasIronReductionPlantCostComponent,
 )
@@ -56,7 +62,7 @@ def ng_dri_base_config():
 
 
 @fixture
-def feedstock_availability_costs():
+def ng_feedstock_availability_costs():
     feedstocks_dict = {
         "electricity": {
             "rated_capacity": 27000,  # need 26949.46472431 kW
@@ -87,8 +93,40 @@ def feedstock_availability_costs():
     return feedstocks_dict
 
 
+@fixture
+def h2_feedstock_availability_costs():
+    feedstocks_dict = {
+        "electricity": {
+            "rated_capacity": 19000,  # need 18947.258036729818 kW
+            "units": "kW",
+            "price": 0.05802,  # USD/kW TODO: update
+        },
+        "natural_gas": {
+            "rated_capacity": 96.0,  # need 95.4810143 MMBtu at each timestep
+            "units": "MMBtu",
+            "price": 0.0,
+        },
+        "hydrogen": {
+            "rated_capacity": 11.0,  # need 10.677802077625572 t/h
+            "units": "t/h",
+            "price": 0.0,
+        },
+        "water": {
+            "rated_capacity": 30.0,  # need 27.4952280 galUS/h
+            "units": "galUS",
+            "price": 1670.0,  # TODO: update cost is $0.441167535/t, equal to $1670.0004398318847/galUS
+        },
+        "iron_ore": {
+            "rated_capacity": 263.75,  # need 263.75110 t/h
+            "units": "t/h",
+            "price": 27.5409 * 1e3,  # USD/t TODO: update
+        },
+    }
+    return feedstocks_dict
+
+
 def test_ng_dri_performance(
-    plant_config, ng_dri_base_config, feedstock_availability_costs, subtests
+    plant_config, ng_dri_base_config, ng_feedstock_availability_costs, subtests
 ):
     expected_pig_iron_annual_production_tpd = 3885.1917808219177  # t/d
 
@@ -102,7 +140,7 @@ def test_ng_dri_performance(
     prob.model.add_subsystem("perf", iron_dri_perf, promotes=["*"])
     prob.setup()
 
-    for feedstock_name, feedstock_info in feedstock_availability_costs.items():
+    for feedstock_name, feedstock_info in ng_feedstock_availability_costs.items():
         prob.set_val(
             f"perf.{feedstock_name}_in",
             feedstock_info["rated_capacity"],
@@ -119,7 +157,7 @@ def test_ng_dri_performance(
 
 
 def test_ng_dri_performance_cost(
-    plant_config, ng_dri_base_config, feedstock_availability_costs, subtests
+    plant_config, ng_dri_base_config, ng_feedstock_availability_costs, subtests
 ):
     expected_capex = 403808062.6981323
     expected_fixed_om = 60103761.59958463
@@ -142,7 +180,7 @@ def test_ng_dri_performance_cost(
     prob.model.add_subsystem("cost", iron_dri_cost, promotes=["*"])
     prob.setup()
 
-    for feedstock_name, feedstock_info in feedstock_availability_costs.items():
+    for feedstock_name, feedstock_info in ng_feedstock_availability_costs.items():
         prob.set_val(
             f"perf.{feedstock_name}_in",
             feedstock_info["rated_capacity"],
@@ -154,6 +192,87 @@ def test_ng_dri_performance_cost(
     # difference from IronPlantCostComponent:
     # IronPlantCostComponent: maintenance_materials is included in Fixed OpEx
     # NaturalGasIronReductionPlantCostComponent: maintenance_materials is the variable O&M
+
+    annual_pig_iron = np.sum(prob.get_val("perf.pig_iron_out", units="t/h"))
+    with subtests.test("Annual Pig Iron"):
+        assert (
+            pytest.approx(annual_pig_iron / 365, rel=1e-3)
+            == expected_pig_iron_annual_production_tpd
+        )
+    with subtests.test("CapEx"):
+        # expected difference of 0.044534%
+        assert pytest.approx(prob.get_val("cost.CapEx")[0], rel=1e-3) == expected_capex
+    with subtests.test("OpEx"):
+        assert (
+            pytest.approx(prob.get_val("cost.OpEx")[0] + prob.get_val("cost.VarOpEx")[0], rel=1e-3)
+            == expected_fixed_om
+        )
+
+
+def test_h2_dri_performance(
+    plant_config, ng_dri_base_config, h2_feedstock_availability_costs, subtests
+):
+    expected_pig_iron_annual_production_tpd = 3885.1917808219177  # t/d
+
+    prob = om.Problem()
+
+    iron_dri_perf = HydrogenIronReductionPlantPerformanceComponent(
+        plant_config=plant_config,
+        tech_config=ng_dri_base_config,
+        driver_config={},
+    )
+    prob.model.add_subsystem("perf", iron_dri_perf, promotes=["*"])
+    prob.setup()
+
+    for feedstock_name, feedstock_info in h2_feedstock_availability_costs.items():
+        prob.set_val(
+            f"perf.{feedstock_name}_in",
+            feedstock_info["rated_capacity"],
+            units=feedstock_info["units"],
+        )
+    prob.run_model()
+
+    annual_pig_iron = np.sum(prob.get_val("perf.pig_iron_out", units="t/h"))
+    with subtests.test("Annual Pig Iron"):
+        assert (
+            pytest.approx(annual_pig_iron / 365, rel=1e-3)
+            == expected_pig_iron_annual_production_tpd
+        )
+
+
+def test_h2_dri_performance_cost(
+    plant_config, ng_dri_base_config, h2_feedstock_availability_costs, subtests
+):
+    expected_capex = 246546589.2914324
+    expected_fixed_om = 53360873.348792635
+
+    expected_pig_iron_annual_production_tpd = 3885.1917808219177  # t/d
+
+    prob = om.Problem()
+
+    iron_dri_perf = HydrogenIronReductionPlantPerformanceComponent(
+        plant_config=plant_config,
+        tech_config=ng_dri_base_config,
+        driver_config={},
+    )
+    iron_dri_cost = HydrogenIronReductionPlantCostComponent(
+        plant_config=plant_config,
+        tech_config=ng_dri_base_config,
+        driver_config={},
+    )
+
+    prob.model.add_subsystem("perf", iron_dri_perf, promotes=["*"])
+    prob.model.add_subsystem("cost", iron_dri_cost, promotes=["*"])
+    prob.setup()
+
+    for feedstock_name, feedstock_info in h2_feedstock_availability_costs.items():
+        prob.set_val(
+            f"perf.{feedstock_name}_in",
+            feedstock_info["rated_capacity"],
+            units=feedstock_info["units"],
+        )
+
+    prob.run_model()
 
     annual_pig_iron = np.sum(prob.get_val("perf.pig_iron_out", units="t/h"))
     with subtests.test("Annual Pig Iron"):
