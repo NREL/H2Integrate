@@ -626,11 +626,11 @@ class ProFastBase(om.ExplicitComponent):
 
         # calculate capacity and total production based on commodity type
         if self.options["commodity_type"] != "co2":
-            capacity = float(inputs[f"total_{self.options['commodity_type']}_produced"][0]) / 365.0
-            total_production = float(inputs[f"total_{self.options['commodity_type']}_produced"][0])
+            capacity = inputs[f"total_{self.options['commodity_type']}_produced"][0] / 365.0
+            total_production = inputs[f"total_{self.options['commodity_type']}_produced"][0]
         else:
-            capacity = float(inputs["co2_capture_kgpy"]) / 365.0
-            total_production = float(inputs["co2_capture_kgpy"])
+            capacity = inputs["co2_capture_kgpy"][0] / 365.0
+            total_production = inputs["co2_capture_kgpy"][0]
 
         # define profast parameters for capacity and utilization
         profast_params["capacity"] = capacity  # TODO: update to actual daily capacity
