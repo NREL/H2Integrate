@@ -261,11 +261,11 @@ class DemandOpenLoopStorageController(DemandOpenLoopControlBase):
         max_charge_percent = self.config.max_charge_percent
         min_charge_percent = self.config.min_charge_percent
         init_charge_percent = self.config.init_charge_percent
-        max_charge_rate = inputs["max_charge_rate"]
+        max_charge_rate = inputs["max_charge_rate"].item()
         if self.config.charge_equals_discharge:
-            max_discharge_rate = inputs["max_charge_rate"]
+            max_discharge_rate = inputs["max_charge_rate"].item()
         else:
-            max_discharge_rate = self.config.max_discharge_rate
+            max_discharge_rate = float(self.config.max_discharge_rate)
         charge_efficiency = float(self.config.charge_efficiency)
         discharge_efficiency = float(self.config.discharge_efficiency)
 
