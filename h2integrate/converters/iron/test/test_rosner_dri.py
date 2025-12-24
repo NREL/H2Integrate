@@ -97,27 +97,28 @@ def ng_feedstock_availability_costs():
 def h2_feedstock_availability_costs():
     feedstocks_dict = {
         "electricity": {
-            "rated_capacity": 19000,  # need 18947.258036729818 kW
+            # (1418095/8760)t-pig_iron/h * 98.17925 kWh/t-pig_iron = 15893.55104 kW
+            "rated_capacity": 16000,  # need 15893.55104 kW
             "units": "kW",
             "price": 0.05802,  # USD/kW TODO: update
         },
         "natural_gas": {
-            "rated_capacity": 96.0,  # need 95.4810143 MMBtu at each timestep
+            "rated_capacity": 81.0,  # need 80.101596 MMBtu at each timestep
             "units": "MMBtu",
             "price": 0.0,
         },
         "hydrogen": {
-            "rated_capacity": 11.0,  # need 10.677802077625572 t/h
+            "rated_capacity": 9.0,  # need 8.957895917766855 t/h
             "units": "t/h",
             "price": 0.0,
         },
         "water": {
-            "rated_capacity": 30.0,  # need 27.4952280 galUS/h
+            "rated_capacity": 24.0,  # need 23.0664878077501 galUS/h
             "units": "galUS",
             "price": 1670.0,  # TODO: update cost is $0.441167535/t, equal to $1670.0004398318847/galUS
         },
         "iron_ore": {
-            "rated_capacity": 263.75,  # need 263.75110 t/h
+            "rated_capacity": 221.5,  # need 221.2679060330504 t/h
             "units": "t/h",
             "price": 27.5409 * 1e3,  # USD/t TODO: update
         },
