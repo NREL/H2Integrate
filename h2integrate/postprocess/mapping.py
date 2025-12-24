@@ -27,11 +27,11 @@ class GeospatialMapConfig(BaseConfig):
             used to plot points. Defaults to 'EPSG:4326'.
         web_map_crs (str, optional): A string representing the Web Mercator projection CRS used to
             convert the (longitude,latitude) data for plotting. Defaults to 'EPSG:3857'.
-        figsize (tuple, optional): A tuple of floats used to set the matplotlib.pyplot.subplots()
+        figsize (tuple, optional): A tuple of floats used to set the plt.subplots()
             figsize parameter. Defaults to (10.0,8.0).
-        constrained_layout (bool, optional): A boolean used to set the matplotlib.pyplot.subplots()
+        constrained_layout (bool, optional): A boolean used to set the plt.subplots()
             constrained_layout parameter. Defaults to True.
-        figure_title (str, optional): A string used to set the matplotlib.pyplot figure title.
+        figure_title (str, optional): A string used to set the figure title.
             Defaults to 'UPDATE TITLE'.
         colormap (str, optional): A string used to set the gpd.GeoDataFrame.plot() cmap parameter.
             Defaults to 'plasma_r'.
@@ -60,23 +60,23 @@ class GeospatialMapConfig(BaseConfig):
         colorbar_location (str, optional): A string used to set the location of the colorbar in
             conjunction with the colorbar_bbox_to_anchor.
             See mpl_toolkits.axes_grid1.inset_locator.inset_axes documentation for more info.
-            Defaults to 'lower_left'
+            Defaults to 'lower_left'.
         colorbar_bbox_to_anchor (tuple, optional): A tuple of floats used to set the location of the
             bounding box to anchor the colorbar. Defaults to (0.75, 0.97, 1.0, 1.0), upper right.
-            The values represent normalized coordinates relative to the parent figure where.
-            Example: (0,0,1,1) would be the bottom left corner and (1,1,1,1) would be the top right.
+            The values represent normalized coordinates relative to the parent figure.
+            Example: (0,0,1,1) is the bottom left corner and (1,1,1,1) is the top right.
             See mpl_toolkits.axes_grid1.inset_locator.inset_axes() documentation for more info.
         colorbar_borderpad (float, optional): A float used to fine tune the padding and location of
             the colorbar. Defaults to 0.0.
         colorbar_orientation (str, optional): A string used to set the orientation of the colorbar.
             Defaults to 'horizontal'.
             See matplotlib.pyplot.colorbar orientation parameter documentation for more info.
-        colorbar_limits (tuple | None, optional): A tuple used to set the lower and upper limits of
-            the colorbar ticks and colormap normalization. Defaults to None.
+        colorbar_limits (tuple | None, optional): A tuple used to manually set the lower and upper
+            limits of the colorbar ticks and colormap normalization range. Defaults to None.
         colorbar_tick_location (str, optional): A string used to set the location of the tick marks
             for the colorbar. Defaults to 'bottom'.
             See matplotlib.pyplot.colorbar ticklocation parameter documentation for more info.
-        colorbar_tick_direction (str, optional): A string used to set if the colorbar ticks appear
+        colorbar_tick_direction (str, optional): A string used to set the colorbar ticks to appear
             inside the colorbar, outside, or both. Default 'inout' == both.
             See matplotlib.axes.Axes.tick_params direction parameter documentation for more info.
         colorbar_tick_label_font_size (float, optional): A float used to set the fontsize of the
@@ -189,12 +189,12 @@ def plot_geospatial_point_heat_map(
     file (if ran in serial), a set of cases.sql recorder files (if ran in parallel), or a .csv file.
 
     Allows plotting of additional layers on an existing map if the plt.figure, plt.axes,
-    and the previous gpd.GeoDataFrame object(s) used to create the existing map are passed in as
+    and previous gpd.GeoDataFrame object(s) used to create the existing map are passed in as
     arguments to the function.
 
     Args:
         case_results_fpath (Path | str): A string or Path object to the .csv or cases.sql file(s)
-            where results are stored
+            where results are stored.
         metric_to_plot (str): A string representing the column / variable name of the metric of
             interest to plot as heat map points as defined in the .csv or cases.sql file.
         latitude_var_name (str, optional): A string representing the column / variable name of the
@@ -238,7 +238,7 @@ def plot_geospatial_point_heat_map(
 
     Raises:
         TypeError: If the provided case_results_fpath is of the wront type (not .csv or .sql)
-        ValueError: If only a subset of fig, ax, and base_layer_gdf is provided.
+        ValueError: If only a subset of fig, ax, and base_layer_gdf is provided when adding a layer.
     """
     # Check if map_preferences is a dictionary and load as GeospatialMapConfig.from_dict()
     # Loads default values and checks for any erroneous / extraneous keys
@@ -282,27 +282,34 @@ def plot_geospatial_point_heat_map(
     # Convert coordinates to typical Web Mercator project CRS (EPSG:3857) for plotting
     results_gdf = results_gdf.to_crs(map_preferences.web_map_crs)
 
-    # Check if fig, ax, and base_layer_gdf are all provided together
-    if len({fig is None, ax is None, base_layer_gdf is None}) != 1:
-        raise ValueError(
-            """The fig, ax, and base_layer_gdf arguments must be provided together to add a layer to
-            an existing plot or all must be omitted/None to create a new plot"""
-        )
+    # Create list variable to hold all gdfs for calculating basemap bounds
+    gdfs_for_bounds = [results_gdf]
 
-    # Create figure and axis objects if none are provided = creating base map
-    elif fig is None:
+    # Check if fig, ax, and base_layer_gdf are all None
+    if all(v is None for v in [fig, ax, base_layer_gdf]):
+        # Then create new fig and ax objects (creating new map)
         fig, ax = plt.subplots(
             1,
             figsize=map_preferences.figsize,
             constrained_layout=map_preferences.constrained_layout,
         )
-    else:  # Else fig and ax and base_layer_gdf are all not None:
-        # set figure and axes as current fig,ax objects
+
+    # Else if fig, ax, and base_layer_gdf are all not None
+    elif all(v is not None for v in [fig, ax, base_layer_gdf]):
+        # Then set figure and axes as current fig, ax objects (adding layer to existing map)
         plt.figure(fig.number)
         plt.sca(ax)
-
         # Validate base_layer_gdf(s) is in the same CRS as the results_gdf
         base_layer_gdf = validate_gdfs_are_same_crs(base_layer_gdf, results_gdf)
+        # Extend gdf_for_bounds with base_layer_gdf(s) provided
+        gdfs_for_bounds.extend(base_layer_gdf)
+
+    # Else fig, ax, and base_layer_gdf not provided as a full set
+    else:
+        raise ValueError(
+            """The fig, ax, and base_layer_gdf arguments must be provided together to add a layer to
+            an existing plot or all must be omitted/None to create a new plot"""
+        )
 
     # Determine appropriate lower and upper bounds for the colormap and legend
     # If no colorbar_limits provided, attempt to automatically set limits
@@ -326,7 +333,7 @@ def plot_geospatial_point_heat_map(
         markersize=map_preferences.markersize,
         edgecolor=map_preferences.edgecolor,
         norm=norm,
-        # zorder=1,
+        zorder=map_preferences.zorder,
     )
 
     # Create inset axis for color bar legend
@@ -369,8 +376,8 @@ def plot_geospatial_point_heat_map(
     )
 
     # format color bar legend offset text and position (exp notation for values if applicable)
-    # By default, this is set such that if the values of the colorbar legend are larger or smaller
-    # than 4 decimal places (0.0001-9999) then use exponential notation
+    # By default, this is set such that if the values of the colorbar legend are smaller or larger
+    # than -3,4 decimal places (0.001-9999) then use exponential notation
     cbar.formatter.set_scientific(map_preferences.colorbar_tick_label_use_exp_notation)
     cbar.formatter.set_powerlimits(map_preferences.colorbar_tick_label_exp_notation_decimal_limit)
 
@@ -389,12 +396,9 @@ def plot_geospatial_point_heat_map(
     cbar.ax.xaxis.OFFSETTEXTPAD = -24
 
     # Calculate appropriate bounds for map based on coordinates of data used in plots
-    gdfs_for_bounds = [results_gdf]
-    if base_layer_gdf is not None:
-        gdfs_for_bounds.extend(base_layer_gdf)
-
     coord_range_dict = calculate_geodataframe_total_bounds(*gdfs_for_bounds)
 
+    # Set basemap extent based on calculated bounds and padding fractions
     left_pad = coord_range_dict["x_range"] * map_preferences.basemap_leftpad
     right_pad = coord_range_dict["x_range"] * map_preferences.basemap_rightpad
     upper_pad = coord_range_dict["y_range"] * map_preferences.basemap_upperpad
@@ -413,6 +417,7 @@ def plot_geospatial_point_heat_map(
         zoom=map_preferences.basemap_zoom,
     )
 
+    # Show the plot if show_plot == True
     # NOTE: when plotting multiple layers, set this to True only when plotting the last layer
     if show_plot:
         plt.show()
@@ -451,15 +456,15 @@ def plot_straight_line_shipping_routes(
     arguments to the function
 
     NOTE:
-        This function currently plots simple straight-line connections between locations and is
-        intended for proof-of-concept and early-stage analysis.
-        Future versions may incorporate more advanced routing logic.
+        This function currently plots simple straight-line connections between locations and was
+        developed for ITO Iron proof of concept work.
+        Future versions may incorporate more advanced shipping logic within H2I or other tools.
 
     Args:
-        shipping_coords_fpath (Path | str): A string or Path object pointing to a .csv file
+        shipping_coords_fpath (Path | str): A string or Path object to a .csv file
             containing location names and their corresponding latitude and longitude coordinates.
-        shipping_route (list[str]): An ordered list of location identifiers defining the shipping or
-            transport route. Each identifier must correspond to an index entry in the provided .csv.
+        shipping_route (list[str]): An ordered list of locations defining the shipping or
+            transport route. Each location must correspond to an index entry in the provided .csv.
         latitude_var_name (str, optional): A string representing the column / variable name of the
             latitude data as defined in the .csv file. Defaults to None.
             The code will attempt to automatically detect this column if no string is provided and
@@ -469,9 +474,9 @@ def plot_straight_line_shipping_routes(
             The code will attempt to automatically detect this column if no string is provided and
             will raise an error if unable to resolve to one column.
         fig (plt.Figure, optional):A plt.Figure object of an existing map on which to add the
-            shipping route. Defaults to None.
+            shipping route layer. Defaults to None.
         ax (plt.Axes, optional): A plt.Axes object of an existing map on which to add the shipping
-            route. Defaults to None.
+            route layer. Defaults to None.
         base_layer_gdf (
             gpd.GeoDataFrame | list[gpd.GeoDataFrame] | tuple[gpd.GeoDataFrame, ...],
             optional
@@ -515,23 +520,24 @@ def plot_straight_line_shipping_routes(
     if (".csv") in shipping_coords_fpath.suffix:
         shipping_coords_df = pd.read_csv(shipping_coords_fpath, index_col=0)
 
-        # Auto detect latitude and longitude column names if not provided as argument
-        if latitude_var_name is None:
-            latitude_var_name, _ = auto_detect_lat_long_columns(shipping_coords_df)
-
-        if longitude_var_name is None:
-            _, longitude_var_name = auto_detect_lat_long_columns(shipping_coords_df)
-
-        # Order columns so tuples created in dict below are (long,lat) ordered pairs
-        shipping_coords_df = shipping_coords_df[[longitude_var_name, latitude_var_name]]
-        shipping_coords_dict = {
-            index: tuple(row.values())
-            for index, row in shipping_coords_df.to_dict(orient="index").items()
-        }
     else:
         raise TypeError(
             f"The provided filepath {shipping_coords_fpath} is of the wrong type, must be a .csv"
         )
+
+    # Auto detect latitude and longitude column names if not provided as argument
+    if latitude_var_name is None:
+        latitude_var_name, _ = auto_detect_lat_long_columns(shipping_coords_df)
+
+    if longitude_var_name is None:
+        _, longitude_var_name = auto_detect_lat_long_columns(shipping_coords_df)
+
+    # Order columns so tuples created in dict below are (long,lat) ordered pairs
+    shipping_coords_df = shipping_coords_df[[longitude_var_name, latitude_var_name]]
+    shipping_coords_dict = {
+        key: tuple(value.values())
+        for key, value in shipping_coords_df.to_dict(orient="index").items()
+    }
 
     # Create list of coordinates to trace shipping route
     shipping_route_coords = [shipping_coords_dict[str(city)] for city in shipping_route]
@@ -544,27 +550,33 @@ def plot_straight_line_shipping_routes(
     # Convert coordinates to typical Web Mercator project CRS (EPSG:3857) for plotting
     shipping_route_gdf = shipping_route_gdf.to_crs(map_preferences.web_map_crs)
 
-    # Check if fig, ax, and base_layer_gdf are all provided together
-    if len({fig is None, ax is None, base_layer_gdf is None}) != 1:
-        raise ValueError(
-            """The fig, ax, and base_layer_gdf arguments must be provided together to add a layer to
-            an existing plot or all must be omitted/None to create a new plot"""
-        )
+    # Create list variable to hold all gdfs for calculating basemap bounds
+    gdfs_for_bounds = [shipping_route_gdf]
 
-    # Create figure and axis objects if none are provided = creating base map
-    elif fig is None:
+    # Check if fig, ax, and base_layer_gdf are all None
+    if all(v is None for v in [fig, ax, base_layer_gdf]):
         fig, ax = plt.subplots(
             1,
             figsize=map_preferences.figsize,
             constrained_layout=map_preferences.constrained_layout,
         )
-    else:  # Else fig and ax and base_layer_gdf are all not None:
+
+    # Else if fig, ax, and base_layer_gdf are all not None
+    elif all(v is not None for v in [fig, ax, base_layer_gdf]):
         # set figure and axes as current fig,ax objects
         plt.figure(fig.number)
         plt.sca(ax)
-
         # Validate base_layer_gdf(s) is in the same CRS as the results_gdf
         base_layer_gdf = validate_gdfs_are_same_crs(base_layer_gdf, shipping_route_gdf)
+        # Extend gdf_for_bounds with base_layer_gdf(s) provided
+        gdfs_for_bounds.extend(base_layer_gdf)
+
+    # Else fig, ax, and base_layer_gdf not provided as a full set
+    else:
+        raise ValueError(
+            """The fig, ax, and base_layer_gdf arguments must be provided together to add a layer to
+            an existing plot or all must be omitted/None to create a new plot"""
+        )
 
     # Plot straight line shipping layer
     shipping_route_gdf.plot(
@@ -576,12 +588,9 @@ def plot_straight_line_shipping_routes(
     )
 
     # Calculate appropriate bounds for map based on coordinates of data used in plots
-    gdfs_for_bounds = [shipping_route_gdf]
-    if base_layer_gdf is not None:
-        gdfs_for_bounds.extend(base_layer_gdf)
-
     coord_range_dict = calculate_geodataframe_total_bounds(*gdfs_for_bounds)
 
+    # Set basemap extent based on calculated bounds and padding fractions
     left_pad = coord_range_dict["x_range"] * map_preferences.basemap_leftpad
     right_pad = coord_range_dict["x_range"] * map_preferences.basemap_rightpad
     upper_pad = coord_range_dict["y_range"] * map_preferences.basemap_upperpad
@@ -732,8 +741,7 @@ def validate_gdfs_are_same_crs(
     Validate that one or more GeoDataFrames share the same CRS as a reference GeoDataFrame.
 
     Ensures that all provided baselayer GeoDataFrames use the same coordinate reference system (CRS)
-    as the results GeoDataFrame used for plotting. If a single GeoDataFrame is provided, it is
-    normalized to a list to simplify downstream processing.
+    as the results GeoDataFrame used for plotting.
 
     Args:
         base_layer_gdf (
