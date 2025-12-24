@@ -10,7 +10,7 @@ from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
 
 @define
 class HydrogenIronReductionPerformanceConfig(BaseConfig):
-    """Configuration class for NaturalGasIronReductionPlantPerformanceComponent.
+    """Configuration class for HydrogenIronReductionPlantPerformanceComponent.
 
     Attributes:
         pig_iron_production_rate_tonnes_per_hr (float): capacity of the iron processing plant
@@ -50,7 +50,6 @@ class HydrogenIronReductionPlantPerformanceComponent(om.ExplicitComponent):
             "iron_ore": "t/h",
             "electricity": "kW",
             "hydrogen": "t/h",
-            # "reformer_catalyst": "(m**3)",  # "(m**3)/h"
         }
 
         # Add feedstock inputs and outputs, default to 0 --> set using feedstock component
@@ -97,7 +96,7 @@ class HydrogenIronReductionPlantPerformanceComponent(om.ExplicitComponent):
         """Update the coefficient dataframe such that feedstock values are converted to units of
         feedstock unit / unit pig iron, e.g., 'galUS/t'. Also convert values to standard units
         and that units are compatible with OpenMDAO Units. Filter the dataframe to include
-        only the data necessary for Natural Gas reduction.
+        only the data necessary for hydrogen reduction.
 
         Args:
             coeff_df (pd.DataFrame): performance coefficient dataframe.
