@@ -105,7 +105,10 @@ develop = [
     "jupyter-book<2",
     "sphinxcontrib-napoleon"
 ]
-examples = ["jupyterlab"]
+examples = [
+    "jupyterlab",
+    "geopandas",
+    "contextily"]
 all = ["h2integrate[develop,examples]"]
 
 [tool.setuptools]
