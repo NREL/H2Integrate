@@ -1,6 +1,7 @@
 # Changelog
 ## 0.5.x [TBD]
 - Updates models for NumPy version 2.4.0
+- Added ability to plot multi-layer geospatial point heat map and simple straight line transport routes with GeoPandas and Contextily [PR 413](https://github.com/NREL/H2Integrate/pull/413)
 
 ## 0.5.1 [December 18, 2025]
 
