@@ -122,7 +122,7 @@ class ResizeablePerformanceModelBaseClass(om.ExplicitComponent):
 class CacheModelBaseClass(om.ExplicitComponent):
     """Baseclass to be used for any model that may cache results."""
 
-    def load_outputs(self, inputs, outputs, discrete_inputs={}):
+    def load_outputs(self, inputs, outputs, discrete_inputs={}, config_dict: dict = {}):
         """Create filename for cached results using data from inputs and discrete_inputs.
         If the filepathe exists for the cached results, then sets the outputs values to the
         values in the cached results file and returns True. Otherwise, returns False.
@@ -132,48 +132,70 @@ class CacheModelBaseClass(om.ExplicitComponent):
             outputs (om.vectors.default_vector.DefaultVector): OM outputs of `compute()` method
             discrete_inputs (om.core.component._DictValues, optional): OM discrete inputs to
                 `compute()` method. Defaults to {}.
+            config_dict (dict, optional): dictionary created/updated from config class.
+                Defaults to {}. If config_dict is input as an empty dictionary,
+                config_dict is created from `self.config.as_dict()`
 
         Returns:
             bool: True if outputs were set to cached results. False if cache file
                 doesnt't exist and the model still needs to calculate and set the outputs.
         """
         if self.config.enable_caching:
-            config_dict = self.config.as_dict()
+            # check if config_dict was input
+            if not bool(config_dict):
+                # create config_dict from config attribute
+                config_dict = self.config.as_dict()
 
+            # create unique filename for cached results based on inputs and config
             cache_filename = make_cache_hash_filename(
                 config_dict, inputs, discrete_inputs, cache_dir=self.config.cache_dir
             )
 
+            # Check if file exists that contains cached results
             if not cache_filename.exists():
+                # If file doesn't exist, return False to indicate that outputs have not been set
                 return False
 
             # Load the cached results
             cache_path = Path(cache_filename)
             with cache_path.open("rb") as f:
                 cached_data = dill.load(f)
+
+            # Set outputs to the outputs saved in the cached results
             for output_name, default_output_val in outputs.items():
                 outputs[output_name] = cached_data.get(output_name, default_output_val)
+            # Return True to indicate that outputs have been set from cached results
             return True
 
-    def cache_outputs(self, inputs, outputs, discrete_inputs={}):
+    def cache_outputs(self, inputs, outputs, discrete_inputs={}, config_dict: dict = {}):
         """Create filename for cached results using data from inputs and discrete_inputs.
         Save dictionary of outputs to the file.
 
         Args:
             inputs (om.vectors.default_vector.DefaultVector): OM inputs to `compute()` method
             outputs (om.vectors.default_vector.DefaultVector): OM outputs of `compute()` method
+                that have already been set with the resulting values
             discrete_inputs (om.core.component._DictValues, optional): OM discrete inputs to
                 `compute()` method. Defaults to {}.
+            config_dict (dict, optional): dictionary created/updated from config class.
+                Defaults to {}. If config_dict is input as an empty dictionary,
+                config_dict is created from `self.config.as_dict()`
         """
         # Cache the results for future use
         if self.config.enable_caching:
-            config_dict = self.config.as_dict()
+            # check if config_dict was input
+            if not bool(config_dict):
+                # create config_dict from config attribute
+                config_dict = self.config.as_dict()
 
+            # create unique filename for cached results based on inputs and config
             cache_filename = make_cache_hash_filename(
                 config_dict, inputs, discrete_inputs, cache_dir=self.config.cache_dir
             )
 
             cache_path = Path(cache_filename)
+
+            # Save outputs to pickle file
             with cache_path.open("wb") as f:
                 output_dict = dict(outputs.items())
                 dill.dump(output_dict, f)
