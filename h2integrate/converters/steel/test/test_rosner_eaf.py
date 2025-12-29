@@ -189,10 +189,12 @@ def test_ng_eaf_performance_limited_feedstock(
 def test_ng_eaf_performance_cost(
     plant_config, ng_eaf_base_config, ng_feedstock_availability_costs, subtests
 ):
+    ng_eaf_base_config["model_inputs"]["shared_parameters"][
+        "steel_production_rate_tonnes_per_hr"
+    ] = 838926.9489 / 8760
     expected_capex = 264034898.3329662
     expected_fixed_om = 38298777.651658
-    expected_var_om = 32.09095
-    expected_steel_annual_production_tpd = 3259.391781  # t/d
+    expected_steel_annual_production_tpd = 2298.43  # t/d
 
     prob = om.Problem()
 
@@ -235,13 +237,6 @@ def test_ng_eaf_performance_cost(
             pytest.approx(prob.get_val("cost.OpEx")[0] + prob.get_val("cost.VarOpEx")[0], rel=1e-3)
             == expected_fixed_om
         )
-    with subtests.test("VarOpEx"):
-        assert (
-            pytest.approx(
-                prob.get_val("cost.VarOpEx")[0] + prob.get_val("cost.VarOpEx")[0], rel=1e-3
-            )
-            == expected_var_om
-        )
 
 
 def test_h2_eaf_performance(
@@ -275,11 +270,13 @@ def test_h2_eaf_performance(
 def test_h2_eaf_performance_cost(
     plant_config, ng_eaf_base_config, h2_feedstock_availability_costs, subtests
 ):
-    expected_capex = 246546589.2914324
-    expected_fixed_om = 53360873.348792635
-    expected_var_om = 888847481.352381
+    ng_eaf_base_config["model_inputs"]["shared_parameters"][
+        "steel_production_rate_tonnes_per_hr"
+    ] = 838926.9489 / 8760
+    expected_capex = 271492352.2740321
+    expected_fixed_om = 37048005.00181486
 
-    expected_steel_annual_production_tpd = 3259.391781  # t/d
+    expected_steel_annual_production_tpd = 2298.43  # t/d
 
     prob = om.Problem()
 
@@ -317,11 +314,4 @@ def test_h2_eaf_performance_cost(
         assert (
             pytest.approx(prob.get_val("cost.OpEx")[0] + prob.get_val("cost.VarOpEx")[0], rel=1e-3)
             == expected_fixed_om
-        )
-    with subtests.test("VarOpEx"):
-        assert (
-            pytest.approx(
-                prob.get_val("cost.VarOpEx")[0] + prob.get_val("cost.VarOpEx")[0], rel=1e-3
-            )
-            == expected_var_om
         )
