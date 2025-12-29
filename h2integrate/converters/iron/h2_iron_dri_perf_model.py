@@ -10,7 +10,7 @@ from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
 
 @define
 class HydrogenIronReductionPerformanceConfig(BaseConfig):
-    """Configuration class for NaturalGasIronReductionPlantPerformanceComponent.
+    """Configuration class for HydrogenIronReductionPlantPerformanceComponent.
 
     Attributes:
         pig_iron_production_rate_tonnes_per_hr (float): capacity of the iron processing plant
@@ -50,7 +50,6 @@ class HydrogenIronReductionPlantPerformanceComponent(om.ExplicitComponent):
             "iron_ore": "t/h",
             "electricity": "kW",
             "hydrogen": "t/h",
-            # "reformer_catalyst": "(m**3)",  # "(m**3)/h"
         }
 
         # Add feedstock inputs and outputs, default to 0 --> set using feedstock component
@@ -97,7 +96,7 @@ class HydrogenIronReductionPlantPerformanceComponent(om.ExplicitComponent):
         """Update the coefficient dataframe such that feedstock values are converted to units of
         feedstock unit / unit pig iron, e.g., 'galUS/t'. Also convert values to standard units
         and that units are compatible with OpenMDAO Units. Filter the dataframe to include
-        only the data necessary for Natural Gas reduction.
+        only the data necessary for hydrogen reduction.
 
         Args:
             coeff_df (pd.DataFrame): performance coefficient dataframe.
@@ -139,12 +138,12 @@ class HydrogenIronReductionPlantPerformanceComponent(om.ExplicitComponent):
                 i_update = coeff_df[coeff_df["Unit"] == old_unit].index
 
                 # convert from feedstock per unit steel to feedstock per unit pig iron
-                coeff_df.loc[i_update]["Value"] = (
-                    coeff_df.loc[i_update]["Value"] * steel_to_iron_ratio
+                coeff_df.loc[i_update, "Value"] = (
+                    coeff_df.loc[i_update, "Value"] * steel_to_iron_ratio
                 )
 
                 # update the "Type" to specify that units were changed to be per unit pig iron
-                coeff_df.loc[i_update]["Type"] = f"{coeff_df.loc[i_update]['Type'].values[0]}/iron"
+                coeff_df.loc[i_update, "Type"] = f"{coeff_df.loc[i_update, 'Type'].values[0]}/iron"
 
                 is_capacity_type = all(
                     k == "capacity" for k in coeff_df.loc[i_update]["Type"].to_list()
@@ -197,15 +196,21 @@ class HydrogenIronReductionPlantPerformanceComponent(om.ExplicitComponent):
 
     def compute(self, inputs, outputs):
         # get the feedstocks from
-        feedstocks = self.coeff_df[self.coeff_df["Type"] == "feed"].copy()
+        feedstocks = self.coeff_df[self.coeff_df["Type"] == "feed/iron"].copy()
 
         # get the feedstock usage rates in units/t pig iron
         feedstocks_usage_rates = {
-            "natural_gas": feedstocks[feedstocks["Unit"] == "MMBtu/t"]["Value"].sum(),
-            "water": feedstocks[feedstocks["Unit"] == "galUS/t"]["Value"].sum(),
-            "iron_ore": feedstocks[feedstocks["Name"] == "Iron Ore"]["Value"].sum(),
-            "electricity": feedstocks[feedstocks["Unit"] == "(kW*h)/t"]["Value"].sum(),
-            "hydrogen": feedstocks[feedstocks["Name"] == "Hydrogen"]["Value"].sum(),
+            "natural_gas": feedstocks[feedstocks["Name"] == "Natural Gas"][
+                "Value"
+            ].sum(),  # MMBtu/t
+            "water": feedstocks[feedstocks["Name"] == "Raw Water Withdrawal"][
+                "Value"
+            ].sum(),  # galUS/t
+            "iron_ore": feedstocks[feedstocks["Name"] == "Iron Ore"]["Value"].sum(),  # t/t
+            "electricity": feedstocks[feedstocks["Name"] == "Electricity"][
+                "Value"
+            ].sum(),  # (kW*h)/t
+            "hydrogen": feedstocks[feedstocks["Name"] == "Hydrogen"]["Value"].sum(),  # t/t
         }
 
         # pig iron demand, saturated at maximum rated system capacity

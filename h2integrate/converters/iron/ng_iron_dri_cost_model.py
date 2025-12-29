@@ -12,7 +12,7 @@ from h2integrate.tools.inflation.inflate import inflate_cpi, inflate_cepci
 
 @define
 class NaturalGasIronReductionCostConfig(CostModelBaseConfig):
-    """Configuration class for RosnerIronPlantCostComponent.
+    """Configuration class for NaturalGasIronReductionPlantCostComponent.
 
     Attributes:
         pig_iron_production_rate_tonnes_per_hr (float): capacity of the iron processing plant
@@ -32,7 +32,8 @@ class NaturalGasIronReductionCostConfig(CostModelBaseConfig):
 
 
 class NaturalGasIronReductionPlantCostComponent(CostModelBaseClass):
-    """_summary_
+    """Calculates the capital and operating costs for a natural gas-based direct
+    iron reduction plant using the Rosner cost model.
 
     Attributes:
         config (NaturalGasIronReductionCostConfig): configuration class
@@ -76,7 +77,6 @@ class NaturalGasIronReductionPlantCostComponent(CostModelBaseClass):
         self.add_input(
             "system_capacity",
             val=self.config.pig_iron_production_rate_tonnes_per_hr,
-            # shape=n_timesteps,
             units="t/h",
             desc="Pig ore production capacity",
         )

@@ -189,7 +189,7 @@ supported_models = {
     "ng_dri_performance_rosner": NaturalGasIronReductionPlantPerformanceComponent,
     "ng_dri_cost_rosner": NaturalGasIronReductionPlantCostComponent,  # standalone model
     "h2_dri_performance_rosner": HydrogenIronReductionPlantPerformanceComponent,
-    "h2_dri_cost_rosner": HydrogenIronReductionPlantCostComponent,
+    "h2_dri_cost_rosner": HydrogenIronReductionPlantCostComponent,  # standalone model
     "reverse_osmosis_desalination_performance": ReverseOsmosisPerformanceModel,
     "reverse_osmosis_desalination_cost": ReverseOsmosisCostModel,
     "simple_ammonia_performance": SimpleAmmoniaPerformanceModel,

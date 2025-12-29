@@ -12,7 +12,7 @@ from h2integrate.tools.inflation.inflate import inflate_cpi, inflate_cepci
 
 @define
 class HydrogenIronReductionCostConfig(CostModelBaseConfig):
-    """Configuration class for RosnerIronPlantCostComponent.
+    """Configuration class for HydrogenIronReductionPlantCostComponent.
 
     Attributes:
         pig_iron_production_rate_tonnes_per_hr (float): capacity of the iron processing plant
@@ -32,10 +32,11 @@ class HydrogenIronReductionCostConfig(CostModelBaseConfig):
 
 
 class HydrogenIronReductionPlantCostComponent(CostModelBaseClass):
-    """_summary_
+    """Cost component for hydrogen-based direct reduced iron (DRI) plant
+    using the Rosner cost model.
 
     Attributes:
-        config (NaturalGasIronReductionCostConfig): configuration class
+        config (HydrogenIronReductionCostConfig): configuration class
         coeff_df (pd.DataFrame): cost coefficient dataframe
         steel_to_iron_ratio (float): steel/pig iron ratio
     """
