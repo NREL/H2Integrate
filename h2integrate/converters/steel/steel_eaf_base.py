@@ -359,10 +359,10 @@ class ElectricArcFurnacePlantBaseCostComponent(CostModelBaseClass):
             pd.DataFrame: cost coefficient dataframe
         """
 
-        perf_coeff_fpath = ROOT_DIR / "converters" / "iron" / "rosner" / "perf_coeffs.csv"
+        # perf_coeff_fpath = ROOT_DIR / "converters" / "iron" / "rosner" / "perf_coeffs.csv"
 
-        perf_df = pd.read_csv(perf_coeff_fpath, index_col=0)
-        perf_df = perf_df[perf_df["Product"] == self.product]
+        # perf_df = pd.read_csv(perf_coeff_fpath, index_col=0)
+        # perf_df = perf_df[perf_df["Product"] == self.product]
 
         # only include data for the given product
 
@@ -391,7 +391,7 @@ class ElectricArcFurnacePlantBaseCostComponent(CostModelBaseClass):
         total_capex_usd = 0.0
         for item in capital_items:
             if (
-                capital_items_df.loc[item, "exp"]["Value"] > 0
+                np.abs(capital_items_df.loc[item, "exp"]["Value"]) > 0
                 and capital_items_df.loc[item, "lin"]["Value"] > 0
             ):
                 capex = capital_items_df.loc[item, "lin"]["Value"] * (
