@@ -44,6 +44,12 @@ from h2integrate.storage.hydrogen.tank_baseclass import (
     HydrogenTankPerformanceModel,
 )
 from h2integrate.converters.hydrogen.wombat_model import WOMBATElectrolyzerModel
+from h2integrate.converters.steel.steel_eaf_plant import (
+    HydrogenEAFPlantCostComponent,
+    NaturalGasEAFPlantCostComponent,
+    HydrogenEAFPlantPerformanceComponent,
+    NaturalGasEAFPlantPerformanceComponent,
+)
 from h2integrate.storage.battery.atb_battery_cost import ATBBatteryCostModel
 from h2integrate.storage.hydrogen.h2_storage_cost import (
     PipeStorageCostModel,
@@ -184,6 +190,10 @@ supported_models = {
     "ng_dri_cost_rosner": NaturalGasIronReductionPlantCostComponent,  # standalone model
     "h2_dri_performance_rosner": HydrogenIronReductionPlantPerformanceComponent,
     "h2_dri_cost_rosner": HydrogenIronReductionPlantCostComponent,  # standalone model
+    "ng_eaf_performance_rosner": NaturalGasEAFPlantPerformanceComponent,
+    "ng_eaf_cost_rosner": NaturalGasEAFPlantCostComponent,  # standalone model
+    "h2_eaf_performance_rosner": HydrogenEAFPlantPerformanceComponent,
+    "h2_eaf_cost_rosner": HydrogenEAFPlantCostComponent,  # standalone model
     "reverse_osmosis_desalination_performance": ReverseOsmosisPerformanceModel,
     "reverse_osmosis_desalination_cost": ReverseOsmosisCostModel,
     "simple_ammonia_performance": SimpleAmmoniaPerformanceModel,
