@@ -26,9 +26,9 @@ technologies:
     model_inputs:
       shared_parameters:
         feedstock_type: "crude_ore"
-        units: "kg/h"
+        units: "t/h"
       performance_parameters:
-        rated_capacity: 2000. # kg/h
+        rated_capacity: 2000. # t/h
       cost_parameters:
         cost_year: 2022
         price: 0.0
