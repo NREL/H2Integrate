@@ -205,9 +205,9 @@ class IronReductionPlantBasePerformanceComponent(om.ExplicitComponent):
                 "Value"
             ].sum(),  # galUS/t
             "iron_ore": feedstocks[feedstocks["Name"] == "Iron Ore"]["Value"].sum(),  # t/t
-            "electricity": feedstocks[feedstocks["Unit"] == "(kW*h)/t"][
+            "electricity": feedstocks[feedstocks["Name"] == "Electricity"][
                 "Value"
-            ].sum(),  # electricity
+            ].sum(),  # (kW*h)/t
         }
         if "hydrogen" in self.feedstocks_to_units:
             # t/t
