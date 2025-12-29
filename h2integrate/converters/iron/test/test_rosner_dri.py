@@ -151,6 +151,45 @@ def test_ng_dri_performance(
         )
 
 
+def test_ng_dri_performance_limited_feedstock(
+    plant_config, ng_dri_base_config, ng_feedstock_availability_costs, subtests
+):
+    expected_pig_iron_annual_production_tpd = 3885.1917808219177 / 2  # t/d
+    # make iron ore feedstock half of whats needed
+    water_usage_rate_gal_pr_tonne = 0.20060957937294563
+    water_half_availability_gal_pr_hr = (
+        water_usage_rate_gal_pr_tonne * expected_pig_iron_annual_production_tpd / 24
+    )
+    ng_feedstock_availability_costs["water"].update(
+        {"rated_capacity": water_half_availability_gal_pr_hr}
+    )
+
+    prob = om.Problem()
+
+    iron_dri_perf = NaturalGasIronReductionPlantPerformanceComponent(
+        plant_config=plant_config,
+        tech_config=ng_dri_base_config,
+        driver_config={},
+    )
+    prob.model.add_subsystem("perf", iron_dri_perf, promotes=["*"])
+    prob.setup()
+
+    for feedstock_name, feedstock_info in ng_feedstock_availability_costs.items():
+        prob.set_val(
+            f"perf.{feedstock_name}_in",
+            feedstock_info["rated_capacity"],
+            units=feedstock_info["units"],
+        )
+    prob.run_model()
+
+    annual_pig_iron = np.sum(prob.get_val("perf.pig_iron_out", units="t/h"))
+    with subtests.test("Annual Pig Iron"):
+        assert (
+            pytest.approx(annual_pig_iron / 365, rel=1e-3)
+            == expected_pig_iron_annual_production_tpd
+        )
+
+
 def test_ng_dri_performance_cost(
     plant_config, ng_dri_base_config, ng_feedstock_availability_costs, subtests
 ):
