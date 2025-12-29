@@ -27,6 +27,12 @@ from h2integrate.converters.wind.atb_wind_cost import ATBWindPlantCostModel
 from h2integrate.storage.battery.pysam_battery import PySAMBatteryPerformanceModel
 from h2integrate.transporters.generic_combiner import GenericCombinerPerformanceModel
 from h2integrate.transporters.generic_splitter import GenericSplitterPerformanceModel
+from h2integrate.converters.iron.iron_dri_plant import (
+    HydrogenIronReductionPlantCostComponent,
+    NaturalGasIronReductionPlantCostComponent,
+    HydrogenIronReductionPlantPerformanceComponent,
+    NaturalGasIronReductionPlantPerformanceComponent,
+)
 from h2integrate.converters.iron.iron_transport import (
     IronTransportCostComponent,
     IronTransportPerformanceComponent,
@@ -58,20 +64,8 @@ from h2integrate.converters.hydrogen.pem_electrolyzer import ECOElectrolyzerPerf
 from h2integrate.converters.solar.atb_res_com_pv_cost import ATBResComPVCostModel
 from h2integrate.converters.solar.atb_utility_pv_cost import ATBUtilityPVCostModel
 from h2integrate.resource.wind.nrel_developer_wtk_api import WTKNRELDeveloperAPIWindResource
-from h2integrate.converters.iron.h2_iron_dri_cost_model import (
-    HydrogenIronReductionPlantCostComponent,
-)
-from h2integrate.converters.iron.h2_iron_dri_perf_model import (
-    HydrogenIronReductionPlantPerformanceComponent,
-)
 from h2integrate.converters.iron.martin_mine_cost_model import MartinIronMineCostComponent
 from h2integrate.converters.iron.martin_mine_perf_model import MartinIronMinePerformanceComponent
-from h2integrate.converters.iron.ng_iron_dri_cost_model import (
-    NaturalGasIronReductionPlantCostComponent,
-)
-from h2integrate.converters.iron.ng_iron_dri_perf_model import (
-    NaturalGasIronReductionPlantPerformanceComponent,
-)
 from h2integrate.converters.methanol.smr_methanol_plant import (
     SMRMethanolPlantCostModel,
     SMRMethanolPlantFinanceModel,
