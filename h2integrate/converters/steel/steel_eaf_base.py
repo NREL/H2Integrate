@@ -205,8 +205,6 @@ class ElectricArcFurnacePlantBasePerformanceComponent(om.ExplicitComponent):
             "natural_gas": feedstocks[feedstocks["Name"] == "Natural Gas"][
                 "Value"
             ].sum(),  # MMBtu/t
-            "carbon": feedstocks[feedstocks["Name"] == "Carbon (Coke)"]["Value"].sum(),  # t/t
-            "lime": feedstocks[feedstocks["Name"] == "Lime"]["Value"].sum(),  # t/t
             "water": feedstocks[feedstocks["Name"] == "Raw Water Withdrawal"][
                 "Value"
             ].sum(),  # galUS/t
@@ -215,6 +213,18 @@ class ElectricArcFurnacePlantBasePerformanceComponent(om.ExplicitComponent):
                 "Value"
             ].sum(),  # electricity
         }
+
+        if "carbon" in self.feedstocks_to_units:
+            # t/t
+            feedstocks_usage_rates["carbon"] = feedstocks[feedstocks["Name"] == "Carbon (Coke)"][
+                "Value"
+            ].sum()  # t/t
+
+        if "lime" in self.feedstocks_to_units:
+            # m**3/t
+            feedstocks_usage_rates["lime"] = feedstocks[feedstocks["Name"] == "Lime"][
+                "Value"
+            ].sum()  # t/t
 
         # steel demand, saturated at maximum rated system capacity
         steel_demand = np.where(
@@ -281,7 +291,6 @@ class ElectricArcFurnacePlantBaseCostComponent(CostModelBaseClass):
     Attributes:
         config (ElectricArcFurnaceCostBaseConfig): configuration class
         coeff_df (pd.DataFrame): cost coefficient dataframe
-        steel_to_iron_ratio (float): steel/pig iron ratio
     """
 
     def setup(self):
@@ -449,7 +458,7 @@ class ElectricArcFurnacePlantBaseCostComponent(CostModelBaseClass):
         varom = self.coeff_df[self.coeff_df["Type"] == "variable opex"][
             "Value"
         ].sum()  # units are USD/mtpy steel
-        tot_varopex = varom * self.steel_to_iron_ratio * inputs["pig_iron_out"].sum()
+        tot_varopex = varom * inputs["steel_out"].sum()
 
         # Adjust costs to target dollar year
         tot_capex_adjusted = inflate_cepci(total_capex_usd, dollar_year, self.config.cost_year)
