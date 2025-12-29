@@ -138,3 +138,17 @@ technologies:
       cost_parameters:
         skilled_labor_cost: 40.85 #2022 USD/hr
         unskilled_labor_cost: 30.0 #2022 USD/hr
+
+  steel_plant:
+    performance_model:
+      model: "ng_eaf_performance_rosner"
+    cost_model:
+      model: "ng_eaf_cost_rosner"
+    model_inputs:
+      shared_parameters:
+        steel_production_rate_tonnes_per_hr: 135.8187214611872 #equivalent to 1189772 t/yr
+      performance_parameters:
+        water_density: 1000 #kg/m3
+      cost_parameters:
+        skilled_labor_cost: 40.85 #2022 USD/hr
+        unskilled_labor_cost: 30.0 #2022 USD/hr
