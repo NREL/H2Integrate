@@ -5,7 +5,7 @@ from turbine_models.tools.library_tools import check_turbine_library_for_turbine
 from turbine_models.tools.interface_tools import get_pysam_turbine_specs, get_floris_turbine_specs
 
 from h2integrate import H2I_LIBRARY_DIR
-from h2integrate.core.utilities import BaseConfig, get_path, write_yaml_readable
+from h2integrate.core.utilities import BaseConfig, get_path, write_readable_yaml
 
 
 def export_turbine_to_pysam_format(
@@ -49,7 +49,7 @@ def export_turbine_to_pysam_format(
 
     pysam_options = {"Turbine": turbine_specs}
 
-    write_yaml_readable(pysam_options, output_filepath)
+    write_readable_yaml(pysam_options, output_filepath)
 
     return output_filepath
 
@@ -138,6 +138,6 @@ def export_turbine_to_floris_format(
         if turbine_specs["power_thrust_table"].get(var, None) is None:
             turbine_specs["power_thrust_table"].update({var: default_val})
 
-    write_yaml_readable(turbine_specs, output_filepath)
+    write_readable_yaml(turbine_specs, output_filepath)
 
     return output_filepath

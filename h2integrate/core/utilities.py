@@ -286,6 +286,8 @@ def dict_to_yaml_formatting(orig_dict):
             elif isinstance(key, str):
                 if isinstance(orig_dict[key], (str, bool, int)):
                     continue
+                if orig_dict[key] is None:
+                    continue
                 if isinstance(orig_dict[key], (list, np.ndarray)):
                     if any(isinstance(v, dict) for v in val):
                         for vii, v in enumerate(val):
@@ -560,7 +562,7 @@ def write_yaml(
         yaml.dump(instance, f)
 
 
-def write_yaml_readable(instance: dict, foutput: str | Path):
+def write_readable_yaml(instance: dict, foutput: str | Path):
     """
     Writes a dictionary to a YAML file using the yaml library.
 
