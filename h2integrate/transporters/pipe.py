@@ -20,6 +20,8 @@ class PipePerformanceModel(om.ExplicitComponent):
                 "iron_ore",
                 "reformer_catalyst",
                 "water",
+                "carbon",
+                "lime",
             ],
         )
 
