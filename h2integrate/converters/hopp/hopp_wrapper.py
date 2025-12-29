@@ -34,16 +34,6 @@ class HOPPComponent(CostModelBaseClass, CacheModelBaseClass):
 
         super().setup()
 
-        # if "simulation_options" in self.config.hopp_config["config"]:
-        #     if "cache" in self.config.hopp_config["config"]["simulation_options"]:
-        #         self.config.enable_caching = self.config.hopp_config["config"][
-        #             "simulation_options"
-        #         ]["cache"]
-        #     else:
-        #         self.config.enable_caching = True
-        # else:
-        #     self.config.enable_caching = True
-
         if "wind" in self.config.hopp_config["technologies"]:
             wind_turbine_rating_kw_init = self.config.hopp_config["technologies"]["wind"].get(
                 "turbine_rating_kw", 0.0
