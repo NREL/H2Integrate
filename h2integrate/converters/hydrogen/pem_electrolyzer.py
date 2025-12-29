@@ -105,12 +105,12 @@ class ECOElectrolyzerPerformanceModel(ElectrolyzerPerformanceBaseClass):
             size_flow = discrete_inputs["flow_used_for_sizing"]
         if size_mode == "resize_by_max_feedstock":
             # In this sizing mode, electrolyzer size comes from feedstock
-            feed_ratio = inputs["max_feedstock_ratio"]
+            feed_ratio = inputs["max_feedstock_ratio"][0]
             # Make sure COBLYA doesn't cause any shenanigans trying to set feed_ratio <= 0
             if feed_ratio <= 1e-6:
-                feed_ratio = 1e-6
+                feed_ratio = 1.0e-6
             if size_flow == "electricity":
-                electrolyzer_size_mw = np.max(inputs["electricity_in"]) / 1000 * feed_ratio
+                electrolyzer_size_mw = np.max(inputs["electricity_in"]) / 1000.0 * feed_ratio
             else:
                 raise ValueError(f"Cannot resize for '{size_flow}' feedstock")
         elif size_mode == "resize_by_max_commodity":
