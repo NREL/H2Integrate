@@ -183,12 +183,20 @@ class IronTransportCostComponent(CostModelBaseClass):
         self.add_input("land_transport_distance", val=0.0, units="mi")
         self.add_input("water_transport_distance", val=0.0, units="mi")
         self.add_input("total_transport_distance", val=0.0, units="mi")
+        # self.add_input("iron_ore_consumed", val=0.0, units="t/h")
         self.add_input("total_iron_ore_produced", val=0.0, units="t/year")
 
         self.add_output("iron_transport_cost", val=0.0, units="USD/t")
         self.add_output("ore_profit_margin", val=0.0, units="USD/t")
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
+        # ore_consumed = inputs["iron_ore_consumed"]
+        # ore_consumed_sum = np.sum(ore_consumed)
+        # if ore_consumed_sum > 0:
+        #     total_ore = ore_consumed_sum
+        # else:
+        total_ore = inputs["total_iron_ore_produced"]
+
         water_coeff_dict = load_top_down_coeffs(
             ["Barge Shipping Cost"], cost_year=self.config.cost_year
         )
@@ -200,7 +208,7 @@ class IronTransportCostComponent(CostModelBaseClass):
         water_ship_cost_dol_per_ton = (
             water_ship_cost_dol_tonne_mi * inputs["water_transport_distance"]
         )
-        water_ship_cost_USD = inputs["total_iron_ore_produced"] * water_ship_cost_dol_per_ton
+        water_ship_cost_USD = total_ore * water_ship_cost_dol_per_ton
 
         land_coeff_dict = load_top_down_coeffs(
             ["Land Shipping Cost"], cost_year=self.config.cost_year
@@ -209,7 +217,7 @@ class IronTransportCostComponent(CostModelBaseClass):
         land_ship_cost_dol_tonne_mi = land_coeff_dict["Land Shipping Cost"]["values"][land_year_idx]
 
         land_ship_cost_dol_per_ton = land_ship_cost_dol_tonne_mi * inputs["land_transport_distance"]
-        land_ship_cost_USD = inputs["total_iron_ore_produced"] * land_ship_cost_dol_per_ton
+        land_ship_cost_USD = total_ore * land_ship_cost_dol_per_ton
 
         total_shipment_cost = water_ship_cost_USD + land_ship_cost_USD
 
@@ -219,5 +227,5 @@ class IronTransportCostComponent(CostModelBaseClass):
             pm_year_idx
         ]
 
-        outputs["iron_transport_cost"] = total_shipment_cost / inputs["total_iron_ore_produced"]
+        outputs["iron_transport_cost"] = total_shipment_cost / total_ore
         outputs["VarOpEx"] = total_shipment_cost

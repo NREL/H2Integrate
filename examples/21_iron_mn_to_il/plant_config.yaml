@@ -27,9 +27,14 @@ technology_interconnections: [
   ["mine_feedstock","iron_mine","crude_ore","pipe"],
   # connect iron mine to iron transport
   #TODO: update after updated transport model is integrated
-  ["iron_mine","iron_transport","total_iron_ore_produced"],
-  ["iron_mine","iron_plant","iron_ore","pipe"], #temp workaround until transport model is updated
+  ["iron_mine","ore_splitter","iron_ore","pipe"],
+  ["iron_mine","ore_splitter","total_iron_ore_produced"],
+  ["iron_plant","ore_splitter",["iron_ore_consumed","prescribed_commodity_to_priority_tech"]],
+  ["ore_splitter","iron_transport",["total_iron_ore_produced1","total_iron_ore_produced"]],
+  # connect iron ore price to feedstock
+  ["finance_subgroup_iron_ore","ore_feedstock",["price_iron_ore","price"]],
   # connect feedstocks to iron plant
+  ["ore_feedstock","iron_plant","iron_ore","pipe"],
   ["dri_grid_feedstock","iron_plant","electricity","cable"],
   ["catalyst_feedstock","iron_plant","reformer_catalyst","pipe"],
   ["water_feedstock","iron_plant","water","pipe"],
@@ -83,9 +88,7 @@ finance_parameters:
       commodity: "pig_iron"
       commodity_stream: "iron_plant"
       technologies:
-      - "iron_mine"
-      - "grid_feedstock"
-      - "mine_feedstock"
+      - "ore_feedstock"
       - "iron_transport"
       - "iron_plant"
       - "dri_grid_feedstock"
@@ -96,9 +99,7 @@ finance_parameters:
       commodity: "steel"
       commodity_stream: "steel_plant"
       technologies:
-      - "iron_mine"
-      - "grid_feedstock"
-      - "mine_feedstock"
+      - "ore_feedstock"
       - "iron_transport"
       - "iron_plant"
       - "dri_grid_feedstock"
