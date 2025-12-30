@@ -7,7 +7,7 @@ from h2integrate.core.h2integrate_model import H2IntegrateModel
 # Create an H2Integrate model
 model = H2IntegrateModel("pyomo_heuristic_dispatch.yaml")
 
-demand_profile = np.ones(8760) * 50.0
+demand_profile = np.ones(8760) * 100.0
 
 
 # TODO: Update with demand module once it is developed

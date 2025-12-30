@@ -61,10 +61,10 @@ technologies:
         charge_efficiency: 0.938
         discharge_efficiency: 0.938
         commodity_storage_units: "kW"
-        cost_per_charge: 10
-        cost_per_discharge: 10
-        commodity_met_value: 20        
-        cost_per_production: 5
+        cost_per_charge: 0.05
+        cost_per_discharge: 0.1
+        commodity_met_value: 0.5       
+        cost_per_production: 0.01
       performance_parameters:
         system_model_source: "pysam"
         chemistry: "LFPGraphite"
