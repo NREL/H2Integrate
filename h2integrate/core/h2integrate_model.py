@@ -1,6 +1,7 @@
 import importlib.util
 
 import numpy as np
+import networkx as nx
 import openmdao.api as om
 import matplotlib.pyplot as plt
 
@@ -13,7 +14,7 @@ from h2integrate.core.utilities import (
 )
 from h2integrate.finances.finances import AdjustedCapexOpexComp
 from h2integrate.core.resource_summer import ElectricitySumComp
-from h2integrate.core.supported_models import supported_models, electricity_producing_techs
+from h2integrate.core.supported_models import supported_models, is_electricity_producer
 from h2integrate.core.inputs.validation import load_tech_yaml, load_plant_yaml, load_driver_yaml
 from h2integrate.core.pose_optimization import PoseOptimization
 from h2integrate.postprocess.sql_to_csv import convert_sql_to_csv_summary
@@ -205,10 +206,34 @@ class H2IntegrateModel:
                 Defaults to "". Should be "finance_" if looking for custom general finance models.
         """
 
+        included_custom_models = {}
+
         for name, config in model_config.items():
             for model_type in model_types:
                 if model_type in config:
                     model_name = config[model_type].get(f"{prefix}model")
+
+                    # Don't create new custom model or raise an error if the current custom model
+                    # has already been processed. This can happen if there are 2 or more instances
+                    # of the same custom model. Also check that all instances of the same custom
+                    # model tech name use the same class definition.
+                    if model_name in included_custom_models:
+                        model_class_name = config[model_type].get(f"{prefix}model_class_name")
+                        if (
+                            model_class_name
+                            != included_custom_models[model_name]["model_class_name"]
+                        ):
+                            raise (
+                                ValueError(
+                                    "User has specified two custom models using the same model"
+                                    "name ({model_name}), but with different model classes. "
+                                    "Technologies defined with different classes must have "
+                                    "different technology names."
+                                )
+                            )
+                        else:
+                            continue
+
                     if (model_name not in self.supported_models) and (model_name is not None):
                         model_class_name = config[model_type].get(f"{prefix}model_class_name")
                         model_location = config[model_type].get(f"{prefix}model_location")
@@ -238,6 +263,11 @@ class H2IntegrateModel:
 
                         # Add the custom model to the supported models dictionary
                         self.supported_models[model_name] = custom_model_class
+
+                        # Add the custom model to custom models dictionary
+                        included_custom_models[model_name] = {
+                            "model_class_name": model_class_name,
+                        }
 
                     else:
                         if (
@@ -443,8 +473,6 @@ class H2IntegrateModel:
                         else:
                             plural_model_type_name = model_type + "s"
                         getattr(self, plural_model_type_name).append(om_model_object)
-                    elif model_type == "performance_model":
-                        raise KeyError("Model definition requires 'performance_model'.")
 
                 # Process the finance models
                 if "finance_model" in individual_tech_config:
@@ -1011,7 +1039,7 @@ class H2IntegrateModel:
                     # and in this finance group
                     for tech_name in tech_configs.keys():
                         if (
-                            tech_name in electricity_producing_techs
+                            is_electricity_producer(tech_name)
                             and primary_commodity_type == "electricity"
                         ):
                             self.plant.connect(
@@ -1097,15 +1125,20 @@ class H2IntegrateModel:
 
         self.plant.options["auto_order"] = True
 
-        # Check if there are any connections FROM a finance group to ammonia
-        # This handles the case where LCOH is computed in the finance group and passed to ammonia
+        # Check if there are any loops in the technology interconnections
+        # If loops are present, add solvers to resolve the coupling
+        # Create a directed graph from the technology interconnections
+        G = nx.DiGraph()
         for connection in technology_interconnections:
-            if connection[0].startswith("finance_subgroup_") and connection[1] == "ammonia":
-                # If the connection is from a finance group, set solvers for the
-                # plant to resolve the coupling
-                self.plant.nonlinear_solver = om.NonlinearBlockGS()
-                self.plant.linear_solver = om.DirectSolver()
-                break
+            source = connection[0]
+            destination = connection[1]
+            G.add_edge(source, destination)
+
+        # Check if there are any cycles (loops) in the graph
+        if list(nx.simple_cycles(G)):
+            # If cycles are found, set solvers for the plant to resolve the coupling
+            self.plant.nonlinear_solver = om.NonlinearBlockGS()
+            self.plant.linear_solver = om.DirectSolver()
 
         # initialize dispatch rules connection list
         tech_to_dispatch_connections = self.plant_config.get("tech_to_dispatch_connections", [])

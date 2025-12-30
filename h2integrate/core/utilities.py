@@ -113,7 +113,7 @@ def merge_shared_inputs(config, input_type):
         return config["shared_parameters"]
 
 
-@define
+@define(kw_only=True)
 class BaseConfig:
     """
     A Mixin class to allow for kwargs overloading when a data class doesn't
@@ -173,9 +173,33 @@ class BaseConfig:
         return attrs.asdict(self, filter=attr_filter, value_serializer=attr_serializer)
 
 
-@define
+@define(kw_only=True)
 class CostModelBaseConfig(BaseConfig):
     cost_year: int = field(converter=int)
+
+
+@define(kw_only=True)
+class ResizeablePerformanceModelBaseConfig(BaseConfig):
+    size_mode: str = field(default="normal")
+    flow_used_for_sizing: str | None = field(default=None)
+    max_feedstock_ratio: float = field(default=1.0)
+    max_commodity_ratio: float = field(default=1.0)
+
+    def __attrs_post_init__(self):
+        """Validate sizing parameters after initialization."""
+        valid_modes = ["normal", "resize_by_max_feedstock", "resize_by_max_commodity"]
+        if self.size_mode not in valid_modes:
+            raise ValueError(
+                f"Sizing mode '{self.size_mode}' is not a valid sizing mode. "
+                f"Options are {valid_modes}."
+            )
+
+        if self.size_mode != "normal":
+            if self.flow_used_for_sizing is None:
+                raise ValueError(
+                    "'flow_used_for_sizing' must be set when size_mode is "
+                    "'resize_by_max_feedstock' or 'resize_by_max_commodity'"
+                )
 
 
 def attr_serializer(inst: type, field: Attribute, value: Any):
@@ -830,10 +854,25 @@ def print_results(model, includes=None, excludes=None, show_units=True):
             mean_raw = _mean(meta.get("val"))
             try:
                 val = float(mean_raw)
-                if abs(val) >= 1e5:
-                    mean_val = f"{val:,.2f}"
+                units_val_raw = meta.get("units")
+                # Format as integer if units are 'year' or variable name is 'cost_year'
+                if units_val_raw == "year" or var == "cost_year":
+                    mean_val = str(int(val))
+                elif abs(val) >= 1e5:
+                    formatted = f"{val:,.2f}"
+                    mean_val = formatted.rstrip("0")
+                    if mean_val.endswith("."):
+                        mean_val = mean_val  # Keep e.g. "520." format
+                    else:
+                        mean_val = mean_val + "." if "." not in mean_val else mean_val
                 else:
-                    mean_val = f"{val:,.4f}"
+                    formatted = f"{val:,.4f}"
+                    mean_val = formatted.rstrip("0")
+                    # Ensure we end with "." if all decimals were zeros
+                    if mean_val.endswith("."):
+                        pass  # Keep as e.g. "520." or "0."
+                    elif "." not in mean_val:
+                        mean_val = mean_val + "."
             except (ValueError, TypeError):
                 mean_val = str(mean_raw)
             units_val = (
