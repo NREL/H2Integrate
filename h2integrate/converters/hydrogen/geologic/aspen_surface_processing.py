@@ -83,33 +83,33 @@ class AspenGeoH2SurfacePerformanceModel(GeoH2SurfacePerformanceBaseClass):
         super().setup()
         n_timesteps = self.options["plant_config"]["plant"]["simulation"]["n_timesteps"]
 
+        self.outputs_to_units = {
+            "H2 Flow Out": "kg/hr",
+            "H2 Conc Out": "% mol",
+            "Electricity": "kW",
+            "Cooling Water": "kt/h",
+            "Steam": "kt/h",
+        }
         if self.config.refit_coeffs:
-            output_names = [
-                "H2 Flow Out [kg/hr]",
-                "H2 Conc Out [% mol]",
-                "Electricity [kW]",
-                "Cooling Water [kt/h]",
-                "Steam [kt/h]",
-            ]
+            output_names = [f"{k} [{v}]" for k, v in self.outputs_to_units.items()]
+
             coeffs = refit_coeffs(
                 self.config.curve_input_fn, self.config.perf_coeff_fn, output_names
             )
         else:
             output_names = [
-                "H2 Flow Out [kg/hr/(kg/hr H2 in)]",
-                "H2 Conc Out [% mol]",
-                "Electricity [kW/(kg/hr H2 in)]",
-                "Cooling Water [kt/h/(kg/hr H2 in)]",
-                "Steam [kt/h/(kg/hr H2 in)]",
+                f"{k} [{v}/(kg/hr H2 in)]" if "%" not in v else f"{k} [{v}]"
+                for k, v in self.outputs_to_units.items()
             ]
+
             coeffs = load_coeffs(self.config.perf_coeff_fn, output_names)
 
         self.add_input("max_wellhead_gas", val=-1.0, units="kg/h")
         self.add_discrete_input("perf_coeffs", val=coeffs)
 
-        self.add_output("electricity_consumed", val=-1.0, shape=(n_timesteps,))
-        self.add_output("water_consumed", val=-1.0, shape=(n_timesteps,))
-        self.add_output("steam_out", val=-1.0, shape=(n_timesteps,))
+        self.add_output("electricity_consumed", val=-1.0, shape=(n_timesteps,), units="kW")
+        self.add_output("water_consumed", val=-1.0, shape=(n_timesteps,), units="kt/h")
+        self.add_output("steam_out", val=-1.0, shape=(n_timesteps,), units="kt/h")
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         """Compute performance outputs based on wellhead conditions."""
@@ -126,11 +126,8 @@ class AspenGeoH2SurfacePerformanceModel(GeoH2SurfacePerformanceBaseClass):
 
         # Evaluate all performance curves
         curve_names = [
-            "H2 Flow Out [kg/hr/(kg/hr H2 in)]",
-            "H2 Conc Out [% mol]",
-            "Electricity [kW/(kg/hr H2 in)]",
-            "Cooling Water [kt/h/(kg/hr H2 in)]",
-            "Steam [kt/h/(kg/hr H2 in)]",
+            f"{k} [{v}/(kg/hr H2 in)]" if "%" not in v else f"{k} [{v}]"
+            for k, v in self.outputs_to_units.items()
         ]
 
         curve_results = evaluate_performance_curves(
@@ -264,8 +261,8 @@ class AspenGeoH2SurfaceCostModel(GeoH2SurfaceCostBaseClass):
         self.add_input("overhead_rate", val=self.config.overhead_rate, units="unitless")
         self.add_input("electricity_price", val=self.config.electricity_price, units="USD/kW/h")
         self.add_input("water_price", val=self.config.water_price, units="USD/kt")
-        self.add_input("electricity_consumed", val=-1.0, shape=(n_timesteps,))
-        self.add_input("water_consumed", val=-1.0, shape=(n_timesteps,))
+        self.add_input("electricity_consumed", val=-1.0, shape=(n_timesteps,), units="kW")
+        self.add_input("water_consumed", val=-1.0, shape=(n_timesteps,), units="kt/h")
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         """Compute cost outputs based on wellhead conditions and operating parameters."""
