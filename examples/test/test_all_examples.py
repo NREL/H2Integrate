@@ -1111,7 +1111,7 @@ def test_csvgen_design_of_experiments(subtests):
     with subtests.test("Check that sql summary file was written as expected"):
         summary = pd.read_csv(summarized_filepath, index_col="Unnamed: 0")
         assert len(summary) == 10
-        d_var_cols = ["solar.capacity_kWdc (kW)", "electrolyzer.n_clusters (unitless)"]
+        d_var_cols = ["solar.capacity_DC (kW)", "electrolyzer.n_clusters (unitless)"]
         assert summary.columns.to_list()[0] in d_var_cols
         assert summary.columns.to_list()[1] in d_var_cols
         assert "finance_subgroup_hydrogen.LCOH_optimistic (USD/kg)" in summary.columns.to_list()
@@ -1123,11 +1123,9 @@ def test_csvgen_design_of_experiments(subtests):
     cases = list(cr.get_cases())
 
     with subtests.test("Check solar capacity in case 0"):
-        assert pytest.approx(cases[0].get_val("solar.capacity_kWdc", units="MW"), rel=1e-6) == 25.0
+        assert pytest.approx(cases[0].get_val("solar.capacity_DC", units="MW"), rel=1e-6) == 25.0
     with subtests.test("Check solar capacity in case 9"):
-        assert (
-            pytest.approx(cases[-1].get_val("solar.capacity_kWdc", units="MW"), rel=1e-6) == 500.0
-        )
+        assert pytest.approx(cases[-1].get_val("solar.capacity_DC", units="MW"), rel=1e-6) == 500.0
 
     with subtests.test("Check electrolyzer capacity in case 0"):
         assert (
@@ -1179,7 +1177,7 @@ def test_csvgen_design_of_experiments(subtests):
     with subtests.test("Min LCOH solar capacity"):
         assert (
             pytest.approx(
-                cases[min_lcoh_case_num].get_val("solar.capacity_kWdc", units="MW"), rel=1e-6
+                cases[min_lcoh_case_num].get_val("solar.capacity_DC", units="MW"), rel=1e-6
             )
             == 200.0
         )
@@ -1221,7 +1219,7 @@ def test_sweeping_solar_sites_doe(subtests):
     for ci, case in enumerate(cases):
         solar_resource_data = case.get_val("site.solar_resource.solar_resource_data")
         lat_lon = f"{case.get_val('site.latitude')[0]} {case.get_val('site.longitude')[0]}"
-        solar_capacity = case.get_design_vars()["solar.capacity_kWdc"]
+        solar_capacity = case.get_design_vars()["solar.capacity_DC"]
         aep = case.get_val("solar.annual_energy", units="MW*h/yr")
         lcoe = case.get_val("finance_subgroup_electricity.LCOE_optimistic", units="USD/(MW*h)")
 
