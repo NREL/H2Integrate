@@ -324,16 +324,29 @@ def refit_coeffs(
     and one output (cycling through variables in output_names).
 
     Args:
-        input_fn: Filename of ASPEN results CSV in ./inputs directory.
-        coeff_fn: Filename to save fitted coefficients to in ./inputs directory.
-        output_names: List of output variable names to fit curves for.
-        plot_flag: Whether to plot fitted surfaces for visual validation.
+        input_fn (str): Filename of ASPEN results CSV in ./inputs directory.
+        coeff_fn (str): Filename to save fitted coefficients to in ./inputs directory.
+        output_names (list[str]): List of output variable names to fit curves for.
+        plot_flag (bool): Whether to plot fitted surfaces for visual validation.
 
     Returns:
-        Dictionary mapping output names to their fitted coefficients.
+        dict: Dictionary mapping output names to their fitted coefficients.
     """
     # Load and prepare data
     h2_conc, flow, inputs_df = load_aspen_data(input_fn)
+
+    # Check for any invalid output names
+    invalid_output_names = [
+        out_name
+        for out_name in output_names
+        if out_name not in list(inputs_df.index.get_level_values("Item"))
+    ]
+    if len(invalid_output_names) > 0:
+        msg = (
+            f"{invalid_output_names} is not a valid output name, valid options "
+            f"include {inputs_df.index.to_list()}"
+        )
+        raise ValueError(msg)
 
     # Extract and normalize outputs
     outputs = []
@@ -415,17 +428,26 @@ def load_coeffs(coeff_fn: str, output_names: list[str]) -> dict[str, dict]:
     Load pre-fitted curve coefficients from CSV file.
 
     Args:
-        coeff_fn: Filename of coefficients CSV in ./inputs directory.
-        output_names: List of output variable names to load.
+        coeff_fn (str): Filename of coefficients CSV in ./inputs directory.
+        output_names (list[str]): List of output variable names to load.
 
     Returns:
-        Dictionary mapping output names to their coefficient dictionaries.
+        dict: Dictionary mapping output names to their coefficient dictionaries.
     """
-    df = pd.read_csv(ROOT_DIR / "inputs" / coeff_fn, index_col=0)
+    df = pd.read_csv(ROOT_DIR / "inputs" / coeff_fn, index_col="Unnamed: 0")
 
-    coeff_dict = {}
-    for name in output_names:
-        coeff_dict[name] = dict(zip(df.columns.values, df.loc[name].values))
+    invalid_output_names = [
+        out_name for out_name in output_names if out_name not in df.index.to_list()
+    ]
+    if len(invalid_output_names) > 0:
+        msg = (
+            f"{invalid_output_names} is not a valid output name, valid options include"
+            f" {df.index.to_list()}"
+        )
+
+        raise ValueError(msg)
+
+    coeff_dict = df.loc[output_names].to_dict("index")
 
     return coeff_dict
 
@@ -437,13 +459,13 @@ def evaluate_performance_curves(
     Evaluate all performance curves for given inputs.
 
     Args:
-        h2_conc: H2 concentration (fraction, not %).
-        wellhead_cap: Wellhead capacity in kg/hr.
-        coeffs_dict: Dictionary of curve coefficients.
-        curve_names: List of curve names to evaluate.
+        h2_conc (float): H2 concentration (fraction, not %).
+        wellhead_cap (float): Wellhead capacity in kg/hr.
+        coeffs_dict (dict): Dictionary of curve coefficients.
+        curve_names (list[str]): List of curve names to evaluate.
 
     Returns:
-        Dictionary mapping curve names to evaluated results.
+        dict: Dictionary mapping curve names to evaluated results.
     """
     results = {}
 
