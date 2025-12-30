@@ -1293,3 +1293,23 @@ def test_24_solar_battery_grid_example(subtests):
     with subtests.test("Value check on LCOE"):
         lcoe = model.prob.get_val("finance_subgroup_renewables.LCOE", units="USD/(MW*h)")[0]
         assert pytest.approx(lcoe, rel=1e-4) == 91.7057887
+
+
+def test_21_iron_dri_eaf_example(subtests):
+    os.chdir(EXAMPLE_DIR / "21_iron_mn_to_il")
+
+    h2i = H2IntegrateModel("21_iron.yaml")
+
+    h2i.run()
+
+    with subtests.test("Value check on LCOI"):
+        lcoi = h2i.model.get_val("finance_subgroup_iron_ore.LCOI", units="USD/t")[0]
+        assert pytest.approx(lcoi, rel=1e-4) == 143.3495266638054
+
+    with subtests.test("Value check on LCOP"):
+        lcop = h2i.model.get_val("finance_subgroup_pig_iron.LCOP", units="USD/t")[0]
+        assert pytest.approx(lcop, rel=1e-4) == 353.63339139124
+
+    with subtests.test("Value check on LCOS"):
+        lcos = h2i.model.get_val("finance_subgroup_steel.LCOS", units="USD/t")[0]
+        assert pytest.approx(lcos, rel=1e-4) == 524.2665698971817
