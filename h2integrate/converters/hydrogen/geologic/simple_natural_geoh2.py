@@ -26,7 +26,7 @@ class NaturalGeoH2PerformanceConfig(GeoH2SubsurfacePerformanceConfig):
             production potential of the location.
 
         wellhead_h2_concentration (float):
-            Conecentration of hydrogen at the wellhead in mol %.
+            Concentration of hydrogen at the wellhead in mol %.
 
         initial_wellhead_flow (float):
             Hydrogen flow rate measured immediately after well completion, in kilograms
@@ -65,7 +65,7 @@ class NaturalGeoH2PerformanceModel(GeoH2SubsurfacePerformanceBaseClass):
             Dimensionless measure of natural hydrogen production potential at a given site.
 
         wellhead_h2_concentration (float):
-            Conecentration of hydrogen at the wellhead in mol %.
+            Concentration of hydrogen at the wellhead in mol %.
 
         initial_wellhead_flow (float):
             Hydrogen flow rate measured immediately after well completion, in kilograms

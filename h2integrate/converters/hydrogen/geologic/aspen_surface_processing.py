@@ -104,7 +104,7 @@ class AspenGeoH2SurfacePerformanceModel(GeoH2SurfacePerformanceBaseClass):
             ]
             coeffs = load_coeffs(self.config.perf_coeff_fn, output_names)
 
-        self.add_input("max_wellhead_gas", val=-1.0)
+        self.add_input("max_wellhead_gas", val=-1.0, units="kg/h")
         self.add_discrete_input("perf_coeffs", val=coeffs)
 
         self.add_output("electricity_consumed", val=-1.0, shape=(n_timesteps,))

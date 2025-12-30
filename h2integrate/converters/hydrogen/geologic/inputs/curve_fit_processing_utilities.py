@@ -152,10 +152,10 @@ def load_aspen_data(input_fn: str) -> tuple[np.ndarray, np.ndarray, pd.DataFrame
         Tuple of (h2_concentration, flow_rate, dataframe).
     """
     path = ROOT_DIR / "inputs"
-    inputs_df = pd.read_csv(path / input_fn, index_col=[0, 1], header=0)
 
-    h2_conc = inputs_df.loc["H2 Conc Wellhead"].values.ravel()
-    flow = inputs_df.loc["Mass Flow Wellhead"].values.ravel()
+    inputs_df = pd.read_csv(path / input_fn, index_col=["Item", "Units"])
+    h2_conc = inputs_df.loc["H2 Conc Wellhead"].to_numpy().flatten()
+    flow = inputs_df.loc["Mass Flow Wellhead"].to_numpy().flatten()
 
     return h2_conc, flow, inputs_df
 
