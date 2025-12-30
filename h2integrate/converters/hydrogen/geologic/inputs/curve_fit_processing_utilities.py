@@ -60,7 +60,7 @@ class CurveCoefficients:
         }
 
 
-def scale_variables(input_vars: list[np.ndarray]) -> tuple[list[np.ndarray], list[float]]:
+def scale_variables(input_vars: list[np.ndarray] | np.ndarray) -> tuple[np.ndarray, list[float]]:
     """
     Scale variables to the range [0, 1] for better numerical conditioning during curve fitting.
 
@@ -70,15 +70,20 @@ def scale_variables(input_vars: list[np.ndarray]) -> tuple[list[np.ndarray], lis
     Returns:
         Tuple of (scaled_variables, scale_factors) where scale_factors are the max values.
     """
-    scaled_inputs = []
-    scale_factors = []
+    # scaled_inputs = []
+    # scale_factors = []
 
-    for input_var in input_vars:
-        scale_factor = np.max(input_var)
-        scaled_inputs.append(input_var / scale_factor)
-        scale_factors.append(scale_factor)
+    # for input_var in input_vars:
+    #     scale_factor = np.max(input_var)
+    #     scaled_inputs.append(input_var / scale_factor)
+    #     scale_factors.append(scale_factor)
 
-    return scaled_inputs, scale_factors
+    if isinstance(input_vars, list):
+        input_vars = np.array(input_vars)
+    scale_factors = input_vars.max(axis=1)
+    scaled_inputs = np.transpose(np.transpose(input_vars) / scale_factors)
+
+    return scaled_inputs, list(scale_factors)
 
 
 def exponential_power_function(
@@ -315,7 +320,7 @@ def plot_curve_fit(
 
 
 def refit_coeffs(
-    input_fn: str, coeff_fn: str, output_names: list[str], plot_flag: bool = False
+    input_fn: str, refit_coeff_fn: str, output_names: list[str], plot_flag: bool = False
 ) -> dict[str, dict]:
     """
     Fit performance and cost coefficients to ASPEN modeling data for surface processing model.
@@ -325,7 +330,8 @@ def refit_coeffs(
 
     Args:
         input_fn (str): Filename of ASPEN results CSV in ./inputs directory.
-        coeff_fn (str): Filename to save fitted coefficients to in ./inputs directory.
+        refit_coeff_fn (str | None): Filename to save fitted coefficients to in ./inputs directory.
+            If None, does not save the file.
         output_names (list[str]): List of output variable names to fit curves for.
         plot_flag (bool): Whether to plot fitted surfaces for visual validation.
 
@@ -349,47 +355,44 @@ def refit_coeffs(
         raise ValueError(msg)
 
     # Extract and normalize outputs
-    outputs = []
-    output_names_with_flow = ["H2 Flow Out [kg/hr]", *output_names]
+    output_names = list({"H2 Flow Out [kg/hr]", *output_names})
 
-    for name in output_names_with_flow:
-        output = inputs_df.loc[name].values.ravel()
-        # Normalize by flow rate except for concentration
-        if "H2 Conc" not in name:
-            output = output / flow
-        outputs.append(output)
-
-    # Store H2 output flow for later use
-    h2_out = outputs[0] * flow
+    outputs = np.zeros((len(output_names), len(h2_conc)))
+    for ni, name in enumerate(output_names):
+        if "H2 Conc" in name:
+            outputs[ni] = inputs_df.loc[name].to_numpy().flatten()
+            continue
+        outputs[ni] = inputs_df.loc[name].to_numpy().flatten() / flow
 
     # Scale data for numerical conditioning
-    scaled_inputs, in_scale_factors = scale_variables([h2_conc, flow])
+    fit_input_data, in_scale_factors = scale_variables([h2_conc, flow])
     scaled_outputs, out_scale_factors = scale_variables(outputs)
-    fit_input_data = np.vstack(scaled_inputs)
 
     # Fit curves for each output
-    output_names_with_flow = ["H2 Flow Out [kg/hr]", *output_names]
-    fit_results = {}
-    labels = []
-    h2_out_surf = None
+    col_names = ["a1", "a2", "a3", "a4", "a5", "scale_x", "scale_y", "scale_z", "fit_type"]
 
-    for i, name in enumerate(output_names_with_flow):
+    # Generate labels for the outputs
+    name_to_label = {
+        name: f"{name[:-1]}/(kg/hr H2 in)]"
+        if "H2 Conc Out" not in name and name != "H2 Flow Out [kg/hr]"
+        else name
+        for name in output_names
+    }
+
+    fit_coeffs = pd.DataFrame(columns=col_names, index=list(name_to_label.values()))
+    h2_out_surf = None  # only used for plotting
+    for i, name in enumerate(output_names):
         # Fit the curve
         coeffs = fit_single_curve(
             name, scaled_outputs[i], fit_input_data, in_scale_factors, out_scale_factors[i]
         )
 
-        # Generate label for this output
-        if "H2 Conc Out" not in name and name != "H2 Flow Out [kg/hr]":
-            label = name[:-1] + "/(kg/hr H2 in)]"
-        else:
-            label = name
-        labels.append(label)
-
-        fit_results[label] = coeffs
+        fit_coeffs.loc[name_to_label[name]] = coeffs.to_dict()
 
         # Plot if requested
         if plot_flag:
+            h2_out = outputs[output_names.index("H2 Flow Out [kg/hr]")] * flow
+
             actual_output = scaled_outputs[i] * out_scale_factors[i]
             h2_out_surf = (
                 plot_curve_fit(name, coeffs, h2_conc, flow, actual_output, h2_out, h2_out_surf)
@@ -397,30 +400,11 @@ def refit_coeffs(
             )
 
     # Save coefficients to CSV
-    col_names = ["a1", "a2", "a3", "a4", "a5", "scale_x", "scale_y", "scale_z", "fit_type"]
-    rows = []
-    for label in labels[1:]:  # Skip H2 Flow Out
-        coeff = fit_results[label]
-        rows.append(
-            [
-                coeff.a1,
-                coeff.a2,
-                coeff.a3,
-                coeff.a4,
-                coeff.a5,
-                coeff.scale_x,
-                coeff.scale_y,
-                coeff.scale_z,
-                coeff.fit_type,
-            ]
-        )
-
-    fit_coeffs_df = pd.DataFrame(rows, columns=col_names, index=labels[1:])
-    fit_coeffs_df.to_csv(ROOT_DIR / "inputs" / coeff_fn)
+    if refit_coeff_fn is not None:
+        fit_coeffs.to_csv(ROOT_DIR / "inputs" / refit_coeff_fn)
 
     # Return as dictionary
-    coeff_dict = {label: fit_results[label].to_dict() for label in labels[1:]}
-    return coeff_dict
+    return fit_coeffs.to_dict("index")
 
 
 def load_coeffs(coeff_fn: str, output_names: list[str]) -> dict[str, dict]:
