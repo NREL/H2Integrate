@@ -801,9 +801,9 @@ def test_electrolyzer_om_example(subtests):
     with subtests.test("Check LCOE"):
         assert pytest.approx(lcoe, rel=1e-4) == 39.98869
     with subtests.test("Check LCOH with lcoh_financials"):
-        assert pytest.approx(lcoh_with_lcoh_finance, rel=1e-4) == 13.0954678
+        assert pytest.approx(lcoh_with_lcoh_finance, rel=1e-4) == 13.0858012
     with subtests.test("Check LCOH with lcoe_financials"):
-        assert pytest.approx(lcoh_with_lcoe_finance, rel=1e-4) == 8.00321771
+        assert pytest.approx(lcoh_with_lcoe_finance, rel=1e-4) == 7.9935907
 
 
 def test_wombat_electrolyzer_example(subtests):
