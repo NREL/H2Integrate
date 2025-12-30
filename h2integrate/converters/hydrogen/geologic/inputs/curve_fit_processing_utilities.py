@@ -372,10 +372,14 @@ def refit_coeffs(
     col_names = ["a1", "a2", "a3", "a4", "a5", "scale_x", "scale_y", "scale_z", "fit_type"]
 
     # Generate labels for the outputs
+    # name_to_label = {
+    #     name: f"{name[:-1]}/(kg/hr H2 in)]"
+    #     if "H2 Conc Out" not in name and name != "H2 Flow Out [kg/hr]"
+    #     else name
+    #     for name in output_names
+    # }
     name_to_label = {
-        name: f"{name[:-1]}/(kg/hr H2 in)]"
-        if "H2 Conc Out" not in name and name != "H2 Flow Out [kg/hr]"
-        else name
+        name: f"{name[:-1]}/(kg/hr H2 in)]" if "H2 Conc Out" not in name else name
         for name in output_names
     }
 
@@ -453,8 +457,8 @@ def evaluate_performance_curves(
     """
     results = {}
 
-    for curve_name in curve_names:
-        curve_coeffs = coeffs_dict[curve_name]
+    for curve_name, curve_coeffs in coeffs_dict.items():
+        # curve_coeffs = coeffs_dict[curve_name]
 
         # Scale inputs
         x = h2_conc / curve_coeffs["scale_x"]

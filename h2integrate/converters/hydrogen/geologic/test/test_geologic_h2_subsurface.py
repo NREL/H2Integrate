@@ -30,6 +30,18 @@ def plant_config():
 
 @fixture
 def geoh2_subsurface_well():
+    plant = {
+        "plant_life": 10,
+        "simulation": {
+            "dt": 3600,
+            "n_timesteps": 8760,
+            "start_time": "01/01/1900 00:30:00",
+            "timezone": 0,
+        },
+    }
+
+    plant_config_dict = {"plant": plant, "site": {"latitude": 32.34, "longitude": -98.27}}
+
     subsurface_perf_config = {
         "shared_parameters": {
             "borehole_depth": 300,
@@ -47,7 +59,6 @@ def geoh2_subsurface_well():
         },
     }
     tech_config_dict = {"model_inputs": subsurface_perf_config}
-    plant_config_dict = plant_config()
     subsurface_comp = NaturalGeoH2PerformanceModel(
         plant_config=plant_config_dict,
         tech_config=tech_config_dict,
@@ -87,8 +98,16 @@ def test_aspen_geoh2_performance(subtests, plant_config, geoh2_subsurface_well, 
         tech_config=aspen_geoh2_config,
         driver_config={},
     )
-    prob.model.add_subsystem("well", geoh2_subsurface_well, promotes=["*"])
-    prob.model.add_subsystem("perf", perf_comp, promotes=["*"])
+
+    well_group = prob.model.add_subsystem("well", om.Group())
+    well_group.add_subsystem("perf", geoh2_subsurface_well, promotes=["*"])
+
+    tech_group = prob.model.add_subsystem("geoh2", om.Group())
+    tech_group.add_subsystem("perf", perf_comp, promotes=["*"])
+
+    prob.model.connect("well.wellhead_gas_out", "geoh2.wellhead_gas_in")
+    prob.model.connect("well.wellhead_h2_concentration_mol", "geoh2.wellhead_h2_concentration_mol")
+
     prob.setup()
     prob.run_model()
 
@@ -117,18 +136,26 @@ def test_aspen_geoh2_performance_cost(
         tech_config=aspen_geoh2_config,
         driver_config={},
     )
-    prob.model.add_subsystem("well", geoh2_subsurface_well, promotes=["*"])
-    prob.model.add_subsystem("perf", perf_comp, promotes=["*"])
-    prob.model.add_subsystem("cost", cost_comp, promotes=["*"])
+
+    well_group = prob.model.add_subsystem("well", om.Group())
+    well_group.add_subsystem("perf", geoh2_subsurface_well, promotes=["*"])
+
+    tech_group = prob.model.add_subsystem("geoh2", om.Group())
+    tech_group.add_subsystem("perf", perf_comp, promotes=["*"])
+    tech_group.add_subsystem("cost", cost_comp, promotes=["*"])
+
+    prob.model.connect("well.wellhead_gas_out", "geoh2.wellhead_gas_in")
+    prob.model.connect("well.wellhead_h2_concentration_mol", "geoh2.wellhead_h2_concentration_mol")
+
     prob.setup()
     prob.run_model()
 
     with subtests.test("CapEx"):
-        assert pytest.approx(prob.model.get_val("cost.CapEx")) == expected_capex
+        assert pytest.approx(prob.model.get_val("geoh2.CapEx"), rel=1e-6) == expected_capex
     with subtests.test("OpEx"):
-        assert pytest.approx(prob.model.get_val("cost.OpEx")) == expected_opex
+        assert pytest.approx(prob.model.get_val("geoh2.OpEx"), rel=1e-6) == expected_opex
     with subtests.test("VarOpEx"):
-        assert pytest.approx(prob.model.get_val("cost.VarOpEx")) == expected_varopex
+        assert pytest.approx(prob.model.get_val("geoh2.VarOpEx")[0], rel=1e-6) == expected_varopex
 
 
 def test_aspen_geoh2_refit_coeffs(
@@ -150,8 +177,22 @@ def test_aspen_geoh2_refit_coeffs(
         tech_config=aspen_geoh2_config,
         driver_config={},
     )
-    prob.model.add_subsystem("well", geoh2_subsurface_well, promotes=["*"])
-    prob.model.add_subsystem("perf", perf_comp, promotes=["*"])
+    cost_comp = AspenGeoH2SurfaceCostModel(
+        plant_config=plant_config,
+        tech_config=aspen_geoh2_config,
+        driver_config={},
+    )
+
+    well_group = prob.model.add_subsystem("well", om.Group())
+    well_group.add_subsystem("perf", geoh2_subsurface_well, promotes=["*"])
+
+    tech_group = prob.model.add_subsystem("geoh2", om.Group())
+    tech_group.add_subsystem("perf", perf_comp, promotes=["*"])
+    tech_group.add_subsystem("cost", cost_comp, promotes=["*"])
+
+    prob.model.connect("well.wellhead_gas_out", "geoh2.wellhead_gas_in")
+    prob.model.connect("well.wellhead_h2_concentration_mol", "geoh2.wellhead_h2_concentration_mol")
+
     prob.setup()
     prob.run_model()
 
