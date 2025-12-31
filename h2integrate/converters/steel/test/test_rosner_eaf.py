@@ -69,7 +69,7 @@ def ng_feedstock_availability_costs():
             "price": 0.0,
         },
         "water": {
-            "rated_capacity": 10000.0,  # need 9.08297025163801 galUS/h
+            "rated_capacity": 10000.0,  # need 9082.97025163801 galUS/h
             "units": "galUS",
             "price": 1670.0,  # cost is $0.441167535/t, equal to $1670.0004398318847/galUS
         },
@@ -107,7 +107,7 @@ def h2_feedstock_availability_costs():
             "price": 0.0,
         },
         "water": {
-            "rated_capacity": 6000.0,  # need 5.766528266260271 galUS/h
+            "rated_capacity": 6000.0,  # need 5766.528266260271 galUS/h
             "units": "galUS",
             "price": 1670.0,  # TODO: update cost is $0.441167535/t, equal to $1670.0004398318847/galUS
         },
