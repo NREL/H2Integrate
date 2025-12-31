@@ -87,7 +87,7 @@ technologies:
         feedstock_type: "water"
         units: "galUS" #galUS/h
       performance_parameters:
-        rated_capacity: 40. # need 38.71049649 galUS/h
+        rated_capacity: 40000. # need 38710.49649 galUS/h
       cost_parameters:
         cost_year: 2022
         price: 0.0016700004398318847 # cost is USD0.441167535/t, converted to USD/gal

@@ -70,7 +70,7 @@ def test_baseline_iron_dri_costs_rosner_ng(
     plant_config, driver_config, iron_dri_config_rosner_ng, subtests
 ):
     expected_capex = 403808062.6981323
-    expected_var_om = 373666381.7736174
+    expected_var_om = 369445330.68402404
     expected_fixed_om = 60103761.59958463
     capacity = 3885.1917808219177
 
@@ -107,7 +107,7 @@ def test_baseline_iron_dri_costs_rosner_h2(
     plant_config, driver_config, iron_dri_config_rosner_ng, subtests
 ):
     expected_capex = 246546589.2914324
-    expected_var_om = 888847481.352381
+    expected_var_om = 888529893.2442514
     expected_fixed_om = 53360873.348792635
     capacity = 3885.1917808219177
 

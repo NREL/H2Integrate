@@ -74,7 +74,7 @@ def ng_feedstock_availability_costs():
             "price": 0.0,
         },
         "water": {
-            "rated_capacity": 40.0,  # need 38.71049649 galUS/h
+            "rated_capacity": 40000.0,  # need 38071.049649 galUS/h
             "units": "galUS",
             "price": 1670.0,  # cost is $0.441167535/t, equal to $1670.0004398318847/galUS
         },
@@ -107,7 +107,7 @@ def h2_feedstock_availability_costs():
             "price": 0.0,
         },
         "water": {
-            "rated_capacity": 24.0,  # need 23.0664878077501 galUS/h
+            "rated_capacity": 24000.0,  # need 23066.4878077501 galUS/h
             "units": "galUS",
             "price": 1670.0,  # TODO: update cost is $0.441167535/t, equal to $1670.0004398318847/galUS
         },
@@ -156,7 +156,7 @@ def test_ng_dri_performance_limited_feedstock(
 ):
     expected_pig_iron_annual_production_tpd = 3885.1917808219177 / 2  # t/d
     # make iron ore feedstock half of whats needed
-    water_usage_rate_gal_pr_tonne = 0.20060957937294563
+    water_usage_rate_gal_pr_tonne = 200.60957937294563
     water_half_availability_gal_pr_hr = (
         water_usage_rate_gal_pr_tonne * expected_pig_iron_annual_production_tpd / 24
     )
