@@ -1,9 +1,20 @@
 import openmdao.api as om
+from attrs import field, define
+
+from h2integrate.core.utilities import BaseConfig
+
+
+@define(kw_only=True)
+class CostModelBaseConfig(BaseConfig):
+    cost_year: int = field(converter=int)
 
 
 class CostModelBaseClass(om.ExplicitComponent):
     """Baseclass to be used for all cost models. The built-in outputs
     are used by the finance model and must be outputted by all cost models.
+
+    It is suggested to use CostModelBaseConfig as the base class for
+    configuration classes that are used in subclasses that inherit this class.
 
     Outputs:
         - CapEx (float): capital expenditure costs in $
@@ -47,12 +58,36 @@ class CostModelBaseClass(om.ExplicitComponent):
         raise NotImplementedError("This method should be implemented in a subclass.")
 
 
+@define(kw_only=True)
+class ResizeablePerformanceModelBaseConfig(BaseConfig):
+    size_mode: str = field(default="normal")
+    flow_used_for_sizing: str | None = field(default=None)
+    max_feedstock_ratio: float = field(default=1.0)
+    max_commodity_ratio: float = field(default=1.0)
+
+    def __attrs_post_init__(self):
+        """Validate sizing parameters after initialization."""
+        valid_modes = ["normal", "resize_by_max_feedstock", "resize_by_max_commodity"]
+        if self.size_mode not in valid_modes:
+            raise ValueError(
+                f"Sizing mode '{self.size_mode}' is not a valid sizing mode. "
+                f"Options are {valid_modes}."
+            )
+
+        if self.size_mode != "normal":
+            if self.flow_used_for_sizing is None:
+                raise ValueError(
+                    "'flow_used_for_sizing' must be set when size_mode is "
+                    "'resize_by_max_feedstock' or 'resize_by_max_commodity'"
+                )
+
+
 class ResizeablePerformanceModelBaseClass(om.ExplicitComponent):
     """Baseclass to be used for all resizeable performance models. The built-in inputs
     are used by the performance models to resize themselves.
 
     These parameters are all set as attributes within the config class, which inherits from
-    h2integrate.core.utilities.ResizeablePerformanceModelBaseConfig
+    ResizeablePerformanceModelBaseConfig
 
     Discrete Inputs:
         - size_mode (str): The mode in which the component is sized. Options:
