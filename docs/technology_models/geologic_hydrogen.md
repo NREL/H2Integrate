@@ -41,11 +41,11 @@ The modeling approach in this cost model is based on:
 
 ## Hydrogen Surface Processing Models
 
-There is one performance model and one cost model available to model the hydrogen surface processing, and only for natural geologic hydrogen. There are currently no processing models implemented for stimulated geologic hydrogen.
+There is one performance model and one cost model available to model the hydrogen surface processing, and only for natural geologic hydrogen. There are currently no surface processing models implemented for stimulated geologic hydrogen.
 
-- [`"aspen_geoh2_performance"`](#aspen-geoh2-surface-performance): A series of empirical relations between wellhead flow/concentration and processing plant performance, based on the Aspen process models.
+- [`"aspen_geoh2_performance"`](#aspen-geoh2-surface-performance): A series of empirical relations between wellhead flow/concentration and processing plant performance, based on the [ASPEN](https://www.aspentech.com/en/products/engineering/aspen-plus) process models.
 
-- [`"aspen_geoh2_cost"`](#aspen-geoh2-surface-cost): A series of empirical relations between wellhead flow/concentration and processing plant cost, based on the Aspen process models.
+- [`"aspen_geoh2_cost"`](#aspen-geoh2-surface-cost): A series of empirical relations between wellhead flow/concentration and processing plant cost, based on the [ASPEN](https://www.aspentech.com/en/products/engineering/aspen-plus) process models.
 
 (aspen-geoh2-surface-performance)=
 ### Aspen GeoH2 Performance
