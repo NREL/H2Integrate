@@ -2,6 +2,7 @@
 ## 0.5.x [TBD]
 - Updates models for NumPy version 2.4.0
 - Update test values for WOMBAT update to 0.13.0
+- Added standlone iron DRI and steel EAF performance and cost models
 
 ## 0.5.1 [December 18, 2025]
 
