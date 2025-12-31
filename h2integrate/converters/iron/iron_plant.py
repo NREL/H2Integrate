@@ -256,7 +256,7 @@ class IronPlantCostComponent(CostModelBaseClass):
 
         # TODO: make natural gas costs an input
         natural_gas_prices_MMBTU = coeff_dict["Natural Gas"]["values"][indices].astype(float)
-        natural_gas_prices_GJ = natural_gas_prices_MMBTU * 1.05506  # Convert to GJ
+        natural_gas_prices_GJ = natural_gas_prices_MMBTU / 1.05506  # Convert to GJ
 
         iron_ore_pellet_unitcost_tonne = inputs["price_iron_ore"]
         if inputs["iron_transport_cost"] > 0:
