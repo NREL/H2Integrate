@@ -70,13 +70,6 @@ def scale_variables(input_vars: list[np.ndarray] | np.ndarray) -> tuple[np.ndarr
     Returns:
         Tuple of (scaled_variables, scale_factors) where scale_factors are the max values.
     """
-    # scaled_inputs = []
-    # scale_factors = []
-
-    # for input_var in input_vars:
-    #     scale_factor = np.max(input_var)
-    #     scaled_inputs.append(input_var / scale_factor)
-    #     scale_factors.append(scale_factor)
 
     if isinstance(input_vars, list):
         input_vars = np.array(input_vars)
@@ -372,12 +365,6 @@ def refit_coeffs(
     col_names = ["a1", "a2", "a3", "a4", "a5", "scale_x", "scale_y", "scale_z", "fit_type"]
 
     # Generate labels for the outputs
-    # name_to_label = {
-    #     name: f"{name[:-1]}/(kg/hr H2 in)]"
-    #     if "H2 Conc Out" not in name and name != "H2 Flow Out [kg/hr]"
-    #     else name
-    #     for name in output_names
-    # }
     name_to_label = {
         name: f"{name[:-1]}/(kg/hr H2 in)]" if "H2 Conc Out" not in name else name
         for name in output_names
