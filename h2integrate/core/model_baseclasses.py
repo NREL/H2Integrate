@@ -1,9 +1,9 @@
+import copy
+import hashlib
 from pathlib import Path
 
 import dill
 import openmdao.api as om
-
-from h2integrate.core.utilities import make_cache_hash_filename
 
 
 class CostModelBaseClass(om.ExplicitComponent):
@@ -119,10 +119,10 @@ class ResizeablePerformanceModelBaseClass(om.ExplicitComponent):
         raise NotImplementedError("This method should be implemented in a subclass.")
 
 
-class CacheModelBaseClass(om.ExplicitComponent):
+class CacheBaseClass(om.ExplicitComponent):
     """Baseclass with methods to cache results and load data from cached results.
     Subclasses should have a corresponding config class that inherits
-    `CacheModelBaseConfig`.
+    `CacheBaseConfig`.
     """
 
     def set_outputs_from_cache_dict(self, cached_dict, outputs, discrete_outputs={}):
@@ -208,9 +208,7 @@ class CacheModelBaseClass(om.ExplicitComponent):
             config_dict = self.config.as_dict()
 
         # Create unique filename for cached results based on inputs and config
-        cache_filename = make_cache_hash_filename(
-            config_dict, inputs, discrete_inputs, cache_dir=self.config.cache_dir
-        )
+        cache_filename = self.make_cache_hash_filename(config_dict, inputs, discrete_inputs)
 
         # Check if file exists that contains cached results
         if not cache_filename.exists():
@@ -259,9 +257,7 @@ class CacheModelBaseClass(om.ExplicitComponent):
             config_dict = self.config.as_dict()
 
         # Create unique filename for cached results based on inputs and config
-        cache_filename = make_cache_hash_filename(
-            config_dict, inputs, discrete_inputs, cache_dir=self.config.cache_dir
-        )
+        cache_filename = self.make_cache_hash_filename(config_dict, inputs, discrete_inputs)
 
         cache_path = Path(cache_filename)
 
@@ -272,6 +268,38 @@ class CacheModelBaseClass(om.ExplicitComponent):
         with cache_path.open("wb") as f:
             dill.dump(output_dict, f)
         return
+
+    def make_cache_hash_filename(self, config, inputs, discrete_inputs={}):
+        """Make valid filepath to a pickle file with a filename that is unique based on information
+        available in the config, inputs, and discrete inputs.
+
+        Args:
+            config (object | dict): configuration object that inherits `BaseConfig` or dictionary.
+            inputs (om.vectors.default_vector.DefaultVector): OM inputs to `compute()` method
+            discrete_inputs (om.core.component._DictValues, optional): OM discrete inputs to
+                `compute()` method. Defaults to {}.
+
+        Returns:
+            Path: filepath to pickle file with filename as unique cache key.
+        """
+        # NOTE: maybe would be good to add a string input that can specify what model this
+        # cache is for (like "hopp" or "floris"), this could be used in the cache
+        # filename but perhaps unnecessary
+
+        if not isinstance(config, dict):
+            config_dict = config.as_dict()
+        else:
+            config_dict = copy.deepcopy(config)
+
+        hash_dict_str = str(config_dict)
+        hash_dict_str += str(dict(inputs.items()))
+        hash_dict_str += str(dict(discrete_inputs.items()))
+
+        # Create a unique hash for the current configuration to use as a cache key
+        config_hash = hashlib.md5(hash_dict_str.encode("utf-8")).hexdigest()
+
+        cache_file = self.config.cache_dir / f"{config_hash}.pkl"
+        return cache_file
 
     # def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
     #     """

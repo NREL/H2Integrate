@@ -2,19 +2,19 @@ import numpy as np
 from attrs import field, define
 from hopp.tools.dispatch.plot_tools import plot_battery_output, plot_generation_profile
 
-from h2integrate.core.utilities import CacheModelBaseConfig, merge_shared_inputs
-from h2integrate.core.model_baseclasses import CostModelBaseClass, CacheModelBaseClass
+from h2integrate.core.utilities import CacheBaseConfig, merge_shared_inputs
+from h2integrate.core.model_baseclasses import CacheBaseClass, CostModelBaseClass
 from h2integrate.converters.hopp.hopp_mgmt import run_hopp, setup_hopp
 
 
 @define(kw_only=True)
-class HOPPComponentModelConfig(CacheModelBaseConfig):
+class HOPPComponentModelConfig(CacheBaseConfig):
     hopp_config: dict = field()
     cost_year: int = field(converter=int)
     electrolyzer_rating: int | float | None = field(default=None)
 
 
-class HOPPComponent(CostModelBaseClass, CacheModelBaseClass):
+class HOPPComponent(CostModelBaseClass, CacheBaseClass):
     """
     A simple OpenMDAO component that represents a HOPP model.
 
@@ -172,6 +172,5 @@ class HOPPComponent(CostModelBaseClass, CacheModelBaseClass):
 
         outputs["power_capacity_to_interconnect_ratio"] = total_power_capacity / interconnect_kw
 
-        if self.config.enable_caching:
-            # Cache the results for future use
-            self.cache_outputs(inputs, outputs, discrete_inputs)
+        # Cache the results for future use if enabled
+        self.cache_outputs(inputs, outputs, discrete_inputs)
