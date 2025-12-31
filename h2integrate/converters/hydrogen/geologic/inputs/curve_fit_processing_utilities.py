@@ -267,7 +267,6 @@ def plot_curve_fit(
     new_h2_out_surf = None
     if output_name == "H2 Flow Out [kg/hr]":
         new_h2_out_surf = z_surf * y_grid
-        z_surf = new_h2_out_surf
     elif output_name == "Steam [kt/h]":
         z_surf = STEAM_CONSTANT / h2_out_surf if h2_out_surf is not None else z_surf
     elif output_name not in ["H2 Conc Out [% mol]"]:
@@ -348,7 +347,8 @@ def refit_coeffs(
         raise ValueError(msg)
 
     # Extract and normalize outputs
-    output_names = list({"H2 Flow Out [kg/hr]", *output_names})
+    output_names = list({*output_names})
+    output_names.insert(0, "H2 Flow Out [kg/hr]")
 
     outputs = np.zeros((len(output_names), len(h2_conc)))
     for ni, name in enumerate(output_names):
@@ -385,10 +385,11 @@ def refit_coeffs(
             h2_out = outputs[output_names.index("H2 Flow Out [kg/hr]")] * flow
 
             actual_output = scaled_outputs[i] * out_scale_factors[i]
-            h2_out_surf = (
-                plot_curve_fit(name, coeffs, h2_conc, flow, actual_output, h2_out, h2_out_surf)
-                or h2_out_surf
+            new_surf = plot_curve_fit(
+                name, coeffs, h2_conc, flow, actual_output, h2_out, h2_out_surf
             )
+            if h2_out_surf is None:
+                h2_out_surf = new_surf
 
     # Save coefficients to CSV
     if refit_coeff_fn is not None:
