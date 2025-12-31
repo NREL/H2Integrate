@@ -1395,7 +1395,8 @@ def test_stimulated_geoh2(subtests):
             "finance_subgroup_default.opex_adjusted_geoh2_well_subsurface"
         )
         assert pytest.approx(adjusted_opex, rel=1e-6) == 215100.7857875
-        
+
+
 def test_21_iron_dri_eaf_example(subtests):
     os.chdir(EXAMPLE_DIR / "21_iron_mn_to_il")
 
