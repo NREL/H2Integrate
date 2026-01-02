@@ -7,7 +7,7 @@ from h2integrate.core.model_baseclasses import CostModelBaseClass
 from h2integrate.tools.inflation.inflate import inflate_cepci
 
 
-@define
+@define(kw_only=True)
 class GeoH2SubsurfacePerformanceConfig(BaseConfig):
     """Configuration for performance parameters in natural and geologic hydrogen subsurface
         well sub-models.
@@ -91,7 +91,7 @@ class GeoH2SubsurfacePerformanceBaseClass(om.ExplicitComponent):
         self.add_output("total_hydrogen_produced", val=0.0, units="kg/year")
 
 
-@define
+@define(kw_only=True)
 class GeoH2SubsurfaceCostConfig(CostModelBaseConfig):
     """Configuration for cost parameters in natural and geologic hydrogen well subsurface
         sub-models.

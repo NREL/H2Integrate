@@ -27,6 +27,12 @@ from h2integrate.converters.wind.atb_wind_cost import ATBWindPlantCostModel
 from h2integrate.storage.battery.pysam_battery import PySAMBatteryPerformanceModel
 from h2integrate.transporters.generic_combiner import GenericCombinerPerformanceModel
 from h2integrate.transporters.generic_splitter import GenericSplitterPerformanceModel
+from h2integrate.converters.iron.iron_dri_plant import (
+    HydrogenIronReductionPlantCostComponent,
+    NaturalGasIronReductionPlantCostComponent,
+    HydrogenIronReductionPlantPerformanceComponent,
+    NaturalGasIronReductionPlantPerformanceComponent,
+)
 from h2integrate.converters.iron.iron_transport import (
     IronTransportCostComponent,
     IronTransportPerformanceComponent,
@@ -38,6 +44,12 @@ from h2integrate.storage.hydrogen.tank_baseclass import (
     HydrogenTankPerformanceModel,
 )
 from h2integrate.converters.hydrogen.wombat_model import WOMBATElectrolyzerModel
+from h2integrate.converters.steel.steel_eaf_plant import (
+    HydrogenEAFPlantCostComponent,
+    NaturalGasEAFPlantCostComponent,
+    HydrogenEAFPlantPerformanceComponent,
+    NaturalGasEAFPlantPerformanceComponent,
+)
 from h2integrate.storage.battery.atb_battery_cost import ATBBatteryCostModel
 from h2integrate.storage.hydrogen.h2_storage_cost import (
     PipeStorageCostModel,
@@ -55,10 +67,7 @@ from h2integrate.converters.water.desal.desalination import (
     ReverseOsmosisPerformanceModel,
 )
 from h2integrate.converters.hydrogen.basic_cost_model import BasicElectrolyzerCostModel
-from h2integrate.converters.hydrogen.pem_electrolyzer import (
-    ElectrolyzerCostModel,
-    ElectrolyzerPerformanceModel,
-)
+from h2integrate.converters.hydrogen.pem_electrolyzer import ECOElectrolyzerPerformanceModel
 from h2integrate.converters.solar.atb_res_com_pv_cost import ATBResComPVCostModel
 from h2integrate.converters.solar.atb_utility_pv_cost import ATBUtilityPVCostModel
 from h2integrate.resource.wind.nrel_developer_wtk_api import WTKNRELDeveloperAPIWindResource
@@ -94,9 +103,6 @@ from h2integrate.resource.solar.nrel_developer_goes_api_models import (
     GOESConusSolarAPI,
     GOESFullDiscSolarAPI,
     GOESAggregatedSolarAPI,
-)
-from h2integrate.converters.hydrogen.eco_tools_pem_electrolyzer import (
-    ECOElectrolyzerPerformanceModel,
 )
 from h2integrate.converters.water_power.hydro_plant_run_of_river import (
     RunOfRiverHydroCostModel,
@@ -167,8 +173,6 @@ supported_models = {
     "atb_comm_res_pv_cost": ATBResComPVCostModel,
     "run_of_river_hydro_performance": RunOfRiverHydroPerformanceModel,
     "run_of_river_hydro_cost": RunOfRiverHydroCostModel,
-    "pem_electrolyzer_performance": ElectrolyzerPerformanceModel,
-    "pem_electrolyzer_cost": ElectrolyzerCostModel,
     "eco_pem_electrolyzer_performance": ECOElectrolyzerPerformanceModel,
     "singlitico_electrolyzer_cost": SingliticoCostModel,
     "basic_electrolyzer_cost": BasicElectrolyzerCostModel,
@@ -184,6 +188,14 @@ supported_models = {
     "iron_plant_cost": IronPlantCostComponent,
     "iron_mine_performance_martin": MartinIronMinePerformanceComponent,  # standalone model
     "iron_mine_cost_martin": MartinIronMineCostComponent,  # standalone model
+    "ng_dri_performance_rosner": NaturalGasIronReductionPlantPerformanceComponent,
+    "ng_dri_cost_rosner": NaturalGasIronReductionPlantCostComponent,  # standalone model
+    "h2_dri_performance_rosner": HydrogenIronReductionPlantPerformanceComponent,
+    "h2_dri_cost_rosner": HydrogenIronReductionPlantCostComponent,  # standalone model
+    "ng_eaf_performance_rosner": NaturalGasEAFPlantPerformanceComponent,
+    "ng_eaf_cost_rosner": NaturalGasEAFPlantCostComponent,  # standalone model
+    "h2_eaf_performance_rosner": HydrogenEAFPlantPerformanceComponent,
+    "h2_eaf_cost_rosner": HydrogenEAFPlantCostComponent,  # standalone model
     "humbert_electrowinning_performance": HumbertEwinPerformanceComponent,
     "humbert_stinn_electrowinning_cost": HumbertStinnEwinCostComponent,
     "reverse_osmosis_desalination_performance": ReverseOsmosisPerformanceModel,
@@ -252,12 +264,31 @@ supported_models = {
     "NumpyFinancialNPV": NumpyFinancialNPV,
 }
 
-electricity_producing_techs = [
-    "wind",
-    "solar",
-    "pv",
-    "river",
-    "hopp",
-    "natural_gas_plant",
-    "grid_buy",
-]
+
+def is_electricity_producer(tech_name: str) -> bool:
+    """Check if a technology is an electricity producer.
+
+    Args:
+        tech_name: The name of the technology to check.
+    Returns:
+        True if tech_name starts with any of the known electricity producing
+        tech prefixes (e.g., 'wind', 'solar', 'pv', 'grid_buy', etc.).
+    Note:
+        This uses prefix matching, so 'grid_buy_1' and 'grid_buy_2' would both
+        be considered electricity producers. Be careful when naming technologies
+        to avoid unintended matches (e.g., 'pv_battery' would be incorrectly
+        identified as an electricity producer).
+    """
+
+    # add any new electricity producing technologies to this list
+    electricity_producing_techs = [
+        "wind",
+        "solar",
+        "pv",
+        "river",
+        "hopp",
+        "natural_gas_plant",
+        "grid_buy",
+    ]
+
+    return any(tech_name.startswith(elem) for elem in electricity_producing_techs)

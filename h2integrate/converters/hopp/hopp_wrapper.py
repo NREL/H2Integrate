@@ -118,19 +118,19 @@ class HOPPComponent(CostModelBaseClass):
                 electrolyzer_rating = self.options["tech_config"]["electrolyzer_rating"]
 
             if "pv" in self.hopp_config["technologies"]:
-                pv_capacity_kw = float(inputs["pv_capacity_kw"])
+                pv_capacity_kw = inputs["pv_capacity_kw"][0]
             else:
                 pv_capacity_kw = None
 
             if "battery" in self.hopp_config["technologies"]:
-                battery_capacity_kw = float(inputs["battery_capacity_kw"])
-                battery_capacity_kwh = float(inputs["battery_capacity_kwh"])
+                battery_capacity_kw = inputs["battery_capacity_kw"][0]
+                battery_capacity_kwh = inputs["battery_capacity_kwh"][0]
             else:
                 battery_capacity_kw = None
                 battery_capacity_kwh = None
 
             if "wind" in self.hopp_config["technologies"]:
-                wind_turbine_rating_kw = float(inputs["wind_turbine_rating_kw"])
+                wind_turbine_rating_kw = inputs["wind_turbine_rating_kw"][0]
             else:
                 wind_turbine_rating_kw = None
 

@@ -81,7 +81,7 @@ from h2integrate.core.validators import gt_zero, contains, must_equal
 from h2integrate.core.model_base import CostModelBaseConfig, CostModelBaseClass
 
 # make a cost config input to get user-provided inputs that won't be passed from other models
-@define
+@define(kw_only=True)
 class ReverseOsmosisCostModelConfig(BaseConfig):
     # the config variables for the cost model would be provided in the tech_config[tech]['model_inputs']['cost_parameters'] or tech_config[tech]['model_inputs']['shared_parameters']
     freshwater_kg_per_hour: float = field(validator=gt_zero)
@@ -123,7 +123,7 @@ from h2integrate.core.utilities import BaseConfig, CostModelBaseConfig, merge_sh
 from h2integrate.core.validators import gt_zero, contains
 from h2integrate.core.model_base import CostModelBaseConfig, CostModelBaseClass
 
-@define
+@define(kw_only=True)
 class ATBUtilityPVCostModelConfig(CostModelBaseConfig):
     capex_per_kWac: float | int = field(validator=gt_zero)
     opex_per_kWac_per_year: float | int = field(validator=gt_zero)
@@ -140,11 +140,11 @@ class ATBUtilityPVCostModel(CostModelBaseClass):
         super().setup()
 
         # add extra inputs or outputs for the cost model
-        self.add_input("capacity_kWac", val=0.0, units="kW", desc="PV rated capacity in AC")
+        self.add_input("system_capacity_AC", val=0.0, units="kW", desc="PV rated capacity in AC")
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         # calculate CapEx and OpEx in USD
-        capacity = inputs["capacity_kWac"][0]
+        capacity = inputs["system_capacity_AC"][0]
         capex = self.config.capex_per_kWac * capacity
         opex = self.config.opex_per_kWac_per_year * capacity
         outputs["CapEx"] = capex
@@ -165,13 +165,14 @@ Here's what the updated `supported_models.py` file looks like with our new solar
 from h2integrate.converters.solar.solar_pysam import PYSAMSolarPlantPerformanceComponent
 
 supported_models = {
-    'pysam_solar_plant_performance' : PYSAMSolarPlantPerformanceComponent,
+    "pysam_solar_plant_performance" : PYSAMSolarPlantPerformanceComponent,
 
-    'pem_electrolyzer_performance': ElectrolyzerPerformanceModel,
-    'pem_electrolyzer_cost': ElectrolyzerCostModel,
-
-    'eco_pem_electrolyzer_performance': ECOElectrolyzerPerformanceModel,
-    'eco_pem_electrolyzer_cost': ECOElectrolyzerCostModel,
+    "run_of_river_hydro_performance": RunOfRiverHydroPerformanceModel,
+    "run_of_river_hydro_cost": RunOfRiverHydroCostModel,
+    "eco_pem_electrolyzer_performance": ECOElectrolyzerPerformanceModel,
+    "singlitico_electrolyzer_cost": SingliticoCostModel,
+    "basic_electrolyzer_cost": BasicElectrolyzerCostModel,
+    "custom_electrolyzer_cost": CustomElectrolyzerCostModel,
 
     ...
 }

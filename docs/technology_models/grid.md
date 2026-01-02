@@ -16,7 +16,7 @@ It supports:
 - Computing unmet demand and unsold electricity due to constraints.
 
 ```{note}
-Multiple grid instances may be used within the same plant to represent different interconnection nodes. In the `tech_config` the component **must** be called `grid_buy` for the logic to work appropriately in financial calculations.
+Multiple grid instances may be used within the same plant to represent different interconnection nodes. For buying electricity from the grid, the technology name in the `tech_config` **must** start with `grid_buy` for the logic to work appropriately in financial calculations.
 ```
 
 **Inputs**
