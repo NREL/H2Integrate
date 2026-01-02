@@ -25,5 +25,5 @@ for casename in casenames:
     model.post_process()
     lcois.append(float(model.model.get_val("finance_subgroup_sponge_iron.price_sponge_iron")[0]))
 
-# Compare the LCOIs from iron_wrapper and modular iron
+# Compare the LCOIs from each electrowinning type
 print(lcois)

@@ -51,6 +51,13 @@ class HumbertEwinPerformanceComponent(om.ExplicitComponent):
         self.add_input("spec_energy_cons_fe", val=spec_energy_cons_fe, units="kW*h/kg")
         self.add_input("capacity", val=self.config.capacity_mw, units="MW")
 
+        self.add_output(
+            "electricity_consumed",
+            val=0.0,
+            shape=n_timesteps,
+            units="kW",
+            desc="Electricity consumed",
+        )
         self.add_output("limiting_input", val=0.0, shape=n_timesteps, units=None)
         self.add_output("sponge_iron_out", val=0.0, shape=n_timesteps, units="kg/h")
         self.add_output("total_sponge_iron_produced", val=0.0, units="kg/year")
@@ -80,7 +87,7 @@ class HumbertEwinPerformanceComponent(om.ExplicitComponent):
         fe_prod = np.minimum.reduce([fe_from_ore, fe_from_elec])
         limiters = np.argmin([fe_from_ore, fe_from_elec], axis=0)
 
-        # Limiting NH3 production per hour by capacity
+        # Limiting iron production per hour by capacity
         fe_prod = np.minimum.reduce([fe_prod, np.full(len(fe_prod), cap_kw / kwh_kg_fe)])
         cap_lim = 1 - np.argmax([fe_prod, np.full(len(fe_prod), cap_kw / kwh_kg_fe)], axis=0)
 
@@ -88,7 +95,11 @@ class HumbertEwinPerformanceComponent(om.ExplicitComponent):
         limiters = np.maximum.reduce([cap_lim * 2, limiters])
         outputs["limiting_input"] = limiters
 
+        # Determine actual electricity consumption from iron consumption
+        elec_consume = fe_prod * kwh_kg_fe
+
         # Return iron production
         outputs["sponge_iron_out"] = fe_prod
+        outputs["electricity_consumed"] = elec_consume
         outputs["total_sponge_iron_produced"] = np.sum(fe_prod)
         outputs["output_capacity"] = cap_kw / kwh_kg_fe * 8760

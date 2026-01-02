@@ -17,29 +17,18 @@ site:
     }
   ]
 
-  resources:
-    wind_resource:
-      resource_model: "wind_toolkit_v2_api"
-      resource_parameters:
-        latitude: 35.2018863
-        longitude: -101.945027
-        resource_year: 2012
 
 # array of arrays containing left-to-right technology
 # interconnections; can support bidirectional connections
 # with the reverse definition.
 # this will naturally grow as we mature the interconnected tech
 technology_interconnections: [
-  ["iron_mine","iron_transport","total_iron_ore_produced"],
-  ["iron_transport","iron_plant","iron_transport_cost"],
-  ["finance_subgroup_iron_ore","iron_plant","price_iron_ore"],
-  ["finance_subgroup_electricity","iron_plant","price_electricity"],
-  ["wind","iron_plant","electricity","cable"]
-]
-
-resource_to_tech_connections: [
-  # connect the wind resource to the wind technology
-  ['wind_resource', 'wind', 'wind_resource_data'],
+  # connect feedstocks to iron mine
+  ["grid_feedstock","iron_mine","electricity","cable"],
+  ["mine_feedstock","iron_mine","crude_ore","pipe"],
+  # connect feedstocks to iron plant
+  ["iron_mine","iron_plant","iron_ore","iron_transport"],
+  ["ewin_grid_feedstock","iron_plant","electricity","cable"],
 ]
 
 plant:
@@ -71,15 +60,17 @@ finance_parameters:
     cost_year_adjustment_inflation: 0.025
     target_dollar_year: 2022
   finance_subgroups:
-    electricity:
-      commodity: "electricity"
-      commodity_stream: "wind"
-      technologies: ["wind"]
     iron_ore:
       commodity: "iron_ore"
       commodity_stream: "iron_mine"
-      technologies: ["iron_mine"]
+      technologies: ["iron_mine", "grid_feedstock", "mine_feedstock"]
     sponge_iron:
       commodity: "sponge_iron"
       commodity_stream: "iron_plant"
-      technologies: ["iron_plant"] #
+      technologies:
+      - "iron_mine"
+      - "grid_feedstock"
+      - "mine_feedstock"
+      - "iron_transport"
+      - "iron_plant"
+      - "ewin_grid_feedstock"
