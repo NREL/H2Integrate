@@ -1034,7 +1034,10 @@ class H2IntegrateModel:
             resource_name, tech_name, variable = connection
 
             # Connect the resource output to the technology input
-            self.model.connect(f"site.{resource_name}.{variable}", f"{tech_name}.{variable}")
+            if "." in resource_name:
+                self.model.connect(f"site.{resource_name}.{variable}", f"{tech_name}.{variable}")
+            else:
+                self.model.connect(f"{resource_name}.{variable}", f"{tech_name}.{variable}")
 
         # connect outputs of the technology models to the cost and finance models of the
         # same name if the cost and finance models are not None
