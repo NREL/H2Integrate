@@ -202,6 +202,21 @@ class ResizeablePerformanceModelBaseConfig(BaseConfig):
                 )
 
 
+@define(kw_only=True)
+class CacheBaseConfig(BaseConfig):
+    enable_caching: bool = field()
+    cache_dir: str | Path = field()
+
+    def __attrs_post_init__(self):
+        # Convert cache directory to Path object
+        if isinstance(self.cache_dir, str):
+            self.cache_dir = Path(self.cache_dir)
+
+        # Create a cache directory if it doesn't exist
+        if not self.cache_dir.exists():
+            self.cache_dir.mkdir(parents=True, exist_ok=True)
+
+
 def attr_serializer(inst: type, field: Attribute, value: Any):
     if isinstance(value, np.ndarray):
         return value.tolist()

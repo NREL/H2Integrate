@@ -1,3 +1,8 @@
+import copy
+import hashlib
+from pathlib import Path
+
+import dill
 import openmdao.api as om
 
 
@@ -112,3 +117,207 @@ class ResizeablePerformanceModelBaseClass(om.ExplicitComponent):
         """
 
         raise NotImplementedError("This method should be implemented in a subclass.")
+
+
+class CacheBaseClass(om.ExplicitComponent):
+    """Baseclass with methods to cache results and load data from cached results.
+    Subclasses should have a corresponding config class that inherits
+    `CacheBaseConfig`.
+    """
+
+    def set_outputs_from_cache_dict(self, cached_dict, outputs, discrete_outputs={}):
+        """Set outputs and discrete_outputs using previously cached data available in cached_dict.
+
+        Args:
+            cached_dict (dict): dictionary with top-level keys of "outputs" and "discrete_outputs".
+                Top-level values are dictionaries with keys corresponding to output of discrete
+                output names and values of the resulting output value.
+            outputs (om.vectors.default_vector.DefaultVector): OM outputs of `compute()` method.
+                The output values are set the outputs have been previously cached.
+            discrete_outputs (om.core.component._DictValues, optional): OM discrete outputs of
+                `compute()` method. Defaults to {}.
+        """
+        # Set outputs to the outputs saved in the cached results
+        for output_name, default_output_val in outputs.items():
+            outputs[output_name] = cached_dict.get("outputs", {}).get(
+                output_name, default_output_val
+            )
+
+        # Set discrete outputs to the outputs saved in the cached results
+        for discrete_output_name, discrete_default_output_val in discrete_outputs.items():
+            discrete_outputs[output_name] = cached_dict.get("discrete_outputs", {}).get(
+                discrete_output_name, discrete_default_output_val
+            )
+        return
+
+    def create_cache_dict_from_outputs(self, outputs, discrete_outputs={}):
+        """Create a dictionary of outputs and discrete outputs. The outputs and discrete_outputs
+        should be set in the `compute()` prior to this function being called.
+
+        Args:
+            outputs (om.vectors.default_vector.DefaultVector): OM outputs of `compute()` method
+                that have already been set with the resulting values.
+            discrete_outputs (om.core.component._DictValues, optional): OM discrete outputs of
+                `compute()` method that have been set with resulting values. Defaults to {}.
+
+        Returns:
+            dict: dictionary with top-level keys of "outputs" and "discrete_outputs".
+                Top-level values are dictionaries with keys corresponding to output of discrete
+                output names and values of the resulting output value.
+        """
+        cache_dict = {
+            "outputs": dict(outputs.items()),
+            "discrete_outputs": dict(discrete_outputs.items()),
+        }
+        return cache_dict
+
+    def load_outputs(
+        self, inputs, outputs, discrete_inputs={}, discrete_outputs={}, config_dict: dict = {}
+    ):
+        """Create filename for cached results using data from inputs and discrete_inputs.
+        If the filepath exists for the cached results, then sets the outputs values to the
+        values in the cached results file and returns True. Otherwise, returns False.
+
+        Args:
+            inputs (om.vectors.default_vector.DefaultVector): OM inputs to `compute()` method.
+            outputs (om.vectors.default_vector.DefaultVector): OM outputs of `compute()` method.
+                The output values are set the results that have been previously cached.
+            discrete_inputs (om.core.component._DictValues, optional): OM discrete inputs to
+                `compute()` method. Defaults to {}.
+            discrete_outputs (om.core.component._DictValues, optional): OM discrete outputs of
+                `compute()` method. The discrete_output values are set to the discrete_outputs have
+                been previously cached. Defaults to {}.
+            config_dict (dict, optional): dictionary created/updated from config class.
+                Defaults to {}. If config_dict is input as an empty dictionary,
+                config_dict is created from `self.config.as_dict()`
+
+        Returns:
+            bool: True if outputs were set to cached results. False if cache file
+                doesnt't exist and the model still needs to calculate and set the outputs.
+        """
+
+        # If not caching is not enabled, return False to indicate that outputs have not been set
+        if not self.config.enable_caching:
+            return False
+
+        # If caching is enabled, check if file exists with cached results
+
+        # Check if config_dict was input as an empty dictionary
+        if not bool(config_dict):
+            # Create config_dict from config attribute
+            config_dict = self.config.as_dict()
+
+        # Create unique filename for cached results based on inputs and config
+        cache_filename = self.make_cache_hash_filename(config_dict, inputs, discrete_inputs)
+
+        # Check if file exists that contains cached results
+        if not cache_filename.exists():
+            # If file doesn't exist, return False to indicate that outputs have not been set
+            return False
+
+        # Load the cached results
+        cache_path = Path(cache_filename)
+        with cache_path.open("rb") as f:
+            cached_data = dill.load(f)
+
+        # Set outputs to the outputs saved in the cached results
+        self.set_outputs_from_cache_dict(cached_data, outputs, discrete_outputs)
+        # Return True to indicate that outputs have been set from cached results
+        return True
+
+    def cache_outputs(
+        self, inputs, outputs, discrete_inputs={}, discrete_outputs={}, config_dict: dict = {}
+    ):
+        """Create filename for cached results using data from inputs and discrete_inputs.
+        Save dictionary of outputs to the file. The outputs and discrete_outputs
+        should be set in the `compute()` prior to this function being called.
+
+        Args:
+            inputs (om.vectors.default_vector.DefaultVector): OM inputs to `compute()` method
+            outputs (om.vectors.default_vector.DefaultVector): OM outputs of `compute()` method
+                that have already been set with the resulting values
+            discrete_inputs (om.core.component._DictValues, optional): OM discrete inputs to
+                `compute()` method. Defaults to {}.
+            discrete_outputs (om.core.component._DictValues, optional): OM discrete_outputs of
+                `compute()` method that have already been set with the resulting values.
+                Defaults to {}.
+            config_dict (dict, optional): dictionary created/updated from config class.
+                Defaults to {}. If config_dict is input as an empty dictionary,
+                config_dict is created from `self.config.as_dict()`
+        """
+        # If not caching is not enabled, return without caching outputs
+        if not self.config.enable_caching:
+            return
+
+        # Cache the results for future use if caching is enabled
+
+        # Check if config_dict was input as an empty dictionary
+        if not bool(config_dict):
+            # Create config_dict from config attribute
+            config_dict = self.config.as_dict()
+
+        # Create unique filename for cached results based on inputs and config
+        cache_filename = self.make_cache_hash_filename(config_dict, inputs, discrete_inputs)
+
+        cache_path = Path(cache_filename)
+
+        # Create dictionary of outputs and discrete_outputs
+        output_dict = self.create_cache_dict_from_outputs(outputs, discrete_outputs)
+
+        # Save outputs and discrete_outputs to pickle file
+        with cache_path.open("wb") as f:
+            dill.dump(output_dict, f)
+        return
+
+    def make_cache_hash_filename(self, config, inputs, discrete_inputs={}):
+        """Make valid filepath to a pickle file with a filename that is unique based on information
+        available in the config, inputs, and discrete inputs.
+
+        Args:
+            config (object | dict): configuration object that inherits `BaseConfig` or dictionary.
+            inputs (om.vectors.default_vector.DefaultVector): OM inputs to `compute()` method
+            discrete_inputs (om.core.component._DictValues, optional): OM discrete inputs to
+                `compute()` method. Defaults to {}.
+
+        Returns:
+            Path: filepath to pickle file with filename as unique cache key.
+        """
+        # NOTE: maybe would be good to add a string input that can specify what model this
+        # cache is for (like "hopp" or "floris"), this could be used in the cache
+        # filename but perhaps unnecessary
+
+        if not isinstance(config, dict):
+            config_dict = config.as_dict()
+        else:
+            config_dict = copy.deepcopy(config)
+
+        hash_dict_str = str(config_dict)
+        hash_dict_str += str(dict(inputs.items()))
+        hash_dict_str += str(dict(discrete_inputs.items()))
+
+        # Create a unique hash for the current configuration to use as a cache key
+        config_hash = hashlib.md5(hash_dict_str.encode("utf-8")).hexdigest()
+
+        cache_file = self.config.cache_dir / f"{config_hash}.pkl"
+        return cache_file
+
+    # def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
+    #     """
+    #     Computation for the OM component.
+    #     This template includes commented out code on how to use the functionality
+    #     of this component within a model.
+
+    #     For a template class this is not implement and raises an error.
+    #         """
+
+    #     # 1. check if this case has been run before
+    #     loaded_results = self.load_outputs(inputs, outputs, discrete_inputs, discrete_outputs)
+    #     if loaded_results:
+    #         return
+
+    #     # 2. run model as normal and set outputs
+
+    #     # 3. save outputs to cache directory
+    #     self.cache_outputs(inputs, outputs, discrete_inputs, discrete_outputs)
+
+    #     raise NotImplementedError("This method should be implemented in a subclass.")
