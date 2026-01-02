@@ -200,7 +200,7 @@ class IronTransportCostComponent(CostModelBaseClass):
         # if ore_consumed_sum > 0:
         #     total_ore = ore_consumed_sum
         # else:
-        inputs["total_iron_ore_produced"]
+        #     total_ore = inputs["total_iron_ore_produced"]
 
         water_coeff_dict = load_top_down_coeffs(
             ["Barge Shipping Cost"], cost_year=self.config.cost_year
