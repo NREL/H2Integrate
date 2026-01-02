@@ -93,8 +93,8 @@ from h2integrate.converters.natural_gas.natural_gas_cc_ct import (
 from h2integrate.converters.hydrogen.singlitico_cost_model import SingliticoCostModel
 from h2integrate.converters.co2.marine.direct_ocean_capture import DOCCostModel, DOCPerformanceModel
 from h2integrate.control.control_strategies.pyomo_controllers import (
-    HeuristicLoadFollowingController,
     OptimizedDispatchController,
+    HeuristicLoadFollowingController,
 )
 from h2integrate.converters.hydrogen.geologic.mathur_modified import GeoH2SubsurfaceCostModel
 from h2integrate.resource.solar.nrel_developer_goes_api_models import (
@@ -126,17 +126,14 @@ from h2integrate.converters.co2.marine.ocean_alkalinity_enhancement import (
 from h2integrate.converters.hydrogen.custom_electrolyzer_cost_model import (
     CustomElectrolyzerCostModel,
 )
+from h2integrate.control.control_rules.converters.generic_converter_opt import (
+    PyomoDispatchGenericConverterMinOperatingCosts,
+)
 from h2integrate.converters.hydrogen.geologic.templeton_serpentinization import (
     StimulatedGeoH2PerformanceModel,
 )
 from h2integrate.control.control_rules.storage.pyomo_storage_rule_baseclass import (
     PyomoRuleStorageBaseclass,
-)
-from h2integrate.control.control_rules.storage.pyomo_storage_rule_min_operating_cost import (
-    PyomoRuleStorageMinOperatingCosts,
-)
-from h2integrate.control.control_rules.converters.generic_converter_opt import (
-    PyomoDispatchGenericConverterMinOperatingCosts,
 )
 from h2integrate.control.control_strategies.passthrough_openloop_controller import (
     PassThroughOpenLoopController,
@@ -150,6 +147,9 @@ from h2integrate.control.control_strategies.storage.demand_openloop_controller i
 )
 from h2integrate.control.control_strategies.converters.demand_openloop_controller import (
     DemandOpenLoopConverterController,
+)
+from h2integrate.control.control_rules.storage.pyomo_storage_rule_min_operating_cost import (
+    PyomoRuleStorageMinOperatingCosts,
 )
 from h2integrate.control.control_strategies.converters.flexible_demand_openloop_controller import (
     FlexibleDemandOpenLoopConverterController,
@@ -256,9 +256,7 @@ supported_models = {
     # Dispatch
     "pyomo_dispatch_generic_converter": PyomoDispatchGenericConverter,
     "pyomo_dispatch_generic_storage": PyomoRuleStorageBaseclass,
-    "pyomo_dispatch_battery_min_operating_cost": (
-        PyomoRuleStorageMinOperatingCosts
-    ),
+    "pyomo_dispatch_battery_min_operating_cost": (PyomoRuleStorageMinOperatingCosts),
     "pyomo_dispatch_generic_converter_min_operating_cost": (
         PyomoDispatchGenericConverterMinOperatingCosts
     ),
