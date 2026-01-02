@@ -4,7 +4,7 @@ description: "This plant is located in OR, USA"
 site:
   latitude: 43.807
   longitude: -124.816
-  elevation_m: 439.0
+  elevation: 439.0
 
 plant:
   plant_life: 30
