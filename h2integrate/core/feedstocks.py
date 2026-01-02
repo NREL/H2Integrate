@@ -84,10 +84,16 @@ class FeedstockCostModel(CostModelBaseClass):
             units=self.config.units,
             desc=f"Consumption profile of {feedstock_type}",
         )
+        self.add_input(
+            "price",
+            val=self.config.price,
+            units="USD/(" + self.config.units + ")/h",
+            desc=f"Consumption profile of {feedstock_type}",
+        )
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         feedstock_type = self.config.feedstock_type
-        price = self.config.price
+        price = inputs["price"]
         hourly_consumption = inputs[f"{feedstock_type}_consumed"]
         cost_per_year = sum(price * hourly_consumption)
 

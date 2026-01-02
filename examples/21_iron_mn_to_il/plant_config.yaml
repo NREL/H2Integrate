@@ -25,8 +25,16 @@ technology_interconnections: [
   # connect feedstocks to iron mine
   ["grid_feedstock","iron_mine","electricity","cable"],
   ["mine_feedstock","iron_mine","crude_ore","pipe"],
+  # connect iron mine to iron transport
+  #TODO: update after updated transport model is integrated
+  ["iron_mine","ore_splitter","iron_ore","pipe"],
+  ["iron_mine","ore_splitter","total_iron_ore_produced"],
+  ["iron_plant","ore_splitter",["iron_ore_consumed","prescribed_commodity_to_priority_tech"]],
+  ["ore_splitter","iron_transport","iron_ore","pipe"],
+  # connect iron ore price to feedstock
+  ["finance_subgroup_iron_ore","ore_feedstock",["price_iron_ore","price"]],
   # connect feedstocks to iron plant
-  ["iron_mine","iron_plant","iron_ore","iron_transport"],
+  ["ore_feedstock","iron_plant","iron_ore","pipe"],
   ["dri_grid_feedstock","iron_plant","electricity","cable"],
   ["catalyst_feedstock","iron_plant","reformer_catalyst","pipe"],
   ["water_feedstock","iron_plant","water","pipe"],
@@ -36,6 +44,7 @@ technology_interconnections: [
   ["eaf_water_feedstock","steel_plant","water","pipe"],
   ["eaf_natural_gas_feedstock","steel_plant","natural_gas","pipe"],
   ["iron_plant","steel_plant","pig_iron","pipe"],
+  # ["iron_transport","iron_plant","iron_transport_cost"],
 ]
 
 plant:
@@ -75,13 +84,12 @@ finance_parameters:
       commodity: "iron_ore"
       commodity_stream: "iron_mine"
       technologies: ["iron_mine", "grid_feedstock", "mine_feedstock"]
+      technologies: ["iron_mine", "grid_feedstock", "mine_feedstock"]
     pig_iron:
       commodity: "pig_iron"
       commodity_stream: "iron_plant"
       technologies:
-      - "iron_mine"
-      - "grid_feedstock"
-      - "mine_feedstock"
+      - "ore_feedstock"
       - "iron_transport"
       - "iron_plant"
       - "dri_grid_feedstock"
@@ -92,9 +100,7 @@ finance_parameters:
       commodity: "steel"
       commodity_stream: "steel_plant"
       technologies:
-      - "iron_mine"
-      - "grid_feedstock"
-      - "mine_feedstock"
+      - "ore_feedstock"
       - "iron_transport"
       - "iron_plant"
       - "dri_grid_feedstock"

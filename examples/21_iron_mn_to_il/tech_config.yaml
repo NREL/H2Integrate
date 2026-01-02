@@ -3,6 +3,7 @@ description: "This hybrid plant produces iron"
 
 technologies:
   grid_feedstock: #electricity feedstock for iron ore
+  grid_feedstock: #electricity feedstock for iron ore
     performance_model:
       model: "feedstock_performance"
     cost_model:
@@ -12,10 +13,10 @@ technologies:
         feedstock_type: "electricity"
         units: "MW"
       performance_parameters:
-        rated_capacity: 30. # MW, need 27.913 MW per timestep for iron ore
+        rated_capacity: 100. # MW, need 27.913 MW per timestep for iron ore
       cost_parameters:
         cost_year: 2022
-        price: 58.02 #USD/MW
+        price: 0. #USD/MW
         annual_cost: 0.
         start_up_cost: 0.
 
@@ -32,9 +33,28 @@ technologies:
         rated_capacity: 2000. # need 828.50385048 t/h
       cost_parameters:
         cost_year: 2022
+        price: 0. #USD/t
+        annual_cost: 0.
+        start_up_cost: 0.
+
+  ore_feedstock: #iron ore feedstock
+    performance_model:
+      model: "feedstock_performance"
+    cost_model:
+      model: "feedstock_cost"
+    model_inputs:
+      shared_parameters:
+        feedstock_type: "iron_ore"
+        units: "t/h"
+      performance_parameters:
+        rated_capacity: 2000. # need 828.50385048 t/h
+        rated_capacity: 2000. # need 828.50385048 t/h
+      cost_parameters:
+        cost_year: 2022
         price: 0.0
         annual_cost: 0.
         start_up_cost: 0.
+
 
   iron_mine:
     performance_model:
@@ -45,7 +65,17 @@ technologies:
       shared_parameters:
         mine: "Northshore"
         taconite_pellet_type: "drg"
-        max_ore_production_rate_tonnes_per_hr: 221.2592636 #516.0497610311598
+        max_ore_production_rate_tonnes_per_hr: 516.0497610311598
+
+  ore_splitter:
+    performance_model:
+      model: "splitter_performance"
+    model_inputs:
+      performance_parameters:
+        split_mode: "prescribed_commodity"
+        commodity: "iron_ore"
+        commodity_units: "t/h"
+        prescribed_commodity_to_priority_tech: 221.2592636
 
   iron_transport:
     performance_model:
@@ -87,7 +117,7 @@ technologies:
         feedstock_type: "water"
         units: "galUS" #galUS/h
       performance_parameters:
-        rated_capacity: 40000. # need 38710.49649 galUS/h
+        rated_capacity: 40000. # need 38.71049649 galUS/h
       cost_parameters:
         cost_year: 2022
         price: 0.0016700004398318847 # cost is USD0.441167535/t, converted to USD/gal
@@ -169,7 +199,7 @@ technologies:
         feedstock_type: "water"
         units: "galUS" #galUS/h
       performance_parameters:
-        rated_capacity: 10000. # need 9083.687924154146 galUS/h
+        rated_capacity: 10. # need 9.083687924154146 galUS/h
       cost_parameters:
         cost_year: 2022
         price: 0.0016700004398318847 # cost is USD 0.441167535/t, converted to USD/gal
@@ -181,13 +211,35 @@ technologies:
       model: "feedstock_performance"
     cost_model:
       model: "feedstock_cost"
+      model: "feedstock_cost"
     model_inputs:
       shared_parameters:
         feedstock_type: "natural_gas"
         units: "MMBtu"
+        feedstock_type: "natural_gas"
+        units: "MMBtu"
       performance_parameters:
         rated_capacity: 280. # need 276.5242929731515 MMBtu at each timestep
+        rated_capacity: 280. # need 276.5242929731515 MMBtu at each timestep
       cost_parameters:
+        cost_year: 2022
+        price: 4.0 #USD 4.0/MMBtu
+        annual_cost: 0.
+        start_up_cost: 0.
+
+  steel_plant:
+    performance_model:
+      model: "ng_eaf_performance_rosner"
+    cost_model:
+      model: "ng_eaf_cost_rosner"
+    model_inputs:
+      shared_parameters:
+        steel_production_rate_tonnes_per_hr: 135.8187214611872 #equivalent to 1189772 t/yr
+      performance_parameters:
+        water_density: 1000 #kg/m3
+      cost_parameters:
+        skilled_labor_cost: 40.85 #2022 USD/hr
+        unskilled_labor_cost: 30.0 #2022 USD/hr
         cost_year: 2022
         price: 4.0 #USD 4.0/MMBtu
         annual_cost: 0.
