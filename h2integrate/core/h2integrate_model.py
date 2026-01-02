@@ -1,6 +1,5 @@
 import importlib.util
 
-import numpy as np
 import networkx as nx
 import openmdao.api as om
 import matplotlib.pyplot as plt
@@ -354,20 +353,10 @@ class H2IntegrateModel:
     def create_site_group(self, plant_config_dict: dict, site_config: dict):
         site_group = om.Group()
 
-        site_params = site_config.get("site_parameters", {})
-
         # Create a site-level component
-        site_component = om.IndepVarComp()
-        site_component.add_output("latitude", val=site_params.get("latitude", 0.0), units="deg")
-        site_component.add_output("longitude", val=site_params.get("longitude", 0.0), units="deg")
-        site_component.add_output("elevation_m", val=site_params.get("elevation_m", 0.0), units="m")
-
-        # Add boundaries if they exist
-        boundaries = site_params.get("boundaries", [])
-        for i, boundary in enumerate(boundaries):
-            site_component.add_output(f"boundary_{i}_x", val=np.array(boundary.get("x", [])))
-            site_component.add_output(f"boundary_{i}_y", val=np.array(boundary.get("y", [])))
-
+        site_component = self.supported_models[site_config.get("site_model", "location")](
+            site_config.get("site_parameters", {})
+        )
         site_group.add_subsystem("site_component", site_component, promotes=["*"])
 
         # Add the site resource components

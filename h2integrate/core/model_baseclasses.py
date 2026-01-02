@@ -1,4 +1,8 @@
 import openmdao.api as om
+from attrs import field, define
+
+from h2integrate.core.utilities import BaseConfig
+from h2integrate.core.validators import range_val
 
 
 class CostModelBaseClass(om.ExplicitComponent):
@@ -111,4 +115,25 @@ class ResizeablePerformanceModelBaseClass(om.ExplicitComponent):
         For a template class this is not implement and raises an error.
         """
 
+        raise NotImplementedError("This method should be implemented in a subclass.")
+
+
+@define
+class SiteBaseConfig(BaseConfig):
+    latitude: float = field(default=0.0, validator=range_val(-90.0, 90.0))
+    longitude: float = field(default=0.0, validator=range_val(-180.0, 180.0))
+
+
+class SiteBaseComponent(om.IndepVarComp):
+    def __init__(self, name=None, val=1.0, **kwargs):
+        # initialize config here from site_config
+
+        super().__init__(name, val, **kwargs)
+
+        self.add_output("latitude", val=self.config.latitude, units="deg")
+        self.add_output("longitude", val=self.config.latitude, units="deg")
+
+        self.set_outputs()
+
+    def set_outputs(self):
         raise NotImplementedError("This method should be implemented in a subclass.")
