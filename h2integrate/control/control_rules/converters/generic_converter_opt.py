@@ -1,11 +1,7 @@
 import pyomo.environ as pyo
+from attrs import field
 from pyomo.network import Port
-from attrs import field, define
 
-from h2integrate.control.control_rules.converters.generic_converter import (
-    PyomoDispatchGenericConverter
-)
-from h2integrate.control.control_rules.pyomo_rule_baseclass import PyomoRuleBaseConfig
 
 # @define
 # class PyomoDispatchGenericConverterMinOperatingCostsConfig(PyomoRuleBaseConfig):
@@ -22,7 +18,6 @@ commodity_cost_per_production: float = field()
 
 
 class PyomoDispatchGenericConverterMinOperatingCosts:
-
     def __init__(
         self,
         commodity_info: dict,
@@ -30,8 +25,7 @@ class PyomoDispatchGenericConverterMinOperatingCosts:
         index_set: pyo.Set,
         block_set_name: str = "converter",
     ):
-
-        self.round_digits = int(4)
+        self.round_digits = 4
         self.block_set_name = block_set_name
         self.commodity_name = commodity_info["commodity_name"]
         self.commodity_storage_units = commodity_info["commodity_storage_units"]
@@ -44,10 +38,10 @@ class PyomoDispatchGenericConverterMinOperatingCosts:
 
         print("HEYYYY")
 
-    def initialize_parameters(self, commodity_in: list, commodity_demand: list,
-                              dispatch_inputs: dict):
-        """Initialize parameters method.
-        """
+    def initialize_parameters(
+        self, commodity_in: list, commodity_demand: list, dispatch_inputs: dict
+    ):
+        """Initialize parameters method."""
 
         self.cost_per_production = dispatch_inputs["cost_per_production"]
 
@@ -108,9 +102,7 @@ class PyomoDispatchGenericConverterMinOperatingCosts:
         """
         pyomo_model.port = Port()
         pyomo_model.port.add(
-            getattr(
-                pyomo_model, f"{self.block_set_name}_{self.commodity_name}"
-            ),
+            getattr(pyomo_model, f"{self.block_set_name}_{self.commodity_name}"),
         )
 
     def _create_parameters(self, pyomo_model: pyo.ConcreteModel):
@@ -136,18 +128,14 @@ class PyomoDispatchGenericConverterMinOperatingCosts:
             units=pyo.units.hr,
         )
         pyomo_model.cost_per_production = pyo.Param(
-            doc="Production cost for generator [$/"
-            + self.commodity_storage_units
-            + "]",
+            doc="Production cost for generator [$/" + self.commodity_storage_units + "]",
             default=0.0,
             within=pyo.NonNegativeReals,
             mutable=True,
-            units=eval("pyo.units.USD / pyo.units." + self.commodity_storage_units+"h"),
+            units=eval("pyo.units.USD / pyo.units." + self.commodity_storage_units + "h"),
         )
         pyomo_model.available_production = pyo.Param(
-            doc="Available production for the generator ["
-            + self.commodity_storage_units
-            + "]",
+            doc="Available production for the generator [" + self.commodity_storage_units + "]",
             default=0.0,
             within=pyo.Reals,
             mutable=True,
@@ -172,11 +160,13 @@ class PyomoDispatchGenericConverterMinOperatingCosts:
         pass
 
     # Update time series parameters for next optimization window
-    def update_time_series_parameters(self, start_time: int,
-                                      commodity_in:list,
-                                      commodity_demand:list,
-                                    #   time_commodity_met_value:list
-                                      ):
+    def update_time_series_parameters(
+        self,
+        start_time: int,
+        commodity_in: list,
+        commodity_demand: list,
+        #   time_commodity_met_value:list
+    ):
         """Update time series parameters method.
 
         Args:
@@ -184,8 +174,7 @@ class PyomoDispatchGenericConverterMinOperatingCosts:
             commodity_in (list): List of commodity input values for each time step.
         """
         self.time_duration = [1.0] * len(self.blocks.index_set())
-        self.available_production = [commodity_in[t]
-                                        for t in self.blocks.index_set()]
+        self.available_production = [commodity_in[t] for t in self.blocks.index_set()]
 
     # Objective functions
     def min_operating_cost_objective(self, hybrid_blocks, tech_name: str):
@@ -200,20 +189,22 @@ class PyomoDispatchGenericConverterMinOperatingCosts:
         #     hybrid_blocks,
         #     f"{tech_name}_{self.commodity_name}",
         # )
-        commodity_set = [getattr(hybrid_blocks[t], f"{tech_name}_{self.commodity_name}")
-                         for t in self.blocks.index_set()]
+        commodity_set = [
+            getattr(hybrid_blocks[t], f"{tech_name}_{self.commodity_name}")
+            for t in self.blocks.index_set()
+        ]
         i = hybrid_blocks.index_set()[1]
-        print("Units???",self.blocks[i].time_duration.get_units())
+        print("Units???", self.blocks[i].time_duration.get_units())
         print(commodity_set[i].get_units())
         print(self.blocks[i].cost_per_production.get_units())
-        self.obj =sum(
+        self.obj = sum(
             hybrid_blocks[t].time_weighting_factor
             * self.blocks[t].time_duration
             * self.blocks[t].cost_per_production
             # * commodity_set[t].value
             * getattr(hybrid_blocks[t], f"{tech_name}_{self.commodity_name}")
             for t in hybrid_blocks.index_set()
-            )
+        )
         # print(self.obj.get_units())
         return self.obj
 
@@ -275,17 +266,13 @@ class PyomoDispatchGenericConverterMinOperatingCosts:
             list: List of available generation.
 
         """
-        return [
-            self.blocks[t].available_production.value for t in self.blocks.index_set()
-        ]
+        return [self.blocks[t].available_production.value for t in self.blocks.index_set()]
 
     @available_production.setter
     def available_production(self, resource: list):
         if len(resource) == len(self.blocks):
             for t, gen in zip(self.blocks, resource):
-                self.blocks[t].available_production.set_value(
-                    round(gen, self.round_digits)
-                )
+                self.blocks[t].available_production.set_value(round(gen, self.round_digits))
         else:
             raise ValueError(
                 f"'resource' list ({len(resource)}) must be the same length as\
@@ -317,8 +304,7 @@ class PyomoDispatchGenericConverterMinOperatingCosts:
                 self.blocks[t].time_duration = round(delta, self.round_digits)
         else:
             raise ValueError(
-                self.time_duration.__name__
-                + " list must be the same length as time horizon"
+                self.time_duration.__name__ + " list must be the same length as time horizon"
             )
 
     @property

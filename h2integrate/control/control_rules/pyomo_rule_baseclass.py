@@ -29,12 +29,11 @@ class PyomoRuleBaseClass(om.ExplicitComponent):
 
     def setup(self):
         self.config = PyomoRuleBaseConfig.from_dict(
-            merge_shared_inputs(self.options["tech_config"]["model_inputs"],
-                                 "dispatch_rule"),
-            strict=False
+            merge_shared_inputs(self.options["tech_config"]["model_inputs"], "dispatch_rule"),
+            strict=False,
         )
 
-        self.round_digits = int(4)
+        self.round_digits = 4
 
         self.add_discrete_output(
             "dispatch_block_rule_function",

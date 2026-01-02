@@ -1,6 +1,7 @@
 name: "technology_config"
 description: "This hybrid plant produces hydrogen"
 
+
 technologies:
   wind:
     performance_model:
@@ -63,7 +64,7 @@ technologies:
         commodity_storage_units: "kW"
         cost_per_charge: 0.05
         cost_per_discharge: 0.1
-        commodity_met_value: 0.5       
+        commodity_met_value: 0.5
         cost_per_production: 0.01
       performance_parameters:
         system_model_source: "pysam"

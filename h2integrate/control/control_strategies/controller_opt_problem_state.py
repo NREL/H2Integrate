@@ -18,9 +18,7 @@ class DispatchProblemState:
         self._gap = ()
         self._n_non_optimal_solves = 0
 
-    def store_problem_metrics(
-        self, solver_results, start_time, n_days, objective_value
-    ):
+    def store_problem_metrics(self, solver_results, start_time, n_days, objective_value):
         self.start_time = start_time
         self.n_days = n_days
         self.termination_condition = str(solver_results.solver.termination_condition)
@@ -45,10 +43,7 @@ class DispatchProblemState:
         else:
             self.gap = float("inf")
 
-        if (
-            not solver_results.solver.termination_condition
-            == TerminationCondition.optimal
-        ):
+        if not solver_results.solver.termination_condition == TerminationCondition.optimal:
             self._n_non_optimal_solves += 1
 
     def _update_metric(self, metric_name, value):
