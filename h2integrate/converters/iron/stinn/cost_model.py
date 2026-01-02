@@ -16,10 +16,92 @@ import matplotlib.pyplot as plt
 
 CD = Path(__file__).parent
 
+# Physical constants
 faraday_const = 96485.3321  # Electric charge per mole of electrons (Faraday constant), C/mol
+F = 96485.3321  # Faraday constant: Electric charge per mole of electrons (Faraday constant), C/mol
+M = 0.055845  # Fe molar mass (kg/mol)
 
 
-def capex_calc(
+def stinn_capex_calc(T, P, p, z, j, A, e, Q, V, N):
+    """
+    Equation (7) from Stinn: doi.org/10.1149.2/2.F06202IF
+    default values for coefficients defined as globals
+    """
+    # Default coefficents
+    a1n = 51010
+    a1d = -3.82e-03
+    a1t = -631
+    a2n = 5634000
+    a2d = -7.1e-03
+    a2t = 349
+    a3n = 750000
+    e1 = 0.8
+    e2 = 0.9
+    e3 = 0.15
+    e4 = 0.5
+
+    # Alpha coefficients
+    a1 = a1n / (1 + np.exp(a1d * (T - a1t)))
+    a2 = a2n / (1 + np.exp(a2d * (T - a2t)))
+    a3 = a3n * Q
+
+    # Pre-costs calculation
+    pre_costs = a1 * P**e1
+
+    # Electrolysis and product handling contribution to total cost
+    electrolysis_product_handling = a2 * ((p * z * F) / (j * A * e * M)) ** e2
+
+    # Power rectifying contribution
+    power_rectifying_contribution = a3 * V**e3 * N**e4
+
+    return pre_costs, electrolysis_product_handling, power_rectifying_contribution, a1, a2, a3
+
+
+def humbert_opex_calc(
+    capacity,
+    positions,
+    NaOH_ratio,
+    CaCl2_ratio,
+    limestone_ratio,
+    anode_ratio,
+    anode_interval,
+    ore_in,
+    ore_price,
+    elec_in,
+    elec_price,
+):
+    """
+    Calculations in Excel spreadsheet SI of Humbert doi.org/10.1149.2/2.F06202IF
+    """
+    # Default costs - adjusted to 2018 to match Stinn via CPI
+    labor_rate = 55.90  # USD/person-hour
+    NaOH_cost = 415.179  # USD/tonne
+    CaCl2_cost = 207.59  # USD/tonne
+    limestone_cost = 0
+    anode_cost = 1660.716  # USD/tonne
+    hours = 2000  # hours/position-year
+
+    # All linear OpEx for now - TODO: apply scaling models
+    labor_opex = labor_rate * capacity * positions * hours  # Labor OpEx USD/year
+    NaOH_varopex = NaOH_ratio * capacity * NaOH_cost  # NaOH VarOpEx USD/year
+    CaCl2_varopex = CaCl2_ratio * capacity * CaCl2_cost  # CaCl2 VarOpEx USD/year
+    limestone_varopex = limestone_ratio * capacity * limestone_cost  # CaCl2 VarOpEx USD/year
+    anode_varopex = anode_ratio * capacity * anode_cost / anode_interval  # Anode VarOpEx USD/year
+    ore_varopex = np.sum(ore_in * ore_price, keepdims=True)  # Ore VarOpEx USD/year
+    elec_varopex = np.sum(elec_in * elec_price, keepdims=True)  # Electricity VarOpEx USD/year
+
+    return (
+        labor_opex,
+        NaOH_varopex,
+        CaCl2_varopex,
+        limestone_varopex,
+        anode_varopex,
+        ore_varopex,
+        elec_varopex,
+    )
+
+
+def plot_capex_calc(
     a1n, a1d, a1t, a2n, a2d, a2t, a3n, e1, e2, e3, e4, T, P, p, z, F, j, A, e, M, Q, V, N
 ):
     # Pre-costs calculation
@@ -96,7 +178,6 @@ def main(config):
     e4 = coeffs["exp_4"]
 
     metal_dict = {
-        "Fe": [0.5, 0, 0],
         "Al": [0, 0, 0],
         "Mg": [0, 0.5, 1],
         "Na": [0, 1, 0],
@@ -126,14 +207,11 @@ def main(config):
         N = metal_df["Cell Count"].values
         Q = Q * N
 
-        F, E, R, a1, a2, a3 = capex_calc(
+        F, E, R, a1, a2, a3 = plot_capex_calc(
             a1n, a1d, a1t, a2n, a2d, a2t, a3n, e1, e2, e3, e4, T, P, p, z, f, j, A, e, M, Q, V, 1
         )
 
         plt.plot(cap, (F + E + R) / P, "-", color=color)
-        # plt.plot(T, a1/10**4, '.', color=metal_dict["Al"])
-        # plt.plot(T, a2/10**6, '.', color=metal_dict["Cl2"])
-        # plt.plot(T, a3/10**6, '.', color=metal_dict["Cu"])
 
     # Assign inputs from config
     T = config.electrolysis_temp  # Electrolysis temperature (°C)
@@ -150,7 +228,7 @@ def main(config):
     N = config.rectifier_lines  # Number of rectifier lines
 
     pre_costs, electrolysis_product_handling, power_rectifying_contribution, a1, a2, a3 = (
-        capex_calc(
+        plot_capex_calc(
             a1n, a1d, a1t, a2n, a2d, a2t, a3, e1, e2, e3, e4, T, P, p, z, f, j, A, e, M, Q, V, N
         )
     )

@@ -5,7 +5,7 @@ from h2integrate.core.h2integrate_model import H2IntegrateModel
 
 
 # Create H2Integrate model
-model = H2IntegrateModel("22_iron_electrowinning.yaml")
+model = H2IntegrateModel("27_iron_electrowinning.yaml")
 
 # Load cases
 case_file = Path("test_inputs.csv")
