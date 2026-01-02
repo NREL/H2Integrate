@@ -88,4 +88,3 @@ properties:
 required:
   - name
   - description
-  - site

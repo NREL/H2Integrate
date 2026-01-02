@@ -4,7 +4,6 @@ description: "This plant uses solar resource data from 2012"
 site:
   latitude: 34.22
   longitude: -102.75
-  year: 2012
 
   resources:
     solar_resource:

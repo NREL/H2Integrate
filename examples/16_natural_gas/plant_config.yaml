@@ -4,7 +4,6 @@ description: "This plant is located in Texas"
 site:
   latitude: 32.34
   longitude: -98.27
-  year: 2013
 
   resources:
     solar_resource:
