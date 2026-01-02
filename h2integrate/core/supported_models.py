@@ -56,6 +56,7 @@ from h2integrate.storage.hydrogen.h2_storage_cost import (
     SaltCavernStorageCostModel,
     LinedRockCavernStorageCostModel,
 )
+from h2integrate.converters.iron.humbert_ewin_perf import HumbertEwinPerformanceComponent
 from h2integrate.converters.ammonia.ammonia_synloop import (
     AmmoniaSynLoopCostModel,
     AmmoniaSynLoopPerformanceModel,
@@ -81,6 +82,7 @@ from h2integrate.converters.ammonia.simple_ammonia_model import (
     SimpleAmmoniaCostModel,
     SimpleAmmoniaPerformanceModel,
 )
+from h2integrate.converters.iron.humbert_stinn_ewin_cost import HumbertStinnEwinCostComponent
 from h2integrate.converters.methanol.co2h_methanol_plant import (
     CO2HMethanolPlantCostModel,
     CO2HMethanolPlantFinanceModel,
@@ -198,6 +200,8 @@ supported_models = {
     "ng_eaf_cost_rosner": NaturalGasEAFPlantCostComponent,  # standalone model
     "h2_eaf_performance_rosner": HydrogenEAFPlantPerformanceComponent,
     "h2_eaf_cost_rosner": HydrogenEAFPlantCostComponent,  # standalone model
+    "humbert_electrowinning_performance": HumbertEwinPerformanceComponent,
+    "humbert_stinn_electrowinning_cost": HumbertStinnEwinCostComponent,
     "reverse_osmosis_desalination_performance": ReverseOsmosisPerformanceModel,
     "reverse_osmosis_desalination_cost": ReverseOsmosisCostModel,
     "simple_ammonia_performance": SimpleAmmoniaPerformanceModel,

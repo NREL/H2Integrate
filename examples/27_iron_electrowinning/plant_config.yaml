@@ -17,14 +17,18 @@ site:
     }
   ]
 
+
 # array of arrays containing left-to-right technology
 # interconnections; can support bidirectional connections
 # with the reverse definition.
 # this will naturally grow as we mature the interconnected tech
 technology_interconnections: [
+  # connect feedstocks to iron mine
+  ["grid_feedstock","iron_mine","electricity","cable"],
+  ["mine_feedstock","iron_mine","crude_ore","pipe"],
+  # connect feedstocks to iron plant
   ["iron_mine","iron_plant","iron_ore","iron_transport"],
-  ["iron_transport","iron_plant","iron_transport_cost"],
-  ["finance_subgroup_iron_ore","iron_plant","price_iron_ore_"],
+  ["ewin_grid_feedstock","iron_plant","electricity","cable"],
 ]
 
 plant:
@@ -59,8 +63,14 @@ finance_parameters:
     iron_ore:
       commodity: "iron_ore"
       commodity_stream: "iron_mine"
-      technologies: ["iron_mine"]
-    pig_iron:
-      commodity: "pig_iron"
+      technologies: ["iron_mine", "grid_feedstock", "mine_feedstock"]
+    sponge_iron:
+      commodity: "sponge_iron"
       commodity_stream: "iron_plant"
-      technologies: ["iron_plant"] #
+      technologies:
+      - "iron_mine"
+      - "grid_feedstock"
+      - "mine_feedstock"
+      - "iron_transport"
+      - "iron_plant"
+      - "ewin_grid_feedstock"
