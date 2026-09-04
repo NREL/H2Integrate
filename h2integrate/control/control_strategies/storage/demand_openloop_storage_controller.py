@@ -146,6 +146,8 @@ class DemandOpenLoopStorageController(OpenLoopControlBase):
         soc_array = np.zeros(self.n_timesteps)
         set_point_array = np.zeros(self.n_timesteps)
         combined_output_array = np.zeros(self.n_timesteps)
+        leftover_input = np.zeros(self.n_timesteps)
+        unmet_demand = np.zeros(self.n_timesteps)
         # Loop through each time step
         for t, demand_t in enumerate(demand_profile):
             # Get the input flow at the current time step
@@ -171,6 +173,8 @@ class DemandOpenLoopStorageController(OpenLoopControlBase):
                 # applying `discharge_efficiency`.
                 combined_output_array[t] = input_flow + discharge * discharge_eff
                 set_point_array[t] = discharge * discharge_eff
+                leftover_input[t] = 0.0  # none is left over
+                unmet_demand[t] = demand_t - input_flow - set_point_array[t]
             else:
                 # Charge storage with unused input
                 # `unused_input` is as seen outside the storage
@@ -185,6 +189,9 @@ class DemandOpenLoopStorageController(OpenLoopControlBase):
                 soc += charge / max_capacity  # soc is a ratio with value between 0 and 1
                 combined_output_array[t] = demand_t
                 set_point_array[t] = -1 * charge / charge_eff
+                leftover_input[t] = (
+                    unused_input + set_point_array[t]
+                )  # this is basically "curtailed"
 
             # Ensure SOC stays within bounds
             soc = max(soc_min, min(soc_max, soc))
@@ -193,3 +200,9 @@ class DemandOpenLoopStorageController(OpenLoopControlBase):
             soc_array[t] = deepcopy(soc)
 
         outputs[f"{commodity}_command_value"] = set_point_array
+
+        outputs[f"unmet_{commodity}_demand_out"] = np.maximum(
+            0,
+            demand_profile - combined_output_array,
+        )
+        outputs[f"unused_{commodity}_out"] = leftover_input

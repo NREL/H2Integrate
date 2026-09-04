@@ -201,6 +201,22 @@ class OpenLoopControlBase(om.ExplicitComponent):
             desc=f"Dispatch commands for {commodity} storage",
         )
 
+        self.add_output(
+            f"unmet_{commodity}_demand_out",
+            val=0.0,
+            shape=self.n_timesteps,
+            units=self.config.commodity_rate_units,
+            desc=f"Unmet demand for {commodity} after dispatch commands are applied",
+        )
+
+        self.add_output(
+            f"unused_{commodity}_out",
+            val=0.0,
+            shape=self.n_timesteps,
+            units=self.config.commodity_rate_units,
+            desc=f"Amount of {commodity} that is unutilized after dispatch commands are applied",
+        )
+
     def compute():
         """This method must be implemented by subclasses to define the
         controller.
