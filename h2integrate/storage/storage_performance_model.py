@@ -155,3 +155,8 @@ class StoragePerformanceModel(StoragePerformanceBase):
         outputs = self.run_storage(
             charge_rate, discharge_rate, storage_capacity, inputs, outputs, discrete_inputs
         )
+
+        outputs[f"unmet_{self.commodity}_demand"] = np.maximum(
+            0.0, inputs[f"{self.commodity}_demand"] - outputs[f"{self.commodity}_out"]
+        )
+        outputs[f"unused_{self.commodity}_out"] = np.inf
