@@ -153,9 +153,6 @@ class PYSAMSolarPlantPerformanceModel(SolarPerformanceBaseClass):
         3600,
     )  # (min, max) time step lengths (in seconds) compatible with this model
 
-    # Flag to avoid unnecessary re-calculation of PySAM model
-    _PYSAM_model_has_been_executed = False
-
     def setup(self):
         super().setup()
 
@@ -191,6 +188,9 @@ class PYSAMSolarPlantPerformanceModel(SolarPerformanceBaseClass):
 
         self.design_dict = design_dict
         self.system_model.assign(design_dict)
+
+        # Flag to avoid unnecessary re-calculation of PySAM model
+        self._PYSAM_model_has_been_executed = False
 
     def calc_tilt_angle(self, latitude):
         """

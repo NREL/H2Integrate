@@ -49,8 +49,6 @@ class DemandOpenLoopStorageController(OpenLoopControlBase):
         3600,
     )  # (min, max) time step lengths (in seconds) compatible with this model
 
-    _soc_timeseries = np.zeros(8760)  # state of charge storage array
-
     def setup(self):
         self.config = DemandOpenLoopStorageControllerConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "control"),
