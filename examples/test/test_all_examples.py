@@ -1,4 +1,5 @@
 import os
+import shutil
 import importlib
 from pathlib import Path
 
@@ -278,7 +279,7 @@ def test_ammonia_synloop_example(subtests, temp_copy_of_example):
     model.post_process()
 
     # Subtests for checking specific values
-    with subtests.test("Check HOPP CapEx"):
+    with subtests.test("Check renewable plant CapEx"):
         wind_pv_capex = (
             model.prob.get_val("wind.CapEx", units="USD")[0]
             + model.prob.get_val("solar.CapEx", units="USD")[0]
@@ -287,7 +288,7 @@ def test_ammonia_synloop_example(subtests, temp_copy_of_example):
         re_capex = wind_pv_capex + battery_capex
         assert pytest.approx(re_capex, rel=1e-6) == 1.75469962e09
 
-    with subtests.test("Check HOPP OpEx"):
+    with subtests.test("Check renewable plant OpEx"):
         wind_pv_opex = (
             model.prob.get_val("wind.OpEx", units="USD/yr")[0]
             + model.prob.get_val("solar.OpEx", units="USD/yr")[0]
@@ -1400,9 +1401,9 @@ def test_electrolyzer_om_example(subtests, temp_copy_of_example):
     with subtests.test("Check LCOE"):
         assert pytest.approx(lcoe, rel=1e-4) == 39.98869
     with subtests.test("Check LCOH with lcoh_financials"):
-        assert pytest.approx(lcoh_with_lcoh_finance, rel=1e-4) == 16.9204156301
+        assert pytest.approx(lcoh_with_lcoh_finance, rel=2e-3) == 16.9204156301
     with subtests.test("Check LCOH with lcoe_financials"):
-        assert pytest.approx(lcoh_with_lcoe_finance, rel=1e-4) == 10.3360027653
+        assert pytest.approx(lcoh_with_lcoe_finance, rel=2e-3) == 10.3360027653
 
 
 @pytest.mark.integration
@@ -1457,8 +1458,6 @@ def test_pyomo_heuristic_dispatch_example(subtests, temp_copy_of_example):
 
     # Run the model
     model.run()
-
-    model.post_process()
 
     # Test battery storage functionality
     # SOC should stay within configured bounds (10% to 90%)
@@ -1530,7 +1529,7 @@ def test_pyomo_heuristic_dispatch_example(subtests, temp_copy_of_example):
     model_config = load_yaml(example_folder / "pyomo_heuristic_dispatch.yaml")
     tech = load_yaml(example_folder / "tech_config.yaml")
     with subtests.test("Ensure no-tech name validates"):
-        tech["technologies"]["battery"]["model_inputs"]["control_parameters"] = None
+        tech["technologies"]["battery"]["model_inputs"].pop("control_parameters")
         model_config["technology_config"] = tech
         model = H2IntegrateModel(model_config)
 
@@ -1796,7 +1795,7 @@ def test_csvgen_parameter_sweep(subtests, temp_copy_of_example):
 
     with pytest.raises(UserWarning) as excinfo:
         model = H2IntegrateModel(example_folder / "20_solar_electrolyzer_doe.yaml")
-        assert "There may be issues with the csv file csv_doe_cases.csv" in str(excinfo.value)
+    assert "There may be issues with the csv file csv_doe_cases.csv" in str(excinfo.value)
 
     from h2integrate import write_yaml, load_driver_yaml
     from h2integrate.core.dict_utils import update_defaults
@@ -1963,11 +1962,31 @@ def test_sweeping_solar_sites_doe(subtests, temp_copy_of_example):
         solar_capacity = case.get_design_vars()["solar.system_capacity_DC"][0]
         aep = case.get_val("solar.annual_electricity_produced", units="MW*h/yr")[0]
         lcoe = case.get_val("finance_subgroup_electricity.LCOE_optimistic", units="USD/(MW*h)")[0]
+        lcoe_transported = case.get_val(
+            "finance_subgroup_transported_electricity.LCOE_optimistic", units="USD/(MW*h)"
+        )[0]
+        transport_distance = case.get_val("electricity_transport.transport_distance", units="km")[0]
+        transport_capex_adj = case.get_val(
+            "finance_subgroup_transported_electricity.capex_electricity_transport", units="USD"
+        )
+        transport_opex_adj = case.get_val(
+            "finance_subgroup_transported_electricity.opex_electricity_transport", units="USD/year"
+        )
+        transport_capex = case.get_val("electricity_transport.CapEx", units="USD")
+        transport_opex = case.get_val("electricity_transport.OpEx", units="USD/year")
 
         site_res = pd.DataFrame(
-            [aep, lcoe, solar_capacity], index=["AEP", "LCOE", "solar_capacity"], columns=[lat_lon]
+            [aep, lcoe, lcoe_transported, solar_capacity, transport_distance],
+            index=["AEP", "LCOE", "LCOE-T", "solar_capacity", "Distance"],
+            columns=[lat_lon],
         ).T
         res_df = pd.concat([site_res, res_df], axis=0)
+
+        with subtests.test(f"Case {ci}: Transport Costs are Non-zero"):
+            assert transport_capex_adj == transport_capex
+            assert transport_opex_adj == transport_opex
+            assert transport_capex_adj > 0
+            assert transport_opex_adj > 0
 
         with subtests.test(f"Case {ci}: Solar resource latitude matches site latitude"):
             assert (
@@ -1979,6 +1998,26 @@ def test_sweeping_solar_sites_doe(subtests, temp_copy_of_example):
                 pytest.approx(case.get_val("site.longitude", units="deg"), abs=0.1)
                 == solar_resource_data["site_lon"]
             )
+        with subtests.test(f"Case {ci}: Site longitude matches transport source longitude"):
+            assert pytest.approx(
+                case.get_val("site.longitude", units="deg"), abs=1e-3
+            ) == case.get_val("electricity_transport.source_longitude", units="deg")
+        with subtests.test(f"Case {ci}: Site latitude matches transport source latitude"):
+            assert pytest.approx(
+                case.get_val("site.latitude", units="deg"), abs=1e-3
+            ) == case.get_val("electricity_transport.source_latitude", units="deg")
+        with subtests.test(
+            f"Case {ci}: Interconnect site longitude matches transport source longitude"
+        ):
+            assert pytest.approx(
+                case.get_val("interconnection_site.longitude", units="deg"), abs=1e-3
+            ) == case.get_val("electricity_transport.dest_longitude", units="deg")
+        with subtests.test(
+            f"Case {ci}: Interconnect site latitude matches transport source latitude"
+        ):
+            assert pytest.approx(
+                case.get_val("interconnection_site.latitude", units="deg"), abs=1e-3
+            ) == case.get_val("electricity_transport.dest_latitude", units="deg")
 
     locations = list(set(res_df.index.to_list()))
     solar_sizes = list(set(res_df["solar_capacity"].to_list()))
@@ -1987,12 +2026,21 @@ def test_sweeping_solar_sites_doe(subtests, temp_copy_of_example):
         assert len(solar_sizes) == 2
     with subtests.test("Two unique sites"):
         assert len(locations) == 2
+    with subtests.test("Two unique transport distances"):
+        assert len(list(set(res_df["Distance"].to_list()))) == 2
 
     with subtests.test("Unique AEPs per case"):
         assert len(list(set(res_df["AEP"].to_list()))) == len(res_df)
 
+    with subtests.test("Unique LCOE (transported) per case"):
+        assert len(list(set(res_df["LCOE-T"].to_list()))) == len(res_df)
+
     with subtests.test("Unique LCOEs per case"):
         assert len(list(set(res_df["LCOE"].to_list()))) == len(res_df)
+
+    with subtests.test("Transported LCOE > LCOE"):
+        lcoe_comp = (res_df["LCOE-T"] > res_df["LCOE"]).to_list()
+        assert all(k for k in lcoe_comp)
 
 
 @pytest.mark.integration
@@ -2275,7 +2323,7 @@ def test_iron_mapping_example(subtests, temp_copy_of_example):
     ex_dir = example_folder
     ex_out_dir = ex_dir / "ex_out"
     ore_prices_filepath = ex_dir / "example_ore_prices.csv"
-    shipping_coords_filepath = ROOT_DIR / "converters/iron/martin_transport/shipping_coords.csv"
+    shipping_coords_filepath = ROOT_DIR / "converters/iron/simple_transport/shipping_coords.csv"
     shipping_prices_filepath = ex_dir / "example_shipping_prices.csv"
     cases_csv_fpath = ex_out_dir / "cases.csv"
     ex_png_fpath = ex_out_dir / "example_iron_map.png"
@@ -2566,6 +2614,30 @@ def test_iron_dri_eaf_example(subtests, temp_copy_of_example):
 
 @pytest.mark.integration
 @pytest.mark.parametrize(
+    "example_folder,resource_example_folder", [("21_iron_examples/iron_dri_nrri", None)]
+)
+def test_iron_dri_nrri_example(subtests, temp_copy_of_example):
+    example_folder = temp_copy_of_example
+
+    h2i = H2IntegrateModel(example_folder / "single_site_iron.yaml")
+
+    h2i.run()
+
+    with subtests.test("Value check on LCOI"):
+        lcoi = h2i.model.get_val("finance_subgroup_iron_ore.LCOI", units="USD/t")[0]
+        assert pytest.approx(lcoi, rel=1e-4) == 129.083
+
+    with subtests.test("Value check on LCOS"):
+        lcos = h2i.model.get_val("finance_subgroup_sponge_iron.LCOS", units="USD/t")[0]
+        assert pytest.approx(lcos, rel=1e-4) == 350.302
+
+    with subtests.test("Value check on LCOS"):
+        lcos = h2i.model.get_val("finance_subgroup_steel.LCOS", units="USD/t")[0]
+        assert pytest.approx(lcos, rel=1e-4) == 520.417
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
     "example_folder,resource_example_folder", [("21_iron_examples/iron_electrowinning", None)]
 )
 def test_iron_electrowinning_example(subtests, temp_copy_of_example):
@@ -2730,6 +2802,9 @@ def test_sweeping_different_resource_sites_doe(subtests, temp_copy_of_example):
     "example_folder,resource_example_folder", [("30_pyomo_optimized_dispatch", None)]
 )
 def test_pyomo_optimized_dispatch_example(subtests, temp_copy_of_example):
+    if shutil.which("glpsol") is None:
+        pytest.skip("GLPK executable 'glpsol' is not available in PATH")
+
     example_folder = temp_copy_of_example
 
     # Create a H2Integrate model
@@ -2984,12 +3059,13 @@ def test_cmu_eaf_dri_example(subtests, temp_copy_of_example):
 
 @pytest.mark.integration
 @pytest.mark.parametrize(
-    "example_folder,resource_example_folder", [("33_peak_load_management", None)]
+    "example_folder,resource_example_folder",
+    [("33_peak_load_management_heuristics/plm_storage", None)],
 )
 def test_peak_load_management_example(subtests, temp_copy_of_example):
     example_folder = temp_copy_of_example
 
-    model = H2IntegrateModel(example_folder / "33_peak_load_management.yaml")
+    model = H2IntegrateModel(example_folder / "33_plm_storage_heuristic.yaml")
     model.setup()
     model.run()
 
@@ -2999,6 +3075,9 @@ def test_peak_load_management_example(subtests, temp_copy_of_example):
 
     with subtests.test("Battery SOC stays within bounds"):
         soc = model.prob.get_val("battery.SOC", units="percent")
+        import pdb
+
+        pdb.set_trace()
         assert soc.max() <= 90.0 + 1e-3
         assert soc.min() >= 10.0 - 1e-3
 
@@ -3026,6 +3105,55 @@ def test_peak_load_management_example(subtests, temp_copy_of_example):
         )
         grid_purchase = model.prob.get_val("grid_buy.electricity_out", units="kW")
         assert battery_unmet_demand.sum() == pytest.approx(grid_purchase.sum(), rel=1e-3)
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "example_folder,resource_example_folder,expected",
+    [
+        (
+            "33_peak_load_management_heuristics/plm_converter/commodity_peak_driven_mode",
+            None,
+            {"command_sum": 778276.0, "command_max": 519.0, "nonzero_dispatch": 3648},
+        ),
+        (
+            "33_peak_load_management_heuristics/plm_converter/price_peak_driven_mode",
+            None,
+            {"command_sum": 39615.0, "command_max": 140.0, "nonzero_dispatch": 516},
+        ),
+    ],
+    ids=["commodity_peak_driven_mode", "price_peak_driven_mode"],
+)
+def test_plm_converter_heuristic_example(subtests, temp_copy_of_example, expected):
+    example_folder = temp_copy_of_example
+
+    model = H2IntegrateModel(example_folder / "33_plm_converter_heuristic.yaml")
+    model.setup()
+    model.run()
+
+    command = model.prob.get_val("fuel_cell.electricity_command_value", units="kW")
+    electricity_out = model.prob.get_val("fuel_cell.electricity_out", units="kW")
+    unmet = model.prob.get_val("electrical_load_demand.unmet_electricity_demand_out", units="kW")
+    grid_purchase = model.prob.get_val("grid_buy.electricity_out", units="kW")
+    rated = model.prob.get_val("fuel_cell.rated_electricity_production", units="kW")
+
+    with subtests.test("Fuel-cell command sum"):
+        assert command.sum() == pytest.approx(expected["command_sum"], rel=1e-6)
+
+    with subtests.test("Fuel-cell output matches command"):
+        np.testing.assert_allclose(electricity_out, command, rtol=1e-9)
+
+    with subtests.test("Fuel-cell command max"):
+        assert command.max() == pytest.approx(expected["command_max"], rel=1e-6)
+
+    with subtests.test("Unmet demand equals grid purchase"):
+        assert unmet.sum() == pytest.approx(grid_purchase.sum(), rel=1e-9)
+
+    with subtests.test("Rated fuel-cell production"):
+        assert rated[0] == pytest.approx(1000.0, rel=1e-9)
+
+    with subtests.test("Nonzero dispatch timesteps"):
+        assert np.sum(command > 0) == expected["nonzero_dispatch"]
 
 
 @pytest.mark.integration

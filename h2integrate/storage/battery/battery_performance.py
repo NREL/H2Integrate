@@ -10,7 +10,7 @@ import math
 
 import numpy as np
 import simses.battery  # noqa: F401  (import-order side effect; see note above)
-from attrs import field, define
+from attrs import field, define, validators
 from openmdao.utils import units as om_units
 from simses.degradation import DegradationModel
 from simses.battery.state import BatteryState
@@ -47,7 +47,6 @@ from simses.model.degradation.sony_lfp_calendar import (
 )
 
 from h2integrate.core.utilities import merge_shared_inputs
-from h2integrate.core.validators import gt_zero, range_val, range_val_or_none
 from h2integrate.storage.storage_baseclass import (
     StoragePerformanceBase,
     StoragePerformanceBaseConfig,
@@ -191,30 +190,56 @@ class BatteryPerformanceModelConfig(StoragePerformanceBaseConfig):
     commodity: str = field()
     commodity_rate_units: str = field()
 
-    max_capacity: float = field(validator=gt_zero)
-    max_charge_rate: float = field(validator=gt_zero)
+    max_capacity: float = field(validator=validators.gt(0))
+    max_charge_rate: float = field(validator=validators.gt(0))
 
-    init_soc_fraction: float = field(validator=range_val(0, 1))
+    init_soc_fraction: float = field(validator=(validators.ge(0), validators.le(1)))
 
     commodity_amount_units: str = field(default=None)
     max_discharge_rate: float | None = field(default=None)
     charge_equals_discharge: bool = field(default=True)
 
-    charge_efficiency: float | None = field(default=None, validator=range_val_or_none(0, 1))
-    discharge_efficiency: float | None = field(default=None, validator=range_val_or_none(0, 1))
-    round_trip_efficiency: float | None = field(default=None, validator=range_val_or_none(0, 1))
+    charge_efficiency: float | None = field(
+        default=None,
+        validator=validators.optional(
+            validators.and_(
+                validators.ge(0),
+                validators.le(1),
+            )
+        ),
+    )
+    discharge_efficiency: float | None = field(
+        default=None,
+        validator=validators.optional(
+            validators.and_(
+                validators.ge(0),
+                validators.le(1),
+            )
+        ),
+    )
+    round_trip_efficiency: float | None = field(
+        default=None,
+        validator=validators.optional(
+            validators.and_(
+                validators.ge(0),
+                validators.le(1),
+            )
+        ),
+    )
 
-    deg_scale: float = field(default=0.7056, validator=range_val(0, 1))
-    eol_soh_capacity: float = field(default=0.8, validator=range_val(0, 1))
+    deg_scale: float = field(default=0.7056, validator=(validators.ge(0), validators.le(1)))
+    eol_soh_capacity: float = field(default=0.8, validator=(validators.ge(0), validators.le(1)))
     # TODO convert from power and energy ratings (see math in chat)
-    series_count: int = field(default=336, converter=int, validator=gt_zero)
-    parallel_count: int = field(default=16, converter=int, validator=gt_zero)
+    series_count: int = field(default=336, converter=int, validator=validators.gt(0))
+    parallel_count: int = field(default=16, converter=int, validator=validators.gt(0))
     battery_temperature_c: float = field(default=25.0)
-    converter_efficiency: float = field(default=0.96, validator=range_val(0, 1))
-    converter_max_power: float = field(default=2400.0, validator=gt_zero)
+    converter_efficiency: float = field(
+        default=0.96, validator=(validators.ge(0), validators.le(1))
+    )
+    converter_max_power: float = field(default=2400.0, validator=validators.gt(0))
 
     # TODO degradation: add additional parameters for degradation here
-    cop: float = field(validator=gt_zero)
+    cop: float = field(validator=validators.gt(0))
 
     def __attrs_post_init__(self):
         """

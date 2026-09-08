@@ -51,6 +51,9 @@ parts:
       - file: technology_models/iron_dri.md
       - file: technology_models/steel_eaf.md
       - file: technology_models/steel_eaf_cmu.md
+      - file: technology_models/diesel.md
+      - file: technology_models/PEM_h2_fuel_cell.md
+      - file: technology_models/SO_NG_fuel_cell.md
   - caption: Storage Models
     chapters:
       - file: storage/storage_models_index.md
@@ -63,15 +66,18 @@ parts:
       - file: resource/resource_index
         sections:
           - file: resource/wind_index
-          - file: resource/wind_toolkit_v2_api
-          - file: resource/openmeteo_wind_archive
+            sections:
+              - file: resource/wind_toolkit_v2_api
+              - file: resource/openmeteo_wind_archive
           - file: resource/solar_index
-          - file: resource/goes_solar_v4_api
-          - file: resource/himawari_v3_api
-          - file: resource/meteosat_prime_meridian_v4_api
-          - file: resource/openmeteo_solar_archive
+            sections:
+              - file: resource/goes_solar_v4_api
+              - file: resource/himawari_v3_api
+              - file: resource/meteosat_prime_meridian_v4_api
+              - file: resource/openmeteo_solar_archive
           - file: resource/tidal_resource
           - file: resource/wave_resource
+          - file: resource/nlr_dataset_index
   - caption: Control
     chapters:
       - file: control/system_level_control/system_level_control

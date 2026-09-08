@@ -5,11 +5,10 @@ from datetime import datetime
 import numpy as np
 import pandas as pd
 import pyomo.environ as pyomo
-from attrs import field, define
+from attrs import field, define, validators
 from pyomo.opt import SolverStatus, TerminationCondition
 
 from h2integrate.core.utilities import merge_shared_inputs, build_time_series_from_plant_config
-from h2integrate.core.validators import range_val
 from h2integrate.control.control_strategies.controller_opt_problem_state import DispatchProblemState
 from h2integrate.control.control_strategies.pyomo_storage_controller_baseclass import (
     SolverOptions,
@@ -72,6 +71,10 @@ class PeakLoadManagementOptimizedControllerConfig(PyomoStorageControllerBaseConf
             ``event_duration``. When set, the eligible timesteps identified
             by ``signal_threshold_percentile`` are treated as peaks and
             the first peak is chosen as eligible.
+        constrain_dispatch_to_set_point (bool): When ``True``, caps
+            ``p_discharge``/``p_charge`` each timestep at
+            ``{commodity}_set_point - {commodity}_in`` (positive = system
+            needs discharge, negative = surplus to absorb),
     """
 
     max_charge_rate: float = field()
@@ -79,13 +82,16 @@ class PeakLoadManagementOptimizedControllerConfig(PyomoStorageControllerBaseConf
     peak_window: dict = field()
     performance_incentive: float = field(default=None)
     performance_incentive_per_event: float = field(default=None)
-    charge_efficiency: float = field(validator=range_val(0, 1), default=1.0)
-    discharge_efficiency: float = field(validator=range_val(0, 1), default=1.0)
+    charge_efficiency: float = field(validator=(validators.ge(0), validators.le(1)), default=1.0)
+    discharge_efficiency: float = field(validator=(validators.ge(0), validators.le(1)), default=1.0)
     n_max_events: int = field(default=10)
     n_control_window_hours: float = field(default=24.0)
-    signal_threshold_percentile: float = field(default=0.0, validator=range_val(0, 100))
+    signal_threshold_percentile: float = field(
+        default=0.0, validator=(validators.ge(0), validators.le(100))
+    )
     event_duration: dict = field(default=None)
     min_peak_separation: dict = field(default=None)
+    constrain_dispatch_to_set_point: bool = field(default=False)
 
     def __attrs_post_init__(self):
         # Make sure n_control_window_hours is an int
@@ -132,6 +138,12 @@ class PeakLoadManagementOptimizedStorageController(PyomoStorageControllerBaseCla
     and solves a MILP that maximizes incentive revenue, then passes the
     resulting dispatch commands to the performance model. The terminal SOC
     of each window is carried forward as the initial SOC of the next window.
+
+    Works standalone via ``plant_config["tech_to_dispatch_connections"]`` (as
+    in ``examples/34_plm_optimized_dispatch``), or as a storage tech's SLC
+    sub-controller with no extra wiring (``examples/35_system_level_control/
+    plm_optimized_storage``). Set ``constrain_dispatch_to_set_point=True`` to
+    have the SLC's demand signal cap dispatch.
     """
 
     dr_model: Any
@@ -277,6 +289,13 @@ class PeakLoadManagementOptimizedStorageController(PyomoStorageControllerBaseCla
             # Compute the starting index of each rolling window.
             window_start_indices = list(range(0, self.n_timesteps, n_w))
 
+            # positive = discharge, negative = charge.
+            net_demand = (
+                inputs[f"{commodity_name}_set_point"] - inputs[f"{commodity_name}_in"]
+                if self.config.constrain_dispatch_to_set_point
+                else None
+            )
+
             for window_start in window_start_indices:
                 window_len: int = min(n_w, self.n_timesteps - window_start)
                 month_ids_w = self.month_ids[window_start : window_start + window_len]
@@ -290,6 +309,11 @@ class PeakLoadManagementOptimizedStorageController(PyomoStorageControllerBaseCla
                     )
                     for m in np.unique(month_ids_w)
                 }
+                set_point_w = (
+                    net_demand[window_start : window_start + window_len]
+                    if net_demand is not None
+                    else None
+                )
                 # Construct the MILP for this window
                 self.dr_model = self._build_dr_model(
                     window_start=window_start,
@@ -298,6 +322,7 @@ class PeakLoadManagementOptimizedStorageController(PyomoStorageControllerBaseCla
                     remaining_budget=remaining_budget,
                     P_max=P_max,
                     storage_capacity=storage_capacity,
+                    set_point_w=set_point_w,
                 )
                 self.problem_state = DispatchProblemState()
 
@@ -498,6 +523,7 @@ class PeakLoadManagementOptimizedStorageController(PyomoStorageControllerBaseCla
         remaining_budget: dict,
         P_max: float,
         storage_capacity: float,
+        set_point_w: np.ndarray | None = None,
     ) -> pyomo.ConcreteModel:
         """Build the DR MILP for a single rolling window.
 
@@ -531,6 +557,11 @@ class PeakLoadManagementOptimizedStorageController(PyomoStorageControllerBaseCla
                 from OpenMDAO inputs so optimizer changes are reflected.
             storage_capacity (float): Total storage capacity (kWh), taken
                 from OpenMDAO inputs so optimizer changes are reflected.
+            set_point_w (np.ndarray | None): Per-timestep net-demand slice
+                (already netted by the caller), or ``None`` when
+                ``config.constrain_dispatch_to_set_point`` is ``False``.
+                When provided, caps ``p_discharge``/``p_charge`` at its
+                magnitude each timestep.
 
         Returns:
             pyomo.ConcreteModel: Fully formed MILP ready to solve.
@@ -646,6 +677,17 @@ class PeakLoadManagementOptimizedStorageController(PyomoStorageControllerBaseCla
             m.T,
             rule=lambda mdl, t: mdl.p_charge[t] <= P_max * mdl.charge[t],
         )
+
+        if set_point_w is not None:
+            # Cap dispatch at what the system actually needs/can absorb this timestep.
+            m.discharge_set_point_cap = pyomo.Constraint(
+                m.T,
+                rule=lambda mdl, t: mdl.p_discharge[t] <= max(float(set_point_w[t]), 0.0),
+            )
+            m.charge_set_point_cap = pyomo.Constraint(
+                m.T,
+                rule=lambda mdl, t: mdl.p_charge[t] <= max(-float(set_point_w[t]), 0.0),
+            )
 
         m.soc_init = pyomo.Constraint(expr=m.soc[0] == init_soc)
 

@@ -37,7 +37,7 @@ requires-python = ">=3.11, <3.14"
 license = {file = "LICENSE"}
 dependencies = [
   "attrs",
-  "CoolProp<7.0.0",
+  "CoolProp",
   "geopy",
   "jsonschema",
   "marine-carbon-management",
@@ -48,8 +48,10 @@ dependencies = [
   "openmdao>=3.45.0",
   "openmeteo-requests",
   "pandas>=2.0.3",
+  "pint",
   "ProFAST",
   "Pyomo>=6.1.2",
+  "pyfluids>=4.0",
   "rainflow",
   "requests",
   "requests-cache",
@@ -58,12 +60,13 @@ dependencies = [
   "ruamel.yaml",
   "scipy",
   "simses>=2.1.1",
-  "orbit-nrel",
   "floris",
-  "hopp>=3.3.0",
+  "timezonefinder",
   "turbine-models>=0.2.1",
   "wombat>=0.13.3",
   "charset_normalizer==3.4.9",
+  "NREL-rex",
+  "statsmodels==0.14.6",
 ]
 keywords = [
     "python3",
@@ -155,6 +158,7 @@ markers = [
     "unit: marks unit tests (deselect with '-m \"not unit\"')",
     "regression: marks regression tests (deselect with '-m \"not regression\"')",
     "integration: marks unit tests (deselect with '-m \"not integration\"')",
+    "hpc: marks unit tests (deselect with '-m \"not hpc\"')",
 ]
 
 [tool.isort]
@@ -273,3 +277,25 @@ none_representation = "null"
 explicit_start = false
 # quote_representation = '"'  # NOTE: uncomment when issue is resolved: https://github.com/lyz-code/yamlfix/issues/252
 sequence_style = "keep_style"
+
+[tool.pixi.workspace]
+channels = ["conda-forge"]
+platforms = ["win-64"]
+
+[tool.pixi.pypi-dependencies]
+h2integrate = { path = ".", editable = true }
+
+[tool.pixi.environments]
+default = { solve-group = "default" }
+all = { features = ["all"], solve-group = "default" }
+ard = { features = ["ard"], solve-group = "default" }
+develop = { features = ["develop"], solve-group = "default" }
+examples = { features = ["examples"], solve-group = "default" }
+extras = { features = ["extras"], solve-group = "default" }
+gis = { features = ["gis"], solve-group = "default" }
+
+[tool.pixi.tasks]
+
+[tool.pixi.dependencies]
+pre-commit = ">=4.6.2,<5"
+git = ">=2.55.0,<3"
