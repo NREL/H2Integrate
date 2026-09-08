@@ -111,16 +111,17 @@ class ThresholdStatisticsPerformanceModel(om.ExplicitComponent):
         commodity_threshold = inputs[f"{self.config.commodity}_threshold"]
 
         # compute deficit/surplus (using threshold epsilons)
-        deficit = np.maximum(
-            0.0, commodity_threshold - commodity_in - self.config.epsilon_comparison
-        )
-        surplus = np.maximum(
-            0.0, commodity_in - commodity_threshold + self.config.epsilon_comparison
-        )
+        commodity_difference = commodity_in - (commodity_threshold - self.config.epsilon_comparison)
+        deficit = np.maximum(0.0, -commodity_difference)
+        surplus = np.maximum(0.0, commodity_difference)
         # use the epsilons conservatively to ID surplus or deficit
 
         # extract the statistics on the deficit or surplus and package outputs
-        outputs[f"frac_timestep_{self.config.commodity}_deficit"] = np.mean(deficit > 0.0)
-        outputs[f"frac_timestep_{self.config.commodity}_surplus"] = np.mean(surplus >= 0.0)
+        outputs[f"frac_timestep_{self.config.commodity}_deficit"] = np.mean(
+            commodity_difference < 0.0
+        )
+        outputs[f"frac_timestep_{self.config.commodity}_surplus"] = np.mean(
+            commodity_difference >= 0.0
+        )
         outputs[f"net_{self.config.commodity}_deficit"] = np.sum(deficit)
         outputs[f"net_{self.config.commodity}_surplus"] = np.sum(surplus)
