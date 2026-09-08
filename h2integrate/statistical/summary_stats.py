@@ -7,9 +7,15 @@ from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
 
 @define(kw_only=True)
 class SummaryStatisticsPerformanceConfig(BaseConfig):
-    """Configuration class for a statistical summary component.
+    """
+    Configuration class for a summary statistics component.
 
-    Fields include `commodity`, `commodity_rate_units`, and `percentiles`.
+    Attributes:
+        commodity (str): name of the commodity for which summary statistics are computed.
+        commodity_rate_units (str): units of the commodity (e.g., "kg/h").
+        percentiles (list[float]): list of percentiles to compute for the commodity timeseries.
+            Defaults to [2.275, 5.0, 15.865, 50.0, 84.135, 95.0, 97.725]
+            (2-sigma, 5%, 1-sigma, 50%, ...).
     """
 
     commodity: str = field(converter=(str.lower, str.strip))
@@ -21,7 +27,27 @@ class SummaryStatisticsPerformanceConfig(BaseConfig):
 
 class SummaryStatisticsPerformanceModel(om.ExplicitComponent):
     """
-    Compute summary statistics on a given input timeseries commodity.
+    A component for summary statistics of simulation timeseries as optimization QoIs
+
+    This component takes 8760 hourly timeseries (or other timeseries) and computes
+    summary statistics for use in optimization (post-processing would otherwise
+    suffice).
+
+    The available statistics are currently: mean, stdev, median, min, max, and
+    percentiles (with the ability to set user-defined percentile targets).
+
+    Inputs:
+        commodity_in (array): timeseries of commodity values (e.g., electricity flow in MW)
+
+    Outputs:
+        commodity_mean (float): mean value of the commodity timeseries (with the same units)
+        commodity_stdev (float): standard deviation of the commodity timeseries
+            (with the same units)
+        commodity_median (float): median value of the commodity timeseries (with the same units)
+        commodity_min (float): minimum value of the commodity timeseries (with the same units)
+        commodity_max (float): maximum value of the commodity timeseries (with the same units)
+        commodity_percentiles (array): percentiles of the commodity timeseries (with the same
+            units) as specified in config
     """
 
     _time_step_bounds = (
@@ -51,6 +77,13 @@ class SummaryStatisticsPerformanceModel(om.ExplicitComponent):
 
         self.add_output(
             f"{self.config.commodity}_mean",
+            val=0.0,
+            shape=1,
+            units=self.config.commodity_rate_units,
+        )
+
+        self.add_output(
+            f"{self.config.commodity}_stdev",
             val=0.0,
             shape=1,
             units=self.config.commodity_rate_units,
@@ -87,7 +120,9 @@ class SummaryStatisticsPerformanceModel(om.ExplicitComponent):
     def compute(self, inputs, outputs):
         commodity_in = inputs[f"{self.config.commodity}_in"]
 
+        # compute statistics
         outputs[f"{self.config.commodity}_mean"] = np.mean(commodity_in)
+        outputs[f"{self.config.commodity}_stdev"] = np.std(commodity_in)
         outputs[f"{self.config.commodity}_median"] = np.median(commodity_in)
         outputs[f"{self.config.commodity}_min"] = np.min(commodity_in)
         outputs[f"{self.config.commodity}_max"] = np.max(commodity_in)

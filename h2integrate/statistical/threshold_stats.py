@@ -7,9 +7,13 @@ from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
 
 @define(kw_only=True)
 class ThresholdStatisticsPerformanceConfig(BaseConfig):
-    """Configuration class for a statistical counting component.
+    """
+    Configuration class for a threshold statistics component.
 
-    Fields include `commodity`, `commodity_rate_units`, and `thresholds`.
+    Attributes:
+        commodity (str): name of the commodity for which threshold statistics are computed.
+        commodity_rate_units (str): units of the commodity (e.g., "kg/h").
+        epsilon_comparison (float): small positive value used to define a tolerance when comparing
     """
 
     commodity: str = field(converter=(str.lower, str.strip))
@@ -19,7 +23,27 @@ class ThresholdStatisticsPerformanceConfig(BaseConfig):
 
 class ThresholdStatisticsPerformanceModel(om.ExplicitComponent):
     """
-    Compute counting statistics on a given input timeseries commodity.
+    A component for threshold statistics of simulation timeseries as optimization QoIs.
+
+    This component takes 8760 hourly timeseries (or other timeseries) and computes
+    threshold statistics for use in optimization (post-processing would otherwise
+    suffice).
+
+    The available statistics are currently: net deficit, net surplus, fraction of timesteps
+    below threshold, and fraction of timesteps above threshold.
+
+    Inputs:
+        commodity_in (array): timeseries of commodity values (e.g., electricity flow in MW
+        commodity_threshold (array): timeseries of threshold values for the commodity
+            (e.g., electricity demand in MW)
+
+    Outputs:
+        net_commodity_deficit (float): net deficit of the commodity timeseries below the threshold
+        net_commodity_surplus (float): net surplus of the commodity timeseries above the threshold
+        frac_timestep_commodity_deficit (float): fraction of timesteps where the commodity is
+            below the threshold
+        frac_timestep_commodity_surplus (float): fraction of timesteps where the commodity is
+            above the threshold
     """
 
     _time_step_bounds = (
@@ -86,17 +110,17 @@ class ThresholdStatisticsPerformanceModel(om.ExplicitComponent):
         commodity_in = inputs[f"{self.config.commodity}_in"]
         commodity_threshold = inputs[f"{self.config.commodity}_threshold"]
 
-        net_deficit = np.sum(np.maximum(0.0, commodity_threshold - commodity_in))
-        net_surplus = np.sum(np.maximum(0.0, commodity_in - commodity_threshold))
-
-        frac_deficit = np.mean(
-            commodity_in < (commodity_threshold - self.config.epsilon_comparison)
+        # compute deficit/surplus (using threshold epsilons)
+        deficit = np.maximum(
+            0.0, commodity_threshold - commodity_in - self.config.epsilon_comparison
         )
-        frac_surplus = np.mean(
-            commodity_in >= (commodity_threshold - self.config.epsilon_comparison)
+        surplus = np.maximum(
+            0.0, commodity_in - commodity_threshold + self.config.epsilon_comparison
         )
+        # use the epsilons conservatively to ID surplus or deficit
 
-        outputs[f"frac_timestep_{self.config.commodity}_deficit"] = frac_deficit
-        outputs[f"frac_timestep_{self.config.commodity}_surplus"] = frac_surplus
-        outputs[f"net_{self.config.commodity}_deficit"] = net_deficit
-        outputs[f"net_{self.config.commodity}_surplus"] = net_surplus
+        # extract the statistics on the deficit or surplus and package outputs
+        outputs[f"frac_timestep_{self.config.commodity}_deficit"] = np.mean(deficit > 0.0)
+        outputs[f"frac_timestep_{self.config.commodity}_surplus"] = np.mean(surplus >= 0.0)
+        outputs[f"net_{self.config.commodity}_deficit"] = np.sum(deficit)
+        outputs[f"net_{self.config.commodity}_surplus"] = np.sum(surplus)
