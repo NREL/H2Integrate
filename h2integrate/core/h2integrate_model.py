@@ -1817,19 +1817,26 @@ class H2IntegrateModel:
 
                 resource_name, tech_name, variable = connection
 
-                if isinstance(variable, list | tuple):
-                    # Connect a site parameter to a technology
+                # Normalize both forms (paired [site_param, tech_param] vs a single shared
+                # name) into a common site_parameter/tech_parameter pair so the connection
+                # and latitude/longitude checks below only need to be written once.
+                is_pair = isinstance(variable, list | tuple)
+                if is_pair:
                     site_parameter, tech_parameter = variable
-                    self.model.connect(
-                        f"{resource_name}.{site_parameter}", f"{tech_name}.{tech_parameter}"
-                    )
+                else:
+                    site_parameter = tech_parameter = variable
 
-                    if site_parameter in ["latitude", "longitude"]:
-                        # If site_parameter is latitude, make sure destination is not longitude
-                        # (and vice versa)
-                        other_loc_var = "longitude" if site_parameter == "latitude" else "latitude"
-                        # NOTE: this assumes that technologies with location inputs use full names,
-                        # rather than shorthand versions like 'lat' and 'lon'
+                self.model.connect(
+                    f"{resource_name}.{site_parameter}", f"{tech_name}.{tech_parameter}"
+                )
+
+                if site_parameter in ["latitude", "longitude"]:
+                    # If site_parameter is latitude, make sure destination is not longitude
+                    # (and vice versa)
+                    other_loc_var = "longitude" if site_parameter == "latitude" else "latitude"
+                    if is_pair:
+                        # NOTE: this assumes that technologies with location inputs use full
+                        # names, rather than shorthand versions like 'lat' and 'lon'
                         if other_loc_var in tech_parameter:
                             # connecting site latitude to tech longitude or
                             # site longitude to tech latitude
@@ -1840,38 +1847,23 @@ class H2IntegrateModel:
                                 f"{tech_parameter.replace(other_loc_var, site_parameter)}."
                             )
                             raise ValueError(msg)
-
-                        # If latitude is connected, make sure longitude is also connected
-                        other_connection = [
-                            resource_name,
-                            tech_name,
-                            [other_loc_var, tech_parameter.replace(site_parameter, other_loc_var)],
+                        other_variable = [
+                            other_loc_var,
+                            tech_parameter.replace(site_parameter, other_loc_var),
                         ]
-                        if other_connection not in resource_to_tech_connections:
-                            msg = (
-                                f"{site_parameter} is connected between {resource_name} and "
-                                f"{tech_name}, but {other_loc_var} is not. Please ensure that "
-                                f"both latitude and longitude are connected from "
-                                f"'{resource_name}' to technology '{tech_name}'"
-                            )
-                            raise ValueError(msg)
+                    else:
+                        other_variable = other_loc_var
 
-                else:
-                    # Connect the resource output to the technology input
-                    self.model.connect(f"{resource_name}.{variable}", f"{tech_name}.{variable}")
-
-                    if variable in ["latitude", "longitude"]:
-                        other_loc_var = "longitude" if variable == "latitude" else "latitude"
-                        # If latitude is connected, make sure longitude is also connected
-                        other_connection = [resource_name, tech_name, other_loc_var]
-                        if other_connection not in resource_to_tech_connections:
-                            msg = (
-                                f"{variable} is connected between {resource_name} and "
-                                f"{tech_name}, but {other_loc_var} is not. Please ensure that "
-                                f"both latitude and longitude are connected from "
-                                f"'{resource_name}' to technology '{tech_name}'"
-                            )
-                            raise ValueError(msg)
+                    # If latitude is connected, make sure longitude is also connected
+                    other_connection = [resource_name, tech_name, other_variable]
+                    if other_connection not in resource_to_tech_connections:
+                        msg = (
+                            f"{site_parameter} is connected between {resource_name} and "
+                            f"{tech_name}, but {other_loc_var} is not. Please ensure that "
+                            f"both latitude and longitude are connected from "
+                            f"'{resource_name}' to technology '{tech_name}'"
+                        )
+                        raise ValueError(msg)
 
         # connect outputs of the technology models to the cost and finance models of the
         # same name if the cost and finance models are not None
