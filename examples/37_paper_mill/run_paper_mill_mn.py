@@ -17,15 +17,15 @@ from h2integrate.postprocess.sql_to_csv import convert_sql_to_csv_summary
 from h2integrate.postprocess.sql_timeseries_to_csv import save_case_timeseries_as_csv
 
 
-os.chdir(EXAMPLE_DIR / "36_paper_mill")
+os.chdir(EXAMPLE_DIR / "37_paper_mill")
 
-model = H2IntegrateModel("36_paper_mill_mn.yaml")
+model = H2IntegrateModel("37_paper_mill_mn.yaml")
 
 model.setup()
 model.run()
 model.post_process()
 
-sql_fpath = EXAMPLE_DIR / "36_paper_mill" / "outputs" / "cases.sql"
+sql_fpath = EXAMPLE_DIR / "37_paper_mill" / "outputs" / "cases.sql"
 
 convert_sql_to_csv_summary(sql_fpath)
 save_case_timeseries_as_csv(sql_fpath)

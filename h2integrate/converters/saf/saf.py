@@ -1,3 +1,4 @@
+import numpy as np
 from attrs import field, define
 
 from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
@@ -9,6 +10,7 @@ from h2integrate.core.model_baseclasses import CostModelBaseClass, PerformanceMo
 class SAFPerformanceModelConfig(BaseConfig):
     plant_capacity_mtpy: float = field()
     capacity_factor: float = field()
+    lignin_consumption: float = field(default=1650.0)  # kg lignin/t SAF
 
 
 class SAFPerformanceModel(PerformanceModelBaseClass):
@@ -21,6 +23,8 @@ class SAFPerformanceModel(PerformanceModelBaseClass):
         3600,
         3600,
     )  # (min, max) time step lengths (in seconds) compatible with this model
+
+    _control_classifier = "fixed"
 
     def initialize(self):
         super().initialize()
@@ -38,17 +42,35 @@ class SAFPerformanceModel(PerformanceModelBaseClass):
         self.add_input("plant_capacity_mtpy", val=self.config.plant_capacity_mtpy, units="t/year")
         n_timesteps = self.options["plant_config"]["plant"]["simulation"]["n_timesteps"]
         self.add_input("lignin_in", val=0.0, shape=n_timesteps, units="kg/h")
+        self.add_output("lignin_consumed", val=0.0, shape=n_timesteps, units="kg/h")
+        self.add_output("total_lignin_consumed", val=0.0, units="kg")
+        self.add_output("annual_lignin_consumed", val=0.0, units="kg/year")
 
     def compute(self, inputs, outputs):
         plant_capacity_mtpy = inputs["plant_capacity_mtpy"]
         capacity_factor = self.config.capacity_factor
-        saf_production_mtpy = plant_capacity_mtpy * capacity_factor
-        outputs["saf_out"] = saf_production_mtpy / 8760
+        lignin_consumption = self.config.lignin_consumption
+
+        lignin_in = inputs["lignin_in"]
+        plant_capacity_mtpy * capacity_factor
+        # Average hourly SAF production permitted by nameplate capacity
+        capacity_limited_saf = plant_capacity_mtpy * capacity_factor / 8760  # t SAF/h
+        # Hourly SAF production permitted by available lignin
+        lignin_limited_saf = lignin_in / lignin_consumption  # t SAF/h
+        saf_out = np.minimum(capacity_limited_saf, lignin_limited_saf)
+        lignin_consumed = saf_out * lignin_consumption
+
+        outputs["saf_out"] = saf_out
         outputs["rated_saf_production"] = plant_capacity_mtpy / 8760
         outputs["capacity_factor"] = capacity_factor
-        outputs["total_saf_produced"] = outputs["saf_out"].sum()
-        outputs["annual_saf_produced"] = outputs["total_saf_produced"] * (
-            1 / self.fraction_of_year_simulated
+        outputs["total_saf_produced"] = saf_out.sum()
+        outputs["annual_saf_produced"] = (
+            outputs["total_saf_produced"] / self.fraction_of_year_simulated
+        )
+        outputs["lignin_consumed"] = lignin_consumed
+        outputs["total_lignin_consumed"] = lignin_consumed.sum()
+        outputs["annual_lignin_consumed"] = (
+            outputs["total_lignin_consumed"] / self.fraction_of_year_simulated
         )
 
 
@@ -110,13 +132,12 @@ class SAFCostModel(CostModelBaseClass):
 
         # Fixed O&M Costs
         # TODO: Need to update labor cost
-        labor_cost_annual_operation = (
+        (
             69375996.9
             * ((plant_capacity_mtpy / 365 * 1000) ** 0.25242)
             / ((1162077 / 365 * 1000) ** 0.25242)
         )
-        labor_cost_maintenance = 0.00863 * total_plant_capex
-        0.25 * (labor_cost_annual_operation + labor_cost_maintenance)
+        0.00863 * total_plant_capex
 
         fixed_operating_cost = 390 * plant_capacity_mtpy
 

@@ -9,6 +9,17 @@ from h2integrate.core.model_baseclasses import CostModelBaseClass, PerformanceMo
 class PaperMillPerformanceModelConfig(BaseConfig):
     plant_capacity_mtpy: float = field()
     capacity_factor: float = field()
+    lignin_yield: float = field(default=0.06)  # t lignin/t paper
+    pulp_yield: float = field(default=1.1)  # t pulp/t paper
+    wood_consumption: float = field(default=0.225)  # MT/MT product
+    raw_water_consumption: float = field(default=40693)  # kg/tonne product
+    calcium_carbonate_consumption: float = field(default=240)  # kg/MT product
+    sodium_sulfide_consumption: float = field(default=16.5)  # kg/MT product
+    sodium_hydroxide_consumption: float = field(default=3.5)  # kg/MT product
+    chlorine_dioxide_consumption: float = field(default=2)  # kg/MT product
+    hydrogen_peroxide_consumption: float = field(default=0.5)  # kg/MT product
+    magnesium_sulfate_consumption: float = field(default=0.2)  # kg/MT product
+    oxygen_consumption: float = field(default=2.25)  # kg/MT product
 
 
 class PaperMillPerformanceModel(PerformanceModelBaseClass):
@@ -21,6 +32,8 @@ class PaperMillPerformanceModel(PerformanceModelBaseClass):
         3600,
         3600,
     )  # (min, max) time step lengths (in seconds) compatible with this model
+
+    _control_classifier = "fixed"
 
     def initialize(self):
         super().initialize()
@@ -49,9 +62,21 @@ class PaperMillPerformanceModel(PerformanceModelBaseClass):
         self.add_output("total_pulp_out_produced", val=0.0, units="t")
         self.add_output("annual_pulp_out_produced", val=0.0, units="t/year")
 
+        self.add_output("wood_consumed", val=0.0, shape=n_timesteps, units="t/h")
+        self.add_output("water_consumed", val=0.0, shape=n_timesteps, units="kg/h")
+        self.add_output("calcium_carbonate_consumed", val=0.0, shape=n_timesteps, units="kg/h")
+        self.add_output("sodium_sulfide_consumed", val=0.0, shape=n_timesteps, units="kg/h")
+        self.add_output("sodium_hydroxide_consumed", val=0.0, shape=n_timesteps, units="kg/h")
+        self.add_output("chlorine_dioxide_consumed", val=0.0, shape=n_timesteps, units="kg/h")
+        self.add_output("hydrogen_peroxide_consumed", val=0.0, shape=n_timesteps, units="kg/h")
+        self.add_output("magnesium_sulfate_consumed", val=0.0, shape=n_timesteps, units="kg/h")
+        self.add_output("oxygen_consumed", val=0.0, shape=n_timesteps, units="kg/h")
+
     def compute(self, inputs, outputs):
         plant_capacity_mtpy = inputs["plant_capacity_mtpy"]
         capacity_factor = self.config.capacity_factor
+        lignin_yield = self.config.lignin_yield
+        pulp_yield = self.config.pulp_yield
         paper_mill_production_mtpy = plant_capacity_mtpy * capacity_factor
         outputs["paper_out"] = paper_mill_production_mtpy / 8760  # tons per hour
         outputs["rated_paper_production"] = plant_capacity_mtpy / 8760  # tons per hour
@@ -61,18 +86,46 @@ class PaperMillPerformanceModel(PerformanceModelBaseClass):
             1 / self.fraction_of_year_simulated
         )
 
-        outputs["lignin_out"] = 0.06 * 1000 * paper_mill_production_mtpy / 8760  # tons per hour
-        outputs["rated_lignin_production"] = 0.06 * 1000 * plant_capacity_mtpy / 8760
+        outputs["lignin_out"] = (
+            lignin_yield * 1000 * paper_mill_production_mtpy / 8760
+        )  # tons per hour
+        outputs["rated_lignin_production"] = lignin_yield * 1000 * plant_capacity_mtpy / 8760
         outputs["total_lignin_produced"] = outputs["lignin_out"].sum()
         outputs["annual_lignin_produced"] = outputs["total_lignin_produced"] * (
             1 / self.fraction_of_year_simulated
         )
 
-        outputs["pulp_out"] = 1.1 * paper_mill_production_mtpy / 8760
-        outputs["rated_pulp_out_production"] = 1.1 * plant_capacity_mtpy / 8760
+        outputs["pulp_out"] = pulp_yield * paper_mill_production_mtpy / 8760
+        outputs["rated_pulp_out_production"] = pulp_yield * plant_capacity_mtpy / 8760
         outputs["total_pulp_out_produced"] = outputs["pulp_out"].sum()
         outputs["annual_pulp_out_produced"] = outputs["total_pulp_out_produced"] * (
             1 / self.fraction_of_year_simulated
+        )
+
+        outputs["wood_consumed"] = paper_mill_production_mtpy / 8760 * self.config.wood_consumption
+        outputs["water_consumed"] = (
+            paper_mill_production_mtpy / 8760 * self.config.raw_water_consumption
+        )
+        outputs["calcium_carbonate_consumed"] = (
+            paper_mill_production_mtpy / 8760 * self.config.calcium_carbonate_consumption
+        )
+        outputs["sodium_sulfide_consumed"] = (
+            paper_mill_production_mtpy / 8760 * self.config.sodium_sulfide_consumption
+        )
+        outputs["sodium_hydroxide_consumed"] = (
+            paper_mill_production_mtpy / 8760 * self.config.sodium_hydroxide_consumption
+        )
+        outputs["chlorine_dioxide_consumed"] = (
+            paper_mill_production_mtpy / 8760 * self.config.chlorine_dioxide_consumption
+        )
+        outputs["hydrogen_peroxide_consumed"] = (
+            paper_mill_production_mtpy / 8760 * self.config.hydrogen_peroxide_consumption
+        )
+        outputs["magnesium_sulfate_consumed"] = (
+            paper_mill_production_mtpy / 8760 * self.config.magnesium_sulfate_consumption
+        )
+        outputs["oxygen_consumed"] = (
+            paper_mill_production_mtpy / 8760 * self.config.oxygen_consumption
         )
 
 
@@ -83,9 +136,21 @@ class PaperMillCostModelConfig(BaseConfig):
     operational_year: int = field()
     plant_capacity_mtpy: float = field()
     cost_year: int = field(default=2023, converter=int, validator=must_equal(2023))
+
+    wood_consumption: float = field(default=0.225)  # MT/MT product
+    raw_water_consumption: float = field(default=40693)  # kg/tonne product
+    calcium_carbonate_consumption: float = field(default=240)  # kg/MT product
+    sodium_sulfide_consumption: float = field(default=16.5)  # kg/MT product
+    sodium_hydroxide_consumption: float = field(default=3.5)  # kg/MT product
+    chlorine_dioxide_consumption: float = field(default=2)  # kg/MT product
+    hydrogen_peroxide_consumption: float = field(default=0.5)  # kg/MT product
+    magnesium_sulfate_consumption: float = field(default=0.2)  # kg/MT product
+    oxygen_consumption: float = field(default=2.25)  # kg/MT product
+    electricity_consumption: float = field(default=68.7)  # kWh/tonne product
+    water_disposal_rate: float = field(default=18927)  # kg/MT product
+
     wood_unitcost: float = field(default=99.3)  # $/MT of wood
     wood_transport_cost: float = field(default=0.0)
-
     calcium_carbonate_unitcost: float = field(default=0.33)  # $/kg consumable
     calcium_carbonate_transport_cost: float = field(default=0.0)
     sodium_sulfide_unitcost: float = field(default=0.22)  # $/kg consumable
@@ -100,23 +165,9 @@ class PaperMillCostModelConfig(BaseConfig):
     magnesium_sulfate_transport_cost: float = field(default=0.0)
     oxygen_unitcost: float = field(default=0)  # $/ton consumable
     oxygen_transport_cost: float = field(default=0.0)
-
     electricity_cost: float = field(default=0.054)  # $/kWh
     raw_water_unitcost: float = field(default=0.001519)  # $/kg water
-    wood_consumption: float = field(default=0.225)  # MT/MT product
-    raw_water_consumption: float = field(default=40693)  # kg/tonne product
-
-    calcium_carbonate_consumption: float = field(default=240)  # kg/MT product
-    sodium_sulfide_consumption: float = field(default=16.5)  # kg/MT product
-    sodium_hydroxide_consumption: float = field(default=3.5)  # kg/MT product
-    chlorine_dioxide_consumption: float = field(default=2)  # kg/MT product
-    hydrogen_peroxide_consumption: float = field(default=0.5)  # kg/MT product
-    magnesium_sulfate_consumption: float = field(default=0.2)  # kg/MT product
-    oxygen_consumption: float = field(default=2.25)  # kg/MT product
-
-    electricity_consumption: float = field(default=68.7)  # kWh/tonne product
     water_disposal_unitcost: float = field(default=0.002013)  # $/kg
-    water_disposal_rate: float = field(default=18927)  # kg/MT product
 
 
 class PaperMillCostModel(CostModelBaseClass):
@@ -147,13 +198,12 @@ class PaperMillCostModel(CostModelBaseClass):
 
         # Fixed O&M Costs
         # TODO: Need to update labor cost
-        labor_cost_annual_operation = (
+        (
             69375996.9
             * ((plant_capacity_mtpy / 365 * 1000) ** 0.25242)
             / ((1162077 / 365 * 1000) ** 0.25242)
         )
-        labor_cost_maintenance = 0.00863 * total_plant_capex
-        0.25 * (labor_cost_annual_operation + labor_cost_maintenance)
+        0.00863 * total_plant_capex
 
         fixed_operating_cost = 370 * plant_capacity_mtpy
 
