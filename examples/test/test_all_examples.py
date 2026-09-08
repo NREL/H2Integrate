@@ -878,7 +878,7 @@ def test_hybrid_energy_plant_example(subtests, temp_copy_of_example):
     "example_folder,resource_example_folder", [("13_dispatch_for_electrolyzer", None)]
 )
 def test_electrolyzer_demand(subtests, temp_copy_of_example):
-    from h2integrate import load_tech_yaml, load_plant_yaml, load_driver_yaml
+    from h2integrate import load_plant_yaml, load_driver_yaml
 
     example_folder = temp_copy_of_example
 
@@ -1804,7 +1804,7 @@ def test_csvgen_parameter_sweep(subtests, temp_copy_of_example):
         model = H2IntegrateModel(example_folder / "20_solar_electrolyzer_doe.yaml")
     assert "There may be issues with the csv file csv_doe_cases.csv" in str(excinfo.value)
 
-    from h2integrate import write_yaml, load_driver_yaml
+    from h2integrate import write_yaml
     from h2integrate.core.dict_utils import update_defaults
     from h2integrate.core.file_utils import check_file_format_for_csv_generator
 
@@ -3224,8 +3224,6 @@ def test_concurrent_simulation_example(subtests, temp_copy_of_example):
 
     # Load top level config
     config = load_yaml(config_path)
-    config["driver_config"] = load_driver_yaml(config_root / config["driver_config"])
-    config["technology_config"] = load_tech_yaml(config_root / config["technology_config"])
     config["plant_config"] = load_plant_yaml(config_root / config["plant_config"])
 
     # Run simulation sequentially, one subsystem at a time

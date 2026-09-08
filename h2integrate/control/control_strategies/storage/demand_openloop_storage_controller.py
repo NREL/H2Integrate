@@ -65,7 +65,7 @@ class DemandOpenLoopStorageController(OpenLoopControlBase):
         if hasattr(self.config, "init_soc_fraction"):
             soc_init = self.config.init_soc_fraction
         else:
-            soc_init = (1 / 2) * (self.config.min_soc_fraction + self.config.max_soc_fraction)
+            soc_init = self.config.min_soc_fraction
 
         self._soc_timeseries[0] = soc_init
 

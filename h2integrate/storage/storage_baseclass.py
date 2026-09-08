@@ -51,8 +51,6 @@ class StoragePerformanceBase(PerformanceModelBaseClass):
     )  # (min, max) time step lengths (in seconds) compatible with this model
     _control_classifier = "storage"
 
-    _soc_timeseries = np.zeros(8760)  # state of charge storage array
-
     def setup(self):
         """Set up the storage performance model in OpenMDAO.
 
@@ -80,11 +78,9 @@ class StoragePerformanceBase(PerformanceModelBaseClass):
         # Initialize soc to the value in the config, if given or halfway between
         # the minimum and maximum limits otherwise.
         if hasattr(self.config, "init_soc_fraction"):
-            soc_init = self.config.init_soc_fraction
+            pass
         else:
-            soc_init = (1 / 2) * (self.config.min_soc_fraction + self.config.max_soc_fraction)
-
-        self._soc_timeseries[0] = soc_init
+            pass
 
         # Input timeseries
         self.add_input(
@@ -452,7 +448,7 @@ class StoragePerformanceBase(PerformanceModelBaseClass):
             if hasattr(self.config, "init_soc_fraction"):
                 soc = self.config.init_soc_fraction
             else:
-                soc = self._soc_timeseries[0]
+                soc = self.config.min_soc_fraction
         else:
             soc = self._soc_timeseries[sim_start_index - 1]
 
