@@ -78,9 +78,15 @@ class StoragePerformanceBase(PerformanceModelBaseClass):
         # Initialize soc to the value in the config, if given or halfway between
         # the minimum and maximum limits otherwise.
         if hasattr(self.config, "init_soc_fraction"):
-            pass
+            self.soc_init = self.config.init_soc_fraction
         else:
-            pass
+            # soc_init = (1 / 2) * (self.config.min_soc_fraction + self.config.max_soc_fraction)
+            self.soc_init = self.config.min_soc_fraction
+
+        # if not hasattr(self.config, "init_soc_fraction"):
+        #     self.soc_init = self.config.min_soc_fraction
+
+        # self._soc_timeseries[0] = soc_init
 
         # Input timeseries
         self.add_input(
@@ -445,10 +451,12 @@ class StoragePerformanceBase(PerformanceModelBaseClass):
             commands = np.asarray(storage_dispatch_commands, dtype=float)
 
         if sim_start_index == 0:
-            if hasattr(self.config, "init_soc_fraction"):
-                soc = self.config.init_soc_fraction
-            else:
-                soc = self.config.min_soc_fraction
+            soc = self.soc_init
+            # if hasattr(self.config, "init_soc_fraction"):
+            #     soc = self.config.init_soc_fraction
+            # else:
+            #     # soc = self.config.min_soc_fraction
+            #     soc = self._soc_timeseries[0]
         else:
             soc = self._soc_timeseries[sim_start_index - 1]
 

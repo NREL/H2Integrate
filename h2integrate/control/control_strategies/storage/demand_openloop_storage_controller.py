@@ -63,11 +63,9 @@ class DemandOpenLoopStorageController(OpenLoopControlBase):
         # Initialize soc to the value in the config, if given or halfway between
         # the minimum and maximum limits otherwise.
         if hasattr(self.config, "init_soc_fraction"):
-            soc_init = self.config.init_soc_fraction
+            self.soc_init = self.config.init_soc_fraction
         else:
-            soc_init = self.config.min_soc_fraction
-
-        self._soc_timeseries[0] = soc_init
+            self.soc_init = self.config.min_soc_fraction
 
         # Design constraints of storage system
         self.add_input(
@@ -153,10 +151,11 @@ class DemandOpenLoopStorageController(OpenLoopControlBase):
         # Initialize time-step state of charge prior to loop so the loop starts with
         # the previous time step's value
         if simulation_range.start == 0:
-            if hasattr(self.config, "init_soc_fraction"):
-                soc = self.config.init_soc_fraction
-            else:
-                soc = self._soc_timeseries[0]
+            soc = self.soc_init
+            # if hasattr(self.config, "init_soc_fraction"):
+            #     soc = self.config.init_soc_fraction
+            # else:
+            #     soc = self.config.min_soc_fraction
         else:
             soc = self._soc_timeseries[simulation_range.start - 1]
 
