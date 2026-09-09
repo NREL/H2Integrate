@@ -95,7 +95,6 @@ supported_models = _ModelRegistry(
         "SONGFuelCellPerformanceModel": "converters.natural_gas:SONGFuelCellPerformanceModel",
         "SimpleASUCostModel": "converters.nitrogen:SimpleASUCostModel",
         "SimpleASUPerformanceModel": "converters.nitrogen:SimpleASUPerformanceModel",
-        "HOPPComponent": "converters.hopp:HOPPComponent",
         "SimpleIronMinePerformanceComponent": "converters.iron:SimpleIronMinePerformanceComponent",
         "SimpleIronMineCostComponent": "converters.iron:SimpleIronMineCostComponent",
         "NRRIIronMinePerformanceComponent": "converters.iron:NRRIIronMinePerformanceComponent",
@@ -152,6 +151,7 @@ supported_models = _ModelRegistry(
         "GenericCombinerPerformanceModel": "transporters:GenericCombinerPerformanceModel",
         "GenericSplitterPerformanceModel": "transporters:GenericSplitterPerformanceModel",
         "GenericTransporterPerformanceModel": "transporters:GenericTransporterPerformanceModel",
+        "LinearDistanceCostModel": "transporters:LinearDistanceCostModel",
         "IronTransportPerformanceComponent": "converters.iron:IronTransportPerformanceComponent",
         "IronTransportCostComponent": "converters.iron:IronTransportCostComponent",
         # Simple Summers
@@ -230,4 +230,5 @@ no_cost_models = {
 
 no_replacement_schedule_models = {
     "IronTransportPerformanceComponent",
+    "GenericTransporterPerformanceModel",
 }
