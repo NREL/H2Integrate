@@ -260,7 +260,6 @@ class StorageAutoSizingModel(StoragePerformanceBase):
         self.current_soc = np.max(
             [self.config.min_soc_fraction, commodity_storage_soc[0] / rated_storage_capacity]
         )
-        # self._soc_timeseries[0] = self.current_soc
         self.soc_init = self.current_soc
 
         # Output the calculated storage sizes (charge rate and capacity)
