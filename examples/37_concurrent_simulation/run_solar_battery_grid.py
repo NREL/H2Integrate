@@ -1,4 +1,5 @@
 import time
+import pprint
 from copy import deepcopy
 from pathlib import Path
 
@@ -87,5 +88,5 @@ if run_dict.get("run_sequential", False) and run_dict.get("run_concurrent", Fals
     in_abs, in_rel = find_nonzero_percent_diffs(inputs_pd_dict, dict(inputs_seq))
     out_abs, out_rel = find_nonzero_percent_diffs(outputs_pd_dict, dict(outputs_seq))
 
-    print(in_abs)
-    print(out_abs)
+    pprint.pprint(in_abs)
+    pprint.pprint(out_abs)
