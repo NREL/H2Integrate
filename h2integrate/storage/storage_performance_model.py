@@ -202,12 +202,4 @@ class StoragePerformanceModel(StoragePerformanceBase):
         outputs[f"{self.commodity}_headroom"] = (
             available_discharge
             * self.config.discharge_efficiency  # i could dump this much power out total
-            - outputs[
-                f"storage_{self.commodity}_charge"
-            ]  #  remove current discharge, ADD charge also (not sure if accounting is correct)
-            # # the below was my first attempt, to ignore charging, but I think the
-            # # current charging current should be treated as "available" and *should*
-            # # be accounted as reserve power
-            # - np.maximum(0.0, outputs[f"{self.commodity}_out"])
-            # #  remove current discharge, throw away current charging?
         )
