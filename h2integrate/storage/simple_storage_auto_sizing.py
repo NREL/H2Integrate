@@ -257,10 +257,9 @@ class StorageAutoSizingModel(StoragePerformanceBase):
         # Estimate the initial SOC
 
         # 1. Set the starting SOC (as a fraction) at the start of the simulation.
-        self.current_soc = np.max(
+        self.soc_init = np.max(
             [self.config.min_soc_fraction, commodity_storage_soc[0] / rated_storage_capacity]
         )
-        self.soc_init = self.current_soc
 
         # Output the calculated storage sizes (charge rate and capacity)
         outputs["max_charge_rate"] = storage_max_fill_rate

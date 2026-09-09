@@ -145,8 +145,6 @@ class StoragePerformanceModel(StoragePerformanceBase):
     def compute(self, inputs, outputs, discrete_inputs=[], discrete_outputs=[]):
         """Run the storage performance model."""
 
-        self.current_soc = self.config.init_soc_fraction
-
         # Unpack scalar inputs
         charge_rate = inputs["max_charge_rate"][0]
 
