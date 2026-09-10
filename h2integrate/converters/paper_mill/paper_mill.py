@@ -1,7 +1,6 @@
-from attrs import field, define
+from attrs import field, define, validators
 
 from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
-from h2integrate.core.validators import must_equal
 from h2integrate.core.model_baseclasses import CostModelBaseClass, PerformanceModelBaseClass
 
 
@@ -135,7 +134,7 @@ class PaperMillCostModelConfig(BaseConfig):
     inflation_rate: float = field()
     operational_year: int = field()
     plant_capacity_mtpy: float = field()
-    cost_year: int = field(default=2023, converter=int, validator=must_equal(2023))
+    cost_year: int = field(default=2023, converter=int, validator=validators.in_([2023]))
 
     wood_consumption: float = field(default=0.225)  # MT/MT product
     raw_water_consumption: float = field(default=40693)  # kg/tonne product

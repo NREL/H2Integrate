@@ -1,8 +1,7 @@
 import numpy as np
-from attrs import field, define
+from attrs import field, define, validators
 
 from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
-from h2integrate.core.validators import must_equal
 from h2integrate.core.model_baseclasses import CostModelBaseClass, PerformanceModelBaseClass
 
 
@@ -80,7 +79,7 @@ class SAFCostModelConfig(BaseConfig):
     inflation_rate: float = field()
     operational_year: int = field()
     plant_capacity_mtpy: float = field()
-    cost_year: int = field(default=2023, converter=int, validator=must_equal(2023))
+    cost_year: int = field(default=2023, converter=int, validator=validators.in_([2023]))
 
     # Feedstock parameters - flattened from the nested structure
     lignin_unitcost: float = field(default=0.78)  # $/kg of final product
