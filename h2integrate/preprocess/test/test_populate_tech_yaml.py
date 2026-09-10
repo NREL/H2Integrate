@@ -93,6 +93,25 @@ class TestExtractModelInputs:
         assert config_class.__name__ == "HydrogenStorageBaseCostModelConfig"
         assert "max_capacity" in params
 
+    @pytest.mark.parametrize(
+        ("model_name", "config_name"),
+        [
+            ("SimpleAmmoniaPerformanceModel", "SimpleAmmoniaPerformanceModelConfig"),
+            ("SimpleAmmoniaCostModel", "SimpleAmmoniaCostModelConfig"),
+            ("SMRMethanolPlantPerformanceModel", "SMRMethanolPlantPerformanceModelConfig"),
+            ("SMRMethanolPlantCostModel", "SMRMethanolPlantCostModelConfig"),
+            ("CO2HMethanolPlantPerformanceModel", "CO2HMethanolPlantPerformanceModelConfig"),
+            ("CO2HMethanolPlantCostModel", "CO2HMethanolPlantCostModelConfig"),
+            ("OAECostAndFinancialModel", "OAECostAndFinancialModelConfig"),
+            ("PyomoDispatchGenericConverter", "PyomoDispatchGenericConverterConfig"),
+            ("PyomoRuleStorageBaseclass", "PyomoRuleStorageBaseclassConfig"),
+            ("NumpyFinancialNPV", "NumpyFinancialNPVConfig"),
+        ],
+    )
+    def test_supported_model_config_names(self, model_name, config_name):
+        """Test that renamed supported-model configs follow the naming convention."""
+        assert find_config_class(model_name).__name__ == config_name
+
 
 @pytest.mark.unit
 class TestOrganizeModelParameters:
