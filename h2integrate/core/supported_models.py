@@ -63,6 +63,9 @@ supported_models = _ModelRegistry(
         "Himawari7SolarAPI": "resource.solar:Himawari7SolarAPI",
         "Himawari8SolarAPI": "resource.solar:Himawari8SolarAPI",
         "HimawariTMYSolarAPI": "resource.solar:HimawariTMYSolarAPI",
+        # HPC or HSDS Resources
+        "NSRDBDatasetH5": "resource.solar:NSRDBDatasetH5",
+        "WTKHRRRMETDatasetH5": "resource.wind:WTKHRRRMETDatasetH5",
         # Converters
         "GenericConverterCostModel": "converters:GenericConverterCostModel",
         "ATBWindPlantCostModel": "converters.wind:ATBWindPlantCostModel",
@@ -140,12 +143,15 @@ supported_models = _ModelRegistry(
         "SimpleThermalNuclearReactorPerformanceModel": "converters.nuclear:SimpleThermalNuclearReactorPerformanceModel",
         "NaturalGasCostModel": "converters.natural_gas:NaturalGasCostModel",
         "SimpleCycleTurbinePerformanceModel": "converters.combustion_machines:SimpleCycleTurbinePerformanceModel",
+        "DieselGeneratorPerformanceModel": "converters.diesel:DieselGeneratorPerformanceModel",
+        "DieselGeneratorCostModel": "converters.diesel:DieselGeneratorCostModel",
         # Transport
         "cable": "transporters:CablePerformanceModel",
         "pipe": "transporters:PipePerformanceModel",
         "GenericCombinerPerformanceModel": "transporters:GenericCombinerPerformanceModel",
         "GenericSplitterPerformanceModel": "transporters:GenericSplitterPerformanceModel",
         "GenericTransporterPerformanceModel": "transporters:GenericTransporterPerformanceModel",
+        "LinearDistanceCostModel": "transporters:LinearDistanceCostModel",
         "IronTransportPerformanceComponent": "converters.iron:IronTransportPerformanceComponent",
         "IronTransportCostComponent": "converters.iron:IronTransportCostComponent",
         # Simple Summers
@@ -219,4 +225,5 @@ no_cost_models = {
 
 no_replacement_schedule_models = {
     "IronTransportPerformanceComponent",
+    "GenericTransporterPerformanceModel",
 }

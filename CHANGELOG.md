@@ -18,6 +18,14 @@
 - Added extra capex, opex, and varopex outputs to `GenericConverterCostModel` for increased cost model flexibility for additional costs that don't scale based on capacity, energy throughput, or commodity throughput. [PR 849](https://github.com/NatLabRockies/H2Integrate/pull/849)
 - Updated tech, plant, and driver schemas to better reflect the current state of the codebase and to improve validation. [PR 849](https://github.com/NatLabRockies/H2Integrate/pull/849)
 - Added `populate_tech_yaml` utility to automatically generate `model_inputs` sections in technology configuration files by introspecting model classes and organizing parameters into appropriate sections. Simplifies building tech configs, especially for storage models with multiple parameter sections. [PR 866](https://github.com/NatLabRockies/H2Integrate/pull/866)
+- Fixed some units in the resource models (`C` converted to `degC`, etc) and refactored inheritance of baseclasses for existing resource models [PR 858](https://github.com/NatLabRockies/H2Integrate/pull/858)
+- Add resource models that can extract resource data from NLR resource datasets using the `rex` package [PR 854](https://github.com/NatLabRockies/H2Integrate/pull/854)
+  - `WTKHRRRMETDatasetH5` to access data from the WTK HRRR MET dataset
+  - `NSRDBDatasetH5` to access data from the NSRDB dataset
+  - `ResourceBaseH5Config` and `ResourceBaseH5Model` are base configuration classes for these resource datasets
+- Synced peak load management (PLM) with the system-level control (SLC) paradigm: `PeakLoadManagementOptimizedStorageController` can now be used as a storage tech's SLC sub-controller via a new opt-in `constrain_dispatch_to_set_point` config field, which caps dispatch at the provided demand signal without changing its existing peak-window behavior by default. [Issue 749](https://github.com/NatLabRockies/H2Integrate/issues/749)
+- Bugfix in LCO breakdown function to include sales tax and typo-fix in commodity units extraction in ProFAST finance models [PR 867](https://github.com/NatLabRockies/H2Integrate/pull/867)
+- Expanded ability to connect site information (such as latitude and longitude) to technologies and added the transport cost model `LinearDistanceCostModel` [PR 865](https://github.com/NatLabRockies/H2Integrate/pull/865)
 
 ## 0.9 [August 10, 2026]
 
