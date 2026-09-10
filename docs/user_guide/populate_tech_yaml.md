@@ -181,7 +181,7 @@ Comments are emitted for scalar model-input lines in the generated YAML. If a
 validator is custom or cannot be described safely, the value is still extracted;
 the line simply has no validator comment.
 
-```note
+```{note}
 The in-memory result from `populate_tech_yaml()` and the dictionary returned by
 `populate_tech_yaml_from_file()` do not contain comments because YAML comments
 are not represented in a normal Python dictionary. Reloading the written file
