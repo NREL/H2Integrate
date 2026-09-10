@@ -3307,14 +3307,14 @@ def test_paper_mill_example(subtests, temp_copy_of_example):
         assert pytest.approx(varopex, rel=1e-2) == 705431159.4
 
     with subtests.test("Annual lignin production"):
-        lignin = h2i.prob.get_val("paper_mill.annual_lignin_produced", units="t/year")
+        lignin = h2i.prob.get_val("paper_mill.annual_lignin_produced", units="kg/year")
         assert (
             pytest.approx(lignin, rel=1e-2)
             == paper_capacity * paper_capacity_factor * lignin_yield * 1000
         )
 
     with subtests.test("Annual pulp production"):
-        pulp = h2i.prob.get_val("paper_mill.annual_pulp_produced", units="t/year")
+        pulp = h2i.prob.get_val("paper_mill.annual_pulp_out_produced", units="t/year")
         assert pytest.approx(pulp, rel=1e-2) == paper_capacity * paper_capacity_factor * pulp_yield
 
     expected_hourly_saf = np.minimum(
@@ -3323,7 +3323,7 @@ def test_paper_mill_example(subtests, temp_copy_of_example):
     )
 
     with subtests.test("Annual SAF production"):
-        saf = h2i.prob.get_val("paper_mill.annual_saf_produced", units="t/year")
+        saf = h2i.prob.get_val("saf.annual_saf_produced", units="t/year")
         assert pytest.approx(saf, rel=1e-2) == expected_hourly_saf.sum()
 
     with subtests.test("Paper mill lignin output is connected to SAF input"):
