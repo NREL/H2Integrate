@@ -33,17 +33,177 @@ Usage (Python):
 import copy
 import argparse
 from pathlib import Path
-from collections import Counter
 
 import attr
 import yaml
 
-from h2integrate.core.dict_utils import remove_numpy
+from h2integrate.core.dict_utils import remove_numpy, split_shared_parameters
+from h2integrate.core.file_utils import load_yaml
 from h2integrate.core.supported_models import supported_models
+
+
+MODEL_SECTION_NAMES = {
+    "performance_model": "performance",
+    "control_strategy": "control",
+    "cost_model": "cost",
+    "dispatch_rule_set": "dispatch",
+}
+
+
+def find_config_class(model_name: str, config_class_name: str | None = None):
+    """Find the configuration class associated with a supported model.
+
+    Args:
+        model_name (str): Name of a model in ``supported_models``.
+        config_class_name (str, optional): Explicit config class name to use
+            instead of the standard naming convention. This is useful for
+            models that intentionally share a base configuration class.
+
+    Returns:
+        type: The model's attrs configuration class.
+
+    Raises:
+        ValueError: If ``model_name`` is not supported.
+        RuntimeError: If the configuration class cannot be found.
+    """
+    if model_name not in supported_models:
+        raise ValueError(
+            f"Model '{model_name}' not found in supported_models registry. "
+            f"Available models: {sorted(supported_models.keys())}"
+        )
+
+    model_class = supported_models[model_name]
+    if config_class_name:
+        config_class_candidates = [(model_class.__module__, config_class_name)]
+    else:
+        config_class_candidates = [
+            (model_class.__module__, f"{model_name}Config"),
+            (model_class.__module__, model_name.replace("Model", "Config")),
+            (model_class.__module__, model_name.replace("CostModel", "Config")),
+            (model_class.__module__, f"{model_name}DesignConfig"),
+        ]
+        for base_class in model_class.__mro__[1:]:
+            config_class_candidates.append((base_class.__module__, f"{base_class.__name__}Config"))
+
+    config_class_candidates = list(dict.fromkeys(config_class_candidates))
+
+    if not hasattr(model_class, "__module__"):
+        raise RuntimeError(f"Model '{model_name}' has no __module__ attribute.")
+
+    for module_name, candidate_name in config_class_candidates:
+        model_module = __import__(module_name, fromlist=[candidate_name])
+        if hasattr(model_module, candidate_name):
+            config_class = getattr(model_module, candidate_name)
+            if attr.has(config_class):
+                return config_class
+
+    raise RuntimeError(
+        f"Could not find config class for model '{model_name}' "
+        f"(searched in {model_class.__module__}). Tried: "
+        f"{[candidate_name for _, candidate_name in config_class_candidates]}."
+    )
+
+
+def _validator_description(validator) -> str | None:
+    """Convert a supported attrs validator into a concise YAML comment."""
+    validator_type = type(validator).__name__
+
+    if validator_type == "_OptionalValidator":
+        description = _validator_description(validator.validator)
+        return f"optional; {description}" if description else "optional"
+
+    if validator_type == "_AndValidator":
+        descriptions = [
+            description
+            for nested_validator in validator._validators
+            if (description := _validator_description(nested_validator))
+        ]
+        return " and ".join(descriptions) if descriptions else None
+
+    if validator_type == "_NumberValidator":
+        return f"must be {validator.compare_op} {validator.bound}"
+
+    if validator_type == "_InValidator":
+        values = ", ".join(repr(value) for value in validator.options)
+        return f"must be one of: {values}"
+
+    if validator_type == "_InstanceOfValidator":
+        return f"must be a {validator.type.__name__}"
+
+    return None
+
+
+def _model_validator_descriptions(model_name: str) -> dict[str, str]:
+    """Return YAML comment text for the validators on a model config."""
+    config_class = find_config_class(model_name)
+    descriptions = {}
+    for attribute in attr.fields(config_class):
+        if attribute.validator is None:
+            continue
+        validators = (
+            attribute.validator
+            if isinstance(attribute.validator, tuple | list)
+            else (attribute.validator,)
+        )
+        validator_descriptions = [
+            description
+            for validator in validators
+            if (description := _validator_description(validator))
+        ]
+        if validator_descriptions:
+            descriptions[attribute.name] = " and ".join(validator_descriptions)
+    return descriptions
+
+
+def _validator_comments(tech_config: dict) -> dict[tuple[str, str, str], str]:
+    """Build comments keyed by technology, model-input section, and parameter."""
+    comments = {}
+    for tech_name, tech_info in tech_config.get("technologies", {}).items():
+        for model_type, section_name in MODEL_SECTION_NAMES.items():
+            model_info = tech_info.get(model_type, {})
+            model_name = model_info.get("model")
+            if not model_name:
+                continue
+            try:
+                descriptions = _model_validator_descriptions(model_name)
+            except (AttributeError, ImportError, RuntimeError, ValueError):
+                continue
+            for parameter, description in descriptions.items():
+                key = (tech_name, f"{section_name}_parameters", parameter)
+                comments.setdefault(key, description)
+                shared_key = (tech_name, "shared_parameters", parameter)
+                comments.setdefault(shared_key, description)
+    return comments
+
+
+def _dump_with_validator_comments(config: dict) -> str:
+    """Serialize a config and append validator comments to model input scalars."""
+    comments = _validator_comments(config)
+    yaml_text = yaml.dump(config, default_flow_style=False, sort_keys=False)
+    current_technology = None
+    current_section = None
+    output_lines = []
+
+    for line in yaml_text.splitlines():
+        stripped = line.strip()
+        if line.startswith("  ") and not line.startswith("    ") and stripped.endswith(":"):
+            current_technology = stripped[:-1]
+            current_section = None
+        elif current_technology and line.startswith("      ") and not line.startswith("        "):
+            current_section = stripped[:-1] if stripped.endswith(":") else None
+        elif current_technology and current_section and line.startswith("        "):
+            parameter, separator, _value = stripped.partition(":")
+            comment = comments.get((current_technology, current_section, parameter))
+            if separator and comment and " # " not in line:
+                line = f"{line}  # {comment}"
+        output_lines.append(line)
+
+    return "\n".join(output_lines) + "\n"
 
 
 def extract_model_inputs(
     model_name: str,
+    config_class_name: str | None = None,
 ) -> dict:
     """Extract all parameters from a model's config class.
 
@@ -54,6 +214,8 @@ def extract_model_inputs(
 
     Args:
         model_name (str): Name of the model class (e.g., 'StoragePerformanceModel')
+        config_class_name (str, optional): Explicit configuration class name when
+            the model does not follow the standard naming convention.
 
     Returns:
         dict: Dictionary of all configurable parameters from the model class
@@ -62,49 +224,7 @@ def extract_model_inputs(
         ValueError: If model_name not found in supported_models registry
         RuntimeError: If config class cannot be found or introspected
     """
-    if model_name not in supported_models:
-        raise ValueError(
-            f"Model '{model_name}' not found in supported_models registry. "
-            f"Available models: {sorted(supported_models.keys())}"
-        )
-
-    try:
-        model_class = supported_models[model_name]
-    except Exception as e:
-        raise ValueError(f"Failed to load model '{model_name}': {e}") from e
-
-    # Find the config class (convention: ModelClass -> ModelClassConfig)
-    # Try multiple naming patterns: ModelNameConfig, ModelConfig, ModelNameConfigClass, etc.
-    config_class_candidates = [
-        f"{model_name}Config",  # Standard: StoragePerformanceModelConfig
-        model_name.replace("Model", "Config"),  # Alternate: StoragePerformanceConfig
-    ]
-
-    if not hasattr(model_class, "__module__"):
-        raise RuntimeError(
-            f"Model '{model_name}' has no __module__ attribute. Is it a proper class?"
-        )
-
-    # Try to find config class in the model's module
-    config_class = None
-    last_error = None
-    for config_class_name in config_class_candidates:
-        try:
-            model_module = __import__(model_class.__module__, fromlist=[config_class_name])
-            if hasattr(model_module, config_class_name):
-                config_class = getattr(model_module, config_class_name)
-                break
-        except (ImportError, AttributeError) as e:
-            last_error = e
-            continue
-
-    if config_class is None:
-        raise RuntimeError(
-            f"Could not find config class for model '{model_name}' "
-            f"(searched in {model_class.__module__}). "
-            f"Tried: {config_class_candidates}. "
-            f"Ensure the config class follows naming convention ModelNameConfig."
-        ) from last_error
+    config_class = find_config_class(model_name, config_class_name)
 
     params_dict = {}
 
@@ -209,37 +329,14 @@ def organize_model_parameters(
             print(f"Warning: Failed to extract parameters for {model_type_key}='{model_name}': {e}")
             continue
 
-    # Determine shared parameters: those that appear in 2+ model types
-    all_params_flat = {}
-    for section_params in all_params_by_section.values():
-        all_params_flat.update(section_params)
+    shared_parameters, section_only = split_shared_parameters(all_params_by_section)
 
-    param_counts = Counter()
-    for section_params in all_params_by_section.values():
-        for param_key in section_params:
-            param_counts[param_key] += 1
-
-    # Parameters appearing in 2+ sections should be shared
-    shared_param_keys = {k for k, v in param_counts.items() if v > 1}
-
-    # Organize into sections
-    shared_parameters = {}
     for section_name in ["performance", "control", "cost", "dispatch"]:
         section_key = f"{section_name}_parameters"
-        section_params = all_params_by_section[section_name]
+        section_only_params = section_only.get(section_name, {})
+        if section_only_params:
+            model_inputs[section_key] = section_only_params
 
-        # Remove shared params from this section
-        section_only = {k: v for k, v in section_params.items() if k not in shared_param_keys}
-
-        if section_only:
-            model_inputs[section_key] = section_only
-
-        # Collect shared params (take first occurrence)
-        for param_key in shared_param_keys:
-            if param_key in section_params and param_key not in shared_parameters:
-                shared_parameters[param_key] = section_params[param_key]
-
-    # Add shared_parameters if any exist
     if shared_parameters:
         model_inputs["shared_parameters"] = shared_parameters
 
@@ -313,9 +410,8 @@ def populate_tech_yaml_from_file(
     # Load the skeleton config
     print(f"Loading tech config from {config_path}...")
     try:
-        with config_path.open() as f:
-            tech_config = yaml.safe_load(f)
-    except (OSError, yaml.YAMLError) as e:
+        tech_config = load_yaml(config_path)
+    except (OSError, ValueError, yaml.YAMLError) as e:
         raise ValueError(f"Failed to load tech config as YAML: {e}") from e
 
     if not tech_config:
@@ -339,7 +435,7 @@ def populate_tech_yaml_from_file(
     print(f"Writing populated config to {output_path}...")
     try:
         with output_path.open("w") as f:
-            yaml.dump(populated_config, f, default_flow_style=False, sort_keys=False)
+            f.write(_dump_with_validator_comments(populated_config))
         print(f"Success! Populated config written to {output_path}")
     except (OSError, yaml.YAMLError) as e:
         raise RuntimeError(f"Failed to write config to {output_path}: {e}") from e

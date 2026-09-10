@@ -7,6 +7,7 @@ import yaml
 import pytest
 
 from h2integrate.preprocess.populate_tech_yaml import (
+    find_config_class,
     populate_tech_yaml,
     extract_model_inputs,
     organize_model_parameters,
@@ -59,6 +60,38 @@ class TestExtractModelInputs:
         # config_name should have default "WindPowerSingleOwner"
         assert params["config_name"] == "WindPowerSingleOwner"
         assert params["create_model_from"] == "new"
+
+    def test_explicit_config_class_name(self):
+        """Test extraction for a model with a shared, non-standard config name."""
+        config_class = find_config_class("GenericDemandComponent", "DemandComponentBaseConfig")
+        params = extract_model_inputs("GenericDemandComponent", "DemandComponentBaseConfig")
+
+        assert config_class.__name__ == "DemandComponentBaseConfig"
+        assert "demand_profile" in params
+
+    def test_cost_model_config_name(self):
+        """Test extraction for a config named from a model's CostModel suffix."""
+        config_class = find_config_class("EIANaturalGasFeedstockCostModel")
+        params = extract_model_inputs("EIANaturalGasFeedstockCostModel")
+
+        assert config_class.__name__ == "EIANaturalGasFeedstockConfig"
+        assert "resource_year" in params
+
+    def test_design_config_name(self):
+        """Test extraction for a model with a DesignConfig suffix."""
+        config_class = find_config_class("PYSAMSolarPlantPerformanceModel")
+        params = extract_model_inputs("PYSAMSolarPlantPerformanceModel")
+
+        assert config_class.__name__ == "PYSAMSolarPlantPerformanceModelDesignConfig"
+        assert "pv_capacity_kWdc" in params
+
+    def test_inherited_base_config(self):
+        """Test extraction using a config inherited from the model base class."""
+        config_class = find_config_class("LinedRockCavernStorageCostModel")
+        params = extract_model_inputs("LinedRockCavernStorageCostModel")
+
+        assert config_class.__name__ == "HydrogenStorageBaseCostModelConfig"
+        assert "max_capacity" in params
 
 
 @pytest.mark.unit
@@ -249,6 +282,30 @@ class TestPopulateTechYamlFromFile:
             with skeleton_path.open() as f:
                 updated_config = yaml.safe_load(f)
             assert len(updated_config["technologies"]["wind"]["model_inputs"]) > 0
+
+    def test_populate_file_writes_validator_comments(self):
+        """Test that generated YAML includes useful attrs validator comments."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmppath = Path(tmpdir)
+            skeleton_path = tmppath / "skeleton.yaml"
+            output_path = tmppath / "populated.yaml"
+            skeleton_config = {
+                "technologies": {
+                    "wind": {
+                        "performance_model": {"model": "PYSAMWindPlantPerformanceModel"},
+                        "model_inputs": {},
+                    }
+                }
+            }
+            with skeleton_path.open("w") as f:
+                yaml.dump(skeleton_config, f)
+
+            populate_tech_yaml_from_file(skeleton_path, output_path=output_path)
+            output = output_path.read_text()
+
+            assert "num_turbines: null  # must be >= 0" in output
+            assert "create_model_from: new  # must be one of: 'default', 'new'" in output
+            assert yaml.safe_load(output)["technologies"]["wind"]["model_inputs"]
 
     def test_populate_nonexistent_file_raises_error(self):
         """Test that nonexistent file raises FileNotFoundError."""
