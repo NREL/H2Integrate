@@ -113,7 +113,6 @@ class SAFCostModel(CostModelBaseClass):
         3600,
     )  # (min, max) time step lengths (in seconds) compatible with this model
 
-    # TOASK: In that case, do we need this function?
     def setup(self):
         self.config = SAFCostModelConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "cost"),

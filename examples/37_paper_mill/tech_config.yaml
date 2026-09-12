@@ -1,4 +1,3 @@
-# TOASK: (1) Easy way to switch on and off SAF portion? Create another example?; (2) paper vs pulp
 name: technology_config
 description: This plant produces pulp and paper
 technologies:
@@ -54,8 +53,6 @@ technologies:
         capacity_factor: 0.9
       cost_parameters:
         operational_year: 2030
-# TOASK: LCOH vs hydrogen unit cost. Should we use the hydrogen module for the August results
-#        lcoh: 7.37
         installation_time: 24  # months
         inflation_rate: 0.0  # 0 for nominal analysis
         # Feedstock parameters (flattened)
