@@ -45,6 +45,7 @@ class GridPerformanceModel(PerformanceModelBaseClass):
 
     Outputs
         electricity_out (array): Power flowing out of the grid (buying) (kW).
+        electricity_sold (array): Power sold to the grid (kW).
     """
 
     _time_step_bounds = (
@@ -98,7 +99,7 @@ class GridPerformanceModel(PerformanceModelBaseClass):
             "electricity_sold",
             val=0.0,
             shape=self.n_timesteps,
-            units="kW",  # must be kW to interconect w/ cost model
+            units=self.commodity_rate_units,
             desc="Electricity sold to the grid",
         )
 
