@@ -12,7 +12,7 @@ def plant_config():
         "plant": {
             "simulation": {
                 "n_timesteps": 8760,
-                # "dt": 3600,
+                "dt": 3600,
             },
         },
     }
@@ -25,6 +25,7 @@ def tech_config():
             "performance_parameters": {
                 "commodity": "electricity",
                 "commodity_rate_units": "MW",
+                "commodity_amount_units": "MW*h",
                 # "epsilon_comparison": 1.0e-3,
             },
         },
@@ -55,56 +56,18 @@ def test_threshold_stats_sinusoid(plant_config, tech_config, subtests):
 
     prob.run_model()
 
-    ### MATH COULD DO THE JOB
-    # integral from 0 to 24*365 of minimum(P_t, P_0 + A*sin(2*pi/24*t)) - P_t dt
-    # integral from 0 to 24*365 of minimum(P_t, P_0 + A*sin(2*pi/24*t)) dt
-    #       - 24*365*P_t  # rearranging
-    # 365*(integral from 0 to 24 of minimum(P_t, P_0 + A*sin(2*pi/24*t)) dt
-    #       - 24*P_t)  # moving constant
-    # 365*(integral from -12 to 12 of minimum(P_t, P_0 + A*cos(2*pi/24*t)) dt
-    #       - 24*P_t)  # by periodicity
-    # # define x = t s.t. P_t == P_0 + A*cos(2*pi/24*t)
-    # # => P_t - P_0 = A*cos(2*pi/24*x) => x = 24/(2*pi)*arccos((P_t - P_0)/A)
-    # # +assuming P_t < P_0 + A
-    # 365*(
-    #     integral from -12 to -x of P_t dt
-    #     + integral from -x to x of P_0 dt
-    #     + integral from -x to x of A*cos(2*pi/24*t) dt
-    #     + integral from x to 12 of P_t dt
-    #     - 24*P_t
-    # )  # split integral using regions of dominance
-    # 365*(
-    #     2*(P_0 - P_t)*x
-    #     + integral from -x to x of A*cos(2*pi/24*t) dt
-    # )  # simplify and reduce terms
-    # # define w = 2*pi/24
-    # # => x = 1/w*arccos((P_t - P_0)/A)
-    # 365*(
-    #     2*(P_0 - P_t)*x
-    #     + 2*A/w*sin(w*x)
-    # )  # simplify and reduce terms
-    # 365*(
-    #     2*(P_0 - P_t)*x
-    #     + 2*A/w*sin(arccos((P_t - P_0)/A))
-    # )  # simplify and reduce terms
-    # 365*(
-    #     2*(P_0 - P_t)*arccos((P_t - P_0)/A)
-    #     + 24*A/pi*sqrt(1 - ((P_t - P_0)/A)**2)
-    # )  # sin(arccos(f)) = sqrt(1 - f**2)
-    ### GIVE UP HERE AND USE TRAPZ
-
     # verify deficit and surplus match expected values
     with subtests.test("net deficit match"):
         math_value = np.trapezoid(np.maximum(0.0, -(P_in - P_threshold)), h_in)
         assert np.isclose(
-            prob.get_val("tspm.net_electricity_deficit", units="MW"),
+            prob.get_val("tspm.net_electricity_deficit", units="MW*h"),
             math_value,
             rtol=5.0e-4,
         )
     with subtests.test("net surplus match"):
         math_value = np.trapezoid(np.maximum(0.0, P_in - P_threshold), h_in)
         assert np.isclose(
-            prob.get_val("tspm.net_electricity_surplus", units="MW"),
+            prob.get_val("tspm.net_electricity_surplus", units="MW*h"),
             math_value,
             rtol=1.0e-4,
         )
@@ -112,13 +75,13 @@ def test_threshold_stats_sinusoid(plant_config, tech_config, subtests):
     # verify fraction of timesteps with deficit and surplus match expected values
     with subtests.test("fraction of timesteps with deficit match"):
         assert np.isclose(
-            prob.get_val("tspm.frac_timestep_electricity_deficit"),
+            prob.get_val("tspm.ratio_timestep_electricity_deficit"),
             0.6666666,
             rtol=1e-3,
         )
     with subtests.test("fraction of timesteps with surplus match"):
         assert np.isclose(
-            prob.get_val("tspm.frac_timestep_electricity_surplus"),
+            prob.get_val("tspm.ratio_timestep_electricity_surplus"),
             0.3333333,
             rtol=1e-3,
         )
@@ -163,6 +126,7 @@ def test_threshold_from_demand_component(demand_profile, subtests):
                         "performance_parameters": {
                             "commodity": "electricity",
                             "commodity_rate_units": "MW",
+                            "commodity_amount_units": "MW*h",
                         },
                     },
                 },

@@ -1,6 +1,7 @@
 import numpy as np
 import openmdao.api as om
 from attrs import field, define, validators
+from openmdao.utils.units import convert_units
 
 from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
 from h2integrate.core.supported_models import register
@@ -12,13 +13,15 @@ class ThresholdStatisticsPerformanceConfig(BaseConfig):
     Configuration class for a threshold statistics component.
 
     Attributes:
-        commodity (str): name of the commodity for which threshold statistics are computed.
-        commodity_rate_units (str): units of the commodity (e.g., "kg/h").
+        commodity (str): name of the commodity for which threshold statistics are computed
+        commodity_rate_units (str): units of the commodity (e.g., "kg/h")
+        commodity_amount_units (str): units of the commodity amount (e.g., "kg")
         epsilon_comparison (float): small positive value used to define a tolerance when comparing
     """
 
     commodity: str = field(converter=(str.lower, str.strip))
     commodity_rate_units: str = field()
+    commodity_amount_units: str = field()
     epsilon_comparison: float = field(default=0.0, validator=validators.ge(0.0))
 
 
@@ -48,9 +51,9 @@ class ThresholdStatisticsPerformanceModel(om.ExplicitComponent):
     Outputs:
         net_commodity_deficit (float): net deficit of the commodity timeseries below the threshold
         net_commodity_surplus (float): net surplus of the commodity timeseries above the threshold
-        frac_timestep_commodity_deficit (float): fraction of timesteps where the commodity is
+        ratio_timestep_commodity_deficit (float): fraction of timesteps where the commodity is
             below the threshold
-        frac_timestep_commodity_surplus (float): fraction of timesteps where the commodity is
+        ratio_timestep_commodity_surplus (float): fraction of timesteps where the commodity is
             above the threshold
     """
 
@@ -68,6 +71,11 @@ class ThresholdStatisticsPerformanceModel(om.ExplicitComponent):
         self.config = ThresholdStatisticsPerformanceConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance"),
             additional_cls_name=self.__class__.__name__,
+        )
+        self._rate_hours_to_amount_factor = convert_units(
+            1.0,
+            "h",
+            f"{self.config.commodity_amount_units}/{self.config.commodity_rate_units}",
         )
 
         n_timesteps = int(self.options["plant_config"]["plant"]["simulation"]["n_timesteps"])
@@ -90,25 +98,25 @@ class ThresholdStatisticsPerformanceModel(om.ExplicitComponent):
             f"net_{self.config.commodity}_deficit",
             val=0.0,
             shape=1,
-            units=self.config.commodity_rate_units,
+            units=self.config.commodity_amount_units,
         )
 
         self.add_output(
             f"net_{self.config.commodity}_surplus",
             val=0.0,
             shape=1,
-            units=self.config.commodity_rate_units,
+            units=self.config.commodity_amount_units,
         )
 
         self.add_output(
-            f"frac_timestep_{self.config.commodity}_deficit",
+            f"ratio_timestep_{self.config.commodity}_deficit",
             val=0.0,
             shape=1,
             units="unitless",
         )
 
         self.add_output(
-            f"frac_timestep_{self.config.commodity}_surplus",
+            f"ratio_timestep_{self.config.commodity}_surplus",
             val=0.0,
             shape=1,
             units="unitless",
@@ -125,11 +133,17 @@ class ThresholdStatisticsPerformanceModel(om.ExplicitComponent):
         # use the epsilons conservatively to ID surplus or deficit
 
         # extract the statistics on the deficit or surplus and package outputs
-        outputs[f"frac_timestep_{self.config.commodity}_deficit"] = np.mean(
+        outputs[f"ratio_timestep_{self.config.commodity}_deficit"] = np.mean(
             commodity_difference < 0.0
         )
-        outputs[f"frac_timestep_{self.config.commodity}_surplus"] = np.mean(
+        outputs[f"ratio_timestep_{self.config.commodity}_surplus"] = np.mean(
             commodity_difference >= 0.0
         )
-        outputs[f"net_{self.config.commodity}_deficit"] = np.sum(deficit)
-        outputs[f"net_{self.config.commodity}_surplus"] = np.sum(surplus)
+
+        hours_per_timestep = self.options["plant_config"]["plant"]["simulation"]["dt"] / 3600
+        outputs[f"net_{self.config.commodity}_deficit"] = (
+            np.sum(deficit) * hours_per_timestep * self._rate_hours_to_amount_factor
+        )
+        outputs[f"net_{self.config.commodity}_surplus"] = (
+            np.sum(surplus) * hours_per_timestep * self._rate_hours_to_amount_factor
+        )
