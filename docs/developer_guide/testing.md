@@ -54,34 +54,19 @@ Tests must be marked with at least one of `unit`, `regression`, `integration`, `
 
 ## Parallel Test Execution
 
-Install the `develop` extra to include `pytest-xdist`. Tests run in parallel by default using
-`-n auto --dist=loadfile`, which keeps tests from the same file on one worker so they can reuse
-module-scoped fixtures. The automatic worker count considers physical CPUs when available, CPU
-affinity, and reported available memory. It reserves 1 GiB for the rest of the system and
-budgets 2 GiB per worker. When fewer than two workers fit, tests run serially. Four workers
-require at least 9 GiB of reported available memory.
+Install the `develop` extra to include `pytest-xdist`.
+Tests run in parallel by default using `-n auto --dist=loadfile`, which keeps tests from the same file on one worker so they can reuse module-scoped fixtures.
+The automatic worker count considers core count and reported available memory.
+CI caps the automatic count at four workers per job.
 
-The memory budget is an estimate, not a guarantee: a serial regression run's test processes
-reached 2.59 GiB, and other applications and individual tests can use more memory while the
-suite runs. CI caps the automatic count at four workers per job.
-Container or scheduler memory limits may be lower than the memory reported by the host; use a
-lower cap or `-n 0` when the effective limit is uncertain.
-
-Use `pytest -n 0` to run serially, including when debugging. Use `pytest -n 2` to request a
-specific number of workers, or set `PYTEST_XDIST_AUTO_NUM_WORKERS` to override the automatic
-count. These explicit overrides bypass the memory budget, so check system resources first.
+Use `pytest -n 0` to run serially, including when debugging.
+Use `pytest -n <num_workers>` to request a specific number of workers, or set `PYTEST_XDIST_AUTO_NUM_WORKERS` to override the automatic count.
 Use `pytest --maxprocesses=2` to cap the automatic count without bypassing the budget.
-The `--dist=load` option can improve balancing for suites concentrated in a few files, but may
-repeat expensive fixtures on multiple workers.
-
-For VS Code's Debug Test commands, set `"PYTEST_ADDOPTS": "-n 0"` in the `env` section of the
-launch configuration with `"purpose": ["debug-test"]`. Command-line `-n` options take precedence
-over this environment setting.
 
 Workers have separate process state but share the repository and other external resources.
 Tests must use temporary paths for generated files, restore changes to the working directory,
-and not depend on execution order. Each worker performs its own collection, so parameter values
-and test IDs must have a consistent order. `pytest-cov` combines coverage from the workers.
+and not depend on execution order.
+Each worker performs its own collection, so parameter values and test IDs must have a consistent order. `pytest-cov` combines coverage from the workers.
 
 ## Unit Tests
 
