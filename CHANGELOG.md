@@ -25,7 +25,7 @@
 - Integrate the reliability model into the `SimpleCycleTurbinePerformanceModel` with independent
   samples for each turbine and correct multi-turbine fuel consumption. [PR 919](https://github.com/NatLabRockies/H2Integrate/pull/919)
 - Consolidate redundant tests, strengthen weak assertions, and replace expensive recorder setups with a small grid model. [PR 974](https://github.com/NatLabRockies/H2Integrate/pull/974)
-- Run pytest in parallel by default with a memory-aware automatic worker count and isolate shared test outputs. [PR 975](https://github.com/NatLabRockies/H2Integrate/pull/975)
+- Run pytest in parallel by default with a memory-aware automatic worker count and isolate shared test outputs. [PR 982](https://github.com/NatLabRockies/H2Integrate/pull/982)
 
 
 ## 0.10.0 [October 12, 2026]
