@@ -103,6 +103,10 @@ control["demand_signal"] = demand_signal.tolist()
 
 # Build and set up the H2Integrate model (standard interface)
 # ---------------------------------------------------------------------------
+import time
+
+
+t1 = time.time()
 model = H2IntegrateModel(config)
 model.setup()
 # model.create_xdsm(outfile=str(HERE / "battery_degradation_xdsm"))
@@ -143,6 +147,8 @@ print(f"Controller horizon: {control['n_control_window_hours']} h")
 # Run the optimized battery dispatch over 24-hour windows.
 # ---------------------------------------------------------------------------
 model.run()
+t2 = time.time()
+print(f"Simulation run time: {t2 - t1:.2f} s")
 
 # ---------------------------------------------------------------------------
 # Retrieve the battery internal timeseries and assemble a DataFrame.
