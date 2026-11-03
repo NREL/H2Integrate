@@ -95,7 +95,7 @@ def test_threshold_stats_sinusoid(plant_config, tech_config, subtests):
 @pytest.mark.parametrize(
     "demand_profile",
     [
-        pytest.param(10.0, id="scalar_demand"),
+        pytest.param(10.0 * np.ones(8760), id="scalar_demand"),
         pytest.param((np.arange(8760) % 24 + 1.0).tolist(), id="demand_array"),
     ],
 )
@@ -147,7 +147,17 @@ def test_threshold_from_demand_component(demand_profile, subtests):
     }
 
     h2i = H2IntegrateModel(h2i_config)
+    h2i.model.connect(
+        "electrical_load_demand.electricity_demand", "threshold_stats.electricity_threshold"
+    )  # DEBUG!!!!! HOTFIX
+    h2i.model.set_input_defaults(
+        "electrical_load_demand.electricity_demand",
+        demand_profile,
+        units="MW",
+    )  # DEBUG!!!!! HOTFIX
     h2i.setup()
+
+    om.n2(h2i.model)
 
     expected_demand = np.broadcast_to(np.asarray(demand_profile, dtype=float), n_timesteps)
     electricity_in = np.full(n_timesteps, 6.0)
@@ -160,7 +170,7 @@ def test_threshold_from_demand_component(demand_profile, subtests):
         )
 
     with subtests.test("statistics use the demand profile as the threshold"):
-        assert h2i.prob.get_val("threshold_stats.net_electricity_deficit", units="MW") == (
+        assert h2i.prob.get_val("threshold_stats.net_electricity_deficit", units="MW*h") == (
             pytest.approx(np.sum(np.maximum(0.0, expected_demand - electricity_in)))
         )
 
@@ -171,6 +181,6 @@ def test_threshold_from_demand_component(demand_profile, subtests):
         assert h2i.prob.get_val("threshold_stats.electricity_threshold", units="MW") == (
             pytest.approx(new_demand)
         )
-        assert h2i.prob.get_val("threshold_stats.net_electricity_deficit", units="MW") == (
+        assert h2i.prob.get_val("threshold_stats.net_electricity_deficit", units="MW*h") == (
             pytest.approx(0.0)
         )
