@@ -130,63 +130,9 @@ Option 1
             To the contributor's guide
 
 
-*****************
-About H2Integrate
-*****************
-
-H2Integrate grew from projects that needed to model and analyze complex hybrid energy systems. It is now maintained as a reusable framework for composing technology performance, cost, finance, and control models, while still allowing users to add project-specific components.
-
-Browse the example workflows in the GitHub repository: https://github.com/NatLabRockies/H2Integrate/tree/main/examples
-
-What is H2Integrate?
-====================
-
-H2Integrate is designed to be flexible and extensible, allowing users to create their own components and models for hybrid systems.
-Its registered models cover land-based wind and solar PV; wave, tidal, run-of-river hydro, natural gas, nuclear, and grid electricity; hydrogen production and storage; fuel cells; and industrial processes including ammonia, methanol, iron, and steel.
-The `Model Overview <user_guide/model_overview.md>`__ lists the current registered models, and model-specific pages describe their capabilities and configuration.
-Some models integrate existing tools, including `PySAM <https://github.com/NatLabRockies/pysam>`__ and `ProFAST <https://github.com/NatLabRockies/ProFAST>`__.
-The H2Integrate tool is built on top of `NASA's OpenMDAO framework <https://github.com/OpenMDAO/OpenMDAO/>`__, which provides a powerful and flexible environment for modeling and optimization.
-
-
-.. note::
-   H2Integrate was previously known as GreenHEART. The name was updated to H2Integrate to better reflect its expanded capabilities and focus on integrated energy systems.
-
-
-**************************
-How does H2Integrate work?
-**************************
-
-H2Integrate typically models energy systems on a yearly basis using hourly timesteps (i.e., 8760 operational data points across a year).
-Results from these simulations are then processed across the project's lifecycle to provide insights into the system's performance, costs, and financial viability.
-Depending on the models used and the size of the system, H2Integrate can simulate systems ranging from the kW to GW scale in seconds on a personal computer.
-Additionally, H2Integrate tracks the flow of electricity, molecules (e.g., hydrogen, ammonia, methanol), and other products (e.g., steel) between different technologies in the energy system.
-
-.. note::
-
-   Some models are now able to operate with non-hourly time steps.
-   Appropriate time step bounds are included as class attributes when non-hourly time steps are permitted.
-   Check individual model docs and definitions for time step bounds for individual models. All models in a given simulation must be compatible with the specified time step.
-
-For each technology there are 4 different types of models: control, performance, cost, and finance. These model categories allow for modular pieces to be brought in or re-used throughout H2Integrate, as well as ease of development and organization. Note that the only required models for a technology are performance and cost, while control and finance are optional. The figure below shows these four categories and some of the technologies included in H2Integrate. For a full list of models available, please see `Model Overview <user_guide/model_overview.md>`__.
-
-.. image:: tech-model.png
-   :alt: A representation of a single technology model in H2Integrate
-
-The individual technology models are then connected to create the hybrid system model, as shown in the simplistic example below. Here, data from the performance, cost, and finance models of the grid and battery technologies feed into the overall system performance and finance calculations. There is also a physical connection between the grid and battery performance models in the form of an electrical cable. Lastly, within the battery technology, the control model and performance models are connected for dispatching of electricity.
-
-.. image:: system-model.png
-   :alt: A representation of a system model in H2Integrate
-
-If technologies require resource or price profiles, they can be provided by the user, or in many cases pulled automatically from existing databases. The costs and performance of the technology models in the system are combined into system-level performance and finance components for techno-economic analysis of the hybrid system. H2Integrate systems may include multiple system-level finance models to assess results with different system boundaries if desired. Besides simulation and analysis, H2Integrate can also perform system and sub-system optimization.
-
-A more complex and generalized example of an H2Integrate model is shown below:
-
-.. image:: splash_image.png
-   :alt: H2Integrate Splash Image
-
-
+*********
 Option 2
-========
+*********
 
 .. grid:: 1 1 2 3
     :gutter: 2 3 4 4
@@ -304,8 +250,59 @@ Option 2
 
             To the reliability reference
 
+*****************
+About H2Integrate
+*****************
+
+H2Integrate grew from projects that needed to model and analyze complex hybrid energy systems. It is now maintained as a reusable framework for composing technology performance, cost, finance, and control models, while still allowing users to add project-specific components.
+
+Browse the example workflows in the GitHub repository: https://github.com/NatLabRockies/H2Integrate/tree/main/examples
+
+What is H2Integrate?
+====================
+
+H2Integrate is designed to be flexible and extensible, allowing users to create their own components and models for hybrid systems.
+Its registered models cover land-based wind and solar PV; wave, tidal, run-of-river hydro, natural gas, nuclear, and grid electricity; hydrogen production and storage; fuel cells; and industrial processes including ammonia, methanol, iron, and steel.
+The `Model Overview <user_guide/model_overview.md>`__ lists the current registered models, and model-specific pages describe their capabilities and configuration.
+Some models integrate existing tools, including `PySAM <https://github.com/NatLabRockies/pysam>`__ and `ProFAST <https://github.com/NatLabRockies/ProFAST>`__.
+The H2Integrate tool is built on top of `NASA's OpenMDAO framework <https://github.com/OpenMDAO/OpenMDAO/>`__, which provides a powerful and flexible environment for modeling and optimization.
 
 
+.. note::
+   H2Integrate was previously known as GreenHEART. The name was updated to H2Integrate to better reflect its expanded capabilities and focus on integrated energy systems.
+
+
+**************************
+How does H2Integrate work?
+**************************
+
+H2Integrate typically models energy systems on a yearly basis using hourly timesteps (i.e., 8760 operational data points across a year).
+Results from these simulations are then processed across the project's lifecycle to provide insights into the system's performance, costs, and financial viability.
+Depending on the models used and the size of the system, H2Integrate can simulate systems ranging from the kW to GW scale in seconds on a personal computer.
+Additionally, H2Integrate tracks the flow of electricity, molecules (e.g., hydrogen, ammonia, methanol), and other products (e.g., steel) between different technologies in the energy system.
+
+.. note::
+
+   Some models are now able to operate with non-hourly time steps.
+   Appropriate time step bounds are included as class attributes when non-hourly time steps are permitted.
+   Check individual model docs and definitions for time step bounds for individual models. All models in a given simulation must be compatible with the specified time step.
+
+For each technology there are 4 different types of models: control, performance, cost, and finance. These model categories allow for modular pieces to be brought in or re-used throughout H2Integrate, as well as ease of development and organization. Note that the only required models for a technology are performance and cost, while control and finance are optional. The figure below shows these four categories and some of the technologies included in H2Integrate. For a full list of models available, please see `Model Overview <user_guide/model_overview.md>`__.
+
+.. image:: tech-model.png
+   :alt: A representation of a single technology model in H2Integrate
+
+The individual technology models are then connected to create the hybrid system model, as shown in the simplistic example below. Here, data from the performance, cost, and finance models of the grid and battery technologies feed into the overall system performance and finance calculations. There is also a physical connection between the grid and battery performance models in the form of an electrical cable. Lastly, within the battery technology, the control model and performance models are connected for dispatching of electricity.
+
+.. image:: system-model.png
+   :alt: A representation of a system model in H2Integrate
+
+If technologies require resource or price profiles, they can be provided by the user, or in many cases pulled automatically from existing databases. The costs and performance of the technology models in the system are combined into system-level performance and finance components for techno-economic analysis of the hybrid system. H2Integrate systems may include multiple system-level finance models to assess results with different system boundaries if desired. Besides simulation and analysis, H2Integrate can also perform system and sub-system optimization.
+
+A more complex and generalized example of an H2Integrate model is shown below:
+
+.. image:: splash_image.png
+   :alt: H2Integrate Splash Image
 
 The modular nature of the H2Integrate system makes adding custom models, including proprietary models for local analysis only, very straightforward.
 
