@@ -1489,6 +1489,13 @@ class H2IntegrateModel:
                 if fin_model is None:
                     raise ValueError(f"finance model '{model_name}' not found.")
 
+                check_model_simulation_duration(
+                    model_name,
+                    fin_model,
+                    self.plant_config["plant"]["simulation"]["n_timesteps"],
+                    self.plant_config["plant"]["simulation"]["dt"],
+                )
+
                 # filter the plant_config so the finance_parameters only includes data for
                 # this finance model group
 
