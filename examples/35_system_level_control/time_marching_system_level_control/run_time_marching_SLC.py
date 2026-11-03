@@ -4,26 +4,17 @@ from copy import deepcopy
 from pathlib import Path
 
 import yaml
-import matplotlib.pyplot as plt
 
 from h2integrate import H2IntegrateModel, load_tech_yaml, load_plant_yaml, load_driver_yaml
 from h2integrate.core.dict_utils import percent_diff_dicts, find_nonzero_percent_diffs
 
 
-# ANSI color codes
-CRED = "\033[91m"
-CGREEN = "\033[92m"
-CYELLOW = "\033[93m"
-CBLUE = "\033[94m"
-CEND = "\033[0m"  # Resets the style back to normal
-
-
 # Run one of both simulation paradigms by changing the flags in this dict
 run_dict = {
     "run_sequential": True,
-    "run_concurrent": True,
+    "run_time_marching": True,
     # "run_sequential_opt": True,
-    # "run_concurrent_opt": True,
+    # "run_time_marching_opt": True,
 }
 
 # System level controller options
@@ -80,8 +71,6 @@ for k, v in SLC_configs.items():
     print(f"System level controller: {k}")
     config["plant_config"]["system_level_control"] = v
 
-    fig, ax = plt.subplots(3, 1, sharex="all", layout="constrained")
-
     # Run simulation sequentially one subsystem at a time
     if run_dict.get("run_sequential", False):
         config_seq = deepcopy(config)
@@ -96,10 +85,6 @@ for k, v in SLC_configs.items():
         h2i_seq.run()
         t1 = time.time()
 
-        print("\n")
-        print(CRED + str(type(h2i_seq.plant.system_level_controller)) + CEND)
-        print("\n")
-
         print(f"Sequential took {t1 - t0:.3f} seconds")
 
         # Post-process the results
@@ -108,25 +93,8 @@ for k, v in SLC_configs.items():
         inputs_seq = dict(h2i_seq.model.list_inputs(out_stream=None))
         outputs_seq = dict(h2i_seq.model.list_outputs(out_stream=None))
 
-        SLC_battery_cmd = outputs_seq[
-            "plant.system_level_controller.battery_electricity_set_point"
-        ]["val"]
-
-        battery_out = outputs_seq[
-            "plant.battery.StoragePerformanceModel.storage_electricity_discharge"
-        ]["val"]
-        battery_cmd = inputs_seq["plant.battery.StoragePerformanceModel.electricity_command_value"][
-            "val"
-        ]
-
-        battery_SOC = outputs_seq["plant.battery.StoragePerformanceModel.SOC"]["val"]
-
-        ax[0].plot(battery_SOC)
-        ax[1].plot(battery_cmd)
-        ax[2].plot(SLC_battery_cmd)
-
     # Run the simulation concurrently for all subsystems one step at a time
-    if run_dict.get("run_concurrent", False):
+    if run_dict.get("run_time_marching", False):
         config_con = deepcopy(config)
 
         config_con["plant_config"]["plant"]["simulation"]["n_timesteps"] = 8760
@@ -137,16 +105,10 @@ for k, v in SLC_configs.items():
 
         t0 = time.time()
         # Run the model
-
         h2i_con.run()
-
         t1 = time.time()
 
-        print(f"Concurrent took {t1 - t0:.3f} seconds")
-
-        print("\n")
-        print(CRED + str(type(h2i_con.plant.system_level_controller)) + CEND)
-        print("\n")
+        print(f"Time marching took {t1 - t0:.3f} seconds")
 
         # Post-process the results
         h2i_con.post_process(print_results=False)
@@ -154,35 +116,8 @@ for k, v in SLC_configs.items():
         inputs_con = dict(h2i_con.model.list_inputs(out_stream=None))
         outputs_con = dict(h2i_con.model.list_outputs(out_stream=None))
 
-        SLC_battery_cmd = outputs_con[
-            "plant.system_level_controller.battery_electricity_set_point"
-        ]["val"]
-
-        battery_out = outputs_con[
-            "plant.battery.StoragePerformanceModel.storage_electricity_discharge"
-        ]["val"]
-        battery_cmd = inputs_con["plant.battery.StoragePerformanceModel.electricity_command_value"][
-            "val"
-        ]
-
-        battery_SOC = outputs_con["plant.battery.StoragePerformanceModel.SOC"]["val"]
-
-        ax[0].plot(battery_SOC)
-        ax[1].plot(battery_cmd)
-        ax[2].plot(SLC_battery_cmd)
-
-    ax[0].set_ylabel("Battery SOC")
-    ax[1].set_ylabel("Battery command")
-    ax[2].set_ylabel("SLC battery command")
-
-    ax[0].axhline(40, color="black", linewidth=1)
-    ax[0].axhline(60, color="black", linewidth=1)
-
-    # ax[0].set_xlim([-5, 30])
-    # ax[1].set_ylim([-12345.6, -12345.7])
-
     # Compare results
-    if run_dict.get("run_sequential", False) and run_dict.get("run_concurrent", False):
+    if run_dict.get("run_sequential", False) and run_dict.get("run_time_marching", False):
         inputs_pd_dict = percent_diff_dicts(inputs_seq, inputs_con)
         outputs_pd_dict = percent_diff_dicts(outputs_seq, outputs_con)
 
@@ -192,43 +127,7 @@ for k, v in SLC_configs.items():
         pprint.pprint(in_abs)
         pprint.pprint(out_abs)
 
-        fig, ax = plt.subplots(4, 1, sharex="all", layout="constrained")
-
-        ax[0].plot(
-            inputs_seq[
-                "plant.natural_gas_plant.NaturalGasPerformanceModel.electricity_command_value"
-            ]["val"]
-        )
-        ax[0].plot(
-            inputs_con[
-                "plant.natural_gas_plant.NaturalGasPerformanceModel.electricity_command_value"
-            ]["val"]
-        )
-
-        ax[1].plot(inputs_seq["plant.natural_gas_plant.controller.electricity_set_point"]["val"])
-        ax[1].plot(inputs_con["plant.natural_gas_plant.controller.electricity_set_point"]["val"])
-
-        ax[2].plot(
-            outputs_seq["plant.natural_gas_plant.controller.electricity_command_value"]["val"]
-        )
-        ax[2].plot(
-            outputs_con["plant.natural_gas_plant.controller.electricity_command_value"]["val"]
-        )
-
-        ax[3].plot(
-            outputs_seq["plant.system_level_controller.natural_gas_plant_electricity_set_point"][
-                "val"
-            ]
-        )
-        ax[3].plot(
-            outputs_con["plant.system_level_controller.natural_gas_plant_electricity_set_point"][
-                "val"
-            ]
-        )
-
-        print()
-
-    if run_dict.get("run_sequential_opt", False) or run_dict.get("run_concurrent_opt", False):
+    if run_dict.get("run_sequential_opt", False) or run_dict.get("run_time_marching_opt", False):
         opt_params = {
             "driver": {
                 "optimization": {
@@ -278,7 +177,7 @@ for k, v in SLC_configs.items():
         # Post-process the results
         h2i_seq.post_process(print_results=False)
 
-    if run_dict.get("run_concurrent_opt", False):
+    if run_dict.get("run_time_marching_opt", False):
         config_con = deepcopy(config)
 
         config_con["plant_config"]["plant"]["simulation"]["n_timesteps"] = 8760
