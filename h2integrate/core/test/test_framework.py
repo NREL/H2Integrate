@@ -1082,6 +1082,39 @@ def test_technology_finance_checks_simulation_duration(
 
 
 @pytest.mark.unit
+def test_system_finance_group_defaults_to_annual_only_duration() -> None:
+    """Reject nonannual horizons for finance-group models without duration bounds."""
+
+    class AnnualOnlyFinanceModel:
+        """Finance model that must not be constructed for a half-year simulation."""
+
+        def __init__(self, **kwargs) -> None:
+            raise AssertionError("duration validation should run before construction")
+
+    model = object.__new__(H2IntegrateModel)
+    model.driver_config = {}
+    model.plant_config = {
+        "plant": {
+            "plant_life": 3,
+            "simulation": {"n_timesteps": 4380, "dt": 3600},
+        },
+        "finance_parameters": {
+            "finance_groups": {
+                "commodity": "hydrogen",
+                "commodity_stream": "test_technology",
+                "finance_model": "AnnualOnlyFinanceModel",
+                "model_inputs": {},
+            }
+        },
+    }
+    model.technology_config = {"technologies": {"test_technology": {}}}
+    model.supported_models = {"AnnualOnlyFinanceModel": AnnualOnlyFinanceModel}
+
+    with pytest.raises(ValueError, match=r"Model AnnualOnlyFinanceModel.*simulation durations"):
+        model.create_finance_model()
+
+
+@pytest.mark.unit
 def test_check_model_is_steppable(subtests):
 
     class TechControllerSteppable:
