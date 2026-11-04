@@ -5,7 +5,6 @@ from pathlib import Path
 from unittest.mock import patch
 
 import yaml
-import numpy as np
 import pytest
 
 import h2integrate.postprocess.reporting as reporting_module
@@ -1072,9 +1071,6 @@ def test_technology_connections(temp_dir):
         yaml.safe_dump(highlevel_data, f)
 
     h2i_model = H2IntegrateModel(temp_highlevel_yaml)
-    demand_profile = np.ones(8760) * 720.0
-    h2i_model.setup()
-    h2i_model.prob.set_val("battery.electricity_set_point", demand_profile, units="MW")
     h2i_model.run()
 
 
