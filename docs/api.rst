@@ -1,0 +1,25 @@
+.. api-reference:
+
+#################
+API Documentation
+#################
+
+.. currentmodule:: h2integrate
+
+.. autosummary::
+   :toctree: _autosummary
+   :recursive:
+
+   core
+   feedstocks
+   converters
+   control
+   finances
+   resource
+   storage
+   transporters
+   tools
+   preprocess
+   postprocess
+   demand
+   reliability
