@@ -36,6 +36,8 @@ It models and optimizes hybrid energy plants that produce electricity, hydrogen,
    user_reference
    developer_guide/index
    api
+   ../CHANGELOG
+   auto_examples/index
 
 
 *********
@@ -236,7 +238,7 @@ Option 2
 
     .. grid-item-card::
 
-        Reliabbility Modeling
+        Reliability Modeling
         ^^^
 
         Learn more about modeling system and component availability.
