@@ -26,6 +26,7 @@
 - Integrate the reliability model into the `SimpleCycleTurbinePerformanceModel` with independent
   samples for each turbine and correct multi-turbine fuel consumption. [PR 919](https://github.com/NatLabRockies/H2Integrate/pull/919)
 - Simplified example demand profiles by using configured defaults and plotting model inputs. [PR 986](https://github.com/NatLabRockies/H2Integrate/pull/986)
+- Improve model documentation guidance, embed configuration APIs, cross-link guides and APIs, and correct model interface descriptions across converters, storage, control, resources, transport, demand, feedstocks, and finance. [PR 971](https://github.com/NatLabRockies/H2Integrate/pull/971)
 
 
 ## 0.10.0 [October 12, 2026]
