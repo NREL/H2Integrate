@@ -149,15 +149,13 @@ def test_threshold_from_demand_component(demand_profile, subtests):
     h2i = H2IntegrateModel(h2i_config)
     h2i.model.connect(
         "electrical_load_demand.electricity_demand", "threshold_stats.electricity_threshold"
-    )  # DEBUG!!!!! HOTFIX
+    )  # DEBUG!!!!! HOTFIX!!!!!
     h2i.model.set_input_defaults(
         "electrical_load_demand.electricity_demand",
         demand_profile,
         units="MW",
-    )  # DEBUG!!!!! HOTFIX
+    )  # DEBUG!!!!! HOTFIX!!!!!
     h2i.setup()
-
-    om.n2(h2i.model)
 
     expected_demand = np.broadcast_to(np.asarray(demand_profile, dtype=float), n_timesteps)
     electricity_in = np.full(n_timesteps, 6.0)
