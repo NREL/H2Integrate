@@ -40,6 +40,7 @@ extensions = [
     "sphinx_design",
     "sphinx_copybutton",
     "sphinxcontrib.bibtex",
+    "sphinx_gallery.gen_gallery",
     "myst_nb",  # NOTE: encapsulates myst_parser
 ]
 
@@ -157,3 +158,11 @@ napoleon_google_docstring = True
 napoleon_use_param = False
 napoleon_use_ivar = False
 autoclass_content = "both"
+
+
+# -- Options for Napolean --------------------------------------------------------------------------
+
+sphinx_gallery_conf = {
+    "examples_dirs": "../examples",
+    "gallery_dirs": "auto_examples",  # gallery generated output
+}

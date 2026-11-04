@@ -112,6 +112,7 @@ develop = [
     "pytest-cov",
     "ruff",
     "sphinxcontrib-napoleon",
+    "sphinx-gallery",
     "yamlfix"
 ]
 examples = [
