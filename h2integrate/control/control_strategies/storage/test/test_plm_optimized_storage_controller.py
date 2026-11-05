@@ -939,7 +939,7 @@ def test_invalid_max_cycles_per_day_raises(seasonal_config):
 @pytest.mark.unit
 def test_n_control_window_hours_bounded_below_11_months(subtests, base_config):
     """Windows of 11 months or more could contain the same calendar month twice,
-    which would case the control to merge the two months with the same name into
+    which would cause the controller to merge the two months with the same name into
     a single constraint.
     """
     kwargs = attrs.asdict(base_config, recurse=False)
