@@ -25,6 +25,12 @@
 - Integrate the reliability model into the `SimpleCycleTurbinePerformanceModel` with independent
   samples for each turbine and correct multi-turbine fuel consumption. [PR 919](https://github.com/NatLabRockies/H2Integrate/pull/919)
 - Improve model documentation guidance, embed configuration APIs, cross-link guides and APIs, and correct model interface descriptions across converters, storage, control, resources, transport, demand, feedstocks, and finance. [PR 971](https://github.com/NatLabRockies/H2Integrate/pull/971)
+- Fixed `PeakLoadManagementOptimizedStorageController` issues affecting degraded batteries and multi-year simulations. [PR 988](https://github.com/NatLabRockies/H2Integrate/pull/988)
+  - Removed a redundant initial-SOC constraint that prevented dispatch on the first step of each control window and made the MILP infeasible when that step required dispatch, such as for a heavily degraded battery before replacement.
+  - Monthly event and energy budgets are now tracked per year and month, so they reset each year in multi-year simulations.
+  - `n_control_window_hours` is now limited to 8016 h (334 days) so a control window never contains the same calendar month in two different years.
+  - Monthly cycle budgets now use a 365-day year, so February always has 28 days.
+  - Fixed the misspelled `_time_step_bounds` attribute so time steps from 300 to 3600 s are allowed as intended.
 
 
 ## 0.10.0 [October 12, 2026]
