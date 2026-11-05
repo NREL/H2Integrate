@@ -4,6 +4,7 @@ import numpy as np
 import pytest
 
 from h2integrate.core.annualization import (
+    SECONDS_PER_PLANT_YEAR,
     _project_capacity_factors,
     extrapolate_annual_values,
     time_weighted_annual_means,
@@ -27,7 +28,7 @@ def test_observed_cycles_complete_only_at_soh_resets(subtests, soh, expected_com
         timestep_capacity_factors=np.ones(soh.size),
         state_of_health_timeseries=soh,
         eol_soh=0.8,
-        dt=31_536_000 / 4,
+        dt=SECONDS_PER_PLANT_YEAR / 4,
         plant_life=1,
     )
 
@@ -47,7 +48,7 @@ def test_projected_eol_at_or_below_final_observed_soh(subtests, soh) -> None:
         timestep_capacity_factors=soh.copy(),
         state_of_health_timeseries=soh,
         eol_soh=0.8,
-        dt=31_536_000 / 4,
+        dt=SECONDS_PER_PLANT_YEAR / 4,
         plant_life=3,
     )
 
@@ -62,7 +63,7 @@ def test_projected_eol_at_or_below_final_observed_soh(subtests, soh) -> None:
 def test_time_weighted_annual_means() -> None:
     """Return time-weighted means and durations for two complete plant years."""
     annual_means, durations = time_weighted_annual_means(
-        timestep_values=np.array([0.5, 0.25]), dt=31_536_000
+        timestep_values=np.array([0.5, 0.25]), dt=SECONDS_PER_PLANT_YEAR
     )
     np.testing.assert_allclose(annual_means, [0.5, 0.25])
     np.testing.assert_allclose(durations, [1.0, 1.0])
