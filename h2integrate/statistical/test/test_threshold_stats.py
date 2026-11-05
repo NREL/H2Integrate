@@ -93,6 +93,46 @@ def test_threshold_stats_sinusoid(plant_config, tech_config, subtests):
 
 @pytest.mark.unit
 @pytest.mark.parametrize(
+    "commodity, rate_units, amount_units, dt, expected_deficit, expected_surplus",
+    [
+        pytest.param("hydrogen", "kg/h", "kg", 3600, 7.0, 5.0, id="mass_per_hour"),
+        pytest.param("electricity", "kW", "kW*min", 900, 105.0, 75.0, id="quarter_hour_minutes"),
+    ],
+)
+def test_threshold_stats_amount_units(
+    plant_config,
+    tech_config,
+    commodity,
+    rate_units,
+    amount_units,
+    dt,
+    expected_deficit,
+    expected_surplus,
+):
+    plant_config["plant"]["simulation"].update(n_timesteps=4, dt=dt)
+    tech_config["model_inputs"]["performance_parameters"].update(
+        commodity=commodity, commodity_rate_units=rate_units, commodity_amount_units=amount_units
+    )
+    prob = om.Problem()
+    prob.model.add_subsystem(
+        "tspm",
+        ThresholdStatisticsPerformanceModel(plant_config=plant_config, tech_config=tech_config),
+    )
+    prob.setup()
+    prob.set_val(f"tspm.{commodity}_in", [2.0, 8.0, 7.0, 1.0], units=rate_units)
+    prob.set_val(f"tspm.{commodity}_threshold", [5.0, 5.0, 5.0, 5.0], units=rate_units)
+    prob.run_model()
+
+    assert prob.get_val(f"tspm.net_{commodity}_deficit", units=amount_units) == pytest.approx(
+        expected_deficit
+    )
+    assert prob.get_val(f"tspm.net_{commodity}_surplus", units=amount_units) == pytest.approx(
+        expected_surplus
+    )
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
     "demand_profile",
     [
         pytest.param(10.0 * np.ones(8760), id="scalar_demand"),
