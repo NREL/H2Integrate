@@ -18,9 +18,16 @@ from h2integrate.control.control_strategies.pyomo_storage_controller_baseclass i
 )
 
 
+# Shortest span of 11 consecutive months in a 365-day year (365 - 31 days), in hours.
+MAX_CONTROL_WINDOW_HOURS = 334 * 24
+
+
 @define
 class PeakLoadManagementOptimizedStorageControllerConfig(PyomoStorageControllerBaseConfig):
     """Configuration for the Peak Load Management optimized storage controller.
+
+    See :class:`PeakLoadManagementOptimizedStorageController` and
+    :doc:`/control/technology_level_control/pyomo_controllers`.
 
     Inherits base fields from ``PyomoStorageControllerBaseConfig``:
     ``max_capacity``, ``max_soc_fraction``, ``min_soc_fraction``,
@@ -58,7 +65,10 @@ class PeakLoadManagementOptimizedStorageControllerConfig(PyomoStorageControllerB
             Converted to an integer timestep count during ``setup()``
             using the simulation ``dt``, so the same value works at any
             resolution. Example: ``10`` at a 30-min ``dt`` gives a
-            20-timestep window. Defaults to ``24``.
+            20-timestep window. Must be at most
+            ``MAX_CONTROL_WINDOW_HOURS`` (8016 h, i.e. 334 days, the shortest
+            span of 11 consecutive months) so a window never contains the same
+            calendar month in two different years. Defaults to ``24``.
         signal_threshold_percentile (float): Percentile (0-100) used to
             compute the signal threshold for each rolling window. Only
             timesteps at or above this percentile of the window signal are
@@ -156,7 +166,9 @@ class PeakLoadManagementOptimizedStorageControllerConfig(PyomoStorageControllerB
     charge_efficiency: float = field(validator=(validators.ge(0), validators.le(1)), default=1.0)
     discharge_efficiency: float = field(validator=(validators.ge(0), validators.le(1)), default=1.0)
     n_max_events: int = field(default=10)
-    n_control_window_hours: float = field(default=24.0)
+    n_control_window_hours: float = field(
+        default=24.0, validator=validators.le(MAX_CONTROL_WINDOW_HOURS)
+    )
     signal_threshold_percentile: float = field(
         default=0.0, validator=(validators.ge(0), validators.le(100))
     )
@@ -256,6 +268,9 @@ class PeakLoadManagementOptimizedStorageControllerConfig(PyomoStorageControllerB
 @register
 class PeakLoadManagementOptimizedStorageController(PyomoStorageControllerBaseClass):
     """Demand-response storage controller using a rolling-horizon MILP.
+
+    See :class:`PeakLoadManagementOptimizedStorageControllerConfig` and
+    :doc:`/control/technology_level_control/pyomo_controllers`.
 
     Each call to the dispatch solver iterates over the full simulation in
     windows of length ``n_control_window_hours``. For each window it builds
