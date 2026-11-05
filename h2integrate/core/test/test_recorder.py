@@ -44,31 +44,45 @@ def _recorder_model(output_folder, overwrite=False):
 @pytest.mark.unit
 def test_recorder_creates_unique_files(tmp_path, subtests):
     output_folder = tmp_path / "output"
+    # Reusing one output folder verifies that each subsequent recorder gets a unique suffix.
     for filename in ("cases.sql", "cases0.sql", "cases1.sql"):
-        with subtests.test(filename):
-            model = _recorder_model(output_folder)
-            path = output_folder / filename
+        model = _recorder_model(output_folder)
+        path = output_folder / filename
+        with subtests.test(f"{filename}: recorder path is selected and initially absent"):
             assert output_folder.is_dir()
             assert model.recorder_path == path
             assert not path.exists()
-            model.run()
+
+        # Run the model before checking both file creation and SQL readability.
+        model.run()
+
+        with subtests.test(f"{filename}: recorder file is created"):
             assert path.is_file()
+        with subtests.test(f"{filename}: recorder contains readable cases"):
             assert list(om.CaseReader(str(path)).get_cases())
-            model.prob.cleanup()
+        model.prob.cleanup()
 
 
 @pytest.mark.unit
 @pytest.mark.xfail(sys.platform == "win32", reason="OpenMDAO incorrectly ends SQL processes")
-def test_recorder_overwrites_existing_file(tmp_path):
+def test_recorder_overwrites_existing_file(tmp_path, subtests):
     output_folder = tmp_path / "output"
     path = output_folder / "cases.sql"
     original = _recorder_model(output_folder)
     original.run()
-    assert path.is_file()
+    with subtests.test("initial run creates the configured recorder file"):
+        assert path.is_file()
 
     model = _recorder_model(output_folder, overwrite=True)
-    assert model.recorder_path == path
+    with subtests.test("overwrite keeps the configured recorder path"):
+        assert model.recorder_path == path
+
+    # A second suffixed file would indicate that the existing recorder was not overwritten.
     model.run()
-    assert list(om.CaseReader(str(path)).get_cases())
-    assert not (output_folder / "cases0.sql").exists()
+    with subtests.test("overwritten recorder still contains readable cases"):
+        assert list(om.CaseReader(str(path)).get_cases())
+    with subtests.test("overwrite does not create a suffixed recorder"):
+        assert not (output_folder / "cases0.sql").exists()
+
+    original.prob.cleanup()
     model.prob.cleanup()

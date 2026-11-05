@@ -809,6 +809,37 @@ def test_custom_model_name_clash(temp_dir, subtests):
             H2IntegrateModel(temp_highlevel_yaml)
 
 
+@pytest.mark.unit
+def test_custom_financial_model_grouping(temp_dir, subtests):
+    example_dir = EXAMPLE_DIR / "01_onshore_steel_mn"
+    temp_tech_config = temp_dir / "temp_tech_config.yaml"
+    temp_highlevel_yaml = temp_dir / "temp_01_onshore_steel_mn.yaml"
+
+    shutil.copy(example_dir / "tech_config.yaml", temp_tech_config)
+    shutil.copy(example_dir / "01_onshore_steel_mn.yaml", temp_highlevel_yaml)
+
+    tech_config_data = load_tech_yaml(temp_tech_config)
+    tech_config_data["technologies"]["steel"]["finance_model"]["group"] = "test_financial_group"
+    tech_config_data["technologies"]["electrolyzer"].pop("financial_model", None)
+    with temp_tech_config.open("w") as f:
+        yaml.safe_dump(tech_config_data, f)
+
+    with temp_highlevel_yaml.open() as f:
+        highlevel_data = yaml.safe_load(f)
+    highlevel_data["driver_config"] = load_driver_yaml(example_dir / "driver_config.yaml")
+    highlevel_data["plant_config"] = load_plant_yaml(example_dir / "plant_config.yaml")
+    highlevel_data["technology_config"] = str(temp_tech_config)
+    with temp_highlevel_yaml.open("w") as f:
+        yaml.safe_dump(highlevel_data, f)
+
+    model = H2IntegrateModel(temp_highlevel_yaml)
+
+    with subtests.test("steel finance subgroup uses its technology-specific finance model"):
+        steel_subgroup = model.finance_subgroups["steel"]
+        assert steel_subgroup["is_system_finance_model"] is False
+        assert "steel" in steel_subgroup["tech_configs"]
+
+
 # docs fencepost start: DO NOT REMOVE
 @pytest.mark.unit
 def test_unsupported_simulation_parameters(temp_dir):
