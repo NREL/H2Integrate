@@ -1109,8 +1109,6 @@ class PeakLoadManagementOptimizedStorageController(PyomoStorageControllerBaseCla
                 rule=lambda mdl, t: mdl.p_charge[t] <= max(-float(set_point_w[t]), 0.0),
             )
 
-        m.soc_init = pyomo.Constraint(expr=m.soc[0] == init_soc)
-
         # Dynamics of the battery SOC evolution.
         def soc_evolution_rule(mdl, t):
             if t == 0:
@@ -1296,8 +1294,6 @@ class PeakLoadManagementOptimizedStorageController(PyomoStorageControllerBaseCla
                 mdl.charge[t] == 0 if in_peak_window_w[t] else pyomo.Constraint.Skip
             ),
         )
-
-        m.soc_init = pyomo.Constraint(expr=m.soc[0] == init_soc)
 
         def soc_evolution_rule(mdl, t):
             prev_soc = init_soc if t == 0 else mdl.soc[t - 1]
