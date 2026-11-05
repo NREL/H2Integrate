@@ -1,0 +1,55 @@
+name: driver_config
+description: this analysis runs a brayton-cycle NG power plant with a wind plant
+general:
+  folder_output: outputs
+# recorder:
+#     flag: true
+#     file: cases.sql
+#     overwrite_recorder: true
+#     recorder_attachment: driver
+# driver:
+#     design_of_experiments:
+#         flag: true
+#         debug_print: true
+#         generator: latinhypercube
+#         criterion: center
+#         num_samples: 100
+#  # num_samples: 300
+#         seed: 43
+#     optimization:
+#         flag: false
+#         tol: 0.1
+#         max_iter: 100
+#         solver: COBYLA
+#         rhobeg: 2.0
+#         debug_print: true
+# design_variables:
+#     natural_gas_plant:
+#         num_turbines:
+#             flag: true
+#             lower: 4
+#             upper: 12
+#             units: unitless
+# constraints:
+#     interconnect_counts:
+#         ratio_timestep_electricity_deficit:
+#             flag: true
+#             lower: 0.0
+#             units: unitless
+#         net_electricity_deficit:
+#             flag: true
+#             lower: 0.0
+#             units: MW*h
+#     interconnect_stats:
+#         electricity_min:
+#             flag: true
+#             lower: 1000.0
+#             units: MW
+#     headroom_stats:
+#         electricity_min:
+#             flag: true
+#             lower: 0.0
+#             units: MW
+# objective:
+#     name: finance_subgroup_electricity.LCOE
+#     units: USD/MW/h
