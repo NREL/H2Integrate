@@ -90,6 +90,42 @@ def test_without_degradation_time_averaged_sim_value():
 
 
 @pytest.mark.unit
+@pytest.mark.parametrize("dt", [3600, 900])
+def test_linear_degradation_projects_replacements_over_plant_life(subtests, dt: int) -> None:
+    """Project a two-year SOH cycle from one simulated year of steady degradation."""
+    plant_life = 30
+    steps_per_year = SECONDS_PER_PLANT_YEAR // dt
+    soh = 1.0 - 0.1 * np.arange(1, steps_per_year + 1) / steps_per_year
+
+    capacity_factors, replacement_schedule = _run(
+        _DummyPerformanceModel(plant_life=plant_life, dt=dt),
+        performance_timeseries=soh.copy(),
+        rated=1.0,
+        soh=soh,
+        eol=0.8,
+    )
+
+    observed_cf = soh.mean()
+
+    # Year two continues year one's SOH loss rate, one timestep at a time, from 0.9 to 0.8.
+    soh_loss_per_step = 0.1 / steps_per_year
+    last_observed_soh = soh[-1]
+    projected_soh = last_observed_soh - soh_loss_per_step * np.arange(1, steps_per_year + 1)
+
+    # Each projected timestep's CF is the observed mean CF scaled by its relative SOH.
+    projected_cf_timeseries = observed_cf * projected_soh / last_observed_soh
+    projected_cf = projected_cf_timeseries.mean()
+    with subtests.test("the observed and projected years repeat as a two-year cycle"):
+        np.testing.assert_allclose(
+            capacity_factors, np.tile([observed_cf, projected_cf], plant_life // 2)
+        )
+    with subtests.test("replacements occur every two years, excluding retirement"):
+        expected_schedule = np.zeros(plant_life, dtype=int)
+        expected_schedule[2::2] = 1
+        np.testing.assert_array_equal(replacement_schedule, expected_schedule)
+
+
+@pytest.mark.unit
 def test_average_capacity_factor_weights_partial_year() -> None:
     """Weight a full year and a partial year by their elapsed durations."""
     capacity_factors, replacement_schedule = _run(
@@ -198,15 +234,16 @@ def test_plant_annual_extrapolation_method_is_base_class_default(
 
 
 @pytest.mark.regression
-@pytest.mark.parametrize("dt", [300, 600])
+@pytest.mark.parametrize("dt", [300, 600, 900, 3600])
 def test_exact_three_year_horizon_tiles_capacity_factor_and_varopex(subtests, dt: int) -> None:
     """Tile year-one values after exact three-year simulations without a spurious segment."""
+    plant_life = 30
     steps_per_year = SECONDS_PER_PLANT_YEAR // dt
     timeseries = np.zeros(3 * steps_per_year)
     timeseries[:steps_per_year] = 1.0
 
     capacity_factors, replacement_schedule = _run(
-        _DummyPerformanceModel(plant_life=4, dt=dt),
+        _DummyPerformanceModel(plant_life=plant_life, dt=dt),
         performance_timeseries=timeseries,
         rated=1.0,
         soh=None,
@@ -216,31 +253,34 @@ def test_exact_three_year_horizon_tiles_capacity_factor_and_varopex(subtests, dt
 
     cost_model = CostModelBaseClass()
     cost_model.dt = dt
-    cost_model.plant_life = 4
+    cost_model.plant_life = plant_life
     annual_varopex = cost_model.calculate_annual_varopex(
         timeseries, annual_extrapolation_method="tile"
     )
 
-    with subtests.test("capacity factor tiles the first year after the horizon"):
-        np.testing.assert_allclose(capacity_factors, [1.0, 0.0, 0.0, 1.0])
-        np.testing.assert_array_equal(replacement_schedule, np.zeros(4, dtype=int))
-    with subtests.test("variable OpEx tiles the first year after the horizon"):
-        np.testing.assert_allclose(annual_varopex, [steps_per_year, 0.0, 0.0, steps_per_year])
+    with subtests.test("capacity factor tiles the simulated years after the horizon"):
+        np.testing.assert_allclose(capacity_factors, np.tile([1.0, 0.0, 0.0], plant_life // 3))
+        np.testing.assert_array_equal(replacement_schedule, np.zeros(plant_life, dtype=int))
+    with subtests.test("variable OpEx tiles the simulated years after the horizon"):
+        np.testing.assert_allclose(
+            annual_varopex, np.tile([steps_per_year, 0.0, 0.0], plant_life // 3)
+        )
 
 
 @pytest.mark.regression
-@pytest.mark.parametrize("dt", [300, 600])
+@pytest.mark.parametrize("dt", [300, 600, 900, 3600])
 def test_exact_three_year_horizon_final_sim_value_uses_last_complete_year(
     subtests, dt: int
 ) -> None:
     """Do not use a roundoff-sized segment as the final simulated annual value."""
+    plant_life = 30
     steps_per_year = SECONDS_PER_PLANT_YEAR // dt
     timeseries = np.zeros(3 * steps_per_year)
     timeseries[:steps_per_year] = 1.0
     timeseries[-1] = 1.0
 
     capacity_factors, _ = _run(
-        _DummyPerformanceModel(plant_life=4, dt=dt),
+        _DummyPerformanceModel(plant_life=plant_life, dt=dt),
         performance_timeseries=timeseries,
         rated=1.0,
         soh=None,
@@ -250,17 +290,17 @@ def test_exact_three_year_horizon_final_sim_value_uses_last_complete_year(
 
     cost_model = CostModelBaseClass()
     cost_model.dt = dt
-    cost_model.plant_life = 4
+    cost_model.plant_life = plant_life
     annual_varopex = cost_model.calculate_annual_varopex(
         timeseries, annual_extrapolation_method="final_sim_value"
     )
 
     with subtests.test("capacity factor repeats the last complete year"):
         np.testing.assert_allclose(
-            capacity_factors, [1.0, 0.0, 1.0 / steps_per_year, 1.0 / steps_per_year]
+            capacity_factors, [1.0, 0.0] + [1.0 / steps_per_year] * (plant_life - 2)
         )
     with subtests.test("variable OpEx repeats the last complete year"):
-        np.testing.assert_allclose(annual_varopex, [steps_per_year, 0.0, 1.0, 1.0])
+        np.testing.assert_allclose(annual_varopex, [steps_per_year, 0.0] + [1.0] * (plant_life - 2))
 
 
 @pytest.mark.unit
