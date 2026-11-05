@@ -6,6 +6,21 @@ import h2integrate
 from h2integrate.core.file_utils import load_yaml
 
 
+# This example runs a simulation of a simple-cycle natural gas plant with one
+# 239 MW turbine that tries to serve a flat 200 MW load at the NLR Flatirons
+# Campus in Boulder, CO, where thermodynamic effects mean the performance of the
+# natural gas plant can vary significantly with ambient conditions.
+#
+# The example connects demand to the natural gas plant, and then the results are
+# piped through the statistical components to analyze the demand satisfaction as
+# well as summary statistics of the headroom of the natural gas plant.
+#
+# Overall, this demonstrates that 239 MW of natural gas capacity may not always
+# be sufficient to meet a flat 200 MW load due to ambient condition variability.
+# The statistical analysis components help quantify this variability and provide
+# insights into the reliability of the natural gas plant under different ambient
+# conditions.
+
 # configuration
 do_plots = False  # flip to True to show the plots
 
