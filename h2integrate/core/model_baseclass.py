@@ -8,9 +8,8 @@ import numpy as np
 import openmdao.api as om
 from attrs import field, define
 
-from h2integrate.core.utilities import BaseConfig
+from h2integrate.core.utilities import SECONDS_PER_YEAR, BaseConfig
 from h2integrate.core.annualization import (
-    SECONDS_PER_PLANT_YEAR,
     VALID_ANNUAL_EXTRAPOLATION_METHODS,
     _project_capacity_factors,
     extrapolate_annual_values,
@@ -510,7 +509,7 @@ class CostModelBaseClass(SkippableComputeMixin, om.ExplicitComponent):
         mean_timestep_costs, simulated_durations_years = time_weighted_annual_means(
             varopex_timeseries, self.dt
         )
-        simulated_annual_varopex = mean_timestep_costs * (SECONDS_PER_PLANT_YEAR / self.dt)
+        simulated_annual_varopex = mean_timestep_costs * (SECONDS_PER_YEAR / self.dt)
 
         return extrapolate_annual_values(
             simulated_annual_varopex,

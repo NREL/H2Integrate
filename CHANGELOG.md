@@ -26,7 +26,9 @@
 - Integrate the reliability model into the `SimpleCycleTurbinePerformanceModel` with independent
   samples for each turbine and correct multi-turbine fuel consumption. [PR 919](https://github.com/NatLabRockies/H2Integrate/pull/919)
 - Consolidate redundant tests, strengthen weak assertions, and replace expensive recorder setups with a small grid model. [PR 974](https://github.com/NatLabRockies/H2Integrate/pull/974)
+- Run pytest in parallel by default with a memory-aware automatic worker count and isolate shared test outputs. [PR 982](https://github.com/NatLabRockies/H2Integrate/pull/982)
 - Improve model documentation guidance, embed configuration APIs, cross-link guides and APIs, and correct model interface descriptions across converters, storage, control, resources, transport, demand, feedstocks, and finance. [PR 971](https://github.com/NatLabRockies/H2Integrate/pull/971)
+- Consolidate constants for SECONDS_PER_YEAR and SECONDS_PER_HOUR into one locations (`h2integrate/tools/constants.py`). [PR 990](https://github.com/NatLabRockies/H2Integrate/pull/990)
 - Add core framework support for non-annual simulation durations, including annual capacity-factor and replacement-count projections across the plant life. [PR 934](https://github.com/NatLabRockies/H2Integrate/pull/934)
 - Moved resource resampling into `resample_tools.py`, used `contains_leap_day()` for leap-day detection in `time_tools.py` (fixing a malformed leap-day error message), and made the leap-day-excluded calendar regeneration exact instead of using an upper bound. [PR 964](https://github.com/NatLabRockies/H2Integrate/pull/964)
 - Add example for running with simulation lengths less than or greater than a year and with timesteps shorter than and longer than an hour. [PR 936](https://github.com/NatLabRockies/H2Integrate/pull/936)
