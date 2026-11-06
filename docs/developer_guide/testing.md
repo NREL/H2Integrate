@@ -54,7 +54,7 @@ Tests must be marked with at least one of `unit`, `regression`, `integration`, `
 
 ## Parallel Test Execution
 
-Install the `develop` extra to include `pytest-xdist`.
+Install the `develop` extra from the `pyproject.toml` to include `pytest-xdist`.
 Tests run in parallel by default using `-n auto --dist=loadfile`, which keeps tests from the same file on one worker so they can reuse module-scoped fixtures.
 The automatic worker count considers core count and reported available memory.
 CI caps the automatic count at four workers per job.
