@@ -11,6 +11,7 @@ uses the surface-level resource data provided by the solar database, a specified
 Its {py:class}`~h2integrate.converters.combustion_machines.turbine_simple_cycle.SimpleCycleTurbinePerformanceModelConfig` requires
 `turbine_capacity_mw`, `flowrate_max_fluid_cubic_m_per_s`, `pressure_ratio`, `firing_temp_C`, `isentropic_efficiency_compressor`, `isentropic_efficiency_turbine`, `generator_efficiency`, `generator_oversize_ratio`, and `fuel_source`;
 optionally, `num_turbines` can also be provided.
+In `examples/38_natural_gas_statistical`, users can find an example that highlights the impacts of the thermodynamically-aware modeling approach in terms of the variability of the output that can result.
 
 The OpenMDAO inputs are `num_turbines`, `turbine_capacity` (MW), `generator_oversize_ratio` (-), `electricity_command_value` (MW, defaults to capacity), `flowrate_max_fluid` (m^3/s), and `{fuel_source}_in` (kJ/s);
 the `solar_resource_data` discrete input is also required for surface level atmospheric conditions.
