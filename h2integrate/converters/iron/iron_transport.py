@@ -12,11 +12,12 @@ from attrs import field, define, validators
 from geopy import distance
 
 from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
-from h2integrate.core.model_baseclasses import CostModelBaseClass
+from h2integrate.core.model_baseclass import CostModelBaseClass
+from h2integrate.core.supported_models import register
 
 
 @define(kw_only=True)
-class IronTransportPerformanceComponentConfig(BaseConfig):
+class IronTransportPerformanceConfig(BaseConfig):
     """Configuration class for IronTransportPerformanceComponent.
 
     Args:
@@ -47,6 +48,7 @@ class IronTransportPerformanceComponentConfig(BaseConfig):
             raise ValueError(msg)
 
 
+@register(no_replacement_schedule=True)
 class IronTransportPerformanceComponent(om.ExplicitComponent):
     """Component to calculate iron ore pellet transportation distances considering both
     land and water routes.
@@ -63,17 +65,17 @@ class IronTransportPerformanceComponent(om.ExplicitComponent):
         self.options.declare("tech_config", types=dict)
 
     def setup(self):
-        self.config = IronTransportPerformanceComponentConfig.from_dict(
+        self.config = IronTransportPerformanceConfig.from_dict(
             merge_shared_inputs(self.options["tech_config"]["model_inputs"], "performance"),
             strict=True,
             additional_cls_name=self.__class__.__name__,
         )
 
         # Look up origin and destination from plant_config
-        self.add_input("origin_latitude", shape=1, require_connection=True, units="deg")
-        self.add_input("origin_longitude", shape=1, require_connection=True, units="deg")
-        self.add_input("destination_latitude", shape=1, require_connection=True, units="deg")
-        self.add_input("destination_longitude", shape=1, require_connection=True, units="deg")
+        self.add_input("origin_latitude", shape=1, units="deg")
+        self.add_input("origin_longitude", shape=1, units="deg")
+        self.add_input("destination_latitude", shape=1, units="deg")
+        self.add_input("destination_longitude", shape=1, units="deg")
 
         self.add_output("land_transport_distance_overland", val=0.0, units="km")
         self.add_output("land_transport_distance_great_lakes", val=0.0, units="km")
@@ -312,16 +314,16 @@ class IronTransportPerformanceComponent(om.ExplicitComponent):
 
 
 @define(kw_only=True)
-class IronTransportCostComponentConfig(BaseConfig):
+class IronTransportCostConfig(BaseConfig):
     """Configuration for calculating iron ore pellet transportation costs.
 
     Args:
         transport_year (int): The year for which transportation costs are calculated.
         cost_year (int): The year for which cost data is relevant.
-        land_shipping_cost (float): Cost of land shipping in $/ton-mi. Default is 0.0522 $/ton-mi.
-            See :doc:`/technology_models/iron_transport` for more info on the default cost.
-        water_shipping_cost (float): Cost of water shipping in $/ton-mi. Default is 0.0235 $/ton-mi.
-            See :doc:`/technology_models/iron_transport` for more info on the default cost.
+        land_shipping_cost (float): Cost of land shipping in $/tonne-mi. Default is 0.0522
+            $/tonne-mi. See :doc:`/technology_models/iron_transport` for more info on default cost.
+        water_shipping_cost (float): Cost of water shipping in $/tonne-mi. Default is 0.0235
+            $/tonne-mi. See :doc:`/technology_models/iron_transport` for more info on default cost.
         marginal_cost (float): Marginal cost of transportation. Default is 0.0.
     """
 
@@ -332,6 +334,7 @@ class IronTransportCostComponentConfig(BaseConfig):
     marginal_cost: float = field(default=0.0)
 
 
+@register
 class IronTransportCostComponent(CostModelBaseClass):
     """Component for calculating iron ore pellet transportation costs."""
 
@@ -341,6 +344,7 @@ class IronTransportCostComponent(CostModelBaseClass):
     )  # (min, max) time step lengths (in seconds) compatible with this model
 
     def initialize(self):
+        super().initialize()
         self.options.declare("driver_config", types=dict)
         self.options.declare("plant_config", types=dict)
         self.options.declare("tech_config", types=dict)
@@ -355,7 +359,7 @@ class IronTransportCostComponent(CostModelBaseClass):
         )
         config_dict.update({"cost_year": target_dollar_year})
 
-        self.config = IronTransportCostComponentConfig.from_dict(
+        self.config = IronTransportCostConfig.from_dict(
             config_dict,
             strict=True,
             additional_cls_name=self.__class__.__name__,
@@ -373,24 +377,24 @@ class IronTransportCostComponent(CostModelBaseClass):
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
         # Calculate cost with barge shipping through Great Lakes
         water_ship_cost_dol_tonne_mi = self.config.water_shipping_cost
-        water_ship_cost_dol_per_ton = (
+        water_ship_cost_dol_per_tonne = (
             water_ship_cost_dol_tonne_mi * inputs["water_transport_distance_great_lakes"]
         )
-        water_ship_cost_USD = np.sum(inputs["iron_ore_in"]) * water_ship_cost_dol_per_ton
+        water_ship_cost_USD = np.sum(inputs["iron_ore_in"]) * water_ship_cost_dol_per_tonne
 
         land_ship_cost_dol_tonne_mi = self.config.land_shipping_cost
-        land_ship_cost_dol_per_ton = (
+        land_ship_cost_dol_per_tonne = (
             land_ship_cost_dol_tonne_mi * inputs["land_transport_distance_great_lakes"]
         )
-        land_ship_cost_USD = np.sum(inputs["iron_ore_in"]) * land_ship_cost_dol_per_ton
+        land_ship_cost_USD = np.sum(inputs["iron_ore_in"]) * land_ship_cost_dol_per_tonne
 
         total_shipment_cost_GL = water_ship_cost_USD + land_ship_cost_USD
 
         # Calculate cost with just overland shipping
-        overland_ship_cost_dol_per_ton = (
+        overland_ship_cost_dol_per_tonne = (
             land_ship_cost_dol_tonne_mi * inputs["land_transport_distance_overland"]
         )
-        overland_ship_cost_USD = np.sum(inputs["iron_ore_in"]) * overland_ship_cost_dol_per_ton
+        overland_ship_cost_USD = np.sum(inputs["iron_ore_in"]) * overland_ship_cost_dol_per_tonne
 
         # Find minimum shipping cost
         total_shipment_cost = min(total_shipment_cost_GL, overland_ship_cost_USD)

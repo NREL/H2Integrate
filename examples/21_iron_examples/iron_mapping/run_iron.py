@@ -14,7 +14,6 @@ import pandas as pd
 
 from h2integrate import (
     ROOT_DIR,
-    EXAMPLE_DIR,
     H2IntegrateModel,
     load_tech_yaml,
     load_plant_yaml,
@@ -30,14 +29,16 @@ from h2integrate.postprocess.mapping import (
 # TODO: Pull ore/transport prices from separate runs, not static csvs - ALMOST THERE
 
 # NOTE:
-# If this example has already been run and the cases.csv or cases.sql file are saved in ./ex_28_out,
+# If this example has already been run and the cases_transport.csv or cases_transport.sql file
+# are saved in ./ex_28_out,
 # you may leave rerun_model = False to save on run time.
-# Otherwise, set rerun_model = True to produce the cases.csv / cases.sql results files
+# Otherwise, set rerun_model = True to produce the
+# cases_iron_plant.csv + cases_transport.csv / cases_iron_plant.sql + cases_transport.sql results
 rerun_model = True
 
 # Define filepaths
-ex_dir = EXAMPLE_DIR / "21_iron_examples/iron_mapping"
-ex_out_dir = EXAMPLE_DIR / "21_iron_examples/iron_mapping/ex_out"
+ex_dir = Path(__file__).parent
+ex_out_dir = ex_dir / "ex_out"
 save_plot_filepath = ex_out_dir / "example_iron_map.png"
 save_plot_filepath.unlink(missing_ok=True)
 ore_prices_filepath = ex_dir / "example_ore_prices.csv"
@@ -112,6 +113,8 @@ fig, ax, _, ore_cost_layer_gdf = plot_geospatial_point_heat_map(
 # Add a layer for example waterway shipping cost from select mines to select ports
 fig, ax, _, shipping_cost_layer_gdf = plot_geospatial_point_heat_map(
     case_results_fpath=transport_results_filepath,
+    latitude_var_name="iron_transport.destination_latitude (deg)",
+    longitude_var_name="iron_transport.destination_longitude (deg)",
     metric_to_plot="iron_transport.iron_transport_cost (USD/t)",
     metric_multiplier=1 / 1000,  # Convert from $/t to $/kg
     map_preferences={
@@ -133,9 +136,10 @@ fig, ax, _, shipping_cost_layer_gdf = plot_geospatial_point_heat_map(
 )
 
 # Plot the LCOI results with geopandas and contextily
-# NOTE: you can swap './ex_28_out/cases.sql' with './ex_28_out/cases.csv' to read results from csv
 fig, ax, _, lcoi_layer_gdf = plot_geospatial_point_heat_map(
     case_results_fpath=iron_plant_results_filepath,
+    latitude_var_name="iron_transport.destination_latitude (deg)",
+    longitude_var_name="iron_transport.destination_longitude (deg)",
     metric_to_plot="finance_subgroup_sponge_iron.LCOS (USD/t)",
     metric_multiplier=1 / 1000,  # Convert from $/t to $/kg
     map_preferences={

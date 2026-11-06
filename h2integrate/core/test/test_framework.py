@@ -18,7 +18,12 @@ from h2integrate import (
     load_plant_yaml,
     load_driver_yaml,
 )
-from h2integrate.core.model_checks import check_model_time_step, check_model_control_classifier
+from h2integrate.core.model_checks import (
+    check_model_time_step,
+    check_model_is_steppable,
+    check_time_marching_config,
+    check_model_control_classifier,
+)
 from h2integrate.core.connection_utils import (
     create_technology_graph,
     check_dispatch_connections,
@@ -699,7 +704,7 @@ def test_custom_resource_model(subtests, temp_copy_of_example):
 
     from h2integrate.resource.river import RiverResource
 
-    resource_model_fpath_parts = [ROOT_DIR] + RiverResource.__module__.split(".")[1:]
+    resource_model_fpath_parts = [ROOT_DIR, *RiverResource.__module__.split(".")[1:]]
     resource_model_fpath_parts[-1] = f"{resource_model_fpath_parts[-1]}.py"
 
     # Make folder to hold custom resource model
@@ -959,6 +964,72 @@ def test_check_control_classifier_accepts_classified_model():
 
 
 @pytest.mark.unit
+def test_check_model_is_steppable(subtests):
+
+    class TechControllerSteppable:
+        _is_steppable = True
+
+        def __str__(self):
+            return "TechControllerSteppable"
+
+    class TechControllerNonSteppable:
+        def __str__(self):
+            return "TechControllerNonSteppable"
+
+    class PerformanceModelSteppable:
+        _is_steppable = True
+
+        def __str__(self):
+            return "PerformanceModelSteppable"
+
+    class PerformanceModelNonSteppable:
+        def __str__(self):
+            return "PerformanceModelNonSteppable"
+
+    with subtests.test("Steppable classes"):
+        check_model_is_steppable(
+            control_strategies=[TechControllerSteppable()],
+            performance_models=[PerformanceModelSteppable()],
+        )
+
+    with subtests.test("Nonsteppable classes"):
+        with pytest.raises(AttributeError):
+            check_model_is_steppable(
+                control_strategies=[TechControllerNonSteppable()],
+                performance_models=[PerformanceModelSteppable(), PerformanceModelNonSteppable()],
+            )
+
+
+@pytest.mark.unit
+def test_check_time_marching_config(subtests):
+    with subtests.test("Valid window size enables time-marching"):
+        assert check_time_marching_config(8760, 24, False, False) is True
+
+    with subtests.test("Window size equal to n_timesteps is a normal simulation"):
+        assert check_time_marching_config(8760, 8760, True, True) is False
+
+    with subtests.test("Non-positive window size"):
+        with pytest.raises(ValueError, match=r"must be positive"):
+            check_time_marching_config(8760, 0, False, False)
+
+    with subtests.test("Window size greater than n_timesteps"):
+        with pytest.raises(ValueError, match=r"cannot be greater than n_timesteps \(8760\)"):
+            check_time_marching_config(8760, 9000, False, False)
+
+    with subtests.test("Window size does not divide n_timesteps"):
+        with pytest.raises(ValueError, match=r"divisible by n_timesteps_window \(7\)"):
+            check_time_marching_config(8760, 7, False, False)
+
+    with subtests.test("System-level control is not supported"):
+        with pytest.raises(NotImplementedError, match="system-level control"):
+            check_time_marching_config(8760, 24, True, False)
+
+    with subtests.test("Technology cycles are not supported"):
+        with pytest.raises(NotImplementedError, match="cycle"):
+            check_time_marching_config(8760, 24, False, True)
+
+
+@pytest.mark.unit
 def test_technology_connections(temp_dir):
     # Path to the original plant_config.yaml and high-level yaml in the example directory
     orig_plant_config = EXAMPLE_DIR / "01_onshore_steel_mn" / "plant_config.yaml"
@@ -1192,9 +1263,9 @@ def test_reports_turned_off(temp_dir):
     report_dirs = [f for f in new_files if f.is_dir() and "reports" in f.name.lower()]
 
     # Assert that no report directories were created due to create_om_reports=False
-    assert (
-        len(report_dirs) == 0
-    ), f"Report directories were created despite create_om_reports=False: {report_dirs}"
+    assert len(report_dirs) == 0, (
+        f"Report directories were created despite create_om_reports=False: {report_dirs}"
+    )
 
 
 @pytest.mark.unit

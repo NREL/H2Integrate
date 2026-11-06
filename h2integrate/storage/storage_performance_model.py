@@ -2,6 +2,7 @@ import numpy as np
 from attrs import field, define, validators
 
 from h2integrate.core.utilities import merge_shared_inputs
+from h2integrate.core.supported_models import register
 from h2integrate.storage.storage_baseclass import (
     StoragePerformanceBase,
     StoragePerformanceBaseConfig,
@@ -121,6 +122,7 @@ class StoragePerformanceModelConfig(StoragePerformanceBaseConfig):
             self.commodity_amount_units = f"({self.commodity_rate_units})*h"
 
 
+@register
 class StoragePerformanceModel(StoragePerformanceBase):
     """OpenMDAO component for a storage component."""
 
@@ -128,6 +130,8 @@ class StoragePerformanceModel(StoragePerformanceBase):
         1,
         3600,
     )  # (min, max) time step lengths (in seconds) compatible with this model
+
+    _is_steppable = True
 
     def setup(self):
         self.config = StoragePerformanceModelConfig.from_dict(
@@ -158,14 +162,16 @@ class StoragePerformanceModel(StoragePerformanceBase):
 
     def compute(self, inputs, outputs, discrete_inputs=[], discrete_outputs=[]):
         """Run the storage performance model."""
-        self.current_soc = self.config.init_soc_fraction
 
+        # Unpack scalar inputs
         charge_rate = inputs["max_charge_rate"][0]
+
         if "max_discharge_rate" in inputs:
             discharge_rate = inputs["max_discharge_rate"][0]
         else:
             discharge_rate = inputs["max_charge_rate"][0]
         storage_capacity = inputs["storage_capacity"][0]
+
         outputs = self.run_storage(
             charge_rate, discharge_rate, storage_capacity, inputs, outputs, discrete_inputs
         )

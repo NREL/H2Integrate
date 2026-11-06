@@ -3,7 +3,7 @@ import openmdao.api as om
 from pytest import fixture
 
 from h2integrate.finances.profast_lco import ProFastLCO
-from h2integrate.finances.profast_base import BasicProFASTParameterConfig
+from h2integrate.finances.profast_baseclass import BasicProFASTParameterConfig
 
 
 @fixture
@@ -153,6 +153,32 @@ def test_profast_comp(profast_inputs_no1, fake_filtered_tech_config, fake_cost_d
 
     with subtests.test("LCOE breakdown total"):
         assert pytest.approx(lcoe_breakdown["LCOE: Total ($/kW*h)"] * 1e3, rel=1e-6) == lcoe
+
+    with subtests.test("Wind operating costs in LCOE breakdown"):
+        assert lcoe_breakdown["LCOE: wind Variable OpEx ($/kW*h)"] == 0.0
+        assert lcoe_breakdown["LCOE: wind OpEx ($/kW*h)"] > 0.0
+
+    with subtests.test("Wind OpEx cost in LCOE breakdown"):
+        assert (
+            pytest.approx(lcoe_breakdown["LCOE: wind OpEx ($/kW*h)"], rel=1e-6)
+            == 0.004815957232876712
+        )
+
+    with subtests.test("Natural gas OpEx and VarOpEx in breakdown"):
+        assert (
+            lcoe_breakdown["LCOE: natural_gas OpEx ($/kW*h)"]
+            != lcoe_breakdown["LCOE: natural_gas Variable OpEx ($/kW*h)"]
+        )
+
+    with subtests.test("Natural Gas OpEx costs in LCOE breakdown"):
+        assert (
+            pytest.approx(lcoe_breakdown["LCOE: natural_gas Variable OpEx ($/kW*h)"], rel=1e-6)
+            == 0.014944754999999997
+        )
+        assert (
+            pytest.approx(lcoe_breakdown["LCOE: natural_gas OpEx ($/kW*h)"], rel=1e-6)
+            == 0.0029186880319634705
+        )
 
 
 @pytest.mark.regression
@@ -330,3 +356,118 @@ def test_profast_comp_sales_tax(
 
     with subtests.test("LCOH breakdown total"):
         assert pytest.approx(lcoh_breakdown["LCOH: Total ($/kg*h/s)"] / 3600, rel=1e-6) == lcoh
+
+
+@pytest.mark.regression
+def test_profast_comp_sales_tax_different_units(
+    profast_inputs_no1, fake_filtered_tech_config, fake_cost_dict, subtests
+):
+    # this is the same as test_profast_comp_sales_tax but sets the rated_hydrogen_production
+    # in units of kg/h (instead of kg/s). This ensures that the ProFAST LCO model properly handles
+    # different rate units (LCOH should not change for different rate units)
+    profast_inputs_no1["params"]["sales_tax_rate"] = 0.07
+    mean_hourly_production = 500000.0
+    prob = om.Problem()
+    plant_config = {
+        "plant": {
+            "plant_life": 30,
+        },
+        "finance_parameters": {"model_inputs": profast_inputs_no1},
+    }
+    pf = ProFastLCO(
+        driver_config={},
+        plant_config=plant_config,
+        tech_config=fake_filtered_tech_config,
+        commodity_type="hydrogen",
+        description="no1",
+    )
+    ivc = om.IndepVarComp()
+
+    ivc.add_output("rated_hydrogen_production", mean_hourly_production, units="kg/h")
+    ivc.add_output("capacity_factor", [0.5] * plant_config["plant"]["plant_life"], units="unitless")
+
+    prob.model.add_subsystem("ivc", ivc, promotes=["*"])
+    prob.model.add_subsystem("pf", pf, promotes=["rated_hydrogen_production", "capacity_factor"])
+    prob.setup()
+    for variable, cost in fake_cost_dict.items():
+        units = "USD" if "capex" in variable else "USD/year"
+        prob.set_val(f"pf.{variable}", cost, units=units)
+
+    prob.run_model()
+
+    lcoh = prob.get_val("pf.LCOH_no1", units="USD/kg")
+    price = prob.get_val("pf.price_hydrogen_no1", units="USD/kg")
+    lcoh_breakdown = prob.get_val("pf.LCOH_no1_breakdown")
+
+    with subtests.test("LCOH"):
+        assert pytest.approx(lcoh[0], rel=1e-6) == 0.13724339329249208
+
+    with subtests.test("LCOH == price"):
+        assert pytest.approx(lcoh, rel=1e-6) == price
+
+    with subtests.test("LCOH breakdown total"):
+        assert pytest.approx(lcoh_breakdown["LCOH: Total ($/kg)"], rel=1e-6) == lcoh
+
+
+@pytest.mark.regression
+@pytest.mark.parametrize("use_slc", [True, False])
+def test_profast_lco_warnings(
+    profast_inputs_no1, fake_filtered_tech_config, fake_cost_dict, subtests, use_slc
+):
+    mean_hourly_production = 500000.0
+    prob = om.Problem()
+    plant_config = {
+        "plant": {
+            "plant_life": 30,
+        },
+        "finance_parameters": {"model_inputs": profast_inputs_no1},
+    }
+    if use_slc:
+        plant_config["system_level_control"] = {}
+    pf = ProFastLCO(
+        driver_config={},
+        plant_config=plant_config,
+        tech_config=fake_filtered_tech_config,
+        commodity_type="electricity",
+        description="no1",
+    )
+    ivc = om.IndepVarComp()
+
+    ivc.add_output("rated_electricity_production", mean_hourly_production, units="kW")
+    ivc.add_output("capacity_factor", [1.0] * plant_config["plant"]["plant_life"], units="unitless")
+
+    prob.model.add_subsystem("ivc", ivc, promotes=["*"])
+    prob.model.add_subsystem("pf", pf, promotes=["rated_electricity_production", "capacity_factor"])
+    prob.setup()
+    for variable, cost in fake_cost_dict.items():
+        units = "USD" if "capex" in variable else "USD/year"
+        prob.set_val(f"pf.{variable}", cost, units=units)
+
+    # Set rated capacity to 0
+    prob.set_val("pf.rated_electricity_production", 0.0, units="kW")
+
+    with subtests.test("Test zero capacity warning"):
+        expected_str = "has a zero capacity."
+        with pytest.warns(UserWarning) as excinfo:
+            prob.run_model()
+        assert expected_str in str(excinfo.list[0].message)
+        assert "default value of 1e12" in str(excinfo.list[0].message)
+
+    with subtests.test("Test zero capacity value"):
+        assert prob.get_val("pf.LCOE_no1", units="TUSD/(kW*h)")[0] == 1.0
+
+    # Set capacity factor to 0
+    prob.set_val("pf.rated_electricity_production", mean_hourly_production, units="kW")
+    prob.set_val(
+        "pf.capacity_factor", [0.0] * plant_config["plant"]["plant_life"], units="unitless"
+    )
+
+    with subtests.test("Test zero capacity factor warning"):
+        expected_str = "has a zero capacity factor."
+        with pytest.warns(UserWarning) as excinfo:
+            prob.run_model()
+        assert expected_str in str(excinfo.list[0].message)
+        assert "default value of 1e12" in str(excinfo.list[0].message)
+
+    with subtests.test("Test zero capacity factor value"):
+        assert prob.get_val("pf.LCOE_no1", units="TUSD/(kW*h)")[0] == 1.0

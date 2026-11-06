@@ -21,7 +21,8 @@ from attrs import field, define, validators
 
 from h2integrate.core.utilities import merge_shared_inputs
 from h2integrate.tools.constants import FE_MW, faraday
-from h2integrate.core.model_baseclasses import CostModelBaseClass, CostModelBaseConfig
+from h2integrate.core.model_baseclass import CostModelBaseClass, CostModelBaseConfig
+from h2integrate.core.supported_models import register
 
 
 @define
@@ -65,6 +66,7 @@ class HumbertStinnEwinCostComponentConfig(CostModelBaseConfig):
     opex_modifier: float = field(default=1.0, validator=(validators.ge(0)))
 
 
+@register
 class HumbertStinnEwinCostComponent(CostModelBaseClass):
     """OpenMDAO component for the Humbert/Stinn iron electrowinning cost model.
 
@@ -128,6 +130,7 @@ class HumbertStinnEwinCostComponent(CostModelBaseClass):
     )  # (min, max) time step lengths (in seconds) compatible with this model
 
     def initialize(self):
+        super().initialize()
         self.options.declare("driver_config", types=dict)
         self.options.declare("plant_config", types=dict)
         self.options.declare("tech_config", types=dict)

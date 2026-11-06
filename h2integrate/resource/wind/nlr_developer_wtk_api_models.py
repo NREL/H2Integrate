@@ -1,9 +1,10 @@
-from pathlib import Path
-
 from attrs import field, define, validators
 
-from h2integrate.resource.resource_base import ResourceBaseAPIConfig
-from h2integrate.resource.wind.nlr_developer_wtk_api_base import NLRDeveloperAPIWindResourceBase
+from h2integrate.core.supported_models import register
+from h2integrate.resource.resource_baseclass import ResourceBaseAPIConfig
+from h2integrate.resource.wind.nlr_developer_wtk_api_baseclass import (
+    NLRDeveloperAPIWindResourceBase,
+)
 
 
 @define(kw_only=True)
@@ -14,12 +15,6 @@ class WTKNLRDeveloperAPIWindResourceConfig(ResourceBaseAPIConfig):
     Args:
         resource_year (int): Year to use for resource data.
             Must been between 2007 and 2014 (inclusive).
-        resource_data (dict | object, optional): Dictionary of user-input resource data.
-            Defaults to an empty dictionary.
-        resource_dir (str | Path, optional): Folder to save resource files to or
-            load resource files from. Defaults to "".
-        resource_filename (str, optional): Filename to save resource data to or load
-            resource data from. Defaults to None.
 
     Attributes:
         dataset_desc (str): description of the dataset, used in file naming.
@@ -35,11 +30,9 @@ class WTKNLRDeveloperAPIWindResourceConfig(ResourceBaseAPIConfig):
     dataset_desc: str = "wtk_v2"
     resource_type: str = "wind"
     valid_intervals: list[int] = field(factory=lambda: [5, 15, 30, 60])
-    resource_data: dict | object = field(default={})
-    resource_filename: Path | str = field(default="")
-    resource_dir: Path | str | None = field(default=None)
 
 
+@register
 class WTKNLRDeveloperAPIWindResource(NLRDeveloperAPIWindResourceBase):
     def setup(self):
         resource_specs = self.helper_setup_method()
@@ -64,12 +57,6 @@ class HRRRMETToolkitWindAPIConfig(ResourceBaseAPIConfig):
     Args:
         resource_year (int): Year to use for resource data.
             Must been between 2015 and 2025 (inclusive).
-        resource_data (dict | object, optional): Dictionary of user-input resource data.
-            Defaults to an empty dictionary.
-        resource_dir (str | Path, optional): Folder to save resource files to or
-            load resource files from. Defaults to "".
-        resource_filename (str, optional): Filename to save resource data to or load
-            resource data from. Defaults to None.
 
     Attributes:
         dataset_desc (str): description of the dataset, used in file naming.
@@ -85,11 +72,9 @@ class HRRRMETToolkitWindAPIConfig(ResourceBaseAPIConfig):
     dataset_desc: str = "hrrr_met_toolkit"
     resource_type: str = "wind"
     valid_intervals: list[int] = field(factory=lambda: [60])
-    resource_data: dict | object = field(default={})
-    resource_filename: Path | str = field(default="")
-    resource_dir: Path | str | None = field(default=None)
 
 
+@register
 class HRRRMETToolkitWindAPI(NLRDeveloperAPIWindResourceBase):
     def setup(self):
         resource_specs = self.helper_setup_method()

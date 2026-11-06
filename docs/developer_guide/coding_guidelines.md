@@ -29,13 +29,20 @@ class ExamplePerformanceModelConfig(BaseConfig):
 	...
 ```
 
-The model should instantiate that class in `setup()`. Keep the model name used
-in `supported_models.py` unchanged when renaming or clarifying a configuration
+The model should instantiate that class in `setup()`. Keep the registered model
+name (the class name, or the `name` passed to `@register`) unchanged when
+renaming or clarifying a configuration
 class, because that model name is part of the YAML interface. Models that
 intentionally share a base configuration may retain a base config class, but
 the model-specific class should still be used when the fields or semantics
 differ. The `populate_tech_yaml` utility recognizes the direct `{ModelName}Config`
 convention and can also discover inherited or explicitly supplied config classes.
+
+## Base class file naming
+
+Modules that define base classes should use the `_baseclass.py` suffix, for example
+`h2integrate/core/model_baseclass.py` or `h2integrate/storage/storage_baseclass.py`.
+This keeps base classes easy to find by searching the code base for `baseclass`.
 
 ## Testing
 
