@@ -5,31 +5,21 @@ technologies:
     performance_model:
       model: FeedstockPerformanceModel
     cost_model:
-      model: EIANaturalGasFeedstockCostModel
+      model: FeedstockCostModel
     model_inputs:
-      performance_parameters:
+      shared_parameters:
         commodity: natural_gas
         commodity_rate_units: MMBtu/h
-        rated_capacity: 2500.  # MMBtu/h
+      performance_parameters:
+        rated_capacity: 2500.  # MMBtu
       cost_parameters:
-                    # ESTIMATES FROM: 2024 NLR ATB spreadsheet
-                    #   Natural Gas - FE sheet
-                    #   2-on-1 combined cycle (F-frame), no CCS, moderate scenario, 2026 numbers
+        # ESTIMATES FROM: 2024 NLR ATB spreadsheet
+        #   Natural Gas - FE sheet
+        #   2-on-1 combined cycle (F-frame), no CCS, moderate scenario, 2026 numbers
         cost_year: 2026
-                    # price: 5.25  # USD/MMBtu; hypothetical increase
-                    # price: 4.89  # USD/MMBtu; EIA Texas Industral NG data, Jan. 26: 5.08 $/Mcf / (1.038 MMBtu/Mcf)
-                    # price: 4.50  # USD/MMBtu; EIA Texas Industral NG data, Dec. 25: 4.67 $/Mcf / (1.038 MMBtu/Mcf)
+        price: 2.87  # USD/MMBtu; EIA Texas Industral NG data, Nov. 26: 2.98 $/Mcf / (1.038 MMBtu/Mcf)
         annual_cost: 0.
         start_up_cost: 0.
-                    #  # ORIGINAL ESTIMATES
-                    # cost_year: 2023
-                    # price: 4.2  # USD/MMBtu
-                    # annual_cost: 0.
-                    # start_up_cost: 0.
-        resource_year: 2025
-        monthly: true
-        state: TX
-        price_category: industrial
   natural_gas_plant:
     performance_model:
       model: SimpleCycleTurbinePerformanceModel
