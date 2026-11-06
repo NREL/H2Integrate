@@ -1,6 +1,6 @@
 """Checks that validate individual model declarations."""
 
-from h2integrate.core.annualization import SECONDS_PER_PLANT_YEAR
+from h2integrate.core.utilities import SECONDS_PER_YEAR
 
 
 def check_model_time_step(model_name, model_object, time_step):
@@ -47,7 +47,7 @@ def check_model_simulation_duration(model_name, model_object, n_timesteps, dt):
     Raises:
         ValueError: If the simulation duration falls outside the model's supported bounds.
     """
-    years_simulated = (int(n_timesteps) * int(dt)) / SECONDS_PER_PLANT_YEAR
+    years_simulated = (int(n_timesteps) * int(dt)) / SECONDS_PER_YEAR
     minimum_years, maximum_years = getattr(model_object, "_simulation_duration_bounds", (1.0, 1.0))
     if minimum_years <= years_simulated <= maximum_years:
         return
