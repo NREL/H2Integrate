@@ -45,7 +45,7 @@ dependencies = [
   "NREL-PySAM>=7.0.0",
   "numpy",
   "numpy-financial",
-  "openmdao>=3.45.0",
+  "openmdao[doe]>=3.45.0",
   "openmeteo-requests",
   "pandas>=2.0.3",
   "pint",
@@ -161,6 +161,7 @@ markers = [
     "regression: marks regression tests (deselect with '-m \"not regression\"')",
     "integration: marks unit tests (deselect with '-m \"not integration\"')",
     "hpc: marks unit tests (deselect with '-m \"not hpc\"')",
+    "examples: marks tests that run full example cases nightly (deselect with '-m \"not examples\"')",
 ]
 
 [tool.isort]
