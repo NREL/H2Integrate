@@ -41,4 +41,4 @@ handled separately by a feedstock model. The cost model supports one-hour time s
 
 ## Simple-cycle turbine
 
-The simple cycle turbine found in [combustion_machines.md](../combustion_machines.md) can be configured by setting `fuel_source` to `natural_gas`, and using the appropriate commodity supply.
+The simple cycle turbine found in [combustion_machines.md](./combustion_machines.md) can be configured by setting `fuel_source` to `natural_gas`, and using the appropriate commodity supply.
