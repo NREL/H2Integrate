@@ -26,6 +26,7 @@
 - Integrate the reliability model into the `SimpleCycleTurbinePerformanceModel` with independent
   samples for each turbine and correct multi-turbine fuel consumption. [PR 919](https://github.com/NatLabRockies/H2Integrate/pull/919)
 - Consolidate redundant tests, strengthen weak assertions, and replace expensive recorder setups with a small grid model. [PR 974](https://github.com/NatLabRockies/H2Integrate/pull/974)
+- Run pytest in parallel by default with a memory-aware automatic worker count and isolate shared test outputs. [PR 982](https://github.com/NatLabRockies/H2Integrate/pull/982)
 - Improve model documentation guidance, embed configuration APIs, cross-link guides and APIs, and correct model interface descriptions across converters, storage, control, resources, transport, demand, feedstocks, and finance. [PR 971](https://github.com/NatLabRockies/H2Integrate/pull/971)
 - Added an opt-in `scale_control_variables` solver option for system-level control that applies characteristic `ref` and `res_ref` scales to SLC set points, passthrough command values, and the ProFAST levelized-cost output to improve coupled-solver convergence. [PR 957](https://github.com/NatLabRockies/H2Integrate/pull/957)
 
