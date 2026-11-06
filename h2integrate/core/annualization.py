@@ -1,6 +1,6 @@
 """Annual capacity-factor projection and replacement-cycle calculations.
 
-The public names (``SECONDS_PER_PLANT_YEAR``, ``VALID_ANNUAL_EXTRAPOLATION_METHODS``,
+The public names (``VALID_ANNUAL_EXTRAPOLATION_METHODS``,
 ``time_weighted_annual_means``, ``extrapolate_annual_values``) are shared with the finance
 components. Underscore-prefixed helpers implement the degradation and replacement logic and are
 meant to be called through
@@ -11,10 +11,8 @@ import math
 from itertools import pairwise
 
 import numpy as np
+from utilities import SECONDS_PER_YEAR
 
-
-# H2Integrate plant years are always 365 days (8760 h); leap days are not modeled.
-SECONDS_PER_PLANT_YEAR = 31_536_000
 
 VALID_ANNUAL_EXTRAPOLATION_METHODS = ("tile", "final_sim_value", "time_averaged_sim_value")
 
@@ -200,8 +198,8 @@ def time_weighted_annual_means(
         be shorter than one year.
     """
     # Keep the series' actual start and end, splitting at intervening plant-year boundaries.
-    sample_duration = dt / SECONDS_PER_PLANT_YEAR
-    sample_edges = start_year + (np.arange(timestep_values.size + 1) * dt) / SECONDS_PER_PLANT_YEAR
+    sample_duration = dt / SECONDS_PER_YEAR
+    sample_edges = start_year + (np.arange(timestep_values.size + 1) * dt) / SECONDS_PER_YEAR
     annual_edges = np.arange(math.floor(start_year) + 1, math.ceil(sample_edges[-1]), dtype=float)
     segment_edges = np.concatenate(([start_year], annual_edges, [sample_edges[-1]]))
     durations = np.diff(segment_edges)
@@ -271,7 +269,7 @@ def _degraded_replacement_cycles(
         element by element; its sum is the cycle duration. The final replacement
         flag can remain false when the cycle cannot be completed.
     """
-    sample_duration = dt / SECONDS_PER_PLANT_YEAR
+    sample_duration = dt / SECONDS_PER_YEAR
     simulation_duration = state_of_health_timeseries.size * sample_duration
     # The difference index identifies the preceding sample; +1 identifies the first
     # sample with reset SOH, which starts the new unit's cycle.
@@ -282,7 +280,7 @@ def _degraded_replacement_cycles(
     trailing_soh = state_of_health_timeseries[trailing_start_index:]
     trend_steps = min(
         trailing_soh.size,
-        max(2, math.ceil(SECONDS_PER_PLANT_YEAR / dt)),
+        max(2, math.ceil(SECONDS_PER_YEAR / dt)),
     )
     trend_soh = trailing_soh[-trend_steps:]
     if trend_soh.size >= 2:
