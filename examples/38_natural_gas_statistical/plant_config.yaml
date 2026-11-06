@@ -9,6 +9,7 @@ sites:
         resource_model: GOESAggregatedSolarAPI
         resource_parameters:
           resource_year: 2013
+          resource_filename: 39.9139_-105.2135_2013_goes_aggregated_v4_60min_utc_tz.csv
 technology_interconnections:
     # fuel feedstock connections
   - [ng_feedstock, natural_gas_plant, natural_gas, pipe]  # fuel supply for the NGCT
