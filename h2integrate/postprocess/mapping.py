@@ -267,13 +267,9 @@ def plot_geospatial_point_heat_map(
             Defaults to None.
         leg_texts (list[str], optional): A list of strings representing legend labels for an
             existing plot. Defaults to empty list.
-        base_layer_gdf (
-            gpd.GeoDataFrame | list[gpd.GeoDataFrame] | tuple[gpd.GeoDataFrame, ...],
-            optional
-        ):
-            One or more GeoDataFrame objects previously used to create the base map. These are used
-            to validate CRS consistency and to calculate map bounds when adding new layers.
-            Defaults to None.
+        base_layer_gdf (gpd.GeoDataFrame | list | tuple, optional): One or more GeoDataFrame objects
+            previously used to create the base map. These are used to validate CRS consistency and
+            to calculate map bounds when adding new layers. Defaults to None.
         show_plot (bool, optional): A boolean to control whether the plot is displayed. When adding
             multiple layers to the same figure, this should be set to False until the final layer
             is added. Defaults to False.
@@ -289,13 +285,9 @@ def plot_geospatial_point_heat_map(
             Defaults to False.
 
     Returns:
-        fig (plt.Figure): The plt.Figure object for the current plot. This can be passed back into
-            the function to add additional layers.
-        ax (plt.Axes): The plt.Axes object for the current plot. This can be passed back into the
-            function to add additional layers.
-        leg_texts (list[str]): A list of strings representing legend labels for the current plot.
-        results_gdf (gpd.GeoDataFrame): The gpd.GeoDataFrame object created from the parsed results.
-            This can be passed back into the function to add additional layers.
+        tuple: The figure (plt.Figure), axes (plt.Axes), legend labels (list[str]), and GeoDataFrame
+            (gpd.GeoDataFrame) created from the parsed results, in that order. These can be passed
+            back into the function to add additional layers.
 
     Raises:
         TypeError: If the provided case_results_fpath is of the wrong type (not .csv or .sql)
