@@ -579,8 +579,10 @@ class SimSESBatteryPerformanceModel(StoragePerformanceBase):
         )
 
     def _create_battery(self):
+
         return Battery(
             cell=LFP280Ah(),
+            soc_limits=(self.config.soc_min, self.config.soc_max),
             circuit=(self.config.series_count, self.config.parallel_count),
             initial_states={
                 "start_soc": self.config.init_soc_fraction,
@@ -630,6 +632,7 @@ class SimSESBatteryPerformanceModel(StoragePerformanceBase):
         # ---------------------------------------------------------------------------
         # Battery pack + inverter (fixed Megapack-style topology, from config)
         # ---------------------------------------------------------------------------
+
         battery = self._create_battery()
 
         converter = Converter(
