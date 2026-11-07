@@ -11,7 +11,8 @@ import math
 from itertools import pairwise
 
 import numpy as np
-from utilities import SECONDS_PER_YEAR
+
+from h2integrate.tools.constants import SECONDS_PER_YEAR
 
 
 VALID_ANNUAL_EXTRAPOLATION_METHODS = ("tile", "final_sim_value", "time_averaged_sim_value")

@@ -8,7 +8,8 @@ import numpy as np
 import openmdao.api as om
 from attrs import field, define
 
-from h2integrate.core.utilities import SECONDS_PER_YEAR, BaseConfig
+from h2integrate.core.utilities import BaseConfig
+from h2integrate.tools.constants import SECONDS_PER_YEAR
 from h2integrate.core.annualization import (
     VALID_ANNUAL_EXTRAPOLATION_METHODS,
     _project_capacity_factors,

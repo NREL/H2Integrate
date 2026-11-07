@@ -5,7 +5,7 @@ import math
 import numpy as np
 import pytest
 
-from h2integrate.core.utilities import SECONDS_PER_YEAR
+from h2integrate.tools.constants import SECONDS_PER_YEAR
 from h2integrate.core.model_baseclass import CostModelBaseClass, PerformanceModelBaseClass
 
 

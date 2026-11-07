@@ -3,6 +3,7 @@ import math
 import numpy as np
 import pandas as pd
 
+from h2integrate.tools.constants import SECONDS_PER_YEAR
 from h2integrate.core.supported_models import register
 
 
@@ -211,8 +212,8 @@ class SimSESBatteryPerformanceModelConfig(StoragePerformanceBaseConfig):
         demand_profile (int | float | list): Demand values for each timestep, in
             the same units as `commodity_rate_units`. May be a scalar for constant
             demand or a list/array for time-varying demand.
-        max_capacity (float): Total usable storage capacity in commodity_amount_units.
-            Must be a positive integer multiple of 3854 kWh after unit conversion.
+        max_capacity (float): Total nominal storage capacity in commodity_amount_units.
+            Must be a positive integer multiple of 4816.896 kWh after unit conversion.
             Each container holds one fixed 336s x 16p pack.
         max_charge_rate (float): Rated commodity capacity of the storage  in commodity_rate_units.
             Must be greater than zero.
@@ -265,7 +266,7 @@ class SimSESBatteryPerformanceModelConfig(StoragePerformanceBaseConfig):
         validator=validators.optional((validators.ge(0), validators.le(1))),
     )
 
-    deg_scale: float = field(default=0.115, validator=(validators.ge(0), validators.le(1)))
+    deg_scale: float = field(default=0.7056, validator=(validators.ge(0), validators.le(1)))
     eol_soh_capacity: float = field(default=0.8, validator=(validators.ge(0), validators.le(1)))
     # TODO convert from power and energy ratings (see math in chat)
     series_count: int = field(default=336, converter=int, validator=validators.gt(0))
@@ -365,7 +366,7 @@ class SimSESBatteryPerformanceModel(StoragePerformanceBase):
     )  # (min, max) time step lengths (in seconds) compatible with this model
 
     _simulation_duration_bounds = (0.0, float("inf"))
-    _FIXED_USABLE_CAPACITY_KWH = 3854.0  # Usable capacity per container
+    _FIXED_NOMINAL_CAPACITY_KWH = 4816.896  # Nominal capacity per container
 
     def initialize(self):
         super().initialize()
@@ -582,7 +583,7 @@ class SimSESBatteryPerformanceModel(StoragePerformanceBase):
 
         return Battery(
             cell=LFP280Ah(),
-            soc_limits=(self.config.soc_min, self.config.soc_max),
+            soc_limits=(self.config.min_soc_fraction, self.config.max_soc_fraction),
             circuit=(self.config.series_count, self.config.parallel_count),
             initial_states={
                 "start_soc": self.config.init_soc_fraction,
@@ -609,7 +610,7 @@ class SimSESBatteryPerformanceModel(StoragePerformanceBase):
         capacity_kwh = float(
             om_units.convert_units(storage_capacity, self.commodity_amount_units, "kW*h")
         )
-        container_ratio = capacity_kwh / self._FIXED_USABLE_CAPACITY_KWH
+        container_ratio = capacity_kwh / self._FIXED_NOMINAL_CAPACITY_KWH
         if (
             not np.isfinite(container_ratio)
             or container_ratio < 1.0
@@ -617,7 +618,7 @@ class SimSESBatteryPerformanceModel(StoragePerformanceBase):
         ):
             raise ValueError(
                 f"storage_capacity must be a positive integer multiple of "
-                f"{self._FIXED_USABLE_CAPACITY_KWH} kWh usable "
+                f"{self._FIXED_NOMINAL_CAPACITY_KWH} kWh nominal "
                 f"per container; got {capacity_kwh} kWh."
             )
         container_count = round(container_ratio)
@@ -626,7 +627,7 @@ class SimSESBatteryPerformanceModel(StoragePerformanceBase):
                 "This SimSES battery model requires that each container has "
                 "series_count=336 and parallel_count=16; "
                 f"change storage_capacity in tranches of "
-                f"{self._FIXED_USABLE_CAPACITY_KWH} kWh to size the system."
+                f"{self._FIXED_NOMINAL_CAPACITY_KWH} kWh to size the system."
             )
 
         # ---------------------------------------------------------------------------
@@ -811,7 +812,7 @@ class SimSESBatteryPerformanceModel(StoragePerformanceBase):
                 eol_soh=self.config.eol_soh_capacity,
             )
             annual_amount_per_unit_rate = om_units.convert_units(
-                31_536_000,
+                SECONDS_PER_YEAR,
                 "s",
                 f"({self.commodity_amount_units})/({self.commodity_rate_units})",
             )

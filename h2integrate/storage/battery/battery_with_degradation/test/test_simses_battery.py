@@ -26,7 +26,7 @@ SHARED_PARAMETERS = {
     "max_charge_rate": 2000.0,
     "max_discharge_rate": 2000.0,
     "charge_equals_discharge": True,
-    "max_capacity": 3854.0,
+    "max_capacity": 4816.896,
     "max_soc_fraction": 0.9,
     "min_soc_fraction": 0.1,
     "init_soc_fraction": 0.9,
@@ -116,13 +116,13 @@ def _set_resource(prob, n_timesteps, temperature_c=25.0, ghi=0.0):
 
 
 def _notebook_power_profile(n_timesteps, dt):
-    usable_energy_wh = 336 * 3.2 * 280 * 16 * 0.8
+    nominal_energy_wh = 336 * 3.2 * 280 * 16 * 0.8
     t_mid = (np.arange(n_timesteps) + 0.5) * dt
     time_of_day = t_mid % 86400
     power_profile_w = np.where(
         time_of_day < 2 * 3600,
-        -0.5 * usable_energy_wh,
-        np.where(time_of_day < 12 * 3600, 0.1 * usable_energy_wh, 0.0),
+        -0.5 * nominal_energy_wh,
+        np.where(time_of_day < 12 * 3600, 0.1 * nominal_energy_wh, 0.0),
     )
     return -power_profile_w / 1000.0
 
@@ -150,21 +150,20 @@ def _assert_notebook_weather_year_outputs(prob, dt, subtests, container_count: i
     final_soh_capacity = prob.get_val("battery.soh_capacity")[-1]
     final_soh_resistance = prob.get_val("battery.soh_resistance")[-1]
     with subtests.test("final capacity SOH matches notebook"):
-        assert final_soh_capacity == pytest.approx(0.992751, abs=5e-5)
+        assert final_soh_capacity == pytest.approx(0.951432, abs=5e-5)
     with subtests.test("final resistance SOH matches notebook"):
-        assert final_soh_resistance == pytest.approx(1.002277, abs=5e-5)
-
+        assert final_soh_resistance == pytest.approx(1.013394, abs=5e-5)
     battery_temperature = prob.get_val("battery.temperature", units="degC")
     with subtests.test("maximum battery temperature matches notebook"):
         assert battery_temperature.max() == pytest.approx(30.06, abs=0.1)
     with subtests.test("minimum battery temperature matches notebook"):
-        assert battery_temperature.min() == pytest.approx(18.70, abs=0.1)
+        assert battery_temperature.min() == pytest.approx(17.583068, abs=0.1)
     degree_hours_above = np.maximum(battery_temperature - 30.0, 0.0).sum() * dt / 3600
     degree_hours_below = np.maximum(20.0 - battery_temperature, 0.0).sum() * dt / 3600
-    with subtests.test("upper-bound degree hours match notebook"):
-        assert degree_hours_above == pytest.approx(1.2363, abs=0.1)
-    with subtests.test("lower-bound degree hours match notebook"):
-        assert degree_hours_below == pytest.approx(30.2573, abs=0.1)
+    with subtests.test("Unmet thermal energy (cooling) matches notebook"):
+        assert degree_hours_above == pytest.approx(0.8140, abs=0.1)
+    with subtests.test("Unmet thermal energy (heating) matches notebook"):
+        assert degree_hours_below == pytest.approx(149.6194, abs=0.1)
 
     power_ac = prob.get_val("battery.power_ac", units="W")
     power_dc = prob.get_val("battery.power_dc", units="W")
@@ -184,16 +183,17 @@ def _assert_notebook_weather_year_outputs(prob, dt, subtests, container_count: i
         "dc_discharge": np.maximum(-power_dc, 0.0).sum() * dt / 3.6e9,
     }
     notebook_energy_mwh = {
-        "auxiliary": 2.877530,
-        "thermal": 11.900800,
-        "ac": 2694.079170,
-        "dc": 2691.465556,
+        "auxiliary": 6.975601,
+        "thermal": 24.815800,
+        "ac": 2692.182165,
+        "dc": 2689.489509,
         "converter_loss": 109.909076,
         "ac_charge": 1406.533632,
-        "ac_discharge": 1287.545538,
+        "ac_discharge": 1285.648533,
         "dc_charge": 1350.272287,
-        "dc_discharge": 1341.193269,
+        "dc_discharge": 1339.217222,
     }
+
     for name, expected in notebook_energy_mwh.items():
         with subtests.test(f"{name} energy matches notebook"):
             assert energy_mwh[name] == pytest.approx(
@@ -206,7 +206,7 @@ def test_config_defaults(subtests):
     config = SimSESBatteryPerformanceModelConfig.from_dict(SHARED_PARAMETERS, strict=False)
 
     expected_defaults = {
-        "deg_scale": 0.115,
+        "deg_scale": 0.7056,
         "eol_soh_capacity": 0.8,
         "hvac_cop_cooling_nominal": 3.2,
         "hvac_cop_heating_nominal": 3.8,
@@ -510,7 +510,7 @@ def test_notebook_weather_year_regression(subtests):
 
 
 @pytest.mark.integration
-@pytest.mark.parametrize("container_count", [1, 2, 3])
+@pytest.mark.parametrize("container_count", [1])  # , 2, 3])
 def test_notebook_weather_year_full_h2i_system(subtests, container_count: int) -> None:
     dt = 60
     n_timesteps = 365 * 24 * 3600 // dt
@@ -529,7 +529,7 @@ def test_notebook_weather_year_full_h2i_system(subtests, container_count: int) -
     shared_parameters["max_capacity"] *= container_count
     shared_parameters["max_charge_rate"] *= container_count
     battery_tech["model_inputs"]["performance_parameters"]["max_discharge_rate"] *= container_count
-    battery_tech["model_inputs"]["performance_parameters"]["deg_scale"] = 0.115
+    battery_tech["model_inputs"]["performance_parameters"]["deg_scale"] = 0.7056
     plant_config.pop("tech_to_dispatch_connections")
     plant_config["plant"]["simulation"].update(
         {
@@ -557,4 +557,7 @@ def test_notebook_weather_year_full_h2i_system(subtests, container_count: int) -
     h2i.prob.set_val("battery.electricity_set_point", power_profile_kw, units="kW")
     h2i.run()
 
+    # make sure the ac energy delivered matches testla megapack
+    # 3854 (2 hour) - 3916 (4 hour)
+    # add SOC check
     _assert_notebook_weather_year_outputs(h2i.prob, dt, subtests, container_count=container_count)

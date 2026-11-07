@@ -16,9 +16,9 @@ technologies:
         commodity_rate_units: kW
         commodity_amount_units: kW*h  # amount units for the commodity (defaults to <rate>*h)
         max_charge_rate: 2000.0  # kW
-        max_capacity: 3854.0  # kWh (usable, 10-90 % of the 4817 kWh nominal pack)
-        max_soc_fraction: 1.0 # 0.9  # fraction (0-1)
-        min_soc_fraction: 0.0 # 0.1  # fraction (0-1)
+        max_capacity: 4816.896  # kWh (usable, 10-90 % of the 4817 kWh nominal pack)
+        max_soc_fraction: 0.9 # 0.9  # fraction (0-1)
+        min_soc_fraction: 0.1 # 0.1  # fraction (0-1)
         init_soc_fraction: 0.9  # fraction (0-1)
         charge_efficiency: 1.0  # fraction (0-1)
         discharge_efficiency: 1.0  # fraction (0-1)

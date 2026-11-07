@@ -3,7 +3,7 @@
 import numpy as np
 import pytest
 
-from h2integrate.core.utilities import SECONDS_PER_YEAR
+from h2integrate.tools.constants import SECONDS_PER_YEAR
 from h2integrate.core.annualization import (
     _project_capacity_factors,
     extrapolate_annual_values,

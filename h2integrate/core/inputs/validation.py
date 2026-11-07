@@ -7,8 +7,8 @@ from pathlib import Path
 import numpy as np
 import jsonschema as json
 
-from h2integrate.core.utilities import SECONDS_PER_YEAR
 from h2integrate.core.file_utils import load_yaml, write_yaml
+from h2integrate.tools.constants import SECONDS_PER_YEAR
 
 
 fschema_tech = Path(__file__).parent / "tech_schema.yaml"
