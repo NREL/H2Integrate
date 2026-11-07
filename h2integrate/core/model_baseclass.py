@@ -119,7 +119,7 @@ class PerformanceModelBaseClass(om.ExplicitComponent):
         )
 
         # plant_life is number of years the plant is expected to operate for
-        self.plant_life = int(self.options["plant_config"]["plant"]["plant_life"])
+        self.plant_life = self.options["plant_config"]["plant"]["plant_life"]
 
         # hours simulated is the number of hours in a simulation
         hours_simulated = (self.dt / 3600) * self.n_timesteps
@@ -246,7 +246,7 @@ class PerformanceModelBaseClass(om.ExplicitComponent):
         rated_performance,
         state_of_health_timeseries,
         eol_soh,
-        no_degradation_extrapolation=None,
+        annual_extrapolation_method=None,
         soh_cycle_repetition="all_soh_cycles",
     ):
         """Project annual capacity factors and replacement counts across plant life.
@@ -286,16 +286,16 @@ class PerformanceModelBaseClass(om.ExplicitComponent):
             rated_performance (float): rated performance value used in capacity-factor
                 calculation.
             state_of_health_timeseries (array-like | None): timestep-level state-of-health
-                values. If None, no degradation/replacement projection is applied.
+                values. Values should be between 0 and 1. 0 represents a completely degraded
+                state. 1 represents a fully healthy state. These values are absolute, not
+                dependent on eol_soh. If None, no degradation/replacement projection is applied.
                 When provided, SOH is used to determine replacement timing.
-            eol_soh (float | None): State-of-health threshold at or below which the
-                technology is considered replaced. Only required when
+            eol_soh (float | None): State-of-health threshold. If state_of_health_timeseries
+                falls below eol_soh the technology is assumed replaced. Only required when
                 ``state_of_health_timeseries`` is provided.
-            no_degradation_extrapolation (str | None): Extrapolation strategy when
-                ``state_of_health_timeseries`` is None. If None, use the plant simulation's
-                ``annual_extrapolation_method``; an override should generally match it. Required
-                only when multiple simulated annual values
-                must be extended to cover the remaining plant life. Options:
+            annual_extrapolation_method (str | None): Extrapolation strategy when
+                ``state_of_health_timeseries`` is None. Required only when multiple simulated
+                annual values must be extended to cover the remaining plant life. Options:
 
                 - ``"tile"``: repeat simulated annual values cyclically.
                 - ``"final_sim_value"``: hold the last simulated annual value constant for
@@ -314,8 +314,6 @@ class PerformanceModelBaseClass(om.ExplicitComponent):
             tuple[np.ndarray, np.ndarray]: projected annual capacity factors and
             replacement schedule.
         """
-        if no_degradation_extrapolation is None:
-            no_degradation_extrapolation = getattr(self, "annual_extrapolation_method", None)
 
         (
             performance_timeseries,
@@ -327,18 +325,11 @@ class PerformanceModelBaseClass(om.ExplicitComponent):
             rated_performance,
             state_of_health_timeseries,
             eol_soh,
-            no_degradation_extrapolation,
+            annual_extrapolation_method,
             soh_cycle_repetition,
         )
-        if not np.isfinite(self.dt) or self.dt <= 0.0:
-            raise ValueError("dt must be finite and greater than zero.")
-        if (
-            not np.isfinite(self.plant_life)
-            or self.plant_life < 1
-            or int(self.plant_life) != self.plant_life
-        ):
-            raise ValueError("plant_life must be a positive integer number of years.")
-        plant_life = int(self.plant_life)
+
+        plant_life = self.plant_life
 
         # Without degradation, no replacements occur and capacity factors are simply
         # extrapolated across the plant life.
@@ -350,7 +341,7 @@ class PerformanceModelBaseClass(om.ExplicitComponent):
             annual_capacity_factors = extrapolate_annual_values(
                 simulated_annual_capacity_factors,
                 plant_life,
-                no_degradation_extrapolation,
+                annual_extrapolation_method,
                 simulated_durations_years=simulated_durations_years,
             )
             return annual_capacity_factors, np.zeros(plant_life, dtype=int)
@@ -435,7 +426,7 @@ class CostModelBaseClass(SkippableComputeMixin, om.ExplicitComponent):
             "annual_extrapolation_method"
         )
         # plant_life is number of years the plant is expected to operate for
-        self.plant_life = int(self.options["plant_config"]["plant"]["plant_life"])
+        self.plant_life = self.options["plant_config"]["plant"]["plant_life"]
 
         # fraction_of_year_simulated is the ratio of simulation length to length of year
         # and may be used to estimate annual performance from simulation performance
@@ -478,14 +469,11 @@ class CostModelBaseClass(SkippableComputeMixin, om.ExplicitComponent):
         """Project annual variable OpEx across plant life from timestep-level costs.
 
         Args:
-            varopex_timeseries (array-like): timestep-level variable cost values in
-                annual cost numerator units (for example USD per timestep after any
-                flow * price multiplication).
+            varopex_timeseries (array-like): variable operating cost values per timestep of the
+                simulation in USD/dt (dollars per timestep)
             annual_extrapolation_method (str | None): Extrapolation strategy after the simulated
-                horizon. If None, use the plant simulation's ``annual_extrapolation_method``;
-                an override should generally match it.
-                Required only when multiple simulated annual values must be extended to cover
-                the remaining plant life. Options are ``"tile"``, ``"final_sim_value"``, and
+                horizon. Required only when multiple simulated annual values must be extended to
+                cover the remaining plant life. Options are ``"tile"``, ``"final_sim_value"``, and
                 ``"time_averaged_sim_value"``.
 
         Returns:
@@ -494,9 +482,6 @@ class CostModelBaseClass(SkippableComputeMixin, om.ExplicitComponent):
         varopex_timeseries = np.asarray(varopex_timeseries, dtype=float)
         if varopex_timeseries.size == 0:
             raise ValueError("varopex_timeseries must contain at least one value.")
-
-        if annual_extrapolation_method is None:
-            annual_extrapolation_method = getattr(self, "annual_extrapolation_method", None)
 
         if (
             annual_extrapolation_method is not None

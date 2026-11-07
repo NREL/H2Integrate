@@ -52,7 +52,7 @@ def test_without_degradation_tile():
         rated=2.0,
         soh=None,
         eol=None,
-        no_degradation_extrapolation="tile",
+        annual_extrapolation_method="tile",
     )
 
     np.testing.assert_allclose(cf_values, [0.6, 0.5, 0.4, 0.6, 0.5, 0.4])
@@ -67,7 +67,7 @@ def test_without_degradation_final_sim_value():
         rated=1.0,
         soh=None,
         eol=None,
-        no_degradation_extrapolation="final_sim_value",
+        annual_extrapolation_method="final_sim_value",
     )
 
     np.testing.assert_allclose(cf_values, [0.6, 0.5, 0.4, 0.4, 0.4, 0.4])
@@ -82,7 +82,7 @@ def test_without_degradation_time_averaged_sim_value():
         rated=1.0,
         soh=None,
         eol=None,
-        no_degradation_extrapolation="time_averaged_sim_value",
+        annual_extrapolation_method="time_averaged_sim_value",
     )
 
     np.testing.assert_allclose(cf_values, [0.6, 0.5, 0.4, 0.5, 0.5, 0.5])
@@ -134,7 +134,7 @@ def test_average_capacity_factor_weights_partial_year() -> None:
         rated=1.0,
         soh=None,
         eol=None,
-        no_degradation_extrapolation="time_averaged_sim_value",
+        annual_extrapolation_method="time_averaged_sim_value",
     )
     np.testing.assert_allclose(capacity_factors, [1.0, 0.0, 0.8, 0.8])
     np.testing.assert_array_equal(replacement_schedule, np.zeros(4, dtype=int))
@@ -205,7 +205,7 @@ def test_average_varopex_weights_partial_year() -> None:
         ("time_averaged_sim_value", [1.0, 0.0, 0.5, 0.5], [10.0, 0.0, 5.0, 5.0]),
     ],
 )
-def test_plant_annual_extrapolation_method_is_base_class_default(
+def test_explicit_annual_extrapolation_method_applies_to_both_base_classes(
     annual_extrapolation_method: str,
     expected_capacity_factors: list[float],
     expected_varopex: list[float],
@@ -213,7 +213,6 @@ def test_plant_annual_extrapolation_method_is_base_class_default(
     performance_model = _DummyPerformanceModel(
         plant_life=4,
         dt=SECONDS_PER_YEAR,
-        annual_extrapolation_method=annual_extrapolation_method,
     )
     capacity_factors, _ = _run(
         performance_model,
@@ -221,13 +220,15 @@ def test_plant_annual_extrapolation_method_is_base_class_default(
         rated=1.0,
         soh=None,
         eol=None,
+        annual_extrapolation_method=annual_extrapolation_method,
     )
 
     cost_model = CostModelBaseClass()
     cost_model.dt = SECONDS_PER_YEAR
     cost_model.plant_life = 4
-    cost_model.annual_extrapolation_method = annual_extrapolation_method
-    annual_varopex = cost_model.calculate_annual_varopex(np.array([10.0, 0.0]))
+    annual_varopex = cost_model.calculate_annual_varopex(
+        np.array([10.0, 0.0]), annual_extrapolation_method=annual_extrapolation_method
+    )
 
     np.testing.assert_allclose(capacity_factors, expected_capacity_factors)
     np.testing.assert_allclose(annual_varopex, expected_varopex)
@@ -248,7 +249,7 @@ def test_exact_three_year_horizon_tiles_capacity_factor_and_varopex(subtests, dt
         rated=1.0,
         soh=None,
         eol=None,
-        no_degradation_extrapolation="tile",
+        annual_extrapolation_method="tile",
     )
 
     cost_model = CostModelBaseClass()
@@ -285,7 +286,7 @@ def test_exact_three_year_horizon_final_sim_value_uses_last_complete_year(
         rated=1.0,
         soh=None,
         eol=None,
-        no_degradation_extrapolation="final_sim_value",
+        annual_extrapolation_method="final_sim_value",
     )
 
     cost_model = CostModelBaseClass()
@@ -772,25 +773,6 @@ def test_annualization_rejects_invalid_arrays_and_quantities(overrides, match):
 
 
 @pytest.mark.unit
-@pytest.mark.parametrize(
-    "attribute,value",
-    [
-        ("dt", 0),
-        ("dt", np.inf),
-        ("dt", -1),
-        ("plant_life", 0),
-        ("plant_life", 1.5),
-        ("plant_life", np.nan),
-    ],
-)
-def test_annualization_rejects_invalid_clock(attribute, value):
-    dummy = _DummyPerformanceModel()
-    setattr(dummy, attribute, value)
-    with pytest.raises(ValueError, match=attribute):
-        _run(dummy, performance_timeseries=[1.0], rated=1.0, soh=None, eol=None)
-
-
-@pytest.mark.unit
 def test_annual_means_weight_timesteps_crossing_fixed_year_boundaries(subtests):
     cf_values, schedule = _run(
         _DummyPerformanceModel(plant_life=3, dt=0.3 * SECONDS_PER_YEAR),
@@ -806,7 +788,7 @@ def test_annual_means_weight_timesteps_crossing_fixed_year_boundaries(subtests):
 
 
 @pytest.mark.unit
-def test_invalid_no_degradation_extrapolation_raises():
+def test_invalid_annual_extrapolation_method_raises():
     with pytest.raises(ValueError):
         _run(
             _DummyPerformanceModel(plant_life=6),
@@ -814,5 +796,5 @@ def test_invalid_no_degradation_extrapolation_raises():
             rated=1.0,
             soh=None,
             eol=None,
-            no_degradation_extrapolation="not_a_mode",
+            annual_extrapolation_method="not_a_mode",
         )

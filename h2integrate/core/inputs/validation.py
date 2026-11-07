@@ -168,14 +168,22 @@ def load_plant_yaml(finput):
         dict: Validated plant configuration.
 
     Raises:
-        ValueError: If the simulation horizon is non-positive or longer than the plant life.
+        ValueError: If dt is nonfinite or non-positive, plant life is not a finite positive
+            integer, or the simulation horizon is non-positive or longer than the plant life.
     """
     plant_config = _validate(finput, fschema_plant)
 
     n_timesteps = int(plant_config["plant"]["simulation"]["n_timesteps"])
-    dt = int(plant_config["plant"]["simulation"]["dt"])
-    plant_life = int(plant_config["plant"]["plant_life"])
+    dt = plant_config["plant"]["simulation"]["dt"]
+    plant_life = plant_config["plant"]["plant_life"]
 
+    if not np.isfinite(dt) or dt <= 0.0:
+        raise ValueError("dt must be finite and greater than zero.")
+    if not np.isfinite(plant_life) or plant_life < 1 or plant_life != int(plant_life):
+        raise ValueError("plant_life must be a positive integer number of years.")
+
+    dt = dt
+    plant_life = plant_life
     seconds_simulated = n_timesteps * dt
     years_simulated = seconds_simulated / SECONDS_PER_YEAR
 
