@@ -8,7 +8,8 @@ import numpy as np
 import openmdao.api as om
 from attrs import field, define
 
-from h2integrate.core.utilities import SECONDS_PER_YEAR, BaseConfig
+from h2integrate.core.utilities import BaseConfig
+from h2integrate.tools.constants import SECONDS_PER_YEAR
 from h2integrate.core.annualization import (
     VALID_ANNUAL_EXTRAPOLATION_METHODS,
     _project_capacity_factors,
@@ -293,10 +294,8 @@ class PerformanceModelBaseClass(om.ExplicitComponent):
                 falls below eol_soh the technology is assumed replaced. Only required when
                 ``state_of_health_timeseries`` is provided.
             annual_extrapolation_method (str | None): Extrapolation strategy when
-                ``state_of_health_timeseries`` is None. If None, use the plant simulation's
-                ``annual_extrapolation_method``; an override should generally match it. Required
-                only when multiple simulated annual values
-                must be extended to cover the remaining plant life. Options:
+                ``state_of_health_timeseries`` is None. Required only when multiple simulated
+                annual values must be extended to cover the remaining plant life. Options:
 
                 - ``"tile"``: repeat simulated annual values cyclically.
                 - ``"final_sim_value"``: hold the last simulated annual value constant for
@@ -470,12 +469,11 @@ class CostModelBaseClass(SkippableComputeMixin, om.ExplicitComponent):
         """Project annual variable OpEx across plant life from timestep-level costs.
 
         Args:
-            varopex_timeseries (array-like): variable operating cost values per timestep of the simulation in USD/dt (dollars per timestep)
+            varopex_timeseries (array-like): variable operating cost values per timestep of the
+                simulation in USD/dt (dollars per timestep)
             annual_extrapolation_method (str | None): Extrapolation strategy after the simulated
-                horizon. If None, use the plant simulation's ``annual_extrapolation_method``;
-                an override should generally match it.
-                Required only when multiple simulated annual values must be extended to cover
-                the remaining plant life. Options are ``"tile"``, ``"final_sim_value"``, and
+                horizon. Required only when multiple simulated annual values must be extended to
+                cover the remaining plant life. Options are ``"tile"``, ``"final_sim_value"``, and
                 ``"time_averaged_sim_value"``.
 
         Returns:

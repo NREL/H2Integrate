@@ -7,6 +7,7 @@ import yaml
 import numpy as np
 import pytest
 import openmdao.api as om
+from jsonschema import ValidationError
 
 import h2integrate.postprocess.reporting as reporting_module
 import h2integrate.core.h2integrate_model as h2i_model_module
@@ -869,8 +870,56 @@ def test_unsupported_simulation_parameters():
     # A non-positive horizon is invalid and must raise.
     non_positive = deepcopy(plant_config_data_dt)
     non_positive["plant"]["simulation"]["dt"] = 0
-    with pytest.raises(ValueError, match="must be positive"):
+    with pytest.raises(ValueError, match="dt must be finite and greater than zero"):
         load_plant_yaml(non_positive)
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    "attribute,value,expected_error,expected_message",
+    [
+        ("dt", 0, ValueError, r"^dt must be finite and greater than zero\.$"),
+        ("dt", np.inf, ValueError, r"^dt must be finite and greater than zero\.$"),
+        ("dt", -1, ValueError, r"^dt must be finite and greater than zero\.$"),
+        ("plant_life", 0, ValidationError, r"^0 is less than the minimum of 1"),
+        (
+            "plant_life",
+            1.5,
+            ValueError,
+            r"^plant_life must be a positive integer number of years\.$",
+        ),
+        (
+            "plant_life",
+            np.nan,
+            ValueError,
+            r"^plant_life must be a positive integer number of years\.$",
+        ),
+    ],
+)
+def test_plant_validation_rejects_invalid_clock(
+    attribute: str,
+    value: float,
+    expected_error: type[Exception],
+    expected_message: str,
+) -> None:
+    plant_config = {
+        "plant": {
+            "plant_life": 3,
+            "simulation": {"dt": 3600, "n_timesteps": 1},
+        }
+    }
+    if attribute == "plant_life":
+        plant_config["plant"][attribute] = value
+    else:
+        plant_config["plant"]["simulation"][attribute] = value
+
+    with pytest.raises(expected_error, match=expected_message) as exc_info:
+        load_plant_yaml(plant_config)
+
+    if expected_error is ValidationError:
+        assert exc_info.value.validator == "minimum"
+        assert exc_info.value.validator_value == 1
+        assert list(exc_info.value.absolute_path) == ["plant", "plant_life"]
 
 
 @pytest.mark.unit

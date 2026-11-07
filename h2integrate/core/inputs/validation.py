@@ -7,8 +7,8 @@ from pathlib import Path
 import numpy as np
 import jsonschema as json
 
-from h2integrate.core.utilities import SECONDS_PER_YEAR
 from h2integrate.core.file_utils import load_yaml, write_yaml
+from h2integrate.tools.constants import SECONDS_PER_YEAR
 
 
 fschema_tech = Path(__file__).parent / "tech_schema.yaml"
@@ -168,21 +168,24 @@ def load_plant_yaml(finput):
         dict: Validated plant configuration.
 
     Raises:
-        ValueError: If the simulation horizon is non-positive or longer than the plant life.
+        ValueError: If dt is nonfinite or non-positive, plant life is not a finite positive
+            integer, or the simulation horizon is non-positive or longer than the plant life.
     """
     plant_config = _validate(finput, fschema_plant)
 
     n_timesteps = int(plant_config["plant"]["simulation"]["n_timesteps"])
-    dt = int(plant_config["plant"]["simulation"]["dt"])
-    plant_life = int(plant_config["plant"]["plant_life"])
-
-    seconds_simulated = n_timesteps * dt
-    years_simulated = seconds_simulated / SECONDS_PER_YEAR
+    dt = plant_config["plant"]["simulation"]["dt"]
+    plant_life = plant_config["plant"]["plant_life"]
 
     if not np.isfinite(dt) or dt <= 0.0:
         raise ValueError("dt must be finite and greater than zero.")
     if not np.isfinite(plant_life) or plant_life < 1 or plant_life != int(plant_life):
         raise ValueError("plant_life must be a positive integer number of years.")
+
+    dt = dt
+    plant_life = plant_life
+    seconds_simulated = n_timesteps * dt
+    years_simulated = seconds_simulated / SECONDS_PER_YEAR
 
     # The simulation may cover any positive duration (a fraction of a year, a single
     # year, or multiple years). Performance/cost/finance models annualize their results

@@ -1,6 +1,6 @@
 """Checks that validate individual model declarations."""
 
-from h2integrate.core.utilities import SECONDS_PER_YEAR
+from h2integrate.tools.constants import SECONDS_PER_YEAR
 
 
 def check_model_time_step(model_name, model_object, time_step):
