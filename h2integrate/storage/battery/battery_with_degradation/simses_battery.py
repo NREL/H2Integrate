@@ -238,7 +238,33 @@ class SimSESBatteryPerformanceModelConfig(StoragePerformanceBaseConfig):
             discharging the storage, represented as a decimal between 0 and 1 (e.g., 0.81 for
             81% efficiency). Optional if `charge_efficiency` and `discharge_efficiency` are
             provided.
-
+        deg_scale (float, optional): Calendar and cyclic degradation scaling factor (0 to 1).
+            Defaults to 0.7056.
+        eol_soh_capacity (float, optional): Capacity SOH threshold for battery replacement.
+            Defaults to 0.8.
+        battery_temperature_c (float, optional): Initial cell temperature in degC.
+            Defaults to 25.0.
+        converter_efficiency (float, optional): One-way converter efficiency (0 to 1).
+            Defaults to 0.96.
+        converter_max_power (float, optional): Per-container converter power limit in
+            `commodity_rate_units`. Defaults to 2400.0.
+        hvac_cop_cooling_nominal (float, optional): Nominal cooling COP. Defaults to 3.2.
+        hvac_cop_heating_nominal (float, optional): Nominal heating COP. Defaults to 3.8.
+        hvac_max_power (float, optional): Per-container HVAC thermal power limit in
+            `commodity_rate_units`. Defaults to 12.0.
+        thermostat_setpoint (float, optional): Initial container temperature and thermostat
+            target in degC. Defaults to 25.0.
+        thermostat_deadband (float, optional): Thermostat dead-band half-width in K.
+            Defaults to 5.0. HVAC system tries to keep temp in range
+            [thermostat_setpoint - thermostat_deadband, thermostat_setpoint + thermostat_deadband].
+        thermal_substep_max (float, optional): Maximum internal thermal timestep in seconds.
+            Defaults to 60.0. Thermal model requires a small timestep to converge reliably.
+        azimuth (float, optional): Container orientation in degrees for solar heat gain.
+            Defaults to 0.0.
+        battery_temp_safe_lower (float, optional): Cell temperature below which battery power
+            is forced to zero, in degC. Defaults to 15.0.
+        battery_temp_safe_upper (float, optional): Cell temperature above which battery power
+            is forced to zero, in degC. Defaults to 45.0.
     """
 
     commodity: str = field()
@@ -307,6 +333,10 @@ class SimSESBatteryPerformanceModelConfig(StoragePerformanceBaseConfig):
         or `round_trip_efficiency` is provided. If `round_trip_efficiency` is provided,
         it calculates `charge_efficiency` and `discharge_efficiency` as the square root
         of `round_trip_efficiency`.
+
+        Raises:
+            ValueError: If efficiencies are missing, charge/discharge rates differ while
+                `charge_equals_discharge` is True, or a required discharge rate is missing.
         """
         if (self.round_trip_efficiency is not None) and (
             self.charge_efficiency is None and self.discharge_efficiency is None
@@ -351,13 +381,12 @@ class SimSESBatteryPerformanceModelConfig(StoragePerformanceBaseConfig):
 class SimSESBatteryPerformanceModel(StoragePerformanceBase):
     """Simulate identical battery containers operating in tandem.
 
-    Capacity is specified in 3854 kWh usable increments per container, with
-    4816.896 kWh nominal physical energy per pack/container. Dispatch and charge/discharge
-    ratings are system totals (all containers together). Converter and HVAC ratings
-    apply per container. Power, energy, current, losses, heat, and auxiliary demand
-    are system totals; voltage, SOC, SOH, temperatures, and replacement timing describe
-    both one pack and the full system. A replacement event represents replacement of all
-    packs together.
+    Capacity is specified in 4816.896 kWh nominal increments per container.
+    Dispatch and charge/discharge ratings are system totals (all containers together).
+    Converter and HVAC ratings apply per container. Power, energy, current, losses, heat,
+    and auxiliary demand are system totals; voltage, SOC, SOH, temperatures, and
+    replacement timing describe both one pack and the full system. A replacement
+    event represents replacement of all packs together.
     """
 
     _time_step_bounds = (
@@ -598,7 +627,12 @@ class SimSESBatteryPerformanceModel(StoragePerformanceBase):
         )
 
     def compute(self, inputs, outputs, discrete_inputs=[], discrete_outputs=[]):
-        """Run the storage performance model."""
+        """Run the storage performance model.
+
+        Raises:
+            ValueError: If capacity is not a positive integer multiple of 4816.896 kWh,
+                pack topology is not 336s x 16p, or ambient temperature or GHI data is missing.
+        """
         self.current_soc = self.config.init_soc_fraction
 
         charge_rate = inputs["max_charge_rate"][0]
@@ -851,6 +885,10 @@ class SimSESBatteryPerformanceModel(StoragePerformanceBase):
             sim_start_index: Starting index of the simulation window.
             sim_end_index: Exclusive ending index of the simulation window. If omitted,
                 it is inferred from the command count for callers that provide only a start.
+
+        Raises:
+            ValueError: If the simulation range is invalid or too few dispatch commands
+                are provided for the simulation window.
         """
         del storage_capacity
         state = self._sim_state
