@@ -477,9 +477,7 @@ class CostModelBaseClass(SkippableComputeMixin, om.ExplicitComponent):
         """Project annual variable OpEx across plant life from timestep-level costs.
 
         Args:
-            varopex_timeseries (array-like): timestep-level variable cost values in
-                annual cost numerator units (for example USD per timestep after any
-                flow * price multiplication).
+            varopex_timeseries (array-like): variable operating cost values per timestep of the simulation in USD/dt (dollars per timestep)
             annual_extrapolation_method (str | None): Extrapolation strategy after the simulated
                 horizon. If None, use the plant simulation's ``annual_extrapolation_method``;
                 an override should generally match it.
