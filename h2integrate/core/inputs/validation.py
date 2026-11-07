@@ -179,6 +179,11 @@ def load_plant_yaml(finput):
     seconds_simulated = n_timesteps * dt
     years_simulated = seconds_simulated / SECONDS_PER_YEAR
 
+    if not np.isfinite(dt) or dt <= 0.0:
+        raise ValueError("dt must be finite and greater than zero.")
+    if not np.isfinite(plant_life) or plant_life < 1 or plant_life != int(plant_life):
+        raise ValueError("plant_life must be a positive integer number of years.")
+
     # The simulation may cover any positive duration (a fraction of a year, a single
     # year, or multiple years). Performance/cost/finance models annualize their results
     # using ``fraction_of_year_simulated`` (see the model base classes), so an arbitrary
